@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_005",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 3886,
+      "title": "Using the Kalman Filter for price direction prediction",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3886.md"
+    },
+    {
+      "id": 4162,
+      "title": "Money Management by Vince. Implementation as a module for MQL5 Wizard",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4162.md"
+    },
+    {
+      "id": 4192,
+      "title": "Creating a new trading strategy using a technology of resolving entries into indicators",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4192.md"
+    },
+    {
+      "id": 4534,
+      "title": "Comparative analysis of 10 flat trading strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4534.md"
+    },
+    {
+      "id": 4777,
+      "title": "Applying Monte Carlo method in reinforcement learning",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4777.md"
+    },
+    {
+      "id": 5008,
+      "title": "Reversing: The holy grail or a dangerous delusion?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5008.md"
+    },
+    {
+      "id": 5022,
+      "title": "Combining trend and flat strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5022.md"
+    },
+    {
+      "id": 5111,
+      "title": "Reversing: Reducing maximum drawdown and testing other markets",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5111.md"
+    },
+    {
+      "id": 5226,
+      "title": "50,000 completed orders in the MQL5.com Freelance service",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5226.md"
+    },
+    {
+      "id": 5451,
+      "title": "Econometric approach to finding market patterns: Autocorrelation, Heat Maps and Scatter Plots",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5451.md"
+    },
+    {
+      "id": 5596,
+      "title": "Developing a cross-platform grider EA",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5596.md"
+    },
+    {
+      "id": 5703,
+      "title": "A New Approach to Interpreting Classic and Hidden Divergence. Part II",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5703.md"
+    }
+  ]
+}

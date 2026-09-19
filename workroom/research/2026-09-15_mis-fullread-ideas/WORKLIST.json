@@ -1,0 +1,1296 @@
+{
+  "ok_articles": 3057,
+  "sections": {
+    "Examples": 1215,
+    "Expert Advisors": 56,
+    "Experts": 8,
+    "Indicators": 113,
+    "Integration": 125,
+    "Interviews": 3,
+    "Machine learning": 21,
+    "Statistics and analysis": 71,
+    "Tester": 237,
+    "Trading": 516,
+    "Trading systems": 692
+  },
+  "series_with_2plus": 106,
+  "shard_count": 255,
+  "target_per_shard": 12,
+  "shards": [
+    {
+      "shard_id": "examples_000",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_001",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_002",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_003",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_004",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_005",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_006",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_007",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_008",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_009",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_010",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_011",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_012",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_013",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_014",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_015",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_016",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_017",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_018",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_019",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_020",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_021",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_022",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_023",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_024",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_025",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_026",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_027",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_028",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_029",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_030",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_031",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_032",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_033",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_034",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_035",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_036",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_037",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_038",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_039",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_040",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_041",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_042",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_043",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_044",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_045",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_046",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_047",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_048",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_049",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_050",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_051",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_052",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_053",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_054",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_055",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_056",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_057",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_058",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_059",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_060",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_061",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_062",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_063",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_064",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_065",
+      "section": "Examples",
+      "n": 11
+    },
+    {
+      "shard_id": "examples_066",
+      "section": "Examples",
+      "n": 5
+    },
+    {
+      "shard_id": "examples_067",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_068",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_069",
+      "section": "Examples",
+      "n": 6
+    },
+    {
+      "shard_id": "examples_070",
+      "section": "Examples",
+      "n": 47
+    },
+    {
+      "shard_id": "examples_071",
+      "section": "Examples",
+      "n": 9
+    },
+    {
+      "shard_id": "examples_072",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_073",
+      "section": "Examples",
+      "n": 33
+    },
+    {
+      "shard_id": "examples_074",
+      "section": "Examples",
+      "n": 9
+    },
+    {
+      "shard_id": "examples_075",
+      "section": "Examples",
+      "n": 9
+    },
+    {
+      "shard_id": "examples_076",
+      "section": "Examples",
+      "n": 28
+    },
+    {
+      "shard_id": "examples_077",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_078",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_079",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_080",
+      "section": "Examples",
+      "n": 5
+    },
+    {
+      "shard_id": "examples_081",
+      "section": "Examples",
+      "n": 10
+    },
+    {
+      "shard_id": "examples_082",
+      "section": "Examples",
+      "n": 10
+    },
+    {
+      "shard_id": "examples_083",
+      "section": "Examples",
+      "n": 10
+    },
+    {
+      "shard_id": "examples_084",
+      "section": "Examples",
+      "n": 4
+    },
+    {
+      "shard_id": "examples_085",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_086",
+      "section": "Examples",
+      "n": 7
+    },
+    {
+      "shard_id": "examples_087",
+      "section": "Examples",
+      "n": 8
+    },
+    {
+      "shard_id": "examples_088",
+      "section": "Examples",
+      "n": 44
+    },
+    {
+      "shard_id": "examples_089",
+      "section": "Examples",
+      "n": 10
+    },
+    {
+      "shard_id": "examples_090",
+      "section": "Examples",
+      "n": 13
+    },
+    {
+      "shard_id": "examples_091",
+      "section": "Examples",
+      "n": 6
+    },
+    {
+      "shard_id": "examples_092",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_093",
+      "section": "Examples",
+      "n": 4
+    },
+    {
+      "shard_id": "examples_094",
+      "section": "Examples",
+      "n": 13
+    },
+    {
+      "shard_id": "examples_095",
+      "section": "Examples",
+      "n": 1
+    },
+    {
+      "shard_id": "examples_096",
+      "section": "Examples",
+      "n": 20
+    },
+    {
+      "shard_id": "examples_097",
+      "section": "Examples",
+      "n": 12
+    },
+    {
+      "shard_id": "examples_098",
+      "section": "Examples",
+      "n": 5
+    },
+    {
+      "shard_id": "trading_systems_000",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_001",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_002",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_003",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_004",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_005",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_006",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_007",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_008",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_009",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_010",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_011",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_012",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_013",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_014",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_015",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_016",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_017",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_018",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_019",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_020",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_021",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_022",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_023",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_024",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_025",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_026",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_027",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_028",
+      "section": "Trading systems",
+      "n": 10
+    },
+    {
+      "shard_id": "trading_systems_029",
+      "section": "Trading systems",
+      "n": 11
+    },
+    {
+      "shard_id": "trading_systems_030",
+      "section": "Trading systems",
+      "n": 5
+    },
+    {
+      "shard_id": "trading_systems_031",
+      "section": "Trading systems",
+      "n": 9
+    },
+    {
+      "shard_id": "trading_systems_032",
+      "section": "Trading systems",
+      "n": 7
+    },
+    {
+      "shard_id": "trading_systems_033",
+      "section": "Trading systems",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_systems_034",
+      "section": "Trading systems",
+      "n": 7
+    },
+    {
+      "shard_id": "trading_systems_035",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_036",
+      "section": "Trading systems",
+      "n": 9
+    },
+    {
+      "shard_id": "trading_systems_037",
+      "section": "Trading systems",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_systems_038",
+      "section": "Trading systems",
+      "n": 10
+    },
+    {
+      "shard_id": "trading_systems_039",
+      "section": "Trading systems",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_systems_040",
+      "section": "Trading systems",
+      "n": 7
+    },
+    {
+      "shard_id": "trading_systems_041",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_042",
+      "section": "Trading systems",
+      "n": 22
+    },
+    {
+      "shard_id": "trading_systems_043",
+      "section": "Trading systems",
+      "n": 68
+    },
+    {
+      "shard_id": "trading_systems_044",
+      "section": "Trading systems",
+      "n": 4
+    },
+    {
+      "shard_id": "trading_systems_045",
+      "section": "Trading systems",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_systems_046",
+      "section": "Trading systems",
+      "n": 2
+    },
+    {
+      "shard_id": "trading_systems_047",
+      "section": "Trading systems",
+      "n": 75
+    },
+    {
+      "shard_id": "trading_systems_048",
+      "section": "Trading systems",
+      "n": 5
+    },
+    {
+      "shard_id": "trading_systems_049",
+      "section": "Trading systems",
+      "n": 22
+    },
+    {
+      "shard_id": "trading_systems_050",
+      "section": "Trading systems",
+      "n": 5
+    },
+    {
+      "shard_id": "trading_systems_051",
+      "section": "Trading systems",
+      "n": 10
+    },
+    {
+      "shard_id": "trading_systems_052",
+      "section": "Trading systems",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_000",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_001",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_002",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_003",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_004",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_005",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_006",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_007",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_008",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_009",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_010",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_011",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_012",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_013",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_014",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_015",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_016",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_017",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_018",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_019",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_020",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_021",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_022",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_023",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_024",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_025",
+      "section": "Trading",
+      "n": 11
+    },
+    {
+      "shard_id": "trading_026",
+      "section": "Trading",
+      "n": 47
+    },
+    {
+      "shard_id": "trading_027",
+      "section": "Trading",
+      "n": 9
+    },
+    {
+      "shard_id": "trading_028",
+      "section": "Trading",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_029",
+      "section": "Trading",
+      "n": 13
+    },
+    {
+      "shard_id": "trading_030",
+      "section": "Trading",
+      "n": 7
+    },
+    {
+      "shard_id": "trading_031",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_032",
+      "section": "Trading",
+      "n": 7
+    },
+    {
+      "shard_id": "trading_033",
+      "section": "Trading",
+      "n": 6
+    },
+    {
+      "shard_id": "trading_034",
+      "section": "Trading",
+      "n": 11
+    },
+    {
+      "shard_id": "trading_035",
+      "section": "Trading",
+      "n": 6
+    },
+    {
+      "shard_id": "trading_036",
+      "section": "Trading",
+      "n": 8
+    },
+    {
+      "shard_id": "trading_037",
+      "section": "Trading",
+      "n": 14
+    },
+    {
+      "shard_id": "trading_038",
+      "section": "Trading",
+      "n": 3
+    },
+    {
+      "shard_id": "trading_039",
+      "section": "Trading",
+      "n": 17
+    },
+    {
+      "shard_id": "trading_040",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_041",
+      "section": "Trading",
+      "n": 12
+    },
+    {
+      "shard_id": "trading_042",
+      "section": "Trading",
+      "n": 11
+    },
+    {
+      "shard_id": "trading_043",
+      "section": "Trading",
+      "n": 2
+    },
+    {
+      "shard_id": "tester_000",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_001",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_002",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_003",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_004",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_005",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_006",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_007",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_008",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_009",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_010",
+      "section": "Tester",
+      "n": 12
+    },
+    {
+      "shard_id": "tester_011",
+      "section": "Tester",
+      "n": 6
+    },
+    {
+      "shard_id": "tester_012",
+      "section": "Tester",
+      "n": 9
+    },
+    {
+      "shard_id": "tester_013",
+      "section": "Tester",
+      "n": 6
+    },
+    {
+      "shard_id": "tester_014",
+      "section": "Tester",
+      "n": 20
+    },
+    {
+      "shard_id": "tester_015",
+      "section": "Tester",
+      "n": 6
+    },
+    {
+      "shard_id": "tester_016",
+      "section": "Tester",
+      "n": 16
+    },
+    {
+      "shard_id": "tester_017",
+      "section": "Tester",
+      "n": 7
+    },
+    {
+      "shard_id": "tester_018",
+      "section": "Tester",
+      "n": 10
+    },
+    {
+      "shard_id": "tester_019",
+      "section": "Tester",
+      "n": 16
+    },
+    {
+      "shard_id": "tester_020",
+      "section": "Tester",
+      "n": 9
+    },
+    {
+      "shard_id": "integration_000",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_001",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_002",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_003",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_004",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_005",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_006",
+      "section": "Integration",
+      "n": 10
+    },
+    {
+      "shard_id": "integration_007",
+      "section": "Integration",
+      "n": 8
+    },
+    {
+      "shard_id": "integration_008",
+      "section": "Integration",
+      "n": 7
+    },
+    {
+      "shard_id": "integration_009",
+      "section": "Integration",
+      "n": 10
+    },
+    {
+      "shard_id": "integration_010",
+      "section": "Integration",
+      "n": 12
+    },
+    {
+      "shard_id": "integration_011",
+      "section": "Integration",
+      "n": 6
+    },
+    {
+      "shard_id": "indicators_000",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_001",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_002",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_003",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_004",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_005",
+      "section": "Indicators",
+      "n": 12
+    },
+    {
+      "shard_id": "indicators_006",
+      "section": "Indicators",
+      "n": 10
+    },
+    {
+      "shard_id": "indicators_007",
+      "section": "Indicators",
+      "n": 8
+    },
+    {
+      "shard_id": "indicators_008",
+      "section": "Indicators",
+      "n": 8
+    },
+    {
+      "shard_id": "indicators_009",
+      "section": "Indicators",
+      "n": 8
+    },
+    {
+      "shard_id": "indicators_010",
+      "section": "Indicators",
+      "n": 7
+    },
+    {
+      "shard_id": "statistics_and_analysis_000",
+      "section": "Statistics and analysis",
+      "n": 12
+    },
+    {
+      "shard_id": "statistics_and_analysis_001",
+      "section": "Statistics and analysis",
+      "n": 12
+    },
+    {
+      "shard_id": "statistics_and_analysis_002",
+      "section": "Statistics and analysis",
+      "n": 12
+    },
+    {
+      "shard_id": "statistics_and_analysis_003",
+      "section": "Statistics and analysis",
+      "n": 12
+    },
+    {
+      "shard_id": "statistics_and_analysis_004",
+      "section": "Statistics and analysis",
+      "n": 12
+    },
+    {
+      "shard_id": "statistics_and_analysis_005",
+      "section": "Statistics and analysis",
+      "n": 11
+    },
+    {
+      "shard_id": "expert_advisors_000",
+      "section": "Expert Advisors",
+      "n": 12
+    },
+    {
+      "shard_id": "expert_advisors_001",
+      "section": "Expert Advisors",
+      "n": 11
+    },
+    {
+      "shard_id": "expert_advisors_002",
+      "section": "Expert Advisors",
+      "n": 12
+    },
+    {
+      "shard_id": "expert_advisors_003",
+      "section": "Expert Advisors",
+      "n": 11
+    },
+    {
+      "shard_id": "expert_advisors_004",
+      "section": "Expert Advisors",
+      "n": 10
+    },
+    {
+      "shard_id": "machine_learning_000",
+      "section": "Machine learning",
+      "n": 12
+    },
+    {
+      "shard_id": "machine_learning_001",
+      "section": "Machine learning",
+      "n": 9
+    },
+    {
+      "shard_id": "experts_000",
+      "section": "Experts",
+      "n": 8
+    },
+    {
+      "shard_id": "interviews_000",
+      "section": "Interviews",
+      "n": 3
+    }
+  ]
+}

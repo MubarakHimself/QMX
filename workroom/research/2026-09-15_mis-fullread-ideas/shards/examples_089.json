@@ -1,0 +1,102 @@
+{
+  "shard_id": "examples_089",
+  "section": "Examples",
+  "n": 10,
+  "series_in_shard": [
+    "prices and signals in doeasy library",
+    "prices in doeasy library",
+    "ready-made templates for including indicators to expert advisors"
+  ],
+  "articles": [
+    {
+      "id": 9095,
+      "title": "Prices and Signals in DoEasy library (Part 65): Depth of Market collection and the class for working with MQL5.com Signals",
+      "section": "Examples",
+      "series_title": "Prices and Signals in DoEasy library (): Depth of Market collection and the class for working with MQL5.com Signals",
+      "series_key": "prices and signals in doeasy library",
+      "series_part": 65,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9095.md"
+    },
+    {
+      "id": 8818,
+      "title": "Prices in DoEasy library (part 59): Object to store data of one tick",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Object to store data of one tick",
+      "series_key": "prices in doeasy library",
+      "series_part": 59,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8818.md"
+    },
+    {
+      "id": 8912,
+      "title": "Prices in DoEasy library (part 60): Series list of symbol tick data",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Series list of symbol tick data",
+      "series_key": "prices in doeasy library",
+      "series_part": 60,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8912.md"
+    },
+    {
+      "id": 8952,
+      "title": "Prices in DoEasy library (part 61): Collection of symbol tick series",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Collection of symbol tick series",
+      "series_key": "prices in doeasy library",
+      "series_part": 61,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8952.md"
+    },
+    {
+      "id": 8988,
+      "title": "Prices in DoEasy library (part 62): Updating tick series in real time, preparation for working with Depth of Market",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Updating tick series in real time, preparation for working with Depth of Market",
+      "series_key": "prices in doeasy library",
+      "series_part": 62,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8988.md"
+    },
+    {
+      "id": 9010,
+      "title": "Prices in DoEasy library (part 63): Depth of Market and its abstract request class",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Depth of Market and its abstract request class",
+      "series_key": "prices in doeasy library",
+      "series_part": 63,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9010.md"
+    },
+    {
+      "id": 9044,
+      "title": "Prices in DoEasy library (Part 64): Depth of Market, classes of DOM snapshot and snapshot series objects",
+      "section": "Examples",
+      "series_title": "Prices in DoEasy library (): Depth of Market, classes of DOM snapshot and snapshot series objects",
+      "series_key": "prices in doeasy library",
+      "series_part": 64,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9044.md"
+    },
+    {
+      "id": 13244,
+      "title": "Ready-made templates for including indicators to Expert Advisors (Part 1): Oscillators",
+      "section": "Examples",
+      "series_title": "Ready-made templates for including indicators to Expert Advisors (): Oscillators",
+      "series_key": "ready-made templates for including indicators to expert advisors",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13244.md"
+    },
+    {
+      "id": 13277,
+      "title": "Ready-made templates for including indicators to Expert Advisors (Part 2): Volume and Bill Williams indicators",
+      "section": "Examples",
+      "series_title": "Ready-made templates for including indicators to Expert Advisors (): Volume and Bill Williams indicators",
+      "series_key": "ready-made templates for including indicators to expert advisors",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13277.md"
+    },
+    {
+      "id": 13406,
+      "title": "Ready-made templates for including indicators to Expert Advisors (Part 3): Trend indicators",
+      "section": "Examples",
+      "series_title": "Ready-made templates for including indicators to Expert Advisors (): Trend indicators",
+      "series_key": "ready-made templates for including indicators to expert advisors",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13406.md"
+    }
+  ]
+}

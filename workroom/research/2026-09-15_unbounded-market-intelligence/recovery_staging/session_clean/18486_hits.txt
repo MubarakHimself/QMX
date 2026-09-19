@@ -1,0 +1,125 @@
+4: title: "Price Action Analysis Toolkit Development (Part 28): Opening Range Breakout Tool"
+11: series_title: "Price Action Analysis Toolkit Development (): Opening Range Breakout Tool"
+20: # Price Action Analysis Toolkit Development (Part 28): Opening Range Breakout Tool
+25: | 20 June 2025 at 06:41
+36: ### Contents
+38: - [Introduction](https://www.mql5.com/en/articles/18486#introduction)
+39: - [Opening Range](https://www.mql5.com/en/articles/18486#opening_range)
+40: - [Strategy Overview](https://www.mql5.com/en/articles/18486#strategy_overview)
+41: - [EA Components Breakdown](https://www.mql5.com/en/articles/18486#ea_components_breakdown)
+42: - [Backtesting and Results](https://www.mql5.com/en/articles/18486#backtesting_and_results)
+43: - [Conclusion](https://www.mql5.com/en/articles/18486#conclusion)
+45: ### Introduction
+49: A breakout occurs when price decisively moves beyond a clearly defined boundary, such as the high or low of the session’s opening interval, signaling that supply or demand has overwhelmed the opposite side. Spotting genuine breakouts is essential because true breakouts often mark the start of sustained trends, while false breakouts, if acted on prematurely, lead to whipsaw losses.
+51: The Opening Range Breakout (ORB) strategy addresses this by first capturing the upper and lower limits of that opening interval (configurable to any duration) and shading the range on the chart as a rectangle. These bounds serve both as visual landmarks and precise trigger levels. Only when price breaks beyond the rectangle, revisits that boundary, and breaks out again does the strategy confirm en
+53: In this article, you’ll explore a professional MQL5 Expert Advisor implementation of ORB, featuring:
+55: - Encapsulated range capture that tracks and displays the opening high/low without cluttering your main loop,
+56: - Volatility‑adjusted stops and targets via a reusable ATR module,
+57: - Retest confirmation logic that distinguishes real breakouts from transient spikes,
+58: - On‑chart visualization with dynamic dashboard labels and graphical objects,
+59: - A clear state machine in OnTick() to orchestrate each step and reset cleanly at session close.
+61: ### Opening Range
+63: The Opening Range refers to the high and low-price levels established during the first few minutes of a trading session, often the initial 15 or 30 minutes. This period reflects the market’s immediate reaction to overnight news, economic data, and institutional activity, typically marked by high volume and volatility. Traders use the range’s boundaries as reference points; breakouts above or below
+65: Knowing and trading the Opening Range effectively offers several advantages in intraday markets:
+67: | Advantage | Description |
+68: | --- | --- |
+69: | Early Trend Detection | A breakout from the initial 15–30 min range signals potential momentum, helping traders align with intraday moves. |
+70: | Clear Trade Rules | With precise high/low boundaries, you get objective entry points and stop levels, reducing guesswork. |
+71: | Built-in Risk Management | Stops can be placed just inside the opposite boundary, defining risk/reward upfront. |
+72: | Time Efficiency and Consistency | Trades confined to the morning window mean less screen time, making the system repeatable. |
+73: | Cross-Market Applicability | Works across stocks, forex, futures, and timeframes for greater trader versatility. |
+74: | Volatility Advantage | Leverages the liquidity and tight spreads seen in early session moves. |
+75: | Strategy Flexibility | Supports breakout, reversal, and scalping tactics within a unified framework. |
+77: We use two primary methods to calculate the [opening range](https://howtotrade.com/trading-strategies/opening-range-breakout-orb/ "https://howtotrade.com/trading-strategies/opening-range-breakout-orb/").
+81: This approach relies on just two bars. First, take the very last candle of the previous session, its high and low define yesterday’s closing extremes. Next, use the opening candle of the current session, its high and low capture the initial burst of trading. The opening range is simply the distance between the highest high and lowest low of those two bars. This compact calculation gives you an imm
+85: First, calculate the exact datetime when your trading session begins (e.g. 09:30 local server time). You can hard‑code this or compute it via SymbolInfoSessionTrade.
+87: ```
+88: // Example: use SymbolInfoSessionTrade to get today's session start
+96: // 'from' now holds seconds since midnight; convert to full datetime:
+97: datetime todayStart = (TimeCurrent() - TimeCurrent()%86400) + from;
+98: ```
+102: ```
+106: ```
+110: ```
+116: ```
+118: Take the maximum of the two highs and the minimum of the two lows to form the opening range, then calculate its size.
+120: ```
+125: PrintFormat("Opening Range → High: %.5f   Low: %.5f   Size: %.5f",
+127: ```
+131: Rather than using specific candles, this approach defines the opening range by the highest and lowest prices hit during the first minutes after the market opens. By tracking those early extremes, you capture the day’s initial sentiment and momentum in real time. These opening high and low levels then serve as your breakout thresholds, once price moves beyond them, it signals a potential trend for 
+135: First, compute the exact timestamp when the current trading session begins (e.g. 09:30). We use SymbolInfoSessionTrade to get the “from” seconds and convert it into a full datetime.
+137: ```
+138: // Calculate the session’s opening datetime
+148: // Build a full datetime from today’s midnight plus the session offset
+149: datetime sessionStart = (TimeCurrent() - TimeCurrent() % 86400) + fromSec;
+150: ```
+152: Next, loop over each minute‐bar in the first RangeMinutes after sessionStart, tracking the highest high and lowest low seen so far.
+154: ```
+158: // Find the bar index at or just after sessionStart
+159: int startIdx = iBarShift(_Symbol, TF, sessionStart, false);
+172: ```
+176: ```
+178: PrintFormat("Opening Range (Method 2): High=%.5f Low=%.5f Size=%.5f",
+187: ```
+189: ### 
+191: ### Strategy Overview
+193: This EA automates an Opening Range Breakout strategy by first identifying the high and low boundaries of the market’s opening period. At the start of each session, it records the price at the session open and then continuously updates the maximum high and minimum low over the next RangeMinutes (e.g., 15 minutes). Once that window closes, it draws horizontal lines and a rectangle on the chart to vi
+195: After the range is defined, the EA watches for a two‑step breakout: first, price must close outside the range; next, it must retrace back to the boundary and then close beyond it again (the “retest”). When that retest confirmation occurs, the EA plots an up or down arrow at the entry bar, computes stop‑loss and take‑profit levels based on the ATR, and fires alerts (on‑screen, email, and/or push no
+197: This EA automates an Opening Range Breakout strategy by first identifying the high and low boundaries of the market’s opening period. At the start of each session, it records the price at the session open and then continuously updates the maximum high and minimum low over the next RangeMinutes (e.g., 15 minutes). Once that window closes, it draws horizontal lines and a rectangle on the chart to vi
+199: After the range is defined, the EA watches for a two‑step breakout: first, price must close outside the range; next, it must retrace back to the boundary and then close beyond it again (the “retest”). When that retest confirmation occurs, the EA plots an up or down arrow at the entry bar, computes stop‑loss and take‑profit levels based on the ATR, and fires alerts (on‑screen, email, and/or push no
+201: ### EA Components Breakdown
+207: ```
+209: //|                                                   ORB Breakout EA|
+213: #property copyright   "Copyright 2025, MetaQuotes Ltd."
+214: #property link        "https://www.mql5.com/en/users/lynnchris"
+215: #property version     "1.0"
+216: #property description "Opening‑Range Breakout with ATR confirmation"
+217: #property strict
+218: ```
+222: We group user‑tweakable settings under clear comments: session index and range length, ATR filter settings, arrow codes/colors, and alert toggles. In MQL5, input variables automatically appear in the EA’s Properties dialog, with proper types and even enums (like ENUM\_TIMEFRAMES for timeframes) rendering as dropdowns—no need to hand‑roll your own GUI. Note that by choosing input int ArrowUpCode, w
+224: ```
+226: input int            SessionIndex    = 0;            // 0 = first session
+239: input string         EmailSubject    = "ORB Signal"; // mail subject
+240: ```
+246: ```
+264: ```
+270: ```
+295: ```
+301: ```
+331: ```
+337: ```
+360: ```
+366: ```
+378: string arrowName = "ORB_Arrow_" + IntegerToString((int)r[0].time);
+385: ```
+391: ```
+408: ```
+412: The heart of the EA is OnTick(). We use static bool inited and static int state, so they persist across calls, this is how MQL5 achieves per‑EA memory without globals or external storage. First, we calculate the session’s start time and reset once per day, showing a common pattern for intraday logic. Then a switch(state) moves cleanly through our four stages (Capture, Break, Retest, Done). Because
+414: ```
+423:       // compute sessionStart, init g_range & g_retest, Alert
+451: ```
+455: Finally, we compare today = now - now%86400 with a static datetime lastDay. As soon as the date changes, we delete old objects and reset our flags, no messy “if hour==0” hacks needed. This pattern works for any daily‑based EA: zero-bars, daily pivot routines, end‑of‑day reporting, etc. Encouraging readers to adopt this idiom helps them avoid subtle off‑by‑one errors when clocks cross midnight or w
+457: ```
+460: datetime        today   = TimeCurrent() - TimeCurrent() % 86400;
+470: ```
+472: ### Backtesting and Results
+482: - OnInit() sets everything up (ATR handle, chart objects, initial state)
+483: - OnTick() drives the range capture, breakout/retest logic, arrow drawing, alerts and dashboard updates on each simulated tick
+484: - OnDeinit() cleans up after the test
+490: The animated GIF above illustrates the Opening Range Breakout EA running on an EURUSD M15 chart during a back‑test. In the main panel, you can see a shaded rectangle marking the opening range, bounded by two horizontal lines at the high and low of that initial interval. This visual framing immediately communicates where the EA expects significant price action to occur.
+494: Below the chart, the Journal pane logs every critical event: session start, range definition, breakout detection, and final signal with its exact entry, stop‑loss, and take‑profit values. These log entries mirror the EA’s internal state transitions, providing transparency into how and when decisions are made.
+496: This example demonstrates how the ORB strategy captures early‑session volatility, confirms true breakouts, and produces repeatable, positive signals on the EURUSD M15 timeframe.
+502: ### Conclusion
+504: The Opening Range Breakout EA we’ve developed in MQL5 transforms the simple concept of an early‑session price corridor into a disciplined, automated strategy. By modularizing each component-range capture, volatility‑based stops, retest validation, and on‑chart feedback, we’ve crafted a codebase that’s both easy to maintain and fast enough for live deployment.
+508: Now it’s time to make it your own. Compile the EA in MetaEditor, back‑test across various symbols and sessions, and experiment with inputs like range duration and ATR multiplier. Watch the rectangle, lines, and arrows come to life on your chart, and follow the Journal logs to see every decision unfold. With this ORB framework under your belt, you’re equipped to turn each day’s opening fluctuations
+510: |  |  |  |  |  |  |
+511: | --- | --- | --- | --- | --- | --- |
+512: | [Chart Projector](https://www.mql5.com/en/articles/16014) | [Analytical Comment](https://www.mql5.com/en/articles/15927) | [Analytics Master](https://www.mql5.com/en/articles/16434) | [Analytics Forecaster](https://www.mql5.com/en/articles/16559) | [Volatility Navigator](https://www.mql5.com/en/ar
+513: | [Signal Pulse](https://www.mql5.com/en/articles/16861) | [Metrics Board](https://www.mql5.com/en/articles/16584) | [External Flow](https://www.mql5.com/en/articles/16967) | [VWAP](https://www.mql5.com/en/articles/16984) | [Heikin Ashi](https://www.mql5.com/en/articles/17021) | [FibVWAP](https://ww
+514: | [RSI DIVERGENCE](https://www.mql5.com/en/articles/17198) | [Parabolic Stop and Reverse (PSAR)](https://www.mql5.com/en/articles/17234) | [Quarters Drawer Script](https://www.mql5.com/en/articles/17250) | [Intrusion Detector](https://www.mql5.com/en/articles/17321) | [TrendLoom Tool](https://www.mq
+515: | [ZigZag Analyzer](https://www.mql5.com/en/articles/17625) | [Correlation Pathfinder](https://www.mql5.com/en/articles/17742) | [Market Structure Flip Detector Tool](https://www.mql5.com/en/articles/17891) | [Correlation Dashboard](https://www.mql5.com/en/articles/18052) | [Currency Strength Meter]
+516: | [Dual EMA Fractal Breaker](https://www.mql5.com/en/articles/18297) | [Pin bar, Engulfing and RSI divergence](https://www.mql5.com/en/articles/17962) | [Liquidity Sweep](https://www.mql5.com/en/articles/18379) | Opening Range Breakout Tool |  |  |
+522: [ORB.mq5](https://www.mql5.com/en/articles/download/18486/orb.mq5 "Download ORB.mq5")
+537: Today, we take another step forward by integrating an external news API as the source of headlines for our News Headline EA. In this phase, we’ll explore various news sources—both established and emerging—and learn how to access their APIs effectively. We'll also cover methods for parsing the retrieved data into a format optimized for display within our Expert Advisor. Join the discussion as we ex
+540: [Atomic Orbital Search (AOS) algorithm](https://www.mql5.com/en/articles/16276)
+542: The article considers the Atomic Orbital Search (AOS) algorithm, which uses the concepts of the atomic orbital model to simulate the search for solutions. The algorithm is based on probability distributions and the dynamics of interactions in the atom. The article discusses in detail the mathematical aspects of AOS, including updating the positions of candidate solutions and the mechanisms of ener

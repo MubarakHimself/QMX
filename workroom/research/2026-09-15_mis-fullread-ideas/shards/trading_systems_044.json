@@ -1,0 +1,48 @@
+{
+  "shard_id": "trading_systems_044",
+  "section": "Trading systems",
+  "n": 4,
+  "series_in_shard": [
+    "market microstructure in mql5",
+    "meta-labeling the classics",
+    "mvc design pattern and its application"
+  ],
+  "articles": [
+    {
+      "id": 10249,
+      "title": "MVC design pattern and its application (Part 2): Diagram of interaction between the three components",
+      "section": "Trading systems",
+      "series_title": "MVC design pattern and its application (): Diagram of interaction between the three components",
+      "series_key": "mvc design pattern and its application",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10249.md"
+    },
+    {
+      "id": 22263,
+      "title": "Market Microstructure in MQL5 (Part 1): Robust Foundation",
+      "section": "Trading systems",
+      "series_title": "Market Microstructure in MQL5 (): Robust Foundation",
+      "series_key": "market microstructure in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22263.md"
+    },
+    {
+      "id": 22754,
+      "title": "Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades",
+      "section": "Trading systems",
+      "series_title": "Meta-Labeling the Classics (): Filtering and Sizing ADX Trades",
+      "series_key": "meta-labeling the classics",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22754.md"
+    },
+    {
+      "id": 22755,
+      "title": "Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades",
+      "section": "Trading systems",
+      "series_title": "Meta-Labeling the Classics (): Filtering and Sizing Bollinger Band Trades",
+      "series_key": "meta-labeling the classics",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22755.md"
+    }
+  ]
+}

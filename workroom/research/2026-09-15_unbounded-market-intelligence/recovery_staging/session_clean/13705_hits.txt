@@ -1,0 +1,183 @@
+4: title: "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session"
+11: series_title: "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Added symbols prefixes and/or suffixes and Trading Time Session"
+20: # How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session
+25: | 9 November 2023 at 07:49
+36: ### Introduction
+40: how to implement trading time zones or trading time sessions on this Multi-Currency EA.
+46: ### Plans and Features
+78: In this version, because we add a trading session (trading time zone), we will also add 10 option pairs to be traded which may correspond to the time for the trading session.
+88: The MetaTrader5 time offset setting is different for each broker depending on the time zone of the broker referring to GMT/UTC Time. You can also see the broker time offset setting for the trade server on the top left of the Metatrader5 platform. But in general the broker's time of trade server refers to the New York Exchange Market (NYEM) Closing time, as when the MetaTrader5 shows 00:00, NYEM is
+90: The forex market is open 24 hours a day, 5 days a week, across the world. The market first opens on Monday in New Zealand at 8:00 AM local time or 20:00 GMT/UTC, followed by the start of one of the major market sessions in Sydney at 9:00 AM Monday local time, which is 21:00 GMT/UTC Sunday. (Standard time offset)
+92: To get the trading time zone, we must first know the latest time from the current time of the trade server. Then we also have to know the time difference (in hours) from the time of trader server compared to GMT/UTC time. In term of changing the time forward by 1 hour during daylight saving time has no effect on the time of trade server, because the time trade server of Metatrader5 will also advan
+96: - New Zealand open at 20:00 and closes at 05:00 AM GMT/UTC, which is 8:00 AM and 5:00 PM local time.
+97: - Sydney opens at 21:00 and closes at 7:00 AM GMT/UTC, which is 9:00 AM and 5:00 PM local time.
+98: - Tokyo opens at 00:00 and closes at 9:00 AM GMT/UTC, which is 8:00 AM and 6:00 PM local time.
+99: - London opens at 9:00 AM and closes at 19:00 GMT/UTC, which is 9:00 AM and 7:00 PM local time.
+100: - New York opens at 13:00 and closes at 22:00 GMT/UTC, which is 9:00 AM and 7:00 PM local time.
+102: ### Implementation of planning in the MQL5 program
+108: ```
+112: #include <Trade\Trade.mqh>
+113: #include <Trade\PositionInfo.mqh>
+114: #include <Trade\SymbolInfo.mqh>
+115: #include <Trade\AccountInfo.mqh>
+122: ```
+126: ```
+130:    Cus_Session,        // Trading on Custom Session
+131:    New_Zealand,        // Trading on New Zealand Session
+132:    Australia,          // Trading on Autralia Sydney Session
+133:    Asia_Tokyo,         // Trading on Asia Tokyo Session
+134:    Europe_London,      // Trading on Europe London Session
+135:    US_New_York         // Trading on US New York Session
+138: ```
+142: ```
+172: ```
+176: ```
+194: ```
+198: ```
+214: ```
+218: ```
+226: ```
+230: ```
+238: ```
+242: ```
+255: input tm_zone            session = Cus_Session;      // Select Trading Time Zone
+256: input swhour            stsescuh = hr_00;            // Time Hour to Start Trading Custom Session (0-23)
+257: input inmnt             stsescum = mn_15;            // Time Minute to Start Trading Custom Session (0-55)
+258: input swhour            clsescuh = hr_23;            // Time Hour to Stop Trading Custom Session (0-23)
+259: input inmnt             clsescum = mn_55;            // Time Minute to Stop Trading Custom Session (0-55)
+292: ```
+300: - Trading on Custom Session
+301: - Trading on New Zealand Session
+302: - Trading on Australia Sydney Session
+303: - Trading on Asia Tokyo Session
+304: - Trading on Europe London Session
+305: - Trading on America New York Session
+309: In this session, traders must set the time or hours and minutes to start trading and the hours and minutes to close trading. So the EA will only carry out activities during the specified time from start time to close time.
+311: In Trading on New Zealand Session to Trading on US New York Session, the time from start of trading to close of trading is calculated by the EA.
+319: ```
+331:     int              x_hour;       // Hour in a day 
+545: ```
+551: ```
+593: ```
+599: ```
+806: ```
+812: ```
+897: ```
+903: ```
+916: ```
+922: ```
+957:             if(mc.TradingToday() && mc.Trade_session())
+1045: ```
+1047: Specifically for Trading Time Zones, in the ExpertActionTrade() function, a call to the Trade Session() boolean function is added.
+1049: If Trade\_session() is true, then the EA work process will continue until it is finished, but if it is false, then the EA will only carry out the tasks "Close Trade and Save profit due to weak signal (Yes)" and "Trailing Stop (Yes)".
+1051: ```
+1058:    datetime tcurr=TimeCurrent(); // Server Time
+1105: ```
+1107: ```
+1118:     int svrhr=svrtm.hour;  // Server time hour
+1120:     int difhr=svrhr-gmthr; // Time difference Server time to GMT time
+1122:     int NZSGMT=12;  // New Zealand Session GMT/UTC+12
+1123:     int AUSGMT=10;  // Australia Sydney Session GMT/UTC+10
+1124:     int TOKGMT=9;   // Asia Tokyo Session GMT/UTC+9
+1125:     int EURGMT=0;   // Europe London Session GMT/UTC 0
+1126:     int USNGMT=-5;  // US New York Session GMT/UTC-5
+1128:     int NZSStm=8;   // New Zealand Session time start: 08:00 Local Time
+1129:     int NZSCtm=17;  // New Zealand Session time close: 17:00 Local Time 
+1130:     int AUSStm=7;   // Australia Sydney Session time start: 07:00 Local Time 
+1131:     int AUSCtm=17;  // Australia Sydney Session time close: 17:00 Local Time  
+1132:     int TOKStm=9;   // Asia Tokyo Session time start: 09:00 Local Time 
+1133:     int TOKCtm=18;  // Asia Tokyo Session time close: 18:00 Local Time  
+1134:     int EURStm=9;   // Europe London Session time start: 09:00 Local Time 
+1135:     int EURCtm=19;  // Europe London Session time close: 19:00 Local Time  
+1136:     int USNStm=8;   // US New York Session time start: 08:00 Local Time 
+1137:     int USNCtm=17;  // US New York Session time close: 17:00 Local Time  
+1139:     int nzo = (NZSStm+difhr-NZSGMT)<0 ? 24+(NZSStm+difhr-NZSGMT) : (NZSStm+difhr-NZSGMT);
+1140:     int nzc = (NZSCtm+difhr-NZSGMT)<0 ? 24+(NZSCtm+difhr-NZSGMT) : (NZSCtm+difhr-NZSGMT);
+1142:     int auo = (AUSStm+difhr-AUSGMT)<0 ? 24+(AUSStm+difhr-AUSGMT) : (AUSStm+difhr-AUSGMT);
+1143:     int auc = (AUSCtm+difhr-AUSGMT)<0 ? 24+(AUSCtm+difhr-AUSGMT) : (AUSCtm+difhr-AUSGMT);
+1145:     int tko = (TOKStm+difhr-TOKGMT)<0 ? 24+(TOKStm+difhr-TOKGMT) : (TOKStm+difhr-TOKGMT);
+1146:     int tkc = (TOKCtm+difhr-TOKGMT)<0 ? 24+(TOKCtm+difhr-TOKGMT) : (TOKCtm+difhr-TOKGMT);
+1148:     int euo = (EURStm+difhr-EURGMT)<0 ? 24+(EURStm+difhr-EURGMT) : (EURStm+difhr-EURGMT);
+1149:     int euc = (EURCtm+difhr-EURGMT)<0 ? 24+(EURCtm+difhr-EURGMT) : (EURCtm+difhr-EURGMT);
+1151:     int uso = (USNStm+difhr-USNGMT)<0 ? 24+(USNStm+difhr-USNGMT) : (USNStm+difhr-USNGMT);
+1152:     int usc = (USNCtm+difhr-USNGMT)<0 ? 24+(USNCtm+difhr-USNGMT) : (USNCtm+difhr-USNGMT);
+1162:     //--Trading on New Zealand Session GMT/UTC+12
+1163:     int _days01=ThisTime(hour)<nzc ? ThisTime(day)-1 : ThisTime(day);
+1164:     int _days11=ThisTime(hour)<nzc ? ThisTime(day) : ThisTime(day)+1;
+1165:     tmop01=ReqDate(_days01,nzo,0);    // start: 08:00 Local Time == 20:00 GMT/UTC
+1166:     tmcl01=ReqDate(_days11,nzc-1,59); // close: 17:00 Local Time == 05:00 GMT/UTC
+1168:     //--Trading on Australia Sydney Session GMT/UTC+10
+1169:     int _days02=ThisTime(hour)<auc ? ThisTime(day)-1 : ThisTime(day);
+1170:     int _days12=ThisTime(hour)<auc ? ThisTime(day) : ThisTime(day)+1;
+1171:     tmop02=ReqDate(_days02,auo,0);    // start: 07:00 Local Time == 21:00 GMT/UTC
+1172:     tmcl02=ReqDate(_days12,auc-1,59); // close: 17:00 Local Time == 07:00 GMT/UTC
+1174:     //--Trading on Asia Tokyo Session GMT/UTC+9
+1175:     int _days03=ThisTime(hour)<tkc ? ThisTime(day) : ThisTime(day)+1;
+1176:     int _days13=ThisTime(hour)<tkc ? ThisTime(day) : ThisTime(day)+1;
+1177:     tmop03=ReqDate(_days03,tko,0);    // start: 09:00 Local Time == 00:00 GMT/UTC
+1178:     tmcl03=ReqDate(_days13,tkc-1,59); // close: 18:00 Local Time == 09:00 GMT/UTC
+1180:     //--Trading on Europe London Session GMT/UTC 00:00
+1181:     int _days04=ThisTime(hour)<euc ? ThisTime(day) : ThisTime(day)+1;
+1182:     int _days14=ThisTime(hour)<euc ? ThisTime(day) : ThisTime(day)+1;
+1183:     tmop04=ReqDate(_days04,euo,0);     // start: 09:00 Local Time == 09:00 GMT/UTC
+1184:     tmcl04=ReqDate(_days14,euc-1,59);  // close: 19:00 Local Time == 19:00 GMT/UTC
+1186:     //--Trading on US New York Session GMT/UTC-5
+1187:     int _days05=ThisTime(hour)<usc  ? ThisTime(day) : ThisTime(day)+1;
+1188:     int _days15=ThisTime(hour)<=usc ? ThisTime(day) : ThisTime(day)+1;
+1189:     tmop05=ReqDate(_days05,uso,0);  // start: 08:00 Local Time == 13:00 GMT/UTC
+1190:     tmcl05=ReqDate(_days15,usc,59); // close: 17:00 Local Time == 22:00 GMT/UTC
+1205: ```
+1207: ```
+1236:            tz_opn=timehr(ReqTime(Ses01Op,hour),ReqTime(Ses01Op,min));
+1237:            tz_cls=timehr(ReqTime(Ses01Cl,hour),ReqTime(Ses01Cl,min));
+1248:            tz_opn=timehr(ReqTime(Ses02Op,hour),ReqTime(Ses02Op,min));
+1249:            tz_cls=timehr(ReqTime(Ses02Cl,hour),ReqTime(Ses02Cl,min));
+1260:            tz_opn=timehr(ReqTime(Ses03Op,hour),ReqTime(Ses03Op,min));
+1261:            tz_cls=timehr(ReqTime(Ses03Cl,hour),ReqTime(Ses03Cl,min));
+1272:            tz_opn=timehr(ReqTime(Ses04Op,hour),ReqTime(Ses04Op,min));
+1273:            tz_cls=timehr(ReqTime(Ses04Cl,hour),ReqTime(Ses04Cl,min));
+1284:            tz_opn=timehr(ReqTime(Ses05Op,hour),ReqTime(Ses05Op,min));
+1285:            tz_cls=timehr(ReqTime(Ses05Cl,hour),ReqTime(Ses05Cl,min));
+1298:        tz_opn=timehr(ReqTime(SesNoOp,hour),ReqTime(SesNoOp,min));
+1299:        tz_cls=timehr(ReqTime(SesNoCl,hour),ReqTime(SesNoCl,min));
+1306: ```
+1310: ```
+1380:    string mdr=string(x_year)+"."+string(x_mon)+"."+string(x_day)+"   "+timehr(x_hour,x_min);
+1398:         case 3: valtm=tm.hour; break;        // Return Hour 
+1422:         case 3: valtm=tm.hour; break;        // Return Hour 
+1433: ```
+1439: ```
+1454: ```
+1458: ```
+1473: ```
+1477: ```
+1501: ```
+1505: ```
+1534: ```
+1538: ```
+1556: ```
+1566: ```
+1585: ```
+1591: ```
+1610: ```
+1616: ```
+1725: ```
+1729: ```
+1748: ```
+1750: Because we are adding a Trade Session or Trading Time Zone and options for the pairs that will be traded, we need additional information in the Displayed Trading Info on Chart.
+1754: ```
+1759:    double spread=SymbolInfoInteger(Symbol(),SYMBOL_SPREAD)/xpip;
+1767:    comm="\n     :: Server Date Time : "+string(ThisTime(year))+"."+string(ThisTime(mon))+"."+string(ThisTime(day))+ "   "+TimeToString(TimeCurrent(),TIME_SECONDS)+
+1780:         "\n      :: Trading Session :  "+ tz_ses+
+1785:             "\n      :: Time Remaining :  "+(string)ReqTime(rem,hour)+":"+(string)ReqTime(rem,min)+":"+(string)ReqTime(rem,sec) + eawait;
+1804: ```
+1808: ```
+1828:     if(TimeCurrent()>=znop && TimeCurrent()<zncl)
+1846: ```
+1868: ```
+1898: ```
+1902: ### **Strategy Tester**
+1908: In the back test below, the time zone setting is selected at US New York
+1912: In the back test below, the time zone setting is selected at Asia/Tokyo
+1920: ### Conclusion
+1923: 2. By adding a trading session or trading time zone and add 10 option pairs to be traded, it is hoped that traders will get a better strategy by only trading at certain pairs and in certain times or sessions.

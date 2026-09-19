@@ -1,0 +1,49 @@
+{
+  "pack_id": "tester_019_p01",
+  "section": "Tester",
+  "parent_shard": "tester_019",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "market simulation"
+  ],
+  "n": 4,
+  "articles": [
+    {
+      "id": 12987,
+      "title": "Market Simulation (Part 23): Getting Started with SQL (VI)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Getting Started with SQL (VI)",
+      "series_key": "market simulation",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12987.md"
+    },
+    {
+      "id": 13133,
+      "title": "Market Simulation (Part 23): Position View (I)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Position View (I)",
+      "series_key": "market simulation",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13133.md"
+    },
+    {
+      "id": 13059,
+      "title": "Market Simulation (Part 24): Getting Started with SQL (VII)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Getting Started with SQL (VII)",
+      "series_key": "market simulation",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13059.md"
+    },
+    {
+      "id": 13137,
+      "title": "Market Simulation (Part 24): Position View (II)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Position View (II)",
+      "series_key": "market simulation",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13137.md"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+Focused recheck packet integrity and scenario preservation
+Date: 2026-09-19
+
+Input packet:
+  CODEX-RECHECK-PACKET-2026-09-19.zip
+  SHA-256: 101ddefe89253ccb62ccbed83b2c3be71c0e312a30eae87f99db960171cdfab8
+  Bytes: 95333
+
+Scenario catalogue supplied in packet:
+  codex-challenge-20260919/SCENARIO-CATALOG.jsonl
+  SHA-256: 8a8e709c2a0788b25943ef86bddf6ab92e8015b317af2fe049ca5297d34ccbe9
+
+Validation results:
+  JSONL schema/header rows: 1
+  Scenario rows: 85
+  Unique scenario IDs: 85
+  Pass-I rows: 65
+  Pass-II rows: 20
+  JSON parse errors: 0
+  Unique BDD scenario IDs: 85
+  Catalogue IDs absent from BDD: 0
+  BDD IDs absent from catalogue: 0
+
+Frozen Pass-I baseline supplied by operator:
+  SHA-256: 1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8
+
+Interpretation:
+  All 85 scenario IDs were preserved. This validation checks catalogue/BDD identity coverage only.
+  It is not evidence that Gherkin files execute or that candidate behavior is implemented.

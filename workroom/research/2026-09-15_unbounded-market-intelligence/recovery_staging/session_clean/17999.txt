@@ -1,0 +1,714 @@
+---
+id: 17999
+source_url: https://www.mql5.com/en/articles/17999
+title: "Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs"
+author: ""
+author_url: 
+published: 2025-05-14T08:43Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Trading with the MQL5 Economic Calendar (): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs"
+series_part: 8
+source: mql5
+language: en
+---
+
+# Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 14 May 2025 at 04:43
+
+3 329
+[
+0](https://www.mql5.com/en/forum/486482 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In this article, we propel the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) series forward by optimizing our trading system for lightning-fast, visually intuitive backtesting, seamlessly integrating data visualization for both live and offline modes to enhance news-driven strategy development. Building on [Part 7’s foundation of resource-based event analysis for Strategy Tester](https://www.mql5.com/en/articles/17603) compatibility, we now introduce smart event filtering and targeted logging to streamline performance, ensuring we can efficiently visualize and test strategies across real-time and historical environments with minimal clutter. We structure the article with the following topics:
+
+1. [A Visual Chronograph for Seamless News-Driven Trading Across Live and Offline Realms](https://www.mql5.com/en/articles/17999#a_visual_chronograph_for_seamless_news_driven)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/17999#implementation_in_mql5)
+3. [Testing and Validation](https://www.mql5.com/en/articles/17999#testing_and_validation)
+4. [Conclusion](https://www.mql5.com/en/articles/17999#conclusion)
+
+Let’s explore these advancements!
+
+### A Visual Chronograph for Seamless News-Driven Trading Across Live and Offline Realms
+
+The ability to visualize and analyze economic news events in both live and offline environments is a game-changer for us, and in this part of the series, we introduce a visual chronograph—a metaphor for our optimized event processing and logging system—that will empower us to navigate the temporal landscape of news-driven trading with precision and efficiency.
+
+By implementing smart event filtering, we will drastically reduce the computational load in the [Strategy Tester](https://www.metatrader5.com/en/automated-trading/strategy-tester "https://www.metatrader5.com/en/automated-trading/strategy-tester"), pre-selecting only the most relevant news events within a user-defined date range, which ensures that backtesting mirrors the speed and clarity of live trading. This filtering mechanism, akin to a chronograph’s precise timekeeping, will allow us to focus on critical events without sifting through irrelevant data, enabling seamless transitions between historical simulations and real-time market analysis.
+
+Complementing this, our targeted logging system will act as the chronograph’s display, presenting only essential information—such as trade executions and dashboard updates—while suppressing extraneous logs, thus maintaining a clean, distraction-free interface for both live and offline modes. This dual-mode visualization capability will ensure we can test strategies with historical data in the [Strategy Tester](https://www.metatrader5.com/en/automated-trading/strategy-tester "https://www.metatrader5.com/en/automated-trading/strategy-tester") and apply the same intuitive dashboard in live trading, fostering a unified workflow that enhances decision-making and strategy refinement across all market conditions. Here is a visualization of what we aim to achieve.
+
+### Implementation in MQL5
+
+To make the improvements in [MQL5](https://www.mql5.com/), we first will need to declare some variables that we will use to keep track of the downloaded events that we will then display seamlessly in the news dashboard using a similar format as we did in the previous articles when doing live trading, but first include the resource where we store the data as below.
+
+```
+//---- Include trading library
+#include <Trade\Trade.mqh>
+CTrade trade;
+
+//---- Define resource for CSV
+#resource "\\Files\\Database\\EconomicCalendar.csv" as string EconomicCalendarData
+```
+
+We start by integrating a trading library that enables seamless trade execution across live and offline modes. We use the "#include <Trade\Trade.mqh>" directive to incorporate the MQL5 trading library, which provides the "CTrade" class for managing trade operations. By declaring a "CTrade" object named "trade", we enable the program to execute buy and sell orders programmatically.
+
+We then use the "[#resource](https://www.mql5.com/en/docs/basis/preprosessor/include)" directive to define "\Files\Database\EconomicCalendar.csv" as a string resource named "EconomicCalendarData". This [Comma Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values "https://en.wikipedia.org/wiki/Comma-separated_values") (CSV), loaded via the "LoadEventsFromResource" function, will supply event details such as date, time, currency, and forecast, providing a unified data presentation without dependency on live data feeds. We can now define the rest of the control variables.
+
+```
+//---- Event name tracking
+string current_eventNames_data[];
+string previous_eventNames_data[];
+string last_dashboard_eventNames[]; // Added: Cache for last dashboard event names in tester mode
+datetime last_dashboard_update = 0; // Added: Track last dashboard update time in tester mode
+
+//---- Filter flags
+bool enableCurrencyFilter = true;
+bool enableImportanceFilter = true;
+bool enableTimeFilter = true;
+bool isDashboardUpdate = true;
+bool filters_changed = true;        // Added: Flag to detect filter changes in tester mode
+
+//---- Event counters
+int totalEvents_Considered = 0;
+int totalEvents_Filtered = 0;
+int totalEvents_Displayable = 0;
+
+//---- Input parameters (PART 6)
+sinput group "General Calendar Settings"
+input ENUM_TIMEFRAMES start_time = PERIOD_H12;
+input ENUM_TIMEFRAMES end_time = PERIOD_H12;
+input ENUM_TIMEFRAMES range_time = PERIOD_H8;
+input bool updateServerTime = true; // Enable/Disable Server Time Update in Panel
+input bool debugLogging = false;    // Added: Enable debug logging in tester mode
+
+//---- Input parameters for tester mode (from PART 7, minimal)
+sinput group "Strategy Tester CSV Settings"
+input datetime StartDate = D'2025.03.01'; // Download Start Date
+input datetime EndDate = D'2025.03.21';   // Download End Date
+
+//---- Structure for CSV events (from PART 7)
+struct EconomicEvent {
+   string eventDate;       // Date of the event
+   string eventTime;       // Time of the event
+   string currency;        // Currency affected
+   string event;           // Event description
+   string importance;      // Importance level
+   double actual;          // Actual value
+   double forecast;        // Forecast value
+   double previous;        // Previous value
+   datetime eventDateTime; // Added: Store precomputed datetime for efficiency
+};
+
+//---- Global array for tester mode events
+EconomicEvent allEvents[];
+EconomicEvent filteredEvents[]; // Added: Filtered events for tester mode optimization
+
+//---- Trade settings
+enum ETradeMode {
+   TRADE_BEFORE,
+   TRADE_AFTER,
+   NO_TRADE,
+   PAUSE_TRADING
+};
+input ETradeMode tradeMode = TRADE_BEFORE;
+input int tradeOffsetHours = 12;
+input int tradeOffsetMinutes = 5;
+input int tradeOffsetSeconds = 0;
+input double tradeLotSize = 0.01;
+
+//---- Trade control
+bool tradeExecuted = false;
+datetime tradedNewsTime = 0;
+int triggeredNewsEvents[];
+```
+
+Here, we store event names in "current\_eventNames\_data", "previous\_eventNames\_data", and "last\_dashboard\_eventNames", using "last\_dashboard\_eventNames" to cache tester-mode dashboard updates and "last\_dashboard\_update" to schedule refreshes only when needed, cutting down redundant processing.
+
+We toggle event filtering with "enableCurrencyFilter", "enableImportanceFilter", "enableTimeFilter", and "filters\_changed", resetting filters when "filters\_changed" is true to process only relevant events and use "debugLogging" under "sinput group 'General Calendar Settings'" to log just trades and updates.
+
+We define the backtesting period with "StartDate" and "EndDate" under "[sinput](https://www.mql5.com/en/docs/basis/variables/inputvariables) group 'Strategy Tester CSV Settings'", structure events in "EconomicEvent" with "eventDateTime" for fast access, and filter "allEvents" into "filteredEvents" for quicker handling while setting "tradeMode" and related variables to execute trades efficiently. This now enables us to choose the testing period which we will download the data from and use the same time range for testing. This is the user interface we have.
+
+From the image, we can see that we have extra inputs to control the display of the events in the tester mode as well as controlled updates to the time in the panel and the logging. We did that to optimize unnecessary resources when backtesting. Moving on, we need to define a function to handle the tester events filtering process.
+
+```
+//+------------------------------------------------------------------+
+//| Filter events for tester mode                                    | // Added: Function to pre-filter events by date range
+//+------------------------------------------------------------------+
+void FilterEventsForTester() {
+   ArrayResize(filteredEvents, 0);
+   int eventIndex = 0;
+   for (int i = 0; i < ArraySize(allEvents); i++) {
+      datetime eventDateTime = allEvents[i].eventDateTime;
+      if (eventDateTime < StartDate || eventDateTime > EndDate) {
+         if (debugLogging) Print("Event ", allEvents[i].event, " skipped in filter due to date range: ", TimeToString(eventDateTime)); // Modified: Conditional logging
+         continue;
+      }
+      ArrayResize(filteredEvents, eventIndex + 1);
+      filteredEvents[eventIndex] = allEvents[i];
+      eventIndex++;
+   }
+   if (debugLogging) Print("Tester mode: Filtered ", eventIndex, " events."); // Modified: Conditional logging
+   filters_changed = false;
+}
+```
+
+Here, we implement smart event filtering to accelerate backtesting by reducing the number of news events processed in the Strategy Tester. We use the "FilterEventsForTester" function, to clear the "filteredEvents" array with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function and rebuild it with relevant events from "allEvents". For each event, we check its "eventDateTime" against "StartDate" and "EndDate", skipping those outside the range and logging skips only if "debugLogging" is true using the [Print](https://www.mql5.com/en/docs/common/print) function, ensuring minimal log clutter.
+
+We copy qualifying events into "filteredEvents" at index "eventIndex", incrementing it with each addition, and use the "ArrayResize" function to allocate space dynamically. We log the total "eventIndex" count via "Print" only if "debugLogging" is enabled, keeping tester output clean, and set "filters\_changed" to false to signal that filtering is complete. This focused filtering action shrinks the event set, speeding up subsequent processing and enabling efficient visualization of news events in offline mode. We then call this function in the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler to pre-filter the news data.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit() {
+   //---- Create dashboard UI
+   createRecLabel(MAIN_REC,50,50,740,410,clrSeaGreen,1);
+   createRecLabel(SUB_REC1,50+3,50+30,740-3-3,410-30-3,clrWhite,1);
+   createRecLabel(SUB_REC2,50+3+5,50+30+50+27,740-3-3-5-5,410-30-3-50-27-10,clrGreen,1);
+   createLabel(HEADER_LABEL,50+3+5,50+5,"MQL5 Economic Calendar",clrWhite,15);
+
+   //---- Create calendar buttons
+   int startX = 59;
+   for (int i = 0; i < ArraySize(array_calendar); i++) {
+      createButton(ARRAY_CALENDAR+IntegerToString(i),startX,132,buttons[i],25,
+                   array_calendar[i],clrWhite,13,clrGreen,clrNONE,"Calibri Bold");
+      startX += buttons[i]+3;
+   }
+
+   //---- Initialize for live mode (unchanged)
+   int totalNews = 0;
+   bool isNews = false;
+   MqlCalendarValue values[];
+   datetime startTime = TimeTradeServer() - PeriodSeconds(start_time);
+   datetime endTime = TimeTradeServer() + PeriodSeconds(end_time);
+   string country_code = "US";
+   string currency_base = SymbolInfoString(_Symbol,SYMBOL_CURRENCY_BASE);
+   int allValues = CalendarValueHistory(values,startTime,endTime,NULL,NULL);
+
+   //---- Load CSV events for tester mode
+   if (MQLInfoInteger(MQL_TESTER)) {
+      if (!LoadEventsFromResource()) {
+         Print("Failed to load events from CSV resource.");
+         return(INIT_FAILED);
+      }
+      Print("Tester mode: Loaded ", ArraySize(allEvents), " events from CSV.");
+      FilterEventsForTester(); // Added: Pre-filter events for tester mode
+   }
+
+   //---- Create UI elements
+   createLabel(TIME_LABEL,70,85,"Server Time: "+TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS)+
+               "   |||   Total News: "+IntegerToString(allValues),clrBlack,14,"Times new roman bold");
+   createLabel(IMPACT_LABEL,70,105,"Impact: ",clrBlack,14,"Times new roman bold");
+   createLabel(FILTER_LABEL,370,55,"Filters:",clrYellow,16,"Impact");
+
+   //---- Create filter buttons
+   string filter_curr_text = enableCurrencyFilter ? ShortToString(0x2714)+"Currency" : ShortToString(0x274C)+"Currency";
+   color filter_curr_txt_color = enableCurrencyFilter ? clrLime : clrRed;
+   bool filter_curr_state = enableCurrencyFilter;
+   createButton(FILTER_CURR_BTN,430,55,110,26,filter_curr_text,filter_curr_txt_color,12,clrBlack);
+   ObjectSetInteger(0,FILTER_CURR_BTN,OBJPROP_STATE,filter_curr_state);
+
+   string filter_imp_text = enableImportanceFilter ? ShortToString(0x2714)+"Importance" : ShortToString(0x274C)+"Importance";
+   color filter_imp_txt_color = enableImportanceFilter ? clrLime : clrRed;
+   bool filter_imp_state = enableImportanceFilter;
+   createButton(FILTER_IMP_BTN,430+110,55,120,26,filter_imp_text,filter_imp_txt_color,12,clrBlack);
+   ObjectSetInteger(0,FILTER_IMP_BTN,OBJPROP_STATE,filter_imp_state);
+
+   string filter_time_text = enableTimeFilter ? ShortToString(0x2714)+"Time" : ShortToString(0x274C)+"Time";
+   color filter_time_txt_color = enableTimeFilter ? clrLime : clrRed;
+   bool filter_time_state = enableTimeFilter;
+   createButton(FILTER_TIME_BTN,430+110+120,55,70,26,filter_time_text,filter_time_txt_color,12,clrBlack);
+   ObjectSetInteger(0,FILTER_TIME_BTN,OBJPROP_STATE,filter_time_state);
+
+   createButton(CANCEL_BTN,430+110+120+79,51,50,30,"X",clrWhite,17,clrRed,clrNONE);
+
+   //---- Create impact buttons
+   int impact_size = 100;
+   for (int i = 0; i < ArraySize(impact_labels); i++) {
+      color impact_color = clrBlack, label_color = clrBlack;
+      if (impact_labels[i] == "None") label_color = clrWhite;
+      else if (impact_labels[i] == "Low") impact_color = clrYellow;
+      else if (impact_labels[i] == "Medium") impact_color = clrOrange;
+      else if (impact_labels[i] == "High") impact_color = clrRed;
+      createButton(IMPACT_LABEL+string(i),140+impact_size*i,105,impact_size,25,
+                   impact_labels[i],label_color,12,impact_color,clrBlack);
+   }
+
+   //---- Create currency buttons
+   int curr_size = 51, button_height = 22, spacing_x = 0, spacing_y = 3, max_columns = 4;
+   for (int i = 0; i < ArraySize(curr_filter); i++) {
+      int row = i / max_columns;
+      int col = i % max_columns;
+      int x_pos = 575 + col * (curr_size + spacing_x);
+      int y_pos = 83 + row * (button_height + spacing_y);
+      createButton(CURRENCY_BTNS+IntegerToString(i),x_pos,y_pos,curr_size,button_height,curr_filter[i],clrBlack);
+   }
+
+   //---- Initialize filters
+   if (enableCurrencyFilter) {
+      ArrayFree(curr_filter_selected);
+      ArrayCopy(curr_filter_selected, curr_filter);
+      Print("CURRENCY FILTER ENABLED");
+      ArrayPrint(curr_filter_selected);
+      for (int i = 0; i < ArraySize(curr_filter_selected); i++) {
+         ObjectSetInteger(0, CURRENCY_BTNS+IntegerToString(i), OBJPROP_STATE, true);
+      }
+   }
+
+   if (enableImportanceFilter) {
+      ArrayFree(imp_filter_selected);
+      ArrayCopy(imp_filter_selected, allowed_importance_levels);
+      ArrayFree(impact_filter_selected);
+      ArrayCopy(impact_filter_selected, impact_labels);
+      Print("IMPORTANCE FILTER ENABLED");
+      ArrayPrint(imp_filter_selected);
+      ArrayPrint(impact_filter_selected);
+      for (int i = 0; i < ArraySize(imp_filter_selected); i++) {
+         string btn_name = IMPACT_LABEL+string(i);
+         ObjectSetInteger(0, btn_name, OBJPROP_STATE, true);
+         ObjectSetInteger(0, btn_name, OBJPROP_BORDER_COLOR, clrNONE);
+      }
+   }
+
+   //---- Update dashboard
+   update_dashboard_values(curr_filter_selected, imp_filter_selected);
+   ChartRedraw(0);
+   return(INIT_SUCCEEDED);
+}
+```
+
+We use the "createRecLabel" function to build dashboard panels "MAIN\_REC", "SUB\_REC1", and "SUB\_REC2" with distinct colors and sizes, and the "createLabel" function to add a "HEADER\_LABEL" displaying "MQL5 Economic Calendar" as we did earlier on. We create calendar buttons dynamically from "array\_calendar" using the "createButton" and [ArraySize](https://www.mql5.com/en/docs/array/arraysize) functions, positioning them with "startX" and "buttons" for event display.
+
+We prepare live mode by fetching events with the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function into "values", using "startTime" and "endTime" calculated via [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) and [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds), and for tester mode, we use the [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) function to check [MQL\_TESTER](https://www.mql5.com/en/docs/constants/environment_state/mql5_programm_info#enum_mql_info_integer), loading "EconomicCalendarData" with the "LoadEventsFromResource" function into "allEvents". We use the "FilterEventsForTester" function, the function that is most crucial here, to populate "filteredEvents", optimizing event processing.
+
+We add UI elements like "TIME\_LABEL", "IMPACT\_LABEL", and "FILTER\_LABEL" with "createLabel", and filter buttons "FILTER\_CURR\_BTN", "FILTER\_IMP\_BTN", "FILTER\_TIME\_BTN", and "CANCEL\_BTN" with "createButton" and [ObjectSetInteger](https://www.mql5.com/en/docs/objects/ObjectSetInteger), setting states like "filter\_curr\_state" based on "enableCurrencyFilter". We create impact and currency buttons from "impact\_labels" and "curr\_filter" using "createButton", initialize filters "curr\_filter\_selected" and "imp\_filter\_selected" with [ArrayFree](https://www.mql5.com/en/docs/array/ArrayFree) and [ArrayCopy](https://www.mql5.com/en/docs/array/arraycopy), and update the dashboard with "update\_dashboard\_values" and [ChartRedraw](https://www.mql5.com/en/docs/chart_operations/ChartRedraw), returning "INIT\_SUCCEEDED" to confirm the setup. When we now initialize the program, we have the following outcome.
+
+Since we can now load the relevant data after filtering, on the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) event handler, we need to make sure we get relevant data within a specified time and populate it to the dashboard instead of just all the data, just as we do in the live mode. Here is the logic we employ, and before we forget, we have added relevant comments to the specific and vital update sections where we have made the modifications.
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick() {
+   UpdateFilterInfo();
+   CheckForNewsTrade();
+   if (isDashboardUpdate) {
+      if (MQLInfoInteger(MQL_TESTER)) {
+         datetime currentTime = TimeTradeServer();
+         datetime timeRange = PeriodSeconds(range_time);
+         datetime timeAfter = currentTime + timeRange;
+         if (filters_changed || last_dashboard_update < timeAfter) { // Modified: Update on filter change or time range shift
+            update_dashboard_values(curr_filter_selected, imp_filter_selected);
+            ArrayFree(last_dashboard_eventNames);
+            ArrayCopy(last_dashboard_eventNames, current_eventNames_data);
+            last_dashboard_update = currentTime;
+         }
+      } else {
+         update_dashboard_values(curr_filter_selected, imp_filter_selected);
+      }
+   }
+}
+```
+
+In the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) event handler, we use the "UpdateFilterInfo" function to refresh filter settings and the "CheckForNewsTrade" function to evaluate and execute trades based on news events. When "isDashboardUpdate" is true, we check [MQL\_TESTER](https://www.mql5.com/en/docs/constants/environment_state/mql5_programm_info#enum_mql_info_integer) with the [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) function to apply tester-specific logic, calculating "currentTime" with [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver), "timeRange" with [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) on "range\_time", and "timeAfter" as "currentTime" plus "timeRange".
+
+In tester mode, we use the condition "filters\_changed" or "last\_dashboard\_update" less than "timeAfter", to trigger the "update\_dashboard\_values" function with "curr\_filter\_selected" and "imp\_filter\_selected", clearing "last\_dashboard\_eventNames" with [ArrayFree](https://www.mql5.com/en/docs/array/ArrayFree) function, copying "current\_eventNames\_data" to it with [ArrayCopy](https://www.mql5.com/en/docs/array/arraycopy), and updating "last\_dashboard\_update" to "currentTime", minimizing refreshes. In live mode, we directly call "update\_dashboard\_values" for continuous updates, ensuring optimized, targeted dashboard visualization in both modes. We can now modify functions that we use as follows making sure they incorporate the relevant modifications, specifically the time division.
+
+```
+//+------------------------------------------------------------------+
+//| Load events from CSV resource                                    |
+//+------------------------------------------------------------------+
+bool LoadEventsFromResource() {
+   string fileData = EconomicCalendarData;
+   Print("Raw resource content (size: ", StringLen(fileData), " bytes):\n", fileData);
+   string lines[];
+   int lineCount = StringSplit(fileData, '\n', lines);
+   if (lineCount <= 1) {
+      Print("Error: No data lines found in resource! Raw data: ", fileData);
+      return false;
+   }
+   ArrayResize(allEvents, 0);
+   int eventIndex = 0;
+   for (int i = 1; i < lineCount; i++) {
+      if (StringLen(lines[i]) == 0) {
+         if (debugLogging) Print("Skipping empty line ", i); // Modified: Conditional logging
+         continue;
+      }
+      string fields[];
+      int fieldCount = StringSplit(lines[i], ',', fields);
+      if (debugLogging) Print("Line ", i, ": ", lines[i], " (field count: ", fieldCount, ")"); // Modified: Conditional logging
+      if (fieldCount < 8) {
+         Print("Malformed line ", i, ": ", lines[i], " (field count: ", fieldCount, ")");
+         continue;
+      }
+      string dateStr = fields[0];
+      string timeStr = fields[1];
+      string currency = fields[2];
+      string event = fields[3];
+      for (int j = 4; j < fieldCount - 4; j++) {
+         event += "," + fields[j];
+      }
+      string importance = fields[fieldCount - 4];
+      string actualStr = fields[fieldCount - 3];
+      string forecastStr = fields[fieldCount - 2];
+      string previousStr = fields[fieldCount - 1];
+      datetime eventDateTime = StringToTime(dateStr + " " + timeStr);
+      if (eventDateTime == 0) {
+         Print("Error: Invalid datetime conversion for line ", i, ": ", dateStr, " ", timeStr);
+         continue;
+      }
+      ArrayResize(allEvents, eventIndex + 1);
+      allEvents[eventIndex].eventDate = dateStr;
+      allEvents[eventIndex].eventTime = timeStr;
+      allEvents[eventIndex].currency = currency;
+      allEvents[eventIndex].event = event;
+      allEvents[eventIndex].importance = importance;
+      allEvents[eventIndex].actual = StringToDouble(actualStr);
+      allEvents[eventIndex].forecast = StringToDouble(forecastStr);
+      allEvents[eventIndex].previous = StringToDouble(previousStr);
+      allEvents[eventIndex].eventDateTime = eventDateTime; // Added: Store precomputed datetime
+      if (debugLogging) Print("Loaded event ", eventIndex, ": ", dateStr, " ", timeStr, ", ", currency, ", ", event); // Modified: Conditional logging
+      eventIndex++;
+   }
+   Print("Loaded ", eventIndex, " events from resource into array.");
+   return eventIndex > 0;
+}
+```
+
+Here, we load historical news events from a CSV resource to enable offline backtesting with optimized event handling and targeted logging. We use the "LoadEventsFromResource" function to read "EconomicCalendarData" into "fileData", logging its size with the [Print](https://www.mql5.com/en/docs/common/print) and [StringLen](https://www.mql5.com/en/docs/strings/StringLen) functions. We split "fileData" into "lines" using the [StringSplit](https://www.mql5.com/en/docs/strings/stringsplit) function, checking "lineCount" to ensure data exists, and clear "allEvents" with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function.
+
+We iterate through "lines", skipping empty ones with the "StringLen" function and logging skips only if "debugLogging" is true. We use "StringSplit" to parse each line into "fields", verify "fieldCount", and extract "dateStr", "timeStr", "currency", "event", "importance", "actualStr", "forecastStr", and "previousStr", combining event fields dynamically.
+
+We convert "dateStr" and "timeStr" to "eventDateTime" with the [StringToTime](https://www.mql5.com/en/docs/convert/stringtotime) function, storing it in "allEvents[eventIndex].eventDateTime" for efficiency, populate "allEvents" using "ArrayResize" and [StringToDouble](https://www.mql5.com/en/docs/convert/stringtodouble), log successful loads conditionally, and return true if "eventIndex" is positive, ensuring a robust event dataset for backtesting. We now still update the function responsible for updating the dashboard values which is critical for visualizing the stored events data as below.
+
+```
+//+------------------------------------------------------------------+
+//| Update dashboard values                                          |
+//+------------------------------------------------------------------+
+void update_dashboard_values(string &curr_filter_array[], ENUM_CALENDAR_EVENT_IMPORTANCE &imp_filter_array[]) {
+   totalEvents_Considered = 0;
+   totalEvents_Filtered = 0;
+   totalEvents_Displayable = 0;
+   ArrayFree(current_eventNames_data);
+
+   datetime timeRange = PeriodSeconds(range_time);
+   datetime timeBefore = TimeTradeServer() - timeRange;
+   datetime timeAfter = TimeTradeServer() + timeRange;
+
+   int startY = 162;
+
+   if (MQLInfoInteger(MQL_TESTER)) {
+      if (filters_changed) FilterEventsForTester(); // Added: Re-filter events if filters changed
+      //---- Tester mode: Process filtered events
+      for (int i = 0; i < ArraySize(filteredEvents); i++) {
+         totalEvents_Considered++;
+         datetime eventDateTime = filteredEvents[i].eventDateTime;
+         if (eventDateTime < StartDate || eventDateTime > EndDate) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to date range."); // Modified: Conditional logging
+            continue;
+         }
+
+         bool timeMatch = !enableTimeFilter;
+         if (enableTimeFilter) {
+            if (eventDateTime <= TimeTradeServer() && eventDateTime >= timeBefore) timeMatch = true;
+            else if (eventDateTime >= TimeTradeServer() && eventDateTime <= timeAfter) timeMatch = true;
+         }
+         if (!timeMatch) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to time filter."); // Modified: Conditional logging
+            continue;
+         }
+
+         bool currencyMatch = !enableCurrencyFilter;
+         if (enableCurrencyFilter) {
+            for (int j = 0; j < ArraySize(curr_filter_array); j++) {
+               if (filteredEvents[i].currency == curr_filter_array[j]) {
+                  currencyMatch = true;
+                  break;
+               }
+            }
+         }
+         if (!currencyMatch) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to currency filter."); // Modified: Conditional logging
+            continue;
+         }
+
+         bool importanceMatch = !enableImportanceFilter;
+         if (enableImportanceFilter) {
+            string imp_str = filteredEvents[i].importance;
+            ENUM_CALENDAR_EVENT_IMPORTANCE event_imp = (imp_str == "None") ? CALENDAR_IMPORTANCE_NONE :
+                                                      (imp_str == "Low") ? CALENDAR_IMPORTANCE_LOW :
+                                                      (imp_str == "Medium") ? CALENDAR_IMPORTANCE_MODERATE :
+                                                      CALENDAR_IMPORTANCE_HIGH;
+            for (int k = 0; k < ArraySize(imp_filter_array); k++) {
+               if (event_imp == imp_filter_array[k]) {
+                  importanceMatch = true;
+                  break;
+               }
+            }
+         }
+         if (!importanceMatch) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to importance filter."); // Modified: Conditional logging
+            continue;
+         }
+
+         totalEvents_Filtered++;
+         if (totalEvents_Displayable >= 11) continue;
+         totalEvents_Displayable++;
+
+         color holder_color = (totalEvents_Displayable % 2 == 0) ? C'213,227,207' : clrWhite;
+         createRecLabel(DATA_HOLDERS+string(totalEvents_Displayable),62,startY-1,716,26+1,holder_color,1,clrNONE);
+
+         int startX = 65;
+         string news_data[ArraySize(array_calendar)];
+         news_data[0] = filteredEvents[i].eventDate;
+         news_data[1] = filteredEvents[i].eventTime;
+         news_data[2] = filteredEvents[i].currency;
+         color importance_color = clrBlack;
+         if (filteredEvents[i].importance == "Low") importance_color = clrYellow;
+         else if (filteredEvents[i].importance == "Medium") importance_color = clrOrange;
+         else if (filteredEvents[i].importance == "High") importance_color = clrRed;
+         news_data[3] = ShortToString(0x25CF);
+         news_data[4] = filteredEvents[i].event;
+         news_data[5] = DoubleToString(filteredEvents[i].actual, 3);
+         news_data[6] = DoubleToString(filteredEvents[i].forecast, 3);
+         news_data[7] = DoubleToString(filteredEvents[i].previous, 3);
+
+         for (int k = 0; k < ArraySize(array_calendar); k++) {
+            if (k == 3) {
+               createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY-(22-12),news_data[k],importance_color,22,"Calibri");
+            } else {
+               createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY,news_data[k],clrBlack,12,"Calibri");
+            }
+            startX += buttons[k]+3;
+         }
+
+         ArrayResize(current_eventNames_data, ArraySize(current_eventNames_data)+1);
+         current_eventNames_data[ArraySize(current_eventNames_data)-1] = filteredEvents[i].event;
+         startY += 25;
+      }
+   } else {
+
+      //---- Live mode: Unchanged
+
+   }
+}
+```
+
+To display filtered news events efficiently, we use the "update\_dashboard\_values" function to reset "totalEvents\_Considered", "totalEvents\_Filtered", "totalEvents\_Displayable", and clear "current\_eventNames\_data" with the [ArrayFree](https://www.mql5.com/en/docs/array/ArrayFree) function, setting "timeRange" via the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) function on "range\_time" and calculating "timeBefore" and "timeAfter" with [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver). We check "MQL\_TESTER" with the [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) function and, if "filters\_changed" is true, use the "FilterEventsForTester" function that we had earlier defined fully to refresh "filteredEvents".
+
+We iterate through "filteredEvents" using the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function, incrementing "totalEvents\_Considered" and skipping events outside "StartDate" or "EndDate" or failing "enableTimeFilter", "enableCurrencyFilter", or "enableImportanceFilter" checks, logging skips only if "debugLogging" is true.
+
+For up to 11 matching events, we increment "totalEvents\_Displayable", use the "createRecLabel" function to draw "DATA\_HOLDERS" rows and use the "createLabel" function to populate "news\_data" from "filteredEvents" fields like "eventDate" and "event", styled with "importance\_color" and "array\_calendar", resizing "current\_eventNames\_data" with [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) to store event names, ensuring a fast, clear dashboard visualization. To trade in tester mode, we modify the function responsible for checking for trades and opening trades as below.
+
+```
+//+------------------------------------------------------------------+
+//| Check for news trade (adapted for tester mode trading)           |
+//+------------------------------------------------------------------+
+void CheckForNewsTrade() {
+   if (!MQLInfoInteger(MQL_TESTER) || debugLogging) Print("CheckForNewsTrade called at: ", TimeToString(TimeTradeServer(), TIME_SECONDS)); // Modified: Conditional logging
+   if (tradeMode == NO_TRADE || tradeMode == PAUSE_TRADING) {
+      if (ObjectFind(0, "NewsCountdown") >= 0) {
+         ObjectDelete(0, "NewsCountdown");
+         Print("Trading disabled. Countdown removed.");
+      }
+      return;
+   }
+
+   datetime currentTime = TimeTradeServer();
+   int offsetSeconds = tradeOffsetHours * 3600 + tradeOffsetMinutes * 60 + tradeOffsetSeconds;
+
+   if (tradeExecuted) {
+      if (currentTime < tradedNewsTime) {
+         int remainingSeconds = (int)(tradedNewsTime - currentTime);
+         int hrs = remainingSeconds / 3600;
+         int mins = (remainingSeconds % 3600) / 60;
+         int secs = remainingSeconds % 60;
+         string countdownText = "News in: " + IntegerToString(hrs) + "h " +
+                               IntegerToString(mins) + "m " + IntegerToString(secs) + "s";
+         if (ObjectFind(0, "NewsCountdown") < 0) {
+            createButton1("NewsCountdown", 50, 17, 300, 30, countdownText, clrWhite, 12, clrBlue, clrBlack);
+            Print("Post-trade countdown created: ", countdownText);
+         } else {
+            updateLabel1("NewsCountdown", countdownText);
+            Print("Post-trade countdown updated: ", countdownText);
+         }
+      } else {
+         int elapsed = (int)(currentTime - tradedNewsTime);
+         if (elapsed < 15) {
+            int remainingDelay = 15 - elapsed;
+            string countdownText = "News Released, resetting in: " + IntegerToString(remainingDelay) + "s";
+            if (ObjectFind(0, "NewsCountdown") < 0) {
+               createButton1("NewsCountdown", 50, 17, 300, 30, countdownText, clrWhite, 12, clrRed, clrBlack);
+               ObjectSetInteger(0,"NewsCountdown",OBJPROP_BGCOLOR,clrRed);
+               Print("Post-trade reset countdown created: ", countdownText);
+            } else {
+               updateLabel1("NewsCountdown", countdownText);
+               ObjectSetInteger(0,"NewsCountdown",OBJPROP_BGCOLOR,clrRed);
+               Print("Post-trade reset countdown updated: ", countdownText);
+            }
+         } else {
+            Print("News Released. Resetting trade status after 15 seconds.");
+            if (ObjectFind(0, "NewsCountdown") >= 0) ObjectDelete(0, "NewsCountdown");
+            tradeExecuted = false;
+         }
+      }
+      return;
+   }
+
+   datetime lowerBound = currentTime - PeriodSeconds(start_time);
+   datetime upperBound = currentTime + PeriodSeconds(end_time);
+   if (debugLogging) Print("Event time range: ", TimeToString(lowerBound, TIME_SECONDS), " to ", TimeToString(upperBound, TIME_SECONDS)); // Modified: Conditional logging
+
+   datetime candidateEventTime = 0;
+   string candidateEventName = "";
+   string candidateTradeSide = "";
+   int candidateEventID = -1;
+
+   if (MQLInfoInteger(MQL_TESTER)) {
+      //---- Tester mode: Process filtered events
+      int totalValues = ArraySize(filteredEvents);
+      if (debugLogging) Print("Total events found: ", totalValues); // Modified: Conditional logging
+      if (totalValues <= 0) {
+         if (ObjectFind(0, "NewsCountdown") >= 0) ObjectDelete(0, "NewsCountdown");
+         return;
+      }
+
+      for (int i = 0; i < totalValues; i++) {
+         datetime eventTime = filteredEvents[i].eventDateTime;
+         if (eventTime < lowerBound || eventTime > upperBound || eventTime < StartDate || eventTime > EndDate) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to date range."); // Modified: Conditional logging
+            continue;
+         }
+
+         bool currencyMatch = !enableCurrencyFilter;
+         if (enableCurrencyFilter) {
+            for (int k = 0; k < ArraySize(curr_filter_selected); k++) {
+               if (filteredEvents[i].currency == curr_filter_selected[k]) {
+                  currencyMatch = true;
+                  break;
+               }
+            }
+            if (!currencyMatch) {
+               if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to currency filter."); // Modified: Conditional logging
+               continue;
+            }
+         }
+
+         bool impactMatch = !enableImportanceFilter;
+         if (enableImportanceFilter) {
+            string imp_str = filteredEvents[i].importance;
+            ENUM_CALENDAR_EVENT_IMPORTANCE event_imp = (imp_str == "None") ? CALENDAR_IMPORTANCE_NONE :
+                                                      (imp_str == "Low") ? CALENDAR_IMPORTANCE_LOW :
+                                                      (imp_str == "Medium") ? CALENDAR_IMPORTANCE_MODERATE :
+                                                      CALENDAR_IMPORTANCE_HIGH;
+            for (int k = 0; k < ArraySize(imp_filter_selected); k++) {
+               if (event_imp == imp_filter_selected[k]) {
+                  impactMatch = true;
+                  break;
+               }
+            }
+            if (!impactMatch) {
+               if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to impact filter."); // Modified: Conditional logging
+               continue;
+            }
+         }
+
+         bool alreadyTriggered = false;
+         for (int j = 0; j < ArraySize(triggeredNewsEvents); j++) {
+            if (triggeredNewsEvents[j] == i) {
+               alreadyTriggered = true;
+               break;
+            }
+         }
+         if (alreadyTriggered) {
+            if (debugLogging) Print("Event ", filteredEvents[i].event, " already triggered a trade. Skipping."); // Modified: Conditional logging
+            continue;
+         }
+
+         if (tradeMode == TRADE_BEFORE) {
+            if (currentTime >= (eventTime - offsetSeconds) && currentTime < eventTime) {
+               double forecast = filteredEvents[i].forecast;
+               double previous = filteredEvents[i].previous;
+               if (forecast == 0.0 || previous == 0.0) {
+                  if (debugLogging) Print("Skipping event ", filteredEvents[i].event, " because forecast or previous value is empty."); // Modified: Conditional logging
+                  continue;
+               }
+               if (forecast == previous) {
+                  if (debugLogging) Print("Skipping event ", filteredEvents[i].event, " because forecast equals previous."); // Modified: Conditional logging
+                  continue;
+               }
+               if (candidateEventTime == 0 || eventTime < candidateEventTime) {
+                  candidateEventTime = eventTime;
+                  candidateEventName = filteredEvents[i].event;
+                  candidateEventID = i;
+                  candidateTradeSide = (forecast > previous) ? "BUY" : "SELL";
+                  if (debugLogging) Print("Candidate event: ", filteredEvents[i].event, " with event time: ", TimeToString(eventTime, TIME_SECONDS), " Side: ", candidateTradeSide); // Modified: Conditional logging
+               }
+            }
+         }
+      }
+   } else {
+
+      //---- Live mode: Unchanged
+
+   }
+}
+```
+
+To evaluate and trigger news-driven trades in tester mode with optimized event filtering and targeted logging for efficient backtesting, we use the "CheckForNewsTrade" function to start, logging its execution only when "debugLogging" is true with the [Print](https://www.mql5.com/en/docs/common/print) function, [TimeToString](https://www.mql5.com/en/docs/convert/timetostring), and "TimeTradeServer" for the current timestamp, keeping tester logs clean. We exit if "tradeMode" is "NO\_TRADE" or "PAUSE\_TRADING", using the [ObjectFind](https://www.mql5.com/en/docs/objects/ObjectFind) function to check for "NewsCountdown" and removing it with [ObjectDelete](https://www.mql5.com/en/docs/objects/objectdelete) while logging via "Print", and manage post-trade states by computing "currentTime" with [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) and "offsetSeconds" from "tradeOffsetHours", "tradeOffsetMinutes", and "tradeOffsetSeconds".
+
+If "tradeExecuted" is true, we handle countdown timers for "tradedNewsTime", formatting "countdownText" with [IntegerToString](https://www.mql5.com/en/docs/convert/IntegerToString) to show remaining time or reset delay, creating or updating "NewsCountdown" with "createButton1" or "updateLabel1" based on "ObjectFind", styling with [ObjectSetInteger](https://www.mql5.com/en/docs/objects/ObjectSetInteger), and logging via "Print", resetting "tradeExecuted" after 15 seconds with "ObjectDelete" and "Print".
+
+In tester mode, confirmed by [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) checking [MQL\_TESTER](https://www.mql5.com/en/docs/constants/environment_state/mql5_programm_info#enum_mql_info_integer), we process "filteredEvents" using [ArraySize](https://www.mql5.com/en/docs/array/arraysize) to get "totalValues", logging it conditionally with "Print", and exit if empty after clearing "NewsCountdown". We set "lowerBound" and "upperBound" with "TimeTradeServer" and [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) on "start\_time" and "end\_time", logging the range with "Print" if "debugLogging" is true, and initialize "candidateEventTime", "candidateEventName", "candidateEventID", and "candidateTradeSide" for trade selection.
+
+We iterate "filteredEvents", skipping events outside "lowerBound", "upperBound", "StartDate", or "EndDate", or failing "enableCurrencyFilter" against "curr\_filter\_selected" or "enableImportanceFilter" against "imp\_filter\_selected" using "ArraySize", with skips logged via [Print](https://www.mql5.com/en/docs/common/print) only if "debugLogging" is enabled. We use [ArraySize](https://www.mql5.com/en/docs/array/arraysize) on "triggeredNewsEvents" to exclude traded events, logging conditionally.
+
+For "TRADE\_BEFORE" mode, we target events within "offsetSeconds" before "eventDateTime", validating "forecast" and "previous", and select the earliest event into "candidateEventTime", "candidateEventName", "candidateEventID", and "candidateTradeSide" ("BUY" if "forecast" exceeds "previous", else "SELL"), logging with "Print" if "debugLogging" is true, ensuring efficient trade decisions with minimal logging. The rest of the live mode logic remains unchanged. Upon compilation, we have the following trade confirmation visualization.
+
+From the image, we can see that we can get the data, filter it populate it in the dashboard, initialize countdowns when the respective time range of a certain data is reached, and trade the news event, simulating exactly what we have in live mode trading environment, hence achieving our integration objective. What now remains is backtesting the system thoroughly and that is handled in the next section.
+
+### Testing and Validation
+
+We test the program by first loading it in a live environment, downloading the desired news events data, and running it in the [MetaTrader 5 Strategy Tester](https://www.metatrader5.com/en/automated-trading/strategy-tester "https://www.metatrader5.com/en/automated-trading/strategy-tester") with "StartDate" set to '2025.03.01', "EndDate" to '2025.03.21', and "debugLogging" disabled, using a [Comma Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values "https://en.wikipedia.org/wiki/Comma-separated_values") (CSV) file in "EconomicCalendarData" to simulate trades via "CheckForNewsTrade" on "filteredEvents". A GIF showcases the dashboard, updated by "update\_dashboard\_values" only when "filters\_changed" or "last\_dashboard\_update" triggers, displaying filtered events with "createLabel" and clean logs of trades and updates. Live mode tests with the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function confirm identical visualization, validating the program’s fast, clear performance across both modes. Here is the visualization.
+
+### Conclusion
+
+In conclusion, we’ve elevated the [MQL5 Economic Calendar](https://www.mql5.com/en/economic-calendar) series by optimizing backtesting with smart event filtering and streamlined logging, enabling rapid and clear strategy validation while preserving seamless live trading capabilities. This advancement bridges efficient offline testing with real-time event analysis, offering us a robust tool for refining news-driven strategies, as showcased in our testing visualization. You can use it as a backbone and enhance it further to meet your specific trading needs.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17999.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_8.mq5](https://www.mql5.com/en/articles/download/17999/mql5_news_calendar_part_8.mq5 "Download MQL5_NEWS_CALENDAR_PART_8.mq5")
+(73.85 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Developing a Replay System (Part 68): Getting the Time Right (I)](https://www.mql5.com/en/articles/12309)
+
+Today we will continue working on getting the mouse pointer to tell us how much time is left on a bar during periods of low liquidity. Although at first glance it seems simple, in reality this task is much more difficult. This involves some obstacles that we will have to overcome. Therefore, it is important that you have a good understanding of the material in this first part of this subseries in order to understand the following parts.
+
+[Artificial Ecosystem-based Optimization (AEO) algorithm](https://www.mql5.com/en/articles/16058)
+
+The article considers a metaheuristic Artificial Ecosystem-based Optimization (AEO) algorithm, which simulates interactions between ecosystem components by creating an initial population of solutions and applying adaptive update strategies, and describes in detail the stages of AEO operation, including the consumption and decomposition phases, as well as different agent behavior strategies. The article introduces the features and advantages of this algorithm.
+
+[From Basic to Intermediate: Arrays and Strings (III)](https://www.mql5.com/en/articles/15461)
+
+This article considers two aspects. First, how the standard library can convert binary values to other representations such as octal, decimal, and hexadecimal. Second, we will talk about how we can determine the width of our password based on the secret phrase, using the knowledge we have already acquired.
+
+[Data Science and ML (Part 39): News + Artificial Intelligence, Would You Bet on it?](https://www.mql5.com/en/articles/17986)
+
+News drives the financial markets, especially major releases like Non-Farm Payrolls (NFPs). We've all witnessed how a single headline can trigger sharp price movements. In this article, we dive into the powerful intersection of news data and Artificial Intelligence.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=gwdoeightvpfjtmijoytzbtfbijtzxyb&ssn=1788790404514882069&ssn_dr=0&ssn_sr=0&fv_date=1788790404&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F17999&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Trading%20with%20the%20MQL5%20Economic%20Calendar%20(Part%208)%3A%20Optimizing%20News-Driven%20Backtesting%20with%20Smart%20Event%20Filtering%20and%20Targeted%20Logs%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178879040488247146&fz_uniq=6369080297224026244&sv=2552)

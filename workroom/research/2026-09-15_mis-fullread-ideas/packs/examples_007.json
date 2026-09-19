@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_007",
+  "section": "Examples",
+  "parent_shard": "examples_007",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1429,
+      "title": "Construction of Fractal Lines",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1429.md"
+    },
+    {
+      "id": 1430,
+      "title": "Secrets of MetaTrader 4 Client Terminal: File Library in MetaEditor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1430.md"
+    },
+    {
+      "id": 1431,
+      "title": "Technical Analysis: Make the Impossible Possible!",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1431.md"
+    },
+    {
+      "id": 1432,
+      "title": "Alternative Log File with the Use of HTML and CSS",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1432.md"
+    },
+    {
+      "id": 1433,
+      "title": "Running MetaTrader 4 Client Terminal on Linux-Desktop",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1433.md"
+    },
+    {
+      "id": 1435,
+      "title": "Drawing Horizontal Break-Through Levels Using Fractals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1435.md"
+    },
+    {
+      "id": 1436,
+      "title": "Sending Trading Signals in a Universal Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1436.md"
+    },
+    {
+      "id": 1439,
+      "title": "A Method of Drawing the Support/Resistance Levels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1439.md"
+    },
+    {
+      "id": 1440,
+      "title": "Displaying of Support/Resistance Levels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1440.md"
+    },
+    {
+      "id": 1443,
+      "title": "Three-Dimensional Graphs - a Professional Tool of Market Analyzing",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1443.md"
+    },
+    {
+      "id": 1444,
+      "title": "Beginners' Mistakes when Working with MetaTrader 4 Client Terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1444.md"
+    },
+    {
+      "id": 1449,
+      "title": "MetaTrader 4 Working under Antiviruses and Firewalls",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1449.md"
+    }
+  ]
+}

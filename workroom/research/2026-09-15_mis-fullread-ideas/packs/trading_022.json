@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_022",
+  "section": "Trading",
+  "parent_shard": "trading_022",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 20309,
+      "title": "Developing a Trading Strategy: The Flower Volatility Index Trend-Following Approach",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20309.md"
+    },
+    {
+      "id": 20343,
+      "title": "Training Neural Networks on Oscillators Without Look-Ahead Bias",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20343.md"
+    },
+    {
+      "id": 20346,
+      "title": "Differential Search Algorithm (DSA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20346.md"
+    },
+    {
+      "id": 20354,
+      "title": "Python + LLM API + MetaTrader 5: Real-World Experience Building an Autonomous Trading Bot",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20354.md"
+    },
+    {
+      "id": 20430,
+      "title": "Deterministic Dendritic Cell Algorithm (dDCA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20430.md"
+    },
+    {
+      "id": 20469,
+      "title": "Developing a Trading Strategy: Using a Volume-Bound Approach",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20469.md"
+    },
+    {
+      "id": 20540,
+      "title": "Dandelion Optimizer (DO)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20540.md"
+    },
+    {
+      "id": 21212,
+      "title": "Optimizing Liquidity Raids: Mastering the Difference Between Liquidity Raids and Market Structure Shifts",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21212.md"
+    },
+    {
+      "id": 21246,
+      "title": "Mastering PD Arrays: Optimizing Trading from Imbalances in PD Arrays",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21246.md"
+    },
+    {
+      "id": 21398,
+      "title": "MQL5 Bootstrap (I): Reusable Functions for Working with Positions and Orders",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21398.md"
+    },
+    {
+      "id": 21833,
+      "title": "Building a Research-Grounded Grid EA in MQL5: Why Most Grid EAs Fail and What Taranto Proved",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21833.md"
+    },
+    {
+      "id": 21876,
+      "title": "How to Detect Round-Number Liquidity in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21876.md"
+    }
+  ]
+}

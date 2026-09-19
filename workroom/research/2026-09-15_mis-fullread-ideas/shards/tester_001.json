@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_001",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1434,
+      "title": "How Not to Fall into Optimization Traps?",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1434.md"
+    },
+    {
+      "id": 1452,
+      "title": "Testing Visualization: Trade History",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1452.md"
+    },
+    {
+      "id": 1467,
+      "title": "Automated Optimization of a Trading Robot in Real Trading",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1467.md"
+    },
+    {
+      "id": 1486,
+      "title": "What the Numbers in the Expert Testing Report Mean",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1486.md"
+    },
+    {
+      "id": 1487,
+      "title": "Testing Visualization: Account State Charts",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1487.md"
+    },
+    {
+      "id": 1490,
+      "title": "Tester in the Terminal MetaTrader 4: It Should Be Known",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1490.md"
+    },
+    {
+      "id": 1493,
+      "title": "Break Through The Strategy Tester Limit On Testing Hedge EA",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1493.md"
+    },
+    {
+      "id": 1498,
+      "title": "How To Implement Your Own Optimization Criteria",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1498.md"
+    },
+    {
+      "id": 1511,
+      "title": "Strategy Tester: Modes of Modeling during Testing",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1511.md"
+    },
+    {
+      "id": 1513,
+      "title": "One-Minute Data Modelling Quality Rating",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1513.md"
+    },
+    {
+      "id": 1527,
+      "title": "A Pattern Trailing Stop and Exit the Market",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1527.md"
+    },
+    {
+      "id": 1924,
+      "title": "Evaluating the effectiveness of trading systems by analyzing their components",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1924.md"
+    }
+  ]
+}

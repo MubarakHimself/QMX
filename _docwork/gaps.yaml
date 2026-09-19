@@ -685,8 +685,8 @@ gaps:
     recommendation: "its own session - the operator has not started the UI and does not plan to soon; the wire contract (AD-5) and the variables registry (AD-26) are not deferred and bind now. Revisit once the daemon API is live and stable. Profile records are client state and are specified in that session; nothing in the daemon reads or stores one (AD-7). Carried forward for that session: the UI reads as a trading/research terminal, not a generic agent dashboard, and surfaces live remote-agent activity - status, current task, tool calls, outputs, progress, failures, attach and observe (operator, T-5071, T-5082-5084)"
     status: deferred
     answer: null
-    note: "AD-5 wire. The qma-ui-contract package ships as a stub only in v1. The wire contract (AD-5) and the variables registry (AD-26) are NOT deferred and bind now. Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard (operator, T-5071, T-5082-5084)."
-    date: 2026-08-29
+    note: "AD-5 wire. The qma-ui-contract package ships as a stub only in v1. The wire contract (AD-5) and the variables registry (AD-26) are NOT deferred and bind now. Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard (operator, T-5071, T-5082-5084). 2026-09-19 Workflows: UI-host contracts (AD-17 / DEC-0430 DTOs) fold now; chrome stays deferred on this row (DEC-0446)."
+    date: 2026-09-19
   - id: GAP-0082
     question: "Are Mission reports (an agent-derived synthesis over a mission's task ledgers) wanted, and in what shape?"
     needed_by: [COMP-QMA-DAEMON]
@@ -703,7 +703,7 @@ gaps:
     recommendation: "after the first missions run; roles are settled; Profile is presentation and may collapse desks for display - never a rename or retirement of a desk_slug, ActorId, plugin prefix, memory scope or ledger index key (AD-7), which is what makes this deferral free"
     status: deferred
     answer: null
-    note: "AD-7 ontology. Only a Profile-level display collapse is on the table; the five desk_slug values (research, trading, dev, analysis, pm), ActorIds, plugin prefixes, memory scopes and ledger index keys are never renamed or retired, which is what makes this deferral free."
+    note: "AD-7 ontology. Only a Profile-level display collapse is on the table; the five desk_slug values (research, trading, dev, analysis, pm), ActorIds, plugin prefixes, memory scopes and ledger index keys are never renamed or retired, which is what makes this deferral free. 2026-09-19 Workflows: Portfolio Manager is a trading-floor Role display label only (DEC-0435); this gap is not closed by that rename."
     date: 2026-08-29
   - id: GAP-0084
     question: "Is a separate Mission Template registry needed beside Graph Templates?"
@@ -785,7 +785,7 @@ gaps:
     recommendation: "Rule it in a one-shot architecture increment BEFORE the variant's epic; the VPS epics proceed now. Not a second product: placement is the roster's VPS machine tuple (DEC-0188) plus the V1 enforcement that the composition root refuses to compose off that tuple and the SecretStore refuses a venue-session holder off that host (DEC-0236 ruling 18). A co-located variant = naming that machine as the tuple and lifting the refusal by a later ruling, with the reasons for the refusal (the venue session secret lives there; the box must stay up 24/5 while the operator's laptop sleeps; broker latency) weighed at that time. Defer until the UI and the agentic system exist on a machine."
     status: open
     answer: null
-    note: "Flipped from deferred to OPEN (non-blocking) by the operator in the second exchange of the veto round 2026-08-30 ('let's do the two variants, please... I have a colleague who might want to try this out'; 'the backend should set itself up... If you need Docker, you use Docker'). Raised by the operator at the veto round 2026-08-30 ('is it possible to have two variants of this trading node? One that can run on the same machine... as the agentic system'); recorded as deferred, never a second product (DEC-0261)."
+    note: "Flipped from deferred to OPEN (non-blocking) by the operator in the second exchange of the veto round 2026-08-30 ('let's do the two variants, please... I have a colleague who might want to try this out'; 'the backend should set itself up... If you need Docker, you use Docker'). Raised by the operator at the veto round 2026-08-30 ('is it possible to have two variants of this trading node? One that can run on the same machine... as the agentic system'); recorded as deferred, never a second product (DEC-0261). 2026-09-19 Workflows: fencing sequential deploy (DEC-0427, DEC-0438) does not close this gap; GAP-0058 stays its own increment."
     date: 2026-08-30
 
   - id: GAP-0059
@@ -823,7 +823,7 @@ gaps:
     recommendation: "Keep workbench AD-10 / DEC-0278's property (daemon or a reachable remote env must not live only on the sleeping laptop). Leave the machine as operator config under QMA AD-25/AD-26. Do not invent a host name in docs."
     status: deferred
     answer: null
-    note: "Workbench Open questions 2026-09-14 (DEC-0278, DEC-0287). Property is decided; the machine is not. Revisit when the operator names a reachable ExecutionEnvironment or moves the daemon off the laptop."
+    note: "Workbench Open questions 2026-09-14 (DEC-0278, DEC-0287). Property is decided; the machine is not. Revisit when the operator names a reachable ExecutionEnvironment or moves the daemon off the laptop. 2026-09-19 Workflows: host machine still unruled; do not invent a name (DEC-0428)."
     date: 2026-09-14
   - id: GAP-0063
     question: "What is the first structure-generator algorithm — placeholder-fill of CT-34 legs versus Python-logic synthesis?"
@@ -844,3 +844,85 @@ gaps:
     answer: null
     note: "QML research expansion Open questions 2026-09-16 (DEC-0405, DEC-0380). PRD 2026-08-21 has QMB/QML FRs and a QMA phase boundary; it has no mill / seed-corpus / hypothesis FRs. First-distill FR-LIB-* ids are superseded. Operator instruction: stamp the package proposed; do not pretend the old PRD specified this expansion."
     date: 2026-09-16
+
+  - id: GAP-0092
+    question: "Focused Codex recheck of AD-23..AD-31 was skipped. When, if ever, is independent recheck required?"
+    needed_by: [COMP-QMA-CORE, COMP-QMF-RISK, COMP-QMN]
+    blocking: false
+    recommendation: "Recheck returned 2026-09-19: repairs required, not ratified. Desk-fix RC-01..RC-17 in spine/CONTRACTS.md and folded ADR-0024/SCN-0018..22. Epics stay paused until that desk-fix lands. Do not claim Codex approved AD-23..AD-31. Do not re-run Documentation Factory."
+    status: deferred
+    answer: "Operator 2026-09-19: recheck ran. Return zip SHA-256 aa64bc8a431d543d86da77b182b2c18e449d3a6665fe837709902dc95b3adeb4. Disposition repairs-required-not-ratified. Next is Grok desk-fix, then epics."
+    note: "Workflows increment 2026-09-19 (DEC-0447). Codex Stage B reviewed 18-a. Stage C added AD-23..31. Focused recheck of 19-c returned RC-01..RC-17. 85 Codex scenario IDs remain specification oracles, not executed proof."
+    date: 2026-09-19
+  - id: GAP-0093
+    question: "When is product_session runtime (psess: journal projection, CAS mutations, authoring/app-use profiles) delivered on the daemon/wire?"
+    needed_by: [COMP-QMA-DAEMON, COMP-QMA-WIRE]
+    blocking: false
+    recommendation: "Feeds FEAT-0053. Absent at 270e992 (DEC-0450). Implement after Operation/GrantRecord surface (FEAT-0052)."
+    status: deferred
+    answer: null
+    note: "Workflows AD-8/AD-29. product_session is a journal-projected record kind, not a new store class."
+    date: 2026-09-19
+  - id: GAP-0094
+    question: "When do ContributionHit and pin/tombstone land on the federated discovery wire (still KnowledgeHit|ArtifactHit at 270e992)?"
+    needed_by: [COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "Feeds FEAT-0051. First epic after docs. Amend DEC-0389 two-class freeze via DEC-0449 without superseding the mill package."
+    status: deferred
+    answer: null
+    note: "Workflows AD-2 / DEC-0415 / DEC-0449. Identity is the published_contributions() tuple; never fp1. FEAT-0051 lands CT-40 format-mint fields (hit union, pin tuple, listing query) without a new CT number. Unruled until that epic: pin persistence location (must be an existing sqlite class from DEC-0429, not a sixth store); whether availability_revision is an occurrence field on the live hit; CT-04 mapping of unavailable vs tombstone (do not invent a new refusal category)."
+    date: 2026-09-19
+  - id: GAP-0095
+    question: "When are Task Graph edges persisted and the durable outbox added (in-memory store today drops edges)?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "Feeds FEAT-0055 after DAG validator FEAT-0054. Connect named task_graph_state; JobHandle stays QMA AD-17 parent vocab."
+    status: deferred
+    answer: null
+    note: "Workflows AD-7/AD-26. Completing predecessor and making successors ready is one sqlite transaction plus outbox."
+    date: 2026-09-19
+  - id: GAP-0096
+    question: "When do Operation descriptor, InvocationEnvelope, and GrantRecord land on COMP-QMA-CORE / COMP-QMA-WIRE?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-WIRE]
+    blocking: false
+    recommendation: "Feeds FEAT-0052. Absent at 270e992 (DEC-0450). Field catalogue is cheap-veto A3."
+    status: deferred
+    answer: null
+    note: "Workflows AD-3/AD-24. Manifests request; host grants structured GrantRecords."
+    date: 2026-09-19
+  - id: GAP-0097
+    question: "When do AlternativeRunConfig and PolicyPair appear in code (ATC path)?"
+    needed_by: [COMP-QMF-RISK, COMP-QMB, COMP-QML, COMP-QMN]
+    blocking: false
+    recommendation: "Feeds FEAT-0056 thin fixtures. ATC class is operator-direct (OD-01); PolicyPair field catalogue is cheap-veto A1. Dummy Book remains INVALID_INPUT."
+    status: deferred
+    answer: null
+    note: "Workflows AD-11/AD-23. Book/BMS keys absent-not-null on AlternativeRunConfig."
+    date: 2026-09-19
+  - id: GAP-0098
+    question: "When is QML→QMB→QMN cross-component integration supported end-to-end (P2-INT-001)?"
+    needed_by: [COMP-QML, COMP-QMB, COMP-QMN]
+    blocking: false
+    recommendation: "Package tests are not e2e (DEC-0286 / DEC-0450). Keep as deferred integration hole; do not claim adoption from unit presence."
+    status: deferred
+    answer: null
+    note: "Workflows wiring honesty. Unsupported at 270e992."
+    date: 2026-09-19
+  - id: GAP-0099
+    question: "What is the QMN supervision-mode taxonomy (unattended VPS vs local-attended vs agent-watched)?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "Out of this epic set. Revisit when the platform is live. Do not invent a taxonomy in stories or factory work now."
+    status: deferred
+    answer: "Operator 2026-09-19: out of scope until the platform is live."
+    note: "Workflows deferred. Distinct from GAP-0058 single-machine placement design. QMN remains the unattended-server symbol and the only venue importer; the three-mode taxonomy is later product work."
+    date: 2026-09-19
+  - id: GAP-0100
+    question: "Is a cutover readiness dashboard (latency/deployed) required beside the AD-25 fencing machine?"
+    needed_by: [COMP-QMN, COMP-QMA-WIRE]
+    blocking: false
+    recommendation: "UI chrome, not this epic set. AD-25 fencing remains the transition machine. GAP-0081 chrome stays deferred."
+    status: deferred
+    answer: "Operator 2026-09-19: readiness dashboard is user-interface work, later."
+    note: "Workflows deferred. Operator confirmed this is UI, not backend contracts. Do not invent chrome in FEAT-0051..0057."
+    date: 2026-09-19

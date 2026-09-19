@@ -1,0 +1,98 @@
+4: title: "Night trading during the Asian session: How to stay profitable"
+18: # Night trading during the Asian session: How to stay profitable
+23: | 15 January 2018 at 09:02
+28: 16](https://www.mql5.com/en/forum/224776 "Comments")
+34: ### Introduction
+36: Many traders often come across the notion of night trading. The first thing that comes to mind when meeting this concept is that trading is carried out at night. However, everything is simpler: because of the difference in time zones, the night in different parts of the world comes at different times. American and European trading sessions take place in time zones -4 and +1 relative to the [UTC Wo
+38: They are followed by Asian and Pacific exchanges whose time zones are opposite to that of their American and European counterparts. Here, trading starts when American traders go home, while European traders go to bed. This is the night trading in our current understanding. Trading session periods can be displayed the following way (Fig. 1, time goes from right to left):
+42: Fig. 1. Trading sessions on the world map
+46: ### Night trading strategies
+50: Let's take the popular EURUSD pair. During the Asian session, its volatility usually decreases and it starts moving in flat. A roll-back at this stage is often insignificant and may resemble a horizontal movement.
+54: Fig. 2. Flat movement on EURUSD during the Asian session
+56: Fig. 2 yellow rectangles indicate EURUSD movement on H1 during the Asian session. The first one (on the left) demonstrates a small intra-channel oscillation. At the beginning of the session, the price follows the previously created trend, then a small correction occurs (in the middle of the session) only to turn into a sharp roll-back in the end. The second rectangle shows a slow upward movement, 
+58: In all described cases, we can see small movements within the price range during the Asian session. It seems like the market shows "uncertainty". Such a movement can be treated as flat.
+68: Fig. 3 shows EURUSD М30 chart with Bollinger Bands attached. The selected period is as low as possible (10), other settings are left by default. Here we can see how the price falls into the so-called "dynamic channel" created by the indicator. However, the channel's signals are not accurate enough. For example, in the first rectangle, the price moves down, and the channel follows it. At the same t
+70: As we can see, accurate signals are formed only towards the end of each three sessions. As we can see some regularity, we may use it to build a strategy.
+72: Now, let's turn to another strategy based on a sharp volatility. For the Asian session, these are JPY pairs. This strategy is widely described on the Web. Its idea is to enter the market at the most volatile moment when a sharp movement is possible in any direction. Two pending orders (above the current price - the buy one, below it - the sell one) are placed simultaneously at equal distance in op
+80: Let's have a closer look on Asian session segments:
+84: Fig. 5. Asian session segments, USDJPY H1
+88: Now, let's analyze each segment separately. On all four segments, the Open time is 8.00 MSK (5.00 UTC).
+91: 2. On the upper right segment, the candle starts opening at 114.152. The Low is 114.109, the High (at the next hour) is 114.308. Totally, we have 156 points from the Open price upwards and 43 points - downwards.
+92: 3. The bottom left segment opens at 113.601. The Low is 113.587, the High (after three hours) is 113.747. Totally, we have 146 points from the Open price upwards and 14 points - downwards.
+99: | Segment # | Open | High | Low | Maximum points | Minimum points |
+100: | --- | --- | --- | --- | --- | --- |
+101: | 1 | 113.521 | 113.553 | 113.341 | 180 | 32 |
+102: | 2 | 114.152 | 114.308 | 114.109 | 156 | 43 |
+103: | 3 | 113.601 | 113.747 | 113.587 | 146 | 14 |
+104: | 4 | 113.192 | 113.193 | 112.957 | 235 | 1 |
+105: | Summary | --- | --- | --- | minimum 146 | maximum 43 |
+107: As we can see in Table 1, the least of the maximum movements in one direction has comprised 146 points, while the strongest of the minimum ones — 43 points during all the four sessions. Let's round the maximum one down to 140 points and round the minimum one up to 45 points, accordingly.
+113: ### Coding the strategies
+119: - The div\_work variable is responsible for sharp price spikes: it limits the range, within which the signal can be located.
+120: - The div\_signal variable is responsible for signal distortion. The point of crossing the upper or lower indicator border is not considered a signal. Instead, it is given some reserve. In other words, the signal is triggered when the price goes beyond the border for the distance set in this variabl
+121: - The work\_alt variable is a flag that allows closing the current position and opening a new one when an opposite signal appears.
+123: ```
+129: #property copyright "Aktiniy"
+130: #property link      "BBFF"
+131: #property version   "1.01"
+132: #include<Trade\Trade.mqh>
+163: ```
+169: - two equivalent time variables (time\_now\_str, time\_now\_var) for convenience,
+170: - followed by the class object for working with orders,
+171: - indicator handle,
+172: - three small arrays for the indicator data at the current time (bb\_base\_line[], bb\_upper\_line[], bb\_lower\_line[]).
+173: - The work\_day variable is responsible for issuing orders by days of week.
+177: ```
+191: ```
+197: I assumed that the EA would work during all sessions (not only the Asian one). In addition, it is possible that the time of the terminal is different on different servers. Therefore, we need to check the working time. There are two options here: either work during the period, or use the transition through the daily period separator. Enter the data to the 'work' flag.
+201: ```
+208:    time_now_var=TimeCurrent(time_now_str);// current time
+233:       if(time_now_str.hour>=time_h_start || time_now_str.hour<=time_h_stop)
+240:       if(time_now_str.hour>=time_h_start && time_now_str.hour<=time_h_stop)
+296: ```
+298: The last code element: close all orders if the night session is closed. This ends the EA's code.
+308: - work — enable one-time placing of orders only,
+309: - work\_del — enable removal of an opposite order if one of the orders is triggered,
+310: - work\_day — enable working during the current day.
+314: ```
+320: #property copyright "Aktiniy"
+321: #property link      "TBOS"
+322: #property version   "1.01"
+323: #include<Trade\Trade.mqh>
+350: ```
+354: The beginning of the OnTick function is similar to the previous described EA. After getting the flag for working the current day, the check is performed on whether the current hour corresponds with it. If all is successful, calculate the parameters for opening orders (Take Profit, Stop Loss, Open price and time of removal in case of failure to trigger). Send the relevant trade requests to the serv
+358: ```
+365:    time_now_var=TimeCurrent(time_now_str);// current time
+386:    if(time_now_str.hour==order_time && work==true && work_day==true)
+403:       datetime time_end=time_now_var+time_to_del;     //3600 seconds, one hour
+435: ```
+439: ### Testing and profitability
+443: - Symbol: EURUSD
+444: - Period: М30 (2017.01.01 - 2017.11.03)
+445: - Broker: Halifax Investment Services Pty Ltd
+446: - Currency: AUD
+447: - Initial deposit: 100.00
+448: - Leverage: 1:100
+478: Previously, we have examined three session periods (Fig. 3) and described the strategy. Now, let's see the EA performance on the first two segments (Fig. 10 and 11):
+484: Fig. 10 (the first period from Fig. 3) shows that the EA implements three entries. The first is unsuccessful and ends with a stop loss, but the next two (at the end of the Asian session and the beginning of the European one) are closed by take profit.
+490: Fig. 11 (the second period from Fig. 3) shows that the EA performs two entries — at the end of the Asian session and the beginning of the European one. One of them turned out to be profitable, while the second one is loss-making. On the third period from Fig. 3, the EA did not enter the market. It was Tuesday, and according to the settings, the EA did not trade on this day.
+566: - The most suitable pairs for working with this EA are EURUSD, NZDUSD and AUDUSD. According to the parameters, the signals are most useful on the previously named pairs in case Take Profit and Stop Loss differ no more than three times. Of course, the profit here is more progressive as well.
+567: - A day of a week affects the profit. The behavior of currency pairs is different on different days of a week, although no stable patterns were detected: everything depends on the pair selected and the applied settings.
+573: - Symbol: USDJPY
+574: - Period: H1 (2017.01.01 - 2017.11.03)
+578: - order\_time=8;
+579: - order\_sl=140;
+580: - order\_tp=70;
+581: - order\_div=50;
+582: - time\_to\_del=18000.
+594: The chart shows that the strategy starts working approximately from the middle of the test. However, on the longer test period (approximately beginning with 2015), the strategy generally yields no profit. Also, according to these parameters, the entry is performed at 8:00 MSK, which means it affects the European session as well. This may be considered a morning trading.
+600: - Symbol: USDJPY
+601: - Period: H1 (2015.01.01 - 2017.11.03)
+607: Thus, the EA works only on Tuesday placing positions at 4:00 MSK (Asian session), stop loss and take profit are almost equal comprising 270 and 220 points respectively, orders are set at a distance of 130 from the entry price. The test results are shown in Fig. 20 and 21:
+619: ### Conclusion
+621: We can conclude that it is quite possible to trade "at night" (Asian session) profitably with a small drawdown. The [Bollinger Bands](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/bb "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/bb")-based strategy has turned out to be particularly efficient during the tests both at night and during the entire
+623: As for the volatility change-based strategy, it has turned out to be quite simple, but much less efficient. Although, it can be used as a supplement to the first one. It has also been tested during the day (including the European session) showing moderately good performance. It is much more dependent on the days of week than the [Bollinger Bands](https://www.metatrader5.com/en/terminal/help/indica
+627: | # | Name | Type | Description |
+628: | --- | --- | --- | --- |
+629: | 1 | BollingerBandsForFlat\_v1.01.mq5 | Expert Advisor | The EA focused on trading during the Asian session's flat movement. Based on [Bollinger Bands](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/bb "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicato
+630: | 2 | TimeBuyOrSell\_v1.01.mq5 | Expert Advisor | The EA focused on trading during the most volatile time |

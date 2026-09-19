@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_001",
+  "section": "Examples",
+  "parent_shard": "examples_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 654,
+      "title": "Debugging MQL5 Programs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\654.md"
+    },
+    {
+      "id": 656,
+      "title": "Indicator for Point and Figure Charting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\656.md"
+    },
+    {
+      "id": 689,
+      "title": "MQL5 Cookbook: Handling Typical Chart Events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\689.md"
+    },
+    {
+      "id": 690,
+      "title": "How to Install and Use OpenCL for Calculations",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\690.md"
+    },
+    {
+      "id": 691,
+      "title": "Trading Signal Generator Based on a Custom Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\691.md"
+    },
+    {
+      "id": 703,
+      "title": "Another MQL5 OOP Class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\703.md"
+    },
+    {
+      "id": 709,
+      "title": "MQL5 Programming Basics: Lists",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\709.md"
+    },
+    {
+      "id": 723,
+      "title": "MQL5 Wizard: How to Teach an EA to Open Pending Orders at Any Price",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\723.md"
+    },
+    {
+      "id": 728,
+      "title": "Marvel Your MQL5 Customers with a Usable Cocktail of Technologies!",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\728.md"
+    },
+    {
+      "id": 741,
+      "title": "Extending MQL5 Standard Library and Reusing Code",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\741.md"
+    },
+    {
+      "id": 748,
+      "title": "MQL5 Cookbook: Sound Notifications for MetaTrader 5 Trade Events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\748.md"
+    },
+    {
+      "id": 749,
+      "title": "MQL5 Cookbook: Monitoring Multiple Time Frames in a Single Window",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\749.md"
+    }
+  ]
+}

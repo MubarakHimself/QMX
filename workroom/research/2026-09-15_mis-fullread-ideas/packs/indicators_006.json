@@ -1,0 +1,107 @@
+{
+  "pack_id": "indicators_006",
+  "section": "Indicators",
+  "parent_shard": "indicators_006",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "custom indicator workshop",
+    "data science and machine learning",
+    "data science and ml",
+    "detecting structural breakpoints in price series using cusum in mql5",
+    "developing a trading expert advisor from scratch"
+  ],
+  "n": 10,
+  "articles": [
+    {
+      "id": 23656,
+      "title": "Learnable Curves, Not Weights: A Kolmogorov-Arnold Network from Scratch",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23656.md"
+    },
+    {
+      "id": 23759,
+      "title": "Building a Dynamic ATR-Based Trend Channel Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23759.md"
+    },
+    {
+      "id": 23815,
+      "title": "Building a Hull Moving Average Momentum Oscillator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23815.md"
+    },
+    {
+      "id": 20755,
+      "title": "Custom Indicator Workshop (Part 1): Building the Supertrend Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "Custom Indicator Workshop (): Building the Supertrend Indicator in MQL5",
+      "series_key": "custom indicator workshop",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20755.md"
+    },
+    {
+      "id": 21497,
+      "title": "Custom Indicator Workshop (Part 3): Building the UT Bot Alerts Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "Custom Indicator Workshop (): Building the UT Bot Alerts Indicator in MQL5",
+      "series_key": "custom indicator workshop",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21497.md"
+    },
+    {
+      "id": 17361,
+      "title": "Data Science and ML (Part 34): Time series decomposition, Breaking the stock market down to the core",
+      "section": "Indicators",
+      "series_title": "Data Science and ML (): Time series decomposition, Breaking the stock market down to the core",
+      "series_key": "data science and ml",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17361.md"
+    },
+    {
+      "id": 14760,
+      "title": "Data Science and Machine Learning (Part 22): Leveraging Autoencoders Neural Networks for Smarter Trades by Moving from Noise to Signal",
+      "section": "Indicators",
+      "series_title": "Data Science and Machine Learning (): Leveraging Autoencoders Neural Networks for Smarter Trades by Moving from Noise to Signal",
+      "series_key": "data science and machine learning",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14760.md"
+    },
+    {
+      "id": 23043,
+      "title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 1): From Statistical Theory to a Working MQL5 Indicator",
+      "section": "Indicators",
+      "series_title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (): From Statistical Theory to a Working MQL5 Indicator",
+      "series_key": "detecting structural breakpoints in price series using cusum in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23043.md"
+    },
+    {
+      "id": 23103,
+      "title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 2): Implementing the Detector as a Native MQL5 Indicator",
+      "section": "Indicators",
+      "series_title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (): Implementing the Detector as a Native MQL5 Indicator",
+      "series_key": "detecting structural breakpoints in price series using cusum in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23103.md"
+    },
+    {
+      "id": 10363,
+      "title": "Developing a trading Expert Advisor from scratch (Part 9): A conceptual leap (II)",
+      "section": "Indicators",
+      "series_title": "Developing a trading Expert Advisor from scratch (): A conceptual leap (II)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10363.md"
+    }
+  ]
+}

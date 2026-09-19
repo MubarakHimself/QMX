@@ -1,0 +1,1230 @@
+# Applying L1 Trend Filtering in MetaTrader 5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 20 April 2026 at 05:21
+3 767
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+9](https://www.mql5.com/en/forum/508604 "Comments")
+[MetaQuotes](https://www.mql5.com/en/users/metaquotes)
+The primary goal of L1 trend filtering is to extract the underlying trend from a time series in such a way that:
+- long-term dynamics of the data are preserved;
+- short-term fluctuations and noise are suppressed;
+- structural breakpoints (changes in trend slope) are automatically detected.
+Unlike classical smoothing methods, this approach does not enforce smoothness of the trend and instead produces a piecewise-linear approximation, which is particularly important for financial time series analysis.
+**Contents**
+- [Introduction](https://www.mql5.com/en/articles/21142#intro)
+- [1. Problem formulation of trend filtering](https://www.mql5.com/en/articles/21142#ch_1)  
+  [1.1. Hodrick–Prescott filter](https://www.mql5.com/en/articles/21142#ch_1_1)  
+  [1.2. L1 trend filtering method](https://www.mql5.com/en/articles/21142#ch_1_2)  
+  [1.3. Role of the regularization parameter λ](https://www.mql5.com/en/articles/21142#ch_1_3)  
+  [1.4. Geometric interpretation](https://www.mql5.com/en/articles/21142#ch_1_4)[1.5. Algorithm for computing λmax](https://www.mql5.com/en/articles/21142#ch_1_5)
+- [2. MQL5 methods for calculation the L1 trend](https://www.mql5.com/en/articles/21142#ch_2)  
+  [2.1. L1TrendFilterLambdaMax](https://www.mql5.com/en/articles/21142#ch_2_1)  
+  [2.2. L1TrendFilter](https://www.mql5.com/en/articles/21142#ch_2_2)
+- [3. Examples of L1 trend computation](https://www.mql5.com/en/articles/21142#ch_3)  
+  [3.1. L1 trend on synthetic data (random walk)](https://www.mql5.com/en/articles/21142#ch_3_1)  
+  [3.2. L1 trend for S&P 500 price series](https://www.mql5.com/en/articles/21142#ch_3_2)  
+  [3.3. Scaling properties of λmax⁡](https://www.mql5.com/en/articles/21142#ch_3_3)  
+  [3.3.1. Numerical experiment for Brownian motion](https://www.mql5.com/en/articles/21142#ch_3_3_1)  
+  [3.3.2. Scaling for financial time series](https://www.mql5.com/en/articles/21142#ch_3_3_2)  
+  [3.3.3. Practical implications of scaling](https://www.mql5.com/en/articles/21142#ch_3_3_3)  
+  [3.4. L1 trend indicators](https://www.mql5.com/en/articles/21142#ch_3_4)  
+  [3.4.1. L1TrendFilter.mq5 - L1 trend indicator](https://www.mql5.com/en/articles/21142#ch_3_4_1)  
+  [3.4.2. L1TrendFilterSlope.mq5 - L1 trend slope indicator](https://www.mql5.com/en/articles/21142#ch_3_4_2)  
+  [3.4.3. L1TrendFilterSlopeSign.mq5 - trend direction indicator](https://www.mql5.com/en/articles/21142#ch_3_4_3)
+- [3.4.4. Volatility Indicators Based on the L1 Trend](https://www.mql5.com/en/articles/21142#ch_3_4_4)  
+  [3.4.4.1. L1Volatility.mq5 - residual volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_1)  
+  [3.4.4.2. L1VolatilitySmoothed.mq5 - smoothed residual volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_2)  
+  [3.4.4.3. L1VolatilityAbsolute.mq5 - absolute volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_3)  
+  [3.4.4.4. L1VolatilityNormalized.mq5 - normalized volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_4)  
+  [3.4.4.5. L1VolatilityNormalizedSmoothed.mq5 - smoothed normalized volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_5)  
+  [3.4.4.6. L1VolatilityRegime.mq5 - market regime detection based on volatility](https://www.mql5.com/en/articles/21142#ch_3_4_4_6)
+- [3.5. Application of L1 trend in trading strategies](https://www.mql5.com/en/articles/21142#ch_3_5)  
+   [3.5.1. Moving Average strategy](https://www.mql5.com/en/articles/21142#ch_3_5_1)[3.5.1.1. General methodology for evaluating L1 trend filtering efficiency](https://www.mql5.com/en/articles/21142#ch_3_5_1_1)  
+  [3.5.1.2. Results for Moving Average strategy](https://www.mql5.com/en/articles/21142#ch_3_5_1_2)  
+   [3.5.2. MACD strategy](https://www.mql5.com/en/articles/21142#ch_3_5_2)[3.5.2.1. Results for MACD strategy](https://www.mql5.com/en/articles/21142#ch_3_5_2_1)  
+   [3.5.3. ADX strategy](https://www.mql5.com/en/articles/21142#ch_3_5_3)  
+  [3.5.3.1. Results for ADX strategy](https://www.mql5.com/en/articles/21142#ch_3_5_3_1)  
+  [3.5.4. EMA strategy](https://www.mql5.com/en/articles/21142#ch_3_5_4)  
+  [3.5.4.1. Results for EMA strategy](https://www.mql5.com/en/articles/21142#ch_3_5_4_1)  
+  [3.5.5. Summary on the use of the L1 filter in MovingAverage, MACD, ADX, and EMA trading strategies](https://www.mql5.com/en/articles/21142#ch_3_5_5)
+- [Conclusion](https://www.mql5.com/en/articles/21142#summary)
+### Introduction
+Financial time series are characterized by high noise levels, frequent outliers, and changing market regimes. In practical trading systems, this manifests in a simple and measurable way: classical “smooth” filters (moving averages, HP) lag behind, blur the moments of slope changes, and often interpret local corrections as reversals — as a result, the number of false entries/exits increases, the Profit Factor decreases, and drawdown grows. In addition, the selection of the regularization parameter λ is usually reduced to manual tuning and does not transfer well across instruments, timeframes, and history lengths.  
+This paper proposes a practical solution to these problems based on L1 trend filtering: optimization with L1 regularization of second differences automatically produces a piecewise-linear approximation with explicit breakpoints. The key advantages are a clear interpretation of breakpoints as regime changes, the ability to set the scale of regularization via computing λmax and moving to a relative parameter λ = coef · λmax, as well as linear computational complexity suitable for implementation in MQL5.  
+We present not only the theory, but also a complete practical roadmap: methods for computing λmax and the L1 trend, three indicators (trend, slope, slope sign), seven L1-trend volatility indicators, integration into Expert Advisors, and a reproducible testing protocol (four filtering modes, balance/equity export, and visualization).
+### 1. Formulation of the Trend Filtering Problem
+We consider a scalar time series represented as the sum of two components:
+where  ![](https://c.mql5.com/2/202/4103178472643.png)  is the trend component, and  ![](https://c.mql5.com/2/202/5972625488545.png) is a noise or an irregular component.
+The objective is to estimate the trend ​ ![](https://c.mql5.com/2/202/5514518418304.png) from the observed data  ![](https://c.mql5.com/2/202/4484728094573.png)​.
+The problem can be expressed as a trade-off between fidelity to the original data and smoothness of the estimated trend.
+
+----- METHOD/CLAIM SWEEP -----
+
+
+![Applying L1 Trend Filtering in MetaTrader 5](https://c.mql5.com/2/207/21142-applying-l1-trend-filtering-in-metatrader-5_600x314.jpg)
+# Applying L1 Trend Filtering in MetaTrader 5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+The primary goal of L1 trend filtering is to extract the underlying trend from a time series in such a way that:
+- long-term dynamics of the data are preserved;
+![L1 trend filtering](https://c.mql5.com/2/202/L1_trend_logo.png "L1 trend filtering")
+  
+- [Introduction](https://www.mql5.com/en/articles/21142#intro)
+- [1. Problem formulation of trend filtering](https://www.mql5.com/en/articles/21142#ch_1)  
+  [1.1. Hodrick–Prescott filter](https://www.mql5.com/en/articles/21142#ch_1_1)  
+  [1.2. L1 trend filtering method](https://www.mql5.com/en/articles/21142#ch_1_2)  
+  [1.3. Role of the regularization parameter λ](https://www.mql5.com/en/articles/21142#ch_1_3)  
+  [1.4. Geometric interpretation](https://www.mql5.com/en/articles/21142#ch_1_4)[1.5. Algorithm for computing λmax](https://www.mql5.com/en/articles/21142#ch_1_5)
+- [2. MQL5 methods for calculation the L1 trend](https://www.mql5.com/en/articles/21142#ch_2)  
+  [2.1. L1TrendFilterLambdaMax](https://www.mql5.com/en/articles/21142#ch_2_1)  
+  [2.2. L1TrendFilter](https://www.mql5.com/en/articles/21142#ch_2_2)
+- [3. Examples of L1 trend computation](https://www.mql5.com/en/articles/21142#ch_3)  
+    
+  [3.1. L1 trend on synthetic data (random walk)](https://www.mql5.com/en/articles/21142#ch_3_1)  
+  [3.2. L1 trend for S&P 500 price series](https://www.mql5.com/en/articles/21142#ch_3_2)  
+  [3.3. Scaling properties of λmax⁡](https://www.mql5.com/en/articles/21142#ch_3_3)  
+  [3.3.1. Numerical experiment for Brownian motion](https://www.mql5.com/en/articles/21142#ch_3_3_1)  
+  [3.4. L1 trend indicators](https://www.mql5.com/en/articles/21142#ch_3_4)  
+  [3.4.1. L1TrendFilter.mq5 - L1 trend indicator](https://www.mql5.com/en/articles/21142#ch_3_4_1)  
+  [3.4.2. L1TrendFilterSlope.mq5 - L1 trend slope indicator](https://www.mql5.com/en/articles/21142#ch_3_4_2)  
+  [3.4.3. L1TrendFilterSlopeSign.mq5 - trend direction indicator](https://www.mql5.com/en/articles/21142#ch_3_4_3)
+- [3.4.4. Volatility Indicators Based on the L1 Trend](https://www.mql5.com/en/articles/21142#ch_3_4_4)  
+  [3.4.4.1. L1Volatility.mq5 - residual volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_1)  
+  [3.4.4.2. L1VolatilitySmoothed.mq5 - smoothed residual volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_2)  
+  [3.4.4.3. L1VolatilityAbsolute.mq5 - absolute volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_3)  
+  [3.4.4.4. L1VolatilityNormalized.mq5 - normalized volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_4)  
+  [3.4.4.5. L1VolatilityNormalizedSmoothed.mq5 - smoothed normalized volatility indicator](https://www.mql5.com/en/articles/21142#ch_3_4_4_5)  
+  [3.4.4.6. L1VolatilityRegime.mq5 - market regime detection based on volatility](https://www.mql5.com/en/articles/21142#ch_3_4_4_6)
+- [3.5. Application of L1 trend in trading strategies](https://www.mql5.com/en/articles/21142#ch_3_5)  
+   [3.5.1. Moving Average strategy](https://www.mql5.com/en/articles/21142#ch_3_5_1)[3.5.1.1. General methodology for evaluating L1 trend filtering efficiency](https://www.mql5.com/en/articles/21142#ch_3_5_1_1)  
+  [3.5.1.2. Results for Moving Average strategy](https://www.mql5.com/en/articles/21142#ch_3_5_1_2)  
+   [3.5.2. MACD strategy](https://www.mql5.com/en/articles/21142#ch_3_5_2)[3.5.2.1. Results for MACD strategy](https://www.mql5.com/en/articles/21142#ch_3_5_2_1)  
+   [3.5.3. ADX strategy](https://www.mql5.com/en/articles/21142#ch_3_5_3)  
+  [3.5.3.1. Results for ADX strategy](https://www.mql5.com/en/articles/21142#ch_3_5_3_1)  
+    
+  [3.5.4. EMA strategy](https://www.mql5.com/en/articles/21142#ch_3_5_4)  
+  [3.5.4.1. Results for EMA strategy](https://www.mql5.com/en/articles/21142#ch_3_5_4_1)  
+  [3.5.5. Summary on the use of the L1 filter in MovingAverage, MACD, ADX, and EMA trading strategies](https://www.mql5.com/en/articles/21142#ch_3_5_5)
+- [Conclusion](https://www.mql5.com/en/articles/21142#summary)
+
+### Introduction
+Financial time series are characterized by high noise levels, frequent outliers, and changing market regimes. In practical trading systems, this manifests in a simple and measurable way: classical “smooth” filters (moving averages, HP) lag behind, blur the moments of slope changes, and often interpret local corrections as reversals — as a result, the number of false entries/exits increases, the Profit Factor decreases, and drawdown grows. In addition, the selection of the regularization parameter λ is usually reduced to manual tuning and does not transfer well across instruments, timeframes, and history lengths.  
+### 1. Formulation of the Trend Filtering Problem
+We consider a scalar time series represented as the sum of two components:
+### 1.1. Hodrick–Prescott Filter
+The Hodrick–Prescott filter defines the trend as the solution to the minimization problem:
+However, the HP filter always produces a smooth trend and poorly detects sharp changes in slope.
+  
+### 1.2. L1 Trend Filtering Method
+The main idea of L1 trend filtering is to find a trend that is close to the original data but contains as few changes in slope as possible. Unlike classical smoothing methods that minimize the squared curvature, the L1 approach minimizes the sum of absolute values of second differences.  
+This leads to a fundamentally different result:
+Thus, the L1 filter does not attempt to make the trend smooth but instead finds the minimal number of structural changes that explain the observed data. This makes the method particularly suitable for financial time series, where dynamics often consist of sequences of quasi-linear growth and decline phases.
+In L1 trend filtering, the quadratic penalty on second differences is replaced by the L1 norm, and the trend is defined as the solution to a convex optimization problem:
+![](https://c.mql5.com/2/202/2358443759220.png)
+In matrix form:
+![](https://c.mql5.com/2/202/3276470711672.png)
+- x — the estimated trend;
+- D — second-difference matrix;
+- λ>=0 — regularization parameter.
+Thus, the L1 Trend Filtering method automatically constructs the trend as a set of linear segments connected at points of structural change.
+
+Main properties of L1 trend filtering:
+- The trend consists of linear segments;
+### 1.3. Role of the Regularization Parameter λ
+The parameter λ controls the trade-off between approximation accuracy and trend complexity:
+### 1.4. Geometric Interpretation of the Problem
+The desired trend x can be viewed as a point in an n-dimensional space. The first term of the objective function, responsible for approximation accuracy, defines a Euclidean ball centered at the observation point y: the closer x is to y, the smaller the error.  
+### 1.5. Algorithm for Computing λmax
+Consider the computation of the maximum regularization parameter λmax for an input vector y of length N.
+1. Construct the second-difference matrix D of size (N−2)×N:
+![](https://c.mql5.com/2/202/3323646824143.png)
+### 2. MQL5 Methods for Calculation the L1 Trend
+For practical use of L1 trend filtering, two methods are implemented for vectors of type double and float.
+- L1TrendFilterLambdaMax computes the maximum regularization parameter;
+- L1TrendFilter computes the L1 trend for a given value of the regularization parameter λ, which can also be specified in units of λmax.
+  
+### 2.1. L1TrendFilterLambdaMax
+Method for calculation the maximum regularization parameter λmax for a data vector.
+### 2.2. L1TrendFilter
+Method for calculation the L1 trend for a data vector.
+   bool            relative,       // flag indicating lambda is in λmax units
+   vector&         result          // output vector with L1 filtering result
+   );
+```
+   vectorf&        result          // output vector with L1 filtering result
+*result*
+
+[out] Vector containing the result of L1 filtering.  
+| λ multiplier | Result |
+| --- | --- |
+| 0.005 – 0.015 | almost L2, noisy |
+### 3. Examples of Application
+In this section, we consider L1 trend calculations on simulated Brownian motion data, on S&P 500 price data, as well as scaling properties of λmax for both Brownian motion and FOREX market data.  
+Additionally, results of filtering trading signals (alignment with the L1 trend) are presented for the MovingAverage, MACD, ADX, and EMA strategies.
+### 3.1. L1 Trend Calculation on Simulated Data (Random Walk)
+As an example, consider computing the L1 trend with different values of the regularization parameter λ on simulated Brownian motion data.
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property script_show_inputs
+#include <Graphics\Graphic.mqh>
+//| Generate Brown movement data                                     |
+   else
+      graphic.Attach(chart,name);
+   graphic.BackgroundMain("L1 Trend filtering (random walk) with different lambda");
+   graphic.BackgroundMainSize(16);
+   graphic.HistoryNameWidth(60);
+   graphic.HistoryColor(ColorToARGB(clrGray,255));
+   graphic.XAxis().AutoScale(false);
+   CopyValues(data_test,y);
+   graphic.CurveAdd(x,y,CURVE_LINES,"Data").LinesWidth(1);
+//--- L1TrendFilterLambdaMax
+   double lambda_max=0.0;
+   if(data_test.L1TrendFilterLambdaMax(lambda_max))
+         CopyValues(data_l1,y);
+         graphic.CurveAdd(x,y,CURVE_LINES,"lambda="+DoubleToString(lambda,0)).LinesWidth(3);
+        }
+     }
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+
+#include <Graphics\Graphic.mqh>
+uint32_t ExtSeed=1;
+      return(false);
+   if(ArrayResize(result,(uint32_t)vres.Size())!=vres.Size())
+   for(uint64_t n=0; n<result.Size(); n++)
+      result[n]=vres[n];
+   return(true);
+   else
+      graphic.Attach(chart,name);
+   string mode_name="(";
+   graphic.BackgroundMainSize(16);
+   graphic.HistoryNameWidth(60);
+   graphic.HistoryColor(ColorToARGB(clrGray,255));
+   graphic.XAxis().AutoScale(false);
+   BMData(v,data_count);
+   v.Swap(y);
+   graphic.CurveAdd(x,y,CURVE_LINES,"Data").LinesWidth(1);
+//--- calculate
+   const double lambda_factors[]= {1.0,0.9,0.8,0.5,0.25,0.1,0.01,0.05,0.001,0.0005};
+         if(L1TrendCalculate<double>(y,data_count,lambda_factors[i],true))
+            graphic.CurveAdd(x,y,CURVE_LINES,"DBL="+DoubleToString(lambda_factors[i],4)).LinesWidth(4);
+        }
+     }
+         if(L1TrendCalculate<float>(y,data_count,(float)lambda_factors[i],true))
+            graphic.CurveAdd(x,y,CURVE_LINES,"FLT="+DoubleToString(lambda_factors[i],4)).LinesWidth(2);
+  {
+   for(uint32_t n=0; !IsStopped(); n++,Sleep(1000))
+     {
+      TestRun(1000,1+n%3);
+
+### 3.2. L1 Trend Calculation for S&P 500 Price Series
+Consider the computation of log(S&P 500) from the original paper [l\_1 Trend Filtering](https://web.stanford.edu/~boyd/papers/l1_trend_filter.html "https://web.stanford.edu/~boyd/papers/l1_trend_filter.html"), S.J. Kim, K. Koh, S. Boyd, and D. Gorinevsky, SIAM Review, problems and techniques section, 51(2):339–360, May 2009.   
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property script_show_inputs
+#include <Graphics\Graphic.mqh>
+//| LoadData                                                         |
+   data_l1_sp500.Resize(data_count);
+//--- L1TrendFilterLambdaMax
+   double lambda_max=0.0;
+   if(data_sp500.L1TrendFilterLambdaMax(lambda_max))
+   double lambda=50;
+//--- L1TrendFilter
+   if(data_sp500.L1TrendFilter(lambda,false,data_l1_sp500))
+      else
+         graphic.Attach(chart,name);
+      graphic.BackgroundMain("log SP500 L1 trend filtering");
+      graphic.BackgroundMainSize(16);
+      graphic.HistoryNameWidth(60);
+      graphic.HistoryColor(ColorToARGB(clrGray,255));
+      graphic.XAxis().AutoScale(false);
+      graphic.XAxis().Max(data_count);
+      graphic.XAxis().DefaultStep(100);
+      graphic.CurveAdd(x,y,CURVE_LINES,"SP500").LinesWidth(1);
+      graphic.CurveAdd(x,y2,CURVE_LINES,"L1 trend").LinesWidth(3);
+      graphic.CurvePlotAll();
+      graphic.Update();
+
+The result of the script execution is shown in Fig.2.
+![Fig.2. Example of L1-trend estimation for log price series of the S&P 500 index](https://c.mql5.com/2/202/Fig_L1_trend_SP500.png "Fig.2. Example of L1-trend estimation for log price series of the S&P 500 index")
+```
+TestL1TrendFilterSP500 (EURUSD,H1)      Lambda_max=37394.835512
+### 3.3. Scaling Properties of λmax⁡
+The parameter λmax plays a key role in L1 filtering, as it defines the upper bound of regularization at which the solution degenerates into a global linear approximation. An interesting property of this quantity is its scaling dependence on the length of the time series.  
+where: T — length of the time series, α — scaling exponent.
+For a random walk (Brownian motion), it can be shown that the exponent should be close to α ≈ 2.5. The amplitude of Brownian motion grows as  ![](https://c.mql5.com/2/202/3296388056266.png), while the second-difference operator scales as ![](https://c.mql5.com/2/202/2847096738394.png).  In computing λmax, one effectively evaluates the maximum of a quantity related to the integral of the curvature of the series.
+As a result, the combined scaling leads to the relationship:
+![](https://c.mql5.com/2/202/4046181363939.png)
+which corresponds to an exponent α ≈ 2.5.  
+  
+Thus, as the length of the time series increases, the value of λmax grows significantly faster than linearly.
+### 3.3.1. Numerical Experiment for Brownian Motion
+To verify the scaling law, a numerical experiment was conducted.  
+which allows estimating the exponent α using linear regression.  
+The code for the experiment is given below.
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#include <Graphics\Graphic.mqh>
+//| Generate Brownian motion                                         |
+   double percent_error=MathAbs(mean-alpha_theory)/alpha_theory*100.0;
+//--- results
+   PrintFormat("mean alpha = %.6f", mean);
+   PrintFormat("std deviation = %.6f", stddev);
+   TestScalingStatistics();
+//--- show sample results
+   TestScaling();
+  }
+
+The simulation results show:
+```
+### 3.3.2. Scaling for financial time series
+A similar experiment was conducted for FOREX market price series. For different currency pairs and timeframes, the exponent α was estimated.
+The results show that for real financial data the value of α also lies in the range α ≈ 2.45–2.60, which is very close to the theoretical value for Brownian motion. This means that the scaling behavior of λmax is nearly universal and holds across different markets and timeframes.
+The script TestScalingLambdaMaxSymbol.mq5 computes the exponent of λmax for a given symbol across standard timeframes M1–H1.
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property script_show_inputs
+//--- input parameters
+input string WorkSymbol   = "EURUSD";     // Symbol
+input int    YearEnd      = 2025;
+#include <Graphics\Graphic.mqh>
+//| GetHistoricalData                                                |
+Results for EURUSD:
+The results for EURUSD (standard timeframes M1–H1) are shown in Fig. 4.
+![Fig.4. Power-law dependence of λmax for the different EURUSD timeframes](https://c.mql5.com/2/202/Fig_LambdaMax_Scaling_Law_EURUSD.png "Fig.4. Power-law dependence of λmax for the different EURUSD timeframes")
+The results for USDJPY are also well approximated by a power-law relationship.
+
+![Fig.5. Power-law dependence of λmax for the different USDJPY timeframes](https://c.mql5.com/2/202/Fig_LambdaMax_Scaling_Law_USDJPY.png "Fig.5. Power-law dependence of λmax for the different USDJPY timeframes")
+### 3.3.3. Practical implications of scaling
+The existence of a power-law dependence for λmax has an important practical implication.
+### 3.4. L1 trend indicators
+In this section, three types of indicators are considered:
+### 3.4.1. L1TrendFilter.mq5 - L1 trend indicator
+In this example, the L1 filter is computed using closing prices for a specified number of bars (in the example, BarsToShow = 1000) with the lambda coefficient specified in units of λmax.
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_chart_window
+#property indicator_buffers 1
+#property indicator_plots   1
+//---
+#property indicator_label1  "L1TrendFilter"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_width1  2
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+     }
+//--- L1 trend filtering
+   vector<double> filtered_data;
+   filtered_data.Resize(data_count);
+   if(DataClose.L1TrendFilter(CoefLambda,true,filtered_data))
+     {
+
+### 3.4.2. L1TrendFilterSlope.mq5 - indicator of L1 trend dynamics
+To display the trend slope, one can use the increment of the L1TrendFilter indicator values.
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+//---
+#property indicator_label1  "L1TrendFilterSlope"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_width1  2
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+     }
+//--- L1 filtering
+   vector<double> filtered_data;
+   filtered_data.Resize(data_count);
+   bool res=DataClose.L1TrendFilter(CoefLambda,true,filtered_data);
+   if(res)
+
+The result of the joint L1TrendFilter.mq5 and L1TrendFilterSlope.mq5 indicators is shown in Fig. 9.
+![Fig.9. Example of L1TrendFilter.mq5 and L1TrendFilterSlope.mq5 indicators calculation with CoefLambda = 0.015](https://c.mql5.com/2/202/Fig_L1TrendFilter_indicator_MQL5_Slope.png "Fig.9. Example of L1TrendFilter.mq5 and L1TrendFilterSlope.mq5 indicators calculation with CoefLambda = 0.015")
+### 3.4.3. L1TrendFilterSlopeSign.mq5 - indicator of L1 trend direction
+Similarly, one can compute an indicator that displays the sign of the increment of the L1TrendFilterSlope.mq5 indicator.
+Code of the L1TrendFilterSlopeSign.mq5 indicator:
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+//---
+#property indicator_label1  "L1TrendFilterSlope"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_width1  2
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+     }
+//--- L1 filtering
+   vector<double> filtered_data;
+   filtered_data.Resize(data_count);
+   res=DataClose.L1TrendFilter(CoefLambda,true,filtered_data);
+   if(res)
+
+### 3.4.4. Volatility Indicators Based on the L1 Trend
+This section presents indicators designed to evaluate the volatility of a financial instrument based on the L1 trend.
+- L1Volatility.mq5 — residual volatility relative to the L1 trend;
+- L1VolatilitySmoothed.mq5 — smoothed residual volatility;
+- L1VolatilityAbsolute.mq5 — absolute volatility;
+- L1VolatilityNormalized.mq5 — normalized volatility;
+- L1VolatilityNormalizedSmoothed.mq5 — smoothed normalized volatility;
+- L1VolatilityRegime.mq5 — market regime detection based on volatility.
+All indicators are built upon a unified L1-trend framework, which ensures analytical consistency and simplifies interpretation of the obtained results.
+As a result, a trader can adapt trading strategies to prevailing market conditions, for example by applying more conservative approaches during low-volatility periods or more active strategies during strong market movements.
+  
+### 3.4.4.1. L1Volatility.mq5 — L1 Volatility Indicator
+The indicator calculates residual volatility as the difference between the closing prices and the corresponding value of the L1 trend.
+- Evaluate price deviations from the L1 trend and measure market movement strength;
+- Detect local volatility spikes for more accurate risk management;
+- Compare the dynamics of different instruments within the same timeframe.
+The code of the L1Volatility.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+//---
+#property indicator_label1  "L1Volatility"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrOrangeRed
+#property indicator_width1  2
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+double Volatility[];
+  {
+   SetIndexBuffer(0,Volatility,INDICATOR_DATA);
+   ArrayInitialize(Volatility,EMPTY_VALUE);
+   PlotIndexSetDouble(0,PLOT_EMPTY_VALUE,EMPTY_VALUE);
+   for(int i=0;i<start;i++)
+      Volatility[i]=EMPTY_VALUE;
+//--- copy Close
+   vector<double> DataClose;
+     }
+//--- L1 filter
+   vector<double> filtered_data;
+   filtered_data.Resize(data_count);
+   res=DataClose.L1TrendFilter(CoefLambda,true,filtered_data);
+   if(res)
+         double residual=close[start+i]-filtered_data[i];
+         Volatility[start+i]=residual;
+        }
+
+The calculation result is shown in Fig. 11.
+![Fig. 11. L1Volatility.mq5 Indicator](https://c.mql5.com/2/203/L1Volatility_indicator__2.png "Fig. 11. L1Volatility.mq5 Indicator")
+Fig. 11. L1Volatility.mq5 Indicator
+  
+### 3.4.4.2. L1VolatilitySmoothed.mq5 — Smoothed Residual Volatility Indicator
+This indicator represents a smoothed version of L1Volatility, where a Simple Moving Average (SMA) is applied.  
+The code of the L1VolatilitySmoothed.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "L1VolatilitySmoothed"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrMediumVioletRed
+#property indicator_width1  2
+//---
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+
+![Fig.12. L1Volatility.mq5 and L1VolatilitySmoothed.mq5 Indicators](https://c.mql5.com/2/203/L1VolatilitySmoothed_indicator__2.png "Fig.12. L1Volatility.mq5 and L1VolatilitySmoothed.mq5 Indicators")
+Fig.12. L1Volatility.mq5 and L1VolatilitySmoothed.mq5 Indicators
+  
+### 3.4.4.3. L1VolatilityAbsolute.mq5 — Absolute Volatility Indicator
+The indicator computes the absolute value of the difference between the closing prices and the L1 trend.
+Absolute volatility reflects the true magnitude of price deviations, enabling the trader to observe the strength of market movement without being distracted by its direction.
+The code of the L1VolatilityAbsolute.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "L1VolatilityAbsolute"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrOrange
+#property indicator_width1  2
+//---
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+
+![Fig.13. L1VolatilityAbsolute.mq5 Indicator](https://c.mql5.com/2/203/L1VolatilityAbsolute__2.png "Fig.13. L1VolatilityAbsolute.mq5 Indicator")
+Fig.13. L1VolatilityAbsolute.mq5 Indicator
+### 3.4.4.4. L1VolatilityNormalized.mq5 — Normalized Volatility Indicator
+The indicator normalizes volatility using ATR (Average True Range) together with the L1 trend.
+It calculates the ratio of the absolute price deviation from the trend to the average price range over the ATR period.Normalization removes price-scale dependence, allowing comparison across different instruments and timeframes.
+Applications include:
+- Identification of relatively strong and weak market movements;
+- Comparison of volatility between different assets;
+- Evaluation of market conditions independently of price level.
+The code of the L1VolatilityNormalized.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "L1VolatilityNormalized"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_width1  2
+//---
+input int    BarsToShow = 1000;  // Number of bars to calculate L1
+
+The calculation result is shown in Fig.14.
+![Fig.14. L1VolatilityNormalized.mq5 Indicator](https://c.mql5.com/2/203/L1VolatilityNormalized__2.png "Fig.14. L1VolatilityNormalized.mq5 Indicator")
+Fig.14. L1VolatilityNormalized.mq5 Indicator
+  
+### 3.4.4.5. L1VolatilityNormalizedSmoothed.mq5 — Smoothed Normalized Volatility Indicator
+This indicator extends the normalization approach by adding exponential moving average (EMA) smoothing.  
+The code of the L1VolatilityNormalizedSmoothed.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "L1VolatilityNormalizedSmoothed"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDeepSkyBlue
+#property indicator_width1  2
+//---
+input int    BarsToShow   = 1000;  // Number of bars to calculate L1
+      //--- EMA smoothing
+      vector<double> Smooth(BarsToShow);
+      double alpha=(SmoothPeriod<=1) ? 1.0: 2.0/(SmoothPeriod+1.0);
+      //---
+
+The calculation result is shown in Fig.15.
+![Fig.15. L1VolatilityNormalized.mq5 and L1VolatilityNormalizedSmoothed.mq5 Indicators](https://c.mql5.com/2/203/L1VolatilityNormalizedSmoothed__2.png "Fig.15. L1VolatilityNormalized.mq5 and L1VolatilityNormalizedSmoothed.mq5 Indicators")
+Fig.15. L1VolatilityNormalized.mq5 and L1VolatilityNormalizedSmoothed.mq5 Indicators
+  
+### 3.4.4.6. L1VolatilityRegime.mq5 — Market Regime Detection Indicator
+The indicator classifies the current market regime based on normalized and smoothed volatility, identifying four market states.
+Indicator features:
+- Provides clear visualization of market dynamics for adaptive strategies;
+- Threshold parameters LowVolThresh and HighVolThresh can be adjusted for different instruments and timeframes.
+| Value | Regime | Description |
+| --- | --- | --- |
+| 0 | Range | Low volatility, sideways market |
+| 1 | Trend | Moderate volatility, presence of a trend |
+| 2 | Expansion | Strong movement, market expansion |
+Table 3. Regimes of the L1VolatilityRegime.mq5 Indicator
+- Quickly determine the current market regime;
+The code of the L1VolatilityRegime.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+//---
+#property indicator_label1  "L1 Volatility Regime"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrRoyalBlue
+#property indicator_width1  2
+//--- input parameters
+input int    BarsToShow    = 1000;  // Number of bars to calculate L1
+input double CoefLambda    = 0.015; // Lambda in lambda_max units
+input int    ATRPeriod     = 14;    // ATR period
+input int    SmoothPeriod  = 10;    // Smooth period
+input double L1MoveThresh  = 0.0;   // Move volatility
+double Regime[];
+//| Indicator initialization function                                |
+//--- check bars
+   if(rates_total<BarsToShow+ATRPeriod)
+     {
+      ArrayInitialize(Regime,EMPTY_VALUE);
+   for(int i=0; i<start; i++)
+      Regime[i]=EMPTY_VALUE;
+   vector<double> DataClose(count),DataHigh(count),DataLow(count);
+   for(int i=0; i<count; i++)
+//---
+   vector<double> TR(count),ATR(count);
+        }
+      int from=MathMax(0,i-ATRPeriod+1);
+      double sumTR=0.0;
+      int n = i-from+1;
+         sumTR += TR[j];
+      ATR[i]=sumTR/n;
+     }
+      NormVol[i]=(ATR[i]>0) ? MathAbs(DataClose[i]-L1[i])/ATR[i] : 0;
+   double alpha=2.0/(SmoothPeriod+1.0);
+   SmoothVol[0]=NormVol[0];
+      if(vol<LowVolThresh)
+         Regime[start+i]=0; // Range
+      else
+         if(vol>=LowVolThresh && vol<HighVolThresh)
+            Regime[start+i]=(MathAbs(deltaL1)>L1MoveThresh) ? 1:0; // Trend/Range
+         else
+            if(vol>=HighVolThresh && vol<HighVolThresh*PanicMult)
+               Regime[start+i]=2; // Expansion
+            else
+               Regime[start+i]=3; // Panic
+//---
+
+The calculation result is shown in Fig.16.
+![Fig.16. L1VolatilityRegime.mq5 Indicator](https://c.mql5.com/2/203/L1VolatilityRegime__2.png "Fig.16. L1VolatilityRegime.mq5 Indicator")
+Fig.16. L1VolatilityRegime.mq5 Indicator
+For convenience, a version with color-coded regime visualization can also be used.
+The code of the L1VolatilityRegimeColor.mq5 indicator is provided below.
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window
+#property indicator_buffers 4
+#property indicator_plots   4
+#property indicator_label1  "Range"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_width1  2
+#property indicator_label2  "Trend"
+#property indicator_type2   DRAW_LINE
+#property indicator_color2  clrLime
+#property indicator_width2  2
+//---
+#property indicator_label3  "Expansion"
+#property indicator_type3   DRAW_LINE
+#property indicator_color3  clrOrange
+#property indicator_width3  2
+#property indicator_label4  "Panic"
+#property indicator_type4   DRAW_LINE
+#property indicator_color4  clrRed
+#property indicator_width4  2
+//--- input parameters
+input int    BarsToShow    = 1000;  // Number of bars to calculate L1
+input double CoefLambda    = 0.015; // Lambda in lambda_max units
+input int    ATRPeriod     = 14;    // ATR period
+input int    SmoothPeriod  = 10;    // Smooth period
+input double L1MoveThresh  = 0.0;   // Move volatility
+//--- buffers
+double Regime[];
+double BufRange[], BufTrend[], BufExpansion[], BufPanic[];
+//+------------------------------------------------------------------+
+  {
+   if(rates_total<BarsToShow+ATRPeriod)
+     {
+      ArrayInitialize(Regime,EMPTY_VALUE);
+//---
+   ArrayResize(Regime,rates_total);
+   for(int i=0;i<start;i++)
+      Regime[i]=EMPTY_VALUE;
+   vector<double> DataClose(count),DataHigh(count),DataLow(count);
+   for(int i=0; i<count; i++)
+   vector<double> TR(count),ATR(count);
+        }
+      int from=MathMax(0,i-ATRPeriod+1);
+      double sumTR=0;
+      int n=i-from+1;
+         sumTR+=TR[j];
+      ATR[i]=sumTR/n;
+     }
+   for(int i=0;i<count;i++)
+      NormVol[i]=(ATR[i]>0) ? MathAbs(DataClose[i]-L1[i])/ATR[i] : 0;
+   double alpha=2.0/(SmoothPeriod+1.0);
+      SmoothVol[i]=alpha*NormVol[i]+(1.0-alpha)*SmoothVol[i-1];
+//--- calc Regime[]
+     {
+      if(vol<LowVolThresh)
+         Regime[start+i]=0;
+      else
+         if(vol<HighVolThresh)
+            Regime[start+i]=(MathAbs(deltaL1)>L1MoveThresh) ? 1:0;
+         else
+            if(vol<HighVolThresh*PanicMult)
+               Regime[start+i]=2;
+            else
+               Regime[start+i]=3;
+//--- buffers
+
+![Fig.17. L1VolatilityRegime.mq5 and L1VolatilityRegimeColor.mq5 Indicators](https://c.mql5.com/2/203/L1VolatilityRegimeColor__2.png "Fig.17. L1VolatilityRegime.mq5 and L1VolatilityRegimeColor.mq5 Indicators")
+Fig.17. L1VolatilityRegime.mq5 and L1VolatilityRegimeColor.mq5 Indicators
+Figures 18–20 present examples of joint all volatility indicators for EURGBP, AUDCAD, and CHFJPY.
+![Fig.18. Volatility Indicators for EURGBP](https://c.mql5.com/2/203/L1Volatility_EURGBP__2.png "Fig.18. Volatility Indicators for EURGBP")
+Fig.18. Volatility Indicators for EURGBP
+![Fig.19. Volatility Indicators for AUDCAD](https://c.mql5.com/2/203/L1Volatility_AUDCAD__2.png "Fig.19. Volatility Indicators for AUDCAD")
+Fig.19. Volatility Indicators for AUDCAD
+![Fig.20. Volatility Indicators for CHFJPY](https://c.mql5.com/2/203/L1Volatility_CHFJPY__2.png "Fig.20. Volatility Indicators for CHFJPY")
+Fig.20. Volatility Indicators for CHFJPY
+### 3.5. Using L1 trend in trading strategies
+In this section, we consider MovingAverage, MACD, ADX, and EMA trading strategies with different options for applying trade signal filters.
+Adding filters to trading signals allows improving the characteristics of trading systems. To analyze the effectiveness of filter usage in the presented Expert Advisors, we will save balance and equity data (on each new bar) into separate files and use a Python script to visualize the results of trading systems under different modes.
+All presented Expert Advisors have the same architecture.
+- The open filter (L1FilterOpen = true) allows opening trades only in the direction of the dominant trend.
+- The close filter (L1FilterClose = true) helps hold positions during strong trends and reduces premature exits during local corrections.
+Input parameters (common for all Expert Advisors):
+```
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;   // Total bars for L1 filter
+input bool   L1FilterOpen   = false;  // Use filter for Open
+input bool   L1FilterClose  = false;  // Use filter for Close
+input double L1CoefLambda   = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+   int v=0;
+   if(L1FilterOpen)
+      v=v | 1;
+//---
+   if(L1FilterClose)
+      v=v | 2;
+
+1. L1FilterOpen = false, L1FilterClose = false (trading without filters);
+2. L1FilterOpen = true, L1FilterClose = false (entry filtering);
+3. L1FilterOpen = false, L1FilterClose = true (exit filtering);
+4. L1FilterOpen = true, L1FilterClose = true (entry and exit filtering).
+produces files such as: 0\_MA\_EURUSD.txt, 1\_MA\_EURUSD.txt, 2\_MA\_EURUSD.txt, 3\_MA\_EURUSD.txt.
+# --- folder for charts
+output_dir = "C:\\data\\charts\\"
+os.makedirs(output_dir, exist_ok=True)
+# --- files
+files = [
+    "C:\\data\\0_"+file_strategy+".txt",
+# --- labels
+labels = [
+    "No filters",
+    "Open L1 filter",
+    "Close L1 filter",
+    "Open+Close L1 filter"
+]
+# --- load data
+def load_file(filename):
+    df = pd.read_csv(
+
+# --- close price chart
+plt.figure(figsize=(10,6), dpi=100)
+for file, label in zip(files, labels):
+    df = load_file(file)
+plt.plot(df["time"], df["close"], color='gray')
+    
+# --- balance chart
+    plt.plot(df["time"], df["balance"], label=label)
+# --- equity chart
+    plt.plot(df["time"], df["equity"], label=label)
+#--- balance + equity chart
+for i, (file, label) in enumerate(zip(files, labels)):
+**L1 trend calculation and alignment with trading signals**
+In all Expert Advisors, additional filtering is applied using L1 trend analysis:
+      data_close[i] = rates_data[i].close;
+//--- calculate L1 filter
+   vector<double> data_filtered;
+   data_filtered.Resize(data_count);
+   double dp=0.0;
+   bool res=data_close.L1TrendFilter(L1CoefLambda,true,data_filtered);
+   if(res)
+      dp = data_filtered[data_count-1]-data_filtered[data_count-2];
+//---
+   return(dp);
+  
+**Trade entry filter**
+
+If L1FilterOpen = true:
+- BUY signals are ignored when the L1 trend is negative;
+      return;
+//--- L1 filter
+   if(L1FilterOpen)
+     {
+      double delta = CheckTrendL1();
+**Trade exit filter**  
+If L1FilterClose = true:
+- BUY positions are not closed by reverse signals while the L1 trend remains upward;
+      close_signal = true;
+//--- check L1 filter
+   if(L1FilterClose)
+### 3.5.1. MovingAverage trading strategy
+As a first example, consider an Expert Advisor trading based on the classical [Moving Average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma") trend-following strategy.  
+Trading signals are generated based on the crossover of the closing price and the moving average:
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+//--- best MovingAverage parameters for EURUSD,H1,2025
+input int    MovingPeriod   = 61;     // MA period
+input double TradeLot       = 0.1;    // Lot size
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;   // Total bars for L1 filter
+input bool   L1FilterOpen   = false;  // Use filter for Open
+input bool   L1FilterClose  = false;  // Use filter for Close
+input double L1CoefLambda   = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+//---
+#define MA_MAGIC 1234501
+#include <Trade\Trade.mqh>
+CTrade ExtTrade;
+int    ExtHandle = INVALID_HANDLE;
+      data_close[i] = rates_data[i].close;
+//--- calculate L1 filter
+   vector<double> data_filtered;
+   data_filtered.Resize(data_count);
+   double dp=0.0;
+   bool res=data_close.L1TrendFilter(L1CoefLambda,true,data_filtered);
+   if(res)
+      dp = data_filtered[data_count-1]-data_filtered[data_count-2];
+   return(dp);
+      return;
+//--- L1 filter
+   if(L1FilterOpen)
+     {
+      double delta = CheckTrendL1();
+      close_signal = true;
+//--- check L1 filter
+   if(L1FilterClose)
+   int v=0;
+      v=v | 1;
+//---
+      v=v | 2;
+
+### 3.5.1.1. General methodology for evaluating L1 trend filtering efficiency
+To evaluate the effectiveness of the L1-filter, it is necessary to:
+For the filter operation, we will use a fixed number of bars for trend calculation: L1TotalBars = 1000. The regularization parameter λ will be specified in units of λmax, using a fixed value L1CoefLambda = 0.2.
+Input parameters:
+input double TradeLot       = 0.1;    // Lot size
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;   // Total bars for L1 filter
+input bool   L1FilterOpen   = false;  // Use filter for Open
+input bool   L1FilterClose  = false;  // Use filter for Close
+input double L1CoefLambda   = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+![Fig.26. Testing results with the best parameters for Expert Advisor MovingAverageFilteredL1.mq5](https://c.mql5.com/2/202/MA_test_results.png "Fig.26. Testing results with the best parameters for Expert Advisor MovingAverageFilteredL1.mq5")
+Fig.26. Testing results with the best parameters for Expert Advisor MovingAverageFilteredL1.mq5
+Now it is necessary to run testing with saving data to files.
+# --- folder for charts
+output_dir = "C:\\data\\charts\\"
+os.makedirs(output_dir, exist_ok=True)
+# --- files
+files = [
+    "C:\\data\\0_"+file_strategy+".txt",
+
+# --- labels
+labels = [
+    "No filters",
+    "Open L1 filter",
+    "Close L1 filter",
+    "Open+Close L1 filter"
+]
+# --- load data
+def load_file(filename):
+    df = pd.read_csv(
+# --- close price chart
+plt.figure(figsize=(10,6), dpi=100)
+for file, label in zip(files, labels):
+    df = load_file(file)
+plt.plot(df["time"], df["close"], color='gray')
+    
+# --- balance chart
+    plt.plot(df["time"], df["balance"], label=label)
+# --- equity chart
+    plt.plot(df["time"], df["equity"], label=label)
+
+#--- balance + equity chart
+for i, (file, label) in enumerate(zip(files, labels)):
+### 3.5.1.2. Results of applying L1 filters (MovingAverage strategy)
+The results (balance, equity, and combined charts) are shown in Fig.35–37.
+Colors:
+1. Blue (strategy without filters);
+2. Green (L1 filter on position closing);
+3. Red (L1 filter on both opening and closing);
+4. Orange (L1 filter on opening);
+![Fig.35. Balance charts for the Expert Advisor MovingAverageFilteredL1.mq5 for the different filter modes](https://c.mql5.com/2/202/EURUSD_MA_balance__2.png "Fig.35. Balance charts for the Expert Advisor MovingAverageFilteredL1.mq5 for the different filter modes")
+### 3.5.2. MACD Trading Strategy
+As another example, consider an expert advisor that trades based on signals of a trading strategy built on the [MACD](https://www.metatrader5.com/en/terminal/help/indicators/oscillators/macd "https://www.metatrader5.com/en/terminal/help/indicators/oscillators/macd") (Moving Average Convergence/Divergence) indicator.
+**Trading signals**  
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+//--- best MACD parameters for USDCHF,H1,2025
+input int    FastEMA        = 43;     // Fast EMA
+input double TradeLot       = 0.1;    // Lot size
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;   // Total bars for L1 filter
+input bool   L1FilterOpen   = false;  // Use filter for Open
+input bool   L1FilterClose  = false;  // Use filter for Close
+input double L1CoefLambda   = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+//---
+#define MACD_MAGIC 1234502
+#include <Trade\Trade.mqh>
+int    ExtHandle = INVALID_HANDLE;
+bool   ExtHedging = false;
+      data_close[i] = rates_data[i].close;
+//--- calculate L1 filter
+   vector<double> data_filtered;
+   data_filtered.Resize(data_count);
+   double dp=0.0;
+   bool res=data_close.L1TrendFilter(L1CoefLambda,true,data_filtered);
+   if(res)
+      dp = data_filtered[data_count-1]-data_filtered[data_count-2];
+   return(dp);
+   if(L1FilterOpen)
+     {
+      double dp = CheckTrendL1();
+      close_signal = true;
+//--- check L1 filter
+   if(L1FilterClose)
+   int v=0;
+      v=v | 1;
+//---
+      v=v | 2;
+
+![Fig.40. Testing results of the Expert Advisor MACDFilteredL1.mq5](https://c.mql5.com/2/202/MACD_Test_Results.png "Fig.40. Testing results of the Expert Advisor MACDFilteredL1.mq5")
+Fig.40. Testing results of the Expert Advisor MACDFilteredL1.mq5
+![Fig.41. Testing parameters for saving results to files for the Expert Advisor MACDFilteredL1.mq5](https://c.mql5.com/2/202/MACD_filter_settings.png "Fig.41. Testing parameters for saving results to files for the Expert Advisor MACDFilteredL1.mq5")
+### 3.5.2.1. Results of applying L1 filters (MACD strategy)
+The results are shown in Fig.43–45.
+![Fig.43. Balance charts of the Expert Advisor MACDFilteredL1.mq5 for the different filter modes](https://c.mql5.com/2/202/EURUSD_MACD_balance__2.png "Fig.43. Balance charts of the Expert Advisor MACDFilteredL1.mq5 for the different filter modes")
+### 3.5.3. ADX Trading Strategy
+As another example, consider the Expert Advisor ADXFilteredL1.mq5, which implements a trend-following strategy based on the [Average Directional Movement Index](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/admi "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/admi") (ADX).  
+  
+The main trading signals are based on the analysis of the +DI and −DI lines, as well as the ADX level, which characterizes trend strength.  
+Signals are defined as follows:
+Additionally, the ADX value is taken into account. If ADX is below the threshold ADXTrendLevel, the market is treated as weakly trending or range-bound, and the signal is ignored.
+Indicator values on the last two closed bars are used, excluding the influence of the current unfinished bar and reducing false signals.
+Entry and exit filters are also applied according to L1-trend settings (L1TotalBars, L1FilterOpen, L1FilterClose, L1CoefLambda).
+Code of the Expert Advisor ADXFilteredL1.mq5 is presented below.
+```
+//+------------------------------------------------------------------+
+//|                                                ADXFilteredL1.mq5 |
+//|                             Copyright 2000-2026, MetaQuotes Ltd. |
+//|                                              http://www.mql5.com |
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+//--- best ADX parameters for EURUSD,H1,2025
+input int    ADXPeriod      = 65;     // ADX Period
+input double ADXTrendLevel  = 7;      // ADX Trend Level
+//--- trade volume
+input double TradeLot       = 0.1;    // Lot size
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;   // Total bars for L1 filter
+input bool   L1FilterOpen   = false;  // Use filter for Open
+input bool   L1FilterClose  = false;  // Use filter for Close
+input double L1CoefLambda   = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+//---
+#define ADX_MAGIC 1234503
+#include <Trade\Trade.mqh>
+CTrade ExtTrade;
+int    ExtHandle = INVALID_HANDLE;
+bool   ExtHedging = false;
+string ExtStrategyName="ADX";
+string ExtStrategyFileName="";
+//+------------------------------------------------------------------+
+      data_close[i] = rates_data[i].close;
+//--- calculate L1 filter
+   vector<double> data_filtered;
+   data_filtered.Resize(data_count);
+   double dp=0.0;
+   bool res=data_close.L1TrendFilter(L1CoefLambda,true,data_filtered);
+   if(res)
+      dp = data_filtered[data_count-1] - data_filtered[data_count-2];
+   return(dp);
+//| GetTradeSignal (ADX)                                             |
+bool GetTradeSignal(ENUM_ORDER_TYPE &signal)
+   signal=WRONG_VALUE;
+   double adx[],plusdi[],minusdi[];
+   ArrayResize(adx,2);
+   ArrayResize(plusdi,2);
+   ArrayResize(minusdi,2);
+//---
+   ArraySetAsSeries(adx,true);
+   ArraySetAsSeries(plusdi,true);
+   ArraySetAsSeries(minusdi,true);
+//--- buffer0 = ADX
+   if(CopyBuffer(ExtHandle,0,1,2,adx)!=2)
+      return(false);
+//--- buffer1 = +DI
+   double adx_last=adx[0];
+   double plus_prev=plusdi[1];
+   double plus_last=plusdi[0];
+//--- strong trend required
+   if(adx_last<ADXTrendLevel)
+      return(true);
+//--- +DI cross -DI
+   if(L1FilterOpen)
+     {
+      double dp=CheckTrendL1();
+//--- check position magic
+   if(PositionGetInteger(POSITION_MAGIC)!=ADX_MAGIC)
+      return;
+//--- check trade signal
+      close_signal=true;
+//--- check L1 filter
+   if(L1FilterClose)
+      double dp = CheckTrendL1();
+         string sym = PositionGetSymbol(i);
+         if(sym == _Symbol && PositionGetInteger(POSITION_MAGIC)==ADX_MAGIC)
+           {
+            res = true;
+      if(PositionSelect(_Symbol))
+         res = (PositionGetInteger(POSITION_MAGIC)==ADX_MAGIC);
+     }
+   return(res);
+   ExtHedging = (AccountInfoInteger(ACCOUNT_MARGIN_MODE)==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING);
+   ExtTrade.SetExpertMagicNumber(ADX_MAGIC);
+   ExtTrade.SetMarginMode();
+   ExtTrade.SetTypeFillingBySymbol(_Symbol);
+//--- prepare indicator
+   ExtHandle=iADX(_Symbol,_Period,ADXPeriod);
+   if(ExtHandle==INVALID_HANDLE)
+     {
+      Print("ADX handle error");
+      return(INIT_FAILED);
+   int v=0;
+   if(L1FilterOpen)
+      v=v | 1;
+//---
+   if(L1FilterClose)
+      v=v | 2;
+
+![Fig.46. Tester setting for the Expert Advisor ADXFilteredL1.mq5](https://c.mql5.com/2/202/ADX_test_settings.png "Fig.46. Tester setting for the Expert Advisor ADXFilteredL1.mq5")
+Fig.46. Tester setting for the Expert Advisor ADXFilteredL1.mq5
+![Fig.47. Testing parameters for the Expert Advisor ADXFilteredL1.mq5](https://c.mql5.com/2/202/ADX_test_parameters.png "Fig.47. Testing parameters for the Expert Advisor ADXFilteredL1.mq5")
+Fig.47. Testing parameters for the Expert Advisor ADXFilteredL1.mq5
+![Fig.48. Testing results for the Expert Advisor ADXFilteredL1.mq5](https://c.mql5.com/2/202/ADX_test_results.png "Fig.48. Testing results for the Expert Advisor ADXFilteredL1.mq5")
+Fig.48. Testing results for the Expert Advisor ADXFilteredL1.mq5
+For testing, you need to perform 4 runs with the different filter settings:
+![Fig.49. Testing parameters for saving the results to files for the Expert Advisor ADXFilteredL1.mq5](https://c.mql5.com/2/202/ADX_filter_parameters.png "Fig.49. Testing parameters for saving the results to files for the Expert Advisor ADXFilteredL1.mq5")
+Fig.49. Testing parameters for saving the results to files for the Expert Advisor ADXFilteredL1.mq5
+After that, files will appear in the tester directory; they should be copied to C:\Data and processed with PlotData.py.
+![Fig.50. Files with the testing results for the Expert Advisor ADXFiltered.mq5 with the different filter setttings](https://c.mql5.com/2/202/ADX_files.png "Fig.50. Files with the testing results for the Expert Advisor ADXFiltered.mq5 with the different filter setttings")
+Fig.50. Files with the testing results for the Expert Advisor ADXFiltered.mq5 with the different filter setttings
+### 
+### 3.5.3.1. Results of applying L1 filters for ADX strategy
+The results are shown in Fig.51-53.
+![Fig.51. Balance charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes](https://c.mql5.com/2/202/EURUSD_ADX_balance__2.png "Fig.51. Balance charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes")
+Fig.51. Balance charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes
+![Fig.52. Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes](https://c.mql5.com/2/202/EURUSD_ADX_equity.png "Fig.52. Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes")
+Fig.52. Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes
+![Fig.53. Combined Balance and Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes](https://c.mql5.com/2/202/EURUSD_ADX_balance_equity__2.png "Fig.53. Combined Balance and Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes")
+
+Fig.53. Combined Balance and Equity charts of the Expert Advisor ADXFilteredL1.mq5 with the different filter modes
+  
+### 3.5.4. Trading strategy based on EMA crossover
+Consider the Expert Advisor EMAFilteredL1.mq5, which implements a trend-following trading strategy based on the crossover of two [exponential moving averages](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma#ema "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma#ema") (EMA).  
+The strategy uses two moving averages:
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2000-2026, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+//--- best EMA parameters for EURUSD,H1,2025
+input int    FastEMA       = 29;     // Fast EMA
+input double TradeLot      = 0.1;    // Lot size
+//--- L1 filter parameters
+input int    L1TotalBars    = 1000;  // Total bars for L1 filter
+input bool   L1FilterOpen  = false;  // Use filter for Open
+input bool   L1FilterClose = false;  // Use filter for Close
+input double L1CoefLambda  = 0.2;    // Lambda in lambda_max units
+//--- save statistics
+//---
+#define EMA_MAGIC 1234503
+#include <Trade\Trade.mqh>
+CTrade ExtTrade;
+int    ExtHandle = INVALID_HANDLE;
+      data_close[i] = rates_data[i].close;
+//--- calculate L1 filter
+   vector<double> data_filtered;
+   data_filtered.Resize(data_count);
+   double dp=0.0;
+   bool res=data_close.L1TrendFilter(L1CoefLambda,true,data_filtered);
+   if(res)
+      dp = data_filtered[data_count-1] - data_filtered[data_count-2];
+   return(dp);
+   if(L1FilterOpen)
+     {
+      double dp=CheckTrendL1();
+      close_signal=true;
+//--- check L1 filter
+   if(L1FilterClose)
+      double dp = CheckTrendL1();
+   int v=0;
+      v=v | 1;
+//---
+      v=v | 2;
+
+![Fig.56. Testing results for the Expert Advisor EMAFilteredL1.mq5](https://c.mql5.com/2/202/EMA_test_results.png "Fig.56. Testing results for the Expert Advisor EMAFilteredL1.mq5")
+Fig.56. Testing results for the Expert Advisor EMAFilteredL1.mq5
+To analyze the effectiveness of L1 filters, it is necessary to sequentially run the Expert Advisor in the tester with different filter modes:
+As a result, files will be created in the tester folder; they should be copied to the directory specified in the Python script PlotData.py and run with the settings: symbol = "EURUSD", name\_strategy = "EMA".
+![Fig.58. Files with testing results of the Expert Advisor EMAFilteredL1.mq5 under different trading signal filtering modes](https://c.mql5.com/2/202/EMA_files.png "Fig.58. Files with testing results of the Expert Advisor EMAFilteredL1.mq5 under different trading signal filtering modes")
+### 3.5.4.1. Results of applying L1 filters to EMA strategy trading signals
+The results are shown in Fig. 59–61.
+![Fig.59. Balance charts of the Expert Advisor EMAFilteredL1.mq5 for the different filtering modes](https://c.mql5.com/2/202/EURUSD_EMA_balance__2.png "Fig.59. Balance charts of the Expert Advisor EMAFilteredL1.mq5 for the different filtering modes")
+### 3.5.5. Summary on the use of the L1 filter in MovingAverage, MACD, ADX, and EMA trading strategies
+In the considered examples, the trading strategies were tested on the EURUSD currency pair, H1 timeframe, for the year 2025 (Fig.62).
+![Fig.63. Balance charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes](https://c.mql5.com/2/202/balance_strategies.png "Fig.63. Balance charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes")
+Fig.63. Balance charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes
+The analysis of the Moving Average, MACD, ADX, and EMA strategies showed that the best results are achieved when applying L1 filtering at the position closing stage (highlighted in green on the charts). Using the filter at exit effectively suppresses noise reversals and false signals, allowing positions to be held in the direction of a stable trend. This leads to increased profit and Profit Factor, as well as reduced maximum drawdown.
+Using L1 filtering at the position opening stage (highlighted in orange) proved to be less effective, since additional filtering limits the number of entries and leads to missing part of profitable movements without a proportional improvement in trade quality.
+![Fig.64. Balance and Equity charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes](https://c.mql5.com/2/202/equity_strategies.png "Fig.64. Balance and Equity charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes")
+Fig.64. Balance and Equity charts of Moving Average, MACD, ADX, and EMA strategies under different filtering modes
+Thus, L1 filtering of trading signals at position closing increases the stability of the trading system, reduces sensitivity to short-term price fluctuations, and improves the profit/risk ratio. Compared to classical moving averages, the L1 filter better distinguishes temporary corrections from real trend reversals, allowing more efficient use of trend-following strategies.
+Attention should be paid to the behavior of Balance and Equity curves when trading with signals aligned with the L1 trend filter (Fig.64). When trading along the trend, Equity is often above Balance, which significantly improves risk metrics and reduces drawdown. Therefore, alignment with the trend also improves the characteristics of trading systems (reduces drawdown and risks).
+| 5 | MovingAverage (L1 entry + exit) | 986.16 | 72.31 % |
+| 6 | MACD (no filters) | 997.79 | 73.16 % |
+| 7 | MACD (L1 entry filter) | 140.13 | 10.27 % |
+| 8 | MACD (L1 exit filter) | **1359.52** | **99.69 %** |
+| 9 | MACD (L1 entry + exit) | 697.54 | 51.15 % |
+| 10 | ADX (no filters) | 791.99 | 58.07 % |
+| 11 | ADX (L1 entry filter) | -50.9 | -3.73 % |
+| 12 | ADX (L1 exit filter) | **940.39** | **68.95 %** |
+| 13 | ADX (L1 entry + exit) | 430.05 | 31.53 % |
+| 14 | EMA (no filters) | 957.3 | 70.19 % |
+| 15 | EMA (L1 entry filter) | -173.35 | -12.71 % |
+| 16 | EMA (L1 exit filter) | **1258.99** | **92.31 %** |
+| 17 | EMA (L1 entry + exit) | -131.41 | -9.64% |
+
+Table 4. Total profit results of using the L1 filter in MovingAverage, MACD, ADX, and EMA strategies compared to Buy and Hold
+According to Table 4, using the L1 filter at position closing improved profitability for all strategies.
+If the result of the Buy and Hold strategy ($1363.8) is taken as 100% of the full trend movement, we obtain:
+1. Moving Average profit increased from 73.4% to 98.43%;
+2. MACD profit increased from 73.16% to 99.69%;
+3. ADX profit increased from 58.07% to 68.5%;
+4. EMA profit increased from 70.19% to 92.31%.
+As we see, the use of the L1 filter allowed the Moving Average, MACD, and EMA strategies to increase profit by 22–26%, capturing most of the trend movement (98.43%, 99.69%, and 92.31%) and approaching the Buy and Hold result. The ADX strategy profit increased by 10%.
+In the examples, strategies with parameters that yielded the highest balance values (i.e., among the best possible solutions) were considered. They are highlighted in blue. The results show that even these most profitable solutions can be further improved by additional filtering of trading signals through alignment with the L1 trend. Some strategies improved only slightly (for ADX, the green curves are close to the blue ones, indicating proximity to the optimal balance solution). The quality of a strategy’s trading signals (optimality of selected parameters) can be judged by how much it improves with such L1 filtering.
+Notably, in this case a strongly trending EURUSD market was considered (Fig.62). For other market regimes and instruments, the results will differ. In addition, the L1 trend was constructed on the H1 timeframe with a regularization parameter λ = 0.2·λmax. For other instruments and timeframes, suitable values of this coefficient can be estimated using [L1 trend indicators](https://www.mql5.com/en/articles/21142#ch_3_4).
+### Conclusion
+L1 trend filtering has proven its practical usefulness as a tool for separating local noise from real trend changes.
+The method produces a piecewise-linear trend with automatic breakpoints and a convenient tuning scale via λmax, which eliminates the problem of manual parameter fitting.
+Limitation: the effect depends on the instrument, timeframe, and market regime; validation on historical data with selected metrics is required.
+The proposed MQL5 modules and testing protocol allow quick hypothesis testing and selection of working parameters for a specific trading system.
+All codes from the article are also available in the [public project](https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public "https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public") "MQL5\Shared Projects\[L1Trend](https://forge.mql5.io/quantum/L1Trend "https://forge.mql5.io/quantum/L1Trend")".
+  
+| Indicator | MQL5\Indicators\L1VolatilityAbsolute.mq5 | Indicator for calculating absolute volatility |
+| Indicator | MQL5\Indicators\L1VolatilityNormalized.mq5 | Indicator for calculating normalized volatility using ATR (Average True Range) and the L1 trend |
+| Indicator | MQL5\Indicators\L1VolatilityNormalizedSmoothed.mq5 | Indicator for calculating smoothed normalized volatility |
+| Indicator | MQL5\Indicators\L1VolatilityRegime.mq5 | Market regime detection indicator |
+| Expert Advisor | MQL5\Experts\MACDFilteredL1.mq5 | Expert Advisor trading based on the MACD strategy with L1 filter |
+| Expert Advisor | MQL5\Experts\ADXFilteredL1.mq5 | Expert Advisor trading based on the ADX strategy with L1 filter |
+| Expert Advisor | MQL5\Experts\EMAFilteredL1.mq5 | Expert Advisor trading based on the crossover of two EMAs with L1 filter |
+| Python script | MQL5\Scripts\PlotData.py | Python script for analyzing the effectiveness of applying the L1 filter to trading signals |
+
+[L1TrendFilter-MQL5-codes.zip](https://www.mql5.com/en/articles/download/21142/L1TrendFilter-MQL5-codes.zip "Download L1TrendFilter-MQL5-codes.zip")
+(41.3 KB)
+![Hidden Markov Models in Machine Learning-Based Trading Systems](https://c.mql5.com/2/140/Hidden_Markov_Models_in_Machine_Learning_Trading_Systems___LOGO.png)
+[Hidden Markov Models in Machine Learning-Based Trading Systems](https://www.mql5.com/en/articles/17917)
+Hidden Markov Models (HMMs) are a powerful class of probabilistic models designed to analyze sequential data, where observed events depend on some sequence of unobserved (hidden) states that form a Markov process. The main assumptions of HMM include the Markov property for hidden states, meaning that the probability of transition to the next state depends only on the current state, and the independence of observations given knowledge of the current hidden state.
+![Fractal-Based Algorithm (FBA)](https://c.mql5.com/2/140/Fractal-Based_Algorithm___LOGO.png)
+[Fractal-Based Algorithm (FBA)](https://www.mql5.com/en/articles/17458)
+The article presents a new metaheuristic method based on a fractal approach to partitioning the search space for solving optimization problems. The algorithm sequentially identifies and separates promising areas, creating a self-similar fractal structure that concentrates computing resources on the most promising areas. A unique mutation mechanism aimed at better solutions ensures an optimal balance between exploration and exploitation of the search space, significantly increasing the efficiency of the algorithm.
+Build a local, bidirectional voice interface for MetaTrader 5 using MQL5 WebRequest and two Python services. The article implements offline speech recognition with Vosk, wake‑word detection, an HTTP command endpoint, and a text‑to‑speech server on localhost. You will wire an Expert Advisor that fetches commands, executes trades, and returns spoken confirmations for hands‑free operation.
+![MQL5 Wizard Techniques You should know (Part 86): Speeding Up Data Access with a Sparse Table for a Custom Trailing Class](https://c.mql5.com/2/206/22136-mql5-wizard-techniques-you-logo.png)
+We revamp our earlier articles on testing trade setups with the MQL5 Wizard by putting a bit more emphasis on input data quality, cleaning, and handling. In the earlier articles we had looked at a lot of custom signal classes, usable by the wizard, so we now shift our focus to a custom trailing class, given that exiting is also a very important part in any trading system. Our broad theme for this particular piece data-efficiency and the O(1) range-query; the core ‘tech’ is MQL5, SQLite, Python-Polars; the Algorithm is the Sparse-Table while we will seek validation from the ATR Indicator.
+[![](https://www.mql5.com/ff/si/tz6htja8wbzb2u6kp2.gif)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=asavypypfjiefdywsbundfnovsqdqrlg&s=822a63e372eca09eaaa973cc0f82be5093d6c353237035cd7209bf509f0bbb1e&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=othghjgxmzzjiwblyznnhbxsakqxjhjs&ssn=1788779727333668500&ssn_dr=1&ssn_sr=0&fv_date=1788779727&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21142&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Applying%20L1%20Trend%20Filtering%20in%20MetaTrader%205%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887797280666133&fz_uniq=5122292656025243343&sv=2552)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+L1 trend filtering has proven its practical usefulness as a tool for separating local noise from real trend changes.
+
+The method produces a piecewise-linear trend with automatic breakpoints and a convenient tuning scale via λmax, which eliminates the problem of manual parameter fitting.
+
+At the level of practical integration, a complete toolkit has been provided: functions for computing λmax and the L1 filter, three indicators (L1Trend, L1TrendSlope, L1TrendSlopeSign), seven L1-trend volatility indicators (L1Volatility, L1VolatilitySmoothed, L1VolatilityAbsolute, L1VolatilityNormalized, L1VolatilityNormalizedSmoothed, L1VolatilityRegime, L1VolatilityRegimeColor), Expert Advisor templates, and a reproducible testing protocol (four modes: no filter, entry filter, exit filter, both filters; saving results and Python visualization script).
+
+It should also be noted that the L1 trend filter can be used for data labeling in machine learning. In particular, in the article [“Developing Trend Trading Strategies Using Machine Learning”](https://www.mql5.com/en/articles/17526), trend determination is executed using derivatives of prices smoothed by the Savitzky–Golay filter. A similar approach can be implemented using L1 filtering, where the trend is approximated by piecewise-linear functions, and the strength of the trend on each segment is naturally related to the slope of the corresponding segment.
+
+Practical recommendations:
+
+- Use relative regularization: λ = coef\_lambda\_max · λmax. For most tasks, use coef in the range 0.04–0.25; for finer detail  ≈0.02–0.04; for coarse approximation and regime detection ≈0.12–0.25.
+- In most cases, the L1 filter is most effective when applied to position closing (holding profitable trends and reducing premature exits). Applying it to entry often reduces the number of trades without proportional improvement in quality.
+- For the current trend analysis, use a simple rule: delta = x\_filtered[last] − x\_filtered[last−1].The sign of delta indicates the direction of the dominant L1 trend.
+
+Limitation: the effect depends on the instrument, timeframe, and market regime; validation on historical data with selected metrics is required.
+
+The proposed MQL5 modules and testing protocol allow quick hypothesis testing and selection of working parameters for a specific trading system.
+
+All codes from the article are also available in the [public project](https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public "https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public") "MQL5\Shared Projects\[L1Trend](https://forge.mql5.io/quantum/L1Trend "https://forge.mql5.io/quantum/L1Trend")".
+
+  
+
+**Examples**
+
+| Type | File | Description |
+| --- | --- | --- |
+| Script | MQL5\Scripts\TestL1Trend.mq5 | Test script for calculating the L1 trend on model data (random walk) |
+| Script | MQL5\Scripts\TestL1TrendFloatDouble.mq5 | Test script for calculating the L1 trend on model data (random walk) for double and float vectors |
+| Script | MQL5\Scripts\TestL1TrendFilterSP500.mq5 | Test script for calculating the L1 trend on SP500 index quote data |
+| Data file | MQL5\Files\snp500.txt | Data file for the test script (log of SP500 index price series) |
+| Script | MQL5\Scripts\TestScalingBrownianMotion.mq5 | Script for calculating the power-law dependence of λmax for Brownian motion |
+| Script | MQL5\Scripts\TestScalingSymbol.mq5 | Script for calculating the power-law dependence of λmax for price series of a given symbol |
+| Indicator | MQL5\Indicators\L1TrendFilter.mq5 | Indicator for calculating the L1 trend |
+| Indicator | MQL5\Indicators\L1TrendFilter\_Slope.mq5 | Indicator for calculating the rate of change of the L1 trend |
+| Indicator | MQL5\Indicators\L1TrendFilter\_SlopeSign.mq5 | Indicator for calculating the sign of change of the L1 trend |
+| Indicator | MQL5\Indicators\L1Volatility.mq5 | Indicator for calculating residual volatility (difference between the closing prices and the L1 trend value) |
+| Indicator | MQL5\Indicators\L1VolatilitySmoothed.mq5 | Indicator for calculating smoothed residual volatility |
+| Indicator | MQL5\Indicators\L1VolatilityAbsolute.mq5 | Indicator for calculating absolute volatility |
+| Indicator | MQL5\Indicators\L1VolatilityNormalized.mq5 | Indicator for calculating normalized volatility using ATR (Average True Range) and the L1 trend |
+| Indicator | MQL5\Indicators\L1VolatilityNormalizedSmoothed.mq5 | Indicator for calculating smoothed normalized volatility |
+| Indicator | MQL5\Indicators\L1VolatilityRegime.mq5 | Market regime detection indicator |
+| Indicator | MQL5\Indicators\L1VolatilityRegimeColor.mq5 | Color version of the market regime detection indicator |
+| Expert Advisor | MQL5\Experts\MovingAverageFilteredL1.mq5 | Expert Advisor trading based on the Moving Average strategy with L1 filter |
+| Expert Advisor | MQL5\Experts\MACDFilteredL1.mq5 | Expert Advisor trading based on the MACD strategy with L1 filter |
+| Expert Advisor | MQL5\Experts\ADXFilteredL1.mq5 | Expert Advisor trading based on the ADX strategy with L1 filter |
+| Expert Advisor | MQL5\Experts\EMAFilteredL1.mq5 | Expert Advisor trading based on the crossover of two EMAs with L1 filter |
+| Python script | MQL5\Scripts\PlotData.py | Python script for analyzing the effectiveness of applying the L1 filter to trading signals |
+
+Table 5. Description of program codes used in the article
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/21142>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21142.zip "Download all attachments in the single ZIP archive")
+
+[L1TrendFilter-MQL5-codes.zip](https://www.mql5.com/en/articles/download/21142/L1TrendFilter-MQL5-codes.zip "Download L1TrendFilter-MQL5-codes.zip")
+(41.3 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+![Hidden Markov Models in Machine Learning-Based Trading Systems](https://c.mql5.com/2/140/Hidden_Markov_Models_in_Machine_Learning_Trading_Systems___LOGO.png)
+[Hidden Markov Models in Machine Learning-Based Trading Systems](https://www.mql5.com/en/articles/17917)
+
+Hidden Markov Models (HMMs) are a powerful class of probabilistic models designed to analyze sequential data, where observed events depend on some sequence of unobserved (hidden) states that form a Markov process. The main assumptions of HMM include the Markov property for hidden states, meaning that the probability of transition to the next state depends only on the current state, and the independence of observations given knowledge of the current hidden state.
+
+![Fractal-Based Algorithm (FBA)](https://c.mql5.com/2/140/Fractal-Based_Algorithm___LOGO.png)
+[Fractal-Based Algorithm (FBA)](https://www.mql5.com/en/articles/17458)
+
+The article presents a new metaheuristic method based on a fractal approach to partitioning the search space for solving optimization problems. The algorithm sequentially identifies and separates promising areas, creating a self-similar fractal structure that concentrates computing resources on the most promising areas. A unique mutation mechanism aimed at better solutions ensures an optimal balance between exploration and exploitation of the search space, significantly increasing the efficiency of the algorithm.
+
+![Overcoming Accessibility Problems in MQL5 Trading Tools (Part III): Bidirectional Speech Communication Between a Trader and an Expert Advisor](https://c.mql5.com/2/206/21533-overcoming-accessibility-problems-logo.png)
+[Overcoming Accessibility Problems in MQL5 Trading Tools (Part III): Bidirectional Speech Communication Between a Trader and an Expert Advisor](https://www.mql5.com/en/articles/21533)
+
+Build a local, bidirectional voice interface for MetaTrader 5 using MQL5 WebRequest and two Python services. The article implements offline speech recognition with Vosk, wake‑word detection, an HTTP command endpoint, and a text‑to‑speech server on localhost. You will wire an Expert Advisor that fetches commands, executes trades, and returns spoken confirmations for hands‑free operation.
+
+![MQL5 Wizard Techniques You should know (Part 86): Speeding Up Data Access with a Sparse Table for a Custom Trailing Class](https://c.mql5.com/2/206/22136-mql5-wizard-techniques-you-logo.png)

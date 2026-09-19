@@ -1,0 +1,61 @@
+{
+  "pack_id": "examples_098",
+  "section": "Examples",
+  "parent_shard": "examples_098",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "universal expert advisor: the event model and trading strategy prototype",
+    "universal expert advisor: trading in a group and managing a portfolio of strategies",
+    "universal expert advisor: trading modes of strategies",
+    "zup - universal zigzag with pesavento patterns"
+  ],
+  "n": 5,
+  "articles": [
+    {
+      "id": 2166,
+      "title": "Universal Expert Advisor: Trading Modes of Strategies (Part 1)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Trading Modes of Strategies ()",
+      "series_key": "universal expert advisor: trading modes of strategies",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2166.md"
+    },
+    {
+      "id": 2179,
+      "title": "Universal Expert Advisor: Trading in a Group and Managing a Portfolio of Strategies (Part 4)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Trading in a Group and Managing a Portfolio of Strategies ()",
+      "series_key": "universal expert advisor: trading in a group and managing a portfolio of strategies",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2179.md"
+    },
+    {
+      "id": 2169,
+      "title": "Universal Expert Advisor: the Event Model and Trading Strategy Prototype (Part 2)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: the Event Model and Trading Strategy Prototype ()",
+      "series_key": "universal expert advisor: the event model and trading strategy prototype",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2169.md"
+    },
+    {
+      "id": 1468,
+      "title": "ZUP - Universal ZigZag with Pesavento Patterns. Part 1",
+      "section": "Examples",
+      "series_title": "ZUP - Universal ZigZag with Pesavento Patterns.",
+      "series_key": "zup - universal zigzag with pesavento patterns",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1468.md"
+    },
+    {
+      "id": 1470,
+      "title": "ZUP - Universal ZigZag with Pesavento Patterns. Part 2",
+      "section": "Examples",
+      "series_title": "ZUP - Universal ZigZag with Pesavento Patterns.",
+      "series_key": "zup - universal zigzag with pesavento patterns",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1470.md"
+    }
+  ]
+}

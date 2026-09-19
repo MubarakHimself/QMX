@@ -1,0 +1,596 @@
+---
+id: 18165
+source_url: https://www.mql5.com/en/articles/18165
+title: "Formulating Dynamic Multi-Pair EA (Part 4): Volatility and Risk Adjustment"
+author: ""
+author_url: 
+published: 2025-08-11T10:06Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "Formulating Dynamic Multi-Pair EA (): Volatility and Risk Adjustment"
+series_part: 4
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Formulating Dynamic Multi-Pair EA (Part 4): Volatility and Risk Adjustment
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 11 August 2025 at 06:06
+
+[IMG]
+7 491
+[[IMG]
+3](https://www.mql5.com/en/forum/493047 "Comments")
+
+[IMG]
+
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+
+### Introduction
+
+In multi-pair trading, one of the challenges traders face is inconsistent performance caused by varying volatility across different currency pairs. As discussed in the previous [article](https://www.mql5.com/en/articles/18037), a strategy that performs well on EURUSD may underperform or become overly risky on GBPJPY due to their different volatility profiles. Using fixed lot sizes or static stop losses can lead to oversized positions in volatile markets or missed opportunities in stable ones. This lack of adaptability often results in uneven risk exposure, increased drawdowns, and unpredictable results especially during high-impact news events or sudden market shifts.
+
+To solve this, we introduce volatility and risk adjustment within the EA. By incorporating tools like the Average True Range (ATR) and dynamic risk-based sizing, the EA automatically adapts trade parameters to current market conditions. This ensures each position is proportionally balanced to its volatility, delivering consistent risk management and improving the EA’s performance across all traded pairs.
+
+### EA Development Plan
+
+Trading logic:
+
+[IMG]
+
+1. Multi-Symbol Handler:
+
+- Symbol list parser
+- Pre-symbol data tracking
+- Concurrent position management
+
+[IMG]
+
+2. Entry Condition:
+
+[IMG]
+
+3. Volatility-Based Risk Tiers:
+
+[IMG]
+
+4. Position Sizing:
+
+```
+Risk Amount = Account Equity * Risk %
+Position Size = Risk Amount / (SL Distance * Point Value)
+```
+
+5. V-stop Target Identification:
+
+```
+[  Current Price  ]
+        |
+        v
+[ Resistance Area ]  <-- Previous V-Stop Upper (TP for sells)
+        |
+        v
+[  Current Price  ]
+        |
+        v
+[  Support Area   ]  <-- Previous V-Stop Lower (TP for buys)
+```
+
+6. Trade Lifecycle Timeline:
+
+[IMG]
+
+### Getting Started
+
+```
+//+------------------------------------------------------------------+
+//|                               MultiSymbolVolatilityTraderEA.mq5  |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#include <Trade/Trade.mqh>
+```
+
+As usual, we start by importing the essential trade library required for our Expert Advisor to execute orders and manage positions.
+
+```
+//--- Input settings
+input string   Symbols = "XAUUSD,GBPUSD,USDCAD,USDJPY";  // Symbols to trade
+input int      RSI_Period = 14;                           // RSI Period
+input double   RSI_Overbought = 70.0;                     // RSI Overbought Level
+input double   RSI_Oversold = 30.0;                       // RSI Oversold Level
+input uint     ATR_Period = 14;                           // ATR Period for Volatility
+input double   ATR_Multiplier = 2.0;                      // ATR Multiplier for SL
+input double   RiskPercent_High = 0.02;                   // Risk % High Volatility
+input double   RiskPercent_Mod = 0.01;                    // Risk % Moderate Volatility
+input double   RiskPercent_Low = 0.005;                   // Risk % Low Volatility
+input int      Min_Bars = 50;                             // Minimum Bars Required
+input double   In_Lot = 0.01;                             // Default lot size
+input int      StopLoss = 100;                            // SL in points
+input int      TakeProfit = 100;                          // TP in points
+```
+
+In this block we define the input settings that configure how the Expert Advisor operates across multiple symbols. The Symbols input allows the trader to specify which instruments to trade, while RSI-related inputs (RSI\_Period, RSI\_Overbought, and RSI\_Oversold) are used to identify potential entry points based on overbought or oversold conditions. Volatility is accounted for using the Average True Range (ATR), with adjustable parameters for its period and a multiplier to scale the stop loss dynamically.
+
+The EA adjusts its risk exposure based on volatility levels, using different risk percentages for high, moderate, and low volatility conditions. Additional inputs include Min\_Bars to ensure sufficient historical data, a default In\_Lot size, and fixed-point-based StopLoss and TakeProfit values, which act as fallbacks if dynamic levels are not applied.
+
+```
+//--- Global variables
+string symb_List[];
+int    Num_symbs = 0;
+int    ATR_Handles[];
+int    RSI_Handles[];
+double Prev_ATR[];
+double Prev_RSI[];
+datetime LastBarTime[];
+CTrade trade;
+```
+
+This section declares the global variables used throughout the Expert Advisor. Symb\_List[] is an array that stores the list of symbols to trade, while Num\_symbs holds the total count of those symbols. Arrays like ATR\_Handles[] and RSI\_Handles[] manage indicator handles for ATR and RSI calculations, allowing the EA to process multiple symbols simultaneously.
+
+Prev\_ATR[] and Prev\_RSI[] store the most recent values of these indicators for each symbol, used in decision-making logic. LastBarTime[] tracks the last processed bar for each symbol to avoid duplicate operations on the same candle. Finally, the CTrade trade object provides access to MQL5’s built-in trade functions, enabling order execution and position management.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    //--- Split symbol list
+    ushort separator = StringGetCharacter(",", 0);
+    StringSplit(Symbols, separator, symb_List);
+    Num_symbs = ArraySize(symb_List);
+    
+    //--- Resize arrays
+    ArrayResize(ATR_Handles, Num_symbs);
+    ArrayResize(RSI_Handles, Num_symbs);
+    ArrayResize(Prev_ATR, Num_symbs);
+    ArrayResize(Prev_RSI, Num_symbs);
+    ArrayResize(LastBarTime, Num_symbs);
+    ArrayInitialize(Prev_ATR, 0.0);
+    ArrayInitialize(Prev_RSI, 50.0);
+    ArrayInitialize(LastBarTime, 0);
+    
+    //--- Create indicator handles
+    for(int i = 0; i < Num_symbs; i++)
+    {
+        string symbol = symb_List[i];
+        ATR_Handles[i] = iATR(symbol, PERIOD_CURRENT, ATR_Period);
+        RSI_Handles[i] = iRSI(symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);
+        
+        if(ATR_Handles[i] == INVALID_HANDLE || RSI_Handles[i] == INVALID_HANDLE)
+        {
+            Print("Error creating indicator handles for ", symbol, " - Error: ", GetLastError());
+            return INIT_FAILED;
+        }
+    }
+    
+    return INIT_SUCCEEDED;
+}
+```
+
+The OnInit() function is responsible for initializing the Expert Advisor when it is loaded onto the chart. It begins by splitting the comma-separated Symbols input into an array symb\_List, and calculates the total number of symbols to manage. It then resizes and initializes several global arrays such as those for ATR and RSI handles, previous indicator values, and last processed bar times to ensure each symbol has dedicated storage and tracking. Initial values are set to prevent undefined behavior during the EA’s first execution cycle.
+
+Next, the function loops through each symbol and creates indicator handles for ATR and RSI using iATR and iRSI, respectively. These handles are essential for fetching real-time indicator values during trading operations. If any of the handle creations fail (i.e., return INVALID\_HANDLE), an error message is printed and initialization is aborted by returning INIT\_FAILED. If all indicators are set up successfully, the function returns INIT\_SUCCEEDED, signaling the EA is ready to begin execution.
+
+```
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    //--- Release indicator handles
+    for(int i = 0; i < Num_symbs; i++)
+    {
+        if(ATR_Handles[i] != INVALID_HANDLE) 
+            IndicatorRelease(ATR_Handles[i]);
+        if(RSI_Handles[i] != INVALID_HANDLE) 
+            IndicatorRelease(RSI_Handles[i]);
+    }
+}
+```
+
+The OnDeinit() function is triggered when the Expert Advisor is removed from the chart or reinitialized. Its primary purpose is to clean up resources by releasing the indicator handles associated with each symbol. By calling IndicatorRelease() for both ATR and RSI handles only if they are valid it ensures that system memory is properly freed, preventing leaks or unnecessary resource consumption. This helps maintain platform stability, especially when running multiple EAs or indicators.
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    for(int i = 0; i < Num_symbs; i++)
+    {
+        string symbol = symb_List[i];
+        
+        //--- Check for new bar
+        datetime currentBarTime = iTime(symbol, PERIOD_CURRENT, 0);
+        if(LastBarTime[i] == currentBarTime) continue;
+        LastBarTime[i] = currentBarTime;
+        
+        //--- Get indicator values
+        double atr[2] = {0.0, 0.0};
+        double rsi[2] = {50.0, 50.0};
+        
+        if(CopyBuffer(ATR_Handles[i], 0, 1, 2, atr) < 2 || 
+           CopyBuffer(RSI_Handles[i], 0, 1, 2, rsi) < 2)
+            continue;
+        
+        Prev_ATR[i] = atr[0];  // Previous bar's ATR
+        Prev_RSI[i] = rsi[0];  // Previous bar's RSI
+        
+        //--- Get current prices
+        MqlTick lastTick;
+        if(!SymbolInfoTick(symbol, lastTick)) continue;
+        double ask = lastTick.ask;
+        double bid = lastTick.bid;
+        
+        //--- Check existing positions
+        bool hasLong = false, hasShort = false;
+        CheckExistingPositions(symbol, hasLong, hasShort);
+        
+        //--- Calculate volatility-based risk
+        double riskPercent = CalculateRiskLevel(symbol);
+        
+        //--- Get V-Stop levels
+        double vStopUpper = CalculateVStop(symbol, 1, true);  // Previous bar's upper band
+        double vStopLower = CalculateVStop(symbol, 1, false); // Previous bar's lower band
+        
+        //--- Trade Entry Logic
+        if(!hasLong && !hasShort)
+        {
+            //--- Sell signal: RSI overbought + price below V-Stop upper band
+            if(rsi[0] > RSI_Overbought && bid < vStopUpper)
+            {
+                double tp = GetProfitTarget(symbol, false);  // Previous V-Stop level
+                double sl = ask + ATR_Multiplier * atr[0];
+                double lots = CalculatePositionSize(symbol, riskPercent, sl, ask);
+                
+                if(lots > 0)
+                    ExecuteTrade(ORDER_TYPE_SELL, symbol);
+            }
+            //--- Buy signal: RSI oversold + price above V-Stop lower band
+            else if(rsi[0] < RSI_Oversold && ask > vStopLower)
+            {
+                double tp = GetProfitTarget(symbol, true);   // Previous V-Stop level
+                double sl = bid - ATR_Multiplier * atr[0];
+                double lots = CalculatePositionSize(symbol, riskPercent, sl, bid);
+                
+                if(lots > 0)
+                    ExecuteTrade(ORDER_TYPE_BUY, symbol);
+            }
+        }
+        
+        //--- Trailing Stop Logic
+        UpdateTrailingStops(symbol, atr[0]);
+    }
+}
+```
+
+The OnTick() function runs every time the market updates, looping through each symbol in the trading list to perform real-time analysis and trade management. It first checks if a new bar has formed for the symbol by comparing the current bar’s timestamp with the last recorded one. If it's a new bar, it proceeds to retrieve the latest ATR and RSI values using CopyBuffer(), storing them in the global arrays for use in decision-making. Current bid and ask prices are also retrieved using SymbolInfoTick() to ensure accurate entry and exit levels.
+
+Next, it verifies whether there are existing long or short positions open for the current symbol using the CheckExistingPositions() function. It then calculates the appropriate risk level based on the symbol’s volatility using CalculateRiskLevel(), and determines the most recent V-Stop levels to guide entry and trailing logic. Based on this information, the EA applies its trade entry rules: a sell is triggered when RSI indicates overbought conditions and price drops below the upper V-Stop, while a buy is triggered when RSI shows oversold conditions and price breaks above the lower V-Stop. In both cases, dynamic stop loss and take profit levels are calculated using ATR and V-Stop, and position size is adjusted to fit the defined risk level.
+
+Finally, regardless of whether a new trade is opened, the EA calls UpdateTrailingStops() to manage any open positions. This function adjusts stop losses according to the latest volatility data, helping to lock in profits and limit losses as market conditions evolve. This dynamic approach ensures that the strategy remains responsive and adaptive across multiple symbols in real time.
+
+```
+//+------------------------------------------------------------------+
+//| Execute trade with risk parameters                               |
+//+------------------------------------------------------------------+
+void ExecuteTrade(ENUM_ORDER_TYPE tradeType, string symbol)
+{
+   double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+   double price = (tradeType == ORDER_TYPE_BUY) ? SymbolInfoDouble(symbol, SYMBOL_ASK) :
+                                                SymbolInfoDouble(symbol, SYMBOL_BID);
+
+   // Convert StopLoss and TakeProfit from pips to actual price distances
+   double sl_distance = StopLoss * point;
+   double tp_distance = TakeProfit * point;
+   
+   double sl = (tradeType == ORDER_TYPE_BUY) ? price - sl_distance :
+                                             price + sl_distance;
+   
+   double tp = (tradeType == ORDER_TYPE_BUY) ? price + tp_distance :
+                                             price - tp_distance;
+
+   trade.PositionOpen(symbol, tradeType, In_Lot, price, sl, tp, NULL);
+}
+```
+
+The ExecuteTrade() function handles the actual execution of a trade based on the specified order type (buy or sell) and symbol. It first determines the correct entry price using either the current ask or bid, depending on the trade direction. It then calculates the stop loss and take profit levels by converting user-defined point values into actual price distances using the symbol’s point size. Based on whether it’s a buy or sell trade, it sets the SL and TP in the appropriate direction and finally uses the CTrade object to open a position with the defined lot size and price parameters.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate V-Stop levels                                          |
+//+------------------------------------------------------------------+
+double CalculateVStop(string symbol, int shift, bool isUpper)
+{
+    double atr[1];
+    double high[1], low[1], close[1];
+    
+    if(CopyBuffer(ATR_Handles[GetSymbolIndex(symbol)], 0, shift, 1, atr) < 1 ||
+       CopyHigh(symbol, PERIOD_CURRENT, shift, 1, high) < 1 ||
+       CopyLow(symbol, PERIOD_CURRENT, shift, 1, low) < 1 ||
+       CopyClose(symbol, PERIOD_CURRENT, shift, 1, close) < 1)
+        return 0.0;
+    
+    double price = (high[0] + low[0] + close[0]) / 3.0;  // Typical price
+    return isUpper ? price + ATR_Multiplier * atr[0] : price - ATR_Multiplier * atr[0];
+}
+```
+
+The CalculateVStop() function computes the dynamic V-Stop level for a given symbol and bar shift, adjusting based on volatility. It retrieves the ATR, high, low, and close values for the specified bar using CopyBuffer() and price series functions. It then calculates the typical price as the average of the high, low, and close. Depending on whether the upper or lower V-Stop is needed (isUpper flag), it adds or subtracts a multiple of the ATR from this typical price to generate a volatility-adjusted support or resistance level used for trade filtering and trailing logic.
+
+```
+//+------------------------------------------------------------------+
+//| Get profit target from V-Stop history                            |
+//+------------------------------------------------------------------+
+double GetProfitTarget(string symbol, bool forLong)
+{
+    int bars = 50;  // Look back 50 bars
+    double target = 0.0;
+    
+    for(int i = 1; i <= bars; i++)
+    {
+        double vStop = forLong ? 
+            CalculateVStop(symbol, i, false) :  // For longs, find support levels
+            CalculateVStop(symbol, i, true);     // For shorts, find resistance levels
+        
+        if(vStop != 0.0)
+        {
+            target = vStop;
+            break;
+        }
+    }
+    
+    // Fallback: Use fixed multiplier if no V-Stop found
+    MqlTick lastTick;
+    SymbolInfoTick(symbol, lastTick);
+    return (target == 0.0) ? 
+        (forLong ? lastTick.ask + 5*Prev_ATR[GetSymbolIndex(symbol)] : 
+                   lastTick.bid - 5*Prev_ATR[GetSymbolIndex(symbol)]) : 
+        target;
+}
+```
+
+The GetProfitTarget() function determines a dynamic take-profit level based on historical V-Stop values. It looks back up to 50 bars, searching for the nearest valid V-Stop level-either a lower band for long trades (acting as support) or an upper band for short trades (acting as resistance). If a valid level is found, it is used as the profit target. If none are available within the lookback window, the function falls back to a default target calculated as a 5× ATR distance from the current bid or ask price, ensuring the EA still sets a logical take-profit level even in the absence of historical V-Stop data.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate risk level based on volatility                         |
+//+------------------------------------------------------------------+
+double CalculateRiskLevel(string symbol)
+{
+    double atrValues[20];
+    if(CopyBuffer(ATR_Handles[GetSymbolIndex(symbol)], 0, 1, 20, atrValues) < 20)
+        return RiskPercent_Mod;
+    
+    double avgATR = 0.0;
+    for(int i = 0; i < 20; i++) avgATR += atrValues[i];
+    avgATR /= 20.0;
+    
+    double currentATR = atrValues[0];  // Most recent ATR
+    
+    if(currentATR > avgATR * 1.5)
+        return RiskPercent_High;
+    else if(currentATR < avgATR * 0.5)
+        return RiskPercent_Low;
+    
+    return RiskPercent_Mod;
+}
+```
+
+The CalculateRiskLevel() function dynamically adjusts the EA’s risk exposure based on current market volatility. It retrieves the last 20 ATR values for the given symbol and calculates their average to establish a baseline. The most recent ATR value is then compared to this average: if it’s significantly higher (above 1.5×), the market is considered highly volatile and the higher risk percentage is used; if it’s much lower (below 0.5×), the lower risk percentage is applied. Otherwise, a moderate risk level is chosen. This ensures that trade sizing is adaptive and aligns with real-time market conditions.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate position size based on risk                            |
+//+------------------------------------------------------------------+
+double CalculatePositionSize(string symbol, double riskPercent, double sl, double entryPrice)
+{
+    double tickSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_SIZE);
+    double tickValue = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_VALUE);
+    double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+    
+    if(tickSize == 0 || point == 0) return 0.0;
+    
+    double riskAmount = AccountInfoDouble(ACCOUNT_EQUITY) * riskPercent;
+    double slDistance = MathAbs(entryPrice - sl) / point;
+    double moneyRisk = slDistance * tickValue / (tickSize / point);
+    
+    if(moneyRisk <= 0) return 0.0;
+    double lots = riskAmount / moneyRisk;
+    
+    // Normalize and validate lot size
+    double minLot = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MIN);
+    double maxLot = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MAX);
+    double step = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
+    
+    lots = MathMax(minLot, MathMin(maxLot, lots));
+    lots = MathRound(lots / step) * step;
+    
+    return lots;
+}
+```
+
+The CalculatePositionSize() function determines the appropriate lot size for a trade based on the specified risk percentage and stop loss distance. It first gathers essential trading parameters like tick size, tick value, and point size for the symbol. Using the account’s equity and the chosen risk percent, it calculates the total amount of money the trader is willing to risk.
+
+Then, it computes the monetary risk per lot by considering the stop loss distance in points and converts it into a value based on tick parameters. The function divides the total risk amount by this per-lot risk to get the optimal lot size. Finally, it adjusts the lot size to comply with the broker’s minimum, maximum, and step size requirements, ensuring the position size is valid and properly rounded for execution.
+
+```
+//+------------------------------------------------------------------+
+//| Update trailing stops                                            |
+//+------------------------------------------------------------------+
+void UpdateTrailingStops(string symbol, double currentATR)
+{
+    double newSL = 0.0;
+    for(int pos = PositionsTotal()-1; pos >= 0; pos--)
+    {
+        if(PositionGetSymbol(pos) != symbol) continue;
+        
+        ulong ticket = PositionGetInteger(POSITION_TICKET);
+        double currentSL = PositionGetDouble(POSITION_SL);
+        double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+        double currentProfit = PositionGetDouble(POSITION_PROFIT);
+        double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+        
+        if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
+        {
+            newSL = currentPrice - ATR_Multiplier * currentATR;
+            if(newSL > currentSL && newSL > openPrice && currentProfit > 0)
+                ModifySL(ticket, newSL);
+        }
+        else
+        {
+            newSL = currentPrice + ATR_Multiplier * currentATR;
+            if((newSL < currentSL || currentSL == 0) && newSL < openPrice && currentProfit > 0)
+                ModifySL(ticket, newSL);
+        }
+    }
+}
+```
+
+The UpdateTrailingStops() function actively manages open positions by adjusting their stop losses based on current market volatility. For each position matching the given symbol, it calculates a new trailing stop level using the latest ATR multiplied by a predefined factor. For long positions, the stop loss is moved up if the new level is higher than the current stop loss and above the opening price, helping to lock in profits once the trade is in positive territory. Conversely, for short positions, the stop loss is adjusted downward under similar conditions. This dynamic trailing stop approach protects gains while allowing room for the trade to breathe in volatile markets.
+
+```
+//+------------------------------------------------------------------+
+//| Modify stop loss                                                 |
+//+------------------------------------------------------------------+
+bool ModifySL(ulong ticket, double newSL)
+{
+    MqlTradeRequest request = {};
+    MqlTradeResult result = {};
+    
+    request.action = TRADE_ACTION_SLTP;
+    request.position = ticket;
+    request.sl = newSL;
+    request.deviation = 5;
+    
+    if(!OrderSend(request, result))
+    {
+        Print("Modify SL error: ", GetLastError());
+        return false;
+    }
+    return true;
+}
+```
+
+The ModifySL() function updates the stop loss level of an existing position identified by its ticket number. It constructs a trade request specifying the action to modify the stop loss (TRADE\_ACTION\_SLTP), assigns the new stop loss price, and sets a maximum allowed price deviation. The request is then sent via OrderSend(), and if the modification fails, an error message is printed with the corresponding error code. The function returns true on success and false if the stop loss update was unsuccessful, enabling the EA to handle errors gracefully.
+
+```
+//+------------------------------------------------------------------+
+//| Check existing positions                                         |
+//+------------------------------------------------------------------+
+void CheckExistingPositions(string symbol, bool &hasLong, bool &hasShort)
+{
+    hasLong = false;
+    hasShort = false;
+    
+    for(int pos = PositionsTotal()-1; pos >= 0; pos--)
+    {
+        if(PositionGetSymbol(pos) == symbol)
+        {
+            if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
+                hasLong = true;
+            else
+                hasShort = true;
+        }
+    }
+}
+```
+
+In this code block, the CheckExistingPositions() function scans all open positions to determine if there are any active long or short trades for the specified symbol. It initializes the output flags hasLong and hasShort as false, then iterates through all positions. For each position matching the symbol, it sets hasLong to true if the position is a buy, or hasShort to true if it is a sell.
+
+```
+//+------------------------------------------------------------------+
+//| Get symbol index                                                 |
+//+------------------------------------------------------------------+
+int GetSymbolIndex(string symbol)
+{
+    for(int i = 0; i < Num_symbs; i++)
+        if(symb_List[i] == symbol)
+            return i;
+    return -1;
+}
+```
+
+Lastly, the GetSymbolIndex() function provides a simple utility to retrieve the index of a given symbol from the symb\_List array. It loops through all the stored symbols and returns the matching index when the symbol is found. If the symbol isn’t present in the list, it returns -1. This function is essential for synchronizing symbol-specific data like indicator handles or stored values across various arrays used throughout the EA.
+
+### **Back Test Results**
+
+The back-testing was evaluated on the 1H timeframe across roughly a 2 months testing window (11 June 2025 to 01 August 2025), with the following input settings:
+
+- RSI Period = 60
+- RSI Overbought Level = 70
+- RSI Oversold Level = 45
+- ATR Period for Volatility = 62
+- ATR Multiplier for SL = 3.2
+- Risk % High Volatility = 0.19
+- Risk % Moderate Volatility = 0.064
+- Risk % Low Volatility = 0.0335
+- Minimum Bars Required = 50
+- Default lot size = 0.01
+- SL in points = 610
+- TP in points = 980
+
+[IMG]
+
+  
+
+### 
+
+### 
+
+### Conclusion
+
+In summary, we developed a dynamic multi-pair Expert Advisor that adapts to changing market conditions by integrating volatility-based risk management. The system processes multiple symbols simultaneously, applying technical indicators like ATR and RSI to identify trade opportunities. It calculates V-Stop levels to filter entries and manage exits, while also dynamically adjusting lot sizes and stop losses based on real-time volatility. Through modular functions, the EA handles trade execution, trailing stops, and risk categorization (high, moderate, low) to ensure that every trade is aligned with the symbol’s current behavior.
+
+In conclusion, this approach equips traders with a robust and adaptive tool that maintains consistent performance across various currency pairs. By adjusting risk exposure and trade parameters based on volatility, the EA reduces overexposure in volatile markets and avoids under-performance in quiet ones.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/18165.zip "Download all attachments in the single ZIP archive")
+
+[Volatility\_and\_Risk.mq5](https://www.mql5.com/en/articles/download/18165/volatility_and_risk.mq5 "Download Volatility_and_Risk.mq5")
+(14.06 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Neural Networks in Trading: Enhancing Transformer Efficiency by Reducing Sharpness (Final Part)](https://www.mql5.com/en/articles/16403)
+
+SAMformer offers a solution to the key drawbacks of Transformer models in long-term time series forecasting, such as training complexity and poor generalization on small datasets. Its shallow architecture and sharpness-aware optimization help avoid suboptimal local minima. In this article, we will continue to implement approaches using MQL5 and evaluate their practical value.
+
+[IMG]
+[Mastering Log Records (Part 10): Avoiding Log Replay by Implementing a Suppression](https://www.mql5.com/en/articles/19014)
+
+We created a log suppression system in the Logify library. It details how the CLogifySuppression class reduces console noise by applying configurable rules to avoid repetitive or irrelevant messages. We also cover the external configuration framework, validation mechanisms, and comprehensive testing to ensure robustness and flexibility in log capture during bot or indicator development.
+
+[IMG]
+[Integrating MQL5 with data processing packages (Part 5): Adaptive Learning and Flexibility](https://www.mql5.com/en/articles/18761)
+
+This part focuses on building a flexible, adaptive trading model trained on historical XAUUSD data, preparing it for ONNX export and potential integration into live trading systems.
+
+[IMG]
+[MQL5 Trading Tools (Part 8): Enhanced Informational Dashboard with Draggable and Minimizable Features](https://www.mql5.com/en/articles/19059)
+
+In this article, we develop an enhanced informational dashboard that upgrades the previous part by adding draggable and minimizable features for improved user interaction, while maintaining real-time monitoring of multi-symbol positions and account metrics.
+
+[[IMG]
+
+metatrader.com: Your New Hub for Trading
+
+A unified portal with global market news and analytics to help you trade smarter
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=nohacijjghimvcjzaekwvnuwufwnpswg&s=ee3b83e6d9917a3b0fdbb21e0b44c932faa82951112160b419f2890a2e1c30a8&uid=&ref=https://www.mql5.com/en/articles/18165&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6431866882230990757)

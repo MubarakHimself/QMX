@@ -1,0 +1,120 @@
+{
+  "package_id": "QMX-REFERENCE-RECON-20260918T082954Z",
+  "created_at_utc": "2026-09-18T08:29:54Z",
+  "research_window_utc": {
+    "start": "2026-09-18T08:30:20Z",
+    "end": "2026-09-18T08:39:38Z"
+  },
+  "scope": "Read-only product discovery for London Strategic Edge, OpenBB, and Taskade; no QMX mutation or external side effects.",
+  "evidence_classes": [
+    "OBSERVED_INTERACTION",
+    "DOCUMENTED_CAPABILITY",
+    "VENDOR_CLAIM",
+    "REPOSITORY_SOURCE",
+    "QMX_ADAPTATION_PROPOSAL",
+    "UNVERIFIED"
+  ],
+  "safety": {
+    "qmx_repository_modified": false,
+    "accounts_created": false,
+    "settings_changed": false,
+    "api_keys_generated_or_entered": false,
+    "downloads_or_exports_started": false,
+    "backtests_or_ml_jobs_started": false,
+    "trades_or_external_actions_started": false,
+    "apps_agents_workflows_cloned_saved_or_published": false,
+    "privacy_action": "LSE screenshots were cropped by 64 pixels at the top to remove the signed-in header/avatar area."
+  },
+  "access": [
+    {
+      "product": "London Strategic Edge",
+      "mode": "User-attached Brave tab plus an agent-created research tab; signed-in state already existed; read-only navigation.",
+      "status": "Browser control verified and interactive public/account-visible surfaces observed."
+    },
+    {
+      "product": "OpenBB",
+      "mode": "Attached public marketing tab plus public official documentation and official repositories; no sign-in or backend connection.",
+      "status": "Documentation/source study; live Workspace behavior unverified."
+    },
+    {
+      "product": "Taskade",
+      "mode": "Public unauthenticated pages plus official documentation and official repositories; no account creation.",
+      "status": "Public create/gallery/agent surfaces observed; signed-in creation, run, clone, and publish journeys unverified."
+    }
+  ],
+  "sources": [
+    {"id":"LSE-WEB-01","url":"https://londonstrategicedge.com/","classification":["OBSERVED_INTERACTION","VENDOR_CLAIM"]},
+    {"id":"LSE-WEB-02","url":"https://londonstrategicedge.com/data/","classification":["OBSERVED_INTERACTION","DOCUMENTED_CAPABILITY"]},
+    {"id":"LSE-WEB-03","url":"https://londonstrategicedge.com/api-documentation/","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"LSE-WEB-04","url":"https://londonstrategicedge.com/websocket-documentation/","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"LSE-WEB-05","url":"https://londonstrategicedge.com/backtest/XAUUSD","classification":["OBSERVED_INTERACTION"]},
+    {"id":"LSE-WEB-06","url":"https://londonstrategicedge.com/machine-learning-studio/","classification":["OBSERVED_INTERACTION","VENDOR_CLAIM","UNVERIFIED"]},
+    {"id":"LSE-WEB-07","url":"https://londonstrategicedge.com/calendar/","classification":["OBSERVED_INTERACTION"]},
+    {"id":"LSE-WEB-08","url":"https://londonstrategicedge.com/correlation-matrix/","classification":["OBSERVED_INTERACTION"]},
+    {"id":"LSE-WEB-09","url":"https://londonstrategicedge.com/stock-screener/","classification":["OBSERVED_INTERACTION"]},
+    {"id":"LSE-REPO-01","url":"https://github.com/londonstrategicedge/lse-data","classification":["REPOSITORY_SOURCE"]},
+    {"id":"LSE-REPO-02","url":"https://github.com/londonstrategicedge/lse-terminal","classification":["REPOSITORY_SOURCE"]},
+    {"id":"LSE-REPO-03","url":"https://github.com/londonstrategicedge/brue","classification":["REPOSITORY_SOURCE"]},
+    {"id":"OBB-WEB-01","url":"https://openbb.co/products/workspace/","classification":["VENDOR_CLAIM","UNVERIFIED"]},
+    {"id":"OBB-DOC-01","url":"https://docs.openbb.co/workspace/developers/data-integration","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-DOC-02","url":"https://docs.openbb.co/workspace/developers/json-specs/widgets-json-reference","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-DOC-03","url":"https://docs.openbb.co/workspace/developers/widget-parameters/parameter-positioning","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-DOC-04","url":"https://docs.openbb.co/odp/python/basic_usage/query_parameters#provider","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-DOC-05","url":"https://docs.openbb.co/odp/python/developer/architecture_overview","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-DOC-06","url":"https://docs.openbb.co/odp/python/developer/extension_types/provider","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"OBB-REPO-01","url":"https://github.com/OpenBB-finance/OpenBB","classification":["REPOSITORY_SOURCE"]},
+    {"id":"OBB-REPO-02","url":"https://github.com/OpenBB-finance/backends-for-openbb","classification":["REPOSITORY_SOURCE"]},
+    {"id":"TSK-WEB-01","url":"https://www.taskade.com/create","classification":["OBSERVED_INTERACTION","UNVERIFIED"]},
+    {"id":"TSK-WEB-02","url":"https://www.taskade.com/apps","classification":["OBSERVED_INTERACTION"]},
+    {"id":"TSK-WEB-03","url":"https://www.taskade.com/agents","classification":["OBSERVED_INTERACTION","VENDOR_CLAIM"]},
+    {"id":"TSK-DOC-01","url":"https://docs.taskade.com/platform/workspace-dna.md","classification":["DOCUMENTED_CAPABILITY"]},
+    {"id":"TSK-DOC-02","url":"https://docs.taskade.com/taskade-genesis/genesis/getting-started.md","classification":["DOCUMENTED_CAPABILITY","VENDOR_CLAIM"]},
+    {"id":"TSK-DOC-03","url":"https://docs.taskade.com/ai-features/ai-features/ai-agents-getting-started.md","classification":["DOCUMENTED_CAPABILITY","VENDOR_CLAIM"]},
+    {"id":"TSK-DOC-04","url":"https://docs.taskade.com/automations/automation.md","classification":["DOCUMENTED_CAPABILITY","UNVERIFIED"]},
+    {"id":"TSK-REPO-01","url":"https://github.com/taskade/mcp","classification":["REPOSITORY_SOURCE"]},
+    {"id":"TSK-REPO-02","url":"https://github.com/taskade/docs","classification":["REPOSITORY_SOURCE"]}
+  ],
+  "report_artifacts": [
+    {"path":"REFERENCE-RECON-RETURN.md","bytes":5682,"sha256":"c0f06ffd4a2f106b5d6ac703b9b4a07a6109d9c8a239cdc9c4345d472b4ee2fe"},
+    {"path":"REFERENCE-JOURNEYS.md","bytes":17996,"sha256":"3c1845647f316bdf2e4f1c104012a1d1c8b5a2ae55756cb372988af9e1fc52c4"},
+    {"path":"CAPABILITY-AND-BACKEND-IMPLICATIONS.md","bytes":10607,"sha256":"c4f220ecbf2482ff400e22ab126dffe6d7720a562370d0aab0bfdb31cf2af9db"},
+    {"path":"QMX-ADAPTATION-OPPORTUNITIES.md","bytes":15377,"sha256":"1bcc54491b0b52bcac79892eafc5f7b2b8217676bb28ac84d210a73ffe06782c"},
+    {"path":"LSE-OFFICIAL-RESEARCH.md","bytes":12966,"sha256":"6c01daf20cd0c8bba8a3391544035bc7e0ec05fa189af60794ddefe441c4e6a5"},
+    {"path":"OPENBB-OFFICIAL-RESEARCH.md","bytes":11950,"sha256":"89c1998bf4970eac805a58b65dcd1c677806d67f347d2106c4447fbdbc8577a2"},
+    {"path":"TASKADE-OFFICIAL-RESEARCH.md","bytes":15962,"sha256":"2210d97e7793add64658fff51014c376eb16b289187d9caa38ba64603cdbfbfe"}
+  ],
+  "screenshots": [
+    {"path":"screenshots/LSE-00-home.png","captured_at_utc":"2026-09-18T08:30:20.0458466Z","dimensions":"1920x887","bytes":303794,"sha256":"6017d82ea2b7da78ed61451ee8152a1ed31d633aa4df73e89445556c50e6324a","journeys":["LSE-NAV-001"]},
+    {"path":"screenshots/LSE-01-databank-overview.png","captured_at_utc":"2026-09-18T08:30:37.0454509Z","dimensions":"1920x831","bytes":966996,"sha256":"190d9d5b88252b16a830ba91e11953e918dcd11110aa658eab6e77c7bff5805f","journeys":["LSE-DATA-001"]},
+    {"path":"screenshots/LSE-02-catalogue-preview.png","captured_at_utc":"2026-09-18T08:30:50.2475692Z","dimensions":"1920x831","bytes":654525,"sha256":"9e64032c78f742eec6839cada02ecdbff445aa6ae833f49d66abfb668b82c30b","journeys":["LSE-DATA-001"]},
+    {"path":"screenshots/LSE-03-dataset-builder-configured.png","captured_at_utc":"2026-09-18T08:31:09.7580387Z","dimensions":"1920x831","bytes":460086,"sha256":"2fa7974ad05f7b078987f71687347d44d5f53340a2c33392a5167d4340f42c71","journeys":["LSE-DATA-002"]},
+    {"path":"screenshots/LSE-04-api-docs.png","captured_at_utc":"2026-09-18T08:31:19.6665729Z","dimensions":"1920x831","bytes":300018,"sha256":"88ca48e2ba4b82d7f5ef86d4095b32bd3febde0690eeb49f39c5d39e14152167","journeys":["LSE-API-001"]},
+    {"path":"screenshots/LSE-05-api-export-job.png","captured_at_utc":"2026-09-18T08:31:23.9231410Z","dimensions":"1920x831","bytes":390627,"sha256":"9d6d099d88d3a6a6bc97bf7bd84d660e9a6ff8957d76e43daa4c1e044219de74","journeys":["LSE-API-001"]},
+    {"path":"screenshots/LSE-06-websocket-docs.png","captured_at_utc":"2026-09-18T08:31:35.9364383Z","dimensions":"1920x831","bytes":269451,"sha256":"640596206bd7038ddee8d542d25851bf106285cf45415a51e404210a621bad68","journeys":["LSE-STREAM-001"]},
+    {"path":"screenshots/LSE-07-websocket-replay.png","captured_at_utc":"2026-09-18T08:31:36.7055194Z","dimensions":"1920x831","bytes":350559,"sha256":"789df87afb51c6a70f8f5562db104a24ab10c06c3eea9751b670d5e6d7017f4a","journeys":["LSE-STREAM-001"]},
+    {"path":"screenshots/LSE-08-backtest-setup.png","captured_at_utc":"2026-09-18T08:31:51.4701070Z","dimensions":"1920x831","bytes":334615,"sha256":"8b23c1691c373415fc46d2dc133caa7f125e9d4960c40dc9240201a9afee71d4","journeys":["LSE-BACKTEST-001"]},
+    {"path":"screenshots/LSE-09-backtest-empty-results.png","captured_at_utc":"2026-09-18T08:32:00.9603080Z","dimensions":"1920x831","bytes":243840,"sha256":"c24392469ab82108d2c3ce1147a69082e1842f1978341398371d1cae088cec86","journeys":["LSE-BACKTEST-001"]},
+    {"path":"screenshots/LSE-10-backtest-indicators.png","captured_at_utc":"2026-09-18T08:32:08.6239835Z","dimensions":"1920x831","bytes":304186,"sha256":"04c8c5974fa56bddca467a3ef7dfbe6ec47cbbd88da68746bebaf9c7da328e68","journeys":["LSE-BACKTEST-001"]},
+    {"path":"screenshots/LSE-11-ml-studio-config.png","captured_at_utc":"2026-09-18T08:32:28.0177413Z","dimensions":"1920x831","bytes":394518,"sha256":"300f1feb9eca3993eafdbe3d7b03cb57a69753d62918d78f608b5a9537b2eea3","journeys":["LSE-ML-001"]},
+    {"path":"screenshots/LSE-12-ml-optimise-config.png","captured_at_utc":"2026-09-18T08:33:06.5632425Z","dimensions":"1920x831","bytes":283275,"sha256":"796084deb0bf6dca7fb60400339431303ff45604663d305280437f7a37762a97","journeys":["LSE-ML-001"]},
+    {"path":"screenshots/LSE-13-economic-calendar.png","captured_at_utc":"2026-09-18T08:33:28.4294215Z","dimensions":"1920x831","bytes":398094,"sha256":"10395e42c51a8579d8ba4e7a4f729a8eaf4621fe810bf8cb020986eea18a53e9","journeys":["LSE-RESEARCH-001"]},
+    {"path":"screenshots/LSE-14-heatmap-404.png","captured_at_utc":"2026-09-18T08:33:35.1411143Z","dimensions":"1920x831","bytes":54847,"sha256":"962f8b49ed227ce24147383130849dc3a76d1926bc875281080b4e7cf1b3ef01","journeys":["LSE-ROUTE-ERR-001"]},
+    {"path":"screenshots/LSE-15-correlation-matrix.png","captured_at_utc":"2026-09-18T08:33:45.2083389Z","dimensions":"1920x831","bytes":339668,"sha256":"24e5ba8b0f4fbb310151df0db5cf66593aa5042373f4a1a469b8155d509f4217","journeys":["LSE-RESEARCH-001"]},
+    {"path":"screenshots/LSE-16-bond-yield-preview.png","captured_at_utc":"2026-09-18T08:34:10.1274761Z","dimensions":"1920x831","bytes":283048,"sha256":"3fcdc128eee55dc54f67bd7acece2697e542e932ac61e413878d63853611bddc","journeys":["LSE-RESEARCH-001"]},
+    {"path":"screenshots/LSE-17-stock-screener-valuation.png","captured_at_utc":"2026-09-18T08:34:21.8300073Z","dimensions":"1920x831","bytes":314061,"sha256":"747e1e9853c2b5bfe8d75540de31090af51b73df153a099b2f6a44f6ba48bb86","journeys":["LSE-RESEARCH-001"]},
+    {"path":"screenshots/OPENBB-01-widget-declaration.png","captured_at_utc":"2026-09-18T08:34:47.5071247Z","dimensions":"1905x888","bytes":111460,"sha256":"ee5a4cc093c79423dc0b363b80dbd36cf4069ff65760ce9326b8c2cda8e095ac","journeys":["OBB-DEV-001"]},
+    {"path":"screenshots/OPENBB-02-app-layout.png","captured_at_utc":"2026-09-18T08:34:52.5463031Z","dimensions":"1905x888","bytes":89330,"sha256":"ccfb666816d3b1501b57415a67384a0e3f5eceb918b06e7c6aa4afbb21f5aec9","journeys":["OBB-DEV-001"]},
+    {"path":"screenshots/OPENBB-03-widget-capability-schema.png","captured_at_utc":"2026-09-18T08:35:03.8122990Z","dimensions":"1905x888","bytes":143466,"sha256":"64acf3487c05ec26f77cb10467349fb6169f44d022404020fa86615da5eb5bcc","journeys":["OBB-DECL-001"]},
+    {"path":"screenshots/OPENBB-04-parameter-positioning.png","captured_at_utc":"2026-09-18T08:35:12.5543119Z","dimensions":"1905x888","bytes":100892,"sha256":"54fb880637a166c0dcb34fdc3838b9d0f3cdbd1afa9188326cec2e93797e2941","journeys":["OBB-DECL-001"]},
+    {"path":"screenshots/OPENBB-05-provider-selection.png","captured_at_utc":"2026-09-18T08:35:20.9066017Z","dimensions":"1905x888","bytes":122437,"sha256":"6da40c6a98afe9535bee24e6dd01c7e35fb6f54d8f6f6e6a911e15579b09f995","journeys":["OBB-PROVIDER-001"]},
+    {"path":"screenshots/TASKADE-01-public-create-surface.png","captured_at_utc":"2026-09-18T08:35:30.4691216Z","dimensions":"1920x895","bytes":62356,"sha256":"18b67370b39116261a93bc1ee9c249261f1eef50fd85cb29ad3ce131074ba353","journeys":["TSK-CREATE-001"]},
+    {"path":"screenshots/TASKADE-02-app-kits-gallery.png","captured_at_utc":"2026-09-18T08:39:35.2347047Z","dimensions":"1905x888","bytes":138783,"sha256":"e4503c570c7481a29eadb510a26d1c1f2ba3a9d0cac6812884a2db76cd37047b","journeys":["TSK-GALLERY-001"]},
+    {"path":"screenshots/TASKADE-03-agent-builder-gallery.png","captured_at_utc":"2026-09-18T08:39:37.2902925Z","dimensions":"1905x888","bytes":62179,"sha256":"e6edb5d8aa585a3cb71560d871788370f1e8f9777caf564f821000552d8e856e","journeys":["TSK-AGENT-001"]}
+  ],
+  "known_gaps": [
+    "No signed-in OpenBB Workspace or connected backend was exercised.",
+    "No signed-in Taskade workspace, Genesis generation, clone, agent run, automation run, connector, or publish path was exercised.",
+    "No LSE API/WebSocket runtime call, download, bulk export, backtest, training, optimisation, or trade was started.",
+    "Donor internal architectures, production guarantees, pricing entitlements, licensing rights, and data/model accuracy were not established."
+  ]
+}

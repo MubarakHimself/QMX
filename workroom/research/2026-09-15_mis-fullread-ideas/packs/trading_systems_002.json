@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_002",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_002",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1438,
+      "title": "Trading Using Linux",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1438.md"
+    },
+    {
+      "id": 1441,
+      "title": "Filtering by History",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1441.md"
+    },
+    {
+      "id": 1442,
+      "title": "Modelling Requotes in Tester and Expert Advisor Stability Analysis",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1442.md"
+    },
+    {
+      "id": 1447,
+      "title": "How to Develop a Profitable Trading Strategy",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1447.md"
+    },
+    {
+      "id": 1462,
+      "title": "How to Develop a Reliable and Safe Trade Robot in MQL 4",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1462.md"
+    },
+    {
+      "id": 1473,
+      "title": "How to Make the Detection and Recovery of Errors in an Expert Advisor Code Easier",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1473.md"
+    },
+    {
+      "id": 1485,
+      "title": "Non-standard Automated Trading",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1485.md"
+    },
+    {
+      "id": 1491,
+      "title": "How to Cut an EA Code for an Easier Life and Fewer Errors",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1491.md"
+    },
+    {
+      "id": 1495,
+      "title": "Universal Expert Advisor Template",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1495.md"
+    },
+    {
+      "id": 1499,
+      "title": "Object Approach in MQL",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1499.md"
+    },
+    {
+      "id": 1501,
+      "title": "Indicator Taichi - a Simple Idea of Formalizing the Values of Ichimoku Kinko Hyo",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1501.md"
+    },
+    {
+      "id": 1508,
+      "title": "Using MetaTrader 4 for a Time Based Pattern Analysis",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1508.md"
+    }
+  ]
+}

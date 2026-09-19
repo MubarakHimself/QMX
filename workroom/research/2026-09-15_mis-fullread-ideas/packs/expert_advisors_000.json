@@ -1,0 +1,119 @@
+{
+  "pack_id": "expert_advisors_000",
+  "section": "Expert Advisors",
+  "parent_shard": "expert_advisors_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 706,
+      "title": "Creating Neural Network EAs Using MQL5 Wizard and Hlaiman EA Generator",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\706.md"
+    },
+    {
+      "id": 1589,
+      "title": "Building an Interactive Application to Display RSS Feeds in MetaTrader 5",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1589.md"
+    },
+    {
+      "id": 3299,
+      "title": "An Analysis of Why Expert Advisors Fail",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3299.md"
+    },
+    {
+      "id": 5337,
+      "title": "DIY multi-threaded asynchronous MQL5 WebRequest",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5337.md"
+    },
+    {
+      "id": 5472,
+      "title": "Practical Use of Kohonen Neural Networks in Algorithmic Trading. Part I. Tools",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5472.md"
+    },
+    {
+      "id": 7318,
+      "title": "Building an Expert Advisor using separate modules",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7318.md"
+    },
+    {
+      "id": 10954,
+      "title": "Video: Simple automated trading \u2013 How to create a simple Expert Advisor with MQL5",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10954.md"
+    },
+    {
+      "id": 10962,
+      "title": "Video: How to setup MetaTrader 5 and MQL5 for simple automated trading",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10962.md"
+    },
+    {
+      "id": 14424,
+      "title": "Seasonality Filtering and time period for Deep Learning ONNX models with python for EA",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14424.md"
+    },
+    {
+      "id": 16029,
+      "title": "Forecasting exchange rates using classic machine learning methods: Logit and Probit models",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16029.md"
+    },
+    {
+      "id": 16124,
+      "title": "Feature Engineering With Python And MQL5 (Part II): Angle Of Price",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16124.md"
+    },
+    {
+      "id": 18759,
+      "title": "Quantum Neural Network in MQL5 (Part I): Creating the Include File",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18759.md"
+    }
+  ]
+}

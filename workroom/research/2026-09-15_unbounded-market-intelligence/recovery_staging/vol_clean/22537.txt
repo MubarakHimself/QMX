@@ -1,0 +1,604 @@
+---
+id: 22537
+source_url: https://www.mql5.com/en/articles/22537
+title: "Beyond GARCH (Part VII): Monte Carlo Volatility Forecasting in MQL5"
+author: ""
+author_url: 
+published: 2026-07-01T13:08Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Beyond GARCH (Part VII): Monte Carlo Volatility Forecasting in MQL5
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 1 July 2026 at 09:08
+
+[IMG]
+830
+[[IMG]
+0](https://www.mql5.com/en/forum/512002 "Comments")
+
+[IMG]
+
+[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)
+
+### Introduction
+
+In [Part 6](https://www.mql5.com/en/articles/22521), we built the simulation engine that generates a single MMAR price path. One path is interesting for visualization but useless for forecasting. A single random draw tells you nothing about the distribution of possible futures. To produce a volatility forecast — a point estimate with uncertainty bounds — we need to run the simulation engine many times and aggregate the results. This is the Monte Carlo method: run N independent simulations, measure the volatility of each, and extract statistics from the resulting distribution.
+
+This article builds the CMonteCarlo class, the final computational module before the top-level facade. It takes the fitted model parameters, runs hundreds or thousands of independent MMAR simulations over a specified forecast horizon, and produces a complete forecast result: mean volatility, standard deviation, median, and a 95% confidence interval. The output answers the question that matters for trading: *what is the expected volatility over the next N bars, and how certain are we?*
+
+We will cover:
+
+1. [The CMonteCarlo Architecture](https://www.mql5.com/en/articles/22537#the_cmontecarlo_architecture)
+2. [Adaptive Cascade Depth](https://www.mql5.com/en/articles/22537#adaptive_cascade_depth)
+3. [The Simulation Loop](https://www.mql5.com/en/articles/22537#the_simulation_loop)
+4. [Forecast Statistics](https://www.mql5.com/en/articles/22537#forecast_statistics)
+5. [Running the Full Pipeline](https://www.mql5.com/en/articles/22537#running_the_full_pipeline)
+6. [Conclusion](https://www.mql5.com/en/articles/22537#conclusion)
+
+### The CMonteCarlo Architecture
+
+The Monte Carlo module sits at the top of the generative stack. It takes the output of Part 4 (Hurst exponent, sample volatility) and Part 5 (distribution type and parameters), runs multiple instances of the Part 6 simulation engine, and outputs a single MMARForecast structure. The module includes MMARConstants.mqh (shared data structures) and SimulationEngine.mqh. SimulationEngine.mqh, in turn, includes the Standard Library headers for FFT, Cholesky, and random number generation discussed in Part 6. The class itself is deliberately thin — it is an orchestrator, not a calculator:
+
+```
+//+------------------------------------------------------------------+
+//| CMonteCarlo class                                                |
+//+------------------------------------------------------------------+
+class CMonteCarlo
+  {
+private:
+   //--- Configuration
+   int               m_n_simulations;
+   int               m_forecast_horizon;
+   int               m_cascade_b;
+
+   //--- Model parameters (from fitting stage)
+   double            m_H;
+   ENUM_MMAR_DISTRIBUTION m_dist_type;
+   double            m_dist_params[4];
+   double            m_sample_volatility;
+
+   //--- Results
+   double            m_vol_forecasts[];
+   MMARForecast      m_forecast;
+   bool              m_ran;
+
+   //--- Internal helpers
+   int               CalculateCascadeDepth(int forecast_length);
+   double            ComputeVolatility(const double &returns[], int n);
+
+public:
+                     CMonteCarlo(void);
+                    ~CMonteCarlo(void);
+
+   //--- Initialization
+   bool              Init(double H, ENUM_MMAR_DISTRIBUTION dist_type,
+             const double &dist_params[], double sample_volatility,
+             int n_simulations, int forecast_horizon, int cascade_b = 2);
+
+   //--- Execution
+   bool              Run(void);
+
+   //--- Results access
+   MMARForecast      GetForecast(void) { return m_forecast; }
+   void              GetAllForecasts(double &forecasts[]);
+   bool              HasRun(void) { return m_ran; }
+  };
+```
+
+The interface is simple: Init() with the model parameters and simulation configuration, Run() to execute all simulations, then GetForecast() to retrieve the aggregated result. The GetAllForecasts() method provides access to the raw volatility values from each individual simulation, which is useful for building custom distributions or diagnostics beyond what the standard forecast structure provides.
+
+The Init() method validates all inputs and pre-allocates the results array:
+
+```
+//+------------------------------------------------------------------+
+//| Init - Configure simulation parameters                           |
+//+------------------------------------------------------------------+
+bool CMonteCarlo::Init(double H, ENUM_MMAR_DISTRIBUTION dist_type,
+                       const double &dist_params[], double sample_volatility,
+                       int n_simulations, int forecast_horizon, int cascade_b)
+  {
+   if(H <= 0.0 || H >= 1.0)
+     {
+      PrintFormat("MonteCarlo::Init - H=%.4f out of range (0,1)", H);
+      return false;
+     }
+   if(n_simulations < 1)
+     {
+      Print("MonteCarlo::Init - need at least 1 simulation");
+      return false;
+     }
+   if(forecast_horizon < 1)
+     {
+      Print("MonteCarlo::Init - forecast_horizon must be >= 1");
+      return false;
+     }
+   if(sample_volatility <= 0.0)
+     {
+      Print("MonteCarlo::Init - sample_volatility must be > 0");
+      return false;
+     }
+
+   m_H = H;
+   m_dist_type = dist_type;
+   m_sample_volatility = sample_volatility;
+   m_n_simulations = n_simulations;
+   m_forecast_horizon = forecast_horizon;
+   m_cascade_b = MathMax(2, cascade_b);
+
+   for(int i = 0; i < 4; i++)
+      m_dist_params[i] = (i < ArraySize(dist_params)) ? dist_params[i] : 0.0;
+
+   ArrayResize(m_vol_forecasts, n_simulations);
+   ArrayInitialize(m_vol_forecasts, 0.0);
+
+   m_ran = false;
+   return true;
+  }
+```
+
+The forecast\_horizon parameter deserves attention. It specifies how many bars into the future we want to forecast volatility. For M10 data, 7,200 bars correspond to 7,200 × 10 minutes (about 50 days). The simulation engine must generate paths at least this long, which affects the cascade depth calculation — the topic of the next section.
+
+### Adaptive Cascade Depth
+
+The simulation engine from Part 6 generates paths of length b^k (cascade base to the power of cascade depth). Since the forecast horizon can be any arbitrary number of bars, we need to compute the minimum cascade depth k that produces at least forecast\_horizon + 1 points:
+
+```
+//+------------------------------------------------------------------+
+//| CalculateCascadeDepth - Find k such that b^k >= forecast_length  |
+//+------------------------------------------------------------------+
+int CMonteCarlo::CalculateCascadeDepth(int forecast_length)
+  {
+   return (int)MathCeil(MathLog((double)(forecast_length + 1)) / MathLog((double)m_cascade_b));
+  }
+```
+
+For our forecast horizon of 7,200 bars with b=2, this gives ceil(log2(7201)) = ceil(12.81) = 13. So each simulation will generate 2^13 = 8,192 points. We then use only the first 7,200 returns from each path for the volatility calculation. The excess points (8,192 - 7,200 = 992) are simply discarded. This is more efficient than trying to fit the cascade exactly to the horizon — binary cascades only produce powers of 2, and the overhead of generating a few extra points is negligible compared to the cost of the cascade and FBM construction.
+
+The choice of k has a direct impact on performance. At k=13, each simulation generates 8,192 points and uses the Davies-Harte method for FBM (since n > 1,024). At k=10 (1,024 points, suitable for short horizons), Cholesky would be used. The automatic method selection in the simulation engine handles this transparently.
+
+Figure 1 visualizes this selection process. Starting from k=10, each power of two falls short of the 7,200-bar horizon until k=13 finally produces 8,192 points — enough to cover the target with 992 points to spare. Those excess points are simply discarded after the volatility calculation, a negligible overhead compared to the cost of the cascade and FBM construction themselves.
+
+[IMG]
+
+Fig. 1. Adaptive cascade depth: powers of two are tested against the forecast horizon until b^k is large enough, with the excess points discarded
+
+### The Simulation Loop
+
+The Run() method is the core of the Monte Carlo module. It creates a fresh simulation engine for each trial, generates a path, extracts the returns over the forecast horizon, and computes the volatility:
+
+```
+//+------------------------------------------------------------------+
+//| Run - Execute all simulations and compute forecast statistics    |
+//+------------------------------------------------------------------+
+bool CMonteCarlo::Run(void)
+  {
+   if(m_n_simulations == 0)
+     {
+      Print("MonteCarlo::Run - not initialized");
+      return false;
+     }
+
+   int cascade_k = CalculateCascadeDepth(m_forecast_horizon);
+   int n_points = (int)MathPow(m_cascade_b, cascade_k);
+
+   PrintFormat("MonteCarlo: %d simulations, horizon=%d bars, k=%d, N=%d",
+               m_n_simulations, m_forecast_horizon, cascade_k, n_points);
+
+   int n_success = 0;
+   int n_fail = 0;
+
+   uint t0 = GetTickCount();
+
+//--- Run each simulation
+   for(int sim = 0; sim < m_n_simulations; sim++)
+     {
+      CSimulationEngine engine;
+      if(!engine.Init(m_H, m_dist_type, m_dist_params, m_sample_volatility,
+                      m_cascade_b, cascade_k))
+        {
+         n_fail++;
+         continue;
+        }
+
+      if(!engine.Generate())
+        {
+         n_fail++;
+         continue;
+        }
+
+      double sim_returns[];
+      int n_sim_returns;
+      engine.GetReturns(sim_returns, n_sim_returns);
+
+      int n_use = MathMin(m_forecast_horizon, n_sim_returns);
+      double vol = ComputeVolatility(sim_returns, n_use);
+      m_vol_forecasts[n_success] = vol;
+      n_success++;
+     }
+
+   uint elapsed = GetTickCount() - t0;
+
+   if(n_success == 0)
+     {
+      Print("MonteCarlo::Run - all simulations failed");
+      return false;
+     }
+
+   if(n_fail > 0)
+      PrintFormat("MonteCarlo: %d/%d succeeded (%d failed)",
+                  n_success, m_n_simulations, n_fail);
+
+   ArrayResize(m_vol_forecasts, n_success);
+
+   // ... statistics computation follows ...
+  }
+```
+
+Each iteration creates a completely fresh CSimulationEngine instance. This is intentional — the engine stores its generated data in member arrays, so reusing a single instance would require explicit cleanup between runs. Creating a new object each time is clean, safe, and the allocation cost is negligible compared to the cascade and FBM generation within.
+
+The failure tracking (n\_fail) covers rare edge cases where the simulation engine fails. For example, Cholesky may fail, and the Davies-Harte fallback may also fail with degenerate inputs. Rather than aborting the entire Monte Carlo run, we simply skip failed simulations and report how many succeeded. The final forecast is computed only from successful runs, and the results array is resized to match.
+
+The ComputeVolatility helper measures the standard deviation of the first n\_use returns from each simulated path:
+
+```
+//+------------------------------------------------------------------+
+//| ComputeVolatility - Standard deviation of a return series        |
+//+------------------------------------------------------------------+
+double CMonteCarlo::ComputeVolatility(const double &returns[], int n)
+  {
+   if(n <= 0)
+      return 0.0;
+
+   double sum = 0.0;
+   double sum_sq = 0.0;
+   for(int i = 0; i < n; i++)
+     {
+      sum += returns[i];
+      sum_sq += returns[i] * returns[i];
+     }
+   double mean = sum / n;
+   double variance = sum_sq / n - mean * mean;
+   return MathSqrt(MathMax(variance, 0.0));
+  }
+```
+
+This is the population standard deviation (dividing by n, not n-1). For large n (7,200 in our case), the difference between population and sample standard deviation is negligible. The MathMax guard prevents taking the square root of a negative number, which can happen due to floating-point cancellation when the variance is extremely small.
+
+Figure 2 illustrates the Monte Carlo process. It starts with one simulated MMAR path and then generates many independent paths from the same origin. The right panel aggregates the per-path volatilities into a histogram, showing the forecast distribution. The mean and median nearly coincide, suggesting a symmetric distribution. The 95% confidence interval marks the main mass of outcomes, while paths outside the interval are dimmed on the left panel.
+
+[IMG]
+
+Fig. 2. Monte Carlo in action: independent MMAR paths fan out from a single origin, each path's volatility is measured, and the results aggregate into a forecast distribution with uncertainty bounds
+
+### Forecast Statistics
+
+After all simulations complete, we have an array of volatility values — one per successful simulation. The second half of Run() sorts this array and extracts the forecast statistics:
+
+```
+//--- Sort for percentile statistics
+   double sorted[];
+   ArrayResize(sorted, n_success);
+   ArrayCopy(sorted, m_vol_forecasts);
+   ArraySort(sorted);
+
+//--- Mean and standard deviation
+   double sum = 0.0;
+   double sum_sq = 0.0;
+   for(int i = 0; i < n_success; i++)
+     {
+      sum += sorted[i];
+      sum_sq += sorted[i] * sorted[i];
+     }
+   double mean = sum / n_success;
+   double variance = sum_sq / n_success - mean * mean;
+   double std_dev = MathSqrt(MathMax(variance, 0.0));
+
+//--- Median
+   double median;
+   if(n_success % 2 == 0)
+      median = (sorted[n_success / 2 - 1] + sorted[n_success / 2]) / 2.0;
+   else
+      median = sorted[n_success / 2];
+
+//--- 95% confidence interval (percentile method)
+   int ci_lo_idx = (int)MathFloor(0.025 * n_success);
+   int ci_hi_idx = (int)MathFloor(0.975 * n_success);
+   ci_lo_idx = MathMax(0, MathMin(ci_lo_idx, n_success - 1));
+   ci_hi_idx = MathMax(0, MathMin(ci_hi_idx, n_success - 1));
+
+   m_forecast.mean_volatility = mean;
+   m_forecast.std_volatility = std_dev;
+   m_forecast.median_volatility = median;
+   m_forecast.ci_lower = sorted[ci_lo_idx];
+   m_forecast.ci_upper = sorted[ci_hi_idx];
+   m_forecast.n_simulations = n_success;
+   m_forecast.forecast_horizon = m_forecast_horizon;
+
+   PrintFormat("MonteCarlo complete: %d sims in %u ms", n_success, elapsed);
+   PrintFormat("  Mean vol: %.6f | Std: %.6f | Median: %.6f",
+               mean, std_dev, median);
+   PrintFormat("  95%% CI: [%.6f, %.6f]",
+               m_forecast.ci_lower, m_forecast.ci_upper);
+
+   m_ran = true;
+   return true;
+  }
+```
+
+The 95% CI uses the percentile method rather than the parametric (mean +/- 1.96\*std) approach. This is more robust because it makes no assumption about the shape of the volatility distribution. With 100 simulations, the 2.5th percentile is the 2nd-smallest value and the 97.5th percentile is the 97th-smallest value. With 1,000 simulations, the resolution improves to the 25th and 975th values.
+
+The distinction between mean and median is important for interpretation. If the volatility distribution from the simulations is symmetric, they will be nearly identical. If the cascade produces occasional outlier paths with extremely high volatility (which can happen with heavy-tailed multiplier distributions like Gamma), the mean will be pulled upward while the median remains stable. For trading decisions, the median is often the more robust estimator.
+
+### Running the Full Pipeline
+
+We can now write a test script that chains all three analytical stages — partition analysis, spectrum fitting, and Monte Carlo forecasting — into a single end-to-end pipeline. This represents the complete MMAR workflow from raw price data to volatility forecast:
+
+```
+//+------------------------------------------------------------------+
+//|                                             MMAR MonteCarlo Test |
+//|                      Copyright 2026, MMQ - Muhammad Minhas Qamar |
+//|                           https://www.mql5.com/en/articles/22537 |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2026, MMQ - Muhammad Minhas Qamar"
+#property link      "https://www.mql5.com/en/articles/22537"
+#property version   "1.00"
+#property strict
+#property script_show_inputs
+
+#include <MMAR\PartitionAnalysis.mqh>
+#include <MMAR\SpectrumFitter.mqh>
+#include <MMAR\MonteCarlo.mqh>
+
+input int    InpBars           = 50000;
+input int    InpForecastBars   = 7200;    // ~50 days of M10
+input int    InpSimulations    = 100;     // Start small, increase to 1000
+input int    InpCascadeB       = 2;
+input int    InpSeed           = 42;
+
+input double InpQMin           = 0.01;
+input double InpQMax           = 30.0;
+input double InpQStep          = 0.5;
+input int    InpDtMin          = 1;
+input int    InpDtMax          = 150;
+input double InpDtSpacing      = 1.1;
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   MathSrand(InpSeed);
+
+   PrintFormat("=== MMAR Monte Carlo Test ===");
+   PrintFormat("Symbol: %s | Period: %s", _Symbol, EnumToString(_Period));
+   PrintFormat("Forecast: %d bars | Simulations: %d",
+               InpForecastBars, InpSimulations);
+
+//--- Load close prices and compute log returns
+   double close[];
+   int copied = CopyClose(_Symbol, _Period, 0, InpBars, close);
+   if(copied < 1000)
+     { PrintFormat("Not enough bars: %d", copied); return; }
+   PrintFormat("Loaded %d bars", copied);
+
+   double returns[];
+   int n_returns = copied - 1;
+   ArrayResize(returns, n_returns);
+   for(int i = 0; i < n_returns; i++)
+      returns[i] = MathLog(close[i + 1] / close[i]);
+
+//--- Stage 1: Partition Analysis
+   uint t0 = GetTickCount();
+
+   CPartitionAnalysis partition;
+   partition.SetPartitionConfig(InpDtMin, InpDtMax, InpDtSpacing);
+   partition.SetMomentConfig(InpQMin, InpQMax, InpQStep);
+
+   if(!partition.Init(returns, n_returns))
+     { Print("Partition Init failed"); return; }
+   if(!partition.Analyze())
+     { Print("Partition Analyze failed"); return; }
+
+   double H = partition.GetH();
+   double sample_vol = partition.GetSampleVolatility();
+   uint t_partition = GetTickCount() - t0;
+
+   PrintFormat("\n--- Partition (%u ms) ---", t_partition);
+   PrintFormat("H = %.4f | Vol = %.6f | Score = %d/9",
+               H, sample_vol, partition.GetMultifractalScore());
+
+//--- Stage 2: Spectrum Fitting
+   t0 = GetTickCount();
+
+   double tau[], q_vals[];
+   partition.GetTauQ(tau, q_vals);
+   int n_q = partition.GetNumQ();
+
+   CSpectrumFitter fitter;
+   if(!fitter.Init(q_vals, tau, n_q, H))
+     { Print("SpectrumFitter Init failed"); return; }
+   if(!fitter.ComputeSpectrum())
+     { Print("ComputeSpectrum failed"); return; }
+   if(!fitter.FitAllDistributions())
+     { Print("FitAllDistributions failed"); return; }
+
+   uint t_spectrum = GetTickCount() - t0;
+
+   ENUM_MMAR_DISTRIBUTION best_dist = fitter.GetBestDistribution();
+   double dist_params[];
+   fitter.GetBestParams(dist_params);
+
+   string dist_names[] = {"Normal", "Binomial", "Poisson", "Gamma"};
+   PrintFormat("\n--- Spectrum (%u ms) ---", t_spectrum);
+   PrintFormat("Best: %s | SSE = %.6f", dist_names[(int)best_dist], fitter.GetBestSSE());
+
+//--- Stage 3: Monte Carlo
+   t0 = GetTickCount();
+
+   CMonteCarlo mc;
+   if(!mc.Init(H, best_dist, dist_params, sample_vol,
+               InpSimulations, InpForecastBars, InpCascadeB))
+     { Print("MonteCarlo Init failed"); return; }
+
+   if(!mc.Run())
+     { Print("MonteCarlo Run failed"); return; }
+
+   uint t_mc = GetTickCount() - t0;
+
+//--- Print forecast
+   MMARForecast forecast = mc.GetForecast();
+
+   PrintFormat("\n--- Forecast Results ---");
+   PrintFormat("Horizon:         %d bars", forecast.forecast_horizon);
+   PrintFormat("Simulations:     %d", forecast.n_simulations);
+   PrintFormat("Mean volatility: %.6f", forecast.mean_volatility);
+   PrintFormat("Std volatility:  %.6f", forecast.std_volatility);
+   PrintFormat("Median:          %.6f", forecast.median_volatility);
+   PrintFormat("95%% CI:          [%.6f, %.6f]", forecast.ci_lower, forecast.ci_upper);
+   PrintFormat("Sample vol:      %.6f (historical)", sample_vol);
+   PrintFormat("Ratio:           %.2f", forecast.mean_volatility / sample_vol);
+
+//--- Timing summary
+   PrintFormat("\n--- Timing ---");
+   PrintFormat("Partition:   %u ms", t_partition);
+   PrintFormat("Spectrum:    %u ms", t_spectrum);
+   PrintFormat("Monte Carlo: %u ms (%d sims)", t_mc, InpSimulations);
+   PrintFormat("Total:       %u ms", t_partition + t_spectrum + t_mc);
+
+   Print("\n=== Monte Carlo Test Complete ===");
+  }
+```
+
+On EURUSD M10 (50,000 bars), with a 7,200-bar horizon (~50 days) and 100 simulations, the script produces the output below. Note that the spectrum fitter and Monte Carlo modules print their own internal diagnostics (distribution SSE values, cascade depth selection), so you will see more detail than what the test script explicitly prints:
+
+```
+=== MMAR Monte Carlo Test ===
+Symbol: EURUSD | Period: PERIOD_M10
+Forecast: 7200 bars | Simulations: 100 | Seed: 42
+Loaded 50000 bars
+Multifractality check: concavity=1 linearity=1 variation=1 total=3/9
+
+--- Partition (422 ms) ---
+H = 0.4817 | Vol = 0.000419 | Score = 3/9
+SpectrumFitter: 58 spectrum points, alpha=[0.1351, 0.5149], peak at alpha_0=0.5149 f=0.9923
+Fitting spectrum to 4 distributions...
+  Normal:   SSE=69.032584  alpha_0=0.514942
+  Binomial: SSE=0.123991  alpha_min=0.188628  alpha_max=0.772413
+  Poisson:  SSE=10.212068  alpha_0=0.514942
+  Gamma:    SSE=0.178587  alpha_0=0.514942  gamma=1.244125
+BEST FIT: Binomial (SSE=0.123991, RMSE=0.046236)
+
+--- Spectrum (16 ms) ---
+Best: Binomial | SSE = 0.123991
+MonteCarlo: 100 simulations, horizon=7200 bars, k=13, N=8192
+MonteCarlo complete: 100 sims in 875 ms
+  Mean vol: 0.000338 | Std: 0.000009 | Median: 0.000339
+  95% CI: [0.000322, 0.000356]
+
+--- Forecast Results ---
+Horizon:         7200 bars
+Simulations:     100
+Mean volatility: 0.000338
+Std volatility:  0.000009
+Median:          0.000339
+95% CI:          [0.000322, 0.000356]
+Sample vol:      0.000419 (historical)
+Ratio:           0.81
+
+--- Timing ---
+Partition:   422 ms
+Spectrum:    16 ms
+Monte Carlo: 875 ms (100 sims)
+Total:       1313 ms
+
+=== Monte Carlo Test Complete ===
+```
+
+The results tell a compelling story. The MMAR forecasts a mean volatility of 0.000338 over the next 7,200 bars, which is 19% lower than the historical sample volatility of 0.000419 (ratio = 0.81). This is not an error — it is the model predicting that forward-looking volatility will be lower than the recent past. The 95% CI [0.000322, 0.000356] is remarkably tight, with a standard deviation across simulations of only 0.000009. This tight clustering is consistent with MMAR's structure: cascade parameters come from long-run scaling properties rather than short-term volatility spikes.
+
+The mean and median are nearly identical (0.000338 vs 0.000339), confirming that the forecast distribution is symmetric — no heavy outlier paths are skewing the mean. If the cascade multiplier distribution were heavy-tailed (like Gamma with small shape parameter), we might see the mean pulled upward by occasional extreme paths.
+
+From a performance perspective, the entire pipeline runs in 1.3 seconds: 422 ms for partition analysis, 16 ms for spectrum fitting, and 875 ms for 100 Monte Carlo simulations. The Monte Carlo stage dominates at larger simulation counts. At 100 simulations, each individual path takes about 8.75 ms (the k=13, N=8192 point Davies-Harte method). Scaling to 1,000 simulations would take approximately 8.75 seconds — still fast enough for periodic recalibration in a live EA, though you would not want to run it on every tick.
+
+### Conclusion
+
+In this article, we built the CMonteCarlo class, completing the generative side of the MMAR library. The module takes the fitted parameters from the analytical stages (Parts 4 and 5) and the simulation engine (Part 6), runs many independent MMAR path simulations, and produces a distribution of volatility forecasts with uncertainty quantification.
+
+- Adaptive cascade depth. Automatically selects the minimum k such that b^k covers the forecast horizon, balancing resolution against computational cost.
+- Robust failure handling. Allows the Monte Carlo to continue even if individual simulations fail, reporting only successful runs in the final statistics.
+- Percentile-based confidence intervals. Make no distributional assumptions about the forecast volatility, providing honest uncertainty bounds.
+- Complete pipeline performance. 1.3 seconds for 100 simulations makes the MMAR practical for periodic recalibration in a live trading environment.
+
+All four computational modules are now in place: partition analysis, spectrum fitting, simulation engine, and Monte Carlo forecasting. In Part 8, we will tie them together with the top-level CMMAR facade class and deploy the complete library in a working Expert Advisor that fits the model to historical data and produces volatility forecasts for trading decisions.
+
+The programs presented in this article are intended for educational purposes only. They are not designed for use in live trading and are not optimized for performance in real-market conditions. The code serves as a foundation for understanding Monte Carlo forecasting with multifractal models; always validate thoroughly on demo accounts before considering any adaptation for live trading.
+
+**Getting the Source Code via MQL5 Algo Forge**
+
+All source files are attached to this article below, but the full repository is also available on [MQL5 Algo Forge](https://forge.mql5.io/ayantrader/MMAR "https://forge.mql5.io/ayantrader/MMAR"), the community's Git-based platform for sharing and collaborating on trading projects.
+
+| File name | Description |
+| --- | --- |
+| MQL5\Include\MMAR\MMARConstants.mqh | Shared enumerations, structures, and type definitions for the MMAR library (Part 4) |
+| MQL5\Include\MMAR\OLS.mqh | Ordinary Least Squares regression via SVD pseudo-inverse with full diagnostics (Part 4) |
+| MQL5\Include\MMAR\HurstGHE.mqh | Generalized Hurst Exponent estimator, fallback method (Part 4) |
+| MQL5\Include\MMAR\PartitionAnalysis.mqh | Multifractal partition function analysis with scaling diagnostics (Part 4) |
+| MQL5\Include\MMAR\SpectrumFitter.mqh | Multifractal spectrum computation and four-distribution fitting via BLEIC optimization (Part 5) |
+| MQL5\Include\MMAR\SimulationEngine.mqh | MMAR simulation engine: multiplicative cascade, FBM generation (Davies-Harte and Cholesky), and time-deformation composition (Part 6) |
+| MQL5\Include\MMAR\MonteCarlo.mqh | Monte Carlo volatility forecasting: runs N MMAR simulations and produces mean, median, std, and 95% CI (Part 7) |
+| MQL5\Scripts\MMAR\MMAR\_PartitionTest.mq5 | Test script for partition analysis on live market data (Part 4) |
+| MQL5\Scripts\MMAR\MMAR\_SpectrumTest.mq5 | Test script for the full partition + spectrum pipeline on live market data (Part 5) |
+| MQL5\Scripts\MMAR\MMAR\_SimulationTest.mq5 | Test script validating cascade invariants, FBM properties, and multi-run consistency (Part 6) |
+| MQL5\Scripts\MMAR\MMAR\_MonteCarloTest.mq5 | End-to-end test script: partition analysis + spectrum fitting + Monte Carlo forecasting (Part 7) |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22537.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/22537/MQL5.zip "Download MQL5.zip")
+(90.46 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Implementation of the Quantum Reservoir Computing (QRC) circuit](https://www.mql5.com/en/articles/19043)
+
+A revolutionary approach to machine learning in trading through quantum computing. The article demonstrates a practical implementation of an adaptive QRC system with continuous retraining for predicting market movements in real time.
+
+[IMG]
+[Digital Signal Processing for Traders: Building Ehlers' Filter Library in MQL5](https://www.mql5.com/en/articles/23149)
+
+We implement Ehlers-style DSP filters in a single reusable MQL5 library and use it to build two indicators. The Roofing Filter applies a 2‑pole high‑pass followed by a Super Smoother to isolate the tradeable 10–48‑bar band. The Even Better Sinewave normalizes the wave to about ±1, oscillating in cycle regimes and railing in trends, so you can read cycles and detect regime shifts in charts and EAs.
+
+[IMG]
+[Code, Tears, and Algo Forge](https://www.mql5.com/en/articles/21732)
+
+This article discusses the transition to MQL5 Algo Forge as a modern and convenient format for publishing program code and article attachments. Using repositories instead of traditional ZIP archives and source code allows you to keep projects up-to-date, make edits quickly, and professionally interact with your readers. Recommendations are provided for quickly migrating developments to the cloud environment via the MetaEditor interface.
+
+[IMG]
+[Heatmap Visualization of Intraday Return Patterns in MQL5 Using CCanvas](https://www.mql5.com/en/articles/23168)
+
+MetaTrader 5 provides no native tool for visualizing intraday return patterns across time dimensions simultaneously. This article implements a custom indicator that aggregates historical bar returns into a 5×24 matrix indexed by weekday and hour of day, then renders the result as a color-interpolated heatmap inside an indicator subwindow using CCanvas. Green cells represent positive average returns, red cells negative, with color intensity encoding return magnitude.
+
+[[IMG]
+
+MetaTrader 5 for iOS and Android
+
+Fully featured platform for any devices and web browsers
+
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=ddonqpipxfqlnsvzlwuowsuwlejpyjxk&s=9daba65b69f40afc3c35f95b1f84ef5824d68c47f29ce96a6dc5b164a2727baa&uid=&ref=https://www.mql5.com/en/articles/22537&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121876748572166520)

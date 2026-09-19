@@ -1,0 +1,80 @@
+{
+  "pack_id": "tester_017",
+  "section": "Tester",
+  "parent_shard": "tester_017",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "developing a robot in python and mql5",
+    "experiments with neural networks",
+    "formulating dynamic multi-pair ea",
+    "implementing practical modules from other languages in mql5",
+    "introduction to mql5"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 14910,
+      "title": "Developing a robot in Python and MQL5 (Part 2): Model selection, creation and training, Python custom tester",
+      "section": "Tester",
+      "series_title": "Developing a robot in Python and MQL5 (): Model selection, creation and training, Python custom tester",
+      "series_key": "developing a robot in python and mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14910.md"
+    },
+    {
+      "id": 11077,
+      "title": "Experiments with neural networks (Part 1): Revisiting geometry",
+      "section": "Tester",
+      "series_title": "Experiments with neural networks (): Revisiting geometry",
+      "series_key": "experiments with neural networks",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11077.md"
+    },
+    {
+      "id": 11186,
+      "title": "Experiments with neural networks (Part 2): Smart neural network optimization",
+      "section": "Tester",
+      "series_title": "Experiments with neural networks (): Smart neural network optimization",
+      "series_key": "experiments with neural networks",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11186.md"
+    },
+    {
+      "id": 16089,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 2): Portfolio Diversification and Optimization",
+      "section": "Tester",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Portfolio Diversification and Optimization",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16089.md"
+    },
+    {
+      "id": 18913,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 03): Schedule Module from Python, the OnTimer Event on Steroids",
+      "section": "Tester",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): Schedule Module from Python, the OnTimer Event on Steroids",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18913.md"
+    },
+    {
+      "id": 13738,
+      "title": "Introduction to MQL5 (Part 1): A Beginner's Guide into Algorithmic Trading",
+      "section": "Tester",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide into Algorithmic Trading",
+      "series_key": "introduction to mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13738.md"
+    },
+    {
+      "id": 15764,
+      "title": "Introduction to MQL5 (Part 9): Understanding and Using Objects in MQL5",
+      "section": "Tester",
+      "series_title": "Introduction to MQL5 (): Understanding and Using Objects in MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15764.md"
+    }
+  ]
+}

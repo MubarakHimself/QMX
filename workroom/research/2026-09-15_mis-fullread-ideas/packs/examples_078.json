@@ -1,0 +1,125 @@
+{
+  "pack_id": "examples_078",
+  "section": "Examples",
+  "parent_shard": "examples_078",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "implementing of a breakeven mechanism in mql5",
+    "integrate your own llm into ea",
+    "integrating mql5 with data processing packages",
+    "introduction to connexus",
+    "introduction to mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17957,
+      "title": "Implementing of a Breakeven Mechanism in MQL5 (Part 1): Base Class and Fixed-Points Breakeven Mode",
+      "section": "Examples",
+      "series_title": "Implementing of a Breakeven Mechanism in MQL5 (): Base Class and Fixed-Points Breakeven Mode",
+      "series_key": "implementing of a breakeven mechanism in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17957.md"
+    },
+    {
+      "id": 13920,
+      "title": "Integrate Your Own LLM into EA (Part 3): Training Your Own LLM with CPU",
+      "section": "Examples",
+      "series_title": "Integrate Your Own LLM into EA (): Training Your Own LLM with CPU",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13920.md"
+    },
+    {
+      "id": 16083,
+      "title": "Integrating MQL5 with data processing packages (Part 3): Enhanced Data Visualization",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with data processing packages (): Enhanced Data Visualization",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16083.md"
+    },
+    {
+      "id": 16446,
+      "title": "Integrating MQL5 with data processing packages (Part 4): Big Data Handling",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with data processing packages (): Big Data Handling",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16446.md"
+    },
+    {
+      "id": 18761,
+      "title": "Integrating MQL5 with data processing packages (Part 5): Adaptive Learning and Flexibility",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with data processing packages (): Adaptive Learning and Flexibility",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18761.md"
+    },
+    {
+      "id": 21115,
+      "title": "Integrating MQL5 with Data Processing Packages (Part 7): Building Multi-Agent Environments for Cross-Symbol Collaboration",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with Data Processing Packages (): Building Multi-Agent Environments for Cross-Symbol Collaboration",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21115.md"
+    },
+    {
+      "id": 21676,
+      "title": "Integrating MQL5 with Data Processing Packages (Part 8): Using Graph Neural Networks for Liquidity Zone Recognition",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with Data Processing Packages (): Using Graph Neural Networks for Liquidity Zone Recognition",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21676.md"
+    },
+    {
+      "id": 22220,
+      "title": "Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with Data Processing Packages (): Entropy-Based Adaptive Volatility",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22220.md"
+    },
+    {
+      "id": 23177,
+      "title": "Integrating MQL5 with Data Processing Packages (Part 10): Deploying Python AutoML Pipelines for Strategy Testing",
+      "section": "Examples",
+      "series_title": "Integrating MQL5 with Data Processing Packages (): Deploying Python AutoML Pipelines for Strategy Testing",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23177.md"
+    },
+    {
+      "id": 15795,
+      "title": "Introduction to Connexus (Part 1): How to Use the WebRequest Function?",
+      "section": "Examples",
+      "series_title": "Introduction to Connexus (): How to Use the WebRequest Function?",
+      "series_key": "introduction to connexus",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15795.md"
+    },
+    {
+      "id": 13997,
+      "title": "Introduction to MQL5 (Part 2): Navigating Predefined Variables, Common Functions, and  Control Flow Statements",
+      "section": "Examples",
+      "series_title": "Introduction to MQL5 (): Navigating Predefined Variables, Common Functions, and  Control Flow Statements",
+      "series_key": "introduction to mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13997.md"
+    },
+    {
+      "id": 18147,
+      "title": "Introduction to MQL5 (Part 16): Building Expert Advisors Using Technical Chart Patterns",
+      "section": "Examples",
+      "series_title": "Introduction to MQL5 (): Building Expert Advisors Using Technical Chart Patterns",
+      "series_key": "introduction to mql5",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18147.md"
+    }
+  ]
+}

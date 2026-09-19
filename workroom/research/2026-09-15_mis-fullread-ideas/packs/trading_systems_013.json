@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_013",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_013",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16570,
+      "title": "Neural Networks in Trading: A Multi-Agent Self-Adaptive Model (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16570.md"
+    },
+    {
+      "id": 16573,
+      "title": "Trading Insights Through Volume: Trend Confirmation",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16573.md"
+    },
+    {
+      "id": 16599,
+      "title": "Neural Networks in Trading: An Ensemble of Agents with Attention Mechanisms (MASAAT)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16599.md"
+    },
+    {
+      "id": 16604,
+      "title": "Portfolio optimization in Forex: Synthesis of VaR and Markowitz theory",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16604.md"
+    },
+    {
+      "id": 16631,
+      "title": "Neural Networks in Trading: An Ensemble of Agents with Attention Mechanisms (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16631.md"
+    },
+    {
+      "id": 16667,
+      "title": "Multi-module trading robot in Python and MQL5 (Part I): Creating basic architecture and first modules",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16667.md"
+    },
+    {
+      "id": 16686,
+      "title": "Neural Networks in Trading: A Hybrid Trading Framework with Predictive Coding (StockFormer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16686.md"
+    },
+    {
+      "id": 16713,
+      "title": "Neural Networks in Trading: A Hybrid Trading Framework with Predictive Coding (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16713.md"
+    },
+    {
+      "id": 16747,
+      "title": "Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16747.md"
+    },
+    {
+      "id": 16757,
+      "title": "Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16757.md"
+    },
+    {
+      "id": 16804,
+      "title": "Neural Networks in Trading: An Agent with Layered Memory",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16804.md"
+    },
+    {
+      "id": 16816,
+      "title": "Neural Networks in Trading: An Agent with Layered Memory (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16816.md"
+    }
+  ]
+}

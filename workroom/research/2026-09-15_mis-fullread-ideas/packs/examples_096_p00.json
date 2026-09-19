@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_096_p00",
+  "section": "Examples",
+  "parent_shard": "examples_096",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "timeseries in doeasy library"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 7594,
+      "title": "Timeseries in DoEasy library (part 35): Bar object and symbol timeseries list",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Bar object and symbol timeseries list",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7594.md"
+    },
+    {
+      "id": 7627,
+      "title": "Timeseries in DoEasy library (part 36): Object of timeseries for all used symbol periods",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Object of timeseries for all used symbol periods",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7627.md"
+    },
+    {
+      "id": 7663,
+      "title": "Timeseries in DoEasy library (part 37): Timeseries collection - database of timeseries by symbols and periods",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Timeseries collection - database of timeseries by symbols and periods",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7663.md"
+    },
+    {
+      "id": 7695,
+      "title": "Timeseries in DoEasy library (part 38): Timeseries collection - real-time updates and accessing data from the program",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Timeseries collection - real-time updates and accessing data from the program",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7695.md"
+    },
+    {
+      "id": 7724,
+      "title": "Timeseries in DoEasy library (part 39): Library-based indicators - preparing data and timeseries events",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Library-based indicators - preparing data and timeseries events",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7724.md"
+    },
+    {
+      "id": 7771,
+      "title": "Timeseries in DoEasy library (part 40): Library-based indicators - updating data in real time",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Library-based indicators - updating data in real time",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7771.md"
+    },
+    {
+      "id": 7804,
+      "title": "Timeseries in DoEasy library (part 41): Sample multi-symbol multi-period indicator",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Sample multi-symbol multi-period indicator",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7804.md"
+    },
+    {
+      "id": 7868,
+      "title": "Timeseries in DoEasy library (part 43): Classes of indicator buffer objects",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Classes of indicator buffer objects",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7868.md"
+    },
+    {
+      "id": 7886,
+      "title": "Timeseries in DoEasy library (part 44): Collection class of indicator buffer objects",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Collection class of indicator buffer objects",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 44,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7886.md"
+    },
+    {
+      "id": 8023,
+      "title": "Timeseries in DoEasy library (part 45): Multi-period indicator buffers",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Multi-period indicator buffers",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 45,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8023.md"
+    },
+    {
+      "id": 8115,
+      "title": "Timeseries in DoEasy library (part 46): Multi-period multi-symbol indicator buffers",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Multi-period multi-symbol indicator buffers",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 46,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8115.md"
+    },
+    {
+      "id": 8257,
+      "title": "Timeseries in DoEasy library (part 48): Multi-period multi-symbol indicators on one buffer in a subwindow",
+      "section": "Examples",
+      "series_title": "Timeseries in DoEasy library (): Multi-period multi-symbol indicators on one buffer in a subwindow",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 48,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8257.md"
+    }
+  ]
+}

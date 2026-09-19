@@ -1,0 +1,121 @@
+{
+  "pack_id": "tester_019_p00",
+  "section": "Tester",
+  "parent_shard": "tester_019",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "market simulation"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12536,
+      "title": "Market Simulation (Part 01): Cross Orders (I)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Cross Orders (I)",
+      "series_key": "market simulation",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12536.md"
+    },
+    {
+      "id": 12537,
+      "title": "Market Simulation (Part 02): Cross Orders (II)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Cross Orders (II)",
+      "series_key": "market simulation",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12537.md"
+    },
+    {
+      "id": 11794,
+      "title": "Market Simulation (Part 06): Transferring Information from MetaTrader 5 to Excel",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Transferring Information from MetaTrader 5 to Excel",
+      "series_key": "market simulation",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11794.md"
+    },
+    {
+      "id": 12790,
+      "title": "Market Simulation (Part 13): Sockets (VII)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Sockets (VII)",
+      "series_key": "market simulation",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12790.md"
+    },
+    {
+      "id": 12827,
+      "title": "Market Simulation (Part 15): Sockets (IX)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Sockets (IX)",
+      "series_key": "market simulation",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12827.md"
+    },
+    {
+      "id": 12828,
+      "title": "Market Simulation (Part 16): Sockets (X)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Sockets (X)",
+      "series_key": "market simulation",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12828.md"
+    },
+    {
+      "id": 12829,
+      "title": "Market Simulation (Part 17): Sockets (XI)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Sockets (XI)",
+      "series_key": "market simulation",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12829.md"
+    },
+    {
+      "id": 12926,
+      "title": "Market Simulation (Part 18): First Steps with SQL (I)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): First Steps with SQL (I)",
+      "series_key": "market simulation",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12926.md"
+    },
+    {
+      "id": 12927,
+      "title": "Market Simulation (Part 19): First Steps with SQL (II)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): First Steps with SQL (II)",
+      "series_key": "market simulation",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12927.md"
+    },
+    {
+      "id": 12928,
+      "title": "Market Simulation (Part 20): First steps with SQL (III)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): First steps with SQL (III)",
+      "series_key": "market simulation",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12928.md"
+    },
+    {
+      "id": 12985,
+      "title": "Market Simulation (Part 21): First Steps with SQL (IV)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): First Steps with SQL (IV)",
+      "series_key": "market simulation",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12985.md"
+    },
+    {
+      "id": 12986,
+      "title": "Market Simulation (Part 22): Getting Started with SQL (V)",
+      "section": "Tester",
+      "series_title": "Market Simulation (): Getting Started with SQL (V)",
+      "series_key": "market simulation",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12986.md"
+    }
+  ]
+}

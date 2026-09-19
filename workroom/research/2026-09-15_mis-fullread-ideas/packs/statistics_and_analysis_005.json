@@ -1,0 +1,117 @@
+{
+  "pack_id": "statistics_and_analysis_005",
+  "section": "Statistics and analysis",
+  "parent_shard": "statistics_and_analysis_005",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "data science and machine learning",
+    "data science and ml",
+    "feature engineering for ml",
+    "gaussian processes in machine learning",
+    "introduction to mql5",
+    "the price movement model and its main provisions"
+  ],
+  "n": 11,
+  "articles": [
+    {
+      "id": 15482,
+      "title": "Data Science and ML (Part 29): Essential Tips for Selecting the Best Forex Data for AI Training Purposes",
+      "section": "Statistics and analysis",
+      "series_title": "Data Science and ML (): Essential Tips for Selecting the Best Forex Data for AI Training Purposes",
+      "series_key": "data science and ml",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15482.md"
+    },
+    {
+      "id": 16390,
+      "title": "Data Science and ML (Part 32): Keeping your AI models updated, Online Learning",
+      "section": "Statistics and analysis",
+      "series_title": "Data Science and ML (): Keeping your AI models updated, Online Learning",
+      "series_key": "data science and ml",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16390.md"
+    },
+    {
+      "id": 17030,
+      "title": "Data Science and ML (Part 33): Pandas Dataframe in MQL5, Data Collection for ML Usage made easier",
+      "section": "Statistics and analysis",
+      "series_title": "Data Science and ML (): Pandas Dataframe in MQL5, Data Collection for ML Usage made easier",
+      "series_key": "data science and ml",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17030.md"
+    },
+    {
+      "id": 11735,
+      "title": "Data Science and Machine Learning (Part 10): Ridge Regression",
+      "section": "Statistics and analysis",
+      "series_title": "Data Science and Machine Learning (): Ridge Regression",
+      "series_key": "data science and machine learning",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11735.md"
+    },
+    {
+      "id": 14926,
+      "title": "Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?",
+      "section": "Statistics and analysis",
+      "series_title": "Data Science and Machine Learning (): Why LightGBM and XGBoost outperform a lot of AI models?",
+      "series_key": "data science and machine learning",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14926.md"
+    },
+    {
+      "id": 22015,
+      "title": "Feature Engineering for ML (Part 2): Implementing Fixed-Width Fractional Differentiation in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "Feature Engineering for ML (): Implementing Fixed-Width Fractional Differentiation in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22015.md"
+    },
+    {
+      "id": 23565,
+      "title": "Feature Engineering for ML (Part 11): Fractal Features in Python",
+      "section": "Statistics and analysis",
+      "series_title": "Feature Engineering for ML (): Fractal Features in Python",
+      "series_key": "feature engineering for ml",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23565.md"
+    },
+    {
+      "id": 18875,
+      "title": "Gaussian Processes in Machine Learning (Part 1): Classification Model in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "Gaussian Processes in Machine Learning (): Classification Model in MQL5",
+      "series_key": "gaussian processes in machine learning",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18875.md"
+    },
+    {
+      "id": 21267,
+      "title": "Introduction to MQL5 (Part 40): Beginner Guide to File Handling in MQL5 (II)",
+      "section": "Statistics and analysis",
+      "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21267.md"
+    },
+    {
+      "id": 10955,
+      "title": "The price movement model and its main provisions (Part 1): The simplest model version and its applications",
+      "section": "Statistics and analysis",
+      "series_title": "The price movement model and its main provisions (): The simplest model version and its applications",
+      "series_key": "the price movement model and its main provisions",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10955.md"
+    },
+    {
+      "id": 11158,
+      "title": "The price movement model and its main provisions (Part 2): Probabilistic price field evolution equation and the occurrence of the observed random walk",
+      "section": "Statistics and analysis",
+      "series_title": "The price movement model and its main provisions (): Probabilistic price field evolution equation and the occurrence of the observed random walk",
+      "series_key": "the price movement model and its main provisions",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11158.md"
+    }
+  ]
+}

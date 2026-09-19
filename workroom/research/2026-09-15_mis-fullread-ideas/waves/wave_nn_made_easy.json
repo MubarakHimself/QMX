@@ -1,0 +1,770 @@
+{
+  "packs": [
+    {
+      "pack_id": "trading_systems_047_p00",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 0,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 8385,
+          "title": "Neural networks made easy (Part 4): Recurrent networks",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Recurrent networks",
+          "series_key": "neural networks made easy",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8385.md"
+        },
+        {
+          "id": 8435,
+          "title": "Neural networks made easy (Part 5): Multithreaded calculations in OpenCL",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Multithreaded calculations in OpenCL",
+          "series_key": "neural networks made easy",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8435.md"
+        },
+        {
+          "id": 8598,
+          "title": "Neural networks made easy (Part 7): Adaptive optimization methods",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Adaptive optimization methods",
+          "series_key": "neural networks made easy",
+          "series_part": 7,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8598.md"
+        },
+        {
+          "id": 9025,
+          "title": "Neural networks made easy (Part 11): A take on GPT",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): A take on GPT",
+          "series_key": "neural networks made easy",
+          "series_part": 11,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9025.md"
+        },
+        {
+          "id": 10947,
+          "title": "Neural networks made easy (Part 15): Data clustering using MQL5",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Data clustering using MQL5",
+          "series_key": "neural networks made easy",
+          "series_part": 15,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10947.md"
+        },
+        {
+          "id": 10943,
+          "title": "Neural networks made easy (Part 16): Practical use of clustering",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Practical use of clustering",
+          "series_key": "neural networks made easy",
+          "series_part": 16,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10943.md"
+        },
+        {
+          "id": 11032,
+          "title": "Neural networks made easy (Part 17): Dimensionality reduction",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Dimensionality reduction",
+          "series_key": "neural networks made easy",
+          "series_part": 17,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11032.md"
+        },
+        {
+          "id": 11090,
+          "title": "Neural networks made easy (Part 18): Association rules",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Association rules",
+          "series_key": "neural networks made easy",
+          "series_part": 18,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11090.md"
+        },
+        {
+          "id": 11141,
+          "title": "Neural networks made easy (Part 19): Association rules using MQL5",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Association rules using MQL5",
+          "series_key": "neural networks made easy",
+          "series_part": 19,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11141.md"
+        },
+        {
+          "id": 11172,
+          "title": "Neural networks made easy (Part 20): Autoencoders",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Autoencoders",
+          "series_key": "neural networks made easy",
+          "series_part": 20,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11172.md"
+        },
+        {
+          "id": 11206,
+          "title": "Neural networks made easy (Part 21): Variational autoencoders (VAE)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Variational autoencoders (VAE)",
+          "series_key": "neural networks made easy",
+          "series_part": 21,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11206.md"
+        },
+        {
+          "id": 11273,
+          "title": "Neural networks made easy (Part 23): Building a tool for Transfer Learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Building a tool for Transfer Learning",
+          "series_key": "neural networks made easy",
+          "series_part": 23,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11273.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p01",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 1,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 11306,
+          "title": "Neural networks made easy (Part 24): Improving the tool for Transfer Learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Improving the tool for Transfer Learning",
+          "series_key": "neural networks made easy",
+          "series_part": 24,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11306.md"
+        },
+        {
+          "id": 11369,
+          "title": "Neural networks made easy (Part 27): Deep Q-Learning (DQN)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Deep Q-Learning (DQN)",
+          "series_key": "neural networks made easy",
+          "series_part": 27,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11369.md"
+        },
+        {
+          "id": 11392,
+          "title": "Neural networks made easy (Part 28): Policy gradient algorithm",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Policy gradient algorithm",
+          "series_key": "neural networks made easy",
+          "series_part": 28,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11392.md"
+        },
+        {
+          "id": 11452,
+          "title": "Neural networks made easy (Part 29): Advantage Actor-Critic algorithm",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Advantage Actor-Critic algorithm",
+          "series_key": "neural networks made easy",
+          "series_part": 29,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11452.md"
+        },
+        {
+          "id": 11489,
+          "title": "Neural networks made easy (Part 30): Genetic algorithms",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Genetic algorithms",
+          "series_key": "neural networks made easy",
+          "series_part": 30,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11489.md"
+        },
+        {
+          "id": 11619,
+          "title": "Neural networks made easy (Part 31): Evolutionary algorithms",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Evolutionary algorithms",
+          "series_key": "neural networks made easy",
+          "series_part": 31,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11619.md"
+        },
+        {
+          "id": 11716,
+          "title": "Neural networks made easy (Part 32): Distributed Q-Learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Distributed Q-Learning",
+          "series_key": "neural networks made easy",
+          "series_part": 32,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11716.md"
+        },
+        {
+          "id": 11752,
+          "title": "Neural networks made easy (Part 33): Quantile regression in distributed Q-learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Quantile regression in distributed Q-learning",
+          "series_key": "neural networks made easy",
+          "series_part": 33,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11752.md"
+        },
+        {
+          "id": 11833,
+          "title": "Neural networks made easy (Part 35): Intrinsic Curiosity Module",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Intrinsic Curiosity Module",
+          "series_key": "neural networks made easy",
+          "series_part": 35,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11833.md"
+        },
+        {
+          "id": 11876,
+          "title": "Neural networks made easy (Part 36): Relational Reinforcement Learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Relational Reinforcement Learning",
+          "series_key": "neural networks made easy",
+          "series_part": 36,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11876.md"
+        },
+        {
+          "id": 12638,
+          "title": "Neural networks made easy (Part 42): Model procrastination, reasons and solutions",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Model procrastination, reasons and solutions",
+          "series_key": "neural networks made easy",
+          "series_part": 42,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12638.md"
+        },
+        {
+          "id": 12698,
+          "title": "Neural networks made easy (Part 43): Mastering skills without the reward function",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Mastering skills without the reward function",
+          "series_key": "neural networks made easy",
+          "series_part": 43,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12698.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p02",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 2,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 12750,
+          "title": "Neural networks made easy (Part 44): Learning skills with dynamics in mind",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Learning skills with dynamics in mind",
+          "series_key": "neural networks made easy",
+          "series_part": 44,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12750.md"
+        },
+        {
+          "id": 12783,
+          "title": "Neural networks made easy (Part 45): Training state exploration skills",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Training state exploration skills",
+          "series_key": "neural networks made easy",
+          "series_part": 45,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12783.md"
+        },
+        {
+          "id": 12816,
+          "title": "Neural networks made easy (Part 46): Goal-conditioned reinforcement learning (GCRL)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Goal-conditioned reinforcement learning (GCRL)",
+          "series_key": "neural networks made easy",
+          "series_part": 46,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12816.md"
+        },
+        {
+          "id": 12853,
+          "title": "Neural networks made easy (Part 47): Continuous action space",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Continuous action space",
+          "series_key": "neural networks made easy",
+          "series_part": 47,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12853.md"
+        },
+        {
+          "id": 12941,
+          "title": "Neural networks made easy (Part 49): Soft Actor-Critic",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Soft Actor-Critic",
+          "series_key": "neural networks made easy",
+          "series_part": 49,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12941.md"
+        },
+        {
+          "id": 12998,
+          "title": "Neural networks made easy (Part 50): Soft Actor-Critic (model optimization)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Soft Actor-Critic (model optimization)",
+          "series_key": "neural networks made easy",
+          "series_part": 50,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12998.md"
+        },
+        {
+          "id": 13024,
+          "title": "Neural networks made easy (Part 51): Behavior-Guided Actor-Critic (BAC)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Behavior-Guided Actor-Critic (BAC)",
+          "series_key": "neural networks made easy",
+          "series_part": 51,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13024.md"
+        },
+        {
+          "id": 13055,
+          "title": "Neural networks made easy (Part 52): Research with optimism and distribution correction",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Research with optimism and distribution correction",
+          "series_key": "neural networks made easy",
+          "series_part": 52,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13055.md"
+        },
+        {
+          "id": 13098,
+          "title": "Neural networks made easy (Part 53): Reward decomposition",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Reward decomposition",
+          "series_key": "neural networks made easy",
+          "series_part": 53,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13098.md"
+        },
+        {
+          "id": 13158,
+          "title": "Neural networks made easy (Part 54): Using random encoder for efficient research (RE3)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Using random encoder for efficient research (RE3)",
+          "series_key": "neural networks made easy",
+          "series_part": 54,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13158.md"
+        },
+        {
+          "id": 13212,
+          "title": "Neural networks made easy (Part 55): Contrastive intrinsic control (CIC)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Contrastive intrinsic control (CIC)",
+          "series_key": "neural networks made easy",
+          "series_part": 55,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13212.md"
+        },
+        {
+          "id": 13242,
+          "title": "Neural networks made easy (Part 56): Using nuclear norm to drive research",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Using nuclear norm to drive research",
+          "series_key": "neural networks made easy",
+          "series_part": 56,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13242.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p03",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 3,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 13290,
+          "title": "Neural networks made easy (Part 57): Stochastic Marginal Actor-Critic (SMAC)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Stochastic Marginal Actor-Critic (SMAC)",
+          "series_key": "neural networks made easy",
+          "series_part": 57,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13290.md"
+        },
+        {
+          "id": 13347,
+          "title": "Neural networks made easy (Part 58): Decision Transformer (DT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Decision Transformer (DT)",
+          "series_key": "neural networks made easy",
+          "series_part": 58,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13347.md"
+        },
+        {
+          "id": 13596,
+          "title": "Neural networks made easy (Part 60): Online Decision Transformer (ODT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Online Decision Transformer (ODT)",
+          "series_key": "neural networks made easy",
+          "series_part": 60,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13596.md"
+        },
+        {
+          "id": 13639,
+          "title": "Neural networks made easy (Part 61): Optimism issue in offline reinforcement learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Optimism issue in offline reinforcement learning",
+          "series_key": "neural networks made easy",
+          "series_part": 61,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13639.md"
+        },
+        {
+          "id": 13674,
+          "title": "Neural networks made easy (Part 62): Using Decision Transformer in hierarchical models",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Using Decision Transformer in hierarchical models",
+          "series_key": "neural networks made easy",
+          "series_part": 62,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13674.md"
+        },
+        {
+          "id": 13712,
+          "title": "Neural networks made easy (Part 63): Unsupervised Pretraining for Decision Transformer (PDT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Unsupervised Pretraining for Decision Transformer (PDT)",
+          "series_key": "neural networks made easy",
+          "series_part": 63,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13712.md"
+        },
+        {
+          "id": 13742,
+          "title": "Neural networks made easy (Part 64): ConserWeightive Behavioral Cloning (CWBC) method",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): ConserWeightive Behavioral Cloning (CWBC) method",
+          "series_key": "neural networks made easy",
+          "series_part": 64,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13742.md"
+        },
+        {
+          "id": 13779,
+          "title": "Neural networks made easy (Part 65): Distance Weighted Supervised Learning (DWSL)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Distance Weighted Supervised Learning (DWSL)",
+          "series_key": "neural networks made easy",
+          "series_part": 65,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13779.md"
+        },
+        {
+          "id": 13819,
+          "title": "Neural networks made easy (Part 66): Exploration problems in offline learning",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Exploration problems in offline learning",
+          "series_key": "neural networks made easy",
+          "series_part": 66,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13819.md"
+        },
+        {
+          "id": 13854,
+          "title": "Neural networks made easy (Part 67): Using past experience to solve new tasks",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Using past experience to solve new tasks",
+          "series_key": "neural networks made easy",
+          "series_part": 67,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13854.md"
+        },
+        {
+          "id": 13912,
+          "title": "Neural networks made easy (Part 68): Offline Preference-guided Policy Optimization",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Offline Preference-guided Policy Optimization",
+          "series_key": "neural networks made easy",
+          "series_part": 68,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13912.md"
+        },
+        {
+          "id": 13954,
+          "title": "Neural networks made easy (Part 69): Density-based support constraint for the behavioral policy (SPOT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Density-based support constraint for the behavioral policy (SPOT)",
+          "series_key": "neural networks made easy",
+          "series_part": 69,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13954.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p04",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 4,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 13982,
+          "title": "Neural networks made easy (Part 70): Closed-Form Policy Improvement Operators (CFPI)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Closed-Form Policy Improvement Operators (CFPI)",
+          "series_key": "neural networks made easy",
+          "series_part": 70,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13982.md"
+        },
+        {
+          "id": 14012,
+          "title": "Neural networks made easy (Part 71): Goal-Conditioned Predictive Coding (GCPC)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Goal-Conditioned Predictive Coding (GCPC)",
+          "series_key": "neural networks made easy",
+          "series_part": 71,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14012.md"
+        },
+        {
+          "id": 14044,
+          "title": "Neural networks made easy (Part 72): Trajectory prediction in noisy environments",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Trajectory prediction in noisy environments",
+          "series_key": "neural networks made easy",
+          "series_part": 72,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14044.md"
+        },
+        {
+          "id": 14095,
+          "title": "Neural networks made easy (Part 73): AutoBots for predicting price movements",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): AutoBots for predicting price movements",
+          "series_key": "neural networks made easy",
+          "series_part": 73,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14095.md"
+        },
+        {
+          "id": 14143,
+          "title": "Neural networks made easy (Part 74): Trajectory prediction with adaptation",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Trajectory prediction with adaptation",
+          "series_key": "neural networks made easy",
+          "series_part": 74,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14143.md"
+        },
+        {
+          "id": 14187,
+          "title": "Neural networks made easy (Part 75): Improving the performance of trajectory prediction models",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Improving the performance of trajectory prediction models",
+          "series_key": "neural networks made easy",
+          "series_part": 75,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14187.md"
+        },
+        {
+          "id": 14226,
+          "title": "Neural networks made easy (Part 76): Exploring diverse interaction patterns with Multi-future Transformer",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Exploring diverse interaction patterns with Multi-future Transformer",
+          "series_key": "neural networks made easy",
+          "series_part": 76,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14226.md"
+        },
+        {
+          "id": 14276,
+          "title": "Neural networks made easy (Part 77): Cross-Covariance Transformer (XCiT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Cross-Covariance Transformer (XCiT)",
+          "series_key": "neural networks made easy",
+          "series_part": 77,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14276.md"
+        },
+        {
+          "id": 14338,
+          "title": "Neural networks made easy (Part 78): Decoder-free Object Detector with Transformer (DFFT)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Decoder-free Object Detector with Transformer (DFFT)",
+          "series_key": "neural networks made easy",
+          "series_part": 78,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14338.md"
+        },
+        {
+          "id": 14394,
+          "title": "Neural networks made easy (Part 79): Feature Aggregated Queries (FAQ) in the context of state",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Feature Aggregated Queries (FAQ) in the context of state",
+          "series_key": "neural networks made easy",
+          "series_part": 79,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14394.md"
+        },
+        {
+          "id": 14445,
+          "title": "Neural networks made easy (Part 80): Graph Transformer Generative Adversarial Model (GTGAN)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Graph Transformer Generative Adversarial Model (GTGAN)",
+          "series_key": "neural networks made easy",
+          "series_part": 80,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14445.md"
+        },
+        {
+          "id": 14505,
+          "title": "Neural Networks Made Easy (Part 81): Context-Guided Motion Analysis (CCMR)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Context-Guided Motion Analysis (CCMR)",
+          "series_key": "neural networks made easy",
+          "series_part": 81,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14505.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p05",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 5,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 14569,
+          "title": "Neural networks made easy (Part 82): Ordinary Differential Equation models (NeuralODE)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Ordinary Differential Equation models (NeuralODE)",
+          "series_key": "neural networks made easy",
+          "series_part": 82,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14569.md"
+        },
+        {
+          "id": 14615,
+          "title": "Neural Networks Made Easy (Part 83): The \"Conformer\" Spatio-Temporal Continuous Attention Transformer Algorithm",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): The \"Conformer\" Spatio-Temporal Continuous Attention Transformer Algorithm",
+          "series_key": "neural networks made easy",
+          "series_part": 83,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14615.md"
+        },
+        {
+          "id": 14673,
+          "title": "Neural Networks Made Easy (Part 84): Reversible Normalization (RevIN)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Reversible Normalization (RevIN)",
+          "series_key": "neural networks made easy",
+          "series_part": 84,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14673.md"
+        },
+        {
+          "id": 14721,
+          "title": "Neural Networks Made Easy (Part 85): Multivariate Time Series Forecasting",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Multivariate Time Series Forecasting",
+          "series_key": "neural networks made easy",
+          "series_part": 85,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14721.md"
+        },
+        {
+          "id": 14766,
+          "title": "Neural Networks Made Easy (Part 86): U-Shaped Transformer",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): U-Shaped Transformer",
+          "series_key": "neural networks made easy",
+          "series_part": 86,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14766.md"
+        },
+        {
+          "id": 14798,
+          "title": "Neural Networks Made Easy (Part 87): Time Series Patching",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Time Series Patching",
+          "series_key": "neural networks made easy",
+          "series_part": 87,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14798.md"
+        },
+        {
+          "id": 14812,
+          "title": "Neural Networks Made Easy (Part 88): Time-Series Dense Encoder (TiDE)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Time-Series Dense Encoder (TiDE)",
+          "series_key": "neural networks made easy",
+          "series_part": 88,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14812.md"
+        },
+        {
+          "id": 14858,
+          "title": "Neural networks made easy (Part 89): Frequency Enhanced Decomposition Transformer (FEDformer)",
+          "section": "Trading systems",
+          "series_title": "Neural networks made easy (): Frequency Enhanced Decomposition Transformer (FEDformer)",
+          "series_key": "neural networks made easy",
+          "series_part": 89,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14858.md"
+        },
+        {
+          "id": 14913,
+          "title": "Neural Networks Made Easy (Part 90): Frequency Interpolation of Time Series (FITS)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Frequency Interpolation of Time Series (FITS)",
+          "series_key": "neural networks made easy",
+          "series_part": 90,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14913.md"
+        },
+        {
+          "id": 14996,
+          "title": "Neural Networks Made Easy (Part 92): Adaptive Forecasting in Frequency and Time Domains",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Adaptive Forecasting in Frequency and Time Domains",
+          "series_key": "neural networks made easy",
+          "series_part": 92,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14996.md"
+        },
+        {
+          "id": 15024,
+          "title": "Neural Networks Made Easy (Part 93): Adaptive Forecasting in Frequency and Time Domains (Final Part)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Adaptive Forecasting in Frequency and Time Domains (Final Part)",
+          "series_key": "neural networks made easy",
+          "series_part": 93,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15024.md"
+        },
+        {
+          "id": 15074,
+          "title": "Neural Networks Made Easy (Part 94): Optimizing the Input Sequence",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Optimizing the Input Sequence",
+          "series_key": "neural networks made easy",
+          "series_part": 94,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15074.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "trading_systems_047_p06",
+      "section": "Trading systems",
+      "parent_shard": "trading_systems_047",
+      "part_index": 6,
+      "part_count": 7,
+      "series_in_pack": [
+        "neural networks made easy"
+      ],
+      "n": 3,
+      "articles": [
+        {
+          "id": 15117,
+          "title": "Neural Networks Made Easy (Part 95): Reducing Memory Consumption in Transformer Models",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Reducing Memory Consumption in Transformer Models",
+          "series_key": "neural networks made easy",
+          "series_part": 95,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15117.md"
+        },
+        {
+          "id": 15156,
+          "title": "Neural Networks Made Easy (Part 96): Multi-Scale Feature Extraction (MSFformer)",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Multi-Scale Feature Extraction (MSFformer)",
+          "series_key": "neural networks made easy",
+          "series_part": 96,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15156.md"
+        },
+        {
+          "id": 15171,
+          "title": "Neural Networks Made Easy (Part 97): Training Models With MSFformer",
+          "section": "Trading systems",
+          "series_title": "Neural Networks Made Easy (): Training Models With MSFformer",
+          "series_key": "neural networks made easy",
+          "series_part": 97,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15171.md"
+        }
+      ]
+    }
+  ]
+}

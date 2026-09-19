@@ -1,0 +1,1332 @@
+---
+id: 22714
+source_url: https://www.mql5.com/en/articles/22714
+title: "Building Volatility Models in MQL5 (Part III): Implementing the SLSQP Algorithm for Model Estimation"
+author: ""
+author_url: 
+published: 2026-05-30T11:37Z
+platform: "MetaTrader 5"
+section: "Integration"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Building Volatility Models in MQL5 (Part III): Implementing the SLSQP Algorithm for Model Estimation
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Integration](https://www.mql5.com/en/articles/mt5/integration)
+| 30 May 2026 at 07:37
+
+[IMG]
+1 742
+[[IMG]
+0](https://www.mql5.com/en/forum/510478 "Comments")
+
+[IMG]
+
+[Francis Dube](https://www.mql5.com/en/users/ufranco)
+
+### Contents
+
+1. [Introduction](https://www.mql5.com/en/articles/22714#introduction)
+2. [Discrepancy Analysis](https://www.mql5.com/en/articles/22714#discrepancy_analysis)
+3. [Sequential Least Squares Programming Optimizer](https://www.mql5.com/en/articles/22714#the_sequential_least_squares_programming_optimizer)
+4. [SLSQP MQL5 Implementation Overview](https://www.mql5.com/en/articles/22714#slsqp_mql5_implementation_overview)
+5. [Defining the Objective Function and Constraints](https://www.mql5.com/en/articles/22714#defining_the_objective_function_and_constraints)
+6. [Configuration and Initialization](https://www.mql5.com/en/articles/22714#configuration_and_initialization)
+7. [Execution and Results](https://www.mql5.com/en/articles/22714#execution_and_results)
+8. [Integrating the SLSQP Solver](https://www.mql5.com/en/articles/22714#integrating_the_slsqp_solver)
+9. [Conclusion](https://www.mql5.com/en/articles/22714#conclusion)
+
+### 
+
+### Introduction
+
+The volatility library ported to MQL5 throughout this series of articles was designed to replicate the functionality of Python’s ARCH module. Ideally, the MQL5 implementation should produce results that approximate those obtained in Python; however, tests on identical datasets have consistently yielded divergent model parameters. While the objective is not to replicate every decimal place exactly, the parameters must fall within an acceptable range of variance. To address this gap, this installment replaces ALGLIB’s preconditioned augmented Lagrangian algorithm for nonlinearly constrained optimization (minNLC) with the Sequential Least Squares Programming (SLSQP) algorithm.
+
+This article begins by analyzing cross-platform discrepancies to explain why changing optimizers is necessary, specifically by comparing volatility models constructed in Python and MetaTrader 5. We then provide a comprehensive walkthrough of the MQL5-native SLSQP implementation and demonstrate how to integrate this solver into the existing volatility library. Finally, we validate the updated library against its Python counterpart to ensure consistent results. The complete source code is provided for an MQL5 toolset that performs on par with the ARCH module.
+
+### 
+
+### Discrepancy Analysis
+
+The primary motivation for replacing the current optimization engine is consistency, rather than a lack of convergence or computational inefficiency. The library utilizes a log-likelihood function as its objective to derive model parameters. However, empirical testing reveals that the ALGLIB minNLC solver frequently arrives at parameter sets that differ from those produced by Python’s arch module, even when initiated with identical starting values. This discrepancy is demonstrated by running the script VolatilityModelParameterComparison.ex5. The script pulls sample data from MetaTrader 5 (MetaTrader 5) and builds identical, user-configurable volatility models using the MQL5 library and Python's ARCH module for comparison.
+
+This program illustrates the problems faced by the current state of the library. The script was run several times with various configurations; the output from a few of these runs is shown below.
+
+```
+MEAN_CONSTANT
+VOL_GJR_GARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(1) Q(1) Power(2.000000)
+MT5 model parameters:
+[-0.02197736805578508,0.008665530470622173,0.05,0.01,0.9249999999999999]
+MT5 model LogLikelihood: 968.9105526360026
+Python's Model Parameters [-0.0242805845484529,0.002293742963206083,0.01626902046373811,0.01434054744816164,0.9712268914708287]
+Python's LogLikelihood: 964.9296120077307
+```
+
+The results above show the output for the GJR-GARCH model, while the results for a standard GARCH model are displayed below.
+
+```
+MEAN_CONSTANT
+VOL_GARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(1) Power(2.000000)
+MT5 model parameters:
+[-0.02197736805578508,0.008665530470622173,0.05,0.9299999999999999]
+MT5 model LogLikelihood: 968.2234497542257
+Python's Model Parameters [-0.02170062752089841,0.002653690530826297,0.02523174395053289,0.9686111317666565]
+Python's LogLikelihood: 965.277797248645
+```
+
+As seen in the output, the log-likelihood from the MQL5 library differs, which accounts for the variation in model parameters across platforms.
+
+```
+MEAN_CONSTANT
+VOL_TARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(1) Q(1) Power(1.000000)
+MT5 model parameters:
+[-0.02197736805578508,0.01316474874095376,0.1,0.05,0.855]
+MT5 model LogLikelihood: 1049.2999012672242
+Python's Model Parameters [-0.02774962124001202,0.003761918497530642,0.01425295763143413,0.02392852230367382,0.9737827811881781]
+Python's LogLikelihood: 963.005988142707
+```
+
+The divergence in parameters appears to be accentuated as model complexity increases.
+
+```
+MEAN_CONSTANT
+VOL_AVGARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(1) Power(1.000000)
+MT5 model parameters:
+[-0.02197736805578508,0.01316474874095376,0.2,0.78]
+MT5 model LogLikelihood: 1100.9969289096468
+Python's Model Parameters [-0.02250404030999785,0.004185362811318036,0.03014462096952416,0.9698553790305747]
+Python's LogLikelihood: 964.3159918481251
+```
+
+Consequently, simpler models appear to fare better.
+
+```
+MEAN_CONSTANT
+VOL_ARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(0) Power(2.000000)
+MT5 model parameters:
+[-0.01996155842932553,0.3827935932951031,0.1198093348469467]
+MT5 model LogLikelihood: 993.7152272796347
+Python's Model Parameters [-0.01996231775953625,0.3827906664926961,0.1198013671195205]
+Python's LogLikelihood: 993.7152272209562
+```
+
+Before attributing this failure entirely to the solver, another potential cause was investigated: auxiliary calculation errors. To ensure the MQL5 library's internal logic was sound, a test was conducted by manually inputting known parameters from a Python-generated model into the MetaTrader 5 model. If the MQL5 model could reproduce a matching log-likelihood value, it would prove that the underlying code was implemented correctly. A cross-platform test was performed using the LogLikelihoodVerification.mq5 script to call the objective function on both platforms and compare the outputs. Below is the output over three runs with different model specifications.
+
+[IMG]
+
+Comparing the log-likelihood values, they are nearly identical, with only marginal differences. Thereby verifying the objective function's MQL5 implementation, ruling out the possibility of model parameter divergence being due to calculation errors.
+
+Another way to resolve this issue without replacing the optimizer is to adjust its parameters. ALGLIB's minNLC solver features several tunable settings; however, optimizing them is difficult, as it requires a profound understanding of both the optimizer itself and the broader problem to which it is being applied. Furthermore, this serves as compelling evidence to adopt an alternative optimizer. Given that Python’s ARCH module utilizes Sequential Least Squares Programming (SLSQP), porting this algorithm to MQL5 represents the most logical path toward achieving cross-platform parity.
+
+### 
+
+### The Sequential Least Squares Programming Optimizer
+
+Sequential Least Squares Programming operates by decomposing a complex, non-linear constrained optimization problem into a series of simplified quadratic programming subproblems. At each major iteration, the algorithm builds a local quadratic approximation of the Lagrangian. It also linearizes the constraints. The Lagrangian function is an optimization strategy used to transform a constrained problem into an unconstrained form by incorporating the constraints directly into the objective function
+
+This framework enables the solver to determine an optimal search direction by solving a specific subproblem that accounts for both the objective curvature and the local geometry of the feasible region. Unlike ALGLIB’s minNLC, which typically employs an interior-point or penalty-based framework to handle boundaries, SLSQP utilizes an active-set strategy to manage equality and inequality constraints directly. By solving the Karush-Kuhn-Tucker (KKT) conditions for each quadratic subproblem, SLSQP maintains a more rigorous adherence to the constraint boundaries.
+
+[IMG]
+
+The KKT conditions provide a set of necessary mathematical requirements that determine when an optimizer has successfully located the optimal solution for a constrained problem. Constrained optimization is uniquely challenging because the absolute minimum of the objective function may lie within a forbidden zone. While unconstrained optimization simply requires finding where the gradient is zero, the KKT conditions extend this principle to bound spaces by utilizing Lagrange multipliers. These multipliers act like mathematical forces pushing back against the constraints to keep the solver within legal boundaries. For a point to be considered an optimal solution, it must satisfy four tests simultaneously.
+
+1. Primal Feasibility: The solution must strictly obey all conditions and cannot violate any equality or inequality constraints.
+2. Dual Feasibility: The Lagrange multipliers for the active inequality constraints must be greater than or equal to zero, ensuring that the gradient forces push toward the feasible region rather than into forbidden territory.
+3. Complementary Slackness: For every inequality constraint, either the constraint must rest exactly at its limit, or its multiplier must be zero—meaning the constraint is not actively prohibiting progress and there is room to move.
+4. Stationarity: The gradients of the objective function and all active constraints must perfectly cancel each other out, indicating that no further movement in a feasible direction can lower the objective score.
+
+The KKT conditions fail when constraints are contradictory, rendering a valid solution mathematically impossible. In such a scenario, the optimizer will typically exhaust its maximum allowable iterations before terminating in a failure state. This fundamental difference in handling the topology of the feasible region may explain the variation in parameter estimates observed earlier, as SLSQP avoids the numerical smoothing inherent in penalty-based methods.  
+  
+SLSQP therefore relies on two core pillars: the construction of the Lagrangian function and the utilization of an active-set strategy for constraint management. The active-set strategy is the mechanism SLSQP uses to handle inequality constraints dynamically during the optimization process. At any given iteration, an inequality constraint is considered active if the current solution lies exactly on its boundary and inactive if the solution rests safely within the interior of the feasible region.  
+  
+Unlike the ALGLIB minNLC approach, which may use a barrier function to penalize the objective and push the solution away from boundaries regardless of their status, the active-set strategy treats active constraints as temporary equality constraints. This allows the algorithm to move precisely along the edge of the feasible region without crossing into invalid parameter space. In the context of volatility modeling, these components ensure that the optimizer respects critical structural boundaries, such as the non-negativity of variance parameters and stationarity requirements. The subsequent section details the implementation of this algorithm within MQL5.
+
+### 
+
+### SLSQP MQL5 Implementation Overview
+
+The MQL5 implementation of the SLSQP solver is based on a translation of the original Fortran algorithm developed by Dieter Kraft in the late 1980s. The core logic resides in slsqp.mqh and consists of ported functional code and an object-oriented interface: the CSLSQP class. This implementation supports all original features, including boundary, equality, and inequality constraints. It relies on the header file num\_diff.mqh for numerical differentiation, which allows the solver to function even when analytical gradients are unavailable.
+
+```
+//+------------------------------------------------------------------+
+//| OOP interface for SLSQP minimizer                                |
+//+------------------------------------------------------------------+
+class CSlsqp : public CObject
+  {
+protected:
+   double            m_acc;
+   slsqp_constraint  m_eq_constraints[];
+   slsqp_constraint  m_ineq_constraints[];
+   slsqp_stopping    m_stop;
+   slsqp_result      m_slsqp_result;
+   bool              check_constraints(void);
+
+public:
+                     CSlsqp(void) : m_acc(0.0) {}
+                    ~CSlsqp(void)
+     {
+     }
+   void              SetAcc(double acc_)
+     {
+      m_acc = acc_;
+     }
+   
+   void              SetStopVal(double stopval)
+     {
+      m_stop.minf_max = stopval;
+     }
+   void              SetFtolRel(double ftolrel)
+     {
+      if(ftolrel>0.0)
+         m_stop.ftol_rel = ftolrel;
+     }
+   void              SetXtolRel(double xtolrel)
+     {
+      if(xtolrel>0.0)
+         m_stop.xtol_rel = xtolrel;
+     }
+   void              SetFtolAbs(double ftolabs)
+     {
+      if(ftolabs>0.0)
+         m_stop.ftol_abs = ftolabs;
+     }
+   void              SetXtolAbs(vector& xtolabs)
+     {
+      ArrayResize(m_stop.xtol_abs,(int)xtolabs.Size());
+      for(ulong i = 0; i<xtolabs.Size(); ++i)
+          m_stop.xtol_abs[i] = xtolabs[i];
+     }
+   void              SetMaxEval(int maxeval)
+     {
+      m_stop.maxeval = fabs(maxeval);
+     }
+   bool              SetEqualityConstraints(CConstraints &constraints, vector &tolerances)
+     {
+      if(!m_eq_constraints.Size())
+         if(ArrayResize(m_eq_constraints,1)!=1)
+           {
+            Print(__FUNCTION__, ": Error ", GetLastError());
+            return false;
+           }
+
+      m_eq_constraints[0].f_data = GetPointer(constraints);
+      m_eq_constraints[0].m = constraints.numConstraints();
+      ArrayResize(m_eq_constraints[0].tol,m_eq_constraints[0].m);
+      return Copy(m_eq_constraints[0].tol,tolerances,m_eq_constraints[0].m);
+     }
+   bool              SetInequalityConstraints(CConstraints &constraints, vector &tolerances)
+     {
+      if(!m_ineq_constraints.Size())
+         if(ArrayResize(m_ineq_constraints,1)!=1)
+           {
+            Print(__FUNCTION__, ": Error ", GetLastError());
+            return false;
+           }
+
+      m_ineq_constraints[0].f_data = GetPointer(constraints);
+      m_ineq_constraints[0].m = constraints.numConstraints();
+      ArrayResize(m_ineq_constraints[0].tol,m_ineq_constraints[0].m);
+      return Copy(m_ineq_constraints[0].tol,tolerances,m_ineq_constraints[0].m);
+     }
+   bool              SetEqualityConstraints(CConstraints &constraints)
+     {
+      vector tolerances(constraints.numConstraints());
+      tolerances.Fill(1.e-8);
+      return SetEqualityConstraints(constraints,tolerances);
+     }
+   bool              SetInequalityConstraints(CConstraints &constraints)
+     {
+      vector tolerances(constraints.numConstraints());
+      tolerances.Fill(1.e-8);
+      return SetInequalityConstraints(constraints,tolerances);
+     }
+   OptimizeResult    Minimize(CFunctor &fungrad)
+     {
+      vector x0 = fungrad.initial_params();
+      int n = (int)x0.Size();
+      vector x_data = x0;
+
+      vector low = fungrad.lower_bounds();
+      vector up = fungrad.upper_bounds();
+
+      if((low.Size()&&low.Size()!=ulong(n)) || (up.Size()&&up.Size()!=ulong(n)))
+        {
+         Print(__FUNCTION__,": All vector inputs should be the same size if not empty");
+         return OptimizeResult();
+        }
+
+      for(int i  = 0; i<n; ++i)
+         if(low[i]>up[i])
+           {
+            Print(__FUNCTION__ ": Invalid boundary constraints");
+            return OptimizeResult();
+           }
+
+      slsqp_func ofunc = func;
+      IObjective *obj = (IObjective*)GetPointer(fungrad);
+      double minimum = 0.0;
+      m_stop.n = n;
+      m_stop.nevals_p = 0;
+      m_stop.start = (double)TimeLocal();
+      m_slsqp_result = slsqp_minimizer(n,ofunc,obj,ArraySize(m_ineq_constraints),m_ineq_constraints,ArraySize(m_eq_constraints),m_eq_constraints,low,up,x0,minimum,m_acc,m_stop);
+      if(m_slsqp_result<0)
+        {
+         Print(__FUNCTION__, ": Operation failed ", EnumToString((slsqp_result)m_slsqp_result));
+         return OptimizeResult();
+        }
+
+      vector out(1);
+      out[0] = minimum;
+      vector gg;
+
+      return OptimizeResult(int(m_slsqp_result),m_stop.nevals_p,m_stop.slsqp_state.itermx,x0,out,m_stop.gradient);
+     }
+  };
+```
+
+Utilities defined in the file num\_diff.mqh were documented previously in an article describing the implementation of the [TNC optimizer](https://www.mql5.com/en/articles/21589 "Implementing the Truncated Newton Conjugate-Gradient Algorithm in MQL5"). This section addresses the specific modifications made to support the SLSQP optimizer. The first of these is the modification of the ObjReturn structure, which has been augmented with vector and matrix properties to handle multivariable outputs.
+
+```
+//+------------------------------------------------------------------+
+//|struct objective function return                                  |
+//+------------------------------------------------------------------+
+struct ObjReturn
+  {
+   double            f;
+   vector            g;
+   vector            mf;
+   matrix            mg;
+                     ObjReturn(void)
+     {
+      f = double(0);
+      g = vector::Zeros(0);
+      mf = vector::Zeros(0);
+      mg = matrix::Zeros(0,0);
+     }
+                     ObjReturn(ObjReturn& other)
+     {
+      f = other.f;
+      g = other.g;
+      mf = other.mf;
+      mg = other.mg;
+     }
+   void              operator=(ObjReturn& other)
+     {
+      f = other.f;
+      g = other.g;
+      mf = other.mf;
+      mg = other.mg;
+     }
+  };
+```
+
+Regarding the base class CFunctor, a clipping property has been added to actively modify decision variables during optimization, ensuring they remain within the predefined boundaries. This feature can be enabled by calling the new setClipOption() method, which accepts a boolean input (true enables clipping, while false disables it). Additionally, the CConstraints base class has been introduced to manage constraints and their respective gradient functions. It operates similarly to the CFunctor class and shares identical properties.
+
+```
+//+------------------------------------------------------------------+
+//|base class representing function and its derivative               |
+//+------------------------------------------------------------------+
+class CConstraints:public IObjective
+  {
+protected:
+   int               m_n,m_m;
+   bool              m_clip,m_initialized;
+   GradDiffOptions   m_options;
+   vector            wrapped_func(vector& x)
+     {
+      if(!m_initialized)
+         return vector::Zeros(0);
+      if(m_clip)
+        {
+         matrix bnds = m_options.bounds;
+         for(ulong i = 0; i<x.Size(); ++i)
+           {
+            if(x[i]<bnds[i,0])
+               x[i] = bnds[i,0];
+            else
+               if(x[i]>bnds[i,1])
+                  x[i] = bnds[i,1];
+           }
+        }
+      vector copy = x;
+      return orig_fun(copy);
+     }
+   matrix            wrapped_grad(vector& x,vector& f0)
+     {
+      if(!m_initialized)
+         return matrix::Zeros(0,0);
+      if(m_clip)
+        {
+         matrix bnds = m_options.bounds;
+         for(ulong i = 0; i<x.Size(); ++i)
+           {
+            if(x[i]<bnds[i,0])
+               x[i] = bnds[i,0];
+            else
+               if(x[i]>bnds[i,1])
+                  x[i] = bnds[i,1];
+           }
+        }
+      vector copy = x;
+      if(m_options.method == GRAD_POINT_CALLABLE)
+         return orig_grad(copy);
+      IObjective* fun = (IObjective*)GetPointer(this);
+      matrix ad = approx_derivative(fun,copy,f0,m_options.method,m_options.rel_step,m_options.abs_step,m_options.bounds);
+      return ad;
+     }
+public:
+                     CConstraints(void)
+     {
+      m_n = m_m = 0;
+      m_clip = true;
+      m_initialized = false;
+      m_options.method = GRAD_POINT_2;
+     }
+                    ~CConstraints(void)
+     {
+     }
+   bool                   initialize(vector& x)
+     {
+      if((m_m == 0 && m_n) || (int)x.Size()!=m_n)
+        {
+         Print(__FUNCTION__," ","Invalid property dimensions.", " n ", m_n, " vs ", x.Size());
+         return false;
+        }
+
+      vector check = orig_fun(x);
+      if(!check.Size() || check.HasNan() || MathClassify(fabs(check.Max())) == FP_INFINITE)
+        {
+         Print(__FUNCTION__," ","Check the implementation of the constraints function.");
+         return false;
+        }
+
+      if(m_options.method == GRAD_POINT_CALLABLE)
+        {
+         matrix a  = orig_grad(x);
+         if(a.Rows()!=m_m || a.HasNan() || MathClassify(fabs(a.Max())) == FP_INFINITE)
+           {
+            Print(__FUNCTION__," ","Check the implementation of the overridden constraints gradient function.");
+            return false;
+           }
+        }
+      if(m_options.bounds.Rows()!=ulong(m_n))
+        {
+         m_options.bounds.Resize(m_n,2);
+         m_options.bounds.Fill(double("inf"));
+         for(int i  = 0; i<m_n; ++i)
+            m_options.bounds[i,0]*=-1.0;
+         Print(__FUNCTION__, " ","WARNING:Boundary constraints not properly specified.\nOverwritten to (-inf,inf) ");
+        }
+      m_initialized = true;
+      return m_initialized;
+     }
+
+   void              setParams(int m, int n, GradDiffOptions& opts, bool clip_to_bounds=true)
+     {
+      m_initialized = false;
+      m_n = fabs(n);
+      m_m = fabs(m);
+      m_clip = clip_to_bounds;
+      m_options = opts;
+     }
+
+   void              setGradientOptions(GradDiffOptions& opts)
+     {
+      m_initialized = false;
+      m_options = opts;
+     }
+
+   void              setBounds(matrix& bounds)
+     {
+      m_initialized = false;
+      m_options.bounds = bounds;
+     }
+
+   void              setNumConstraints(int m)
+     {
+      m_initialized = false;
+      m_m = m;
+     }
+
+   void              setDimension(int n)
+     {
+      m_initialized = false;
+      m_n = n;
+     }
+
+   vector            objective_function(vector& x)
+     {
+
+      return wrapped_func(x);
+     }
+
+   ObjReturn         fun_and_grad(vector& x)
+     {
+      ObjReturn out;
+      out.mf = objective_function(x);
+      out.mg = wrapped_grad(x,out.mf);
+      return out;
+     }
+   virtual vector    orig_fun(vector& x)
+     {
+      return vector::Zeros(0);
+     }
+   virtual matrix    orig_grad(vector& x)
+     {
+      return matrix::Zeros(0,0);
+     }
+   int               numConstraints(void)
+     {
+      return m_m;
+     }
+   int               dim(void)
+     {
+      return m_n;
+     }
+   vector            lower_bounds(void)
+     {
+      return m_options.bounds.Col(0);
+     }
+   vector            upper_bounds(void)
+     {
+      return m_options.bounds.Col(1);
+     }
+  };
+```
+
+The following sections describe the steps involved in deploying the SLSQP solver in MQL5.
+
+### 
+
+### Defining the Objective Function and Constraints
+
+The first step is to encapsulate the objective function and any constraints in specialized classes. The objective function's class wrapper must derive from CFunctor and implement the orig\_fun() method. If known, the gradient of the objective function can be optionally implemented by overriding the grad\_fun() method. Equality and inequality constraint classes must inherit from the CConstraints base class. Equality constraints are defined as functions adhering to the standard form: h(x) = 0. Similarly, inequality constraints must conform to the following format: g(x) <= 0, where x represents the vector of decision variables. The orig\_fun() method of the CConstraints class returns a vector equal in size to the number of constraints. If the analytical gradient is known, the grad\_fun() method should be overridden to return an m by n Jacobian matrix, where m is the number of constraints and n is the number of decision variables.
+
+```
+//+------------------------------------------------------------------+
+//| objective function                                               |
+//+------------------------------------------------------------------+
+class CObjectiveFunc:public CFunctor
+  {
+protected:
+   vector            obj_gradient;
+public:
+                     CObjectiveFunc(void)
+     {
+     }
+                    ~CObjectiveFunc(void)
+     {
+     }
+   virtual double    orig_fun(vector& x)
+
+  };
+//+------------------------------------------------------------------+
+//| inequality constraints                                           |
+//+------------------------------------------------------------------+
+class CIneqConstraints: public CConstraints
+  {
+private:
+   vector            obj_result;
+public:
+                     CIneqConstraints(void)
+     {
+     }
+                    ~CIneqConstraints(void)
+     {
+     }
+   virtual vector    orig_fun(vector& x) override
+     {
+
+     }
+  };
+//+------------------------------------------------------------------+
+//| equality constraints                                             |
+//+------------------------------------------------------------------+
+class CEqConstraints: public CConstraints
+  {
+private:
+public:
+                     CEqConstraints(void)
+     {
+     }
+                    ~CEqConstraints(void)
+     {
+     }
+   virtual vector    orig_fun(vector& x) override
+     {
+
+     }
+  };
+```
+
+### 
+
+### Configuration and Initialization
+
+Once derived objects of CFunctor and CConstraints are instantiated, they must be initialized with starting values and boundary limits. It is critical to ensure that boundary limits are consistent across both the objective function and the constraints. The configuration of the objective function and its constraints must be verified by calling their respective initialize() methods, which must return true for optimization to proceed.
+
+```
+CObjectiveFunc obj_func;
+//---
+CIneqConstraints ineq_func;
+//---
+CEqConstraints eq_func;
+//---
+vector initp = {2, 0};
+//---
+GradDiffOptions obj_options;
+//---
+obj_options.bounds = matrix::Zeros(2,2);
+obj_options.bounds[0,1] = 10.;
+obj_options.bounds[1,1] = 10.;
+obj_options.method = GRAD_POINT_2;
+//---
+obj_func.setParams(obj_options);
+ineq_func.setParams(1,2,obj_options);
+eq_func.setParams(1,2,obj_options);
+//---
+if(!obj_func.initialize(initp) || !ineq_func.initialize(initp) || !eq_func.initialize(initp))
+    return;
+```
+
+Thereafter, the SLSQP optimizer object can be configured. Equality and inequality constraints are specified using the SetEqualityConstraints() and SetInequalityConstraints() methods, respectively. These overloaded methods accept either the constraint class instance alone or the class alongside a vector of tolerance values. Tolerances define the acceptable thresholds for constraint violations. For an equality constraint, for instance, a user can specify a tight tolerance that permits minor numerical deviations from zero. The size of the tolerance vector must match the number of constraints. If tolerances are not explicitly set, a default tolerance of 1e-8 is enabled for each constraint.
+
+```
+CSlsqp slsqp_minim;
+slsqp_minim.SetInequalityConstraints(ineq_func);
+slsqp_minim.SetEqualityConstraints(eq_func);
+```
+
+The CSLSQP class also allows users to configure specific convergence criteria.
+
+- SetXtolRel(): Configures the relative parameter tolerance, which serves as the default convergence criterion. Convergence is achieved when the change in the input parameters is small relative to their magnitude. For example, a relative tolerance of 0.0001 stops the optimization when the input parameters change by less than 0.01%. By default, this parameter is set to 0.0001.
+- SetXtolAbs(): Accepts a vector of absolute tolerances applied to each individual decision variable. This allows for the specification of unique convergence criteria per variable, which is highly beneficial when dealing with parameters across widely different scales.
+- SetFtolRel(): Sets the relative function tolerance. This criterion terminates the optimization when the fractional change in the objective function value between successive iterations falls below the specified tolerance.
+- SetFtolAbs(): Configures the absolute function tolerance. It terminates the optimization process when the absolute difference between function values from one iteration to the next is less than the specified threshold.
+- SetMaxEval(): Defines an integer hard cap representing the maximum number of objective function evaluations tolerated before halting the solver.
+- SetStopVal(): Establishes a minimum threshold that halts the optimization as soon as the objective function value is less than or equal to the specified criterion.
+- SetAcc(): Specifies a tolerance for the gradient norm (first-order optimality). While the ideal gradient at a minimum is exactly zero, the accuracy parameter provides a practical threshold; when the slope of the optimization landscape becomes flatter than this value, the process terminates.
+
+### 
+
+### Execution and Results
+
+The optimization procedure is triggered by invoking the Minimize() method, which accepts the derived objective CFunctor instance as its sole argument. This method returns an OptimizeResult structure.
+
+```
+//+------------------------------------------------------------------+
+//|Optimization results                                              |
+//+------------------------------------------------------------------+
+struct OptimizeResult
+  {
+   int               return_code;
+   int               nfeval;
+   int               niter;
+   vector            solution;
+   vector            objective_result;
+   vector            objective_gradient;
+
+                     OptimizeResult(void)
+     {
+      return_code = WRONG_VALUE;
+      nfeval = niter = 0;
+      solution = objective_result = objective_gradient = vector::Zeros(0);
+     }
+                     OptimizeResult(int rc,int feval,int iter,vector &x, vector& f, vector& g)
+     {
+      return_code = rc;
+      nfeval = feval;
+      niter = iter;
+      solution = x;
+      objective_result = f;
+      objective_gradient = g;
+     }
+                     OptimizeResult(OptimizeResult& other)
+     {
+      return_code = other.return_code;
+      nfeval = other.nfeval;
+      niter = other.niter;
+      solution = other.solution;
+      objective_result = other.objective_result;
+      objective_gradient = other.objective_gradient;
+     }
+   void              operator=(OptimizeResult& other)
+     {
+      return_code = other.return_code;
+      nfeval = other.nfeval;
+      niter = other.niter;
+      solution = other.solution;
+      objective_result = other.objective_result;
+      objective_gradient = other.objective_gradient;
+     }
+  };
+```
+
+The return\_code property indicates the final status of the routine: a value greater than zero denotes successful convergence, whereas a value less than zero indicates that the optimization process failed.
+
+```
+//+------------------------------------------------------------------+
+//| result                                                           |
+//+------------------------------------------------------------------+
+enum slsqp_result
+  {
+   SLSQP_FAILURE = -1,
+   SLSQP_INVALID_ARGS = -2,
+   SLSQP_OUT_OF_MEMORY = -3,
+   SLSQP_ROUNDOFF_LIMITED = -4,
+   SLSQP_FORCED_STOP = -5,
+   SLSQP_NUM_FAILURES = -6,
+   SLSQP_SUCCESS = 1,          /* generic success code */
+   SLSQP_STOPVAL_REACHED = 2,
+   SLSQP_FTOL_REACHED = 3,
+   SLSQP_XTOL_REACHED = 4,
+   SLSQP_MAXEVAL_REACHED = 5,
+   SLSQP_MAXTIME_REACHED = 6,
+   SLSQP_NUM_RESULTS
+  };
+```
+
+To demonstrate practical application, two reference scripts are provided: one utilizing numerical finite differences and another utilizing explicitly defined analytical gradients.
+
+Optimization via Numerical Gradients. The script slsqp\_optimization\_with\_numerical\_gradients.mq5 shows how to optimize a mathematical function using numerical gradients. It models a problem with two changing variables by setting up a main goal alongside one equality rule and one inequality rule. To make this work in the code, it extends the built-in CFunctor and CConstraints classes into custom user classes.
+
+```
+//+------------------------------------------------------------------+
+//|                  slsqp_optimization_with_numerical_gradients.mq5 |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#include<slsqp_article\slsqp.mqh>
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//---objective function object
+   CObjectiveFunc obj_func;
+//---inequality constraints function object
+   CIneqConstraints ineq_func;
+//---equality constraints function object
+   CEqConstraints eq_func;
+//---the initial guess
+   vector initp = {2, 0};
+//---gradient configuration instance
+   GradDiffOptions obj_options;
+//---configure upper and lower limits
+   obj_options.bounds = matrix::Zeros(2,2);
+   obj_options.bounds[0,1] = 10.;
+   obj_options.bounds[1,1] = 10.;
+//---set gradient calculation method
+   obj_options.method = GRAD_POINT_2;
+//---set gradient options for objective function and constraints
+   obj_func.setParams(obj_options);
+   ineq_func.setParams(1,2,obj_options);
+   eq_func.setParams(1,2,obj_options);
+//---initialize and verify configuration of all function objects
+   if(!obj_func.initialize(initp) || !ineq_func.initialize(initp) || !eq_func.initialize(initp))
+      return;
+//---the minimizer instance
+   CSlsqp slsqp_minim;
+//---configure the minimizer
+   slsqp_minim.SetInequalityConstraints(ineq_func);
+   slsqp_minim.SetEqualityConstraints(eq_func);
+//---run the optimizer
+   OptimizeResult ro = slsqp_minim.Minimize(obj_func);
+//---check return code
+   Print("Minimization return code : ", ro.return_code);
+//---print results
+   if(ro.return_code>0)
+     {
+      Print("Solution ", ro.solution);
+      Print("Minimum value of function ", ro.objective_result);
+      Print("Gradient at the minimum ", ro.objective_gradient);
+      Print("Number of iterations ", ro.niter);
+      Print("Number of function evaluations ", ro.nfeval);
+     }
+  }
+```
+
+The objective function represents a simple bowl-shaped surface where the goal is to find the lowest possible point. Geometrically, it calculates the squared distance from any chosen point to an ideal center point at (1, 2.5).
+
+```
+//+------------------------------------------------------------------+
+//| objective function                                               |
+//+------------------------------------------------------------------+
+class CObjectiveFunc:public CFunctor
+  {
+protected:
+   vector            obj_gradient;
+public:
+                     CObjectiveFunc(void)
+     {
+      m_clip = true;
+      obj_gradient = vector::Zeros(2);
+     }
+                    ~CObjectiveFunc(void)
+     {
+     }
+   virtual double    orig_fun(vector& x) override
+     {
+      return pow((x[0] - 1),2) + pow((x[1] - 2.5),2);
+     }
+  };
+```
+
+Without any constraints, the absolute lowest point would sit exactly at x = [1, 2.5], giving the function a perfect minimum value of 0. The inequality constraint forces any valid solution to lie directly on or above an upward-opening parabola curve.
+
+```
+//+------------------------------------------------------------------+
+//| inequality constraints                                           |
+//+------------------------------------------------------------------+
+class CIneqConstraints: public CConstraints
+  {
+private:
+   vector            obj_result;
+public:
+                     CIneqConstraints(void)
+     {
+      obj_result =  vector::Zeros(1);
+     }
+                    ~CIneqConstraints(void)
+     {
+     }
+   virtual vector    orig_fun(vector& x) override
+     {
+      obj_result[0] = pow(x[0],2) - x[1];
+      return obj_result;
+     }
+  };
+```
+
+The equality constraint wrapped in CEqConstraints restricts the solver's search space to a diagonal straight line passing through the two-dimensional plane.
+
+```
+//+------------------------------------------------------------------+
+//| equality constraint                                              |
+//+------------------------------------------------------------------+
+class CEqConstraints: public CConstraints
+  {
+private:
+   vector            obj_result;
+public:
+                     CEqConstraints(void)
+     {
+      obj_result =  vector::Zeros(1);
+     }
+                    ~CEqConstraints(void)
+     {
+     }
+   virtual vector    orig_fun(vector& x) override
+     {
+      obj_result[0] = x[0] - x[1] + 2;
+      return obj_result;
+     }
+  };
+```
+
+The domain bounds (obj\_options.bounds) act as barriers for the solver, restricting both variables to a safe operating box where x0 and x1 both stay within the range [0, 10]. Because of the constraints, SLSQP cannot select the unconstrained minimum (1, 2.5). That point violates the equality constraint.
+
+Instead, the optimizer must search for a point that sits precisely on the diagonal line x1 = x0 + 2, while simultaneously ensuring that the point remains above the parabola x1 >= x0^2 and inside the coordinate bounding box [0, 10], all while minimizing the physical distance to the ideal coordinates (1, 2.5). Below we can view the results of the optimization procedure.
+
+```
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Minimization return code : 4
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Solution [0.7499999938026685,2.749999984155363]
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Minimum value of function [0.1249999951763475]
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Gradient at the minimum [-0.500000013038516,0.5000000128691847]
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Number of iterations 4
+slsqp_optimization_with_numerical_gradients (AUDUSD,D1) Number of function evaluations 5
+```
+
+Optimization via Analytical Gradients. The script slsqp\_optimization\_with\_analytical\_gradients.mq5 demonstrates optimization using explicitly defined analytical gradients. The script models a two-dimensional non-linear constrained optimization problem over the decision variable vector x = [x0, x1].
+
+```
+//+------------------------------------------------------------------+
+//|                 slsqp_optimization_with_analytical_gradients.mq5 |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#include<slsqp_article\slsqp.mqh>
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//---custom constraint parameters
+   vector aa = {2,-1};
+   vector bb = {0, 1};
+//---gradient configuration instance
+   GradDiffOptions obj_options;
+//---set upper and lower limits for optimization problem
+   obj_options.bounds = matrix::Zeros(2,2);
+   obj_options.bounds.Fill(double("inf"));
+   obj_options.bounds[0,0]*=-1.;
+   obj_options.bounds[1,0] = 1.e-6;
+//---configure gradient calculation method
+   obj_options.method = GRAD_POINT_CALLABLE;
+//---objective function object instance
+   CObjectiveFunc obj_func;
+//---inequality constraints function object instance
+   CIneqConstraints ineq_func;
+//---initial guess
+   vector initp = {1.234, 5.678};
+//---pass extra arguments to objective function's constraints
+   ineq_func.SetInternalData(aa,bb);
+//---configure gradient options for objective function and constraints
+   obj_func.setParams(obj_options);
+   ineq_func.setParams(2,2,obj_options);
+//---initialize and verify configuration of objective function and corresponding constraints
+   if(!obj_func.initialize(initp) || !ineq_func.initialize(initp))
+      return;
+//---optimizer instance
+   CSlsqp slsqp_minim;
+//---configure the optimizer
+   slsqp_minim.SetXtolRel(1.e-4);
+   vector ineq_tols(2);
+   ineq_tols.Fill(1.e-8);
+   slsqp_minim.SetInequalityConstraints(ineq_func,ineq_tols);
+//---run the optimizer
+   OptimizeResult ro = slsqp_minim.Minimize(obj_func);
+//---check optimizer return code
+   Print("Minimization return code : ", ro.return_code);
+//---print results of optimization
+   if(ro.return_code>0)
+     {
+      Print("Solution ", ro.solution);
+      Print("Minimum value of function ", ro.objective_result);
+      Print("Gradient at the minimum ", ro.objective_gradient);
+      Print("Number of iterations ", ro.niter);
+      Print("Number of function evaluations ", ro.nfeval);
+     }
+  }
+```
+
+Given the parameter vectors injected into the constraint engine, a = [2, -1] and b = [0, 1], the complete mathematical system is structured as follows. The objective function (CObjectiveFunc) isolates and minimizes the square root of the second variable.
+
+```
+//+------------------------------------------------------------------+
+//|objective function object                                         |
+//+------------------------------------------------------------------+
+class CObjectiveFunc:public CFunctor
+  {
+private:
+   vector            obj_grad;
+public:
+                     CObjectiveFunc(void)
+     {
+      obj_grad = vector::Zeros(2);
+     }
+                    ~CObjectiveFunc(void)
+     {
+     }
+   virtual double    orig_fun(vector& x) override
+     {
+      return sqrt(x[1]);
+     }
+   virtual vector    grad_fun(vector& x) override
+     {
+      obj_grad[0] = 0.0;
+      obj_grad[1] = 0.5/sqrt(x[1]);
+      return obj_grad;
+     }
+  };
+```
+
+The gradient vector maps the partial derivatives regarding the first and second decision variables, respectively. The partial derivative regarding the second variable triggers a division-by-zero error if set to zero; therefore, a lower bound buffer of 1e-6 within obj\_options.bounds is specified to keep the solver strictly inside a safe, differentiable domain. The inequality constraints class (CIneqConstraints) manages a vector function containing two separate boundary restrictions.
+
+```
+//+------------------------------------------------------------------+
+//| inequality constraints                                           |
+//+------------------------------------------------------------------+
+class CIneqConstraints: public CConstraints
+  {
+private:
+   vector            a, b;
+   vector            f_result;
+   matrix            g_result;
+public:
+                     CIneqConstraints(void)
+     {
+      f_result = vector::Zeros(2);
+      g_result = matrix::Zeros(2,2);
+     }
+                    ~CIneqConstraints(void)
+     {
+     }
+   void              SetInternalData(vector& a_, vector& b_)
+     {
+      a = a_;
+      b = b_;
+     }
+   virtual vector    orig_fun(vector& x) override
+     {
+      f_result[0] = (a[0]*x[0] + b[0]) * (a[0]*x[0] + b[0]) * (a[0]*x[0] + b[0]) - x[1];
+      f_result[1] = (a[1]*x[0] + b[1]) * (a[1]*x[0] + b[1]) * (a[1]*x[0] + b[1]) - x[1];
+      return f_result;
+     }
+   virtual matrix    orig_grad(vector& x) override
+     {
+      g_result[0,0] = 3 * a[0] * (a[0]*x[0] + b[0]) * (a[0]*x[0] + b[0]);
+      g_result[0,1] = -1.;
+      g_result[1,0] = 3 * a[1] * (a[1]*x[0] + b[1]) * (a[1]*x[0] + b[1]);
+      g_result[1,1] = -1.;
+      return g_result;
+     }
+  };
+```
+
+By substituting the internal parameters a and b, the explicit algebraic equations constrain the system based on intersecting cubic functions. The Jacobian of the constraints is a 2-by-2 matrix containing the partial derivatives of every constraint function (rows) regarding every decision variable (columns).
+
+[IMG]
+
+The class explicitly overrides orig\_grad() to return this analytical matrix. Substituting the explicit variables a and b yields the exact numerical Jacobian matrix evaluated during the SLSQP subproblems.
+
+[IMG]
+
+This problem forces the optimizer to drive x1 down as close to its lower bound as possible. However, x1 is bounded from below by two intersecting cubic curves. The absolute constrained minimum will settle precisely at the intersection point of these two curves, where both inequality constraints become active boundaries simultaneously. A run of the script produces the following output.
+
+[IMG]
+
+### Integrating the SLSQP Solver
+
+To integrate the SLSQP solver into the existing conditional volatility library, we will use a preprocessor directive to enable conditional compilation. Users will therefore have the option to select which optimizer to use by compiling their programs with or without the \_\_SLSQP\_\_ macro defined.
+
+```
+//+------------------------------------------------------------------+
+//|                                                         mean.mqh |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#include"volatility.mqh"
+#ifdef __SLSQP__
+#include"..\..\slsqp.mqh"
+#else
+#include<Math\Alglib\delegatefunctions.mqh>
+#include<Math\Alglib\optimization.mqh>
+#endif
+```
+
+Integrating the SLSQP algorithm requires modifying the HARX class to accommodate the new optimization workflow. Volatility model parameters are derived by minimizing an objective function subject to box and inequality constraints; therefore, we must implement wrapper classes for both. These wrappers are added to the HARX class as protected properties to maintain encapsulation while allowing the solver access to the necessary mathematical logic. The new properties of the class are wrapped in conditional preprocessor directives.
+
+```
+//+------------------------------------------------------------------+
+//| Heterogeneous Autoregression (HAR)                               |
+//+------------------------------------------------------------------+
+class HARX: public CArchModel
+  {
+protected:
+#ifdef __SLSQP__
+   class CObjectiveF: public CFunctor
+     {
+   private:
+      vector            m_sigma,m_bc;
+      matrix            m_vb;
+      HARX*             m_obj;
+      bool              m_centered,m_individual;
+      double            m_epsilon;
+      vector            obj_result;
+      matrix            obj_gradient;
+   public:
+      //--- constructor, destructor
+                     CObjectiveF(void) {}
+                    ~CObjectiveF(void)
+        {
+         m_obj = NULL;
+         obj_result = vector::Zeros(1);
+         obj_gradient = matrix::Zeros(1,2);
+        }
+      void              setFuncParams(vector& s, vector& bc, matrix &vb, HARX &obj, bool individual=false, bool center = false, double ep=EMPTY_VALUE)
+        {
+         m_sigma  = s;
+         m_bc = bc;
+         m_vb = vb;
+         m_obj = GetPointer(obj);
+         m_individual = individual;
+         m_centered = center;
+         m_epsilon = ep;
+         m_clip = true;
+         m_grad_options.method = GRAD_POINT_2;
+        }
+      virtual double    orig_fun(vector& x) override
+        {
+         obj_result = CheckPointer(m_obj)!=POINTER_INVALID?m_obj.objective(x,m_sigma,m_bc,m_vb):obj_result;
+         return obj_result[0];
+        }
+      virtual vector grad_fun(vector& x) override
+        {
+         obj_gradient = CheckPointer(m_obj)!=POINTER_INVALID?m_obj.jacobian(x,m_sigma,m_bc,m_vb,m_individual,m_centered,m_epsilon):obj_gradient;
+         return obj_gradient.Row(0);
+        }
+     };
+   class CIneqConstraints: public CConstraints
+     {
+   private:
+      matrix            a;
+      vector            b;
+      vector            obj_result;
+   public:
+                     CIneqConstraints(void)
+        {
+        }
+                    ~CIneqConstraints(void)
+        {
+        }
+      void              setConstraints(matrix& a_, vector& b_)
+        {
+         a = a_;
+         b = b_;
+         m_m = int(a.Rows());
+         m_n = int(a.Cols());
+         obj_result =  vector::Zeros(m_n);
+         m_options.method = GRAD_POINT_2;
+        }
+      virtual vector    orig_fun(vector& x) override
+        {
+         if(!a.Rows())
+            return obj_result;
+         obj_result = b - a.MatMul(x);
+         return obj_result;
+        }
+     };
+#else
+```
+
+The #else block contains the existing code that implements the objective function for the minNLC optimizer. The CIneqConstraints class encapsulates the inequality constraints of the optimization procedure, with dynamic inequality specifications processed by the setConstraints() method. Meanwhile, the objective function is wrapped in CObjectiveF, a derivative of the CFunctor class. Its setFunParams() method provides an interface to specify the objective function's parameter constants.
+
+```
+#ifdef __SLSQP__
+ArchModelResult   fit(double tol = 1e-4,uint maxits = 0,ENUM_COVAR_TYPE cov_type = COVAR_ROBUST, long first = 0, long last = -1)
+  {
+   return fit(EMPTY_VECTOR,EMPTY_VECTOR,tol,maxits,cov_type,first,last);
+  }
+
+ArchModelResult   fit(vector& startingvalues,vector& backcast,double tol = 1e-4, uint maxits = 0,ENUM_COVAR_TYPE cov_type = COVAR_ROBUST, long first = 0, long last = -1)
+  {
+   return ArchModelResult(m_params,pcov,r2,res_final,vol_final,cov_type,-1.0*llh[0],f_obs,l_obs);
+  }
+#else
+ArchModelResult   fit(double scaling = 1.0, uint maxits = 0,ENUM_COVAR_TYPE cov_type = COVAR_ROBUST, long first = 0, long last = -1, double tol = 1e-9, bool guardsmoothness=false, double gradient_test_step = 0.0)
+  {
+   return fit(EMPTY_VECTOR,EMPTY_VECTOR,scaling,maxits,cov_type,first,last,tol,guardsmoothness,gradient_test_step);
+  }
+ArchModelResult   fit(vector& startingvalues,vector& backcast,double scaling = 1.0, uint maxits = 0,ENUM_COVAR_TYPE cov_type = COVAR_ROBUST, long first = 0, long last = -1, double tol = 1e-9, bool guardsmoothness=false, double gradient_test_step = 0.0)
+  {
+   return ArchModelResult(m_params,pcov,r2,res_final,vol_final,cov_type,-1.0*llh[0],f_obs,l_obs);
+  }
+#endif
+```
+
+Conditional compilation provides the flexibility to maintain a pair of bespoke fit() methods for each optimizer in the HARX class, with each method defined by function parameters tailored to that chosen optimizer. The SLSQP-aligned fit() methods swap out the original scaling parameter for a tolerance parameter that specifies the relative parameter tolerance for convergence. By default, this is set to 1.e-4. Additionally, the maxits parameter enforces a hard limit on the number of allowed iterations.
+
+```
+CObject             obj;
+CObjectiveF         obfunc;
+CIneqConstraints    obfunc_constraints;
+
+obfunc.setFuncParams(sigma2,bcast,vb,this);
+obfunc_constraints.setConstraints(a,b);
+
+all_bounds = all_bounds.Transpose();
+obfunc.setBounds(all_bounds);
+obfunc_constraints.setBounds(all_bounds);
+
+if(!obfunc.initialize(sv) ||
+   !obfunc_constraints.initialize(sv))
+  {
+   m_converged = false;
+   return out;
+  }
+  
+CSlsqp slsqp_minim;
+slsqp_minim.SetInequalityConstraints(obfunc_constraints);
+if(maxits)
+   slsqp_minim.SetMaxEval(int(maxits));
+if(fabs(tol))
+   slsqp_minim.SetXtolRel(tol);
+
+OptimizeResult minim_result = slsqp_minim.Minimize(obfunc);
+
+if(minim_result.return_code<0)
+  {
+   Print(__FUNCTION__, " termination reason ", minim_result.return_code);
+   m_converged = false;
+   return out;
+  }
+else
+  {
+   m_params = minim_result.solution;
+   m_converged = true;
+  }
+```
+
+The fit() method instantiates and initializes the objective function and constraint wrapper classes before presenting them to the SLSQP solver. With our volatility library now modified, we can test it by compiling the VolatilityModelParameterComparison.mq5 script with the \_\_SLSQP\_\_ macro.
+
+```
+#define __SLSQP__
+#include<slsqp_article\Arch\Univariate\mean.mqh>
+```
+
+The script was run several times with the same model configurations used to demonstrate cross-platform parameter discrepancies.
+
+```
+USING SLSQP
+MEAN_CONSTANT
+VOL_GJR_GARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(1) Q(1) Power(2.000000)
+MT5 model parameters:
+[-0.02428054511106604,0.002293739492468097,0.01626899292823011,0.01434061687833297,0.971226894861318]
+MT5 model LogLikelihood: 964.9296120064769
+Python's Model Parameters [-0.0242805845484529,0.002293742963206083,0.01626902046373811,0.01434054744816164,0.9712268914708287]
+Python's LogLikelihood: 964.9296120077307
+//+------------------------------------------------------------------+
+USING SLSQP
+MEAN_CONSTANT
+VOL_GARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(1) Power(2.000000)
+MT5 model parameters:
+[-0.0217010704352728,0.002655694264387353,0.02523836526782006,0.9686009128621481]
+MT5 model LogLikelihood: 965.2777981527584
+Python's Model Parameters [-0.02170062752089841,0.002653690530826297,0.02523174395053289,0.9686111317666565]
+Python's LogLikelihood: 965.277797248645
+//+------------------------------------------------------------------+
+USING SLSQP
+MEAN_CONSTANT
+VOL_TARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(1) Q(1) Power(1.000000)
+MT5 model parameters:
+[-0.02774988476354253,0.003761754971217425,0.01425091738918219,0.02393074653396533,0.9737837093438352]
+MT5 model LogLikelihood: 963.0059881813373
+Python's Model Parameters [-0.02774962124001202,0.003761918497530642,0.01425295763143413,0.02392852230367382,0.9737827811881781]
+Python's LogLikelihood: 963.0059881427078
+//+------------------------------------------------------------------+
+USING SLSQP
+MEAN_CONSTANT
+VOL_AVGARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(1) Power(1.000000)
+MT5 model parameters:
+[-0.02251447564097937,0.004184839168186854,0.03014105668755734,0.9698589433124427]
+MT5 model LogLikelihood: 964.3159918165356
+Python's Model Parameters [-0.02250404030999785,0.004185362811318036,0.03014462096952416,0.9698553790305747]
+Python's LogLikelihood: 964.3159918481251
+//+------------------------------------------------------------------+
+USING SLSQP
+MEAN_CONSTANT
+VOL_AVARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(0) Power(1.000000)
+MT5 model parameters:
+[-0.02519436424425439,0.5912835460641531,0.1280667289474566]
+MT5 model LogLikelihood: 993.2632358829796
+Python's Model Parameters [-0.02519438925614133,0.5912835391625952,0.1280667401117837]
+Python's LogLikelihood: 993.263235882966
+//+------------------------------------------------------------------+
+USING SLSQP
+MEAN_CONSTANT
+VOL_ARCH
+DIST_NORMAL
+GARCH spec
+P(1) O(0) Q(0) Power(2.000000)
+MT5 model parameters:
+[-0.01996170926747607,0.3827916710157989,0.1197990642660044]
+MT5 model LogLikelihood: 993.7152272187727
+Python's Model Parameters [-0.01996231775953625,0.3827906664926961,0.1198013671195205]
+Python's LogLikelihood: 993.7152272209562
+//+------------------------------------------------------------------+
+```
+
+The output shows that the SLSQP implementation was successful in yielding the desired outcome. Readers can replicate these tests by compiling the VolatilityModelParameterComparison.mq5 script with or without the \_\_SLSQP\_\_ macro to switch between the two optimizers.
+
+### 
+
+### Conclusion
+
+Systematic testing and targeted debugging established that the main source of cross-platform divergence was the optimizer, not the log-likelihood computation. By porting SLSQP to MQL5 and wiring it into the HARX fitting pipeline (with explicit constraint and bounds contracts, gradient options, and configurable stopping criteria), the MQL5 volatility library now reproduces Python ARCH results reproducibly: parameter estimates and log‑likelihoods match the Python reference within practical numerical tolerances when the same starting values, data processing, and constraint specifications are used.
+
+Beyond resolving the parity issue, the update delivers practical capabilities to MQL5 users: a native SLSQP solver (CSlsqp), unified interfaces for objective functions and constraints (CFunctor/CConstraints), support for analytical or finite‑difference gradients, and configurable tolerances and stopping rules. The repository also includes verification and comparison scripts (LogLikelihoodVerification, VolatilityModelParameterComparison) so users can validate fits against Python ARCH on their own datasets. In short, the library now provides a reproducible, verifiable optimization workflow that aligns with the Python reference and gives developers explicit control over the optimization process and numerical tolerances.
+
+| File Or Folder | Description |
+| --- | --- |
+| MQL5/Include/slsqp\_article/Arch | Folder of header files for the conditional volatility modeling library |
+| MQL5/Include/slsqp\_article/Regression | Folder of header files for various regression utilities |
+| MQL5/Include/slsqp\_article/Jason.mqh | Header file of JSON serialization and deserialization library |
+| MQL5/Include/slsqp\_article/np.mqh | Header file of various vector and matrix utility functions |
+| MQL5/Include/slsqp\_article/slsqp.mqh | Header file of core SLSQP implementation |
+| MQL5/Include/slsqp\_article/win32\_utils.mqh | Header file of various WIN32 API definitions |
+| MQL5/Scripts/slsqp\_article/LogLikelihoodVerification.mq5 | The script used to verify the MQL5 implementation of the objective function minimized by the conditional volatility model |
+| MQL5/Scripts/slsqp\_article/mt5\_volatility\_processor.py | A Python program that builds a conditional volatility model using the ARCH module |
+| MQL5/Scripts/slsqp\_article/slsqp\_optimization\_with\_analytical\_gradients.mq5 | The script demonstrates SLSQP optimization with analytic gradients |
+| MQL5/Scripts/slsqp\_article/slsqp\_optimization\_with\_numerical\_gradients.mq5 | The script demonstrates SLSQP optimization with gradients calculated using numerical finite-difference approximation |
+| MQL5/Scripts/slsqp\_article/VolatilityModelParameterComparison.mq5 | Script used to compare conditional volatility models built in MQL5 (using SLSQP solver) and Python |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22714.zip "Download all attachments in the single ZIP archive")
+
+[Building\_Volatility\_Models\_in\_MQL5\_Part\_III.zip](https://www.mql5.com/en/articles/download/22714/Building_Volatility_Models_in_MQL5_Part_III.zip "Download Building_Volatility_Models_in_MQL5_Part_III.zip")
+(155.56 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Beyond GARCH (Part IV): Partition Analysis in MQL5](https://www.mql5.com/en/articles/21299)
+
+In this article, we shift from Python research to native MQL5 engineering. We build the first module of the MMAR library: a shared constants header, an SVD-based OLS regression class, a Generalized Hurst Exponent estimator, and the partition analysis engine that computes the partition function, extracts tau(q), estimates H via zero-crossing interpolation, and scores multifractality through three diagnostic tests. Tested on 500,000 bars of EURUSD M10, the engine correctly classifies the data as multifractal in under four seconds. Part 4 of an eight-part series. Part 5 fits the tau(q) curve to four candidate distributions via the Legendre transform.
+
+[IMG]
+[MQL5 Trading Tools (Part 33): Building a Rich Content Markup Documentation System for MQL5 Programs](https://www.mql5.com/en/articles/22303)
+
+We extend the Part 9 setup wizard to build a canvas-based, in-chart documentation system for MetaTrader 5. The panel is tabbed and scrollable, supports inline styling, images, and interactive controls, and renders with supersampled anti-aliasing. The result is a reusable engine that any MQL5 program can embed to deliver self-contained documentation directly on the chart.
+
+[IMG]
+[Encoding Candlestick Patterns (Part 2): Modeling Price Action as an Ordered Sequence](https://www.mql5.com/en/articles/22709)
+
+Developing permutation-based tools in MQL5 provides a systematic way to analyze candlestick pattern combinations for trading strategies. This article introduces a permutation calculator and generator designed to compute and enumerate all possible ordered candlestick sequences from bullish and bearish sets, with or without repetition. By generating exhaustive pattern combinations, traders can perform data-driven analysis to identify high-probability market patterns and improve decision-making in automated trading systems.
+
+[IMG]
+[Beyond the Clock (Part 2): Building Runs Bars in MQL5](https://www.mql5.com/en/articles/22213)
+
+We implement tick-, volume-, and dollar-runs bars in Python and MQL5 and align them with the existing bar‑building framework. The article details the dual‑accumulator update, offline calibration with per‑side seeds, state persistence for EAs, and parity verification to match Python and MQL5 outputs. Runs bars expose one‑sided bursts that net imbalance can hide, improving coverage during quiet sessions and for mean‑reversion models.
+
+[[IMG]](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dtop.experts%26utm_content%3Dbuy.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=widauvjabtsckwovwaperzkotrcrttvb&s=25ef75d39331f608a319410bf27ff02c1bd7986622ecc1eec8968a650f044731&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=yytbtfnzfklloitjvazkdstcyhuedltd&ssn=1788778026180179430&ssn_dr=1&ssn_sr=0&fv_date=1788778026&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22714&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Building%20Volatility%20Models%20in%20MQL5%20(Part%20III)%3A%20Implementing%20the%20SLSQP%20Algorithm%20for%20Model%20Estimation%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877802701576573&fz_uniq=5121770473901393962&sv=2552)

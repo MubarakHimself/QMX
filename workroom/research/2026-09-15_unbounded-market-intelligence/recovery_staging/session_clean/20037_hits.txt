@@ -1,0 +1,209 @@
+4: title: "From Novice to Expert: Time Filtered Trading"
+20: # From Novice to Expert: Time Filtered Trading
+25: | 14 November 2025 at 06:14
+36: ### Contents
+38: - [Introduction](https://www.mql5.com/en/articles/20037#introduction)
+39: - [Implementation](https://www.mql5.com/en/articles/20037#implementation)
+40: - [Testing](https://www.mql5.com/en/articles/20037#testing)
+41: - [Conclusion](https://www.mql5.com/en/articles/20037#conclusion)
+42: - [Key Takeaways](https://www.mql5.com/en/articles/20037#key_takeaways)
+43: - [Attachments](https://www.mql5.com/en/articles/20037#attachments)
+45: ### Introduction
+47: By leveraging the capabilities of MQL5, we can precisely define the times we want to trade and receive alerts accordingly. In our previous discussion, we established the foundation for session visualization, where we uncovered the structure of each trading session—its body, upper wick, and lower wick. That project enabled us to visualize the broader market structure across higher-timeframe session
+49: These concepts may not be exhaustive, but they serve as a valuable stepping stone for other ambitious researchers seeking to visualize and design more advanced market-analysis tools. Price, by its nature, is a time-series phenomenon—it evolves continuously, tick by tick. Our Expert Advisors and indicators are designed to monitor these fluctuations relentlessly, reacting to every pattern or conditi
+51: This is when time reference becomes critical. By anchoring our algorithms to well-defined trading windows or sessions, we guide them to act only when the market is most active, structured, and meaningful. Time filtering therefore serves as a disciplinary framework, ensuring that execution happens when market behavior aligns not just with strategy logic, but with the rhythm of time itself.
+53: Known calendar events can serve as powerful reference points for time-filtered trading. Economic events such as Non-Farm Payrolls, CPI, FOMC decisions, or GDP releases evolve in time and can be used to define precise trading windows—periods in which our tools are either permitted or restricted from placing orders and generating signals.
+55: In the same way that session markers define market rhythm, economic calendar markers define event-driven volatility zones. For instance, an algorithm might automatically suspend trading 30 minutes before a high-impact event and resume only after volatility stabilizes. MQL5 provides direct access to such data through the [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalend
+57: Beyond event-driven scheduling, the hour of the clock itself is another crucial control factor. A trader or researcher might define fixed time windows such as 10:00–12:00 hrs for signal generation or execution. This not only reduces noise but helps isolate statistically favorable periods within a trading day.
+61: Together, these mechanisms—calendar-based event filters and hour-based time windows—give our systems a dual awareness of time: one derived from scheduled economic behavior, and the other from intraday structural rhythm. Integrating both enables our Expert Advisors to act not only on price conditions but also on temporal context, which is often the deciding factor between precision and randomness i
+67: - Trade only during selected sessions (e.g., London or New York).
+68: - Suspend trading before major news releases or low-liquidity hours.
+69: - Deliver alerts, signals, or entries only when the clock and conditions align.
+73: Time filtering ensures that your strategy’s logic is executed only during specific time windows. Instead of letting an EA or indicator run continuously, you can wrap its execution in time checks that confirm whether the current market time falls within the desired trading period.
+77: - Avoiding off-peak or illiquid periods (e.g., post-New York close).
+78: - Capturing session-based volatility bursts (e.g., London–New York overlap).
+79: - Controlling signal frequency to reduce noise or over-trading.
+83: Specifically, we will reference the SessionVisualizer header file—the module responsible for defining and marking our market session periods. The time markers created within it will serve as key reference points for this new concept of time-filtered trading. By utilizing these markers, we can now define and control trading windows that occur before or after a session’s start or close.
+87: 1. Build a modular TimeFilter layer that works together with the SessionVisualizer to provide session-based, clock-based, and (optionally) event-based time windows.
+88: 2. Create an example Expert Advisor that executes trades only when the active time filters allow trading.
+91: ### Implementation
+99: We start by treating this file as a reusable library, not a throwaway code fragment. Using #property strict enforces safer compilation rules, while the include guard prevents duplicate definitions when the file is used in multiple projects. We also include SessionVisualizer.mqh because our time filter is designed to cooperate with your existing session visualization logic. This is the kind of stru
+101: ```
+107: #property strict
+108: #ifndef __TIMEFILTERS_MQH__
+109: #define __TIMEFILTERS_MQH__
+111: #include "SessionVisualizer.mqh"
+112: ```
+116: Next, we expose a small control panel through input parameters. Instead of hard-coding behavior, we allow the trader (or tester) to decide whether to filter by sessions, fixed hours, or events. The clock start/end, pre/post-session padding, and (future) news filters are all tweakable without touching the source. The names are consistently prefixed with Inp and each input is documented—this is prec
+118: ```
+120: input bool   InpUseSessionFilter   = true;      // gate by session times
+122: input bool   InpUseEventFilter     = false;     // gate by economic calendar (stubbed safe)
+124: input int    InpClockStartHour     = 10;        // e.g., 10:00
+125: input int    InpClockEndHour       = 12;        // e.g., 12:00
+126: input int    InpPreSessionMins     = 0;         // allow N minutes before session start
+127: input int    InpPostSessionMins    = 0;         // allow N minutes after session end
+134: ```
+138: Rather than scattering global variables across your EA, we encapsulate time-related state in CTimeFilterContext. This class can optionally store a pointer to CSessionVisualizer and the active gmt\_offset. That means any EA or indicator can pass around a single lightweight context object, and all time decisions stay consistent. SetGMTOffset forwards the offset into the visualizer when it exists—kee
+140: ```
+145:    CSessionVisualizer *viz;   // optional visualizer pointer
+148:    CTimeFilterContext() : viz(NULL), gmt_offset(0) {}
+150:    void AttachVisualizer(CSessionVisualizer &ref) { viz = &ref; }
+162: ```
+166: The clock window is our first and simplest time barrier: “only operate between these hours.” Here we convert the server time into a structured form and check it against the user-defined range. Two behaviors are worth noting: if startHour == endHour we interpret that as “no restriction,” and if startHour > endHour we treat the window as wrapping over midnight (e.g. 22:00–02:00). Many beginners forg
+168: ```
+170: bool InClockWindow(const int startHour, const int endHour)
+179:       return (t.hour >= startHour && t.hour < endHour);
+182:    return (t.hour >= startHour || t.hour < endHour);
+184: ```
+188: This function connects our time-filter engine to the session logic. It expects the CTimeFilterContext (for configuration) and a SESSION\_TYPE (Sydney, Tokyo, London, New York). Depending on your implementation, GetTodaySessionWindow (in your SessionVisualizer) returns the current day’s session start and end. Moreover, we add pre- and post-session padding in minutes, which is where traders usually 
+190: ```
+191: // --------------------------- Utility: Session Window ------------------------
+192: bool InSessionWindow(CTimeFilterContext &ctx, const SESSION_TYPE sType,
+200:    if(!(*ctx.viz).GetTodaySessionWindow(sType, ss, se))
+201:       return true; // session not available -> don't block
+210: ```
+214: Here, we define EventWindowAllowed as a safe stub: for now, it always returns true. The design decision is intentional. Many readers run brokers or testers without economic calendar support; a hard dependency would break portability. By providing this hook with the right signature, we make it trivial to later plug in real calendar-based logic (blocking around NFP, FOMC, CPI etc.) without changing 
+216: ```
+217: // --------------------------- Utility: Economic Calendar ---------------------
+226: ```
+232: - If the clock filter is on, we must be inside the allowed hours.
+233: - If the session filter is on, we must be inside at least one configured session window (with padding).
+234: - If the event filter is on, we must pass the (future) event rule.
+238: ```
+245:       ok = ok && InClockWindow(InpClockStartHour, InpClockEndHour);
+250:       any = any || InSessionWindow(ctx, SESSION_LONDON,  InpPreSessionMins, InpPostSessionMins);
+251:       any = any || InSessionWindow(ctx, SESSION_NEWYORK, InpPreSessionMins, InpPostSessionMins);
+252:       any = any || InSessionWindow(ctx, SESSION_TOKYO,   InpPreSessionMins, InpPostSessionMins);
+253:       any = any || InSessionWindow(ctx, SESSION_SYDNEY,  InpPreSessionMins, InpPostSessionMins);
+266: #endif // __TIMEFILTERS_MQH__
+267: ```
+269: **Example Expert Advisor using time filters**
+275: ```
+277: #property copyright  "Clemence Benjamin"
+278: #property description "Professional Time-Filtered EA with streamlined CTrade usage."
+279: #property version     "1.0"
+280: ```
+282: 2. Strategic Includes: Trading, Symbol Info, Sessions, Time Filters
+284: Next, we selectively include only the building blocks this EA truly depends on. Trade.mqh gives us the high-level CTrade wrapper; SymbolInfo.mqh helps with broker-specific symbol properties; SessionVisualizer.mqh handles our visual context; TimeFilters.mqh provides the central IsTradingAllowed gate. We are composing behavior from well-defined modules, not reinventing everything inside one bloated 
+286: ```
+287: #include <Trade/Trade.mqh>
+288: #include <Trade/SymbolInfo.mqh>
+289: #include <SessionVisualizer.mqh>
+290: #include <TimeFilters.mqh>
+291: ```
+297: ```
+298: input int    InpGMTOffsetHours = 0;     // GMT offset for session alignment
+299: input bool   InpDrawSessions    = true; // Enable session visualization
+300: input int    InpLookbackDays    = 5;    // Days to draw sessions
+306: ```
+310: We now declare the key objects used by the EA: CTrade for order execution, CSymbolInfo for spread/tick/volume data, CSessionVisualizer to draw session blocks, and CTimeFilterContext to coordinate time-related decisions. We also prepare MA handles and gLastSignalBar to ensure we don’t double-trigger signals on the same candle. This pattern is tidy: environment-level tools are global, while trade lo
+312: ```
+322: ```
+328: ```
+380: ```
+386: ```
+420: ```
+422: 7. ExecuteBuy: SL/TP Logic, Spread Awareness, and Error Reporting
+424: ExecuteBuy is where all the pieces come together. We validate the account, normalize and verify volume, fetch fresh symbol prices, and calculate stop-loss and take-profit in a way that respects spread, pip size, and minimum stop levels. If only SL is given and TP is zero, the EA auto-derives a 1:2 risk-reward TP—this introduces good practice directly into the framework. And if something goes wrong
+426: ```
+450:       // --- SL/TP logic (spread-aware, 1:2 RR auto if desired) ---
+455:             PrintFormat("StopLoss (%d points) <= current spread = %.0f points. Spread value will be used",
+457:             stoploss = NormalizeDouble(price - spread, m_digits);
+471:             if(spread >= InpTakeProfitPips * m_point)
+473:                PrintFormat("TakeProfit (%d points) < current spread = %.0f points. Spread value will be used",
+475:                takeprofit = NormalizeDouble(price + spread, m_digits);
+485:          if(spread >= InpTakeProfitPips * m_point)
+487:             PrintFormat("TakeProfit (%d points) < current spread = %.0f points. Spread value will be used",
+489:             takeprofit = NormalizeDouble(price + spread, m_digits);
+551: ```
+553: 8. Initialization: Wiring Time Filters, Visualizer, Trade Manager, and EMAs
+555: OnInit is where the EA becomes alive. We attach the CSessionVisualizer to gCTX, set the GMT offset so both visuals and logic agree on time, and initialize the CTradeManager with our magic number and deviation. We also validate the account (especially useful in Strategy Tester) and create MA handles that drive our signal logic. The printed messages are intentional—they tell the user not only that t
+557: ```
+606: ```
+610: In OnDeinit, we release indicator handles, deinitialize the trade manager, and clear session objects. This EA cleans up after itself.
+612: ```
+623: ```
+629: ```
+648: ```
+654: ```
+669: ```
+671: 12. OnTick: Time Filter First, Then Logic
+673: The OnTick body is deliberately short and readable—this is the payoff of all the abstractions. First, we refresh session visuals (if enabled). Then we pass through the time filter gate: if IsTradingAllowed(gCTX) returns false, the EA simply annotates “Trading OFF” and exits. Only when time conditions are satisfied do we check that there is no open position and that an EMA signal is present. If bot
+675: ```
+698: ```
+706: ```
+715: #property strict
+716: #property indicator_chart_window
+719: #property indicator_plots   2
+720: #property indicator_buffers 2
+723: #property indicator_type1   DRAW_ARROW
+724: #property indicator_color1  clrLime
+725: #property indicator_width1  2
+726: #property indicator_label1  "TF_RSI_Bull"
+729: #property indicator_type2   DRAW_ARROW
+730: #property indicator_color2  clrRed
+731: #property indicator_width2  2
+732: #property indicator_label2  "TF_RSI_Bear"
+733: ```
+735: 2. Reusing the Time Infrastructure–Sessions and Filters, Not Reinvented
+737: Here we include the same building blocks as the EA: SessionVisualizer.mqh and TimeFilters.mqh. That’s the key pattern: one centralized time policy, many consumers (EAs, indicators, dashboards). We also declare inputs for session drawing and RSI configuration, plus alert behavior. We can switch sessions on/off, tune RSI levels, and choose how noisy or quiet notifications should be.
+739: ```
+740: #include <SessionVisualizer.mqh>
+741: #include <TimeFilters.mqh>
+744: // Visual session context (indicator-side)
+745: input bool   InpDrawSessions_i    = true;
+759: ```
+763: The indicator uses the same CTimeFilterContext we designed earlier, pointing it at its own CSessionVisualizer instance. This keeps the implementation consistent with the EA: both consult the same idea of “allowed time.” We allocate two buffers: BuffUp for bullish arrows and BuffDn for bearish arrows. This separation makes interpretation instant on the chart—green up arrow: filtered bullish event; 
+765: ```
+776: ```
+782: ```
+805: ```
+807: 5. OnInit–Binding Arrows to Buffers and Time to Sessions
+811: - Assign buffers to the two plots.
+812: - Select Wingdings arrow codes (233 up, 234 down).
+813: - Attach the visualizer to the context and apply GMT offset.
+814: - Optionally draw sessions.
+815: - Create the RSI handle and initialize buffers.
+819: ```
+853: ```
+860: 2. Optionally refresh session visuals when new bars arrive.
+865: 1. Check IsTradingAllowed(iCTX)—if time filters reject, skip.
+868: - Bullish: leaving oversold upwards → draw green up arrow under the bar.
+869: - Bearish: leaving overbought downwards → draw red down arrow above the bar.
+873: Signals are not just “RSI crosses”; they are “RSI crosses that respect our professional trading hours, sessions, and (future) event blocks."
+875: ```
+891:    // Refresh session drawings when new bars appear
+892:    if(InpDrawSessions_i && rates_total != prev_calculated)
+912:       // Respect global time filters (same logic as EA)
+952: ```
+960: - Moving average cross clusters.
+961: - Breakout conditions (high/low of session, VWAP deviations).
+962: - Candlestick patterns (pin bars, engulfing) only during London.
+963: - Volatility regimes (ATR filters).
+964: - Orderbook/proxy metrics, machine learning outputs, you name it.
+968: - IsTradingAllowed(iCTX) as the universal time gate.
+969: - Arrows (or markers) on the chart.
+970: - Optional alerts via FireRSIAlert (rename to a generic FireSignalAlert).
+974: ### Testing
+976: After successfully compiling the source files, we deployed both the TimeFilteredEA and the TimeFilteredSignal indicator in the Strategy Tester to validate the overall behavior of the framework. The test execution was noticeably slow—unsurprising given the layered time filters, session rendering, and signal logic running together—but it completed reliably and produced clear, interpretable results. 
+988: ### Conclusion
+990: It is absolutely possible to control when our trading systems are allowed to operate by implementing structured MQL5 time-filtering logic, such as the framework developed in this project. Instead of scattering conditions across random if statements, we used clean abstractions, shared context, and session-aware utilities to make the behavior both predictable and reusable. By anchoring our logic to 
+996: ### Key Takeaways:
+998: | Key Takeaways | Description |
+999: | --- | --- |
+1000: | 1. Centralize Time Filtering Logic | Implementing a dedicated TimeFilter layer (instead of scattered if-conditions) makes it easy to reuse the same session, clock, and event rules across multiple EAs and indicators, ensuring consistent behavior and simpler maintenance. |
+1001: | 2. Use Context Objects Instead of Global Chaos | The CTimeFilterContext pattern shows how to bundle configuration (GMT offset, visualizer link) into a single object, reducing global dependencies and making your codebase more modular, testable, and scalable. |
+1002: | 3. Separate Signal Logic from Execution Logic | By placing trade execution inside CTradeManager and signal detection in dedicated functions/indicators, we clearly separate “what triggers” from “how orders are sent,” improving clarity, debuggability, and reuse. |
+1003: | 4. Design for Visual Feedback and Diagnostics | The SessionVisualizer and Wingdings arrow signals provide immediate visual confirmation that time filters and signals behave as expected, which is essential for debugging complex logic and building trader confidence in the system. |
+1004: | 5. Build Extensible Signal Frameworks | Using RSI as a plug-in module inside a time-filtered framework demonstrates a scalable design: any future method (price action, MA crosses, volatility filters, custom models) can be integrated behind the same IsTradingAllowed() gate with minimal code changes
+1006: ### Attachments:
+1008: | Source File | Version | Description |
+1009: | --- | --- | --- |
+1010: | SessionVisualizer.mqh | 1.02 | Modular session-mapping and drawing library that renders key Forex trading sessions on the chart and exposes reusable time-window references for higher-level tools. |
+1011: | TimeFilters.mqh | 1.00 | Core time-filtering framework providing clock, session, and (extensible) event-based checks through a unified IsTradingAllowed() interface and shared context object. |
+1012: | TimeFilteredEA.mq5 | 1.0 | Example Expert Advisor that uses the TimeFilters and SessionVisualizer to execute EMA-based entries only inside permitted time windows, with structured trade management. |
+1013: | TimeFilteredSignal.mq5 | 1.0 | Chart indicator that plots large Wingdings arrows and generates RSI-based alerts strictly within the defined time-filtered windows, serving as a visual and extensible signal layer. |
+1019: [SessionVisualizer.mqh](https://www.mql5.com/en/articles/download/20037/SessionVisualizer.mqh "Download SessionVisualizer.mqh")
+1048: In this part, we focus on how to merge real-time market feedback—such as live trade outcomes, volatility changes, and liquidity shifts—with adaptive model learning to maintain a responsive and self-improving trading system.
+1051: [Neural Networks in Trading: Memory Augmented Context-Aware Learning for Cryptocurrency Markets (Final Part)](https://www.mql5.com/en/articles/16993)
+1053: The MacroHFT framework for high-frequency cryptocurrency trading uses context-aware reinforcement learning and memory to adapt to dynamic market conditions. At the end of this article, we will test the implemented approaches on real historical data to assess their effectiveness.

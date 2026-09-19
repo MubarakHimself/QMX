@@ -1,0 +1,122 @@
+{
+  "pack_id": "trading_systems_027",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_027",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "applying olap in trading",
+    "automating trading strategies in mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 23583,
+      "title": "Building a Position Sizing Engine in MQL5 with Multiple Risk Models",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23583.md"
+    },
+    {
+      "id": 23589,
+      "title": "Implementing a Trade Throttle and Rate Limiter in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23589.md"
+    },
+    {
+      "id": 23693,
+      "title": "Bloch's Relative Moving Average (RMA) Framework Implementation In MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23693.md"
+    },
+    {
+      "id": 23714,
+      "title": "Measuring Market Efficiency with Lempel-Ziv Complexity",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23714.md"
+    },
+    {
+      "id": 23763,
+      "title": "Network Momentum for MetaTrader5: Trading the Lead-Lag Graph Between Markets",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23763.md"
+    },
+    {
+      "id": 23983,
+      "title": "Isolation Forest: Unsupervised Anomaly Detection, and What It Actually Finds in Price Data",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23983.md"
+    },
+    {
+      "id": 7535,
+      "title": "Applying OLAP in trading (part 3): Analyzing quotes for the development of trading strategies",
+      "section": "Trading systems",
+      "series_title": "Applying OLAP in trading (): Analyzing quotes for the development of trading strategies",
+      "series_key": "applying olap in trading",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7535.md"
+    },
+    {
+      "id": 19099,
+      "title": "Automating Trading Strategies in MQL5 (Part 27): Creating a Price Action Crab Harmonic Pattern with Visual Feedback",
+      "section": "Trading systems",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action Crab Harmonic Pattern with Visual Feedback",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19099.md"
+    },
+    {
+      "id": 19105,
+      "title": "Automating Trading Strategies in MQL5 (Part 28): Creating a Price Action Bat Harmonic Pattern with Visual Feedback",
+      "section": "Trading systems",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action Bat Harmonic Pattern with Visual Feedback",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19105.md"
+    },
+    {
+      "id": 20167,
+      "title": "Automating Trading Strategies in MQL5 (Part 39): Statistical Mean Reversion with Confidence Intervals and Dashboard",
+      "section": "Trading systems",
+      "series_title": "Automating Trading Strategies in MQL5 (): Statistical Mean Reversion with Confidence Intervals and Dashboard",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20167.md"
+    },
+    {
+      "id": 20347,
+      "title": "Automating Trading Strategies in MQL5 (Part 43): Adaptive Linear Regression Channel Strategy",
+      "section": "Trading systems",
+      "series_title": "Automating Trading Strategies in MQL5 (): Adaptive Linear Regression Channel Strategy",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20347.md"
+    },
+    {
+      "id": 20355,
+      "title": "Automating Trading Strategies in MQL5 (Part 44): Change of Character (CHoCH) Detection with Swing High/Low Breaks",
+      "section": "Trading systems",
+      "series_title": "Automating Trading Strategies in MQL5 (): Change of Character (CHoCH) Detection with Swing High/Low Breaks",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 44,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20355.md"
+    }
+  ]
+}

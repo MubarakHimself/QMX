@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_004",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1577,
+      "title": "The Magic of Filtration",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1577.md"
+    },
+    {
+      "id": 1578,
+      "title": "Contest of Expert Advisors inside an Expert Advisor",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1578.md"
+    },
+    {
+      "id": 1628,
+      "title": "Deep neural network with Stacked RBM. Self-training, self-control",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1628.md"
+    },
+    {
+      "id": 2049,
+      "title": "Trading signals module using the system by Bill Williams",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2049.md"
+    },
+    {
+      "id": 2110,
+      "title": "False trigger protection for Trading Robot",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2110.md"
+    },
+    {
+      "id": 2225,
+      "title": "Self-optimization of EA: Evolutionary and genetic algorithms",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2225.md"
+    },
+    {
+      "id": 2249,
+      "title": "Area method",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2249.md"
+    },
+    {
+      "id": 2279,
+      "title": "Neural network: Self-optimizing Expert Advisor",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2279.md"
+    },
+    {
+      "id": 2785,
+      "title": "80-20 trading strategy",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2785.md"
+    },
+    {
+      "id": 3172,
+      "title": "Forecasting market movements using the Bayesian classification and indicators based on Singular Spectrum Analysis",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3172.md"
+    },
+    {
+      "id": 3686,
+      "title": "A New Approach to Interpreting Classic and Hidden Divergence",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3686.md"
+    },
+    {
+      "id": 3690,
+      "title": "The NRTR indicator and trading modules based on NRTR for the MQL5 Wizard",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3690.md"
+    }
+  ]
+}

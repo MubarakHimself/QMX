@@ -1,0 +1,411 @@
+# Market Microstructure in MQL5 (Part 4): Volatility That Remembers
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Indicators](https://www.mql5.com/en/articles/mt5/indicators)
+| 5 June 2026 at 06:59
+1 474
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/510797 "Comments")
+[Max Brown](https://www.mql5.com/en/users/gcg26)
+### Introduction
+[Part 1](https://www.mql5.com/en/articles/22263 "Market Microstructure in MQL5: Robust Foundation (Part 1)") built a defensive foundation: guarded math, validated price feeds, and stable statistical primitives. [Part 2](https://www.mql5.com/en/articles/22553 "Market Microstructure in MQL5: Measuring Long Memory (Part 2)") added confidence-weighted Hurst estimation, establishing that US100 M1 Globex operates near the random-walk boundary (pooled H = 0.511, rolling H ≈ 0.48). [Part 3](https://www.mql5.com/en/articles/22598 "Market Microstructure in MQL5: Estimating ARFIMA d with GPH (Part 3)") added the GPH estimator for the fractional differencing parameter d, with pooled d = −0.006 and session-to-session standard deviation of 0.153.
+Standard volatility indicators — ATR and standard deviation of returns — treat each bar as independent. They ignore four empirical facts about financial volatility: clustering (large moves follow large moves), persistence (volatility shocks decay slowly), asymmetry (negative returns increase future volatility more than positive returns of the same magnitude), and regime mixing (the series may be a mixture of different scaling laws, making average measures like H and d misleading). On intraday US100 M1 data, these properties directly affect position sizing, stop-loss placement, and signal filtering. A trading system that ignores them is systematically miscalibrated.
+This article adds two measurement families to MicroStructure\_Foundation.mqh: (1) a revised MFDFA-based multifractal spectrum that returns Δα with an R² confidence field, replacing the raw τ-spread proxy used in the original submission; (2) a volatility suite: RealizedVolatility(), DurationVolatility(), FractionalVolatility(), a FIGARCH-inspired proxy, VolatilityClusteringIndex(), LeverageEffect(), JumpIntensity(), and PopulateVolatilityAnalysis().
+The empirical study in this article uses NQ E-mini Nasdaq 100 futures (CME Globex) rather than the US100 CFD instrument referenced in earlier drafts. NQ is the exchange-traded underlying contract; US100 is a retail CFD product whose price is derived from the index, not from actual futures order flow. The microstructure properties being measured — volatility clustering, leverage asymmetry, jump intensity, multifractal structure — are properties of price formation at the exchange level. Using the actual futures contract is therefore a more appropriate methodological choice for this analysis. The 2-year NQ M1 dataset (514 NY sessions, May 2024–May 2026) captures four macro stress episodes relevant to this series: the BoJ carry-trade unwind of August 2024, the Fed hawkish surprise of December 2024, the Liberation Day tariff shock of April 2025, and the second tariff episode of April 2026.
+Before the implementation sections, several points require explicit framing.
+FIGARCHVolatility() is **not** a fitted FIGARCH model. A proper FIGARCH estimation requires maximum-likelihood optimization over hundreds of observations and is computationally unsuitable for real-time MQL5 use. The function implemented here is a power-law weighted realized volatility, where the weights are derived from the GPH d estimate produced by Part 3. It is a FIGARCH-inspired engineering proxy. It captures the memory structure of the volatility process without the estimation overhead of a full FIGARCH specification.
+LeverageEffect() uses a fitted GJR-GARCH(1,1,1) model via the Dube volatility library ([Yun, 2026](https://www.mql5.com/en/articles/22258 "Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5")). This is a genuine model estimation, not a heuristic. It returns the normalized asymmetry ratio γ/(α + γ + β), which is scale-independent and directly comparable across sessions. A compile-time flag controls whether the Dube library path or a simpler fallback is used; both paths are described in the folder structure section.
+JumpIntensity() uses bipower variation as the threshold baseline. This is more robust than a simple σ-threshold, but it is still a relative flag rather than a formal jump test.
+Deliverable: eight functions updated or added to MicroStructure\_Foundation.mqh, a revised MFDFA returning Δα with R² confidence, and the VolatilityAnalysis struct fully populated with no placeholder fields. No new include file is created. The two companion SSRN working papers that document the empirical foundation for this series are available at [SSRN 6809080](https://papers.ssrn.com/abstract=6809080 "Measuring the Memory Structure of Intraday Returns") and [SSRN 6847024](https://papers.ssrn.com/abstract=6847024 "Intraday Microstructure Dynamics of E-mini S&P 500 Futures").
+### 
+### The Stylized Facts of Volatility
+Volatility clustering means that large price changes tend to be followed by large price changes (of either sign), and small changes by small changes. Engle (1982) formalized this as the ARCH effect, for which he received the Nobel Prize. The lag-1 autocorrelation of squared returns is a direct measure of clustering. Values above 0.2 on daily data are typical; on intraday data, clustering is often stronger. VolatilityClusteringIndex() measures this directly. It is a diagnostic proxy, not a fitted model.
+Volatility persistence means that shocks to volatility decay slowly — not exponentially as GARCH(1,1) implies, but hyperbolically. The fractional differencing parameter d from Part 3 quantifies this: when d > 0 for the squared-return series, volatility itself has long memory. FractionalVolatility() uses that d directly, connecting this article to Part 3 by design. The key simplification is that d is estimated from the return series and applied to squared returns. This assumes the same memory parameter for returns and volatility. It is a reasonable approximation for intraday equity data but is not guaranteed.
+The leverage effect (Black, 1976) describes the asymmetric response: negative returns increase future volatility more than positive returns of the same magnitude. The standard model for this effect is GJR-GARCH (Glosten, Jagannathan and Runkle, 1993), which adds a single asymmetry parameter γ to the GARCH(1,1) specification: σ² t = ω + α·ε² t−1 + γ·I t−1 ·ε² t−1 + β·σ² t−1 , where I t−1 = 1 if the previous return was negative. LeverageEffect() fits this model via the Dube library and returns the normalized ratio γ/(α + γ + β).
+Volatility jumps are rare but consequential. Andersen, Bollerslev and Diebold (2007) proposed bipower variation (BPV = (π/2)·mean(|r t |·|r t−1 |)) as a jump-robust baseline. JumpIntensity() uses BPV as the threshold rather than the sample standard deviation, because a simple σ-threshold is contaminated by the very jumps it is trying to detect. On NQ M1, the 514-session empirical study shows a mean jump intensity of 1.4% with a 90th percentile of 2.1%. A value above 5% is likely to indicate data artifacts — bad ticks, contract rollovers, or feed anomalies — rather than genuine market jumps.
+Multifractality measures whether the series follows a single scaling law or a mixture. The conventional width metric is Δα = α max − α min , where α(q) is the Hölder exponent obtained via the Legendre transform of τ(q) = q·h(q) − 1. The revised MultifractalSpectrum() computes this properly and stores the mean R² of the scaling regressions as a confidence field. A narrow Δα (< 0.3) means H and d are reliable descriptors. A wide Δα (> 0.5) means the series contains opposing memory regimes that cancel in the average.
+### Implementation 1: Revised Multifractal Spectrum (MFDFA)
+The MFDFA algorithm is unchanged in structure. The revision affects the output metric only: the raw τ-spread is replaced by the Legendre-transform Δα, and the function now accepts a confidence output parameter. The outlier filter (|r| ≥ 0.1) is retained; it removes contract rollovers and bad ticks that would otherwise distort the negative-q moments, where large fluctuations dominate the q-th power sum.
+The Legendre transform proceeds as follows. From each q-regression, the slope h(q) is stored. The Hölder exponent is α(q) = h(q) + q·h′(q), where h′(q) is approximated by central finite differences. The spectrum width is Δα = max(α) − min(α). The confidence is the mean R² across all q-regressions; a value below 0.65 indicates unreliable scaling and the result should be treated as unavailable.
+```
+//+------------------------------------------------------------------+
+//| MultifractalSpectrum: MFDFA returning Legendre-transform Δα.     |
+//| confidence = mean R² of the log(F) ~ log(s) regressions.         |
+//| Returns Δα = max(α) − min(α). Returns 0.0 on failure.            |
+//|                                                                  |
+//| Outlier filter: |r| >= 0.1 removed before profile construction.  |
+//| MFDFA is sensitive to extreme values at negative q because large |
+//| fluctuations dominate the q-th moment. Rollovers and bad ticks   |
+//| must be excluded before the profile is built.                    |
+//+------------------------------------------------------------------+
+double MultifractalSpectrum(const string symbol, const int tf,
+                             const int period, double &confidence,
+                             int q_min = -5, int q_max = 5)
+   confidence = 0.0;
+   if(!ValidateSymbolV2(symbol) || period < 100)
+      return 0.0;
+   double close[];
+   if(SafeCopyClose(symbol, tf, 0, period + 1, close) < period + 1)
+      return 0.0;
+   //--- Build log-return array; filter gross outliers
+   double returns[];
+   ArrayResize(returns, period);
+   int valid = 0;
+   for(int i = 0; i < period; i++)
+      if(close[i] <= 0.0 || close[i + 1] <= 0.0) continue;
+      double r = SafeLog(close[i + 1]) - SafeLog(close[i]);
+      if(MathAbs(r) < 0.1) returns[valid++] = r;
+   if(valid < 100) return 0.0;
+   ArrayResize(returns, valid);
+   //--- Cumulative sum profile (demeaned)
+   double mean_r = 0.0;
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Market Microstructure in MQL5 (Part 4): Volatility That Remembers
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Indicators](https://www.mql5.com/en/articles/mt5/indicators)
+### Introduction
+[Part 1](https://www.mql5.com/en/articles/22263 "Market Microstructure in MQL5: Robust Foundation (Part 1)") built a defensive foundation: guarded math, validated price feeds, and stable statistical primitives. [Part 2](https://www.mql5.com/en/articles/22553 "Market Microstructure in MQL5: Measuring Long Memory (Part 2)") added confidence-weighted Hurst estimation, establishing that US100 M1 Globex operates near the random-walk boundary (pooled H = 0.511, rolling H ≈ 0.48). [Part 3](https://www.mql5.com/en/articles/22598 "Market Microstructure in MQL5: Estimating ARFIMA d with GPH (Part 3)") added the GPH estimator for the fractional differencing parameter d, with pooled d = −0.006 and session-to-session standard deviation of 0.153.
+Standard volatility indicators — ATR and standard deviation of returns — treat each bar as independent. They ignore four empirical facts about financial volatility: clustering (large moves follow large moves), persistence (volatility shocks decay slowly), asymmetry (negative returns increase future volatility more than positive returns of the same magnitude), and regime mixing (the series may be a mixture of different scaling laws, making average measures like H and d misleading). On intraday US100 M1 data, these properties directly affect position sizing, stop-loss placement, and signal filtering. A trading system that ignores them is systematically miscalibrated.
+This article adds two measurement families to MicroStructure\_Foundation.mqh: (1) a revised MFDFA-based multifractal spectrum that returns Δα with an R² confidence field, replacing the raw τ-spread proxy used in the original submission; (2) a volatility suite: RealizedVolatility(), DurationVolatility(), FractionalVolatility(), a FIGARCH-inspired proxy, VolatilityClusteringIndex(), LeverageEffect(), JumpIntensity(), and PopulateVolatilityAnalysis().
+The empirical study in this article uses NQ E-mini Nasdaq 100 futures (CME Globex) rather than the US100 CFD instrument referenced in earlier drafts. NQ is the exchange-traded underlying contract; US100 is a retail CFD product whose price is derived from the index, not from actual futures order flow. The microstructure properties being measured — volatility clustering, leverage asymmetry, jump intensity, multifractal structure — are properties of price formation at the exchange level. Using the actual futures contract is therefore a more appropriate methodological choice for this analysis. The 2-year NQ M1 dataset (514 NY sessions, May 2024–May 2026) captures four macro stress episodes relevant to this series: the BoJ carry-trade unwind of August 2024, the Fed hawkish surprise of December 2024, the Liberation Day tariff shock of April 2025, and the second tariff episode of April 2026.
+FIGARCHVolatility() is **not** a fitted FIGARCH model. A proper FIGARCH estimation requires maximum-likelihood optimization over hundreds of observations and is computationally unsuitable for real-time MQL5 use. The function implemented here is a power-law weighted realized volatility, where the weights are derived from the GPH d estimate produced by Part 3. It is a FIGARCH-inspired engineering proxy. It captures the memory structure of the volatility process without the estimation overhead of a full FIGARCH specification.
+LeverageEffect() uses a fitted GJR-GARCH(1,1,1) model via the Dube volatility library ([Yun, 2026](https://www.mql5.com/en/articles/22258 "Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5")). This is a genuine model estimation, not a heuristic. It returns the normalized asymmetry ratio γ/(α + γ + β), which is scale-independent and directly comparable across sessions. A compile-time flag controls whether the Dube library path or a simpler fallback is used; both paths are described in the folder structure section.
+JumpIntensity() uses bipower variation as the threshold baseline. This is more robust than a simple σ-threshold, but it is still a relative flag rather than a formal jump test.
+Deliverable: eight functions updated or added to MicroStructure\_Foundation.mqh, a revised MFDFA returning Δα with R² confidence, and the VolatilityAnalysis struct fully populated with no placeholder fields. No new include file is created. The two companion SSRN working papers that document the empirical foundation for this series are available at [SSRN 6809080](https://papers.ssrn.com/abstract=6809080 "Measuring the Memory Structure of Intraday Returns") and [SSRN 6847024](https://papers.ssrn.com/abstract=6847024 "Intraday Microstructure Dynamics of E-mini S&P 500 Futures").
+### 
+### The Stylized Facts of Volatility
+Volatility clustering means that large price changes tend to be followed by large price changes (of either sign), and small changes by small changes. Engle (1982) formalized this as the ARCH effect, for which he received the Nobel Prize. The lag-1 autocorrelation of squared returns is a direct measure of clustering. Values above 0.2 on daily data are typical; on intraday data, clustering is often stronger. VolatilityClusteringIndex() measures this directly. It is a diagnostic proxy, not a fitted model.
+Volatility persistence means that shocks to volatility decay slowly — not exponentially as GARCH(1,1) implies, but hyperbolically. The fractional differencing parameter d from Part 3 quantifies this: when d > 0 for the squared-return series, volatility itself has long memory. FractionalVolatility() uses that d directly, connecting this article to Part 3 by design. The key simplification is that d is estimated from the return series and applied to squared returns. This assumes the same memory parameter for returns and volatility. It is a reasonable approximation for intraday equity data but is not guaranteed.
+The leverage effect (Black, 1976) describes the asymmetric response: negative returns increase future volatility more than positive returns of the same magnitude. The standard model for this effect is GJR-GARCH (Glosten, Jagannathan and Runkle, 1993), which adds a single asymmetry parameter γ to the GARCH(1,1) specification: σ² t = ω + α·ε² t−1 + γ·I t−1 ·ε² t−1 + β·σ² t−1 , where I t−1 = 1 if the previous return was negative. LeverageEffect() fits this model via the Dube library and returns the normalized ratio γ/(α + γ + β).
+Volatility jumps are rare but consequential. Andersen, Bollerslev and Diebold (2007) proposed bipower variation (BPV = (π/2)·mean(|r t |·|r t−1 |)) as a jump-robust baseline. JumpIntensity() uses BPV as the threshold rather than the sample standard deviation, because a simple σ-threshold is contaminated by the very jumps it is trying to detect. On NQ M1, the 514-session empirical study shows a mean jump intensity of 1.4% with a 90th percentile of 2.1%. A value above 5% is likely to indicate data artifacts — bad ticks, contract rollovers, or feed anomalies — rather than genuine market jumps.
+Multifractality measures whether the series follows a single scaling law or a mixture. The conventional width metric is Δα = α max − α min , where α(q) is the Hölder exponent obtained via the Legendre transform of τ(q) = q·h(q) − 1. The revised MultifractalSpectrum() computes this properly and stores the mean R² of the scaling regressions as a confidence field. A narrow Δα (< 0.3) means H and d are reliable descriptors. A wide Δα (> 0.5) means the series contains opposing memory regimes that cancel in the average.
+
+### Implementation 1: Revised Multifractal Spectrum (MFDFA)
+The MFDFA algorithm is unchanged in structure. The revision affects the output metric only: the raw τ-spread is replaced by the Legendre-transform Δα, and the function now accepts a confidence output parameter. The outlier filter (|r| ≥ 0.1) is retained; it removes contract rollovers and bad ticks that would otherwise distort the negative-q moments, where large fluctuations dominate the q-th power sum.
+The Legendre transform proceeds as follows. From each q-regression, the slope h(q) is stored. The Hölder exponent is α(q) = h(q) + q·h′(q), where h′(q) is approximated by central finite differences. The spectrum width is Δα = max(α) − min(α). The confidence is the mean R² across all q-regressions; a value below 0.65 indicates unreliable scaling and the result should be treated as unavailable.
+```
+//+------------------------------------------------------------------+
+//| MultifractalSpectrum: MFDFA returning Legendre-transform Δα.     |
+//| confidence = mean R² of the log(F) ~ log(s) regressions.         |
+//| Returns Δα = max(α) − min(α). Returns 0.0 on failure.            |
+//|                                                                  |
+//| Outlier filter: |r| >= 0.1 removed before profile construction.  |
+//| MFDFA is sensitive to extreme values at negative q because large |
+//| fluctuations dominate the q-th moment. Rollovers and bad ticks   |
+double MultifractalSpectrum(const string symbol, const int tf,
+                             const int period, double &confidence,
+                             int q_min = -5, int q_max = 5)
+         if(seg_cnt == 0) continue;
+         double Fq = (q == 0.0) ? MathExp(F_sum/seg_cnt)
+                                 : MathPow(F_sum/seg_cnt, 1.0/q);
+         if(Fq <= DBL_MIN_POSITIVE) continue;
+   if(r2_cnt > 0) confidence = r2_sum / r2_cnt;
+   //--- Legendre transform: α(q) = h(q) + q·h'(q)
+   //--- h'(q) by central finite differences
+   double alpha[];
+//| PopulateMultifractalAnalysis: writes multifractal_width (Δα) and |
+//| dimension_confidence (mean R²) into RobustFractalAnalysis.       |
+//| Sessions with confidence < 0.65 have unreliable Δα estimates.    |
+//+------------------------------------------------------------------+
+void PopulateMultifractalAnalysis(const string symbol, const int tf,
+                                   const int period, RobustFractalAnalysis &result)
+  {
+   result.multifractal_width    = 0.0;
+   result.dimension_confidence  = 0.0;
+   if(!ValidateSymbolV2(symbol) || period < 100) return;
+   double conf = 0.0;
+
+### 
+### Implementation 2: Realized and Duration-Adjusted Volatility
+RealizedVolatility() returns the square root of the mean of squared log-returns. It is the benchmark estimator: it makes no assumption about memory or regime structure. DurationVolatility() annualizes RV using the bar duration. The original implementation used 252 × 86,400 seconds as the denominator, which assumes round-the-clock trading. The NY session runs 09:30–16:00 ET — 23,400 seconds per day. The corrected function uses 23,400 for M1 data and the full-day figure for daily and higher timeframes.
+```
+//| RealizedVolatility: sqrt(mean(squared log-returns))              |
+double RealizedVolatility(const string symbol, const int tf,
+                           const int window, int shift = 0)
+//| DurationVolatility: session-aware annualized realized volatility.|
+//| Uses NY session seconds (23,400) for M1; full-day (86,400) for   |
+//| H1 and above. The previous version used 86,400 for all frames,   |
+//| which overstated annualized vol for session-filtered M1 data.    |
+double DurationVolatility(const string symbol, const int tf,
+//+------------------------------------------------------------------+
+                           const int bars, int shift = 0)
+### Implementation 3: Fractional Volatility
+FractionalVolatility() applies the ARFIMA memory kernel to squared returns. Weights decay as kd−1, where k is the lag and d is the GPH estimate from Part 3. When d = 0, the weights are flat and the result equals standard realized volatility. When d > 0, distant observations receive relatively more weight; the volatility estimate incorporates long-range structure. When d < 0, weights decay faster than a uniform average, reflecting anti-persistence.
+//| FractionalVolatility: ARFIMA memory-kernel weighted volatility.  |
+//| Weights: w_k = k^(d-1). When d = 0, equals realized volatility.  |
+//| Simplification: d from returns applied to squared returns.       |
+double FractionalVolatility(const string symbol, const int tf,
+                             const int window, double d = -1.0)
+  {
+
+### 
+### Implementation 4: FIGARCH-Inspired Proxy
+FIGARCHVolatility() is **not** a fitted FIGARCH model. A full FIGARCH requires maximum-likelihood estimation, which is computationally unsuitable for real-time M1 use on sessions of 390 bars. The function is a power-law weighted conditional variance proxy, where the weight recursion w j = w j−1 ·(j−1−d)/j is the truncated fractional differencing kernel of Baillie et al. (1996), applied directly to squared returns. The baseline variance uses bipower variation rather than the sample mean, making the floor robust to isolated jump returns. The original hardcoded omega = 1e-6 and beta = 0.85 are removed; the function now relies entirely on the GPH d from Part 3 and the bipower baseline.
+```
+//| FIGARCHVolatility: FIGARCH-inspired power-law conditional proxy. |
+//|                                                                  |
+//| THIS IS NOT A FITTED FIGARCH MODEL. It is a power-law weighted   |
+//| realized volatility proxy using the fractional differencing      |
+//| kernel of Baillie et al. (1996). The memory exponent d comes     |
+//| from the Part 3 GPH estimate. The baseline is bipower variation, |
+//+------------------------------------------------------------------+
+double FIGARCHVolatility(const string symbol, const int tf,
+                          const int window, double d = -1.0)
+### Implementation 5: Clustering Index, GJR Leverage Effect, Bipower Jump Intensity
+VolatilityClusteringIndex() is unchanged: it returns the lag-1 autocorrelation of squared returns, which is a direct diagnostic for the ARCH effect.
+LeverageEffect() is substantially revised. The original implementation measured the ratio of next-bar variance after negative versus positive returns — a simple heuristic, not a recognized leverage effect model. The revision fits a GJR-GARCH(1,1,1) model via the Dube volatility library and returns the normalized asymmetry ratio γ/(α + γ + β). This ratio is scale-independent, stationary-constrained (the function returns 0.0 if α + γ/2 + β ≥ 1), and directly comparable across sessions. A compile-time flag USE\_GJR\_LEVERAGE controls the path. If the Dube library is not installed, the function compiles and runs using the original sign-conditioned variance fallback.
+JumpIntensity() now uses bipower variation as the baseline rather than the sample standard deviation. A return is classified as a jump when its squared value exceeds σ mult ² × BPV. This is more robust because the sample σ is inflated by the very returns it is trying to classify.
+//| VolatilityClusteringIndex: lag-1 autocorrelation of squared rets |
+//| Diagnostic for the ARCH effect. Values above 0.1 confirm         |
+//| clustering; above 0.2 indicate strong, predictable volatility.   |
+double VolatilityClusteringIndex(const string symbol, const int tf,
+                                   const int window)
+  {
+//| LeverageEffect: GJR-GARCH(1,1,1) asymmetry parameter.            |
+//| Returns γ/(α + γ + β) in [0, 1] — normalized, scale-free.        |
+//| Requires Dube volatility library. Add before your #include:      |
+//|                                                                  |
+//|   #define USE_GJR_LEVERAGE                                       |
+//| Without this define, falls back to next-bar variance asymmetry.  |
+//| Returns 0.0 if model fails to converge or stationarity           |
+//| condition α + γ/2 + β >= 1 is violated.                          |
+//+------------------------------------------------------------------+
+double LeverageEffect(const string symbol, const int tf,
+
+#ifdef USE_GJR_LEVERAGE
+   //--- GJR-GARCH path (Dube library required)
+   //--- Model: σ²_t = ω + α·ε²_{t-1} + γ·I_{t-1}·ε²_{t-1} + β·σ²_{t-1}
+   //--- params order after fit(): [mu, omega, alpha, gamma, beta]
+   vector obs;
+   spec.vol_model_type   = VOL_GJR_GARCH;
+   spec.garch_p = 1;
+   spec.garch_o = 1;
+   spec.garch_q = 1;
+   ConstantMean gjr_model;
+   if(!gjr_model.initialize(spec)) return 0.0;
+   ArchModelResult res = gjr_model.fit(SCALE);
+   if(!res.params.Size()) return 0.0;
+   double alpha = res.params[2];
+   return MathMax(0.0, MathMin(1.0, gamma / denom));
+#else
+   //--- Fallback: next-bar variance asymmetry proxy
+   //--- Measures sign-conditioned next-bar squared return ratio.
+   return MathMax(-1.0, MathMin(1.0, (vn - vp) / dn));
+#endif
+  }
+
+//| Baseline: bipower variation BPV = (π/2)·mean(|r_t|·|r_{t-1}|).   |
+//| A return is a jump when r²_t > sigma_mult² × BPV.                |
+//| BPV is robust to isolated jumps; sample σ is not.                |
+//| Values above 2% indicate elevated activity; above 5% indicates   |
+//| data artifacts (bad ticks, rollovers). Reject if > 5%.           |
+double JumpIntensity(const string symbol, const int tf,
+                      const int window, double sigma_mult = 3.0)
+  {
+   if(!ValidateSymbolV2(symbol) || window < 5 || sigma_mult <= 0.0) return 0.0;
+   double close[];
+   if(SafeCopyClose(symbol, tf, 0, window + 1, close) < window + 1) return 0.0;
+   if(bpv <= DBL_MIN_POSITIVE) return 0.0;
+   double threshold_sq = sigma_mult * sigma_mult * bpv;
+   int    jumps = 0;
+   for(int i = 0; i < valid; i++)
+      if(returns[i] * returns[i] > threshold_sq) jumps++;
+   return (double)jumps / valid;
+### 
+### Implementation 6: PopulateVolatilityAnalysis Wrapper
+The wrapper signature is unchanged from the original submission. The asymmetry field is now populated with the standardized skewness of log-returns — a distributional diagnostic — rather than a hardcoded zero. The volatility\_confidence field in RobustFractalAnalysis is set to the clustering index as before.
+//+------------------------------------------------------------------+
+//| PopulateVolatilityAnalysis: fills all VolatilityAnalysis fields. |
+//| asymmetry = standardized skewness of log-returns.                |
+//| This is a distributional diagnostic. The volatility asymmetry    |
+void PopulateVolatilityAnalysis(const string symbol, const int tf,
+                                  const int period, VolatilityAnalysis &result,
+                                  RobustFractalAnalysis &rfa)
+   result.realized_vol     = RealizedVolatility(symbol, tf, period, 0);
+   result.duration_vol     = DurationVolatility(symbol, tf, period, 0);
+   result.fractional_vol   = FractionalVolatility(symbol, tf, period, -1.0);
+   result.figarch_vol      = FIGARCHVolatility(symbol, tf, period, -1.0);
+   result.clustering_index = VolatilityClusteringIndex(symbol, tf, period);
+   result.leverage_effect  = LeverageEffect(symbol, tf, period);
+   result.jump_intensity   = JumpIntensity(symbol, tf, period, 3.0);
+   //--- Standardized skewness of log-returns
+   double close[];
+   result.asymmetry = 0.0;
+   if(SafeCopyClose(symbol, tf, 0, period + 1, close) >= period + 1)
+     {
+            for(int i=0;i<vld;i++) { double z=(rets[i]-mu)/sd; sk += z*z*z; }
+            result.asymmetry = sk / vld;
+           }
+        }
+   if(!MathIsValidNumber(result.asymmetry))        result.asymmetry        = 0.0;
+   //--- Volatility confidence proxy
+   rfa.volatility_confidence = result.clustering_index;
+   if(!MathIsValidNumber(rfa.volatility_confidence)) rfa.volatility_confidence = 0.0;
+  }
+
+### 
+### Empirical Study: NQ M1 Volatility and Multifractal Width
+All estimators were applied to 514 NY sessions of NQ E-mini Nasdaq 100 futures (CME Globex), covering May 2024 through May 2026. The NY session filter retains bars with open time in [14:30, 21:00) UTC. Sessions with fewer than 300 M1 bars are excluded. Data were sourced from a retail futures data provider with CME Group as the underlying exchange. The asymmetry (skewness) field is winsorized at the 1st and 99th percentiles (−1.39 and 1.85) to remove three sessions whose extreme skewness values (maximum 7.81) indicated intraday data artifacts not captured by the |r| < 0.1 return filter. All other fields use raw values. All 514 sessions pass the MFDFA minimum R² threshold of 0.65 (observed minimum R² = 0.851). The leverage values reported in this section come from the sign-conditioned variance proxy computed in the Python analysis script. In MQL5, LeverageEffect() uses GJR-GARCH(1,1,1) via the Dube library when USE\_GJR\_LEVERAGE is defined; in that mode it returns values in [0, 1] only. The proxy returns values in [−1, +1]; therefore, negative leverage can appear, as observed during the April 2025 tariff episode.
+![Figure 1 — NQ realized volatility time series with regime shading](https://c.mql5.com/2/218/NQ_P4_Fig1.png)
+| Fractional Vol (per bar) | 0.00036 | 0.00015 | 0.00010 | 0.00024 | 0.00033 | 0.00044 | 0.00220 |
+| FIGARCH proxy (per bar) | 0.00041 | 0.00017 | 0.00012 | 0.00028 | 0.00037 | 0.00049 | 0.00290 |
+| Clustering Index | 0.146 | 0.096 | −0.031 | 0.076 | 0.138 | 0.203 | 0.575 |
+| Leverage Effect (proxy) | 0.046 | 0.132 | −0.596 | −0.036 | 0.055 | 0.127 | 0.445 |
+| Jump Intensity (bipower 3σ) | 1.40% | 0.57% | 0.00% | 1.03% | 1.29% | 1.80% | 3.60% |
+| Asymmetry (skewness, winsorized) | −0.071 | 0.555 | −1.386 | −0.367 | −0.139 | 0.169 | 1.850 |
+| d (GPH estimate) | −0.010 | 0.077 | −0.246 | −0.061 | −0.011 | 0.044 | 0.202 |
+Figure 2 — Distribution of six metrics by regime. Duration vol (top left) shows the April 2025 tariff shock as the clear outlier. Clustering index (top centre) is notably lower during acute stress regimes, indicating that volatility becomes less predictable bar-to-bar during crises. Δα (bottom centre) is consistently high across all regimes.
+The three volatility estimators (realized, fractional, FIGARCH proxy) track each other with pairwise correlations above 0.97. The fractional vol is on average 14% below realized vol, consistent with the near-zero, slightly anti-persistent d = −0.010 from Part 3: mild anti-persistence downweights the most recent observations. The FIGARCH proxy sits between the two.
+Two findings from the regime comparison warrant comment. First, the clustering index is *lower* during acute stress regimes (0.107 for the tariff shock vs 0.147 for normal sessions). During acute stress, volatility becomes more erratic and less predictable bar-to-bar, not more clustered. The ARCH effect weakens precisely when it would be most useful for forecasting. Second, the leverage proxy is negative during the April 2025 tariff shock (−0.011), meaning upward moves amplified volatility more than downward moves. This is consistent with short-squeeze dynamics and snap-back rallies observed during tariff-driven dislocations. However, a single episode on one instrument is insufficient to establish causation. The GJR-GARCH implementation in MQL5 is designed to capture asymmetric variance responses through the γ parameter, though the empirical values here reflect the proxy rather than the fitted GJR model.
+![Figure 3 — NQ scatter plots: clustering vs leverage and Δα vs vol](https://c.mql5.com/2/218/NQ_P4_Fig3.png)
+Figure 3 — Left: clustering index against leverage proxy across 514 sessions (r = 0.127, p = 0.004). The two measures appear largely independent, providing non-redundant information. Stress regimes (coloured points) cluster in different quadrants, particularly the negative leverage of the April 2025 tariff shock. Right: Δα against realized volatility (r = 0.022, p = 0.616) — multifractality is uncorrelated with volatility level, consistent with it measuring a structural property independent of vol magnitude.
+### Multifractal Width (Δα — Legendre Transform)
+All 514 sessions produce valid MFDFA estimates with mean R² confidence of 0.972 (minimum 0.851). Every session exceeds the 0.65 confidence threshold, meaning no session needs to be flagged as unreliable on quality grounds. This is stronger than the US100 pilot study, where 7 of 72 sessions fell below the threshold — consistent with genuine futures microstructure tending to produce more regular scaling behavior than a CFD proxy, though other factors may also contribute to this difference.
+| Statistic | Δα | R² confidence |
+| --- | --- | --- |
+| Valid sessions | 514 | 514 |
+
+The Δα values on NQ futures are substantially higher than those from the US100 CFD pilot study (median 0.875 vs 0.498). This is expected: genuine exchange-traded futures exhibit stronger multifractality than CFD proxies because they reflect actual order flow heterogeneity — the interaction of informed traders, market makers, HFT algorithms, and institutional flow creates richer scaling structure than a broker-constructed index-tracking product. This is consistent with the article's central claim: the near-zero H and d from Parts 2 and 3 are averages across strongly opposing memory regimes, not evidence of a genuinely memoryless series.
+**Table 2 – Regime Summary (514 sessions)**
+| Regime | Sessions | Mean vol (%) | vs Normal | Clustering | Leverage | Mean Δα |
+| --- | --- | --- | --- | --- | --- | --- |
+| Normal | 468 | 12.52 | — | 0.147 | 0.048 | 0.891 |
+Δα regime distribution:
+- Δα < 0.76 (moderate mixing): 125 sessions (24.3%)
+- Δα 0.76–0.99 (strong mixing — typical): 265 sessions (51.6%)
+- Δα > 0.99 (extreme mixing): 124 sessions (24.1%)
+Near-monofractal sessions (Δα < 0.30) are absent from the 2-year NQ sample. The minimum observed Δα is 0.460. This means the lower threshold from the US100 pilot study (Δα < 0.30 = near-monofractal) does not apply to NQ futures. All sessions exhibit at least moderate multifractality; the question is only how strong the mixing is.
+### Practical Interpretation and Trading Thresholds
+All thresholds below are derived from the empirical distribution across 514 NQ M1 sessions, May 2024–May 2026. They are heuristic operational cutoffs based on empirical quantiles, not formal hypothesis-test critical values or decision-theoretically optimal boundaries. They are specific to NQ M1 and this sample period. Users should treat them as starting points and re-derive them on their own instrument, timeframe, and data window.
+| Measure | Threshold | Basis | Interpretation | Action |
+| --- | --- | --- | --- | --- |
+| Clustering Index | > 0.20 | 75th pct | Strong ARCH effect; volatility predictable bar-to-bar | Use volatility-targeted sizing; prefer FIGARCH proxy |
+| Clustering Index | < 0.08 | 25th pct | Weak clustering; returns near i.i.d. | Simpler realized vol sufficient |
+| Leverage Effect (GJR) | > 0.13 | 75th pct | Significant asymmetry; negative shocks amplify vol more | Widen stops on short side; reduce long-entry size |
+| Leverage Effect (GJR) | < −0.10 | — | Inverse asymmetry (stress snap-back regime) | Do not apply standard leverage logic; reduce size |
+| Jump Intensity | > 2.1% | 90th pct | Elevated extreme returns | Scale back position; validate data feed |
+| Jump Intensity | > 5% | — | Likely data artifact | Reject session data; do not trade |
+| Δα (multifractal) | < 0.76 | 25th pct | Moderate mixing; H and d partially reliable | Fractional vol preferred; use H/d with caution |
+| Δα (multifractal) | > 0.99 | 75th pct | Extreme mixing; H and d unreliable averages | Prefer the FIGARCH-inspired proxy; treat H/d as less informative |
+| R² confidence | < 0.65 | — | MFDFA estimate unreliable (rare on NQ) | Treat Δα as unavailable |
+
+```
+//--- Example: adaptive position sizing using volatility and multifractal width
+RobustFractalAnalysis rfa;
+VolatilityAnalysis va;
+PopulateMultifractalAnalysis(Symbol(), PERIOD_M1, 390, rfa);
+PopulateVolatilityAnalysis(Symbol(), PERIOD_M1, 90, va, rfa);
+//--- Select volatility estimate based on regime
+double current_vol;
+if(rfa.multifractal_width > 0.99 && rfa.dimension_confidence > 0.65)
+   current_vol = va.figarch_vol;       // strong mixing: use memory proxy
+else if(va.clustering_index > 0.20)
+### 
+### Folder Structure and Include Path
+All Part 4 functions are added to the existing foundation header. No new files are created. The folder structure remains:
+└── Indicators\
+    └── HurstProfile\
+        ├── HurstProfile.mq5
+        └── Includes\
+            └── MicroStructure_Foundation.mqh
+#define USE_GJR_LEVERAGE
+#include "Includes\MicroStructure_Foundation.mqh"
+```
+
+### Conclusion
+This article revised and extended the volatility functions in MicroStructure\_Foundation.mqh, addressing the methodological weaknesses identified during moderator review.
+Three principal changes distinguish this submission from the original. First, LeverageEffect() now fits a GJR-GARCH(1,1,1) model via the Dube library, returning the normalized asymmetry ratio γ/(α + γ + β) rather than a next-bar variance heuristic. Second, MultifractalSpectrum() now returns the Legendre-transform Δα with an R² confidence field, replacing the τ-spread proxy. Third, JumpIntensity() uses bipower variation as the baseline, making the threshold robust to the jump contamination it is designed to detect.
+The empirical study on 514 NQ M1 futures sessions (May 2024–May 2026) confirms: the three volatility estimators track each other with pairwise correlations above 0.97; the bipower jump intensity averages 1.4% with no session exceeding 5%; the Legendre-transform Δα has median 0.875 with mean R² of 0.972; and all 514 sessions pass the R² confidence threshold of 0.65.
+The practical outcome is a fully populated VolatilityAnalysis struct: realized\_vol and fractional\_vol measure level and memory; clustering\_index measures bar-to-bar predictability; leverage\_effect (GJR) measures asymmetric response; jump\_intensity flags contaminated sessions; asymmetry describes the return distribution; and the FIGARCH proxy gives a memory-adjusted conditional variance when Δα indicates strong regime mixing. Part 5 will use these measures as conditioning inputs to microstructure noise estimation and order flow analysis.
+### References
+- [Andersen, T.G., Bollerslev, T. & Diebold, F.X. (2007). Roughing it up: Including jump components in the measurement, modeling, and forecasting of return volatility. *Review of Economics and Statistics*, 89(4), 701–720.](https://doi.org/10.1162/rest.2007.89.4.701 "https://doi.org/10.1162/rest.2007.89.4.701")
+- [Brown, M. (2026e). Intraday Microstructure Dynamics of E-mini S&P 500 Futures: Volatility Regimes, Liquidity Decay, and Long Memory in Realized Volatility. SSRN Working Paper 6847024.](https://papers.ssrn.com/abstract=6847024 "Intraday Microstructure Dynamics of E-mini S&P 500 Futures")
+- [Dmitrievsky, M. (2019). Grokking market "memory" through differentiation and entropy analysis. MQL5 Community Articles.](https://www.mql5.com/en/articles/6854)
+- [Engle, R.F. (1982). Autoregressive Conditional Heteroskedasticity. *Econometrica*, 50(4), 987–1007.](https://doi.org/10.2307/1912773 "https://doi.org/10.2307/1912773")
+- [Glosten, L.R., Jagannathan, R. & Runkle, D.E. (1993). On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks. *Journal of Finance*, 48(5), 1779–1801.](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x "https://doi.org/10.1111/j.1540-6261.1993.tb05128.x")
+[HurstProfile.mq5](https://www.mql5.com/en/articles/download/22638/HurstProfile.mq5 "Download HurstProfile.mq5")
+(12.98 KB)
+Replace static drawings with automated, stateful zones controlled by a CZone wrapper. The system synchronizes user rectangles, sizes zones by ATR, validates breakouts using consecutive closes, applies ghost/deactivation rules, merges nearby structures by a 1.5×ATR threshold, and projects edges forward. Traders gain durable levels that update themselves and reduce repetitive chart management.
+![From Basic to Intermediate: Objects (II)](https://c.mql5.com/2/152/15987-do-b-sico-ao-intermedi-rio-logo.png)
+![Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven](https://c.mql5.com/2/144/18111-implementaci-n-de-breakeven-logo.png)
+[Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven](https://www.mql5.com/en/articles/18111)
+This article completes the implementation of ATR- and RRRR-based breakeven mechanisms in MQL5 and develops, from scratch, a class that makes it easy to switch breakeven modes without having to enter the parameters again. To evaluate the effectiveness of each breakeven type, several backtests are run, analyzing their advantages and disadvantages in the context of algorithmic trading.
+![Market Simulation (Part 24): Getting Started with SQL (VII)](https://c.mql5.com/2/150/13059-simula-o-de-mercado-parte-24-logo.png)
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&uid=&ref=https://www.mql5.com/en/articles/22638&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121798919469795459)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+This article revised and extended the volatility functions in MicroStructure\_Foundation.mqh, addressing the methodological weaknesses identified during moderator review.
+
+Three principal changes distinguish this submission from the original. First, LeverageEffect() now fits a GJR-GARCH(1,1,1) model via the Dube library, returning the normalized asymmetry ratio γ/(α + γ + β) rather than a next-bar variance heuristic. Second, MultifractalSpectrum() now returns the Legendre-transform Δα with an R² confidence field, replacing the τ-spread proxy. Third, JumpIntensity() uses bipower variation as the baseline, making the threshold robust to the jump contamination it is designed to detect.
+
+The empirical study on 514 NQ M1 futures sessions (May 2024–May 2026) confirms: the three volatility estimators track each other with pairwise correlations above 0.97; the bipower jump intensity averages 1.4% with no session exceeding 5%; the Legendre-transform Δα has median 0.875 with mean R² of 0.972; and all 514 sessions pass the R² confidence threshold of 0.65.
+
+The practical outcome is a fully populated VolatilityAnalysis struct: realized\_vol and fractional\_vol measure level and memory; clustering\_index measures bar-to-bar predictability; leverage\_effect (GJR) measures asymmetric response; jump\_intensity flags contaminated sessions; asymmetry describes the return distribution; and the FIGARCH proxy gives a memory-adjusted conditional variance when Δα indicates strong regime mixing. Part 5 will use these measures as conditioning inputs to microstructure noise estimation and order flow analysis.
+
+### 
+
+### References
+
+- [Andersen, T.G., Bollerslev, T. & Diebold, F.X. (2007). Roughing it up: Including jump components in the measurement, modeling, and forecasting of return volatility. *Review of Economics and Statistics*, 89(4), 701–720.](https://doi.org/10.1162/rest.2007.89.4.701 "https://doi.org/10.1162/rest.2007.89.4.701")
+- [Baillie, R.T., Bollerslev, T. & Mikkelsen, H.O. (1996). Fractionally integrated generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 74(1), 3–30.](https://doi.org/10.1016/0304-4076(95)01749-6 "https://doi.org/10.1016/0304-4076(95)01749-6")
+- [Black, F. (1976). Studies of stock price volatility changes. *Proceedings of the 1976 Meetings of the American Statistical Association*, Business and Economic Statistics Section, 177–181.](https://scholar.google.com/scholar?q=Black+1976+stock+price+volatility+changes "https://scholar.google.com/scholar?q=Black+1976+stock+price+volatility+changes")
+- [Bollerslev, T. (1986). Generalized Autoregressive Conditional Heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327.](https://doi.org/10.1016/0304-4076(86)90063-1 "https://doi.org/10.1016/0304-4076(86)90063-1")
+- [Brown, M. (2026a). Market Microstructure in MQL5: Robust Foundation (Part 1). MQL5 Community Articles.](https://www.mql5.com/en/articles/22263 "Market Microstructure in MQL5: Robust Foundation (Part 1)")
+- [Brown, M. (2026b). Market Microstructure in MQL5: Measuring Long Memory (Part 2). MQL5 Community Articles.](https://www.mql5.com/en/articles/22553 "Market Microstructure in MQL5: Measuring Long Memory (Part 2)")
+- [Brown, M. (2026c). Market Microstructure in MQL5: Estimating ARFIMA d with GPH (Part 3). MQL5 Community Articles.](https://www.mql5.com/en/articles/22598 "Market Microstructure in MQL5: Estimating ARFIMA d with GPH (Part 3)")
+- [Brown, M. (2026d). Measuring the Memory Structure of Intraday Returns: Evidence from E-mini S&P 500 Futures. SSRN Working Paper 6809080.](https://papers.ssrn.com/abstract=6809080 "Measuring the Memory Structure of Intraday Returns")
+- [Brown, M. (2026e). Intraday Microstructure Dynamics of E-mini S&P 500 Futures: Volatility Regimes, Liquidity Decay, and Long Memory in Realized Volatility. SSRN Working Paper 6847024.](https://papers.ssrn.com/abstract=6847024 "Intraday Microstructure Dynamics of E-mini S&P 500 Futures")
+- [Dmitrievsky, M. (2019). Grokking market "memory" through differentiation and entropy analysis. MQL5 Community Articles.](https://www.mql5.com/en/articles/6854)
+- [Engle, R.F. (1982). Autoregressive Conditional Heteroskedasticity. *Econometrica*, 50(4), 987–1007.](https://doi.org/10.2307/1912773 "https://doi.org/10.2307/1912773")
+- [Glosten, L.R., Jagannathan, R. & Runkle, D.E. (1993). On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks. *Journal of Finance*, 48(5), 1779–1801.](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x "https://doi.org/10.1111/j.1540-6261.1993.tb05128.x")
+- [Yun, K.T. (2026a). Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5. *MQL5 Community Articles*, article 22258.](https://www.mql5.com/en/articles/22258 "Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5")
+- [Yun, K.T. (2026b). Building Volatility Models in MQL5 (Part III): Implementing the SLSQP Algorithm for Model Estimation. *MQL5 Community Articles*, article 22714.](https://www.mql5.com/en/articles/22714 "Building Volatility Models in MQL5 (Part III): Implementing the SLSQP Algorithm for Model Estimation")
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22638.zip "Download all attachments in the single ZIP archive")
+
+[HurstProfile.mq5](https://www.mql5.com/en/articles/download/22638/HurstProfile.mq5 "Download HurstProfile.mq5")
+(12.98 KB)
+
+[MicroStructure\_Foundation.mqh](https://www.mql5.com/en/articles/download/22638/MicroStructure_Foundation.mqh "Download MicroStructure_Foundation.mqh")
+(77.05 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Interactive Supply and Demand Zone Manager in MQL5 (Part I): From Manual to Automated Lifecycle](https://c.mql5.com/2/219/22666-interactive-supply-and-demand-logo.png)
+[Interactive Supply and Demand Zone Manager in MQL5 (Part I): From Manual to Automated Lifecycle](https://www.mql5.com/en/articles/22666)
+
+Replace static drawings with automated, stateful zones controlled by a CZone wrapper. The system synchronizes user rectangles, sizes zones by ATR, validates breakouts using consecutive closes, applies ghost/deactivation rules, merges nearby structures by a 1.5×ATR threshold, and projects edges forward. Traders gain durable levels that update themselves and reduce repetitive chart management.
+
+![From Basic to Intermediate: Objects (II)](https://c.mql5.com/2/152/15987-do-b-sico-ao-intermedi-rio-logo.png)
+[From Basic to Intermediate: Objects (II)](https://www.mql5.com/en/articles/15987)
+
+In today's article, we will look at how to control some object properties in a simple way using code. We will also see how a custom application can place more than one object on the same chart. In addition, we will begin to understand the importance of assigning a short name to any indicator we plan to implement.
+
+![Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven](https://c.mql5.com/2/144/18111-implementaci-n-de-breakeven-logo.png)
+[Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven](https://www.mql5.com/en/articles/18111)
+
+This article completes the implementation of ATR- and RRRR-based breakeven mechanisms in MQL5 and develops, from scratch, a class that makes it easy to switch breakeven modes without having to enter the parameters again. To evaluate the effectiveness of each breakeven type, several backtests are run, analyzing their advantages and disadvantages in the context of algorithmic trading.
+
+![Market Simulation (Part 24): Getting Started with SQL (VII)](https://c.mql5.com/2/150/13059-simula-o-de-mercado-parte-24-logo.png)
+[Market Simulation (Part 24): Getting Started with SQL (VII)](https://www.mql5.com/en/articles/13059)
+
+In the previous article, we completed the necessary introduction to SQL. And, in my opinion, we properly clarified what we wanted to show and explain about SQL. This was done so that anyone who comes to look at the market replay/simulation system being built can at least get an idea of what may be happening there. The point is that there is no sense in programming things that SQL handles perfectly.
+
+[![](https://www.mql5.com/ff/sh/ub4fqgrk4rkv8gz9z2/01.png)
+![](https://www.mql5.com/ff/sh/ub4fqgrk4rkv8gz9z2/02.png)
+
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&uid=&ref=https://www.mql5.com/en/articles/22638&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121798919469795459)

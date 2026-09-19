@@ -1,0 +1,400 @@
+20: # News Trading Made Easy (Part 5): Performing Trades (II)
+25: | 6 November 2024 at 11:42
+36: ### 
+38: ### Introduction
+42: ### Why use stop orders?
+54: - Buy Stop Order: Placed above the current market price. It triggers a buy order when the price rises, capturing upward momentum after positive news.
+55: - Sell Stop Order: Placed below the current market price. It triggers a sell order when the price drops, taking advantage of negative news.
+79: - Positive NFP Data: The dollar strengthens, causing EUR/USD to fall, triggering your sell stop order.
+80: - Negative NFP Data: The dollar weakens, causing EUR/USD to rise, triggering your buy stop order.
+86: ### Account Properties Class
+96: ```
+97: #include <Trade/AccountInfo.mqh>
+98: ```
+108: ```
+110: ```
+116: - Return type: The function returns an integer.
+117: - Initialization: The variable num is initialized to 0. This will store the count of orders that match the desired types
+119: ```
+123: ```
+127: - OrdersTotal() is an MQL5 function that returns the total number of orders.
+128: - A loop is used to iterate through all of the orders, from index 0 to OrdersTotal() - 1.
+130: ```
+132: ```
+136: - OrderGetTicket(i) is an MQL5 function that retrieves the ticket number for the order at index i. Each order has a unique ticket number.
+137: - If the ticket number is greater than 0, it means that the order is valid, and the code proceeds to check its type.
+139: ```
+141: ```
+145: - OrderGetInteger(ORDER\_TYPE) retrieves the type of the order at index i. This value corresponds to an int that represents various types of orders (buy limit, sell stop, etc.).
+146: - The switch statement checks the type of each order and compares it with predefined order type constants.
+148: ```
+150: ```
+154: - Order types:
+156: - ORDER\_TYPE\_BUY\_LIMIT: A buy limit order.
+157: - ORDER\_TYPE\_BUY\_STOP: A buy stop order.
+158: - ORDER\_TYPE\_BUY\_STOP\_LIMIT: A buy stop limit order.
+159: - ORDER\_TYPE\_SELL\_LIMIT: A sell limit order.
+160: - ORDER\_TYPE\_SELL\_STOP: A sell stop order.
+161: - ORDER\_TYPE\_SELL\_STOP\_LIMIT: A sell stop limit order.
+165: ```
+186: ```
+190: - After iterating through all the orders and counting the valid ones, the function returns the total count stored in num.
+192: ```
+195: ```
+197: ### Risk Management Class
+201: ```
+209: ```
+217: - Represents a market position order.
+218: - This type opens based on the market's current price, that are executed immediately at the current price.
+219: - Requires event impact.
+223: - Represents stop orders.
+224: - Stop orders are conditional orders that execute only when the price reaches a certain level. Both buy-stop and sell-stop orders are opened.
+225: - Doesn't require event impact.
+229: - Represents a single stop order.
+230: - An individual buy-stop or sell-stop order is opened.
+231: - Requires event impact.
+235: - myOrderSelection is a variable that will store the current order type selected by the trader.
+239: In the function below, the volume limit will change depending on the OrderTypeSelection, when the myOrderSelection is StopOrdersType(STOP ORDERS) the volume limit is halved to accommodate both the buy-stop and sell-stop order as both need to be opened at the same time, whereas MarketPositionType(MARKET POSITION) and StopOrderType(SINGLE STOP ORDER) only open single orders.
+241: ```
+250: ```
+252: ### Sessions Class
+254: The code below defines a CSessions class, which is responsible for managing and tracking the trading session times for a particular trading symbol. It uses methods from a base class CTimeManagement (included via Timemanagement.mqh) to determine if a trading session has started, ended, and to get the session end time. For context, we need to know when the trading session will end to close trades be
+262: Markets can be highly volatile overnight, especially in response to economic events, geopolitical developments, or news from other global markets. Since major events can occur outside normal trading hours, positions held overnight are exposed to unpredictable price movements. These moves can cause:
+264: - Significant gaps in price when the market opens the next day, potentially resulting in substantial gains or losses.
+265: - Limited ability to respond to rapid changes, since liquidity can be low and your ability to modify or exit positions quickly may be constrained.
+269: Liquidity tends to be lower during overnight trading sessions because fewer market participants are active. This can lead to:
+271: - Wider spreads between the bid and ask prices, increasing transaction costs.
+272: - Slippage, where trades execute at a different price than expected due to the lack of market depth.
+273: - Difficulty closing large positions without moving the market, potentially causing unfavorable price execution.
+279: - Larger-than-expected losses, especially if the price moves against your position.
+280: - Stop-loss orders being ineffective, as gaps can skip over your predetermined stop levels, executing your order at a much worse price than expected.
+286: - Turn profitable trades into losing ones, especially if held for extended periods.
+287: - Vary depending on market conditions, making them harder to predict and plan for.
+291: During the night, especially in markets with limited or irregular hours, trade execution may be slower or less precise due to:
+293: - Broker operating hours: Some brokers may not support certain trade actions or modifications outside of their regular operating hours, reducing your ability to respond to market conditions.
+295: ```
+301: #include "Timemanagement.mqh"
+303: //|Sessions Class                                                    |
+311:    bool              isSessionStart(int offsethour=0,int offsetmin=0);
+313:    bool              isSessionEnd(int offsethour=0,int offsetmin=45);
+315:    datetime          SessionEnd(int offsethour=0,int offsetmin=45);
+318: //|Check if trading Session has started                              |
+320: bool CSessions::isSessionStart(int offsethour=0,int offsetmin=0)
+328:       //--- Get the session dates for the current symbol and Day of week
+329:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+331:          //--- Check if the end date's hour is at midnight
+332:          if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+334:             //--- Adjust the date to one minute before midnight
+354:       DateFrom[0] = TimePlusOffset(DateFrom[0],HoursS(offsethour));
+358:          //--- Check if the current time is within the trading session
+359:          if(TimeIsInRange(Time(Today(ReturnHour(DateFrom[i]),ReturnMinute(DateFrom[i])))
+360:                           ,Time(Today(ReturnHour(DateTo[i]),ReturnMinute(DateTo[i])))))
+368:       //--- If there are no trading session times
+375: //|Check if trading Session has ended                                |
+377: bool CSessions::isSessionEnd(int offsethour=0,int offsetmin=45)
+380:    datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+385:       //--- Get the session dates for the current symbol and Day of week
+386:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+388:          //--- Check if the end date's hour is at midnight
+389:          if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+391:             //--- Adjust the date to one minute before midnight
+418:       //--- If there are no trading session times
+421:    /* get the current time and modify the hour and minute time to the lastdate variable
+422:    and assign the new datetime to sessionend variable*/
+423:    sessionend =  Time(Today(ReturnHour(lastdate),ReturnMinute(lastdate)));
+424: //--- Re-adjust the sessionend dates with the minute and hour offsets
+425:    sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+426:    sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+428: //--- Check if sessionend date is more than the current time
+437: //|Get Session End datetime                                          |
+439: datetime CSessions::SessionEnd(int offsethour=0,int offsetmin=45)
+442:    datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+447:       //--- Get the session dates for the current symbol and Day of week
+448:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+450:          //--- Check if the end date's hour is at midnight
+451:          if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+453:             //--- Adjust the date to one minute before midnight
+480:       //--- If there are no trading session times
+483:    /* get the current time and modify the hour and minute time to the lastdate variable
+484:    and assign the new datetime to sessionend variable*/
+485:    sessionend = Time(Today(ReturnHour(lastdate),ReturnMinute(lastdate)));
+486: //--- Re-adjust the sessionend dates with the minute and hour offsets
+487:    sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+488:    sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+493: ```
+499: - Inheritance:
+501: - The CSessions class inherits from CTimeManagement, so it has access to any time management-related methods and attributes defined in that base class.
+503: - Methods:
+505: - isSessionStart(int offsethour=0, int offsetmin=0):
+507: - Determines if a trading session has started by checking the current server time against the session start times. It also allows for optional time offsets
+509: - isSessionEnd(int offsethour=0, int offsetmin=45):
+511: - Determines if a trading session has ended, checking current server time against session end times. Like isSessionStart, it takes optional offsets (45 minutes default).
+513: - SessionEnd(int offsethour=0, int offsetmin=45):
+515: - Returns the datetime value of the end of the current trading session, adjusting with the provided offsets (default: 45 minutes).
+519: isSessionStart(int offsethour=0, int offsetmin=0)
+521: This method checks if the trading session has started based on server time and the trading symbol's session schedule.
+525: - datefrom, dateto: These are used to store the session start and end times for each trading day.
+526: - DateFrom[], DateTo[]: Arrays to hold the session start and end times after adjustments.
+530: - Session Retrieval:
+532: - The SymbolInfoSessionTrade function retrieves the trading session start (datefrom) and end (dateto) times for the current symbol and day of the week (retrieved by DayOfWeek(TimeTradeServer())).
+533: - If the session end time (dateto) is at midnight (00:00 or 24:00), the time is adjusted to one minute before midnight (23:59).
+535: - Array Manipulation:
+537: - The session start times (datefrom) are stored in the DateFrom[] array, and end times (dateto) are stored in the DateTo[] array.
+539: - Offset Application:
+541: - The method adjusts the first session's start time by the given offsethour and offsetmin using the helper functions MinutesS() and HoursS().
+543: - Check Current Time:
+545: - The method then iterates through the session times in DateFrom[] and DateTo[] and checks if the current server time (TimeTradeServer()) falls within any of the session intervals.
+546: - If a valid session is found, it returns true, indicating the session has started. Otherwise, it returns false.
+548: isSessionEnd(int offsethour=0, int offsetmin=45)
+550: This method checks if the trading session has ended.
+554: - Similar to isSessionStart(), but with a focus on end times (dateto).
+555: - lastdate: Stores the latest session end time to compare.
+556: - sessionend: Holds the final calculated session end time with offsets applied.
+560: - Session Retrieval:
+562: - Retrieves the session times (datefrom, dateto) as in isSessionStart().
+563: - It checks if there are any valid session times in DateTo[] and identifies the latest session end time (lastdate).
+565: - Offset Application:
+567: - Adjusts the session end time by applying the offsets (offsethour and offsetmin).
+569: - Compare with Server Time:
+571: - If the current time is before the adjusted session end time, it returns false, indicating the session is still ongoing. If the session has ended (current time is after sessionend), it returns true.
+573: SessionEnd(int offsethour=0, int offsetmin=45)
+575: This method returns the datetime value for the end of the current session, applying the provided time offsets.
+579: - Similar to isSessionEnd(), it retrieves session times, applies offsets, and returns the final adjusted session end time (sessionend).
+583: - Increased volatility and unpredictable market movements.
+584: - Low liquidity, leading to wider spreads and higher costs.
+585: - Risk of price gaps, potentially leading to large losses.
+586: - Exposure to global events and their market impacts.
+587: - Interest charges or swap fees in Forex markets.
+588: - Reduced control over trade execution and decision-making.
+593: ### Trade Management Class
+599: ```
+601: | Receive Trade Signal      |
+606: | Check for Available Margin|
+611: | Place Buy/Sell Order      |
+616: | Set Stop Loss & Take Profit|
+621: | Monitor Open Position      |
+628: | Adjust SL/TP or Close Trade|
+630: ```
+632: ```
+638: #include <Trade\Trade.mqh>
+639: #include <Trade\OrderInfo.mqh>
+640: #include <Trade\SymbolInfo.mqh>
+641: #include "RiskManagement.mqh"
+642: #include "TimeManagement.mqh"
+643: #include "Sessions.mqh"
+654:    CSessions         CTS;//Sessions class object
+748: ```
+752: - Objects and variables:
+754: - CTrade Trade: Manages trade execution (buy/sell orders) etc.
+755: - CSymbolProperties CSymbol: Manages symbol properties.
+756: - CTimeManagement CTime: Handles time-related logic.
+757: - CSessions CTS: Manages sessions, which are related to trading hours.
+758: - bool TradeResult: A boolean flag for the result of a trade (success/failure).
+759: - double mySL: Stop-loss value.
+760: - double myTP: Take-profit value.
+761: - uint myDeviation;: Price deviation for stop orders.
+762: - double myOpenPrice: Stores the open price for stop orders.
+766: ```
+787: ```
+789: - Purpose: This inner class encapsulates the trade properties (open price, take-profit, stop-loss). It allows setting and getting these properties easily.
+791: - myTradeProp: A struct to hold trade properties.
+792: - Set(): Method to set the open, take-profit, and stop-loss values.
+793: - Get(): Retrieves the stored trade properties.
+795: - Variables using OrderSettings:
+801: - These objects store the properties for different order types (buy-stop, sell-stop, buy-trade, sell-trade).
+811: ```
+872: ```
+878: ```
+880: ```
+882: - FundamentalMode: This function attempts to remove a pending stop order if the opposite position has been opened.
+883: - COMMENT\_COMMON: A string parameter used to identify trades/orders based on the comment associated with them.
+887: ```
+889: ```
+891: - PositionsTotal(): Returns the total number of open positions.
+892: - OrdersTotal(): Returns the total number of pending orders.
+893: - This for loop iterates through all open positions and ensures there are pending orders to process.
+897: ```
+899: ```
+901: - PositionGetTicket(P): Retrieves the ticket number of the position at index P.
+902: - Ensures the position ticket is valid (i.e., above zero).
+906: ```
+909: ```
+911: - PositionGetString(POSITION\_SYMBOL): Retrieves the symbol of the open position.
+912: - CSymbol.GetSymbolName(): Retrieves the symbol name for the symbol set in the constructor.
+913: - PositionGetString(POSITION\_COMMENT): Retrieves the comment associated with the position.
+914: - StringFind(PositionGetString(POSITION\_COMMENT), COMMENT\_COMMON): Checks if the COMMENT\_COMMON substring is present in the position's comment. It ensures the position belongs to the strategy/expert.
+918: ```
+920: ```
+922: - Iterates through all open pending orders.
+926: ```
+928: ```
+930: - OrderGetTicket(O): Retrieves the ticket number of the order at index O.
+931: - Ensures the order ticket is valid.
+935: ```
+940: ```
+942: - OrderGetString(ORDER\_SYMBOL): Retrieves the symbol associated with the order.
+943: - OrderGetInteger(ORDER\_MAGIC): Retrieves the magic number of the order (which helps identify orders for each event).
+944: - PositionGetInteger(POSITION\_MAGIC): Retrieves the magic number of the position to match it with the order's magic number.
+945: - OrderGetString(ORDER\_COMMENT): Retrieves the comment of the order.
+946: - Ensures that the order's symbol, magic number, and comment match the position's properties. This ensures that the pending order is related to the open position.
+950: ```
+968: ```
+970: - PositionGetInteger(POSITION\_TYPE): Retrieves the type of the open position (either POSITION\_TYPE\_BUY or POSITION\_TYPE\_SELL).
+971: - OrderGetInteger(ORDER\_TYPE): Retrieves the type of the pending order (either ORDER\_TYPE\_BUY\_STOP or ORDER\_TYPE\_SELL\_STOP).
+975: - If the position is a buy position (POSITION\_TYPE\_BUY), the function checks for a pending sell-stop order (ORDER\_TYPE\_SELL\_STOP). If found, this sell-stop order is deleted because it is no longer needed.
+976: - Similarly, if the position is a sell position (POSITION\_TYPE\_SELL), the function checks for a pending buy-stop order (ORDER\_TYPE\_BUY\_STOP). If found, this buy-stop order is deleted.
+994: ```
+1069: ```
+1079: ```
+1081: ```
+1083: - SlippageReduction: The function's name reflects its purpose—adjusting the SL and TP if they have been impacted by slippage during order execution.
+1087: - SL: Expected stop-loss value.
+1088: - TP: Expected take-profit value.
+1089: - COMMENT\_COMMON: A string used to filter and identify trades that belong to this Expert.
+1093: ```
+1097: ```
+1099: - PositionsTotal(): This function returns the number of open positions.
+1100: - PositionGetTicket(i): Retrieves the ticket number for the position at index i. A ticket uniquely identifies an open position.
+1104: ```
+1106: ```
+1108: - Ensures that the position has a valid ticket number before proceeding to the next steps
+1112: ```
+1115: ```
+1117: - PositionGetString(POSITION\_SYMBOL): Retrieves the symbol associated with the open position.
+1118: - CSymbol.GetSymbolName(): Gets the symbol name for the trading strategy (e.g., "EURUSD").
+1119: - PositionGetString(POSITION\_COMMENT): Retrieves the comment attached to the open position.
+1120: - StringFind(): Checks if COMMENT\_COMMON is part of the position's comment, ensuring that the function only processes positions related to the current strategy.
+1126: ```
+1128: ```
+1130: - The function handles positions of type BUY.
+1134: ```
+1136: ```
+1138: - SetBuyTrade(SL, TP, PositionGetDouble(POSITION\_PRICE\_OPEN)): Sets the expected stop-loss, take-profit, and open price for the buy trade. The function SetBuyTrade assigns these expected values to the myBuyTrade object.
+1142: ```
+1145: ```
+1147: - PositionGetDouble(POSITION\_SL): Retrieves the actual stop-loss value from the open position.
+1148: - PositionGetDouble(POSITION\_TP): Retrieves the actual take-profit value from the open position.
+1152: ```
+1158: ```
+1160: - NormalizePrice(mySL): Normalizes the stop-loss value to the correct number of decimal places (based on the symbol's properties, e.g., currency pairs might have 4 or 5 decimal points).
+1161: - DoubleToString(mySL, CSymbol.Digits()): Converts the normalized SL value to a string and then back to a double to ensure precision.
+1162: - The same process is applied to the take-profit (myTP) value.
+1166: ```
+1172: ```
+1174: - myBuyTrade.Get().Stop: Retrieves the expected stop-loss value.
+1175: - mySL: The actual stop-loss value retrieved from the position.
+1176: - If the actual SL and TP values do not match the expected ones, the function calls Trade.PositionModify to update the position and set the correct stop-loss and take-profit.
+1177: - Valid\_Trade(): Checks if the trade parameters (price, SL, TP) are valid for modification before attempting to modify the position.
+1181: ```
+1183: ```
+1185: - This function modifies the position associated with the ticket to reflect the correct stop-loss and take-profit values based on the expected values.
+1189: - This is similar as the process for Buy positions.
+1193: ```
+1236: ```
+1247: ```
+1249: ```
+1251: - Type: The type of position, either POSITION\_TYPE\_BUY (buy position) or POSITION\_TYPE\_SELL (sell position).
+1252: - Price: The opening price of the trade.
+1253: - SL: The stop-loss level for the trade.
+1254: - TP: The take-profit level for the trade.
+1262: ```
+1264: ```
+1270: ```
+1272: ```
+1274: - The take-profit level must be greater than the opening price (Price < TP), or it can be set to zero (no take-profit).
+1278: ```
+1280: ```
+1282: - The stop-loss level must be less than the opening price (Price > SL), or it can be set to zero (no stop-loss).
+1286: - The symbol's stop level defines the minimum distance between the price and stop-loss/take-profit.
+1287: - The stop-loss and take-profit levels must be a minimum distance (equal to or greater than the stop level) from the opening price.
+1291: ```
+1293: ```
+1295: - The difference between the price and stop-loss must be at least the symbol's stop level (in points). If the stop-loss is set to zero, this condition is ignored.
+1299: ```
+1301: ```
+1303: - The difference between the take-profit and price must also meet the stop level requirement.
+1307: ```
+1309: ```
+1311: - The price must be greater than zero.
+1321: ```
+1324: ```
+1332: ```
+1335: ```
+1341: ```
+1384: ```
+1395: ```
+1397: ```
+1399: - Type: The type of stop order (either ORDER\_TYPE\_BUY\_STOP or ORDER\_TYPE\_SELL\_STOP).
+1400: - Price: The price at which the stop order is set.
+1401: - SL: The stop-loss price associated with the stop order.
+1402: - TP: The take-profit price associated with the stop order.
+1410: ```
+1412: ```
+1418: ```
+1420: ```
+1426: ```
+1428: ```
+1434: ```
+1436: ```
+1442: ```
+1444: ```
+1450: ```
+1452: ```
+1458: ```
+1460: ```
+1472: ```
+1475: ```
+1483: ```
+1485: ```
+1495: ```
+1520: ```
+1524: - SL: The stop-loss value in terms of points.
+1525: - TP: The take-profit value in terms of points.
+1527: ```
+1529: ```
+1535: ```
+1537: ```
+1539: - CSymbol.Ask() retrieves the current ask price for the symbol (currency pair or asset).
+1540: - myDeviation \* CSymbol.Point() adds a deviation (price buffer) in terms of points to ensure the open price is placed above the current ask price. CSymbol.Point() returns the size of one point (smallest price change) for the symbol.
+1544: ```
+1547: ```
+1549: - CSymbol.NormalizePrice(myOpenPrice) adjusts the price to align with the precision of the symbol (i.e., to a valid price format).
+1550: - NormalizeDouble(myOpenPrice, CSymbol.Digits()) ensures the price is rounded to the correct number of decimal places defined by the symbol's precision (CSymbol.Digits()).
+1554: ```
+1557: ```
+1559: - SL \* CSymbol.Point() converts the integer stop-loss value (in points) to a price difference.
+1560: - myOpenPrice - mySL calculates the stop-loss price by subtracting the stop-loss value (in points) from the open price. This is because a stop-loss for a buy-stop order is placed below the open price.
+1564: ```
+1567: ```
+1569: - The stop-loss price is normalized and rounded to the correct precision, as explained above.
+1573: ```
+1576: ```
+1578: - TP \* CSymbol.Point() converts the integer take-profit value (in points) to a price difference.
+1579: - myTP += myOpenPrice adds this value to the open price because the take-profit for a buy-stop order is placed above the open price.
+1583: ```
+1586: ```
+1588: - The take-profit price is normalized and rounded, similar to the stop-loss and open prices.
+1592: ```
+1594: ```
+1596: - myBuyStop.Set(myOpenPrice, myTP, mySL) assigns the calculated open price, take-profit, and stop-loss values to the myBuyStop order object.
+1597: - The myBuyStop object will now hold the properties required to place the buy-stop order in the market.
+1603: - SL: The stop-loss value in points (price increments).
+1604: - TP: The take-profit value in points.
+1605: - OP: The open price of the trade (the price at which the position is opened).
+1609: ```
+1613: ```
+1615: - myOpenPrice = OP: The function takes the provided open price (OP) and assigns it to myOpenPrice.
+1616: - CSymbol.NormalizePrice(myOpenPrice): This normalizes the open price according to the symbol's precision, ensuring that it matches the correct number of decimal places.
+1617: - myOpenPrice = double(DoubleToString(myOpenPrice, CSymbol.Digits())): The price is further converted to a string and back to a double with the correct number of decimal digits (precision) for the symbol. This ensures consistency in handling price values, avoiding issues with floating-point precisio
+1621: ```
+1624: ```
+1626: - SL \* CSymbol.Point(): Converts the stop-loss value from points to an actual price difference. CSymbol.Point() returns the size of one point (the smallest possible price increment for the symbol).
+1627: - myOpenPrice - mySL: The stop-loss price is set by subtracting the calculated stop-loss value from the open price. In a buy position, the stop-loss is placed below the open price to protect the trade from excessive losses.
+1631: ```
+1634: ```
+1636: - The stop-loss price is normalized to ensure it has the correct precision, and then it is rounded to the appropriate number of decimal places.
+1640: ```
+1643: ```
+1645: - TP \* CSymbol.Point(): Converts the take-profit value from points to a price difference.
+1646: - myTP += myOpenPrice: The take-profit price is added to the open price since, for a buy position, the take-profit is placed above the open price.
+1650: ```

@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_016",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_016",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17424,
+      "title": "Forex arbitrage trading: A simple synthetic market maker bot to get started",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17424.md"
+    },
+    {
+      "id": 17459,
+      "title": "Neural Networks in Trading: Dual Clustering of Multivariate Time Series (DUET)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17459.md"
+    },
+    {
+      "id": 17487,
+      "title": "Neural Networks in Trading: Dual Clustering of Multivariate Time Series (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17487.md"
+    },
+    {
+      "id": 17522,
+      "title": "Swap Arbitrage in Forex: Building a Synthetic Portfolio and Generating a Consistent Swap Flow",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17522.md"
+    },
+    {
+      "id": 17546,
+      "title": "Employing Game Theory Approaches in Trading Algorithms",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17546.md"
+    },
+    {
+      "id": 17549,
+      "title": "Neural Networks in Trading: Adaptive Detection of Market Anomalies (DADA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17549.md"
+    },
+    {
+      "id": 17577,
+      "title": "Neural Networks in Trading: Adaptive Detection of Market Anomalies (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17577.md"
+    },
+    {
+      "id": 17649,
+      "title": "Neural Networks in Trading: Detecting Anomalies in the Frequency Domain (CATCH)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17649.md"
+    },
+    {
+      "id": 17654,
+      "title": "Exploring Machine Learning in Unidirectional Trend Trading Using Gold as a Case Study",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17654.md"
+    },
+    {
+      "id": 17675,
+      "title": "Neural Networks in Trading: Anomaly Detection in the Frequency Domain (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17675.md"
+    },
+    {
+      "id": 17706,
+      "title": "Analyzing Overbought and Oversold Trends Via Chaos Theory Approaches",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17706.md"
+    },
+    {
+      "id": 17729,
+      "title": "Neural Networks in Trading: Hierarchical Skill Discovery for Adaptive Agent Behavior (HiSSD)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17729.md"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+CONTINUE the CONNECT bmad-architecture sitting.
+
+The previous turn spawned four readers then the one-shot exited; they were interrupted. Do NOT use background delegate_task in this one-shot (ending the turn kills the process). Read integration/docs/_docwork yourself with tools.
+
+Finish bmad-architecture per C:/Users/Mubarak/Desktop/QMX/workroom/research/2026-09-11_connect-architecture-handoff.md
+
+Operator is absent. Stop only when ARCHITECTURE-SPINE.md and C:/Users/Mubarak/Desktop/QMX/workroom/research/2026-09-11_connect-architecture-result.md exist. Do not run documentation-factory.

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_017",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2308,
+      "title": "Graphical Interfaces IV: the Multi-Window Mode and System of Priorities (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2308.md"
+    },
+    {
+      "id": 2379,
+      "title": "Graphical Interfaces V: The Vertical and Horizontal Scrollbar (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2379.md"
+    },
+    {
+      "id": 2380,
+      "title": "Graphical Interfaces V: The List View Element (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2380.md"
+    },
+    {
+      "id": 2381,
+      "title": "Graphical Interfaces V: The Combobox Control (Chapter 3)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2381.md"
+    },
+    {
+      "id": 2432,
+      "title": "Regular expressions for traders",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2432.md"
+    },
+    {
+      "id": 2438,
+      "title": "How to copy signals using an EA by your rules?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2438.md"
+    },
+    {
+      "id": 2466,
+      "title": "Graphical Interfaces VI: the Checkbox Control, the Edit Control and their Mixed Types (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2466.md"
+    },
+    {
+      "id": 2468,
+      "title": "Graphical Interfaces VI: the Slider and the Dual Slider Controls (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2468.md"
+    },
+    {
+      "id": 2500,
+      "title": "Graphical Interfaces VII: the Tables Controls (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2500.md"
+    },
+    {
+      "id": 2501,
+      "title": "LifeHack for Traders: Indicators of Balance, Drawdown, Load and Ticks during Testing",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2501.md"
+    },
+    {
+      "id": 2503,
+      "title": "Graphical Interfaces VII: The Tabs Control (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2503.md"
+    },
+    {
+      "id": 2513,
+      "title": "Creating a trading robot for Moscow Exchange. Where to start?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2513.md"
+    }
+  ]
+}

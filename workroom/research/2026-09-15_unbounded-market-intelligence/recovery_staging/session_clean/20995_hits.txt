@@ -1,0 +1,99 @@
+4: title: "Price Action Analysis Toolkit Development (Part 56): Reading Session Acceptance and Rejection with CPI"
+11: series_title: "Price Action Analysis Toolkit Development (): Reading Session Acceptance and Rejection with CPI"
+20: # Price Action Analysis Toolkit Development (Part 56): Reading Session Acceptance and Rejection with CPI
+25: | 26 January 2026 at 05:29
+36: ### Contents
+38: - [Introduction](https://www.mql5.com/en/articles/20995#introduction)
+39: - [Previous Article Review](https://www.mql5.com/en/articles/20995#previous_article_review)
+40: - [Strategy Concept](https://www.mql5.com/en/articles/20995#strategy_concept)
+41: - [MQL5 Implementation](https://www.mql5.com/en/articles/20995#mql5_implementation)
+42: - [Testing and Outcomes](https://www.mql5.com/en/articles/20995#testing_and_outcomes)
+43: - [Conclusion](https://www.mql5.com/en/articles/20995#conclusion)
+45: ### Introduction
+47: Trading sessions leave lasting structural footprints. As price develops within a session, its high and low become reference boundaries that future price action must respect. Candles interacting with these prior levels reveal whether the market is accepting new range extremes or rejecting them. I previously introduced the [Candle Pressure Index (CPI)](https://www.mql5.com/en/articles/20949) to quan
+49: In this article, that same concept is extended into a session-based context. The goal is to use CPI to validate whether candles interacting with established session boundaries carry bullish or bearish pressure. By doing so, session levels are no longer treated as static lines on the chart, but as areas where internal price pressure determines whether the market is accepting higher prices or reject
+51: ### Previous Article Review
+53: The [previous episode](https://www.mql5.com/en/articles/20949) introduced the Candle Pressure Index (CPI), which can be defined in simple terms as the internal buying or selling pressure contained within each closed candle. This pressure reflects how price behaved during the formation of the candle, beyond what candle color alone can convey. To properly revisit what was covered in that article, th
+57: If you have ever watched a football match, you will notice that the team that wins is not always the one that played better. A team can dominate possession, create more chances, and apply constant pressure, yet still lose the game. What most people remember is the final score, but the full story of how the match was played often remains hidden. Candlesticks work in the same way. Many people look o
+69: These results clearly illustrate the pressure contained within each candle, with arrow-marked candles highlighting stronger buying or selling dominance through color intensity. The following section introduces an enhanced use of CPI to distinguish breakout and reversal behavior at key market session levels.
+71: ### Strategy Concept
+75: When a trading session closes, it marks the conclusion of a defined phase of market participation. During that interval, price explored a range, tested liquidity, and ultimately settled at a closing level that reflects where buyers and sellers reached a temporary agreement. The session’s high and low are not arbitrary extremes; they represent the outer bounds of that decision-making process.
+77: Once established, these boundaries remain embedded in the market. When price revisits a previous session’s high or low, it is not interacting with a random level but returning to a zone where imbalance, absorption, and resolution previously occurred. As a result, session highs and lows often serve as durable support and resistance levels—reference points where the market re-evaluates prior consens
+79: Acceptance and Rejection at Session Levels
+81: When price returns to a prior session boundary, the market confronts two potential outcomes: acceptance or rejection. Acceptance occurs when price moves beyond the level and sustains above or below it, indicating that participants are willing to transact outside the previous session’s range. Rejection occurs when price tests the level but fails to maintain pressure beyond it, rotating back into th
+83: Consider a prior session high at 1.1000. When price returns:
+85: - Acceptance: sustained close above with strong positive CPI.
+86: - Rejection: probe above but close back inside with negative CPI flip.
+88: This is determined by candle close position within its range, not just wicks or color. The diagram below highlights the decision process that occurs when price reaches a previous session boundary, where acceptance or rejection is determined by behavior at the level rather than by the initial probe.
+92: These outcomes are not defined by a single tick or wick, but by how price behaves into the candle close at the level. The close signifies commitment. A move beyond a session level that fails to maintain pressure into the close lacks confirmation, while a close that holds beyond the level reflects sustained participation.
+94: Limitations of Candle Color at Session Boundaries
+96: At key session levels, candle color alone often yields incomplete or misleading signals. A candle may close above its open and appear bullish, yet finish weakly within its range after briefly moving higher. In such instances, candle color implies strength, while internal behavior suggests hesitation or absorption.
+98: Conversely, a candle that closes with a bearish color may finish near its high, indicating that selling pressure was absorbed rather than dominant. Such contradictions are especially common near session highs and lows, where liquidity is concentrated and opposing orders interact. Sole reliance on candle color at these points can lead to misinterpretation of market intent.
+104: The session high or low provides structural context; CPI evaluates the quality of price interaction with that structure. A break beyond a session high accompanied by strong positive CPI suggests acceptance—buying pressure sustained into the close. In contrast, a break with weak or negative CPI implies insufficient commitment and a greater likelihood of rejection. The same logic applies to session 
+108: This framework observes how price behaves at session levels and assesses the response through internal pressure metrics. This keeps the analysis reactive and grounded in observable behavior, avoiding speculative assumptions.
+114: This is a framework for interpreting session levels. It combines session structure with CPI to evaluate whether the price is accepting a level or rejecting it, based on how candles close within their range. The next section shows how this logic is implemented in MQL5 using closed-candle evaluation and session-isolated calculations.
+118: This example reinforces how session structure provides context, while candle behavior at the boundary determines whether the level is accepted or rejected.
+120: ### MQL5 Implementation
+122: The MQL5 implementation translates the Candle Pressure Index (CPI) session concept into a closed-candle analysis tool. It draws Tokyo, London, and New York session rectangles and classifies breakout acceptance and rejection at session boundaries using CPI data. The objective is consistency, ensuring the same logic is applied in both historical reconstruction and live operation. All classifications
+124: Internally, the implementation is structured around three core tasks: constructing session windows in broker (server) time, sampling session ranges from closed candles, and evaluating CPI-confirmed interactions using a two-candle model at session boundaries.
+126: Session Configuration and State Management
+128: Sessions are configured via HH:MM-formatted input strings in broker (server) time. This approach ensures portability across brokers without relying on local machine time. Each session is represented by a SessionState structure holding the session name and configured time window, computed startDT and endDT timestamps anchored to the correct trading day, a running high and low for drawing the sessio
+130: ```
+151: ```
+155: Session bounds are constructed by the BuildSessionBounds() function. This function parses the HH:MM inputs and computes startDT and endDT values anchored to anchorMidnight. Sessions that cross midnight (where the start time is later than the end time) are handled explicitly so the session window remains correct even when it spans two calendar dates.
+157: ```
+158: void BuildSessionBounds(const string startHHMM, const string endHHMM,
+160:                         datetime &sessEnd, datetime &anchorMidnight)
+165: ```
+167: The function also selects the most relevant session occurrence relative to the current time, ensuring that session alignment respects the intended trading day rather than the calendar day alone.
+169: Session Membership Logic (Datetime Filtering)
+171: The implementation avoids mapping session windows to bar-index ranges. Instead, session bounds are stored as datetime values (startDT, endDT), and candle inclusion is determined by comparing each bar’s opening time (iTime) to the session window.
+173: ```
+183: ```
+185: In live operation, UpdateOneSessionLive() checks the most recently closed candle (bar[1]) and updates the session range only if its timestamp lies within [startDT, endDT]. In historical reconstruction, UpdateOneSessionAtShift() applies the same logic using an arbitrary bar shift. Because every candle has an absolute timestamp, this datetime-based approach behaves consistently across all timeframes
+189: The implementation maintains two distinct types of session ranges.
+191: ```
+199: ```
+201: - The rectangle range (s.high, s.low) is updated incrementally as candles are processed and is used solely for drawing visual session rectangles (OBJ\_RECTANGLE). These rectangles persist on the chart, with names incorporating the session’s anchorMidnight timestamp. However, no separate persistent d
+202: - The analytical range is computed on demand via SessionRangeFromShift(). This function scans historical candles whose timestamps fall within the session window, starting from a specified startShift to exclude newer candles. This separation ensures that the evaluation candle does not influence the s
+208: ```
+209: bool SessionRangeFromShift(const SessionState &s,
+225: ```
+233: ```
+239: ```
+245: Breakout acceptance is confirmed using a two-candle sequence. The break candle (sh2) must close beyond the relevant session boundary with CPI exceeding a defined strength threshold in the direction of the breakout. The confirmation candle (sh1) must then retest the boundary within a tolerance band and close beyond it again.
+247: ```
+249: SessionRangeFromShift(s, sh1 + 2, hiBrk, loBrk);
+256: ```
+258: The breakout reference level (hiBrk or loBrk) is computed via SessionRangeFromShift() using startShift = sh1 + 2. This excludes both the break and confirmation candles from the range used to define the level, ensuring the breakout sequence does not influence the boundary it is attempting to break.
+262: Rejection is classified when the confirmation candle (sh1) trades beyond a session boundary but closes back inside the session range. At the session high, the candle must move above the high and close below it (bearish rejection). At the session low, the candle must move below the low and close above it (bullish rejection).
+264: ```
+271: ```
+275: Rejection reference levels (hiRev / loRev) are computed using startShift = sh1 + 1, excluding the confirmation candle while retaining the established session structure.
+279: To prevent repeated markings at the same boundary, a one-time-per-side classification rule can be enabled via InpOncePerSessionPerSide. When active, doneHighSide suppresses repeat classifications at the session high, and doneLowSide suppresses repeat classifications at the session low. These flags automatically reset when the session transitions to a new anchor window.
+281: ```
+287: ```
+291: The visual layer is designed for interpretation rather than execution. Session rectangles are drawn using OBJ\_RECTANGLE with configurable color and transparency. When a breakout or rejection is confirmed, signal arrows are placed on the confirmation candle (sh1). CPI mini-markers are also drawn on sh1 to visualize pressure magnitude and direction: marker height encodes strength, while color encod
+293: ```
+296: ```
+302: When attached to a chart, the tool can perform bounded historical reconstruction using EvaluateHistoryLookback(), walking from older bars toward newer bars to rebuild session rectangles and classify events without triggering alerts.
+304: ```
+309:       EvaluateSignalsForSessionLive(g_sess[i]);
+311: ```
+313: In live operation, session tracking is updated using the most recently closed candle, and signal classification occurs only when a new bar forms. This ensures that evaluation logic matches historical behavior exactly—one assessment per closed candle with no discrepancies between modes.
+315: ```
+317: ```
+319: ### Testing and Outcomes
+321: Testing was performed using the MetaTrader 5 Strategy Tester in visual mode to evaluate structural correctness, timing discipline, and identical behavior of classification. The purpose of testing was analytical validation rather than trade performance. The same implementation, parameters, and session definitions were applied without modification.
+323: To verify robustness across different market conditions, testing was conducted on EURUSD, representing a relatively stable FX environment, and XAUUSD (Gold), representing a higher-volatility instrument with sharper session-driven movements.
+327: Across both symbols, Tokyo, London, and New York session windows formed sequentially and aligned correctly with broker time. Session rectangles expanded only while their respective sessions were active and remained stable once the session window progressed. Boundaries were never altered after the candle close. This behavior was observed consistently in historical reconstruction and live tester pla
+333: Acceptance and Rejection at Session Boundaries
+335: On EURUSD, session boundary interactions were generally orderly. Breakout acceptance followed a clear two-candle sequence: a CPI-supported break candle followed by a confirmation candle that retested and held beyond the session boundary. Rejection cases showed brief probes beyond session levels followed by decisive closes back inside the range, often accompanied by clear CPI threshold flips.
+337: On XAUUSD, the same logic held under higher volatility. Session boundaries were tested more aggressively, but classifications remained controlled and non-repetitive. The noise gate and CPI thresholds filtered out minor fluctuations, allowing only structurally meaningful interactions to be marked.
+339: The once-per-session-per-side constraint proved especially effective in volatile conditions, preventing repeated classifications during rapid boundary testing.
+347: Session rectangles provided time-based structural context, while arrows marked classified interactions at session boundaries. CPI mini-markers added pressure context directly on confirmation candles, making it possible to distinguish acceptance from rejection without relying on candle color alone.
+351: ### Conclusion
+353: This article explored how session structure and candle-level pressure can be combined to interpret acceptance and rejection at key market boundaries. By treating each trading session as a self-contained phase with its own developing range, session highs and lows were approached not as static lines, but as contextual decision zones whose relevance emerges through price behavior and internal pressur
+355: The Candle Pressure Index provided a practical lens for evaluating that behavior. Beyond candle color alone or size alone, CPI exposed whether interactions at session boundaries were supported by sustained buying or selling pressure, or whether they reflected weak probes likely to fail. When applied using closed-candle logic and a two-candle confirmation model, this approach allowed continuation a
+357: This framework is presented strictly as an analytical tool, not as a standalone trading system. Its value lies in clarity. By combining time-based session structure with pressure-based candle evaluation, the implementation provides a structured way to observe, study, and contextualize session-level price behavior alongside other forms of market analysis.
+363: [CPI\_Session\_EA.mq5](https://www.mql5.com/en/articles/download/20995/CPI_Session_EA.mq5 "Download CPI_Session_EA.mq5")

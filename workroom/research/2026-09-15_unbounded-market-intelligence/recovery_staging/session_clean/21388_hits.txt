@@ -1,0 +1,248 @@
+4: title: "Creating Custom Indicators in MQL5 (Part 7): Hybrid Time Price Opportunity (TPO) Market Profiles for Session Analysis"
+11: series_title: "Creating Custom Indicators in MQL5 (): Hybrid Time Price Opportunity (TPO) Market Profiles for Session Analysis"
+20: # Creating Custom Indicators in MQL5 (Part 7): Hybrid Time Price Opportunity (TPO) Market Profiles for Session Analysis
+25: | 19 February 2026 at 06:14
+36: ### Introduction
+38: In [our previous article (Part 6)](https://www.mql5.com/en/articles/21083), we developed an evolved [Relative Strength Index](https://www.metatrader5.com/en/terminal/help/indicators/oscillators/rsi "https://www.metatrader5.com/en/terminal/help/indicators/oscillators/rsi") calculation system in [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.m
+47: ### Exploring the Hybrid Time Price Opportunity Market Profile Concept
+49: The hybrid Time Price Opportunity (TPO) market profile is a visualization tool that maps price distribution over time within defined trading sessions, using letters, rectangle markers, or just dots to represent time intervals at specific price levels, revealing areas of high activity like the value area and point of control where most trading occurred. This approach helps us identify support, resi
+51: Our plan is to define sessions based on selected time frames with time zone adjustments. We will quantize prices into a grid for TPO assignment and track session metrics, such as highs and lows. We will also compute the point of control as the level with the highest TPO count. Next, we derive the value area covering a set percentage of total TPOs. Finally, we visualize the profile with color-coded
+55: ### Implementation in MQL5
+59: ```
+61: //|                             Hybrid TPO Market Profile PART 1.mq5 |
+65: #property copyright "Copyright 2026, Allan Munene Mutiiria."
+66: #property link "https://t.me/Forex_Algo_Trader"
+67: #property version "1.00"
+68: #property strict
+70: #property indicator_chart_window
+71: #property indicator_buffers 0
+72: #property indicator_plots 0
+89: input double ticksPerTpoLetter = 10;             // Ticks per letter
+94: input string timezone = "Exchange";              // Timezone
+95: input string dailySessionRange = "0830-1500";    // Daily session
+104: input color defaultTpoColor = clrGray;          // Default
+113: #define MAX_BARS_BACK 5000
+114: #define TPO_CHARACTERS_STRING "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+119: struct TpoPriceLevel {       // Define TPO price level structure
+121:    string tpoString;         // Store TPO string
+122:    int tpoCount;             // Store TPO count
+125: struct ProfileSessionData {  // Define profile session data structure
+128:    double sessionOpen;       // Store session open price
+129:    double sessionClose;      // Store session close price
+130:    double sessionHigh;       // Store session high price
+131:    double sessionLow;        // Store session low price
+132:    TpoPriceLevel levels[];   // Store array of price levels
+142: ProfileSessionData sessions[];     //--- Declare sessions array
+143: int activeSessionIndex = -1;       //--- Initialize active session index
+144: double tpoPriceGridStep = 0;       //--- Initialize TPO price grid step
+145: string tpoCharacterSet[];          //--- Declare TPO character set array
+148: int maxSessionHistory = 20;        //--- Set maximum session history
+149: int timezoneOffsetSeconds = 0;     //--- Initialize timezone offset in seconds
+150: ```
+152: We begin the implementation by configuring the indicator properties with the [#property](https://www.mql5.com/en/docs/basis/preprosessor/compilation) directives, setting it to display in the main chart window using [indicator\_chart\_window](https://www.mql5.com/en/docs/basis/preprosessor/compilation) and specifying zero buffers and plots since this indicator focuses on custom object rendering rat
+154: We then declare user [input parameters](https://www.mql5.com/en/docs/basis/variables/inputvariables) grouped under sections with string input group, starting with settings for "ticksPerTpoLetter" to control the price granularity per [Time Price Opportunity](https://snpedge.vicitradingsolutions.com/p/understanding-time-price-opportunity "https://snpedge.vicitradingsolutions.com/p/understanding-time
+156: To support consistent operations, we introduce constants via [#define](https://www.mql5.com/en/docs/basis/preprosessor/constant), including "MAX\_BARS\_BACK" to limit historical bar processing and "TPO\_CHARACTERS\_STRING" as the alphabet sequence for assigning letters to Time Price Opportunity periods. We create two structures for data organization: "TpoPriceLevel" to hold individual price level 
+158: Finally, we initialize [global variables](https://www.mql5.com/en/docs/basis/variables/global) essential for runtime management, such as "objectPrefix" for naming chart objects, an array of "sessions" to store profile data, "activeSessionIndex" starting at -1 to track the current session, "tpoPriceGridStep" for price quantization, "tpoCharacterSet" array for letter assignments, timestamps like "pr
+160: ```
+165:    IndicatorSetString(INDICATOR_SHORTNAME, "Hybrid TPO Market Profile - Part 1"); //--- Set indicator short name
+167:    tpoPriceGridStep = ticksPerTpoLetter * _Point;  //--- Calculate TPO price grid step
+169:    ArrayResize(tpoCharacterSet, 52);               //--- Resize TPO character set array
+171:       tpoCharacterSet[i] = StringSubstr(TPO_CHARACTERS_STRING, i, 1); //--- Assign character to array
+174:    if(timezone != "Exchange") {                    //--- Check if timezone is not exchange
+175:       string tzString = StringSubstr(timezone, 3); //--- Extract timezone string
+177:       timezoneOffsetSeconds = offset * 3600;       //--- Calculate timezone offset in seconds
+180:    ArrayResize(sessions, 0);                       //--- Resize sessions array to zero
+184: ```
+186: We continue the implementation with the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler, which runs when the indicator is attached to a chart, setting up essential configurations for the hybrid Time Price Opportunity market profile. First, we assign a short name to the indicator using the [IndicatorSetString](https://www.mql5.com/en/docs/customind/indicatorsetstring) fun
+188: Next, we compute the price grid step by multiplying the user-input "ticksPerTpoLetter" by the symbol's point value [\_Point](https://www.mql5.com/en/docs/predefined/_point), storing it in "tpoPriceGridStep" to determine the vertical spacing for Time Price Opportunity letters based on price increments. We then prepare the character set for labeling Time Price Opportunities by resizing the "tpoChara
+190: To account for time adjustments, we check if the "timezone" input differs from "Exchange"; if so, we extract the offset portion starting from the fourth character using "StringSubstr", convert it to an integer with [StringToInteger](https://www.mql5.com/en/docs/convert/StringToInteger), and calculate the "timezoneOffsetSeconds" by multiplying the offset by 3600 to represent hours in seconds. We re
+192: ```
+194: //| Create new session                                               |
+197:    int size = ArraySize(sessions);                //--- Get size of sessions array
+199:    if(size >= maxSessionHistory) {                //--- Check if size exceeds history limit
+200:       for(int i = 0; i < size - 1; i++) {         //--- Loop to shift sessions
+201:          sessions[i] = sessions[i + 1];           //--- Copy next session to current
+203:       ArrayResize(sessions, size - 1);            //--- Resize sessions array
+207:    ArrayResize(sessions, size + 1);               //--- Resize sessions array for new session
+210:    sessions[newIndex].startTime = 0;              //--- Initialize start time
+211:    sessions[newIndex].endTime = 0;                //--- Initialize end time
+212:    sessions[newIndex].sessionOpen = 0;            //--- Initialize session open
+213:    sessions[newIndex].sessionClose = 0;           //--- Initialize session close
+214:    sessions[newIndex].sessionHigh = 0;            //--- Initialize session high
+215:    sessions[newIndex].sessionLow = 0;             //--- Initialize session low
+216:    sessions[newIndex].periodCount = 0;            //--- Initialize period count
+217:    sessions[newIndex].pointOfControlIndex = -1;   //--- Initialize point of control index
+218:    ArrayResize(sessions[newIndex].levels, 0);     //--- Resize levels array
+219:    ArrayResize(sessions[newIndex].periodOpens, 0);//--- Resize period opens array
+228:    return MathRound(price / tpoPriceGridStep) * tpoPriceGridStep;   //--- Calculate and return quantized price
+232: //| Parse daily session time range                                   |
+234: bool ParseDailySessionTimeRange(int &startHour, int &startMinute, int &endHour, int &endMinute) {
+236:    int count = StringSplit(dailySessionRange, '-', parts);           //--- Split daily session range
+239:    startHour = (int)StringToInteger(StringSubstr(parts[0], 0, 2));   //--- Parse start hour
+241:    endHour = (int)StringToInteger(StringSubstr(parts[1], 0, 2));     //--- Parse end hour
+246: ```
+248: First, we define the "CreateNewSession" function to add a new profile session to the array, starting by retrieving the current size with the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function. If it meets or exceeds the maximum history limit, we shift existing sessions forward in a loop to remove the oldest one and then resize the array downward using [ArrayResize](https://www.mql5
+250: For handling daily sessions, the "ParseDailySessionTimeRange" function breaks down the input range string using the [StringSplit](https://www.mql5.com/en/docs/strings/stringsplit) function with a hyphen delimiter into parts. If exactly two parts are found, we extract and convert hours and minutes from each using "StringSubstr" and [StringToInteger](https://www.mql5.com/en/docs/convert/StringToInte
+252: ```
+254: //| Check if bar is within daily session                             |
+256: bool IsBarWithinDailySession(datetime barTime) {
+259:    int startHour, startMinute, endHour, endMinute;                  //--- Declare time variables
+260:    if(!ParseDailySessionTimeRange(startHour, startMinute, endHour, endMinute)) return true; //--- Parse and return true if fail
+263:    TimeToStruct(barTime + timezoneOffsetSeconds, dateTimeStruct);   //--- Convert time to struct
+265:    int barMinutes = dateTimeStruct.hour * 60 + dateTimeStruct.min;  //--- Calculate bar minutes
+266:    int startMinutes = startHour * 60 + startMinute;                 //--- Calculate start minutes
+267:    int endMinutes = endHour * 60 + endMinute;                       //--- Calculate end minutes
+277: //| Check if new session started                                     |
+279: bool IsNewSessionStarted(datetime currentTime, datetime previousTime) {
+282:    datetime adjustedCurrent = currentTime + timezoneOffsetSeconds;    //--- Adjust current time
+283:    datetime adjustedPrevious = previousTime + timezoneOffsetSeconds;  //--- Adjust previous time
+291:          int startHour, startMinute, endHour, endMinute;              //--- Declare time variables
+292:          if(!ParseDailySessionTimeRange(startHour, startMinute, endHour, endMinute)) return false; //--- Parse and return false if fail
+294:          datetime sessionStart = StringToTime(TimeToString(adjustedCurrent, TIME_DATE) + " " + 
+295:                                               IntegerToString(startHour, 2, '0') + ":" + 
+296:                                               IntegerToString(startMinute, 2, '0')); //--- Calculate session start
+297:          datetime prevSessionStart = StringToTime(TimeToString(adjustedPrevious, TIME_DATE) + " " + 
+298:                                                    IntegerToString(startHour, 2, '0') + ":" + 
+299:                                                    IntegerToString(startMinute, 2, '0')); //--- Calculate previous session start
+301:          return adjustedCurrent >= sessionStart && adjustedPrevious < prevSessionStart; //--- Return if new session
+334:       return IsBarWithinDailySession(barTime);                       //--- Return if within daily session
+343: int GetOrCreatePriceLevel(int sessionIndex, double price) {
+344:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return -1; //--- Return invalid if index out of range
+346:    int size = ArraySize(sessions[sessionIndex].levels);              //--- Get levels size
+349:       if(MathAbs(sessions[sessionIndex].levels[i].price - price) < _Point / 2) //--- Check if price matches
+353:    ArrayResize(sessions[sessionIndex].levels, size + 1);             //--- Resize levels array
+354:    sessions[sessionIndex].levels[size].price = price;                //--- Set new price
+355:    sessions[sessionIndex].levels[size].tpoString = "";               //--- Initialize TPO string
+356:    sessions[sessionIndex].levels[size].tpoCount = 0;                 //--- Initialize TPO count
+360: ```
+362: We proceed by implementing the "IsBarWithinDailySession" function to determine if a given bar falls within the specified daily trading hours, immediately returning true for non-daily timeframes. If parsing the session range fails via the "ParseDailySessionTimeRange" function, it defaults to true; otherwise, we convert the adjusted bar time to an [MqlDateTime](https://www.mql5.com/en/docs/constants
+364: Next, the "IsNewSessionStarted" function checks for the beginning of a new profile session by comparing adjusted current and previous times, returning true if no previous time exists. We adjust timestamps for timezone offset, convert them to "MqlDateTime" structures, and use a switch statement on the profile timeframe: for daily, it parses the session range and constructs start times with [StringT
+366: To filter bars for inclusion, we define the "IsBarEligibleForProcessing" function, which, for fixed timeframes, checks if the bar time is between the start and end inputs, for daily calls "IsBarWithinDailySession", and otherwise returns true for all bars. Finally, the "GetOrCreatePriceLevel" function manages price levels within a session by validating the session index against the sessions array s
+368: ```
+370: //| Add TPO character to level                                       |
+372: void AddTpoCharacterToLevel(int sessionIndex, int levelIndex, int periodIndex) {
+373:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;                  //--- Return if session index invalid
+374:    if(levelIndex < 0 || levelIndex >= ArraySize(sessions[sessionIndex].levels)) return; //--- Return if level index invalid
+376:    string tpoCharacter = tpoCharacterSet[periodIndex % 52];                             //--- Get TPO character
+378:    sessions[sessionIndex].levels[levelIndex].tpoString += tpoCharacter;                 //--- Append character to TPO string
+379:    sessions[sessionIndex].levels[levelIndex].tpoCount++;                                //--- Increment TPO count
+385: void SortPriceLevelsDescending(int sessionIndex) {
+386:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;                 //--- Return if index invalid
+388:    int size = ArraySize(sessions[sessionIndex].levels);                                //--- Get levels size
+392:          if(sessions[sessionIndex].levels[j].price < sessions[sessionIndex].levels[j + 1].price) { //--- Check if swap needed
+393:             TpoPriceLevel temp = sessions[sessionIndex].levels[j];                     //--- Store temporary level
+394:             sessions[sessionIndex].levels[j] = sessions[sessionIndex].levels[j + 1];   //--- Swap levels
+395:             sessions[sessionIndex].levels[j + 1] = temp;                               //--- Assign temporary back
+404: void CalculatePointOfControl(int sessionIndex) {
+405:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;                 //--- Return if index invalid
+407:    int size = ArraySize(sessions[sessionIndex].levels);                                //--- Get levels size
+410:    int maxTpoCount = 0;                                                                //--- Initialize max TPO count
+414:       if(sessions[sessionIndex].levels[i].tpoCount > maxTpoCount) {                    //--- Check if higher TPO count
+415:          maxTpoCount = sessions[sessionIndex].levels[i].tpoCount;                      //--- Update max TPO count
+420:    sessions[sessionIndex].pointOfControlIndex = pointOfControlIndex;                   //--- Set POC index
+424: //| Get total TPO count                                              |
+427:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return 0;               //--- Return zero if index invalid
+430:    int size = ArraySize(sessions[sessionIndex].levels);                                //--- Get levels size
+433:       total += sessions[sessionIndex].levels[i].tpoCount;                              //--- Accumulate TPO count
+438: ```
+440: First, we implement the "AddTpoCharacterToLevel" function to assign Time Price Opportunity letters to specific price levels, first validating the session and level indices against array sizes with "ArraySize" to avoid errors, returning early if invalid. We retrieve the appropriate character from the set using modulo 52 on the period index, append it to the level's string, and increment the count t
+442: The "CalculatePointOfControl" function identifies the price level with the most Time Price Opportunities by validating the session, initializing max count and index to zero, and iterating through levels to update them whenever a higher count is found, finally storing the index in the session data. We add the "GetTotalTpoCount" function to sum all Time Price Opportunity counts across a session's le
+444: ```
+446: //| Render close TPO highlight                                       |
+448: void RenderCloseTpoHighlight(int sessionIndex, int closeLevelIndex, string &displayStrings[]) {
+449:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;                              //--- Return if session invalid
+450:    if(closeLevelIndex < 0 || closeLevelIndex >= ArraySize(sessions[sessionIndex].levels)) return;   //--- Return if level invalid
+459:    string objectName = objectPrefix + "CloseTPO_" + IntegerToString(sessions[sessionIndex].startTime); //--- Create object name
+460:    int barIndex = iBarShift(_Symbol, _Period, sessions[sessionIndex].startTime);                    //--- Get bar index
+465:    ChartTimePriceToXY(0, 0, labelTime, sessions[sessionIndex].levels[closeLevelIndex].price, x, y); //--- Convert to XY
+491: void RenderOpenCloseMarkers(int sessionIndex, int barIndex) {
+492:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;                              //--- Return if index invalid
+493:    if(sessions[sessionIndex].sessionOpen == 0) return;                                              //--- Return if no open
+497:    string openObjectName = objectPrefix + "Open_" + IntegerToString(sessions[sessionIndex].startTime); //--- Create open object name
+499:       ObjectCreate(0, openObjectName, OBJ_TREND, 0, startTime, sessions[sessionIndex].sessionOpen, 
+500:                    startTime, sessions[sessionIndex].sessionOpen);                                  //--- Create trend object
+508:    string closeObjectName = objectPrefix + "Close_" + IntegerToString(sessions[sessionIndex].startTime); //--- Create close object name
+510:       ObjectCreate(0, closeObjectName, OBJ_TREND, 0, startTime, sessions[sessionIndex].sessionClose, 
+511:                    startTime, sessions[sessionIndex].sessionClose);                                 //--- Create trend object
+519: ```
+521: We define the "RenderCloseTpoHighlight" function to emphasize the closing Time Price Opportunity character in the profile display, beginning with index validations for the session and level using [ArraySize](https://www.mql5.com/en/docs/array/arraysize) to skip invalid cases. We retrieve the display string at the close level, calculate its length with [StringLen](https://www.mql5.com/en/docs/strin
+523: An object name is constructed by combining the prefix with the session start time converted through [IntegerToString](https://www.mql5.com/en/docs/convert/integertostring), and we obtain the bar index with [iBarShift](https://www.mql5.com/en/docs/series/ibarshift); if invalid, the function exits early. Next, we fetch the label time using [iTime](https://www.mql5.com/en/docs/series/itime), convert 
+525: To visualize session boundaries, we implement the "RenderOpenCloseMarkers" function, which validates the session index and skips if no open price is set. We retrieve the start time with [iTime](https://www.mql5.com/en/docs/series/itime) based on the bar index, then build names for open and close objects similarly. For the open marker, if not found via "ObjectFind", we create a trend line object wi
+527: ```
+529: //| Render session profile                                           |
+531: void RenderSessionProfile(int sessionIndex) {
+532:    if(sessionIndex < 0 || sessionIndex >= ArraySize(sessions)) return;           //--- Return if index invalid
+534:    int size = ArraySize(sessions[sessionIndex].levels);                          //--- Get levels size
+535:    if(size == 0 || sessions[sessionIndex].startTime == 0) return;                //--- Return if no levels or no start time
+537:    int barIndex = iBarShift(_Symbol, _Period, sessions[sessionIndex].startTime); //--- Get bar index
+540:    SortPriceLevelsDescending(sessionIndex);                                      //--- Sort levels descending
+541:    CalculatePointOfControl(sessionIndex);                                        //--- Calculate POC
+543:    int totalTpoCount = GetTotalTpoCount(sessionIndex);                           //--- Get total TPO count
+544:    int pointOfControlIndex = sessions[sessionIndex].pointOfControlIndex;         //--- Get POC index
+550:       int targetTpoCount = (int)(totalTpoCount * valueAreaPercent / 100.0);      //--- Calculate target TPO count
+551:       int currentTpoCount = sessions[sessionIndex].levels[pointOfControlIndex].tpoCount; //--- Set current TPO count
+553:       while(currentTpoCount < targetTpoCount && (valueAreaUpperIndex > 0 || valueAreaLowerIndex < size - 1)) { //--- Loop to expand value area
+554:          int upperTpoCount = (valueAreaUpperIndex > 0) ? sessions[sessionIndex].levels[valueAreaUpperIndex - 1].tpoCount : 0; //--- Get upper TPO count
+555:          int lowerTpoCount = (valueAreaLowerIndex < size - 1) ? sessions[sessionIndex].levels[valueAreaLowerIndex + 1].tpoCount : 0; //--- Get lower TPO count
+557:          if(upperTpoCount >= lowerTpoCount && valueAreaUpperIndex > 0) {         //--- Check upper expansion
+559:             currentTpoCount += upperTpoCount;     //--- Add upper TPO
+562:             currentTpoCount += lowerTpoCount;     //--- Add lower TPO
+565:             currentTpoCount += upperTpoCount;     //--- Add upper TPO
+575:       displayStrings[i] = sessions[sessionIndex].levels[i].tpoString; //--- Copy TPO string
+579:    double closePrice = sessions[sessionIndex].sessionClose; //--- Get close price
+582:       if(MathAbs(sessions[sessionIndex].levels[i].price - closePrice) < tpoPriceGridStep / 2) { //--- Check price match
+588:    RenderCloseTpoHighlight(sessionIndex, closeLevelIndex, displayStrings); //--- Render close highlight
+591:       string objectName = objectPrefix + "TPO_" + IntegerToString(sessions[sessionIndex].startTime) + "_" + IntegerToString(i); //--- Create object name
+593:       color textColor = defaultTpoColor;                                  //--- Set default color
+595:       if(sessions[sessionIndex].levels[i].tpoCount == 1) {                //--- Check single print
+603:       if(i == sessions[sessionIndex].pointOfControlIndex) {               //--- Check POC
+615:       ChartTimePriceToXY(0, 0, labelTime, sessions[sessionIndex].levels[i].price, x, y); //--- Convert to XY
+629:    RenderOpenCloseMarkers(sessionIndex, barIndex);                        //--- Render open close markers
+631: ```
+633: Here, we implement the "RenderSessionProfile" function to draw the complete market profile for a given session on the chart, starting with index validation against the sessions array size using [ArraySize](https://www.mql5.com/en/docs/array/arraysize) to exit early if invalid, and further checking for non-empty levels and a valid start time. We retrieve the starting bar index with [iBarShift](http
+635: Next, we fetch the total Time Price Opportunity count via "GetTotalTpoCount" and the point of control index, initializing the value area upper and lower indices to it. If the point of control is valid, we calculate a target count as a percentage of the total using the input value area percent, starting from the current count at that level, and expand the value area in a while loop by comparing and
+637: To prepare for rendering, we declare and resize a display string array to match the level's size with [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize), copying each level's Time Price Opportunity string into it via a loop. We then search for the close level index by iterating through levels and using [MathAbs](https://www.mql5.com/en/docs/math/mathabs) to find the closest match to the
+639: After calling "RenderCloseTpoHighlight" with the session index, close level index, and display strings to handle the close emphasis, we loop through each level to create or update label objects: constructing a unique name with the prefix, start time, and level index via [IntegerToString](https://www.mql5.com/en/docs/convert/integertostring); setting a default text color, overriding it for single p
+641: Finally, we invoke "RenderOpenCloseMarkers" with the session index and bar index to add the open and close visual indicators on the chart. We can now call this function in the tick calculation event handler to do the heavy lifting conditionally.
+643: ```
+663:    if(IsNewSessionStarted(currentBarTime, previousBarTime) || previousBarTime == 0) { //--- Check new session
+664:       if(activeSessionIndex >= 0 && activeSessionIndex < ArraySize(sessions)) { //--- Check active session
+665:          sessions[activeSessionIndex].endTime = previousBarTime; //--- Set end time
+666:          RenderSessionProfile(activeSessionIndex);               //--- Render session profile
+669:       activeSessionIndex = CreateNewSession();                  //--- Create new session
+670:       sessions[activeSessionIndex].startTime = currentBarTime;  //--- Set start time
+671:       sessions[activeSessionIndex].sessionOpen = open[rates_total - 1]; //--- Set session open
+672:       sessions[activeSessionIndex].sessionHigh = high[rates_total - 1]; //--- Set session high
+673:       sessions[activeSessionIndex].sessionLow = low[rates_total - 1];   //--- Set session low
+679:    if(isNewBar && IsBarEligibleForProcessing(currentBarTime) && activeSessionIndex >= 0) { //--- Check if process bar
+680:       sessions[activeSessionIndex].sessionHigh = MathMax(sessions[activeSessionIndex].sessionHigh, high[rates_total - 1]); //--- Update session high
+681:       sessions[activeSessionIndex].sessionLow = MathMin(sessions[activeSessionIndex].sessionLow, low[rates_total - 1]); //--- Update session low
+682:       sessions[activeSessionIndex].sessionClose = close[rates_total - 1]; //--- Update session close
+684:       int periodIndex = sessions[activeSessionIndex].periodCount; //--- Get period index
+685:       ArrayResize(sessions[activeSessionIndex].periodOpens, periodIndex + 1); //--- Resize period opens
+687:       sessions[activeSessionIndex].periodOpens[periodIndex] = open[rates_total - 1]; //--- Set period open
+688:       sessions[activeSessionIndex].periodCount++;                 //--- Increment period count
+693:       for(double price = quantizedLow; price <= quantizedHigh; price += tpoPriceGridStep) { //--- Loop through prices
+694:          int levelIndex = GetOrCreatePriceLevel(activeSessionIndex, price); //--- Get or create level
+696:             AddTpoCharacterToLevel(activeSessionIndex, levelIndex, periodIndex); //--- Add TPO character
+703:    if(IsBarEligibleForProcessing(currentBarTime) && activeSessionIndex >= 0) { //--- Check if update session
+704:       sessions[activeSessionIndex].sessionClose = close[rates_total - 1]; //--- Update close
+705:       sessions[activeSessionIndex].sessionHigh = MathMax(sessions[activeSessionIndex].sessionHigh, high[rates_total - 1]); //--- Update high
+706:       sessions[activeSessionIndex].sessionLow = MathMin(sessions[activeSessionIndex].sessionLow, low[rates_total - 1]); //--- Update low
+709:    for(int i = 0; i < ArraySize(sessions); i++) {                 //--- Loop through sessions
+710:       RenderSessionProfile(i);                                    //--- Render profile
+715: ```
+717: We handle the main computation in the [OnCalculate](https://www.mql5.com/en/docs/event_handlers/oncalculate) event handler, which processes price data arrays for the custom indicator on each update, starting by returning zero if fewer than two rates are available to ensure sufficient data. We extract the current bar time from the time array at the last index and determine if it's a new bar by comp
+719: After updating the previous bar time, if it's a new bar eligible for processing through "IsBarEligibleForProcessing" and an active session exists, we refresh the session's high and low using [MathMax](https://www.mql5.com/en/docs/math/mathmax) and [MathMin](https://www.mql5.com/en/docs/math/mathmin) with the current bar values, set the close, increment the period count after resizing and storing t
+721: Finally, we iterate through all sessions to render each profile and return the total rates to indicate full processing. What remains is handling the manual resize of the chart for rerendering the levels so they don't look hanging, and deleting our objects on de-initialization of the indicator. We used the following approach to achieve that.
+723: ```
+732:       for(int i = 0; i < ArraySize(sessions); i++) { //--- Loop through sessions
+733:          RenderSessionProfile(i);                    //--- Render profile
+756: ```
+758: We handle chart interactions in the [OnChartEvent](https://www.mql5.com/en/docs/event_handlers/onchartevent) event handler, which activates on various chart events, checking if the event ID matches [CHARTEVENT\_CHART\_CHANGE](https://www.mql5.com/en/docs/constants/chartconstants/enum_chartevents) to detect modifications like timeframe switches or resizes; if so, we loop through all sessions using 
+762: In "DeleteAllIndicatorObjects", we retrieve the total number of chart objects via the [ObjectsTotal](https://www.mql5.com/en/docs/objects/objectstotal) function across all windows and types, then iterate backward from the last index to zero, fetching each object's name with [ObjectName](https://www.mql5.com/en/docs/objects/objectname), and if it begins with the prefix per [StringFind](https://www.
+768: ### Backtesting
+774: ### Conclusion
+776: In conclusion, we’ve developed a custom indicator in MQL5 for hybrid [Time Price Opportunity](https://snpedge.vicitradingsolutions.com/p/understanding-time-price-opportunity "https://snpedge.vicitradingsolutions.com/p/understanding-time-price-opportunity") (TPO) market profiles that supports multiple session timeframes, including intraday, daily, weekly, monthly, and fixed periods with timezone ad
+782: [Hybrid\_TPO\_Market\_Profile\_PART\_1.mq5](https://www.mql5.com/en/articles/download/21388/Hybrid_TPO_Market_Profile_PART_1.mq5 "Download Hybrid_TPO_Market_Profile_PART_1.mq5")
+809: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F523%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dchoose.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&a=fyznzyduwsltgnhlftytumasbfgbwlqw&s=91bc0eca8f132d3df7d14cdb1baebac753aef179403d60dc83856af55a4d6769&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxq

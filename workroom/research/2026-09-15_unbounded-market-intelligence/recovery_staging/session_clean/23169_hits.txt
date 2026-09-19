@@ -1,0 +1,302 @@
+4: title: "Automatic Session Volume Profile Builder in MQL5: Rendering POC and Value Area Without Third-Party Tools"
+20: # Automatic Session Volume Profile Builder in MQL5: Rendering POC and Value Area Without Third-Party Tools
+25: | 2 July 2026 at 07:35
+36: ### Introduction
+38: MetaTrader 5 does not ship with a native volume profile indicator. This creates a practical gap for traders and quantitative developers who require session-based price-at-volume analysis — the identification of price levels where the market has spent the most transactional effort, expressed through accumulated tick volume per price tier.
+42: This article presents the engineering design and implementation of a session-based volume profile indicator in MQL5. It collects tick data for a user-defined session, aggregates it into price bins, calculates POC and the 70% Value Area, and renders the results as native chart objects.
+44: ### Why Volume Profiles and Why Now
+46: Every bar chart compresses a time period into four prices. It tells you where price opened, where it went, and where it closed. It tells you nothing about where price spent the most time transacting. Two sessions can produce identical OHLC values but completely different volume distributions — one consolidated in a narrow band for hours before breaking out, the other sweeping the full range unifor
+48: A volume profile organizes market activity into a histogram rotated ninety degrees. Price occupies the vertical axis. Accumulated tick volume occupies the horizontal axis. Each row of the histogram corresponds to a price bin — a discrete price range — and its width encodes the volume accumulated within that bin during the session. The distribution reveals where the market accepted price (high-volu
+50: Three quantities are derived from this distribution and used as reference levels in the following session:
+52: - Point of Control (POC) — the price level carrying the greatest accumulated volume. Conceptually it represents the price at which the market found the most agreement between buyers and sellers during the session.
+53: - Value Area High (VAH) — the upper boundary of the contiguous price range containing 70% of total session volume, centered on the POC.
+54: - Value Area Low (VAL) — the lower boundary of the same range.
+56: ### Tick Volume on CFD Instruments
+64: | Field | Populated | Notes |
+65: | --- | --- | --- |
+66: | bid | Always | Primary price field on OTC instruments |
+67: | ask | Always | Secondary price field |
+68: | last | Zero | No central exchange last price |
+69: | volume | Zero | No exchange lot count |
+70: | volume\_real | Zero | No real volume data |
+76: End-to-end pipeline of the Session Volume Profile indicator — from session boundary detection and tick collection through price binning, POC identification, Value Area expansion, rendering, and final chart output. Each stage maps to a dedicated module in the implementation.
+78: ### Mathematical Foundation
+84: Bin Index = floor( (Pᵢ - session\_low) / BinSize )
+86: Where Pᵢ is the tick price, session\_low is the lowest price traded during the session, and BinSize is the user-defined bin size in price units. Subtracting session\_low first shifts the price range to zero, so the lowest traded price always maps to bin index 0. Floor division produces an integer address. All prices within a bin's range map to the same index.
+90: bin\_count = ceil( (session\_high - session\_low) / BinSize ) + 1
+92: The +1 ensures the session high price has its own bin rather than falling at the boundary of the last bin.
+102: The Value Area algorithm expands outward from the POC, greedily absorbing bins on whichever side adds more volume at each step:
+107: 4. Absorb whichever is greater, advancing the corresponding boundary pointer
+110: The VAH is the lower edge of the uppermost absorbed bin. The VAL is the lower edge of the lowermost absorbed bin.
+112: ### Core Variables
+114: | Symbol | Meaning |
+115: | --- | --- |
+116: | Pᵢ | Price of the i-th tick |
+117: | Vᵢ | Volume weight of the i-th tick |
+118: | BinSize | Price row size in absolute price units |
+119: | POC | Point of Control price |
+120: | VAH | Value Area High price |
+121: | VAL | Value Area Low price |
+123: ### Computational Complexity
+125: | Component | Complexity |
+126: | --- | --- |
+127: | Tick collection | O(N) |
+128: | Histogram accumulation | O(N) |
+129: | POC search | O(M) |
+130: | Value Area expansion | O(M) |
+131: | Rendering | O(M) |
+133: N is the number of ticks collected during the session. M is the numbe  
+136: ### Program Architecture
+140: | # | Name | Type | Description |
+141: | --- | --- | --- | --- |
+142: | 1 | SessionManager.mqh | Class header | Session boundary calculation and rollover detection |
+143: | 2 | TickCollector.mqh | Class header | CopyTicksRange acquisition and CFD-aware filtering |
+144: | 3 | PriceHistogram.mqh | Class header | Price-volume accumulation into discrete bins |
+145: | 4 | VolumeProfileCalculator.mqh | Class header | POC and Value Area computation |
+146: | 5 | ProfileRenderer.mqh | Class header | Chart object creation, fixed-width scaling, and cleanup |
+147: | 6 | ProfileStatistics.mqh | Class header | Diagnostic output to the Experts tab |
+148: | 7 | SessionVolumeProfile.mq5 | Indicator | Main event handlers and component orchestration |
+150: ### Module 1 — CSessionManager
+152: CSessionManager translates the user's session type selection into concrete datetime boundaries keyed to the current calendar date. It detects when a new session begins and provides those boundaries to the tick collector and renderer.
+156: ```
+158: //|                                           SessionManager.mqh     |
+159: //|                      Session Volume Profile Engine               |
+161: #ifndef SESSION_MANAGER_MQH
+162: #define SESSION_MANAGER_MQH
+167:    SESSION_LONDON    = 0, // London 08:00 - 17:00 UTC
+168:    SESSION_NEW_YORK  = 1, // New York 13:00 - 22:00 UTC
+169:    SESSION_CUSTOM    = 2  // User-defined hours
+173: //| Session Manager Class                                            |
+190:    void               Configure(ENUM_SESSION_TYPE type,
+194:    bool               IsNewSession(void) const;
+195:    datetime           GetSessionStart(void) const;
+196:    datetime           GetSessionEnd(void)   const;
+199:    void               ResolveSessionHours(void);
+201: ```
+203: The class declaration introduces the ENUM\_SESSION\_TYPE enumeration, which gives the user a named choice between the London session, the New York session, and a fully custom time window. The seven private fields cover the session type, the configured boundary hours, the computed datetime boundaries for the active session, and m\_last\_session\_date — a cursor that advances once per calendar day a
+207: ```
+229: ```
+231: The CSessionManager constructor initializes all fields to their London session defaults using the member initializer list. Setting m\_last\_session\_date to zero is deliberate — zero is earlier than any valid trading timestamp, so the very first call to Update() will always detect a mismatch and fire the new-session signal. The destructor body is empty because the class allocates no heap memory an
+235: ```
+237: //| Configure session parameters                                     |
+239: void CSessionManager::Configure(ENUM_SESSION_TYPE type,
+250: ```
+252: Configure() stores all five caller-supplied parameters and immediately calls ResolveSessionHours(). The call to ResolveSessionHours() is necessary because for the two built-in session types, the caller-supplied hour values are irrelevant — the canonical UTC hours must be enforced regardless of what the input parameters contain. For SESSION\_CUSTOM, ResolveSessionHours() leaves the stored values un
+256: ```
+258: //| Resolve hard-coded session hours for built-in types              |
+260: void CSessionManager::ResolveSessionHours(void)
+277: //--- SESSION_CUSTOM retains caller-supplied values
+279: ```
+281: ResolveSessionHours() enforces the canonical UTC boundaries for the two built-in session types. The London session runs 08:00–17:00 UTC and the New York session runs 13:00–22:00 UTC. The SESSION\_CUSTOM branch is intentionally absent — if neither condition matches, the method returns without modifying any fields, preserving whatever hours the caller supplied through Configure().
+285: ```
+287: //| Update session boundaries and detect rollover                    |
+289: bool CSessionManager::Update(datetime current_time)
+291: //--- Extract the calendar date component from current_time
+295: //--- Build session start and end for today
+306: //--- Detect new session by comparing today's date to the last recorded date
+307:    bool is_new = (today_start != m_last_session_date);
+318: ```
+320: Update() is called once per bar from OnCalculate(). It decomposes current\_time into a MqlDateTime structure using TimeToStruct(), then substitutes the session start hours into that structure and reconstructs a datetime value using StructToTime(). This produces today\_start — the session start timestamp for the calendar date of the current bar. The critical comparison today\_start != m\_last\_sess
+324: ```
+326: //| Return session start timestamp                                   |
+328: datetime CSessionManager::GetSessionStart(void) const
+334: //| Return session end timestamp                                     |
+336: datetime CSessionManager::GetSessionEnd(void) const
+341: #endif // SESSION_MANAGER_MQH
+342: ```
+344: GetSessionStart() and GetSessionEnd() are simple const accessors that expose the active session boundaries to CTickCollector and CProfileRenderer. These values are only meaningful after at least one call to Update() has returned true.
+346: ### Module 2 — CTickCollector
+352: ```
+355: //|                     Session Volume Profile Engine                |
+357: #ifndef TICK_COLLECTOR_MQH
+358: #define TICK_COLLECTOR_MQH
+380: ```
+386: ```
+403: ```
+409: ```
+411: //| Collect and filter session ticks using CopyTicksRange            |
+422:    ulong from_ms = (ulong)session_start * 1000;
+423:    ulong to_ms   = (ulong)session_end   * 1000;
+425: //--- Request all ticks within the session range
+457:       bool in_window = (m_ticks[i].time >= session_start &&
+475: ```
+477: Collect() begins by resetting both counters and freeing any previously allocated tick array, ensuring a clean state before each session rebuild. The datetime boundaries are multiplied by 1000 to convert them from seconds to milliseconds — the unit that CopyTicksRange() requires for its timestamp parameters. This is the key distinction between CopyTicksRange() and CopyTicks(): the former accepts an
+481: The filter loop applies a CFD-aware rule: a tick is valid if it has a non-zero bid or ask price and falls within the session window. A secondary timestamp check handles edge cases where returned ticks slightly exceed the requested range due to internal rounding.
+485: ```
+503: ```
+509: ```
+529: #endif // TICK_COLLECTOR_MQH
+530: ```
+534: ### Module 3 — CPriceHistogram
+540: ```
+543: //|                      Session Volume Profile Engine               |
+545: #ifndef PRICE_HISTOGRAM_MQH
+546: #define PRICE_HISTOGRAM_MQH
+548: #include "TickCollector.mqh"
+573:    double             GetSessionLow(void)            const;
+574:    double             GetSessionHigh(void)           const;
+581: ```
+583: The class owns the bin volume array m\_bin\_volumes[], the session price range defined by m\_session\_low and m\_session\_high, the resolved bin size in absolute price units (m\_bin\_size), the computed bin count (m\_bin\_count), and the total accumulated volume across all bins. The private method PriceToBin() encapsulates the floor discretization formula, keeping the bin-mapping arithmetic in one
+587: ```
+620: ```
+622: The CPriceHistogram constructor zero-initializes all scalar fields. The destructor releases the bin volume array. Reset() is called explicitly at the start of each session rebuild from the main indicator file — it mirrors the destructor's cleanup and zeroes all scalar fields, preparing the object for a fresh Build() call without destroying and recreating the instance. This avoids the overhead of o
+626: ```
+643: //--- First pass: find session high and low
+644:    m_session_low    = collector.GetPrice(0);
+645:    m_session_high   = collector.GetPrice(0);
+657:    m_bin_count = (int)MathCeil((m_session_high - m_session_low) / m_bin_size) + 1;
+684: ```
+686: Build() executes in two sequential passes over the tick data. The first pass determines the session's traded price range by scanning all tick prices for the minimum and maximum values. Before this scan, the user-supplied bin size in points is multiplied by [SYMBOL\_POINT](https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants#enum_symbol_info_double) to convert it to an absol
+688: The bin count is computed from the observed price range and guarded against both zero and the degenerate upper limit of 10,000 bins, which would indicate an unreasonably small bin size relative to the session's price range. The guard prevents both memory exhaustion and nonsensical profiles.
+694: ```
+700:    return((int)MathFloor((price - m_session_low) / m_bin_size));
+702: ```
+704: PriceToBin() implements the floor discretization formula directly. Subtracting m\_session\_low shifts the price range to zero so the lowest traded price always maps to index 0. Dividing by m\_bin\_size produces a fractional position within the bin array. MathFloor() truncates to the integer bin address, ensuring all prices within a bin's half-open interval [lower\_edge, lower\_edge + bin\_size) pr
+708: ```
+724:    return(m_session_low + bin * m_bin_size);
+738: double CPriceHistogram::GetSessionLow(void) const
+746: double CPriceHistogram::GetSessionHigh(void) const
+759: #endif // PRICE_HISTOGRAM_MQH
+760: ```
+762: GetBinVolume() includes a bounds check that returns zero for out-of-range indices rather than causing an array overrun — this is important because the Value Area expansion algorithm in CVolumeProfileCalculator calls this method at boundary indices as part of its termination logic. GetBinPrice() reconstructs the lower edge of a bin from the session low and the bin index, which is the inverse of the
+764: ### Module 4 — CVolumeProfileCalculator
+770: ```
+773: //|                      Session Volume Profile Engine               |
+775: #ifndef VOLUME_PROFILE_CALCULATOR_MQH
+776: #define VOLUME_PROFILE_CALCULATOR_MQH
+778: #include "PriceHistogram.mqh"
+781: //| Volume Profile Calculator Class                                  |
+800: ```
+806: ```
+824: ```
+830: ```
+897: ```
+901: The second stage implements the greedy Value Area expansion. The volume target is computed as total\_volume × (value\_area\_percent / 100.0). The accumulator va\_volume is initialized with the POC bin's volume, and both boundary pointers upper\_bin and lower\_bin start at the POC. Each iteration computes the volume available one step above the current upper boundary and one step below the current 
+905: ```
+909: double CVolumeProfileCalculator::GetPOC(void) const
+930: #endif // VOLUME_PROFILE_CALCULATOR_MQH
+931: ```
+933: GetPOC(), GetVAH(), and GetVAL() expose the three computed price levels to CProfileRenderer for chart object placement and to CProfileStatistics for diagnostic output. These values are only valid after Calculate() has returned true.
+935: ### Module 5 — CProfileRenderer
+937: CProfileRenderer translates the histogram and key price levels into visible chart objects. It supports two rendering modes: a fixed-width mode where the POC bar always spans a user-defined number of chart bars, and a proportional mode where bar widths scale to the session's actual time duration. The fixed-width mode is the default because it produces readable profiles at any timeframe.
+941: ```
+944: //|                      Session Volume Profile Engine               |
+946: #ifndef PROFILE_RENDERER_MQH
+947: #define PROFILE_RENDERER_MQH
+949: #include "PriceHistogram.mqh"
+977:    void               RemoveSessionObjects(void);
+998:    long               ResolveBarSpan(datetime session_start,
+1001: ```
+1003: The class owns eight private fields covering visual configuration and rendering mode. m\_prefix is the string prepended to every chart object name this renderer creates — it enables deterministic cleanup by allowing RemoveSessionObjects() to identify all owned objects without maintaining a separate registry. The two mode fields m\_fixed\_bar\_count and m\_use\_fixed\_width govern ResolveBarSpan(),
+1007: ```
+1029: ```
+1031: The CProfileRenderer constructor sets sensible defaults for all visual parameters and enables fixed-width mode by default, so the indicator produces a readable histogram immediately on any timeframe without requiring the user to tune parameters first. The destructor is empty because chart objects are owned and managed by the MetaTrader terminal, not by this class — cleanup is handled explicitly th
+1035: ```
+1057: ```
+1063: ```
+1065: //| Remove all chart objects belonging to this session               |
+1067: void CProfileRenderer::RemoveSessionObjects(void)
+1080: ```
+1082: RemoveSessionObjects() scans all chart objects in reverse index order and deletes any whose name begins with m\_prefix. Reverse iteration is not optional — ObjectDelete() reduces the value returned by ObjectsTotal() immediately, so forward iteration would skip every second object after the first deletion. Reverse iteration avoids this by always working from the current end of the list. The prefix 
+1086: ```
+1090: long CProfileRenderer::ResolveBarSpan(datetime session_start,
+1100: //--- Proportional mode: POC bar spans the full session duration
+1101:    return((long)(session_end - session_start));
+1103: ```
+1105: ResolveBarSpan() is the method that makes the profile timeframe-aware. In fixed mode, PeriodSeconds() returns the current chart period in seconds — 60 for M1, 3600 for H1, 14400 for H4. Multiplying by m\_fixed\_bar\_count produces a time span that always equals that many visible bars on the current chart, regardless of which timeframe is active. A London session viewed on H1 with m\_fixed\_bar\_co
+1109: ```
+1111: //| Render full volume profile                                       |
+1135:    long bar_span_seconds = ResolveBarSpan(session_start, session_end);
+1174: ```
+1180: ```
+1182: //| Draw a single histogram bar anchored to session end              |
+1194:    datetime bar_start = session_end - (datetime)secs;
+1218: ```
+1220: DrawBar() renders a single price bin as a horizontal OBJ\_TREND line. The normalization ratio volume / max\_volume maps each bin's volume to the interval [0, 1], and multiplying by bar\_span\_seconds converts that ratio into a time-domain length. The right anchor of every bar is fixed at session\_end, so all bars are right-aligned to the session boundary and their left anchors fan out proportional
+1224: ```
+1248: #endif // PROFILE_RENDERER_MQH
+1249: ```
+1251: DrawHLine() creates a horizontal trend line spanning the full session from session\_start to session\_end at the specified price. The key property that distinguishes key level lines from histogram bars is OBJPROP\_RAY\_RIGHT = true, which extends the line indefinitely to the right of session\_end. This keeps the POC, VAH, and VAL levels visible regardless of how far the chart is scrolled forward i
+1253: ### Module 6 — CProfileStatistics
+1259: ```
+1262: //|                      Session Volume Profile Engine               |
+1264: #ifndef PROFILE_STATISTICS_MQH
+1265: #define PROFILE_STATISTICS_MQH
+1298: //| Print session diagnostic report                                  |
+1316: #endif // PROFILE_STATISTICS_MQH
+1318: ```
+1326: ```
+1334: ```
+1336: ### 
+1338: ### Module 7 — SessionVolumeProfile.mq5
+1344: ```
+1346: //|                                     SessionVolumeProfile.mq5     |
+1348: #property indicator_chart_window
+1349: #property indicator_buffers 0
+1350: #property indicator_plots   0
+1352: #include <Session_Volume_Profile_Builder\SessionManager.mqh>
+1353: #include <Session_Volume_Profile_Builder\TickCollector.mqh>
+1354: #include <Session_Volume_Profile_Builder\PriceHistogram.mqh>
+1355: #include <Session_Volume_Profile_Builder\VolumeProfileCalculator.mqh>
+1356: #include <Session_Volume_Profile_Builder\ProfileRenderer.mqh>
+1357: #include <Session_Volume_Profile_Builder\ProfileStatistics.mqh>
+1360: input ENUM_SESSION_TYPE InpSessionType      = SESSION_LONDON; // Session type
+1361: input int               InpStartHour        = 8;              // Custom start hour
+1363: input int               InpEndHour          = 17;             // Custom end hour
+1383: ```
+1389: ```
+1410: ```
+1412: OnInit() configures only the two modules that carry user-supplied parameters. g\_session\_mgr needs the session type and hour boundaries. g\_renderer needs all visual and rendering mode settings. The four remaining module instances — g\_tick\_collector, g\_histogram, g\_calculator, and g\_statistics — require no configuration because they are driven entirely by the data they receive at runtime thr
+1416: ```
+1424: ```
+1426: OnDeinit() delegates entirely to g\_renderer.RemoveSessionObjects(). Without this call, all histogram bars and key level lines would remain on the chart indefinitely after the indicator is removed, creating persistent orphaned objects that no running code manages. The reason parameter is accepted but not used — cleanup is unconditional regardless of whether the indicator was removed by the user, r
+1430: ```
+1454:    bool is_new = g_session_mgr.Update(current_time);
+1463:    datetime session_start = g_session_mgr.GetSessionStart();
+1464:    datetime session_end   = g_session_mgr.GetSessionEnd();
+1505: ```
+1509: The first guard if(prev\_calculated == rates\_total) suppresses tick-driven recalculation. On an M1 chart, OnCalculate() fires on every incoming price tick — potentially many times per minute. When prev\_calculated equals rates\_total, no new bar has formed since the last call, and the function returns immediately with O(1) cost. This converts the indicator from tick-driven to bar-driven for the s
+1511: The second guard if(!is\_new) handles the common case where a new bar has formed but the session boundary has not changed. The vast majority of bar events follow this path with near-zero cost.
+1513: When a new session is detected, the pipeline executes in strict dependency order. Old chart objects are removed before new ones are created, preventing visual overlap between consecutive sessions. Each stage checks its return value and aborts the pipeline on failure — if CTickCollector::Collect() returns false because tick history is unavailable, neither the histogram builder nor the renderer is c
+1515: ### Rendering Objects Summary
+1517: | Object Name Pattern | Type | Purpose |
+1518: | --- | --- | --- |
+1519: | SVP\_BAR\_N | OBJ\_TREND (horizontal) | One histogram bar per non-empty price bin |
+1520: | SVP\_POC | OBJ\_TREND (ray right) | Point of Control level |
+1521: | SVP\_VAH | OBJ\_TREND (ray right) | Value Area High level |
+1522: | SVP\_VAL | OBJ\_TREND (ray right) | Value Area Low level |
+1526: Session volume profile rendered on ETHUSD H1 showing histogram bars (blue), Point of Control (yellow), Value Area High (green dashed), and Value Area Low (red dashed).
+1528: ### Recommended Fixed Bar Count by Timeframe
+1532: | Timeframe | Recommended InpFixedBarCount | POC bar spans |
+1533: | --- | --- | --- |
+1534: | M1 | 30 | 30 minutes |
+1535: | M5 | 20 | 100 minutes |
+1536: | H1 | 15 | 15 hours |
+1537: | H4 | 6 | 24 hours (with H4 and InpFixedBarCount = 6: 6×4h = 24h) |
+1538: | D1 | 5 | 5 days |
+1540: Setting InpFixedWidth = false in the inputs dialog reverts to proportional mode, where the POC bar spans the full session duration. This mode produces the most geometrically faithful representation of the session's time structure but becomes visually compressed on timeframes much longer than the session itself.
+1542: ### Limitations
+1544: - Tick volume as a proxy: The indicator measures tick density, not true transacted volume. In thin liquidity environments — pre-session hours, public holidays, around scheduled news releases — the correlation between tick count and actual order flow degrades. Profiles built during these windows carr
+1545: - Tick history availability: CopyTicksRange() reads from the terminal's locally cached tick database. On a fresh installation or a demo account that has not previously downloaded tick history for the target instrument and time period, the function returns zero ticks. Scrolling the Ticks tab in Marke
+1546: - CFD volume fields: On retail CFD brokers, volume and volume\_real are typically zero for all ticks. The indicator treats each tick as contributing one unit of volume, producing a tick-density profile. This is the only approach available on such instruments and yields analytically useful results, b
+1547: - Session gaps: On instruments with overnight price gaps, the first bar of the new session may be far from the last bar of the previous one. The indicator does not interpolate across gaps. Each session profile is built strictly from ticks falling within the defined session window.
+1548: - Object count at scale: Each non-empty price bin requires one chart object. Running multiple simultaneous instances of the indicator on the same chart requires each instance to use a distinct InpPrefix value, otherwise the RemoveSessionObjects() calls from one instance will delete objects created b
+1549: - Non-predictive interpretation: Volume profiles describe where transactional activity has occurred within a completed session. The POC, VAH, and VAL are retrospective reference levels. They do not predict where price will move in the following session.
+1551: ### 
+1553: ### Conclusion
+1555: MetaTrader 5 provides every primitive required to construct a complete, session-aware volume profile from first principles. CopyTicksRange() bounds tick retrieval to an explicit time window and handles CFD data correctly when filtered on price presence rather than volume fields. A two-pass histogram build converts the tick stream into a discrete price-at-volume distribution. The greedy 70% expansi
+1557: The seven-module architecture separates each concern cleanly. CSessionManager handles time. CTickCollector handles data acquisition. CPriceHistogram handles discretization. CVolumeProfileCalculator handles statistics. CProfileRenderer handles visualization. CProfileStatistics handles observability. SessionVolumeProfile.mq5 sequences them. No module knows about any other module's internal state, an
+1561: | # | Name | Type | Description |
+1562: | --- | --- | --- | --- |
+1563: | 1 | SessionManager.mqh | Include File | Manages session boundary detection by translating the user's session type selection into concrete start and end timestamps keyed to the current calendar date, firing a rollover signal whenever a new trading day begins. |
+1564: | 2 | TickCollector.mqh | Include File | Retrieves all raw ticks within the active session window using CopyTicksRange() and applies a CFD-aware filter that accepts any tick carrying a non-zero bid or ask price, assigning a unit volume weight when the broker reports zero in all volume fields. |
+1565: | 3 | PriceHistogram.mqh | Include File | Converts the raw tick stream into a discrete price-at-volume distribution by mapping each tick's mid-price to an integer bin index using the floor discretization formula, then accumulating the tick's volume weight into that bin across two sequential passes. 
+1566: | 4 | VolumeProfileCalculator.mqh | Include File | Computes the Point of Control by scanning all price bins for the maximum accumulated volume, then determines the Value Area High and Value Area Low by expanding outward from the POC using the standard greedy 70% rule. |
+1567: | 5 | ProfileRenderer.mqh | Include File | Translates the completed histogram and three key price levels into native chart objects, drawing each bin as a right-aligned horizontal trend line whose width is proportional to its volume, with the POC bar width governed by a fixed chart-bar count that kee
+1568: | 6 | ProfileStatistics.mqh | Include File | Prints a structured diagnostic report to the MetaTrader Experts tab after each successful session build, reporting tick count, bin count, POC, VAH, VAL, and total rendered object count so that each pipeline stage can be verified without a debugger. |
+1569: | 7 | SessionVolumeProfile.mq5 | Custom Indicator | Serves as the main orchestration layer, instantiating all six module objects, configuring them from user-supplied input parameters in OnInit(), and sequencing the full pipeline in OnCalculate() whenever a new session boundary is detected on the cur
+1570: | 8 | Session\_Volume\_Profile.zip | Zip Archive | Zip archive containing all the attached files and their paths relative to the terminal's root folder. |
+1576: [SessionManager.mqh](https://www.mql5.com/en/articles/download/23169/SessionManager.mqh "Download SessionManager.mqh")
+1594: [SessionVolumeProfile.mq5](https://www.mql5.com/en/articles/download/23169/SessionVolumeProfile.mq5 "Download SessionVolumeProfile.mq5")
+1597: [Session\_Volume\_Profile.zip](https://www.mql5.com/en/articles/download/23169/Session_Volume_Profile.zip "Download Session_Volume_Profile.zip")
+1629: Begin](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/book%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.algobook%26utm_content=visit.page%26utm_campaign=algobook.promo.04.2024&a=heclgjpfbvfghpmyaciuaesdtswflupo&s=4255fbe1b8cbc4d1b40afbaebf4235e5ace8b5103cba60d996897a03d588556f&uid=&ref=https://www.mql5.com/en/articles/23169&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6

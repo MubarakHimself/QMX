@@ -1,0 +1,492 @@
+##### 623 | Interviews | Interview with Sergey Pankratyev (ATC 2012)
+Interview with Sergey Pankratyev (ATC 2012)
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Interviews](https://www.mql5.com/en/articles/mt5/interviews)
+| 27 December 2012 at 00:53
+
+[img]
+5 916
+[[img]
+1](https://www.mql5.com/en/forum/10112 "Comments")
+
+[img]
+
+[Automated-Trading](https://www.mql5.com/en/users/automated-trading)
+
+Interview on [Automated Trading Championship 2012](https://championship.mql5.com/2012/en) from 27.12.2012.
+
+The Championship is
+coming to an end leaving us with vivid impressions of many unusual
+trading strategies. However, the trading robot of Sergey Pankratyev ([s75](https://championship.mql5.com/2012/en/users/s75 "Sergey Pankratyev (s75) at the Automated Trading Championship 2012"))
+is showing really peculiar things - it is trading all 12 currency pairs
+opening only long positions. Interviewing the developer of this Expert
+Advisor, we found out that this is not an error but just a response to
+some certain market conditions.
+
+**Hello, Sergey! You have signed up
+to the Championship during the last possible days but you do not look
+like a newcomer. Tell us a little about your trading activity.**
+
+I cannot say for sure when exactly
+I've become interested in trading. I can only say that MetaTrader 5 was
+released a year later. I traded manually for a month and then learned
+about MetaTrader 4 and decided to try automated trading systems.
+
+**Why have you decided to switch to trading robots so quickly?**
+
+I've had no desire to constantly sit at my computer lost in anxiety.
+
+**So, one month was enough for you to grasp the basics of trading. How much time did you spend mastering MQL4?**
+
+I am a programmer and C is my "native"
+language, and it is very similar to MQL4. Therefore, I developed my
+first indicator in a couple of days.
+
+**Many developers believe that the
+automated trading is not an ultimate solution, as traders still
+interfere with robot's operation violating their own implemented rules.
+Have you experienced something like that?**
+
+
+----------------------------------------------------------------------
+
+
+##### 624 | Interviews | Interview with Alexey Masterov (ATC 2012)
+Interview with Alexey Masterov (ATC 2012)
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Interviews](https://www.mql5.com/en/articles/mt5/interviews)
+| 8 January 2013 at 01:22
+
+[img]
+13 450
+[[img]
+0](https://www.mql5.com/en/forum/10164 "Comments")
+
+[img]
+
+[Automated-Trading](https://www.mql5.com/en/users/automated-trading)
+
+Interview on [Automated Trading Championship 2012](https://championship.mql5.com/2012/en) from 08.01.2013.
+
+We do our best to introduce all the
+leading Championship Participants to our audience in reasonable time. To
+achieve that, we closely monitor the most promising contestants in our
+TOP-10 and arrange interviews with them. However, the sharp rise of
+Alexey Masterov ([reinhard](https://championship.mql5.com/2012/en/users/reinhard "Alexey Masterov (reinhard) at the Automated Trading Championship 2012")) up to the third place has become a real surprise!
+
+**Alexey, your Expert Advisor burst into TOP-10 during the last week. What position did it occupy before that?**
+
+It came 11th during the twelfth week.
+My Expert Advisor did not show any impressive results during the first
+two months. It fell down to 300th position and even lower. Frankly,
+there were no reasons to be too optimistic at the time. But the hope
+remained, of course.
+
+**The final third place must have
+taken you aback. It is the first time in the Championship's history that
+the Participant enters TOP-3 so unexpectedly.**
+
+Yes, it came as a surprise for me.
+Although I believed that my Expert Advisor is a promising one, the
+circumstances could have been unfavorable preventing my trading robot
+from showing its power. My Expert Advisor is designed for trends and the
+market was favorable to it during the last two weeks, especially when
+the traded symbol opened with a gap after December 25.
+
+**It seems that your trading robot
+has a very aggressive strategy staying in the market almost all the
+time. Why did it trade so frequently?**
+
+I wouldn't call it aggressive. The
+robot has perf
+
+----------------------------------------------------------------------
+
+
+##### 22768 | Interviews | How We Built the Most Powerful Machine Learning-Powered Trading Platform: The Evolution of MQL and MetaTrader Through Archives, Forums, and Releases
+How We Built the Most Powerful Machine Learning-Powered Trading Platform: The Evolution of MQL and MetaTrader Through Archives, Forums, and Releases
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Interviews](https://www.mql5.com/en/articles/mt5/interviews)
+| 10 August 2026 at 06:46
+
+[img]
+8 291
+[[img]
+11](https://www.mql5.com/en/forum/514285 "Comments")
+
+[img]
+
+[MetaQuotes](https://www.mql5.com/en/users/metaquotes)
+
+From the First Expert Advisors to the Agentic AI Assistant, MCP, and OpenBLAS: How the MQL Ecosystem Has Evolved.
+
+The history of MQL is the story of its transformation from a simple language for trading strategies into a comprehensive development and analytical environment. Today the ecosystem combines MetaEditor, MQL5, Python, ONNX, the Agentic AI Assistant, Model Context Protocol (MCP), OpenBLAS, and the Algo Forge Git infrastructure.
+
+[img]
+
+## From the Language of Expert Advisors to an IDE
+
+These days, it's hard to think of MetaEditor as merely a code editor. It includes documentation, a compiler, debugger, profiler, project management, MQL5.COM integration, centralized source code storage, Python integration, ONNX support, an AI Assistant, SQLite database support, and the ability to work with CSV files as editable tables. Yet this evolution did not happen overnight.
+
+
+The Internet has not preserved everything. Some of the old pages have disappeared entirely; some remain only in the [Internet Archive Wayback Machine](https://web.archive.org/ "https://web.archive.org/"); and some can be found in old forum archives and news articles. Nevertheless, enough material remains to reveal the main evolutionary path:
+
+### 
+
+### Fx Charts → MetaQuotes → MetaTrader → MetaTrader 4 → MetaTrader 5
+
+
+## Expert Advisors Came Before the Language
+
+
+[img]
+
+What makes this early discovery particularly interesting is neither the appearance of the website nor its technical details. The important point is that MQL did not yet exist, while the idea of **Expert Advi
+
+----------------------------------------------------------------------
+
+
+##### 638 | Examples | MQL5 Cookbook: Using Different Print Modes
+### Introduction
+However, it turned out to be easier than I thought and it only took me a few months before I could develop a fairly complex program. You can find out more about it in the article called ["Limitless Opportunities with MetaTrader 5 and MQL5"](https://www.mql5.com/en/articles/392 "Limitless Opportunities with MetaTrader 5 and MQL5").
+
+### Conclusion
+We will be ending this article here. In addition to the methods described above, you can also write data to a file. It can be a plain text file or even a HTML report nicely formatted using CSS. But these methods are much more complicated for beginners and the ones provided above should be enough for a start.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/638>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/638.zip "Download all attachments in the single ZIP archive")
+
+[printmodes.mq5](https://www.mql5.com/en/articles/download/638/printmodes.mq5 "Download printmodes.mq5")
+(3.54 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Cookbook: Getting Position Properties](https://www.mql5.com/en/articles/639)
+
+In this article, we will create a script that gets all position properties and displays them to the user in a dialog box. Upon running the script, you will be able to select out of two modes available in the drop-down list in the external parameters: to either view position properties only on the current symbol or to view position properties on all symbols.
+
+[img]
+[Calculation of Integral Characteristics of Indicator Emissions](https://www.mql5.com/en/articles/610)
+
+[img]
+[MQL5 Programming Basics: Arrays](https://www.mql5.com/en/articles/567)
+
+Arrays are an integral part of almost any programming language along with variables and functions. The article should be of interest primarily to novice MQL5 programmers, while experienced programmers will have a good opportunity to summarize and systematize their knowledge.
+
+[img]
+[MetaTrader 4 Expert Advisor exchanges information with the outside world](https://www.mql5.com/en/articles/1361)
+
+A simple, universal and reliable solution of information exchange 
+
+
+----------------------------------------------------------------------
+
+
+##### 639 | Examples | MQL5 Cookbook: Getting Position Properties
+### Introduction
+The previous article called ["MQL5 Cookbook: Using Different Print Modes"](https://www.mql5.com/en/articles/638) showed us how we can quickly write a script and print the required information using three different modes. Let us now create a script that will get and display all position properties to the user.
+
+### Conclusion
+As you can see in the figure above, there are three buttons in the dialog box. If you click **Retry**, the loop counter will be reset and position properties for the symbol currently displayed in the dialog box will be refreshed. If you click **Continue**, the program will proceed to the next symbol. The **Cancel** button serves to terminate the program.
+
+It should also be noted that the first line above the list of position properties contains information on the total number of open positions (**Total Positions**) and current number of the position counter (**Current**).
+
+That's about it. Feel free to download the source code file attached below which will need to be compiled in MetaEditor.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/639>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/639.zip "Download all attachments in the single ZIP archive")
+
+[printpositionproperties.mq5](https://www.mql5.com/en/articles/download/639/printpositionproperties.mq5 "Download printpositionproperties.mq5")
+(9.5 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Programming Basics: Arrays](https://www.mql5.com/en/articles/567)
+
+Arrays are an integral part of almost any programming language along with variables and functions. The article should be of interest primarily to novice MQL5 programmers, while experienced programmers will have a good opportunity to summarize and systematize their knowledge.
+
+[img]
+[MQL5 Cookbook: Using Different Print Modes](https://www.mql5.com/en/articles/638)
+
+[img]
+[MQL5 Cookbook: Position Properties on the Custom Info Panel](https://www.mql5.com/en/articles/641)
+
+[img]
+[Calculation of Integral Characteristics of Indicator Emissions](https://www.mql5.com/en/articles/610)
+
+[Best articl
+
+
+----------------------------------------------------------------------
+
+
+##### 690 | Examples | How to Install and Use OpenCL for Calculations
+How to Install and Use OpenCL for Calculations
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 1 July 2013 at 10:16
+
+[img]
+46 274
+[[img]
+64](https://www.mql5.com/en/forum/12777 "Comments")
+
+[img]
+
+[MetaQuotes](https://www.mql5.com/en/users/metaquotes)
+
+### OpenCL in the MetaTrader 5 Client Terminal
+
+It has been over a year since it became possible to [write programs for OpenCL](https://www.mql5.com/en/docs/opencl) in MQL5. Entries of any OpenCL devices found can now be seen in the Journal at the MetaTrader 5 terminal launch, as shown below.
+
+[img]
+
+
+### OpenCL is Fascinating!
+
+However not many users have taken the advantage of using parallel computing in their Expert Advisors, indicators or scripts as they are not aware of the new possibilities offered and do not have the required knowledge.
+
+The thing is that launching of any MQL5 program that uses OpenCL requires appropriate software to be installed. That's why a lot of users were simply not able to run the Mandelbrot set script, as well as many other programs available in the MQL5.community [forum](https://www.mql5.com/ru/forum/6042).
+
+In this article, we will show you how to install OpenCL on your computer so you can see first-hand the advantages of using parallel computing in MQL5. We are not going to consider the particulars of writing programs for OpenCL in MQL5 as the website already features two great articles that cover this subject:
+
+- [OpenCL: The Bridge to Parallel Worlds](https://www.mql5.com/en/articles/405) and
+- [OpenCL: From Naive Towards More Insightful Programming](https://www.mql5.com/en/articles/407).
+
+### 
+
+### What is OpenCL?
+
+
+In other words, OpenCL makes it possible to utilize all CPU cores or GPU's enormous computing capacity when calculating a task, thus reducing program execution time. Use of OpenCL is therefore very beneficial when dealing with tasks associated with laborious and resource consuming computations.
+
+
+### 
+
+
+----------------------------------------------------------------------
+
+
+##### 1341 | Examples | Studying the CCanvas Class. How to Draw Transparent Objects
+### Introduction
+Before proceeding directly to drawing using the [CCanvas](https://www.mql5.com/en/docs/standardlibrary/canvasgraphics/ccanvas) class, let's analyze some definitions related to color processing. For example, let's find out the meaning of the Alpha channel.
+
+In my opinion, implementation of transparency is the most important technology, which can vivify an image. For example, transparency can be used to implement a more attractive interface with smooth color transition or shadows. Shadow adds up dimension to a graphical object and visually softens the object edges.
+
+### Conclusion
+The article covers the basics of working with color. We have learned how to draw objects in a chart window. The article also discusses the basics of working with the [CCanvas](https://www.mql5.com/en/docs/standardlibrary/canvasgraphics/ccanvas) class of the Standard library and the ARGB format of color representation with transparency.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/1341>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/1341.zip "Download all attachments in the single ZIP archive")
+
+[xor.mq5](https://www.mql5.com/en/articles/download/1341/xor.mq5 "Download xor.mq5")
+(6.99 KB)
+
+[Illusion.mq5](https://www.mql5.com/en/articles/download/1341/illusion.mq5 "Download Illusion.mq5")
+(5.88 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal API, Part 2](https://www.mql5.com/en/articles/1316)
+
+[img]
+[Optimization. A Few Simple Ideas](https://www.mql5.com/en/articles/1052)
+
+The optimization process can require significant resources of your computer or even of the MQL5 Cloud Network test agents. This article comprises some simple ideas that I use for work facilitation and improvement of the MetaTrader 5 Strategy Tester. I got these ideas from the documentation, forum and articles.
+
+[img]
+[Trading Ideas Based on Prices Direction and Movement Speed](https://www.mql5.com/en/articles/1747)
+
+The article provides a review of an idea based on the analysis of prices' movement direction and their speed. We have performed its formalization in the MQL4 language presented as an expert advisor to explore viability of the strategy being under consideration. We also determine the best parameters via check, examination and optimiz
+
+
+----------------------------------------------------------------------
+
+
+##### 1414 | Examples | How to Use Crashlogs to Debug Your Own DLLs
+How to Use Crashlogs to Debug Your Own DLLs
+
+[MetaTrader 4](https://www.mql5.com/en/articles/mt4)
+—
+[Examples](https://www.mql5.com/en/articles/mt4/examples)
+| 21 July 2006 at 05:44
+
+[img]
+4 127
+[[img]
+2](https://www.mql5.com/en/forum/39208 "Comments")
+
+[img]
+
+[Slava](https://www.mql5.com/en/users/stringo)
+
+MetaTrader 4 Client Terminal has an integrated means to detect error conditions
+that occur during the terminal work and generate crashlogs where such errors are
+reported. The generated report is stored in the logs\crashlog.log file to be sent
+to the trade server at the next startup of the client terminal. It should be noted
+that the error condition report does not contain any user's personal details, but
+only the system data that allow to localize the error in the client terminal. This
+information is very important for manufacturers since it is used to correct critical
+errors. Then the software developed will become even more crashproof.
+
+25 to 30% of all crashlogs received from users appear due to errors occurring when
+functions imported from custom dlls are executed. This information will not help
+the developers of the client temrinal in any way, but it can help the developers
+of the corresponding dlls in their trouble-shooting. We will show how the data
+from the error report can be used. Examples named ExpertSample.dll and ExportFunctions.
+mq4 that can be found in the experts\samples directory were taken as a basis.
+
+[img]
+
+The full text of the error report is given below:
+
+
+[CODE]
+
+
+So, what has happened?
+
+- Exception : C0000005 means an error condition that has occurred due to Access Violation.
+- Access Type : read means that there has been an attempt to read.
+- Acess Addr : 00000000 means that the out-of-process memory has a zero address.
+
+Now, let us look at the call stack.  
+  
+The address of 77C36FA3 is the same as that of the top of stack. This means that
+the error occurred during execution of the memcpy function that copies the content
+of one memory ar
+
+----------------------------------------------------------------------
+
+
+##### 748 | Examples | MQL5 Cookbook: Sound Notifications for MetaTrader 5 Trade Events
+### Introduction
+
+
+### Conclusion
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/748>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/748.zip "Download all attachments in the single ZIP archive")
+
+[sounds.zip](https://www.mql5.com/en/articles/download/748/sounds.zip "Download sounds.zip")
+(321.8 KB)
+
+[soundtradeevents.zip](https://www.mql5.com/en/articles/download/748/soundtradeevents.zip "Download soundtradeevents.zip")
+(17.29 KB)
+
+[soundpanel.mq5](https://www.mql5.com/en/articles/download/748/soundpanel.mq5 "Download soundpanel.mq5")
+(14.07 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Cookbook: Monitoring Multiple Time Frames in a Single Window](https://www.mql5.com/en/articles/749)
+
+[img]
+[Technical Indicators and Digital Filters](https://www.mql5.com/en/articles/736)
+
+[img]
+[MQL5 Cookbook: Indicator Subwindow Controls - Buttons](https://www.mql5.com/en/articles/750)
+
+[img]
+[Marvel Your MQL5 Customers with a Usable Cocktail of Technologies!](https://www.mql5.com/en/articles/728)
+
+[[img]
+
+metatrader.com: Your New Hub for Trading
+
+A unified portal with global market news and analytics to help you trade smarter
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=nohacijjghimvcjzaekwvnuwufwnpswg&s=ee3b83e6d9917a3b0fdbb21e0b44c932faa82951112160b419f2890a2e1c30a8&uid=&ref=https://www.mql5.com/en/articles/748&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6390623204640717814)
+
+
+----------------------------------------------------------------------
+
+
+##### 652 | Examples | MQL5 Cookbook: Reducing the Effect of Overfitting and Handling the Lack of Quotes
+### Introduction
+I believe a lot of traders have repeatedly puzzled over the optimal parameters for their trading systems. Indeed, a trading algorithm alone is not enough. One needs to see how it can further be used. Whatever trading strategy you use, whether it's simple or complex, with a single or multiple instruments, you cannot avoid the question of what parameters to choose to ensure future profits.
+
+We tend to check trading systems with parameters that showed good results over the period of optimization (backtesting) and over the subsequent period (forward testing). Forward testing is in fact not so necessary. The relevant results can be obtained using historical data.
+
+This method gives rise to a huge question that cannot be given a definite answer: what amount of historical data should be used to optimize a trading system? The thing is there are lots of options. It all depends on the range of price fluctuations you expect to capitalize on.
+
+Getting back to the amount of history required for optimization, we conclude that the available data may well be sufficient for intra-hour trading. This is not always true for longer time frames. The more the number of repetitions of a consistent pattern, i.e. the more trades we have, the more truthful is the performance of the tested trading system that we can expect to see in the future.
+
+What if price data of a certain instrument are not enough to get a sufficient number of repetitions and feel more certain? Answer: use data from all available instruments.
+
+### Conclusion
+That's about it. We have got a fairly useful tool for studying results of multi-currency trading strategies. Below is the downloadable zip file with the files of the Expert Advisor for your consideration.
+
+After extracting the files, place the **ReduceOverfittingEA** folder into the *MetaTrader 5\MQL5\Experts* directory. Further, the **EventsSpy.mq5** indicator must be placed into *MetaTrader 5\MQL5\Indicators*. **SymbolsList.txt** must be located under *MetaTrader 5\MQL5\Files*.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/652>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/652.zip "Download all attachments in the single ZIP archive")
+
+[symbolslist.txt](https://www.mql5.com/en/articles/download/652/symbolslist.txt "Download symbolslist.txt")
+(0.1 KB)
+
+[eventsspy\_\_1.mq5](https://www.mql5.com/en/articles/download/652/eventsspy__1.mq5 "Download eventsspy__1.mq5")
+(7.59 KB)
+
+[reduceoverfittingea.zip](https://www.mql5.com/en/articles/download/652/reduceoverfittingea.zip "Download reduceoverfittingea.zip")
+(25.39 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Wizard: How to Teach an EA to Open Pending Orders at Any Price](https://www.mql5.com/en/articles/723)
+
+[img]
+[EA Status SMS Notifications](https://www.mql5.com/en/articles/1376)
+
+Developing a system of SMS notifications that informs you of the status of your EA so that you are always aware of any critical situation, wherever you may be.
+
+[img]
+[MetaTrader AppStore Results for Q3 2013](https://www.mql5.com/en/articles/769)
+
+Another quarter of the year has passed and we have decided to sum up its results for MetaTrader AppStore - the largest store of trading robots and technical indicators for MetaTrader platforms. More than 500 developers h
+
+
+----------------------------------------------------------------------
+

@@ -1,0 +1,103 @@
+{
+  "shard_id": "trading_systems_028",
+  "section": "Trading systems",
+  "n": 10,
+  "series_in_shard": [
+    "better programmer",
+    "beyond the clock",
+    "bi-directional trading and hedging of positions in metatrader 5 using the hedgeterminal api",
+    "building a candlestick trend constraint model"
+  ],
+  "articles": [
+    {
+      "id": 9711,
+      "title": "Better Programmer (Part 02): Stop doing these 5 things to become a successful MQL5 programmer",
+      "section": "Trading systems",
+      "series_title": "Better Programmer (): Stop doing these 5 things to become a successful MQL5 programmer",
+      "series_key": "better programmer",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9711.md"
+    },
+    {
+      "id": 22063,
+      "title": "Beyond the Clock (Part 1): Building Activity and Imbalance Bars in Python and MQL5",
+      "section": "Trading systems",
+      "series_title": "Beyond the Clock (): Building Activity and Imbalance Bars in Python and MQL5",
+      "series_key": "beyond the clock",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22063.md"
+    },
+    {
+      "id": 22213,
+      "title": "Beyond the Clock (Part 2): Building Runs Bars in MQL5",
+      "section": "Trading systems",
+      "series_title": "Beyond the Clock (): Building Runs Bars in MQL5",
+      "series_key": "beyond the clock",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22213.md"
+    },
+    {
+      "id": 22681,
+      "title": "Beyond the Clock (Part 3): Building an Indicator Window for Alternative Bars in MQL5",
+      "section": "Trading systems",
+      "series_title": "Beyond the Clock (): Building an Indicator Window for Alternative Bars in MQL5",
+      "series_key": "beyond the clock",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22681.md"
+    },
+    {
+      "id": 1316,
+      "title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal API, Part 2",
+      "section": "Trading systems",
+      "series_title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal API,",
+      "series_key": "bi-directional trading and hedging of positions in metatrader 5 using the hedgeterminal api",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1316.md"
+    },
+    {
+      "id": 14899,
+      "title": "Building A Candlestick Trend Constraint Model (Part 4): Customizing Display Style For Each Trend Wave",
+      "section": "Trading systems",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Customizing Display Style For Each Trend Wave",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14899.md"
+    },
+    {
+      "id": 14963,
+      "title": "Building A Candlestick Trend Constraint Model (Part 5): Notification System (Part I)",
+      "section": "Trading systems",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Notification System (Part I)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14963.md"
+    },
+    {
+      "id": 14969,
+      "title": "Building A Candlestick Trend Constraint Model (Part 5): Notification System (Part III)",
+      "section": "Trading systems",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Notification System (Part III)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14969.md"
+    },
+    {
+      "id": 15143,
+      "title": "Building A Candlestick Trend Constraint Model (Part 6): All in one integration",
+      "section": "Trading systems",
+      "series_title": "Building A Candlestick Trend Constraint Model (): All in one integration",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15143.md"
+    },
+    {
+      "id": 15509,
+      "title": "Building A Candlestick Trend Constraint Model (Part 9): Multiple Strategies Expert Advisor (I)",
+      "section": "Trading systems",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Multiple Strategies Expert Advisor (I)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15509.md"
+    }
+  ]
+}

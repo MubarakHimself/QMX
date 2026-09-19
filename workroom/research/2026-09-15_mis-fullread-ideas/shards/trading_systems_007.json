@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_007",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 8657,
+      "title": "CatBoost machine learning algorithm from Yandex with no Python or R knowledge required",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8657.md"
+    },
+    {
+      "id": 8662,
+      "title": "Advanced resampling and selection of CatBoost models by brute-force method",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8662.md"
+    },
+    {
+      "id": 9168,
+      "title": "MVC design pattern and its possible application",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9168.md"
+    },
+    {
+      "id": 9394,
+      "title": "Patterns with Examples (Part I): Multiple Top",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9394.md"
+    },
+    {
+      "id": 11147,
+      "title": "Cross-validation and basics of causal inference in CatBoost models, export to ONNX format",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11147.md"
+    },
+    {
+      "id": 12140,
+      "title": "Alan Andrews and his methods of time series analysis",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12140.md"
+    },
+    {
+      "id": 12798,
+      "title": "Forecasting with ARIMA models in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12798.md"
+    },
+    {
+      "id": 12809,
+      "title": "Revisiting an Old Trend Trading Strategy: Two Stochastic oscillators, a MA and Fibonacci",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12809.md"
+    },
+    {
+      "id": 12845,
+      "title": "Can Heiken-Ashi Combined With Moving Averages Provide Good Signals Together?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12845.md"
+    },
+    {
+      "id": 12846,
+      "title": "The RSI Deep Three Move Trading Technique",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12846.md"
+    },
+    {
+      "id": 13394,
+      "title": "Mastering ONNX: The Game-Changer for MQL5 Traders",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13394.md"
+    },
+    {
+      "id": 13396,
+      "title": "How to integrate Smart Money Concepts (OB) coupled with Fibonacci indicator for Optimal Trade Entry",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13396.md"
+    }
+  ]
+}

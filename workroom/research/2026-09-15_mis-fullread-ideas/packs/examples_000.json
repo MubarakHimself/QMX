@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_000",
+  "section": "Examples",
+  "parent_shard": "examples_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 638,
+      "title": "MQL5 Cookbook: Using Different Print Modes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\638.md"
+    },
+    {
+      "id": 639,
+      "title": "MQL5 Cookbook: Getting Position Properties",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\639.md"
+    },
+    {
+      "id": 641,
+      "title": "MQL5 Cookbook: Position Properties on the Custom Info Panel",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\641.md"
+    },
+    {
+      "id": 642,
+      "title": "MQL5 Cookbook: Analyzing Position Properties in the MetaTrader 5 Strategy Tester",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\642.md"
+    },
+    {
+      "id": 643,
+      "title": "MQL5 Cookbook: How to Avoid Errors When Setting/Modifying Trade Levels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\643.md"
+    },
+    {
+      "id": 644,
+      "title": "MQL5 Cookbook: The History of Deals And Function Library for Getting Position Properties",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\644.md"
+    },
+    {
+      "id": 645,
+      "title": "MQL5 Cookbook: Using Indicators to Set Trading Conditions in Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\645.md"
+    },
+    {
+      "id": 647,
+      "title": "MQL5 Cookbook: Developing a Framework for a Trading System Based on the Triple Screen Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\647.md"
+    },
+    {
+      "id": 648,
+      "title": "MQL5 Cookbook: Multi-Currency Expert Advisor - Simple, Neat and Quick Approach",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\648.md"
+    },
+    {
+      "id": 650,
+      "title": "MQL5 Cookbook: Developing a Multi-Currency Expert Advisor with Unlimited Number of Parameters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\650.md"
+    },
+    {
+      "id": 651,
+      "title": "MQL5 Cookbook: Writing the History of Deals to a File and Creating Balance Charts for Each Symbol in Excel",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\651.md"
+    },
+    {
+      "id": 652,
+      "title": "MQL5 Cookbook: Reducing the Effect of Overfitting and Handling the Lack of Quotes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\652.md"
+    }
+  ]
+}

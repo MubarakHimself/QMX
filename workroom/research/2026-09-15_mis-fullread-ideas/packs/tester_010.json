@@ -1,0 +1,119 @@
+{
+  "pack_id": "tester_010",
+  "section": "Tester",
+  "parent_shard": "tester_010",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17688,
+      "title": "Battle Royale Optimizer (BRO)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17688.md"
+    },
+    {
+      "id": 17693,
+      "title": "Advanced Memory Management and Optimization Techniques in MQL5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17693.md"
+    },
+    {
+      "id": 17751,
+      "title": "Manual Backtesting Made Easy: Building a Custom Toolkit for Strategy Tester in MQL5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17751.md"
+    },
+    {
+      "id": 17874,
+      "title": "Chaos optimization algorithm (COA): Continued",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17874.md"
+    },
+    {
+      "id": 19797,
+      "title": "Creating a Probabilistic Market-Neutral Trading Robot Based on a Return Distribution",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19797.md"
+    },
+    {
+      "id": 21589,
+      "title": "Implementing the Truncated Newton Conjugate-Gradient Algorithm in MQL5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21589.md"
+    },
+    {
+      "id": 22256,
+      "title": "Manual Backtesting with On-Chart Buttons in the MetaTrader 5 Strategy Tester",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22256.md"
+    },
+    {
+      "id": 22291,
+      "title": "Stress Testing Trade Sequences with Monte Carlo in MQL5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22291.md"
+    },
+    {
+      "id": 22578,
+      "title": "From \"Best Pass\" to Robust Solutions: Exploring the Optimization Surface in MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22578.md"
+    },
+    {
+      "id": 22998,
+      "title": "Measuring broker execution quality in MQL5: Why your live account doesn't match the backtest",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22998.md"
+    },
+    {
+      "id": 23070,
+      "title": "Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23070.md"
+    },
+    {
+      "id": 23546,
+      "title": "MQL5 Bootstrap (III): Simplified Functions for Working with News",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23546.md"
+    }
+  ]
+}

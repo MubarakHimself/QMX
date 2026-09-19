@@ -1,0 +1,100 @@
+{
+  "shard_id": "examples_081",
+  "section": "Examples",
+  "n": 10,
+  "series_in_shard": [
+    "market simulation"
+  ],
+  "articles": [
+    {
+      "id": 12580,
+      "title": "Market Simulation (Part 03): A Matter of Performance",
+      "section": "Examples",
+      "series_title": "Market Simulation (): A Matter of Performance",
+      "series_key": "market simulation",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12580.md"
+    },
+    {
+      "id": 12589,
+      "title": "Market Simulation (Part 04): Creating the C_Orders Class (I)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Creating the C_Orders Class (I)",
+      "series_key": "market simulation",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12589.md"
+    },
+    {
+      "id": 12598,
+      "title": "Market Simulation (Part 05): Creating the C_Orders Class (II)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Creating the C_Orders Class (II)",
+      "series_key": "market simulation",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12598.md"
+    },
+    {
+      "id": 12621,
+      "title": "Market Simulation (Part 07): Sockets (I)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (I)",
+      "series_key": "market simulation",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12621.md"
+    },
+    {
+      "id": 12672,
+      "title": "Market Simulation (Part 08): Sockets (II)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (II)",
+      "series_key": "market simulation",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12672.md"
+    },
+    {
+      "id": 12673,
+      "title": "Market Simulation (Part 09): Sockets (III)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (III)",
+      "series_key": "market simulation",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12673.md"
+    },
+    {
+      "id": 12743,
+      "title": "Market Simulation (Part 10): Sockets (IV)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (IV)",
+      "series_key": "market simulation",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12743.md"
+    },
+    {
+      "id": 12744,
+      "title": "Market Simulation: (Part 11): Sockets (V)",
+      "section": "Examples",
+      "series_title": "Market Simulation: (): Sockets (V)",
+      "series_key": "market simulation",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12744.md"
+    },
+    {
+      "id": 12745,
+      "title": "Market Simulation (Part 12): Sockets (VI)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (VI)",
+      "series_key": "market simulation",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12745.md"
+    },
+    {
+      "id": 10683,
+      "title": "Market Simulation (Part 14): Sockets (VIII)",
+      "section": "Examples",
+      "series_title": "Market Simulation (): Sockets (VIII)",
+      "series_key": "market simulation",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10683.md"
+    }
+  ]
+}

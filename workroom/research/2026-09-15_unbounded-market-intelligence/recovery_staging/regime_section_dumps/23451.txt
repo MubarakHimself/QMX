@@ -1,0 +1,279 @@
+# Ordinal Pattern Transition Networks in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 28 July 2026 at 04:26
+1 162
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+0](https://www.mql5.com/en/forum/513498 "Comments")
+[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)
+### Introduction
+Most indicators read the market through price magnitude. A moving average averages prices. An oscillator scales differences. A volatility band measures distance from a mean. All of these are sensitive to level, to scale, and to the slow drift that makes financial series so awkward to model. In this article we take a deliberately different route. We discard magnitudes almost entirely and keep only the shape of recent price action, the relative order of the last few values, and then we ask a question that shape alone can answer surprisingly well: is the market currently being driven in a direction, or is it just wandering?
+The tool we will use to do this is the ordinal pattern transition network. It comes from nonlinear dynamics and complexity science. There it is used to separate chaos from noise, detect regime changes in EEG and climate data, and rank signal complexity. The idea maps almost one-to-one to trading problems, yet it is essentially absent from the MQL5 literature. We build it from scratch. First, we turn a rolling price window into a directed network of ordinal patterns. Then we compute three complexity metrics and provide two indicators for the two most useful metrics.
+We will not pretend the result is a holy grail. In fact one of the most useful parts of this article is the honest account of what happened when we first ran the metrics on real EUR/USD data: they barely moved. The signal was there, but our settings were hiding it. Working out why, and fixing it with an empirical parameter sweep, taught us more about the method than any amount of theory, and that investigation has its own section below.
+We will cover:
+1. [The Idea: Reading Market Shape, Not Price](https://www.mql5.com/en/articles/23451#the_idea_reading_market_shape_not_price)
+2. [From Prices to Ordinal Patterns](https://www.mql5.com/en/articles/23451#from_prices_to_ordinal_patterns)
+3. [Building the Transition Network](https://www.mql5.com/en/articles/23451#building_the_transition_network)
+4. [Three Signals from the Network](https://www.mql5.com/en/articles/23451#three_signals_from_the_network)
+5. [Reality Check: Tuning the Signal on FX](https://www.mql5.com/en/articles/23451#reality_check_tuning_the_signal_on_fx)
+6. [The Indicators](https://www.mql5.com/en/articles/23451#the_indicators)
+7. [Conclusion](https://www.mql5.com/en/articles/23451#conclusion)
+### The Idea: Reading Market Shape, Not Price
+Consider three consecutive closing prices. There are really only a handful of ways they can be arranged relative to one another: they can rise steadily, fall steadily, rise then dip, dip then rise, and so on. If we ignore how *far* each move went and record only the rank order of the three values, we have compressed a small slice of price action into a single symbol. This is the seed of the method introduced by Bandt and Pompe in 2002, and the symbol it produces is called an ordinal pattern.
+Fix an embedding dimension *d*, the number of consecutive values we look at. Slide a window of length *d* along the series. For each window, rank the values and record which of the *d* factorial possible orderings occurred. With *d* = 3 there are 3! = 6 possible patterns; with *d* = 4 there are 24. A whole price series therefore becomes a string of symbols drawn from an alphabet of *d*! patterns. That symbolic string is what we will analyze, not the prices themselves.
+Why is this worth doing? Because the encoding has three properties that price-based indicators would love to have:
+- It is ordinal, so it is self-normalizing. The pattern depends only on order, so it is invariant to any monotonic transform of the data, to drift, and to scale. A pattern computed on EUR/USD means the same thing as the same pattern computed on Gold. There is nothing to normalize and no level to worry about.
+- It is noise tolerant. A small amount of magnitude jitter rarely flips the rank order of a window, so the symbolic representation is far more stable than the raw series it came from.
+- Its statistics are meaningful. The distribution of patterns tells us how random the series is, and the order in which patterns follow one another tells us something even more interesting, which is where the network comes in.
+It helps to see why the ordinal view can carry information that a magnitude-based view discards. Two very different-looking price paths can share the same sequence of shapes, and conversely a single large candle can dominate a magnitude-based statistic while contributing just one symbol to the ordinal one. By quantizing continuous prices into a small, finite alphabet, we trade a little resolution for a great deal of stability, and, crucially, we make the statistics of the series tractable. There are only *d*! possible symbols, so with a few hundred bars we can actually estimate a probability for each of them, something that is hopeless for the raw continuous series.
+The deeper reason the method works is that markets are not simply "random" or "non-random". They lie on a spectrum from pure noise (future independent of the past) to rigid determinism (the past fully determines the future). Real price action drifts along this spectrum: quiet, efficient, noise-like stretches give way to structured, driven, trending stretches and back again. The ordinal-network approach produces bounded, comparable numbers. They locate the market on that spectrum using only the ordering of recent prices. That is a genuinely different kind of measurement from an oscillator or a moving average.
+The MQL5 community has touched neighboring ideas. There are excellent articles on measuring market entropy from information theory, on encoding candlesticks into an alphabet, and on recurrence networks built from recurrence matrices. None of them combines Bandt-Pompe ordinal patterns with a directed transition network and reads regime and efficiency signals off its structure. That combination is the gap this article fills.
+The plan is a pipeline. First we turn prices into ordinal-pattern symbols. Then we build a network whose nodes are patterns and whose edges are the observed transitions between consecutive patterns. Finally we compute three complexity metrics from that network and its time-reversed counterpart, and we render them as indicators.
+Fig. 1. A length-d price window collapses to a rank-order symbol, discarding magnitude and keeping only shape
+### From Prices to Ordinal Patterns
+Let us make the encoding concrete. Take three closing prices, 1.1050, 1.1052, 1.1051. The first is the smallest, the second is the largest, the third is in the middle. Reading the ranks from left to right, the middle value is at position 0, the top value at position 1, and the mid value at position 2. This "up then small down" shape is one of the six patterns available at *d* = 3. A steadily rising window, 1.1050, 1.1051, 1.1052, is a different pattern, and a steadily falling window, 1.1052, 1.1051, 1.1050, is a third.
+To use these patterns as network nodes we need to give every possible ordering a stable integer identity in the range 0 to *d*! minus 1. Hand-enumerating six cases for *d* = 3 would be easy, but we want the engine to accept *d* = 3, 4, 5 and beyond, so we need a general map from an ordering to an index. The clean, classical tool for this is the Lehmer code, which represents a permutation in the factorial number system.
+The factorial number system is the natural home for permutations. In ordinary base ten, the digit in the hundreds place is worth a hundred; in the factorial system, the digit in the third-from-the-right place is worth 2!, the next 3!, and so on. A permutation of *d* items has exactly *d*! arrangements, and the factorial system has exactly *d*! representable values for a *d*-digit number, so the two line up perfectly. The Lehmer code is the standard bridge between them: it turns "which of the remaining items is this one, in rank order" into the digits of a factorial-base number, giving every ordering a unique address with no gaps and no collisions.
+The Lehmer index of a length-*d* window is computed by counting, for each position, how many later values are smaller than the value at that position, then weighting each of those counts by a factorial place value:
+```
+index = SUM over i of c_i * (d - 1 - i)!
+```
+Here c\_i is the number of values to the right of position i that are strictly smaller than the value at position i. Ties are broken by position so that the map is total and every ordering receives exactly one index. This is the whole of the PatternIndex helper in the engine:
+```
+//+------------------------------------------------------------------+
+//| Lehmer-code index of one ordinal pattern.                        |
+//|  Looks at d consecutive values win[start..start+d-1] and maps    |
+//|  their rank order to a unique integer in [0, d!-1] using the     |
+//|  factorial number system:                                        |
+//|      index = SUM_j  c_j * (d-1-j)!                               |
+//|  where c_j = how many later values are smaller than value j.     |
+//|  Ties are broken by position (earlier value ranks lower) so the  |
+//|  map is total and stable. Returns -1 if the window is flat       |
+//|  (all equal) — a degenerate case with no ordinal information.    |
+//+------------------------------------------------------------------+
+int COrdinalNetwork::PatternIndex(const double &win[],int start) const
+   int    d=m_dim;
+   int    index=0;
+   bool   allEqual=true;
+   for(int i=0;i<d;i++)
+      int c=0;
+      for(int j=i+1;j<d;j++)
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Ordinal Pattern Transition Networks in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+### Introduction
+Most indicators read the market through price magnitude. A moving average averages prices. An oscillator scales differences. A volatility band measures distance from a mean. All of these are sensitive to level, to scale, and to the slow drift that makes financial series so awkward to model. In this article we take a deliberately different route. We discard magnitudes almost entirely and keep only the shape of recent price action, the relative order of the last few values, and then we ask a question that shape alone can answer surprisingly well: is the market currently being driven in a direction, or is it just wandering?
+6. [The Indicators](https://www.mql5.com/en/articles/23451#the_indicators)
+7. [Conclusion](https://www.mql5.com/en/articles/23451#conclusion)
+### The Idea: Reading Market Shape, Not Price
+Consider three consecutive closing prices. There are really only a handful of ways they can be arranged relative to one another: they can rise steadily, fall steadily, rise then dip, dip then rise, and so on. If we ignore how *far* each move went and record only the rank order of the three values, we have compressed a small slice of price action into a single symbol. This is the seed of the method introduced by Bandt and Pompe in 2002, and the symbol it produces is called an ordinal pattern.
+The MQL5 community has touched neighboring ideas. There are excellent articles on measuring market entropy from information theory, on encoding candlesticks into an alphabet, and on recurrence networks built from recurrence matrices. None of them combines Bandt-Pompe ordinal patterns with a directed transition network and reads regime and efficiency signals off its structure. That combination is the gap this article fills.
+The plan is a pipeline. First we turn prices into ordinal-pattern symbols. Then we build a network whose nodes are patterns and whose edges are the observed transitions between consecutive patterns. Finally we compute three complexity metrics from that network and its time-reversed counterpart, and we render them as indicators.
+### From Prices to Ordinal Patterns
+Let us make the encoding concrete. Take three closing prices, 1.1050, 1.1052, 1.1051. The first is the smallest, the second is the largest, the third is in the middle. Reading the ranks from left to right, the middle value is at position 0, the top value at position 1, and the mid value at position 2. This "up then small down" shape is one of the six patterns available at *d* = 3. A steadily rising window, 1.1050, 1.1051, 1.1052, is a different pattern, and a steadily falling window, 1.1052, 1.1051, 1.1050, is a third.
+### Building the Transition Network
+Counting how often each pattern appears gives us a histogram, and the histogram alone already supports one useful metric. But the richer idea is to look at the **order** in which patterns follow one another. If pattern A is very often followed by pattern B, there is structure in the dynamics that a plain histogram cannot see. We capture this by building a directed, weighted network:
+In effect the price window becomes a first-order Markov chain over shapes, stored as a *d*! by *d*! transition-count matrix, that we then analyze with the tools of complexity science. Before any of that, the engine needs to know its own data requirements, so that it refuses to produce numbers it cannot support. That reliability discipline is the same one we used in the Extreme Value Theory engine from an earlier article, and it is worth keeping everywhere.
+The engine is a single class, COrdinalNetwork, and it declares its status vocabulary and its data-sufficiency floors up front:
+//---  practical band for trading data.
+#define OPTN_MIN_DIM   3
+#define OPTN_MAX_DIM   7
+
+//--- minimum window multiple of d! below which the pattern histogram is
+//---  so we also apply OPTN_MIN_TRANS_MULT to the transition estimate.
+#define OPTN_MIN_HIST_MULT   5
+#define OPTN_MIN_TRANS_MULT  10
+```
+With the vocabulary and the floors defined, here is the class interface itself. It is deliberately small and grouped: configuration first, then the single **Compute** entry point, then the four metric accessors, then a block of diagnostics and reliability accessors that follow the same discipline as the Extreme Value Theory engine. The private section holds the histograms, the flattened transition matrix, and the three helpers:
+   int               m_fact;            // d!  = number of possible patterns
+   //--- computed state (last Compute call)
+   double            m_hist[];          // pattern counts, size d!
+   double            m_hist_rev[];      // pattern counts of the reversed series
+   //--- metrics (valid only when IsReliable())
+   double            PermutationEntropy(void)  const;
+   double            TimeIrreversibility(void) const;
+   double            ForbiddenFraction(void)   const;
+The transition matrix is stored as a flat array of *d*!×*d*! doubles rather than a two-dimensional structure, indexed as row times m\_fact plus column. That keeps allocation to a single block and makes the whole object trivially copyable. The two histograms, forward and reversed, are the same size as the node set. Everything the metrics need is held as plain member state and refreshed on each Compute call.
+The constructor initializes a defined but unusable state, then sets a default dimension. This makes a new instance usable without additional configuration:
+Changing dimension is the one configuration action that reshapes the internal buffers, so SetDimension both validates the request and sizes the histograms and the transition matrix once, up front. Doing the allocation here means Compute never has to resize anything on the hot path, and an out-of-range dimension leaves the engine explicitly marked as bad input rather than silently misbehaving:
+//|  Rejects out-of-range d and leaves the engine unusable in that   |
+//|  case. Sizing the d! x d! matrix here means Compute() never has  |
+//|  to reallocate.                                                  |
+//+------------------------------------------------------------------+
+
+The two multipliers turn into a concrete minimum window size through the MinBars helper. We want at least ten times *d*! ordinal windows so that the transition matrix is not mostly zeros, and each ordinal window consumes *d* consecutive prices, so the shortest usable window is ten times *d*! plus *d* minus one:
+The heart of the class is Compute. It clears the accumulators, then makes a forward pass that fills the pattern histogram and the transition matrix, and a second pass over the time-reversed series that fills a mirror histogram we will need for the regime metric. It also tallies how many distinct patterns actually appeared:
+//|   3. tally how many of the d! patterns actually occurred.        |
+//|  Degenerate (flat) windows are skipped, not counted.             |
+bool COrdinalNetwork::Compute(const double &values[],int count)
+At the end of a successful call the object holds everything the metrics need: a forward histogram, a mirror histogram, a transition matrix, and the count of active patterns. Notice that the transition matrix itself is kept internal. In this article we read scalar metrics off the distributions rather than rendering the graph, because a scalar per bar is what an indicator can plot and backtest, whereas a graph is a static snapshot with no time axis.
+![A symbol string becoming a directed transition network of ordinal patterns](https://c.mql5.com/2/231/OptnPriceToSymbol_750w.gif "A symbol string becoming a directed transition network of ordinal patterns")
+### Three Signals from the Network
+With the network built, we read three complexity metrics off it, each with a clear trading interpretation. All three are grounded in the ordinal-pattern literature, and all three are returned in a bounded, comparable range so that indicators can display them cleanly.
+Permutation entropy: an efficiency meter. The first metric measures how random the pattern distribution is. If every pattern is equally likely, the market is visiting all shapes indiscriminately and there is nothing to exploit; if the distribution is concentrated on a few patterns, there is structure. This is the classical permutation entropy of Bandt and Pompe, and we normalize it by the logarithm of *d*! so it lands in the interval zero to one:
+```
+Before the permutation-entropy code, a word on the helper it relies on. Both entropy-style metrics reduce to a Shannon entropy over a count array, so the engine factors that out into a single routine, ShannonNat, which returns the entropy in nats and leaves normalization to the caller. Zero-count bins contribute nothing, since the limit of p times log p as p goes to zero is zero, and the guard on the total keeps an empty distribution from dividing by zero:
+//| Shannon entropy (in nats) of a count array.                      |
+//|  H = -SUM p_i ln p_i, with p_i = counts_i/total. Zero-count bins |
+//|  contribute nothing (0 ln 0 -> 0). Returned unnormalized so the  |
+Factoring this out is more than tidiness. It guarantees the permutation entropy and any future entropy-based metric share exactly the same numerical treatment of the awkward zero-count case, which is where naive entropy code most often goes wrong. Permutation entropy itself is then just that helper divided by the normalizer:
+//| Normalized permutation entropy in [0,1] (Bandt & Pompe, 2002).   |
+//|  PE = H(pattern distribution) / ln(d!).                          |
+//|  1 -> patterns uniform = maximally random / efficient market;    |
+//|  low -> distribution concentrated = exploitable structure.       |
+//+------------------------------------------------------------------+
+double COrdinalNetwork::PermutationEntropy(void) const
+  {
+   if(m_status!=OPTN_OK)
+   switch(m_status)
+     {
+      case OPTN_OK:
+
+| Synthetic series (d = 3) | Permutation entropy | Irreversibility | Forbidden fraction |
+| --- | --- | --- | --- |
+| Gaussian noise | 0.9999 | 0.0003 | 0.0000 |
+### Reality Check: Tuning the Signal on FX
+When we first attached the metrics to EUR/USD on the M30 timeframe with a comfortable 400-bar window, computed directly on closing prices, the indicator looked broken. The permutation entropy line sat at about 0.965 and barely twitched, the irreversibility line hugged 0.008, and the forbidden fraction was exactly zero. Twenty consecutive bars were essentially identical. A trader would have learned nothing from that panel.
+The first instinct, that the code was wrong, was the wrong instinct. The synthetic oracles had already proven the math. Those oracles are worth pausing on, because they are the reason we could trust the engine while distrusting the settings. The diagnostic script builds three series whose answers we know in advance: Gaussian noise from a Box-Muller transform, a steady up-trend with light noise on top, and a sawtooth. The trend generator, for instance, is nothing more than a ramp plus a small noise term:
+Feeding these three series through the compiled engine reproduced the theoretical answers to four decimal places, which told us the encoder, the histograms, the entropy, and the divergence were all correct. So when the same correct engine produced flat lines on EUR/USD, the fault had to lie in what we were feeding it and how, not in the mathematics.
+What the flat lines were actually telling us is a well-known empirical truth: major foreign-exchange pairs are very close to efficient, so the raw permutation entropy of price sits near its ceiling and hardly moves. The signal was not absent, it was buried under two poor parameter choices, and finding them was a matter of measurement rather than opinion.
+We wrote a diagnostic sweep that evaluates each candidate configuration over thousands of bars and reports the spread of the resulting metric, its standard deviation and its minimum-to-maximum range. The logic is simple: a signal that moves has spread, a dead signal is nearly constant, so the configuration with the widest range is the one a trader can actually see. The core of the sweep is one routine that, for a given dimension and window, rolls across the source series, collects the metric at every step, and hands the collected values to a small statistics summarizer:
+        {
+         pe[k]=net.PermutationEntropy();
+         ir[k]=net.TimeIrreversibility();
+         k++;
+Permutation entropy, however, told a more stubborn story. Even at the best settings its range on EUR/USD was only about 0.944 to 1.000. That is not a tuning failure, it is the market: efficient by nature, so its entropy hugs the ceiling. Plotting such a value raw wastes almost the entire vertical axis and shows the trader nothing. The fix is not to change the metric but to change what we plot. Instead of the raw level we plot a **rolling percentile**: how unusual today's permutation entropy is compared with its own recent history. A barely visible dip from 0.99 to 0.96 becomes a dramatic move to the 0th percentile, an unmistakable "efficiency just collapsed, structure is emerging" signal that uses the full height of the panel.
+**The general lesson.** When a complexity metric looks flat, the level is usually the boring part and the deviation is the signal. Before concluding a method does not work on your instrument, check whether you are measuring the raw level of a near-efficient series, and whether your window is so long that it cannot react. The right transform, the right window, and rolling normalization frequently revive a signal that first appeared dead.
+These findings drive the two indicators directly: encode returns, use a short window, lead with irreversibility as the regime signal, and present permutation entropy as a rolling percentile rather than a raw level. The forbidden fraction, flat at these windows, stays in the engine for study but off the chart.
+### The Indicators
+The metrics live in the engine; the indicators are thin consumers that feed it a rolling window and plot what comes back. We ship two, one per signal, because the two metrics live on genuinely different scales and forcing them into a single sub-window is what made our very first attempt unreadable. Both indicators share the same two helpers for extracting the window, so we describe those once.
+The regime indicator. OPTN\_Irreversibility is the primary panel. Its inputs default to the best-performing sweep settings, *d* = 3, a 90-bar window, and the returns source, with a regime threshold that decides when irreversibility is high enough to call the market trending:
+```
+
+The panel draws two plots: a color histogram whose height is the irreversibility value and whose color flips between a neutral gray for ranging and green for trending, and a line of the same value drawn on top. The color decision is a single comparison against the threshold, written once per bar in the WriteBar helper:
+     {
+      BufRegime[i]=EMPTY_VALUE; BufRegimeColor[i]=0; BufIrrev[i]=EMPTY_VALUE;
+      return;
+     }
+   BufIrrev[i]      =irrev;
+   BufRegime[i]     =irrev;                              // shade height = value
+   BufRegimeColor[i]=(irrev>=InpRegimeThresh)?1.0:0.0;   // 1=trend, 0=range
+  }
+        {
+         BufRegime[i]=BufRegime[i-1];
+         BufRegimeColor[i]=BufRegimeColor[i-1];
+         BufIrrev[i]=BufIrrev[i-1];
+         continue;
+![Irreversibility regime panel with green trend shading under EURUSD](https://c.mql5.com/2/232/fig4__3.png "Irreversibility regime panel with green trend shading under EURUSD")
+Fig. 4. The regime panel: green histogram columns mark trending stretches, gray marks ranging, with the irreversibility line on top
+The efficiency indicator. OPTN\_Efficiency computes the permutation entropy per bar, stores it in a rolling history, and plots its percentile rank rather than its raw level. The percentile is computed against past values only, with no look-ahead, by counting how many of the recent stored entropies are less than or equal to the current one:
+//+------------------------------------------------------------------+
+//| Percentile rank (0..100) of the PE at bar 'idx' within the prior |
+//| InpPctLookback stored PE values. Ranks against PAST values only  |
+//| (no look-ahead): counts how many recent PEs are <= the current   |
+
+The calculation loop for this panel requires two steps, implemented in a single pass. It must first know the raw permutation entropy at a bar before it can rank that bar, and the rank needs the entropies of earlier bars, so the indicator maintains a persistent history array, **g\_peHist**, indexed by bar. On each bar it computes the raw entropy, stores it, and then converts it to a percentile against the stored history:
+```
+         if(got>=g_window && g_net.Compute(win,got))
+            pe=g_net.PermutationEntropy();
+        }
+The history array is kept the same length as the series and re-initialized whenever the bar count changes, so the percentile is always ranking against genuine prior values, never against uninitialized memory. The panel scales from zero to a hundred with dotted reference levels at twenty and eighty, so an efficiency collapse toward the floor is immediately visible. A raw-entropy line is available as an optional plot for readers who want to see the underlying level, but it is off by default because, as we saw, it barely moves. A dip in the percentile line toward zero is the actionable event: it says the market has just become unusually structured relative to its recent self, which is precisely when the random-walk assumption is weakest.
+![Permutation entropy percentile panel dipping toward zero on structure](https://c.mql5.com/2/232/fig5__1.png "Permutation entropy percentile panel dipping toward zero on structure")
+Fig. 5. The efficiency panel: the permutation-entropy percentile dips toward zero when the market becomes unusually structured
+Using the two together. The natural reading is to combine them. When the efficiency percentile drops and the regime histogram turns green at the same time, the market has become both structured and directional, the most favorable state for trend-following logic. When efficiency is high and the regime is gray, the series is behaving like an efficient random walk and directional strategies should stand aside. Neither panel is a trade signal on its own; together they are a context filter grounded in the actual complexity of recent price action.
+A reference for the shared inputs:
+| InpPrice | Base applied price for the transform | PRICE\_CLOSE |
+| InpRegimeThresh | Irreversibility level above which the regime is called trending | 0.03 |
+| InpPctLookback | History length for the entropy percentile rank | 250 |
+| InpStep | Recompute every N bars and carry forward in between | 1 |
+### Conclusion
+We set out to read the market through shape rather than magnitude, and we built the full pipeline to do it: an ordinal-pattern encoder based on the Lehmer code, a directed transition network over those patterns, and three complexity metrics computed from the network and its time-reversed counterpart. We then turned the two metrics that matter into indicators, a regime panel driven by time-irreversibility and an efficiency panel driven by the percentile of permutation entropy.
+- Ordinal patterns are a robust encoding. By keeping only rank order, the method is self-normalizing, noise-tolerant, and comparable across instruments, which sidesteps much of the pain of working with raw price levels.
+- Time-irreversibility is the strongest signal here. Comparing the forward and reversed pattern distributions with the Jensen-Shannon divergence gives a bounded, theory-backed way to separate trending from ranging markets.
+- Honest tuning beats blind faith. The raw metrics looked dead on EUR/USD until a measured parameter sweep showed that encoding returns over a short window revives irreversibility, and that permutation entropy needs rolling-percentile normalization to be visible on a near-efficient market.
+- A reliability-first engine pays off. Explicit status codes, a data-sufficiency floor tied to d!, and guards against flat and degenerate windows keep the tool from producing numbers it cannot support.
+
+| --- | --- |
+| MQL5\Include\OPTN\OrdinalNetwork.mqh | Ordinal-pattern transition-network engine: Lehmer encoder, rolling network, permutation entropy, time-irreversibility, forbidden fraction |
+| MQL5\Indicators\OPTN\OPTN\_Irreversibility.mq5 | Regime panel: time-irreversibility with green/gray trend-versus-range shading |
+| MQL5\Indicators\OPTN\OPTN\_Efficiency.mq5 | Efficiency panel: permutation entropy rendered as a rolling percentile |
+| MQL5\Scripts\OPTN\OrdinalNetworkTest.mq5 | Diagnostic harness: synthetic oracles plus real-data metrics across dimensions and windows |
+| MQL5\Scripts\OPTN\OrdinalNetworkSweep.mq5 | Parameter sweep reporting the spread of each metric to find settings that produce a moving signal |
+This article presents a distribution-adaptive spread monitor for MQL5 that replaces fixed thresholds with a rolling histogram of each symbol's recent spread. It explains percentile estimation from bins, a four-state GREEN/YELLOW/RED/WARMING classification, and a CCanvas dashboard rendered from real histogram data. You will get a ready workflow for per-symbol order gating and controlled alerting via arm/disarm hysteresis plus cooldown, with a verification script and clear calibration and resolution limits.
+![Building a JSON Trade Report Exporter in Pure MQL5](https://c.mql5.com/2/235/23403-building-a-json-trade-report-logo.png)
+We demonstrate a practical customization path for a built-in MetaTrader 5 EA using BullishBearish MeetingLines Stoch. The workflow covers baseline testing in the Strategy Tester, parameter optimization, and code-level changes. Two modifications are implemented: exposing Stochastic thresholds as inputs and adding an optional Moving Average filter to limit counter‑trend signals. The article includes the full modified code for replication.
+[![](https://www.mql5.com/ff/sh/qaakb6ygfdvpv4gyp2/0c0f53ccb325ac286ddc0cb633ec045c.png)
+Use mql5.com login on metatrader.com
+Access our new hub for expert analytics, trading insights, global financial news, and more
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/23451&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6416842588413363154)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+We set out to read the market through shape rather than magnitude, and we built the full pipeline to do it: an ordinal-pattern encoder based on the Lehmer code, a directed transition network over those patterns, and three complexity metrics computed from the network and its time-reversed counterpart. We then turned the two metrics that matter into indicators, a regime panel driven by time-irreversibility and an efficiency panel driven by the percentile of permutation entropy.
+
+- Ordinal patterns are a robust encoding. By keeping only rank order, the method is self-normalizing, noise-tolerant, and comparable across instruments, which sidesteps much of the pain of working with raw price levels.
+- Time-irreversibility is the strongest signal here. Comparing the forward and reversed pattern distributions with the Jensen-Shannon divergence gives a bounded, theory-backed way to separate trending from ranging markets.
+- Honest tuning beats blind faith. The raw metrics looked dead on EUR/USD until a measured parameter sweep showed that encoding returns over a short window revives irreversibility, and that permutation entropy needs rolling-percentile normalization to be visible on a near-efficient market.
+- A reliability-first engine pays off. Explicit status codes, a data-sufficiency floor tied to d!, and guards against flat and degenerate windows keep the tool from producing numbers it cannot support.
+
+The two indicators are complete, self-contained tools. Read together, they form a context filter that tells you when recent price action has become structured and directional, and when it is behaving like an efficient random walk, all from the shape of the last few dozen bars.
+
+The programs presented in this article are intended for educational purposes only. Trading involves substantial risk, and nothing here is financial advice or a guarantee of profit. Always test any tool thoroughly on historical and demo data before considering it for a live account.
+
+**Getting the Source Code via MQL5 Algo Forge**
+
+All source files are attached to this article below, but the full repository is also available on [MQL5 Algo Forge](https://forge.mql5.io/ayantrader/OPTN "https://forge.mql5.io/ayantrader/OPTN"), the community's Git-based platform for sharing and collaborating on trading projects.
+
+| File name | Description |
+| --- | --- |
+| MQL5\Include\OPTN\OrdinalNetwork.mqh | Ordinal-pattern transition-network engine: Lehmer encoder, rolling network, permutation entropy, time-irreversibility, forbidden fraction |
+| MQL5\Indicators\OPTN\OPTN\_Irreversibility.mq5 | Regime panel: time-irreversibility with green/gray trend-versus-range shading |
+| MQL5\Indicators\OPTN\OPTN\_Efficiency.mq5 | Efficiency panel: permutation entropy rendered as a rolling percentile |
+| MQL5\Scripts\OPTN\OrdinalNetworkTest.mq5 | Diagnostic harness: synthetic oracles plus real-data metrics across dimensions and windows |
+| MQL5\Scripts\OPTN\OrdinalNetworkSweep.mq5 | Parameter sweep reporting the spread of each metric to find settings that produce a moving signal |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23451.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23451/MQL5.zip "Download MQL5.zip")
+(15.78 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Symbolic Price Forecasting Equation Using SymPy](https://c.mql5.com/2/171/19519-simvolnoe-uravnenie-prognozirovaniya-logo.png)
+[Symbolic Price Forecasting Equation Using SymPy](https://www.mql5.com/en/articles/19519)
+
+The article describes an interesting approach to algorithmic trading based on symbolic mathematical equations instead of traditional machine learning "black boxes". The author demonstrates how to transform opaque neural networks into readable mathematical equations using the SymPy library and polynomial regression, allowing for a full understanding of the logic behind trading decisions. The approach combines the computational power of ML with the transparency of classical methods, giving traders the ability to analyze, adjust, and adapt models in real time.
+
+![Adaptive Spread Monitoring and Order Gating in MQL5](https://c.mql5.com/2/233/23355-adaptive-spread-monitoring-logo.png)
+[Adaptive Spread Monitoring and Order Gating in MQL5](https://www.mql5.com/en/articles/23355)
+
+This article presents a distribution-adaptive spread monitor for MQL5 that replaces fixed thresholds with a rolling histogram of each symbol's recent spread. It explains percentile estimation from bins, a four-state GREEN/YELLOW/RED/WARMING classification, and a CCanvas dashboard rendered from real histogram data. You will get a ready workflow for per-symbol order gating and controlled alerting via arm/disarm hysteresis plus cooldown, with a verification script and clear calibration and resolution limits.
+
+![Building a JSON Trade Report Exporter in Pure MQL5](https://c.mql5.com/2/235/23403-building-a-json-trade-report-logo.png)
+[Building a JSON Trade Report Exporter in Pure MQL5](https://www.mql5.com/en/articles/23403)
+
+A refined MQL5 script exports trade history to a well‑formed JSON file in MQL5/Files/, reconstructing trades from deals by position ID and recovering stop loss and take profit via a two‑pass lookup that falls back closed to the originating order. It includes a dedicated JSON serializer and computes R‑multiple, pip profit, and duration. The result loads cleanly in Python, R, or Excel without custom parsing.
+
+![How to Test and Customize Built-in MQL5 Programs:  Custom BullishBearish MeetingLines Stoch Expert Advisor](https://c.mql5.com/2/235/23312-how-to-test-and-customize-built-logo.png)
+[How to Test and Customize Built-in MQL5 Programs: Custom BullishBearish MeetingLines Stoch Expert Advisor](https://www.mql5.com/en/articles/23312)
+
+We demonstrate a practical customization path for a built-in MetaTrader 5 EA using BullishBearish MeetingLines Stoch. The workflow covers baseline testing in the Strategy Tester, parameter optimization, and code-level changes. Two modifications are implemented: exposing Stochastic thresholds as inputs and adding an optional Moving Average filter to limit counter‑trend signals. The article includes the full modified code for replication.
+
+[![](https://www.mql5.com/ff/sh/qaakb6ygfdvpv4gyp2/0c0f53ccb325ac286ddc0cb633ec045c.png)
+
+Use mql5.com login on metatrader.com
+
+Access our new hub for expert analytics, trading insights, global financial news, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/23451&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6416842588413363154)

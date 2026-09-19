@@ -1,0 +1,320 @@
+# Implementing and Benchmarking Bag-of-SFA-Symbols (BOSS) Against Dynamic Time Warping (DTW)
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Indicators](https://www.mql5.com/en/articles/mt5/indicators)
+| 10 August 2026 at 06:32
+780
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/514280 "Comments")
+[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)
+### Introduction
+A price chart is one of the hardest objects in quantitative finance to compare against itself. Two stretches of market can *look* alike to the eye, a pair of impulsive legs, a quiet drift, a violent shakeout, yet the raw numbers behind them refuse to line up. One runs at $30,000, the other at $60,000. One takes ninety bars to complete a move; the other finishes in sixty. One is buried under noise that the other never sees. If we want a program to recognize that "this stretch of market is the same kind of thing as that stretch", we need a representation that survives all three of those differences: the price level, the timing, and the noise.
+This article builds one such representation from scratch in pure MQL5, and then puts it to work. The method is called Bag-of-SFA-Symbols, or BOSS. It belongs to a family of time-series classifiers that do something surprising: they throw away the raw prices entirely and replace each window of the series with a short *word* made of a handful of letters. A stretch of market then becomes a bag of these words, a small vocabulary, and two stretches are compared by how similar their vocabularies are. Because the words are built from a low-pass Fourier filter, each word is denoised as it is formed. Whether that word-level robustness survives all the way to segment classification, though, is exactly the kind of claim we will test empirically rather than assume. Because it is a bag, it does not care *where* a pattern happened inside the window. And because the words are literally readable, we can print out the vocabulary of a market regime and see what the machine sees.
+We will use BOSS to classify market regimes, tagging a stretch of price as trending, ranging, or volatile. And we will hold it to an honest standard, benchmarking it head-to-head against [Dynamic Time Warping](https://www.mql5.com/en/articles/15572), the classic elastic-distance approach to the same problem. The result is not a clean sweep, and we will not pretend otherwise: BOSS wins decisively on some axes and loses on others, and the article reports both. Along the way we will discover why a single BOSS classifier is not enough, and why the *ensemble* is the version that actually competes.
+We will cover:
+1. [Why Symbolic Representations? From Prices to Words](https://www.mql5.com/en/articles/23491#why_symbolic_representations_from_prices_to_words)
+2. [Symbolic Fourier Approximation (SFA)](https://www.mql5.com/en/articles/23491#symbolic_fourier_approximation_sfa)
+3. [From Words to a Bag: The BOSS Transform](https://www.mql5.com/en/articles/23491#from_words_to_a_bag_the_boss_transform)
+4. [Why One BOSS Is Not Enough: The Ensemble](https://www.mql5.com/en/articles/23491#why_one_boss_is_not_enough_the_ensemble)
+5. [Labeling Market Regimes Without Hand-Labeling](https://www.mql5.com/en/articles/23491#labeling_market_regimes_without_hand_labeling)
+6. [Putting It to the Test: BOSS vs DTW](https://www.mql5.com/en/articles/23491#putting_it_to_the_test_boss_vs_dtw)
+7. [The Regime Indicator](https://www.mql5.com/en/articles/23491#the_regime_indicator)
+8. [Conclusion](https://www.mql5.com/en/articles/23491#conclusion)
+### Why Symbolic Representations? From Prices to Words
+Suppose we take a window of twenty-four consecutive closing prices and ask a simple question: how do we measure its distance to another window of twenty-four prices? The obvious answer is point-by-point Euclidean distance: subtract the two windows element by element, square the differences, and sum them up. This works, and it is fast, but it is also fragile in exactly the ways markets punish. It reacts to the absolute price level, so the same shape at a different price registers as far away. It reacts to a single spike, so one noisy bar can dominate the whole distance. And it demands perfect time alignment, so a pattern that arrives two bars late looks completely different from the same pattern on time.
+Elastic methods such as Dynamic Time Warping fix the alignment problem by stretching and compressing the time axis to find the best match, but they pay for it: they are computationally heavy, still sensitive to noise, and the warping path they produce is hard to interpret. Symbolic methods take a different route. Instead of comparing the raw numbers at all, they compress each window into a short string of letters and then compare the strings. The compression is where all the robustness comes from.
+The pipeline we will build reduces a window to a word in three moves. Each move discards exactly the kind of variation we want to ignore:
+- Z-normalization removes the price level. After subtracting the mean and dividing by the standard deviation, a window is described purely by its *shape*. The same arc at $30,000 and $60,000 becomes the same normalized curve.
+- A low-pass Fourier filter removes the noise. By keeping only the first few Fourier coefficients of the window, we retain its coarse structure and throw away the high-frequency jitter. This is the single most important idea in the whole method, and it is what lets BOSS tolerate noisy price data where a raw matcher cannot.
+- Quantization into letters removes fine numerical detail. Each retained coefficient is mapped to one of a small alphabet of symbols, so tiny differences that do not change the shape category do not change the word.
+The output is a word such as "cbad", four letters standing in for a window of prices. A whole stretch of market, run through a sliding window, becomes a *bag* of such words, and the frequency of each word is the market's vocabulary over that stretch. Two markets in the same regime speak the same dialect; two markets in different regimes do not. The rest of this article is the machinery that makes this precise, and the empirical test of whether it actually works on real data.
+Fig. 1. A single price window is z-normalized, low-pass filtered, and quantized into a short word of letters
+### Symbolic Fourier Approximation (SFA)
+Symbolic Fourier Approximation is the engine that turns one window into one word. It has two parts that must be built in order. First, a Fourier front end that produces the low-frequency coefficients of a window. Second, a data-driven binning scheme, Multiple Coefficient Binning (MCB), that learns how to turn those coefficients into letters. We build the Fourier part first because everything downstream depends on it.
+**The Fourier front end**
+The Discrete Fourier Transform decomposes a window into a sum of sine and cosine waves of increasing frequency. The first coefficient (the DC term) is just the window's average; the next few describe its slow, sweeping structure; the later ones describe progressively finer wiggles. For our purposes the later coefficients are noise, so we never compute more than we need. The CDFT class wraps ALGLIB's real FFT and returns only the first few coefficients, laid out as interleaved real and imaginary parts.
+```
+//+------------------------------------------------------------------+
+//| CDFT - the real-input Fourier front end for SFA.                 |
+//|                                                                  |
+//|  SFA does not need a full spectrum. For a window of length w it  |
+//|  keeps only the first 'l' complex Fourier coefficients, whose    |
+//|  real and imaginary parts become the l real numbers that are     |
+//|  later binned into letters. Low index = low frequency, so        |
+//|  keeping the first few coefficients is a low-pass filter: it     |
+//|  retains the coarse shape of the window and discards the         |
+//|  high-frequency jitter. That built-in denoising is the whole     |
+//|  reason SFA tolerates noisy price data.                          |
+//|                                                                  |
+//|  The transform itself is delegated to ALGLIB's FFTR1D, a real    |
+//|  FFT that accepts any window length (no power-of-two rule). We   |
+//|  simply read back the coefficients we want. The class exists to  |
+//|  give SFA one clean call and to fix the coefficient-ordering     |
+//|  convention in a single place.                                   |
+//+------------------------------------------------------------------+
+```
+The actual transform is short. We copy the window into a plain array, call the FFT, and read back f[1..coeff\_count], deliberately skipping f[0]. After z-normalization the DC term is zero, so carrying it would waste a letter on a constant.
+```
+//+------------------------------------------------------------------+
+//| Compute the low-frequency coefficients of a real window.         |
+//|                                                                  |
+//|  'raw' is expected to be already z-normalized by the caller so   |
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Implementing and Benchmarking Bag-of-SFA-Symbols (BOSS) Against Dynamic Time Warping (DTW)
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Indicators](https://www.mql5.com/en/articles/mt5/indicators)
+### Introduction
+A price chart is one of the hardest objects in quantitative finance to compare against itself. Two stretches of market can *look* alike to the eye, a pair of impulsive legs, a quiet drift, a violent shakeout, yet the raw numbers behind them refuse to line up. One runs at $30,000, the other at $60,000. One takes ninety bars to complete a move; the other finishes in sixty. One is buried under noise that the other never sees. If we want a program to recognize that "this stretch of market is the same kind of thing as that stretch", we need a representation that survives all three of those differences: the price level, the timing, and the noise.
+We will use BOSS to classify market regimes, tagging a stretch of price as trending, ranging, or volatile. And we will hold it to an honest standard, benchmarking it head-to-head against [Dynamic Time Warping](https://www.mql5.com/en/articles/15572), the classic elastic-distance approach to the same problem. The result is not a clean sweep, and we will not pretend otherwise: BOSS wins decisively on some axes and loses on others, and the article reports both. Along the way we will discover why a single BOSS classifier is not enough, and why the *ensemble* is the version that actually competes.
+We will cover:
+3. [From Words to a Bag: The BOSS Transform](https://www.mql5.com/en/articles/23491#from_words_to_a_bag_the_boss_transform)
+4. [Why One BOSS Is Not Enough: The Ensemble](https://www.mql5.com/en/articles/23491#why_one_boss_is_not_enough_the_ensemble)
+5. [Labeling Market Regimes Without Hand-Labeling](https://www.mql5.com/en/articles/23491#labeling_market_regimes_without_hand_labeling)
+6. [Putting It to the Test: BOSS vs DTW](https://www.mql5.com/en/articles/23491#putting_it_to_the_test_boss_vs_dtw)
+7. [The Regime Indicator](https://www.mql5.com/en/articles/23491#the_regime_indicator)
+8. [Conclusion](https://www.mql5.com/en/articles/23491#conclusion)
+### Why Symbolic Representations? From Prices to Words
+Suppose we take a window of twenty-four consecutive closing prices and ask a simple question: how do we measure its distance to another window of twenty-four prices? The obvious answer is point-by-point Euclidean distance: subtract the two windows element by element, square the differences, and sum them up. This works, and it is fast, but it is also fragile in exactly the ways markets punish. It reacts to the absolute price level, so the same shape at a different price registers as far away. It reacts to a single spike, so one noisy bar can dominate the whole distance. And it demands perfect time alignment, so a pattern that arrives two bars late looks completely different from the same pattern on time.
+### Symbolic Fourier Approximation (SFA)
+Symbolic Fourier Approximation is the engine that turns one window into one word. It has two parts that must be built in order. First, a Fourier front end that produces the low-frequency coefficients of a window. Second, a data-driven binning scheme, Multiple Coefficient Binning (MCB), that learns how to turn those coefficients into letters. We build the Fourier part first because everything downstream depends on it.
+//--- flatten f[1..coeff_count] into interleaved real/imag pairs.
+   ArrayResize(out,coeff_count*DFT_REALS_PER_COEFF);
+   for(int k=0;k<coeff_count;k++)
+   double sd=MathSqrt(var);
+   if(sd<SFA_FLAT_EPS)
+      return false;
+
+//|                                                                  |
+//|  The result is a breakpoint table m_break[pos][b], pos in        |
+//|  0..2l-1, b in 0..alpha-2. Symbolizing a value is then a simple  |
+//|  lookup: count how many breakpoints it exceeds.                  |
+The fitting routine is worth reading in full, because its structure is not obvious. It runs in two passes. The first pass transforms every training window once and stores *all* of its coefficient slots into a flat matrix, one row per usable window. We do this rather than transforming twice because the FFT is the expensive step, and we need every window's contribution to every slot before we can bin any slot. Along the way, windows that fail z-normalization (the flat ones) or the DFT are silently skipped, and a running *usable* count tracks how many genuinely made it in. The second pass then bins each of the *2l* slots independently: it gathers that slot's value across every usable window, sorts them, and drops the breakpoints at equal-count quantiles.
+```
+//--- first pass builds a compact per-slot matrix. To avoid a second
+//--- transform pass we transform once and store all slots, then bin
+//--- slot by slot.
+   if(!ZNorm(raw,len,norm))
+      return SFA_FLAT_WINDOW;
+   double coeffs[];
+### From Words to a Bag: The BOSS Transform
+SFA gives us one word per window. BOSS turns a whole series into a *bag* of words by sliding the SFA window along the series one bar at a time, encoding each position, and counting how often each word appears. The bag, a word-frequency histogram, is the fingerprint of the series. This is where the "bag-of-words" name comes from: just as a document can be summarized by how often each term appears in it, a stretch of market is summarized by how often each price-shape word appears in it.
+//+------------------------------------------------------------------+
+void CBossHistogram::Add(const string w)
+  {
+   int idx=IndexOf(w);
+int CBossHistogram::CountOf(const string w) const
+int CBossTransform::Transform(const double &series[],int len,
+                              CBossHistogram &hist) const
+
+To classify a new series we need a distance between its bag and each training bag, and here BOSS makes a deliberate and unusual choice: its distance is not symmetric. Given a query bag *q* and a sample bag *s*, the BOSS distance is an ordinary squared-Euclidean distance over word counts, but summed *only* over the words that actually occur in the query:
+//| Non-symmetric BOSS distance from query q to sample s.            |
+//|  Sum of squared count differences over words present in q only.  |
+double CBossClassifier::BossDistance(const CBossHistogram &q,const CBossHistogram &s)
+   double d=0.0;
+Classification is then nearest-neighbor. The CBossClassifier class stores one labeled bag per training example. Adding an example is just transforming its series into a bag and appending that bag with its label; the transform happens once, at add time, so classification later is cheap:
+```
+bool CBossClassifier::AddExample(const double &series[],int len,const string label)
+   if(!IsReady() || len<BOSS_MIN_SERIES)
+   CBossHistogram h;
+   if(m_transform.Transform(series,len,h)<0)
+      return false;
+string CBossClassifier::ClassifyBag(const CBossHistogram &q,int skip) const
+   double best=DBL_MAX;
+         continue;
+      double d=BossDistance(q,m_train[i]);
+The public Classify method wraps it: it transforms the incoming series into a query bag, delegates to ClassifyBag for the winning label, and then does one cheap re-scan to recover the winning distance for the caller. It works, but as we are about to see, a single such classifier is not yet the method that competes.
+![A sliding window builds a word-frequency histogram](https://c.mql5.com/2/232/BossTransformBag_960w.gif "A sliding window builds a word-frequency histogram")
+### Why One BOSS Is Not Enough: The Ensemble
+A single BOSS classifier commits to one sliding-window length. That is a problem, because the *right* window length is data-dependent and not known in advance: a short window captures fast, local structure and misses slow sweeps, while a long window does the reverse. Pick wrong and the classifier is blind to exactly the structure that distinguishes your classes. In our own testing, a single BOSS on real data performed poorly precisely for this reason, and it is a well-documented weakness of the method.
+
+The fix, and the version of BOSS that is actually competitive, is the ensemble. Rather than gambling on one window size, it trains one BOSS member at each of several window sizes, scores each member, keeps only the good ones, and lets them vote. The scoring uses **leave-one-out** training accuracy: each training bag is classified against all the *others*, and the fraction correctly labeled is the member's score. Members whose score comes within a fixed fraction (the literature uses 92%) of the best member are retained; the rest are discarded. A query is then classified by majority vote among the survivors.
+//+------------------------------------------------------------------+
+double CBossClassifier::LooAccuracy(void) const
+  {
+   if(m_ntrain<2)
+     {
+      string pred=ClassifyBag(m_train[i],i);   // skip self
+      if(pred==m_label[i])
+         correct++;
+The CBossEnsemble class owns the whole procedure. Because different members use different window sizes, and each window size needs its own MCB breakpoints and its own labeled bags, the ensemble is handed the *raw* labeled segments and builds each member's pool and bags internally. That per-member setup is done by FitMember, and it is worth showing because it is the piece that makes the different window sizes work. For a given window length it harvests *every* sliding window across *every* training segment into one big MCB pool, fits a fresh CBossClassifier on that pool, and then adds each whole training segment back as one labeled bag:
+```
+bool CBossEnsemble::FitMember(int win_len,CBossClassifier &clf) const
+   if(win_len<2 || win_len>m_seglen)
+//--- fit a candidate member at each window size and score it.
+   CBossClassifier cand[];
+   int    cwin[];
+   double cacc[];
+//--- keep members within 92% of the best LOO accuracy.
+   double cut=best*BOSS_ENSEMBLE_KEEP;
+   ArrayResize(m_member,ncand);
+   ArrayResize(m_win,ncand);
+
+Classification is the vote. Each kept member classifies the query independently, the labels are tallied, and the label with the most votes wins:
+//+------------------------------------------------------------------+
+//| Classify a query segment by majority vote of the kept members.   |
+//|  Ties are broken by the earliest-listed label reaching the top   |
+//|  count, which is deterministic given the member order.           |
+string CBossEnsemble::Classify(const double &series[],int len) const
+  {
+   if(m_count<=0)
+Fig. 4. Several BOSS members at different window sizes classify the query, and the majority vote wins
+### Labeling Market Regimes Without Hand-Labeling
+BOSS is a *supervised* classifier: it learns from labeled examples. To teach it market regimes we need labeled segments of price, and hand-labeling thousands of them is neither practical nor reproducible. Instead we derive the labels mechanically, from two classic statistics of a segment's log returns. This gives us a transparent, deterministic ground truth that BOSS must then learn to reproduce from window shape alone.
+The two statistics are:
+- Lag-1 autocorrelation of returns. When consecutive returns are positively correlated, moves tend to continue, which is the signature of a *trend*. When it is near zero or negative, moves tend to reverse, which is the signature of a *range*.
+- Return volatility (standard deviation), judged against a rolling reference so that "high" is relative to the instrument rather than an absolute number. An unusually wild segment is *volatile*.
+Both statistics operate on *log returns*, not raw prices, so the first step is always to convert a price window into its returns. We guard against non-positive prices (which would break the logarithm) and simply skip those pairs:
+double CRegimeLabeler::LogReturns(const double &price[],int len,double &ret[]) const
+   int k=0;
+double CRegimeLabeler::Autocorr1(const double &ret[],int n) const
+   if(n<3)
+Volatility is the population standard deviation of the same returns, and a companion WindowVolatility (not shown) simply chains LogReturns into StdDev so a price window can be measured in one call. This is what the benchmark uses to build the rolling reference against which "high" volatility is judged:
+
+```
+//+------------------------------------------------------------------+
+double CRegimeLabeler::StdDev(const double &ret[],int n) const
+   if(n<=0)
+The CRegimeLabeler class applies these in a fixed hierarchy: volatility dominates, so an unusually wild segment is labeled volatile whatever its autocorrelation says; among calmer segments, strong positive autocorrelation marks a trend; everything else is a range. The decision is deliberately simple and readable, because it is the benchmark's *source of truth*, not the thing under test:
+ENUM_REGIME CRegimeLabeler::Label(const double &price[],int len) const
+  {
+   double ret[];
+      return REGIME_UNDEFINED;
+   double vol=StdDev(ret,n);
+//--- volatility first: an unusually wild window is VOLATILE whatever
+//--- its autocorrelation says.
+   double vol_ref=(m_ref_vol>0.0)?m_ref_vol:vol;
+   if(vol>m_vol_hi_mult*vol_ref)
+      return REGIME_VOLATILE;
+//--- among calmer windows, strong persistence marks a trend.
+   if(acf>m_acf_trend)
+      return REGIME_TREND;
+   return REGIME_RANGE;
+  }
+
+The two thresholds, the trend autocorrelation cutoff and the volatility multiplier, are inputs. They matter more than they might appear: set them too strict and almost every segment falls through to "range", producing a degenerate label distribution that no classifier can learn from. On BTCUSD H1 we found that loosening them to a trend cutoff of 0.05 and a volatility multiplier of 1.3 gives a workably balanced mix of the three classes, which is what the benchmark below uses.
+**Note:** the labeler is a convenience for generating training data, not a claim about the "true" state of the market. Its rules are one reasonable definition of regime among many. BOSS learns to reproduce whatever definition you feed it, so a better labeler yields a better classifier.
+### Putting It to the Test: BOSS vs DTW
+Now the empirical part. We benchmark BOSS against Dynamic Time Warping, the elastic-distance classic, on exactly the same task: classify a segment of BTCUSD H1 into trend, range, or volatile, using the same auto-generated labels and the same 1-nearest-neighbor protocol. Before we do that on messy real bars, though, it is worth confirming the classifier behaves on controlled shapes where we know the right answer.
+BOSSSelfTest.mq5 builds three synthetic series, a trending drift, a clean oscillation, and a volatile random walk, and asks the classifier three questions in turn. It is a behavioral test on shapes with known labels, so any failure here is a bug in the engine, not an ambiguity in the market. The first question, discrimination on clean queries, is a clean pass: on well-separated shapes the classifier is perfect, scoring 90 of 90 across all three classes.
+The second question is more revealing. It pushes a single ranging query through rising noise and checks whether it survives. It does not survive for long, and this is the first crack in the noise story: correct at low noise, it falls apart by the time the noise amplitude reaches half the signal, foreshadowing exactly the limitation the benchmark will confirm on real data.
+| range | 14 | [cacb]x10  [adcb]x10  [dbcb]x9 |
+| volatile | 59 | [adda]x7  [ddac]x7  [ddda]x7 |
+![BOSS self-test output on synthetic shapes](https://c.mql5.com/2/234/test__1.png "BOSS self-test output on synthetic shapes")
+Fig. 5. The self-test terminal output: perfect discrimination on clean shapes, the per-query noise breakdown, and the vocabulary each shape produces
+- Both see shape, not price level. BOSS z-normalizes internally; we z-normalize every segment before handing it to DTW as well. Without this, DTW would match on absolute price, which is meaningless on an instrument that ranges over tens of thousands of dollars, and the comparison would be rigged against it.
+- The unit of classification is a segment, not a single window. BOSS represents a series by the *distribution* of words its sliding window produces, so it needs a segment long enough to yield many words. We classify 120-bar segments; DTW compares the same 120-bar shapes point by point.
+- We report macro accuracy, not just raw accuracy. The regime mix is imbalanced (range dominates), so a classifier that always guesses "range" can post a high raw score while being useless. Macro accuracy, the mean of the per-class recalls, exposes that, so it is the number that matters.
+| Classifier | Raw accuracy | Macro accuracy | Time per query |
+| --- | --- | --- | --- |
+| Baseline (always "range") | 71.7% | - | - |
+| Single BOSS | 49.1% | 25.3% | ~9 ms |
+| **BOSS ensemble** | **57.2%** | **62.5%** | ~35 ms |
+| DTW | 50.9% | 44.8% | ~735 ms |
+**The honest limitation: noise**
+
+The introduction promised we would test the noise claim rather than assume it, and this is where we make good on that. The low-pass Fourier filter is a genuine reason to expect noise-robustness, and at the word level it delivers. But at the segment-classification level the data does not fully support the claim, and we will not hide it. When we inject noise into the test queries and re-run, the picture changes:
+| Classifier (noisy queries) | Raw accuracy | Macro accuracy |
+| --- | --- | --- |
+| Single BOSS | 47.4% | 30.4% |
+| BOSS ensemble | 59.5% | 29.6% |
+| **DTW** | 54.3% | **32.6%** |
+There is one thing BOSS offers that DTW structurally cannot: you can read its vocabulary. We saw this already in the self-test's vocabulary table, where each shape printed its own dialect; the same property holds on real regimes. Because each bag is literally a table of words and counts, we can print the most frequent words a regime produces and see its dialect. A ranging market produces a small, tight vocabulary dominated by a few oscillation words; a volatile market produces a sprawling vocabulary with almost no repetition, because chaos has no characteristic shape. That readable signature is a genuine analytical advantage, and it is why symbolic methods remain attractive even where a black-box model might edge them on raw accuracy.
+### The Regime Indicator
+The payoff of all this machinery is a tool you can attach to a chart. BOSSRegime.mq5 is a self-contained indicator that trains a BOSS ensemble on recent history when it loads, then tags every bar with the regime of the segment ending at it, drawing a color-coded lane in a separate window: blue for range, green for trend, red for volatile. Any Expert Advisor can read that lane as context, gating its strategy on the current regime.
+  {
+   SetIndexBuffer(0,RegimeBuffer,INDICATOR_DATA);
+   SetIndexBuffer(1,ColorBuffer,INDICATOR_COLOR_INDEX);
+   IndicatorSetString(INDICATOR_SHORTNAME,"BOSS Regime");
+   ENUM_REGIME lastReg=REGIME_UNDEFINED;
+   for(int i=start;i<rates_total;i++)
+      lastReg=ClassifyBarSegment(close,i,i);
+```
+The classification itself reuses the trained ensemble directly: slice out the Segment closes ending at the bar, call the ensemble's Classify, and write the regime code and color index into the plot buffers. Because the ensemble was trained once at load time, tagging a bar is only a few histogram comparisons, fast enough to run live.
+![The BOSS regime lane on a BTCUSD H1 chart](https://c.mql5.com/2/234/indicator.png "The BOSS regime lane on a BTCUSD H1 chart")
+Fig. 8. The color-coded regime lane under a BTCUSD H1 chart: blue range, green trend, red volatile
+
+### Conclusion
+We built the Bag-of-SFA-Symbols classifier from the ground up in pure MQL5, turning windows of price into words with Symbolic Fourier Approximation, words into bags with the BOSS transform, and bags into a competitive classifier with the ensemble, then tested the whole thing empirically against Dynamic Time Warping on real BTCUSD data.
+There are natural next steps. A richer labeler, or forward-looking labels tied to realized behavior, would give BOSS a cleaner target to learn. WEASEL, a successor to BOSS that weights discriminative words and mixes window lengths more aggressively, is a promising direction for the noise problem. And the ensemble's members and thresholds are all tunable, so there is room to push the accuracy further.
+The programs presented in this article are intended for educational purposes only. Trading involves substantial risk, and past performance on historical data is no guarantee of future results. Test any tool thoroughly on a demo account before considering live use, and never risk capital you cannot afford to lose.
+| --- | --- |
+| MQL5\Include\BOSS\FourierTransform.mqh | CDFT: real-input Fourier front end (ALGLIB FFT), returns the low coefficients for SFA |
+| MQL5\Include\BOSS\SFA.mqh | CMCB (Multiple Coefficient Binning) and CSFA (Symbolic Fourier Approximation): window to word |
+| MQL5\Include\BOSS\BOSS.mqh | CBossTransform, CBossClassifier, and CBossEnsemble: bag-of-words, BOSS distance, and the voting ensemble |
+| MQL5\Include\BOSS\RegimeLabeler.mqh | CRegimeLabeler: rule-based trend/range/volatile labels from autocorrelation and volatility |
+| MQL5\Indicators\BOSS\BOSSRegime.mq5 | Self-contained regime indicator: trains a BOSS ensemble and color-codes the regime lane |
+| MQL5\Scripts\BOSS\BOSSvsDTWBenchmark.mq5 | Head-to-head benchmark of single BOSS, the ensemble, and DTW on real bars |
+| MQL5\Scripts\BOSS\BOSSSelfTest.mq5 | Behavioral self-test of the classifier on synthetic shapes, with a vocabulary readout |
+| MQL5\Scripts\BOSS\BOSSNoiseSweep.mq5 | Diagnostic sweep of retained-coefficient count against query noise |
+**Attached files** |
+![Crystal Structure Algorithm (CryStAl)](https://c.mql5.com/2/178/19899-algoritm-kristallicheskoy-strukturi-logo.png)
+[Crystal Structure Algorithm (CryStAl)](https://www.mql5.com/en/articles/19899)
+This article presents two versions of the Crystal Structure Algorithm: the original and the modified version. The Crystal Structure Algorithm (CryStAl), published in 2021 and inspired by the physics of crystal structures, was positioned as a parameter-free metaheuristic for global optimization. However, testing revealed a critical problem with the algorithm. A modified version, CryStAlm, is also presented; it addresses the original's key shortcomings.
+The article implements a self-sufficient Adaptive SuperTrend EA with internal calculations on a selectable timeframe, avoiding external buffers and indicator files. It includes risk-based lot sizing, ATR stops, stepwise RR trailing, optional anti-repainting confirmation, and session control. Practitioners can reuse the structure for consistent new‑bar signal handling and broker‑compliant order validation.
+[![](https://www.mql5.com/ff/si/0nfwvn6yhmgzf97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F117%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dorder.expert%26utm_content%3Dorder.freelance%26utm_campaign%3D0622.MQL5.com.Internal&a=tunpwtbhegzufrqocbwiszessdutnobs&s=d9e7484e15300021b4066b1df77a94a1352f9e7c326d5113006bb4f6476bafeb&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=dnnjltgxvijqguwjaoymxtbnvhhhezlz&ssn=1788776839490126691&ssn_dr=0&ssn_sr=0&fv_date=1788776839&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23491&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Implementing%20and%20Benchmarking%20Bag-of-SFA-Symbols%20(BOSS)%20Against%20Dynamic%20Time%20Warping%20(DTW)%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887768396384801&fz_uniq=5121393796679598983&sv=2552)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+We built the Bag-of-SFA-Symbols classifier from the ground up in pure MQL5, turning windows of price into words with Symbolic Fourier Approximation, words into bags with the BOSS transform, and bags into a competitive classifier with the ensemble, then tested the whole thing empirically against Dynamic Time Warping on real BTCUSD data.
+
+- A complete, reusable engine. CDFT, CMCB, CSFA, CBossTransform, CBossClassifier, and CBossEnsemble form a self-contained symbolic time-series toolkit with no external dependencies beyond ALGLIB's FFT, usable for any classification task, not only regimes.
+- The ensemble is the method. A single BOSS scored 25.3% macro accuracy and lost; the ensemble scored 62.5% and won. The lesson generalizes: for dictionary classifiers, voting across window sizes is not an optional refinement, it is what makes them work.
+- A real win, honestly bounded. On clean data the BOSS ensemble beat DTW on balanced accuracy (62.5% against 44.8%) and ran roughly twenty times faster. Under heavy noise injection, however, DTW edged ahead, so we do not claim noise robustness at the segment level, and we showed the numbers that make that case.
+- Interpretability for free. BOSS's vocabulary is readable: a regime has a dialect you can print and inspect, something no elastic-distance method offers.
+
+There are natural next steps. A richer labeler, or forward-looking labels tied to realized behavior, would give BOSS a cleaner target to learn. WEASEL, a successor to BOSS that weights discriminative words and mixes window lengths more aggressively, is a promising direction for the noise problem. And the ensemble's members and thresholds are all tunable, so there is room to push the accuracy further.
+
+The programs presented in this article are intended for educational purposes only. Trading involves substantial risk, and past performance on historical data is no guarantee of future results. Test any tool thoroughly on a demo account before considering live use, and never risk capital you cannot afford to lose.
+
+**Getting the Source Code via MQL5 Algo Forge**
+
+All source files are attached to this article below, but the full repository is also available on [MQL5 Algo Forge](https://forge.mql5.io/ayantrader/boss "https://forge.mql5.io/ayantrader/boss"), the community's Git-based platform for sharing and collaborating on trading projects.
+
+| File name | Description |
+| --- | --- |
+| MQL5\Include\BOSS\FourierTransform.mqh | CDFT: real-input Fourier front end (ALGLIB FFT), returns the low coefficients for SFA |
+| MQL5\Include\BOSS\SFA.mqh | CMCB (Multiple Coefficient Binning) and CSFA (Symbolic Fourier Approximation): window to word |
+| MQL5\Include\BOSS\BOSS.mqh | CBossTransform, CBossClassifier, and CBossEnsemble: bag-of-words, BOSS distance, and the voting ensemble |
+| MQL5\Include\BOSS\RegimeLabeler.mqh | CRegimeLabeler: rule-based trend/range/volatile labels from autocorrelation and volatility |
+| MQL5\Indicators\BOSS\BOSSRegime.mq5 | Self-contained regime indicator: trains a BOSS ensemble and color-codes the regime lane |
+| MQL5\Scripts\BOSS\BOSSvsDTWBenchmark.mq5 | Head-to-head benchmark of single BOSS, the ensemble, and DTW on real bars |
+| MQL5\Scripts\BOSS\BOSSSelfTest.mq5 | Behavioral self-test of the classifier on synthetic shapes, with a vocabulary readout |
+| MQL5\Scripts\BOSS\BOSSNoiseSweep.mq5 | Diagnostic sweep of retained-coefficient count against query noise |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23491.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23491/MQL5.zip "Download MQL5.zip")
+(29.37 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Building a Volume-Based Liquidity Heatmap Indicator in MQL5](https://c.mql5.com/2/237/23550-building-a-volume-based-liquidity-logo.png)
+[Building a Volume-Based Liquidity Heatmap Indicator in MQL5](https://www.mql5.com/en/articles/23550)
+
+This article implements an MQL5 Liquidity Heatmap that infers likely liquidation zones from price and volume. It qualifies bars with a rolling volume SMA, computes leverage-based liquidation levels from candle extremes, ranks signals across two volume modes, and manages chart objects (lines and bubbles) that extend until price crosses them, allowing you to highlight potential stop-hunt areas and strengthen structural analysis.
+
+![Crystal Structure Algorithm (CryStAl)](https://c.mql5.com/2/178/19899-algoritm-kristallicheskoy-strukturi-logo.png)
+[Crystal Structure Algorithm (CryStAl)](https://www.mql5.com/en/articles/19899)
+
+This article presents two versions of the Crystal Structure Algorithm: the original and the modified version. The Crystal Structure Algorithm (CryStAl), published in 2021 and inspired by the physics of crystal structures, was positioned as a parameter-free metaheuristic for global optimization. However, testing revealed a critical problem with the algorithm. A modified version, CryStAlm, is also presented; it addresses the original's key shortcomings.
+
+![Exporting Custom Indicator Buffers to CSV for Python Backtesting Pipelines](https://c.mql5.com/2/238/23499-exporting-custom-indicator-logo.png)
+[Exporting Custom Indicator Buffers to CSV for Python Backtesting Pipelines](https://www.mql5.com/en/articles/23499)
+
+We build a CSV exporter for MQL5 custom indicators that preserves the exact values seen on the chart. The script creates the indicator handle with iCustom, waits for BarsCalculated, aligns buffers to CopyRates, and writes a locale-safe CSV that pandas loads with parsed dates and NaN for warm-up bars. It addresses compile-time argument limits, jagged-array workarounds, and EMPTY\_VALUE handling, enabling reliable Python backtests without re-coding the indicator.
+
+![Building a Divergence System (Part III): The Adaptive SuperTrend EA](https://c.mql5.com/2/237/23541-building-a-divergence-system-logo.png)
+[Building a Divergence System (Part III): The Adaptive SuperTrend EA](https://www.mql5.com/en/articles/23541)
+
+The article implements a self-sufficient Adaptive SuperTrend EA with internal calculations on a selectable timeframe, avoiding external buffers and indicator files. It includes risk-based lot sizing, ATR stops, stepwise RR trailing, optional anti-repainting confirmation, and session control. Practitioners can reuse the structure for consistent new‑bar signal handling and broker‑compliant order validation.
+
+[![](https://www.mql5.com/ff/si/0nfwvn6yhmgzf97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F117%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dorder.expert%26utm_content%3Dorder.freelance%26utm_campaign%3D0622.MQL5.com.Internal&a=tunpwtbhegzufrqocbwiszessdutnobs&s=d9e7484e15300021b4066b1df77a94a1352f9e7c326d5113006bb4f6476bafeb&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=dnnjltgxvijqguwjaoymxtbnvhhhezlz&ssn=1788776839490126691&ssn_dr=0&ssn_sr=0&fv_date=1788776839&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23491&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Implementing%20and%20Benchmarking%20Bag-of-SFA-Symbols%20(BOSS)%20Against%20Dynamic%20Time%20Warping%20(DTW)%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887768396384801&fz_uniq=5121393796679598983&sv=2552)

@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_006",
+  "section": "Trading",
+  "parent_shard": "trading_006",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 4227,
+      "title": "Deep Neural Networks (Part VI). Ensemble of neural network classifiers: bagging",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4227.md"
+    },
+    {
+      "id": 4228,
+      "title": "Deep Neural Networks (Part VII). Ensemble of neural networks: stacking",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4228.md"
+    },
+    {
+      "id": 4233,
+      "title": "How to reduce trader's risks",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4233.md"
+    },
+    {
+      "id": 4543,
+      "title": "Testing currency pair patterns: Practical application and real trading perspectives. Part IV",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4543.md"
+    },
+    {
+      "id": 4722,
+      "title": "Deep Neural Networks (Part VIII). Increasing the classification quality of bagging ensembles",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4722.md"
+    },
+    {
+      "id": 5178,
+      "title": "Trading account monitoring is an indispensable trader's tool",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5178.md"
+    },
+    {
+      "id": 5194,
+      "title": "14,000 trading robots in the MetaTrader Market",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5194.md"
+    },
+    {
+      "id": 5211,
+      "title": "950 websites broadcast the Economic Calendar from MetaQuotes",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5211.md"
+    },
+    {
+      "id": 5220,
+      "title": "Gap - a profitable strategy or 50/50?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5220.md"
+    },
+    {
+      "id": 5268,
+      "title": "Reversing: Formalizing the entry point and developing a manual trading algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5268.md"
+    },
+    {
+      "id": 5269,
+      "title": "Martingale as the basis for a long-term trading strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5269.md"
+    },
+    {
+      "id": 5691,
+      "title": "MetaTrader 5 and Python integration: receiving and sending data",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5691.md"
+    }
+  ]
+}

@@ -1,0 +1,400 @@
+20: # News Trading Made Easy (Part 2): Risk Management
+25: | 4 June 2024 at 10:54
+36: ## Introduction
+38: A quick refresher for [the previous article](https://www.mql5.com/en/articles/14324 "News Trading Made Easy (Part 1): Creating a Database") in the News Trading Made Easy series. In part 1, we went through the concept of DST(Daylight Savings Time) and the various versions for different countries that essentially change their time zones by an hour ahead and behind during a financial year. This will 
+40: However, in this article, we will make a few changes to our previous code in part 1. Firstly by implementing inheritance to the existing code and upcoming new code, the previous news/calendar database will get a revamp into something more useable and practical. Additionally, we will tackle risk management and create different risk profiles to choose from for users with different risk appetites or 
+42: ## Inheritance
+46: ### What is Inheritance?
+52: ### What is the purpose of Inheritance?
+58: ### What are Access Modifiers?
+64: - Public
+65: - Private
+66: - Protected
+80: ### Inheritance Example related to MQL5
+86: Classes UnitedStates and Switzerland have singular Inheritance from class NewsData:
+88: ```
+124: //'UnitedStates' class's objects and children
+128:    virtual void      SetNews()//private Function only Accessible in 'UnitedStates' class
+141:                      UnitedStates(void) {SetNews();}//Class constructor
+160: ```
+168: | Class's Properties | Class | Children | Objects |
+169: | --- | --- | --- | --- |
+170: | Variable: Country(Private) | ✔ | ✘ | ✘ |
+171: | Structure: EventDetails(Private) | ✔ | ✘ | ✘ |
+172: | Variable: News(Protected) | ✔ | ✔ | ✘ |
+173: | Function: SetNews(Protected) | ✔ | ✔ | ✘ |
+174: | Function: SetCountry(Protected) | ✔ | ✔ | ✘ |
+175: | Function: GetNews(Public) | ✔ | ✔ | ✔ |
+176: | Constructor: NewsData(Public) | ✔ | ✘ | ✘ |
+177: | Destructor: ~NewsData(Public) | ✔ | ✘ | ✘ |
+179: ```
+209: ```
+221: In the (Child/Sub/Derived) class  UnitedStates, it inherits the parent(NewsData) class privately.   
+222: Meaning that the sub(UnitedStates) class can access the protected and public properties from the parent(NewsData) class, but the children for the UnitedStates class and its objects will not have access to any properties of the parent(NewsData) class. If the inheritance [Access Modifier](https://www.geeksforgeeks.org/access-modifiers-in-c/ "www.geeksforgeeks.org/access-modifiers-in-c/") was protect
+226: | Class's Properties | Class | Children | Objects |
+227: | --- | --- | --- | --- |
+228: | Inheritance(Private) Variable: Country(Private) | ✘ | ✘ | ✘ |
+229: | Inheritance(Private) Structure: EventDetails(Private) | ✘ | ✘ | ✘ |
+230: | Inheritance(Private) Variable: News(Protected) | ✔ | ✘ | ✘ |
+231: | Inheritance(Private) Function: SetNews(Protected) | ✔ | ✘ | ✘ |
+232: | Inheritance(Private) Function: SetCountry(Protected) | ✔ | ✘ | ✘ |
+233: | Inheritance(Private) Function: GetNews(Public) | ✔ | ✘ | ✘ |
+234: | Inheritance(Private) Constructor: NewsData(Public) | ✘ | ✘ | ✘ |
+235: | Inheritance(Private) Destructor: ~NewsData(Public) | ✘ | ✘ | ✘ |
+236: | Function: SetNews(Private) | ✔ | ✘ | ✘ |
+237: | Function: myNews(Public) | ✔ | ✔ | ✔ |
+238: | Constructor: UnitedStates(Public) | ✔ | ✘ | ✘ |
+240: ```
+243: //'UnitedStates' class's objects and children
+247:    virtual void      SetNews()//private Function only Accessible in 'UnitedStates' class
+260:                      UnitedStates(void) {SetNews();}//Class constructor
+262: ```
+264: Visible Properties from the UnitedStates Object:
+268: A compile error arises from attempting to access GetNews function which is privately inherited from NewsData, this prevents the UnitedStates object from access to the function.
+278: | Class's Properties | Class | Children | Objects |
+279: | --- | --- | --- | --- |
+280: | Inheritance(Public) Variable: Country(Private) | ✘ | ✘ | ✘ |
+281: | Inheritance(Public) Structure: EventDetails(Private) | ✘ | ✘ | ✘ |
+282: | Inheritance(Public) Variable: News(Protected) | ✔ | ✔ | ✘ |
+283: | Inheritance(Public) Function: SetNews(Protected) | ✔ | ✔ | ✘ |
+284: | Inheritance(Public) Function: SetCountry(Protected) | ✔ | ✔ | ✘ |
+285: | Inheritance(Public) Function: GetNews(Public) | ✔ | ✔ | ✔ |
+286: | Inheritance(Public) Constructor: NewsData(Public) | ✘ | ✘ | ✘ |
+287: | Inheritance(Public) Destructor: ~NewsData(Public) | ✘ | ✘ | ✘ |
+288: | Function: SetNews(Public) | ✔ | ✔ | ✔ |
+289: | Constructor: Switzerland(Public) | ✔ | ✘ | ✘ |
+291: ```
+305: ```
+315: ## Daylight Savings Classes
+317: ### In News Trading Made Easy (Part 1):
+327: In the previous code we had three classes for Daylight Savings namely:
+329: - CDaylightSavings\_AU
+330: - CDaylightSavings\_UK
+331: - CDaylightSavings\_US
+333: ### In Part 2:
+343: We will have the following classes for Daylight Savings namely:
+345: - CDaylightSavings
+346: - CDaylightSavings\_AU
+347: - CDaylightSavings\_UK
+348: - CDaylightSavings\_US
+350: ### Why create another Daylight savings class?
+352: In the previous classes' code there was a lot of repetition among the classes, which essentially was the same code written over again for different values in a list. Instead of this repetition occurring amongst similar classes, we will put all the commonalities in one separate class and inherit the common features into the different daylight savings classes.
+354: ### What are virtual Functions?
+360: - Polymorphism: Virtual functions allow for dynamic (runtime) polymorphism. This means that the method that gets executed is determined at runtime based on the actual type of the object being referenced, rather than the type of the reference or pointer.
+361: - Flexibility: They enable more flexible and reusable code by allowing derived classes to modify or extend the base class behavior.
+362: - Decoupling: Virtual functions help in decoupling the code by separating the interface from the implementation, making it easier to change the implementation without affecting the code that uses the base class interface.
+364: ### CDaylightSavings Class
+366: In this class all commonalities of the previous codes are put into one class and we will declare a few virtual functions to initialize the different lists for the respective Daylight Savings schedule.
+368: CDaylightSavings class has a singular Inheritance from CObject class.
+370: CDaylightSavings class has Inclusions from classes:
+372: - CArrayObj
+373: - CTimeManagement
+375: ```
+382: #include <Object.mqh>
+384: #include <Arrays\ArrayObj.mqh>
+385: #include "../TimeManagement.mqh"
+388: //|DaylightSavings class                                             |
+395:                      CDaylightSavings(datetime startdate,datetime enddate);
+396:    CObject           *List() { return savings;}//Gets the list of Daylightsavings time
+402:    virtual void      SetDaylightSavings_UK();//Initialize UK Daylight Savings Dates into List
+403:    virtual void      SetDaylightSavings_US();//Initialize US Daylight Savings Dates into List
+404:    virtual void      SetDaylightSavings_AU();//Initialize AU Daylight Savings Dates into List
+409:    bool              isDaylightSavings(datetime Date);//This function checks if a given date falls within Daylight Savings Time.
+410:    bool              DaylightSavings(int Year,datetime &startDate,datetime &endDate);//Check if DaylightSavings Dates are available for a certain Year
+411:    string            adjustDaylightSavings(datetime EventDate);//Will adjust the date's timezone depending on DaylightSavings
+424: CDaylightSavings::CDaylightSavings(datetime startdate,datetime enddate)
+431: //|checks if a given date falls within Daylight Savings Time         |
+433: bool CDaylightSavings::isDaylightSavings(datetime Date)
+435: // Initialize a list to store daylight savings periods.
+440:       // Access the current daylight savings period.
+442:       // Check if the given date is within the current daylight savings period.
+443:       if(Time.DateIsInRange(dayLight.StartDate,dayLight.EndDate,Date))
+445:          // If yes, return true indicating it is daylight savings time.
+449: // If no period matches, return false indicating it is not daylight savings time.
+454: //|Check if DaylightSavings Dates are available for a certain Year   |
+456: bool CDaylightSavings::DaylightSavings(int Year,datetime &startDate,datetime &endDate)
+458: // Initialize a list to store daylight savings periods.
+465:       if(Year==Time.ReturnYear(dayLight.StartDate))//Check if a certain year's date is available within the DaylightSavings start dates in the List
+470:       if(Year==Time.ReturnYear(dayLight.EndDate))//Check if a certain year's date is available within the DaylightSavings end dates in the List
+475:       if(startDateDetected&&endDateDetected)//Check if both DaylightSavings start and end dates are found for a certain Year
+481:    startDate = D'1970.01.01 00:00:00';//Set a default start date if no DaylightSaving date is found
+482:    endDate = D'1970.01.01 00:00:00';//Set a default end date if no DaylightSaving date is found
+487: //|Will adjust the date's timezone depending on DaylightSavings      |
+489: string CDaylightSavings::adjustDaylightSavings(datetime EventDate)
+491:    if(isDaylightSavings(TimeTradeServer()))//Check if the current tradeserver time is already within the DaylightSavings Period
+493:       if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+499:          return TimeToString((datetime)(EventDate-Time.HoursS()));//event time minus an hour for DST
+504:       if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+506:          return TimeToString((datetime)(Time.HoursS()+EventDate));//event time plus an hour for DST
+518: CDaylightSavings::~CDaylightSavings(void)
+521:    delete dayLight;//Delete CDaylightSavings Pointer
+525: ```
+527: ### CDaylightSavings\_AU Class
+529: In this class we expand upon the virtual void SetDaylightSavings\_AU and proceed to add the Daylight Savings Schedule for Australia.
+531: Australian Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/australia "https://www.timeanddate.com/time/change/australia").
+533: CDaylightSavings\_AU class has multilevel Inheritance from classes:
+535: - CDaylightSavings
+536: - CObject
+538: CDaylightSavings\_AU class has hierarchical Inheritance from classes:
+540: - CDaylightSavings
+541: - CArrayObj
+542: - CTimeManagement
+544: ```
+551: #include "DaylightSavings.mqh"
+554: //|DaylightSavings_AU class                                          |
+556: class CDaylightSavings_AU: public CDaylightSavings
+565: //|Set Daylight Savings Schedule for Australia                       |
+567: void CDaylightSavings::SetDaylightSavings_AU()
+570: //Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+571:    savings.Add(new CDaylightSavings(D'2006.10.29 03:00:00',D'2007.03.25 02:00:00'));
+572:    savings.Add(new CDaylightSavings(D'2007.10.28 03:00:00',D'2008.04.06 02:00:00'));
+573:    savings.Add(new CDaylightSavings(D'2008.10.05 03:00:00',D'2009.04.05 02:00:00'));
+574:    savings.Add(new CDaylightSavings(D'2009.10.04 03:00:00',D'2010.04.04 02:00:00'));
+575:    savings.Add(new CDaylightSavings(D'2010.10.03 03:00:00',D'2011.04.03 02:00:00'));
+576:    savings.Add(new CDaylightSavings(D'2011.10.02 03:00:00',D'2012.04.01 02:00:00'));
+577:    savings.Add(new CDaylightSavings(D'2012.10.07 03:00:00',D'2013.04.07 02:00:00'));
+578:    savings.Add(new CDaylightSavings(D'2013.10.06 03:00:00',D'2014.04.06 02:00:00'));
+579:    savings.Add(new CDaylightSavings(D'2014.10.05 03:00:00',D'2015.04.05 02:00:00'));
+580:    savings.Add(new CDaylightSavings(D'2015.10.04 03:00:00',D'2016.04.03 02:00:00'));
+581:    savings.Add(new CDaylightSavings(D'2016.10.02 03:00:00',D'2017.04.02 02:00:00'));
+582:    savings.Add(new CDaylightSavings(D'2017.10.01 03:00:00',D'2018.04.01 02:00:00'));
+583:    savings.Add(new CDaylightSavings(D'2018.10.07 03:00:00',D'2019.04.07 02:00:00'));
+584:    savings.Add(new CDaylightSavings(D'2019.10.06 03:00:00',D'2020.04.05 02:00:00'));
+585:    savings.Add(new CDaylightSavings(D'2020.10.04 03:00:00',D'2021.04.04 02:00:00'));
+586:    savings.Add(new CDaylightSavings(D'2021.10.03 03:00:00',D'2022.04.03 02:00:00'));
+587:    savings.Add(new CDaylightSavings(D'2022.10.02 03:00:00',D'2023.04.02 02:00:00'));
+588:    savings.Add(new CDaylightSavings(D'2023.10.01 03:00:00',D'2024.04.07 02:00:00'));
+589:    savings.Add(new CDaylightSavings(D'2024.10.06 03:00:00',D'2025.04.06 02:00:00'));
+590:    savings.Add(new CDaylightSavings(D'2025.10.05 03:00:00',D'2026.04.05 02:00:00'));
+591:    savings.Add(new CDaylightSavings(D'2026.10.04 03:00:00',D'2027.04.04 02:00:00'));
+592:    savings.Add(new CDaylightSavings(D'2027.10.03 03:00:00',D'2028.04.02 02:00:00'));
+593:    savings.Add(new CDaylightSavings(D'2028.10.01 03:00:00',D'2029.04.01 02:00:00'));
+599: CDaylightSavings_AU::CDaylightSavings_AU(void)
+604: ```
+606: ### CDaylightSavings\_UK Class
+608: In this class we expand upon the virtual void SetDaylightSavings\_UK and proceed to add the Daylight Savings Schedule for Europe.
+610: United Kingdom Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/uk "https://www.timeanddate.com/time/change/uk").
+612: CDaylightSavings\_UK class has multilevel Inheritance from classes:
+614: - CDaylightSavings
+615: - CObject
+617: CDaylightSavings\_UK class has hierarchical Inheritance from classes:
+619: - CDaylightSavings
+620: - CArrayObj
+621: - CTimeManagement
+623: ```
+630: #include "DaylightSavings.mqh"
+633: //|DaylightSavings_UK class                                          |
+635: class CDaylightSavings_UK: public CDaylightSavings
+644: //|Set Daylight Savings Schedule for Europe                          |
+646: void CDaylightSavings::SetDaylightSavings_UK()
+649: //Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+650:    savings.Add(new CDaylightSavings(D'2007.03.25 02:00:00',D'2007.10.28 01:00:00'));
+651:    savings.Add(new CDaylightSavings(D'2008.03.30 02:00:00',D'2008.10.26 01:00:00'));
+652:    savings.Add(new CDaylightSavings(D'2009.03.29 02:00:00',D'2009.10.25 01:00:00'));
+653:    savings.Add(new CDaylightSavings(D'2010.03.28 02:00:00',D'2010.10.31 01:00:00'));
+654:    savings.Add(new CDaylightSavings(D'2011.03.27 02:00:00',D'2011.10.30 01:00:00'));
+655:    savings.Add(new CDaylightSavings(D'2012.03.25 02:00:00',D'2012.10.28 01:00:00'));
+656:    savings.Add(new CDaylightSavings(D'2013.03.31 02:00:00',D'2013.10.27 01:00:00'));
+657:    savings.Add(new CDaylightSavings(D'2014.03.30 02:00:00',D'2014.10.26 01:00:00'));
+658:    savings.Add(new CDaylightSavings(D'2015.03.29 02:00:00',D'2015.10.25 01:00:00'));
+659:    savings.Add(new CDaylightSavings(D'2016.03.27 02:00:00',D'2016.10.30 01:00:00'));
+660:    savings.Add(new CDaylightSavings(D'2017.03.26 02:00:00',D'2017.10.29 01:00:00'));
+661:    savings.Add(new CDaylightSavings(D'2018.03.25 02:00:00',D'2018.10.28 01:00:00'));
+662:    savings.Add(new CDaylightSavings(D'2019.03.31 02:00:00',D'2019.10.27 01:00:00'));
+663:    savings.Add(new CDaylightSavings(D'2020.03.29 02:00:00',D'2020.10.25 01:00:00'));
+664:    savings.Add(new CDaylightSavings(D'2021.03.28 02:00:00',D'2021.10.31 01:00:00'));
+665:    savings.Add(new CDaylightSavings(D'2022.03.27 02:00:00',D'2022.10.30 01:00:00'));
+666:    savings.Add(new CDaylightSavings(D'2023.03.26 02:00:00',D'2023.10.29 01:00:00'));
+667:    savings.Add(new CDaylightSavings(D'2024.03.31 02:00:00',D'2024.10.27 01:00:00'));
+668:    savings.Add(new CDaylightSavings(D'2025.03.30 02:00:00',D'2025.10.26 01:00:00'));
+669:    savings.Add(new CDaylightSavings(D'2026.03.29 02:00:00',D'2026.10.25 01:00:00'));
+670:    savings.Add(new CDaylightSavings(D'2027.03.28 02:00:00',D'2027.10.31 01:00:00'));
+671:    savings.Add(new CDaylightSavings(D'2028.03.26 02:00:00',D'2028.10.29 01:00:00'));
+672:    savings.Add(new CDaylightSavings(D'2029.03.25 02:00:00',D'2029.10.28 01:00:00'));
+678: CDaylightSavings_UK::CDaylightSavings_UK(void)
+683: ```
+685: ### CDaylightSavings\_US Class
+687: In this class we expand upon the virtual void SetDaylightSavings\_US and proceed to add the Daylight Savings Schedule for United States.
+689: United States Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/usa "https://www.timeanddate.com/time/change/usa").
+691: CDaylightSavings\_US class has multilevel Inheritance from classes:
+693: - CDaylightSavings
+694: - CObject
+696: CDaylightSavings\_US class has hierarchical Inheritance from classes:
+698: - CDaylightSavings
+699: - CArrayObj
+700: - CTimeManagement
+702: ```
+709: #include "DaylightSavings.mqh"
+712: //|DaylightSavings_US Class                                          |
+714: class CDaylightSavings_US: public CDaylightSavings
+723: //|Set Daylight Savings Schedule for the United States               |
+725: void CDaylightSavings::SetDaylightSavings_US()
+728: //Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+729:    savings.Add(new CDaylightSavings(D'2007.03.11 03:00:00',D'2007.11.04 01:00:00'));
+730:    savings.Add(new CDaylightSavings(D'2008.03.09 03:00:00',D'2008.11.02 01:00:00'));
+731:    savings.Add(new CDaylightSavings(D'2009.03.08 03:00:00',D'2009.11.01 01:00:00'));
+732:    savings.Add(new CDaylightSavings(D'2010.03.14 03:00:00',D'2010.11.07 01:00:00'));
+733:    savings.Add(new CDaylightSavings(D'2011.03.13 03:00:00',D'2011.11.06 01:00:00'));
+734:    savings.Add(new CDaylightSavings(D'2012.03.11 03:00:00',D'2012.11.04 01:00:00'));
+735:    savings.Add(new CDaylightSavings(D'2013.03.10 03:00:00',D'2013.11.03 01:00:00'));
+736:    savings.Add(new CDaylightSavings(D'2014.03.09 03:00:00',D'2014.11.02 01:00:00'));
+737:    savings.Add(new CDaylightSavings(D'2015.03.08 03:00:00',D'2015.11.01 01:00:00'));
+738:    savings.Add(new CDaylightSavings(D'2016.03.13 03:00:00',D'2016.11.06 01:00:00'));
+739:    savings.Add(new CDaylightSavings(D'2017.03.12 03:00:00',D'2017.11.05 01:00:00'));
+740:    savings.Add(new CDaylightSavings(D'2018.03.11 03:00:00',D'2018.11.04 01:00:00'));
+741:    savings.Add(new CDaylightSavings(D'2019.03.10 03:00:00',D'2019.11.03 01:00:00'));
+742:    savings.Add(new CDaylightSavings(D'2020.03.08 03:00:00',D'2020.11.01 01:00:00'));
+743:    savings.Add(new CDaylightSavings(D'2021.03.14 03:00:00',D'2021.11.07 01:00:00'));
+744:    savings.Add(new CDaylightSavings(D'2022.03.13 03:00:00',D'2022.11.06 01:00:00'));
+745:    savings.Add(new CDaylightSavings(D'2023.03.12 03:00:00',D'2023.11.05 01:00:00'));
+746:    savings.Add(new CDaylightSavings(D'2024.03.10 03:00:00',D'2024.11.03 01:00:00'));
+747:    savings.Add(new CDaylightSavings(D'2025.03.09 03:00:00',D'2025.11.02 01:00:00'));
+748:    savings.Add(new CDaylightSavings(D'2026.03.08 03:00:00',D'2026.11.01 01:00:00'));
+749:    savings.Add(new CDaylightSavings(D'2027.03.14 03:00:00',D'2027.11.07 01:00:00'));
+750:    savings.Add(new CDaylightSavings(D'2028.03.12 03:00:00',D'2028.11.05 01:00:00'));
+751:    savings.Add(new CDaylightSavings(D'2029.03.11 03:00:00',D'2029.11.04 01:00:00'));
+757: CDaylightSavings_US::CDaylightSavings_US(void)
+762: ```
+766: ## Symbol Properties Class
+772: - Ask Price
+773: - Bid Price
+774: - Contract Size
+775: - Minimum Volume
+776: - Maximum Volume
+777: - Volume Step
+778: - Volume Limit
+779: - Spread
+780: - Stops Level
+781: - Freeze Level
+782: - Symbol's Time
+783: - Symbol's Normalized Price
+784: - Symbol's Digits
+785: - Symbol's Point
+786: - Symbol's Trade Mode
+787: - Sum of Symbol's Orders' Volume
+788: - Sum of Symbol's Positions' Volume
+789: - Symbol's Currency Base
+790: - Symbol's Currency Profit
+791: - Symbol's Currency Margin
+792: - Symbol's Custom status
+793: - Symbol's Background color
+797: ```
+803: #include <Trade/SymbolInfo.mqh>
+816:    long              SPREAD;//Store Spread value
+855:    int               Spread(string SYMBOL=NULL);//Retrieve Spread
+880:    SPREAD(0),STOPLEVEL(0),ORDERSVOLUME(0.0),
+999: //|Retrieve Spread                                                   |
+1001: int CSymbolProperties::Spread(string SYMBOL=NULL)
+1005:       if(CSymbol.InfoInteger(SYMBOL_SPREAD,SPREAD))
+1010:    Print("Unable to retrieve Symbol's Spread");
+1261: ```
+1265: ```
+1270:    SPREAD(0),STOPLEVEL(0),ORDERSVOLUME(0.0),
+1275: ```
+1289: ```
+1302: ```
+1304: ```
+1315: ```
+1321: ```
+1334: ```
+1340: ```
+1353: ```
+1359: ```
+1372: ```
+1378: ```
+1391: ```
+1397: ```
+1410: ```
+1416: ```
+1429: ```
+1431: The function below will retrieve the Symbol's Spread. The spread affects traders as the higher the Symbol's spread is the less profitable the trader will be, depending on the spread, a strategy could be profitable or not, obviously there are many different circumstances that could make a strategy unprofitable but the Symbol's spread could be a significant circumstance. Spreads are essentially a fo
+1435: ```
+1436: int CSymbolProperties::Spread(string SYMBOL=NULL)
+1440:       if(CSymbol.InfoInteger(SYMBOL_SPREAD,SPREAD))
+1445:    Print("Unable to retrieve Symbol's Spread");
+1448: ```
+1454: ```
+1467: ```
+1471: ```
+1484: ```
+1490: ```
+1504: ```
+1510: ```
+1523: ```
+1531: ```
+1544: ```
+1548: ```
+1561: ```
+1567: ```
+1580: ```
+1584: ```
+1607: ```
+1611: ```
+1634: ```
+1638: ```
+1651: ```
+1657: ```
+1670: ```
+1676: ```
+1689: ```
+1693: ```
+1706: ```
+1714: ```
+1731: ```
+1733: ## Time Management Class
+1737: ```
+1764:    int               HoursS(int multiple=1);//Returns Hours in seconds
+1822: //|Returns Hours in seconds                                          |
+1824: int CTimeManagement::HoursS(int multiple=1)
+1908: ```
+1910: ## Chart Properties Class
+1920: - CSymbolProperties
+1921: - CSymbolInfo
+1923: ```
+1929: #include "SymbolProperties.mqh"
+2060: ```
+2064: ```
+2092: ```
+2096: ```
+2098: ```
+2110: ```
+2119: ```
+2123: ```
+2152: ```
+2156: ```
+2184: ```
+2188: ```
+2196: ```
+2198: ## Candle Properties Class
+2202: - CChartProperties
+2203: - CSymbolProperties
+2209: - CSymbolProperties
+2210: - CSymbolInfo
+2212: ```
+2218: #include "TimeManagement.mqh"
+2219: #include "ChartProperties.mqh"
+2292: ```
+2294: ## Object Properties Class
+2300: - CChartProperties
+2301: - CSymbolProperties
+2305: - CSymbolProperties
+2306: - CSymbolInfo
+2308: ```
+2314: #include "ChartProperties.mqh"
+2443: ```
+2449: ```
+2455: ```
+2459: ```
+2467: ```
+2471: ```
+2511: ```
+2515: ```
+2535: ```
+2539: ```
+2554: ```
+2556: ## News Class
+2568: - Data\_AU
+2569: - Data\_None
+2570: - Data\_UK
+2571: - Data\_US
+2583: Instead of repeatedly storing the same news event data with different times. We will create a singular table to store all the news event data called MQL5Calendar. And to store the differing time data between each DST schedule, we will have another table called TimeSchedule. This layout will therefore reduce the file size by more than half of the previous calendar database and increase performance.

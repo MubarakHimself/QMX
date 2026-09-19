@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_088_p01",
+  "section": "Examples",
+  "parent_shard": "examples_088",
+  "part_index": 1,
+  "part_count": 4,
+  "series_in_pack": [
+    "price action analysis toolkit development"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18486,
+      "title": "Price Action Analysis Toolkit Development (Part 28): Opening Range Breakout Tool",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Opening Range Breakout Tool",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18486.md"
+    },
+    {
+      "id": 18616,
+      "title": "Price Action Analysis Toolkit Development (Part 29): Boom and Crash Interceptor EA",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Boom and Crash Interceptor EA",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18616.md"
+    },
+    {
+      "id": 18911,
+      "title": "Price Action Analysis Toolkit Development (Part 33): Candle Range Theory Tool",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Candle Range Theory Tool",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18911.md"
+    },
+    {
+      "id": 18979,
+      "title": "Price Action Analysis Toolkit Development (Part 34): Turning Raw Market Data into Predictive Models Using an Advanced Ingestion Pipeline",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Turning Raw Market Data into Predictive Models Using an Advanced Ingestion Pipeline",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18979.md"
+    },
+    {
+      "id": 19137,
+      "title": "Price Action Analysis Toolkit Development (Part 37): Sentiment Tilt Meter",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Sentiment Tilt Meter",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19137.md"
+    },
+    {
+      "id": 19290,
+      "title": "Price Action Analysis Toolkit Development (Part 38): Tick Buffer VWAP and Short-Window Imbalance Engine",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Tick Buffer VWAP and Short-Window Imbalance Engine",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19290.md"
+    },
+    {
+      "id": 19365,
+      "title": "Price Action Analysis Toolkit Development (Part 39): Automating BOS and ChoCH Detection in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Automating BOS and ChoCH Detection in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19365.md"
+    },
+    {
+      "id": 19460,
+      "title": "Price Action Analysis Toolkit Development (Part 40): Market DNA Passport",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Market DNA Passport",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19460.md"
+    },
+    {
+      "id": 19697,
+      "title": "Price Action Analysis Toolkit Development (Part 42): Interactive Chart Testing with Button Logic and Statistical Levels",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Interactive Chart Testing with Button Logic and Statistical Levels",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19697.md"
+    },
+    {
+      "id": 19738,
+      "title": "Price Action Analysis Toolkit Development (Part 43): Candlestick Probability and Breakouts",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Candlestick Probability and Breakouts",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19738.md"
+    },
+    {
+      "id": 19843,
+      "title": "Price Action Analysis Toolkit Development (Part 44): Building a VWMA Crossover Signal EA in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a VWMA Crossover Signal EA in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 44,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19843.md"
+    },
+    {
+      "id": 19842,
+      "title": "Price Action Analysis Toolkit Development (Part 45): Creating a Dynamic Level-Analysis Panel in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Creating a Dynamic Level-Analysis Panel in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 45,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19842.md"
+    }
+  ]
+}

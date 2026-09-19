@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_008",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_008",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 13586,
+      "title": "Launching MetaTrader VPS: A step-by-step guide for first-time users",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13586.md"
+    },
+    {
+      "id": 13743,
+      "title": "Combinatorially Symmetric Cross Validation In MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13743.md"
+    },
+    {
+      "id": 13775,
+      "title": "The case for using a Composite Data Set this Q4 in weighing SPDR XLY's next performance",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13775.md"
+    },
+    {
+      "id": 13835,
+      "title": "Quantitative analysis in MQL5: Implementing a promising algorithm",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13835.md"
+    },
+    {
+      "id": 13842,
+      "title": "Building Your First Glass-box Model Using Python And MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13842.md"
+    },
+    {
+      "id": 13845,
+      "title": "Modified Grid-Hedge EA in MQL5 (Part I): Making a Simple Hedge EA",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13845.md"
+    },
+    {
+      "id": 13957,
+      "title": "Causal inference in time series classification problems",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13957.md"
+    },
+    {
+      "id": 13972,
+      "title": "Modified Grid-Hedge EA in MQL5 (Part III): Optimizing Simple Hedge Strategy (I)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13972.md"
+    },
+    {
+      "id": 13975,
+      "title": "Deep Learning Forecast and ordering with Python and MetaTrader5 python package and ONNX model file",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13975.md"
+    },
+    {
+      "id": 14108,
+      "title": "Using JSON Data API in your MQL projects",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14108.md"
+    },
+    {
+      "id": 14135,
+      "title": "MQL5 Integration: Python",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14135.md"
+    },
+    {
+      "id": 14203,
+      "title": "Implementing the Generalized Hurst Exponent and the Variance Ratio test in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14203.md"
+    }
+  ]
+}

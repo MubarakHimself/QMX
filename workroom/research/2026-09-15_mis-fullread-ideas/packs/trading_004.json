@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_004",
+  "section": "Trading",
+  "parent_shard": "trading_004",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1825,
+      "title": "Market Theory",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1825.md"
+    },
+    {
+      "id": 1838,
+      "title": "Tips for Selecting a Trading Signal to Subscribe. Step-By-Step Guide",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1838.md"
+    },
+    {
+      "id": 1995,
+      "title": "Thomas DeMark's contribution to technical analysis",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1995.md"
+    },
+    {
+      "id": 2195,
+      "title": "Fuzzy logic to create manual trading strategies",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2195.md"
+    },
+    {
+      "id": 2299,
+      "title": "MetaTrader 5 features hedging position accounting system",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2299.md"
+    },
+    {
+      "id": 2358,
+      "title": "R-squared as an estimation of quality of the strategy balance curve",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2358.md"
+    },
+    {
+      "id": 2660,
+      "title": "Working with currency baskets in the Forex market",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2660.md"
+    },
+    {
+      "id": 2704,
+      "title": "The Easy Way to Evaluate a Signal: Trading Activity, Drawdown/Load and MFE/MAE Distribution Charts",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2704.md"
+    },
+    {
+      "id": 2816,
+      "title": "Patterns available when trading currency baskets",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2816.md"
+    },
+    {
+      "id": 2817,
+      "title": "Auto detection of extreme points based on a specified price variation",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2817.md"
+    },
+    {
+      "id": 2930,
+      "title": "Calculating the Hurst exponent",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2930.md"
+    },
+    {
+      "id": 2960,
+      "title": "Patterns available when trading currency baskets. Part II",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2960.md"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_070_p02",
+  "section": "Examples",
+  "parent_shard": "examples_070",
+  "part_index": 2,
+  "part_count": 4,
+  "series_in_pack": [
+    "developing a replay system"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12000,
+      "title": "Developing a Replay System (Part 56): Adapting the Modules",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Adapting the Modules",
+      "series_key": "developing a replay system",
+      "series_part": 56,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12000.md"
+    },
+    {
+      "id": 12005,
+      "title": "Developing a Replay System (Part 57): Understanding a Test Service",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Understanding a Test Service",
+      "series_key": "developing a replay system",
+      "series_part": 57,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12005.md"
+    },
+    {
+      "id": 12039,
+      "title": "Developing a Replay System (Part 58): Returning to Work on the Service",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Returning to Work on the Service",
+      "series_key": "developing a replay system",
+      "series_part": 58,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12039.md"
+    },
+    {
+      "id": 12075,
+      "title": "Developing a Replay System (Part 59): A New Future",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): A New Future",
+      "series_key": "developing a replay system",
+      "series_part": 59,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12075.md"
+    },
+    {
+      "id": 12086,
+      "title": "Developing a Replay System (Part 60): Playing the Service (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the Service (I)",
+      "series_key": "developing a replay system",
+      "series_part": 60,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12086.md"
+    },
+    {
+      "id": 12121,
+      "title": "Developing a Replay System (Part 61): Playing the service (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (II)",
+      "series_key": "developing a replay system",
+      "series_part": 61,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12121.md"
+    },
+    {
+      "id": 12231,
+      "title": "Developing a Replay System (Part 62): Playing the service (III)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (III)",
+      "series_key": "developing a replay system",
+      "series_part": 62,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12231.md"
+    },
+    {
+      "id": 12240,
+      "title": "Developing a Replay System (Part 63): Playing the service (IV)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (IV)",
+      "series_key": "developing a replay system",
+      "series_part": 63,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12240.md"
+    },
+    {
+      "id": 12250,
+      "title": "Developing a Replay System (Part 64): Playing the service (V)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (V)",
+      "series_key": "developing a replay system",
+      "series_part": 64,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12250.md"
+    },
+    {
+      "id": 12265,
+      "title": "Developing a Replay System (Part 65): Playing the service (VI)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (VI)",
+      "series_key": "developing a replay system",
+      "series_part": 65,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12265.md"
+    },
+    {
+      "id": 12286,
+      "title": "Developing a Replay System (Part 66): Playing the service (VII)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Playing the service (VII)",
+      "series_key": "developing a replay system",
+      "series_part": 66,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12286.md"
+    },
+    {
+      "id": 12293,
+      "title": "Developing a Replay System (Part 67): Refining the Control Indicator",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Refining the Control Indicator",
+      "series_key": "developing a replay system",
+      "series_part": 67,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12293.md"
+    }
+  ]
+}

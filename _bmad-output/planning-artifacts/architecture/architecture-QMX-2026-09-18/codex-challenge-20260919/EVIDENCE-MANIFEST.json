@@ -1,0 +1,162 @@
+{
+  "manifest_version": "1.0",
+  "generated_utc": "2026-09-19T13:08:12Z",
+  "stage": "B-independent-scenario-and-architecture-challenge",
+  "status": "complete-awaiting-grok-reconciliation",
+  "candidate": {
+    "candidate_id": "qmx-workflows-arch-2026-09-18-a",
+    "input_archive": "C:/Users/Mubarak/Desktop/QMX/_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/CODEX-CHALLENGE-INPUTS.zip",
+    "input_archive_sha256_expected": "4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87",
+    "input_archive_sha256_observed": "4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87",
+    "candidate_manifest_entries": 21,
+    "candidate_manifest_mismatches": 0,
+    "docs_revision": "b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3",
+    "implementation_revision": "270e992995c2378ca63cf6343254ef8140a8c97e",
+    "stale_audit_revision_not_used_for_absence": "8510c032496bb870824ecc5c4f807e8a4e4f167e"
+  },
+  "pass_control": {
+    "pass1_candidate_files_read": false,
+    "pass1_frozen_before_pass2": true,
+    "pass1_baseline_path": "INDEPENDENT-SCENARIO-BASELINE.md",
+    "pass1_baseline_sha256": "1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8",
+    "pass1_scenario_count": 65,
+    "pass2_added_scenario_count": 20,
+    "catalog_scenario_count": 85,
+    "feature_scenario_id_count": 85,
+    "feature_missing_ids": 0,
+    "feature_extra_ids": 0,
+    "feature_duplicate_ids": 0,
+    "bdd_claim": "specification-only; no feature-runner execution claimed"
+  },
+  "methods": {
+    "cis": [
+      "problem statement refinement",
+      "is/is-not boundary analysis",
+      "systems thinking",
+      "failure-mode analysis",
+      "constraint identification",
+      "combinatorial morphology"
+    ],
+    "review_lenses": [
+      "adversarial",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "editorial_lenses_excluded_reason": "The assignment required semantic architecture challenge, not copy-editing of the candidate."
+  },
+  "subagents": {
+    "model_policy": "gpt-5.6-luna with low reasoning effort",
+    "completed_tracks": [
+      "pass1-intent",
+      "pass1-public-semantics",
+      "pass1-failure-sequences",
+      "pass2-traceability",
+      "pass2-adversarial",
+      "pass2-verification-gap",
+      "deliverable-scenario-catalog",
+      "deliverable-bdd",
+      "deliverable-findings-coverage-tests"
+    ]
+  },
+  "executed_diagnostics": [
+    {
+      "id": "D-INPUT-INTEGRITY",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "diagnostics/input-integrity.txt"
+    },
+    {
+      "id": "D-QML-FOCUSED",
+      "command": "uv run --frozen --project qml python -m pytest -q -p no:cacheprovider --tb=line qml/tests/test_mill_graduation.py qml/tests/test_research_host_store.py qml/tests/test_research_stage0.py qml/tests/test_legal_entries.py qml/tests/test_research_projection.py qml/tests/test_research_collapse.py qml/tests/test_research_vocab.py qml/tests/test_research_ref.py",
+      "revision": "270e992995c2378ca63cf6343254ef8140a8c97e",
+      "result": "47 passed in 3.19s",
+      "exit_code": 0,
+      "evidence": "diagnostics/test-execution.txt"
+    },
+    {
+      "id": "D-QML-DEFAULT",
+      "command": "uv run --frozen --project qml python -m pytest -q -p no:cacheprovider --tb=line",
+      "revision": "270e992995c2378ca63cf6343254ef8140a8c97e",
+      "result": "4 passed in 1.61s",
+      "exit_code": 0,
+      "evidence": "diagnostics/test-execution.txt"
+    },
+    {
+      "id": "D-QMN-CONFORMANCE",
+      "command": "uv run --frozen --project qmn python -m pytest -q -p no:cacheprovider --tb=short qmn/tests/test_qmn_conformance.py",
+      "revision": "270e992995c2378ca63cf6343254ef8140a8c97e",
+      "result": "5 passed, 1 skipped in 2.72s",
+      "exit_code": 0,
+      "evidence": "diagnostics/test-execution.txt"
+    },
+    {
+      "id": "D-QMA",
+      "result": "source-inspection-only",
+      "reason": "Candidate RECON-RETURN records selected QMA tests blocked by invalid qmx-agents/.venv; no green claim made."
+    },
+    {
+      "id": "D-MUTMUT",
+      "result": "not-run",
+      "reason": "Not installed on Windows PATH; optional future execution requires fork-capable WSL/POSIX disposable copy and must never target the shared worktree.",
+      "evidence": "diagnostics/tool-environment.txt"
+    }
+  ],
+  "primary_public_sources": [
+    {
+      "topic": "MCP Apps host-mediated UI and capability model",
+      "url": "https://modelcontextprotocol.io/extensions/apps/overview"
+    },
+    {
+      "topic": "MCP Apps specification",
+      "url": "https://github.com/modelcontextprotocol/ext-apps/tree/main/specification"
+    },
+    {
+      "topic": "OpenBB Workspace widget/app/provider concepts",
+      "url": "https://docs.openbb.co/workspace/developers"
+    },
+    {
+      "topic": "W3C PROV-O provenance meanings",
+      "url": "https://www.w3.org/TR/prov-o/"
+    },
+    {
+      "topic": "CloudEvents event-envelope semantics",
+      "url": "https://cloudevents.io/"
+    },
+    {
+      "topic": "OAuth security and least-privilege context",
+      "url": "https://www.rfc-editor.org/rfc/rfc9700"
+    },
+    {
+      "topic": "mutmut fork/WSL/apply behavior",
+      "url": "https://mutmut.readthedocs.io/en/latest/"
+    }
+  ],
+  "output_files": [
+    {"path":"ARCHITECTURE-FINDINGS.md","bytes":16230,"sha256":"be726069b616d4a0470e94513cfb4eef2c5a26b19667e7a5935cd1b97abf387e"},
+    {"path":"behavior/capabilities-and-operations.feature","bytes":3432,"sha256":"d77d46ac237b03a81e1c18cb412636e606810ec304f7fb020dfb3c88fc6a9c50"},
+    {"path":"behavior/catalog-completion.feature","bytes":13520,"sha256":"bd6bff4bbcf7e183e93c0e0310c55d56425485d39b24d2621ba2daef6a310271"},
+    {"path":"behavior/data-streams-and-market.feature","bytes":3021,"sha256":"b1287615254e8df067af634f1fa0eba20a82ae54a537e433c3e26f24189c11ac"},
+    {"path":"behavior/placement-and-recovery.feature","bytes":1725,"sha256":"cd60e0032fb478ce7b4e5c306ee3ba238dd894524bcf144f8e2f20cad0e163f4"},
+    {"path":"behavior/workflows-and-sessions.feature","bytes":2990,"sha256":"685b24f3049c356c0bb44bc2d986157b46992d5cda0365b6ad23d5b95e5b0a0b"},
+    {"path":"CODEX-CHALLENGE-RETURN.md","bytes":4536,"sha256":"f816fdb6d2c16df3f66c0077dabe26eb1280223ded1b0a8a95ddd0cc3f8193bd"},
+    {"path":"COVERAGE-AND-GAPS.md","bytes":9822,"sha256":"1cccfacd7cdd0eb3f5541201cbe844c8d38bb5b0011675c8b0bbe5f693bb4d5e"},
+    {"path":"diagnostics/input-integrity.txt","bytes":803,"sha256":"a1d3cd30241e5dce7719235162770261da8d31165bd15586fd63d4c4f5e73df8"},
+    {"path":"diagnostics/package-validation.txt","bytes":354,"sha256":"8e1d9af1d2e7df1c1fbf819fc21d2454a17db1e4f15c250cc8310e4cda19dcad"},
+    {"path":"diagnostics/test-execution.txt","bytes":1313,"sha256":"9ec06958be1da4d07bbe7b98db136bc9e6da8abebbd9465ed1a9f26e78fda190"},
+    {"path":"diagnostics/tool-environment.txt","bytes":438,"sha256":"ed31214c49a425c158f5938d724ca5d71e32254c09e48b759b95b8c16ad07bfe"},
+    {"path":"GROK-RECONCILIATION-HANDOFF.md","bytes":7024,"sha256":"08d20ccee2fb21d1ecf22fb2a3e08c1a81d50104c3444aa4f9cf903eb7f9be62"},
+    {"path":"INDEPENDENT-SCENARIO-BASELINE.md","bytes":30286,"sha256":"1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8"},
+    {"path":"SCENARIO-CATALOG.jsonl","bytes":73192,"sha256":"8a8e709c2a0788b25943ef86bddf6ab92e8015b317af2fe049ca5297d34ccbe9"},
+    {"path":"TEST-AND-MUTATION-PLAN.md","bytes":11181,"sha256":"67863e74414fec9567cfe36be7193c1c2848a7e45a27555a09e131b922519c3e"}
+  ],
+  "exclusions": [
+    "production implementation",
+    "canonical-document edits",
+    "architecture ratification",
+    "Documentation Factory",
+    "live trading or paid-provider execution",
+    "Reticle/UI verification because no user-facing implementation changed",
+    "mutation run",
+    "_working source copies from the distributable ZIP"
+  ]
+}

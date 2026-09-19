@@ -1,0 +1,154 @@
+{
+  "shard_id": "tester_016",
+  "section": "Tester",
+  "n": 16,
+  "series_in_shard": [
+    "developing a replay system \u2014 market simulation"
+  ],
+  "articles": [
+    {
+      "id": 10543,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 01): First experiments (I)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): First experiments (I)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10543.md"
+    },
+    {
+      "id": 10551,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 02): First experiments (II)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): First experiments (II)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10551.md"
+    },
+    {
+      "id": 10768,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 06): First improvements (I)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): First improvements (I)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10768.md"
+    },
+    {
+      "id": 10987,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 12): Birth of the SIMULATOR (II)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Birth of the SIMULATOR (II)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10987.md"
+    },
+    {
+      "id": 11034,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 13): Birth of the SIMULATOR (III)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Birth of the SIMULATOR (III)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11034.md"
+    },
+    {
+      "id": 11058,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 14): Birth of the SIMULATOR (IV)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Birth of the SIMULATOR (IV)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11058.md"
+    },
+    {
+      "id": 11071,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 15): Birth of the SIMULATOR (V) - RANDOM WALK",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Birth of the SIMULATOR (V) - RANDOM WALK",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11071.md"
+    },
+    {
+      "id": 11095,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 16): New class system",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): New class system",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11095.md"
+    },
+    {
+      "id": 11113,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 18): Ticks and more ticks (II)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Ticks and more ticks (II)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11113.md"
+    },
+    {
+      "id": 11125,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 19): Necessary adjustments",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Necessary adjustments",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11125.md"
+    },
+    {
+      "id": 11144,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 20): FOREX (I)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (I)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11144.md"
+    },
+    {
+      "id": 11153,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 21): FOREX (II)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (II)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11153.md"
+    },
+    {
+      "id": 11174,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 22): FOREX (III)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (III)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11174.md"
+    },
+    {
+      "id": 11177,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 23): FOREX (IV)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (IV)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11177.md"
+    },
+    {
+      "id": 11189,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 24): FOREX (V)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (V)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11189.md"
+    },
+    {
+      "id": 11203,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 25): Preparing for the next phase",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Preparing for the next phase",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11203.md"
+    }
+  ]
+}

@@ -1,0 +1,766 @@
+---
+id: 21515
+source_url: https://www.mql5.com/en/articles/21515
+title: "Engineering Trading Discipline into Code (Part 4): Enforcing Trading Hours and News Disabling in MQL5"
+author: ""
+author_url: 
+published: 2026-04-27T08:13Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: "Engineering Trading Discipline into Code (): Enforcing Trading Hours and News Disabling in MQL5"
+series_part: 4
+source: mql5
+language: en
+---
+
+# Engineering Trading Discipline into Code (Part 4): Enforcing Trading Hours and News Disabling in MQL5
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 27 April 2026 at 04:13
+
+1 907
+[
+1](https://www.mql5.com/en/forum/508994 "Comments")
+
+[Christian Benjamin](https://www.mql5.com/en/users/lynnchris)
+
+### Contents
+
+- [Introduction](https://www.mql5.com/en/articles/21515#introduction)
+- [Design Philosophy](https://www.mql5.com/en/articles/21515#design_philosophy)
+- [MQL5 Implementation](https://www.mql5.com/en/articles/21515#mql5_implementation)
+- [Outcomes](https://www.mql5.com/en/articles/21515#outcomes)
+- [Conclusion](https://www.mql5.com/en/articles/21515#conclusion)
+
+### Introduction
+
+Trading losses are not always the result of flawed strategy logic. In numerous instances, they arise from violations of timing constraints—entering or holding positions during periods where market conditions are structurally unfavorable. Two conditions consistently reveal this weakness in MetaTrader 5 environments. The first is exposure to high-impact news events. A position can be technically sound and in profit, yet become vulnerable within seconds of a scheduled economic release. Without strict enforcement, missed or ignored news timing introduces uncontrolled volatility into otherwise valid setups.
+
+The second is execution during unsuitable trading hours. Market behavior is not uniform across sessions: liquidity, volatility, and momentum shift throughout the day. Placing trades outside defined trading windows often results in low-quality entries, inconsistent price movement, and conditions that were never part of the original system design. The objective is clear: enforce time-based and event-based constraints at the execution level, ensuring that trades cannot be placed or remain open during restricted periods.
+
+This article presents a system that enforces session constraints and blocks execution during restricted windows around scheduled news events. It is intended for traders seeking enforced discipline and for MQL5 developers implementing EA-based control mechanisms. The system operates as a control layer, ensuring that discipline is not dependent on attention or memory, but is instead guaranteed by design. The sections that follow detail the system architecture, enforcement mechanisms, MQL5 implementation, and observed outcomes.
+
+### Design Philosophy
+
+Many traders interpret poor timing around market sessions or major news releases as a discipline issue—and often they are correct. Traders often know that certain periods carry higher uncertainty, such as low-liquidity session overlaps or major economic announcements, yet they still execute trades during these moments. The difficulty lies in consistently enforcing those personal rules within a platform that allows trading at any time. Without structural safeguards, discipline relies entirely on manual restraint. The trading hours and news blackout Enforcement system addresses this challenge by transforming trading discipline into an EA-based rule set, defining when exposure is permitted and temporarily blocking execution during restricted periods.
+
+When trading hours are undefined, the system becomes active during liquidity troughs, session transitions, and spread expansions. Orders executed in these periods face degraded fill quality and weaker directional commitment. The impact is subtle but cumulative: reduced follow-through, slower trade development, and distorted expectancy.
+
+News exposure creates a more violent distortion. Scheduled macroeconomic releases alter volatility regimes within seconds. Liquidity can thin while price velocity accelerates. Slippage exceeds modeled assumptions, and protective stops become unreliable due to gaps or rapid repricing. Strategies designed under stable conditions are suddenly exposed to a wholly different execution environment. The resulting drawdowns are often misattributed to strategy failure rather than environmental misalignment. The core weakness, therefore, is not memory failure. It is the absence of structural constraints governing when trading is permissible.
+
+Operational and Statistical Consequences
+
+Undefined trading boundaries affect both performance metrics and psychological stability. From a statistical perspective, variance increases. Equity curves show irregular spikes unrelated to signal quality. Slippage costs rise during high-impact announcements. Spread widening during illiquid hours increases effective transaction costs. These factors increase risk without improving reward.
+
+Operationally, traders become dependent on vigilance. They must manually monitor clocks and economic calendars. Fatigue, distraction, or overconfidence weakens compliance. Even EAs remain vulnerable if no external filter restricts execution. Without conditional permission, every signal—regardless of timing—can trigger trade execution during restricted periods. Over time, this creates an inconsistent risk profile: disciplined during some periods, unfiltered during others. Such inconsistency undermines the reliability of backtesting and forward evaluation because live conditions no longer match modeled assumptions.
+
+Why Informational Controls Fail
+
+Common solutions rely on awareness rather than enforcement. Economic calendar alerts notify but do not block. Session knowledge exists as informal guidance rather than executable rules. Platform reminders are dismissible. These approaches treat discipline as optional. Optional constraints inevitably break under pressure. When market conditions appear attractive, traders override reminders. When volatility surges, reaction speed overrides caution. A control mechanism that can be bypassed is not a control mechanism; it is advisory information. For discipline to be reliable, it must operate independently of mood, attention, or urgency.
+
+Engineering Requirements for Structural Discipline
+
+Transforming behavioral discipline into system discipline requires explicit design rules.
+
+| Discipline | Explanation |
+| --- | --- |
+| Defined Session Windows | Trading hours must be encoded as deterministic time intervals aligned with liquidity and volatility characteristics suitable for the strategy. |
+| Configurable News Blackouts | Each economic event must generate a protected interval including pre-release and post-release buffers to account for positioning flows and volatility normalization. |
+| Binary Permission Model | At any moment, trading status must resolve to a single boolean state. Ambiguity introduces inconsistency. Execution is either allowed or blocked based on session validity and news status. |
+| Transaction-Level Enforcement | Permission checks must intercept trade transactions directly, ensuring that manual trades, pending orders, and other Expert Advisors cannot bypass restrictions. |
+| External Configuration | Sessions and news definitions must reside in editable files to allow updates without recompilation and to preserve long-term maintainability. |
+| Transparent Monitoring | A visualization layer must display current status, upcoming restrictions, and recent enforcement actions. Structural rules should be observable, not hidden. |
+
+System Overview
+
+To satisfy these requirements, the system is divided into three independent components.
+
+1. A core permission engine evaluates session and news constraints using a deterministic model.
+2. An enforcement Expert Advisor intercepts trade transactions and neutralizes unauthorized exposure.
+3. A dashboard layer provides real-time visibility into trading status and upcoming restrictions.
+
+Each component operates with a single responsibility and without unnecessary coupling. The logic engine remains independent of visualization. The enforcement layer remains independent of user interface rendering. This separation preserves clarity, simplifies debugging, and enables reuse across multiple strategies. The result is an execution environment where exposure is conditional by architecture. Trading hours and news protection are no longer guidelines to remember; they are structural properties of the system itself.
+
+### MQL5 Implementation
+
+This section describes the transformation of the conceptual discipline framework into a fully operational, robust, and flexible MQL5 system. The goal is to block execution outside predefined schedules and during news blackout windows. The system also provides a real-time overview of current and upcoming restrictions. The system follows a modular architecture in which each component handles a specific task: configuration management, data parsing, condition evaluation, visualization, or trade enforcement.
+
+Components exchange data through well-defined interfaces. This approach guarantees scalability, maintainability, and clarity, making the system adaptable for different trading styles and market conditions. Building this solution involves a well-defined sequence: establishing configuration parameters, loading and parsing data, continuously evaluating trading conditions, dynamically visualizing system status, and actively managing trades to uphold discipline.
+
+**Structuring Core Logic with *TradingHoursNews.mqh***
+
+Namespace and Constants Definition
+
+Encapsulating the system within a dedicated namespace establishes a clear boundary for all trading-hours and news-related logic, ensuring that it remains isolated from other modules in the Expert Advisor. This approach improves maintainability and prevents unintended conflicts, especially in large systems where multiple components interact. By grouping constants and shared variables in one place, the system becomes easier to debug, extend, and reuse across different projects.
+
+The use of external configuration files such as "TradingSessions.txt" and "NewsEvents.csv" introduces flexibility into the system. Instead of hardcoding trading rules, these files allow dynamic updates without recompilation, making it possible to adjust trading sessions or blackout periods in response to changing market conditions. This is particularly valuable in live environments where timing precision and adaptability are critical.
+
+```
+//+------------------------------------------------------------------+
+//| Namespace THN: Trading Hours & News Management                   |
+//| Holds constants, cache state, and shared system variables        |
+//+------------------------------------------------------------------+
+namespace THN
+  {
+   //--- configuration files
+   const string SESSIONS_FILE = "TradingSessions.txt";
+   const string NEWS_FILE     = "NewsEvents.csv";
+   const string LOG_FILE      = "HoursNewsLog.csv";
+
+   //--- refresh control
+   static datetime s_lastRefresh    = 0;
+   static int      s_refreshInterval= 1;   // seconds
+
+   //--- system state cache
+   static bool     s_allowedNow     = true;
+   static string   s_nextSession    = "";
+   static string   s_nextNews       = "";
+   static datetime s_nextNewsTime   = 0;
+  }
+//+------------------------------------------------------------------+
+```
+
+To support efficiency, the system integrates a smart caching mechanism that relies on file modification timestamps. Rather than repeatedly reading files on every tick, the system detects when a file has changed and reloads it only when necessary. This ensures that the latest configurations are always respected while avoiding unnecessary disk operations that could degrade performance.
+
+Internal Cache Variables and Data Structures
+
+To ensure consistent performance during continuous market monitoring, the system maintains critical data in memory rather than recalculating or reloading it repeatedly. This includes cached session definitions, loaded news events, and computed system states such as whether trading is currently allowed. By keeping this data readily accessible, the system avoids delays that could arise from frequent file operations or repeated parsing.
+
+The *NewsEvent* structure plays a key role in representing scheduled economic events. Each instance stores the exact event time along with configurable blackout durations before and after the event. This design allows the system to enforce trading restrictions with precision, ensuring that exposure is reduced during high-impact periods when market volatility can spike unpredictably.
+
+```
+//+------------------------------------------------------------------+
+//| Structure: NewsEvent                                             |
+//| Stores scheduled news time and blackout windows                  |
+//+------------------------------------------------------------------+
+struct NewsEvent
+  {
+   datetime time;           // event timestamp
+   int      preBlackout;    // minutes before event
+   int      postBlackout;   // minutes after event
+  };
+//+------------------------------------------------------------------+
+
+//--- cached news events
+static NewsEvent s_newsEvents[];
+static int       s_newsCount = 0;
+
+//--- session cache
+static string   s_cachedSessions   = "";
+static datetime s_sessionsFileTime = 0;
+
+//--- news file modification tracking
+static datetime s_newsFileTime     = 0;
+//+------------------------------------------------------------------+
+```
+
+In addition to storing data, the system tracks file modification timestamps for both session and news files. These timestamps act as triggers for cache invalidation, ensuring that updates made externally are quickly reflected internally without introducing unnecessary overhead. This combination of structured storage and intelligent synchronization is essential for maintaining both speed and accuracy.
+
+File Operations and Smart Caching
+
+File handling within the system is designed with both reliability and efficiency in mind. Instead of relying on repeated file reads, the system uses a helper function to determine the last modification time of each configuration file. This allows it to detect whether the file has been updated since the last read operation, forming the foundation of a smart caching strategy.
+
+When loading session data, the system first compares the current file modification time with the previously stored value. If no changes are detected, the cached version is returned immediately, eliminating unnecessary disk access. If a change is detected, the file is reloaded and the cache is updated accordingly. This ensures that the system always works with the latest configuration while maintaining optimal performance.
+
+```
+//+------------------------------------------------------------------+
+//| Get file modification time                                       |
+//| Returns 0 if file does not exist or cannot be opened            |
+//+------------------------------------------------------------------+
+datetime FileModificationTime(string filename)
+  {
+   if(!FileIsExist(filename))
+      return(0);
+
+   int handle = FileOpen(filename, FILE_READ|FILE_BIN);
+
+   if(handle == INVALID_HANDLE)
+      return(0);
+
+   datetime modTime = (datetime)FileGetInteger(handle, FILE_MODIFY_DATE);
+
+   FileClose(handle);
+
+   return(modTime);
+  }
+//+------------------------------------------------------------------+
+```
+
+This approach is particularly important in high-frequency environments, where even small inefficiencies can accumulate over time. By minimizing file I/O and relying on cached data wherever possible, the system achieves a balance between responsiveness and resource efficiency.
+
+```
+//+------------------------------------------------------------------+
+//| Load trading sessions with caching                               |
+//| Reloads only if file modification time has changed               |
+//+------------------------------------------------------------------+
+string LoadSessions()
+  {
+   datetime curTime = FileModificationTime(SESSIONS_FILE);
+
+   //--- return cached data if unchanged
+   if(curTime == s_sessionsFileTime && s_cachedSessions != "")
+      return(s_cachedSessions);
+
+   if(!FileIsExist(SESSIONS_FILE))
+      return("");
+
+   int handle = FileOpen(SESSIONS_FILE, FILE_TXT|FILE_READ);
+
+   if(handle == INVALID_HANDLE)
+      return("");
+
+   string data = FileReadString(handle);
+
+   FileClose(handle);
+
+   //--- update cache
+   s_cachedSessions   = data;
+   s_sessionsFileTime = curTime;
+
+   return(data);
+  }
+//+------------------------------------------------------------------+
+```
+
+Parsing and Utility Functions
+
+Reliable parsing is essential for ensuring that the system behaves correctly even when configuration data is not perfectly formatted. The parsing logic converts human-readable session definitions into numerical representations, making it easier to perform fast and accurate comparisons during execution. By working with minutes instead of strings, the system avoids repeated string operations, which can be costly in high-frequency scenarios.
+
+```
+//+------------------------------------------------------------------+
+//| Parse time range "HH:MM-HH:MM"                                   |
+//| Converts into minutes since midnight                             |
+//+------------------------------------------------------------------+
+bool ParseTimeRange(string range,int &startMin,int &endMin)
+  {
+   string parts[];
+
+   if(StringSplit(range,'-',parts) != 2)
+      return(false);
+
+   string startStr = parts[0];
+   string endStr   = parts[1];
+
+   int h1,m1,h2,m2;
+
+   //--- parse start
+   if(StringSplit(startStr,':',parts) != 2)
+      return(false);
+
+   h1 = (int)StringToInteger(parts[0]);
+   m1 = (int)StringToInteger(parts[1]);
+
+   //--- parse end
+   if(StringSplit(endStr,':',parts) != 2)
+      return(false);
+
+   h2 = (int)StringToInteger(parts[0]);
+   m2 = (int)StringToInteger(parts[1]);
+
+   //--- validate
+   if(h1<0 || h1>23 || m1<0 || m1>59 ||
+      h2<0 || h2>23 || m2<0 || m2>59)
+      return(false);
+
+   startMin = h1*60 + m1;
+   endMin   = h2*60 + m2;
+
+   return(true);
+  }
+//+------------------------------------------------------------------+
+```
+
+The ParseTimeRange() function also includes validation checks to ensure that extracted values fall within acceptable ranges. This prevents invalid inputs from propagating through the system and causing unexpected behavior. Rather than assuming perfect input, the design anticipates potential inconsistencies and handles them gracefully, improving overall robustness. These utility functions form the foundation of the system’s reliability, ensuring that all higher-level logic operates on clean and validated data.
+
+Core Logic for Session Enforcement
+
+The session enforcement logic is built around efficient time comparison and early exit conditions. By converting the current time into minutes since midnight, the system simplifies the process of checking whether it falls within any defined session range. This numerical approach is both faster and more reliable than working directly with string-based time representations.
+
+```
+//+------------------------------------------------------------------+
+//| Check if current time is within allowed sessions                 |
+//+------------------------------------------------------------------+
+bool IsWithinAllowedSessions(datetime now)
+  {
+   MqlDateTime t;
+   TimeToStruct(now,t);
+
+   int currentMin = t.hour*60 + t.min;
+
+   string sessions = LoadSessions();
+
+   if(sessions == "")
+      return(false);
+
+   string parts[];
+   int count = StringSplit(sessions,',',parts);
+
+   for(int i=0; i<count; i++)
+     {
+      string range = parts[i];
+
+      StringTrimLeft(range);
+      StringTrimRight(range);
+
+      if(range == "")
+         continue;
+
+      int startMin,endMin;
+
+      if(!ParseTimeRange(range,startMin,endMin))
+         continue;
+
+      if(currentMin >= startMin && currentMin < endMin)
+         return(true);
+     }
+
+   return(false);
+  }
+//+------------------------------------------------------------------+
+```
+
+Each session is evaluated sequentially, and the function immediately returns true as soon as a valid range is found. This early-exit design minimizes unnecessary iterations, which is especially important when the function is called frequently. Even in scenarios with multiple session definitions, the system remains lightweight and responsive. If no valid session is found, the function returns false, effectively blocking trading outside defined periods. This strict enforcement ensures that all trading activity adheres to the predefined schedule.
+
+News Event Loading and Blackout Enforcement
+
+The system enforces trading restrictions around scheduled news events by evaluating whether the current time falls within defined blackout windows. Each news event is expanded into a time interval based on its pre- and post-blackout durations, creating a protective buffer around potentially volatile periods. To ensure stability, safety checks are implemented to keep the event count consistent with the actual array size. This prevents runtime errors that could occur due to data inconsistencies, particularly in dynamic environments where files may be updated externally.
+
+```
+//+------------------------------------------------------------------+
+//| Check if current time falls within news blackout                 |
+//+------------------------------------------------------------------+
+bool IsNewsBlackout(datetime now)
+  {
+   if(s_newsCount <= 0)
+      return(false);
+
+   int size = ArraySize(s_newsEvents);
+
+   //--- safety guard
+   if(size < s_newsCount)
+      s_newsCount = size;
+
+   for(int i=0; i<s_newsCount; i++)
+     {
+      datetime start = s_newsEvents[i].time -
+                       s_newsEvents[i].preBlackout * 60;
+
+      datetime end   = s_newsEvents[i].time +
+                       s_newsEvents[i].postBlackout * 60;
+
+      if(now >= start && now <= end)
+         return(true);
+     }
+
+   return(false);
+  }
+//+------------------------------------------------------------------+
+```
+
+By combining structured data with defensive programming practices, the system maintains reliable behavior even under rapid execution conditions.
+
+Next Event Time Calculations
+
+The system continuously evaluates upcoming sessions to determine the next available trading window. This is achieved by calculating the time difference between the current moment and each session’s start time, selecting the smallest positive difference. A key aspect of this logic is its ability to handle day rollover. When the current time exceeds a session’s end, the system correctly projects the next occurrence into the following day. This ensures that scheduling remains accurate regardless of the time of execution.
+
+```
+//+------------------------------------------------------------------+
+//| Get next session start time                                      |
+//+------------------------------------------------------------------+
+string GetNextSessionTime(datetime now)
+  {
+   MqlDateTime t;
+   TimeToStruct(now,t);
+
+   int currentMin = t.hour*60 + t.min;
+
+   string sessions = LoadSessions();
+
+   if(sessions == "")
+      return("");
+
+   string parts[];
+   int count = StringSplit(sessions,',',parts);
+
+   int    bestDiff = 24*60;
+   string bestTime = "";
+
+   for(int i=0; i<count; i++)
+     {
+      string range = parts[i];
+
+      StringTrimLeft(range);
+      StringTrimRight(range);
+
+      int startMin,endMin;
+
+      if(!ParseTimeRange(range,startMin,endMin))
+         continue;
+
+      int diff;
+
+      if(currentMin < startMin)
+         diff = startMin - currentMin;
+      else if(currentMin >= endMin)
+         diff = (24*60 - currentMin) + startMin;
+      else
+         diff = 0;
+
+      if(diff < bestDiff)
+        {
+         bestDiff = diff;
+         bestTime = StringSubstr(range,0,5);
+        }
+     }
+
+   return(bestTime);
+  }
+//+------------------------------------------------------------------+
+```
+
+Providing visibility into upcoming sessions enhances situational awareness, allowing better preparation and decision-making.
+
+Consolidated Trading Permission Logic
+
+At the core of the system lies a unified decision function that determines whether trading is currently allowed. By combining session validation with news blackout checks, this function provides a single, consistent source of truth for all trading decisions.
+
+```
+//+------------------------------------------------------------------+
+//| Determine if trading is allowed                                  |
+//+------------------------------------------------------------------+
+bool IsTradingAllowed(datetime now)
+  {
+   bool sessionOK = IsWithinAllowedSessions(now);
+   bool newsOK    = !IsNewsBlackout(now);
+
+   return(sessionOK && newsOK);
+  }
+//+------------------------------------------------------------------+
+```
+
+This centralized approach ensures that all components—whether signal generation, visualization, or execution control—operate under the same conditions. It eliminates discrepancies and reinforces disciplined trading behavior across the entire system.
+
+Periodic Refresh and State Synchronization
+
+The refresh mechanism ensures that the system remains aligned with both current market time and external configuration changes. Rather than updating continuously, it operates at controlled intervals, reducing unnecessary processing while maintaining timely updates. During each refresh cycle, the system recalculates trading permissions, updates upcoming session and news information, and synchronizes cached data when needed. This design ensures that all system components operate on up-to-date information without compromising performance.
+
+```
+//+------------------------------------------------------------------+
+//| Refresh system state                                             |
+//| Updates trading status and upcoming events                       |
+//+------------------------------------------------------------------+
+bool Refresh()
+  {
+   datetime now = TimeCurrent();
+
+   if(now - s_lastRefresh < s_refreshInterval)
+      return(false);
+
+   //--- reload news if needed
+   LoadNewsEvents();
+
+   //--- update state
+   s_allowedNow  = IsTradingAllowed(now);
+   s_nextSession = GetNextSessionTime(now);
+
+   datetime nextNews = GetNextNewsTime(now);
+
+   if(nextNews > 0)
+     {
+      s_nextNews     = TimeToString(nextNews,TIME_DATE|TIME_MINUTES);
+      s_nextNewsTime = nextNews;
+     }
+   else
+     {
+      s_nextNews     = "None";
+      s_nextNewsTime = 0;
+     }
+
+   s_lastRefresh = now;
+
+   return(true);
+  }
+//+------------------------------------------------------------------+
+```
+
+By balancing responsiveness with efficiency, the refresh mechanism plays a critical role in maintaining overall system stability.
+
+Logging and Audit Trail
+
+To ensure transparency and accountability, the system logs all blocked trading attempts into a CSV file. Each record captures the timestamp, symbol, reason for restriction, and the source of the attempt, providing a detailed audit trail for analysis.
+
+```
+//+------------------------------------------------------------------+
+//| Log blocked trade attempt                                        |
+//+------------------------------------------------------------------+
+void LogBlockedAttempt(datetime time,string symbol,string reason,string source)
+  {
+   int handle = FileOpen(LOG_FILE,
+                         FILE_TXT|FILE_READ|FILE_WRITE|FILE_CSV,
+                         ',');
+
+   if(handle == INVALID_HANDLE)
+      return;
+
+   //--- append to end of file
+   FileSeek(handle,0,SEEK_END);
+
+   FileWrite(handle,
+             TimeToString(time),
+             symbol,
+             reason,
+             source);
+
+   FileClose(handle);
+  }
+//+------------------------------------------------------------------+
+```
+
+The logging mechanism uses an append-only approach, preserving existing data and continuously extending the record. This makes it possible to review historical behavior, identify patterns, and refine trading rules over time. Such logging is not only useful for debugging but also plays an important role in enforcing discipline and validating system performance.
+
+**Visual Dashboard with *TradingHoursNewsDashboard.mq5***
+
+Designing Customizable Visual Elements
+
+Start by defining input parameters for colors, font sizes, positional offsets, and session strings. These inputs enable traders to adapt the dashboard’s appearance to their preferences, trading environment, or visual comfort. Customization promotes better integration within different chart layouts and enhances clarity, especially during fast-paced trading sessions.
+
+```
+//+------------------------------------------------------------------+
+//| Update label text, create if missing                             |
+//+------------------------------------------------------------------+
+void SetText(string name,string text,color clr,int size)
+  {
+   if(ObjectFind(0,name) < 0)
+     {
+      //--- create label if it doesn't exist
+      ObjectCreate(0,name,OBJ_LABEL,0,0,0);
+      ObjectSetInteger(0,name,OBJPROP_CORNER,CORNER_LEFT_UPPER);
+      ObjectSetInteger(0,name,OBJPROP_XDISTANCE,10);
+      ObjectSetInteger(0,name,OBJPROP_YDISTANCE,10);
+     }
+
+   ObjectSetString(0,name,OBJPROP_TEXT,text);
+   ObjectSetInteger(0,name,OBJPROP_COLOR,clr);
+   ObjectSetInteger(0,name,OBJPROP_FONTSIZE,size);
+  }
+//+------------------------------------------------------------------+
+```
+
+Creating the Layout and Graphical Components
+
+During OnInit(), CreatePanel() constructs the dashboard interface systematically. It creates a layered background rectangle with a subtle shadow effect to add depth, overlaid with a main panel distinguished by a contrasting color. A header label with an icon provides immediate context, while separator lines segment different information zones. Labels for status, upcoming events, and recent logs are precisely positioned with calculated offsets, using eye-friendly fonts and sizes. These elements are designed to be intuitive, ensuring that traders can quickly interpret current conditions at a glance, even during rapid market movements.
+
+```
+//+------------------------------------------------------------------+
+//| Indicator initialization                                         |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   THN::SaveSessions(InpAllowedSessions);
+
+   CreatePanel();
+
+   EventSetTimer(1);
+
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+```
+
+Populating Dynamic Data and Real-Time Updates
+
+OnTimer() calls UpdateDashboard() every second, ensuring the displayed information remains current. The function pulls real-time data from the core logic—such as whether trading is allowed (Allowed or Blocked), the start time of the next session, and upcoming news releases. It calculates the remaining time until the next session begins, then dynamically adjusts a graphical progress bar’s width to visually depict this countdown. This visual cue provides an immediate understanding of restriction durations, reducing cognitive load and enabling traders to plan accordingly.
+
+```
+//+------------------------------------------------------------------+
+//| Timer event for dashboard refresh                                |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+   UpdateDashboard();
+  }
+//+------------------------------------------------------------------+
+```
+
+Maintaining a Clean and Responsive Interface
+
+Helper functions like SetText() update labels with minimal flickering or layout shifts. Before each update cycle, DeleteObjectsByPrefix() removes previous graphical objects to prevent clutter, ensuring a clean interface that remains responsive and easy to read.
+
+The progress bar's fill is recalculated each second, making the countdown smooth and accurate. By managing object creation and deletion efficiently, the dashboard maintains high performance, even during extended trading sessions, providing traders with a reliable, real-time status overview.
+
+```
+//+------------------------------------------------------------------+
+//| Delete objects using prefix filter                               |
+//+------------------------------------------------------------------+
+void DeleteObjectsByPrefix(string prefix)
+  {
+   int total=ObjectsTotal(0);
+
+   for(int i=total-1;i>=0;i--)
+     {
+      string name=ObjectName(0,i);
+
+      if(StringFind(name,prefix)==0)
+         ObjectDelete(0,name);
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+A footer label clearly indicates system status—such as "ENFORCEMENT ACTIVE"—reinforcing confidence and transparency. The entire visual design emphasizes clarity: using icons, color coding (green for allowed, red for blocked), and concise labels to instantly communicate system states. The dashboard’s flexibility allows traders to customize appearance elements further, ensuring seamless integration into their workflow. Displaying recent blocked trade logs can also promote awareness, encouraging traders to understand and respect the enforced restrictions.
+
+**Enforcement Engine with *TradingHoursNewsEnforcer.mq5***
+
+Initialization and System Readiness
+
+Starting with OnInit(), the enforcement EA logs its activation, calls THN::Refresh() to load the latest schedule and news blackout data, and sets a timer for continuous enforcement. This setup ensures the enforcement logic always operates on current data, adapting dynamically to schedule modifications or new news releases. The initialization phase also involves verifying connection status and readiness of trading functions to prevent operational failures during enforcement.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization                                            |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   Print("TradingHoursNewsEnforcer started");
+
+   THN::Refresh();
+
+   EventSetTimer(1);
+
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+```
+
+Every second, OnTimer() triggers a refresh of the schedule and news data via THN::Refresh(). This frequent update cycle guarantees that any external changes—such as a newly scheduled news event or schedule adjustment—are incorporated immediately, maintaining full compliance. It also ensures that enforcement decisions are based on the latest information, especially during volatile news periods when market conditions can change rapidly.
+
+Intercepting and Managing Trade Requests
+
+The core enforcement logic resides within OnTradeTransaction(), which captures every trade request, order submission, or deal execution. It first identifies involved symbols, order IDs, and position references. The function then calls THN::IsTradingAllowed(), which consolidates schedule and news blackout evaluations, to determine whether trading is permissible at that moment. If the system is in a restricted period, it logs the violation with LogBlockedAttempt(), recording timestamp, symbol, and reason—providing transparency and accountability.
+
+```
+//+------------------------------------------------------------------+
+//| Monitor and block trades during restricted periods               |
+//+------------------------------------------------------------------+
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest &request,
+                        const MqlTradeResult &result)
+  {
+   THN::Refresh();
+
+   if(THN::IsTradingAllowed(TimeCurrent()))
+      return;
+
+   string reason = "Trading not allowed";
+   string symbol = (request.symbol != "") ? request.symbol : Symbol();
+
+   THN::LogBlockedAttempt(TimeCurrent(), symbol, reason, "OnTradeTransaction");
+
+   if(request.order > 0)
+      CancelOrder(request.order, reason);
+
+   Print("Trade blocked: ", symbol);
+  }
+//+------------------------------------------------------------------+
+```
+
+To prevent unauthorized execution, the implementation cancels pending orders and closes open positions (see the attached source files). It scans for open positions on the symbol and closes them using opposite deals (TRADE\_ACTION\_DEAL). This automatic closing process ensures that the trading account remains compliant, minimizing risk exposure during news blackout periods and outside scheduled trading hours. Error handling routines check the success of cancellations and closings, logging failures for further analysis.
+
+Maintaining Strict Discipline with Automatic Trade Closure
+
+This enforcement mechanism acts as a vigilant guard, seamlessly closing or blocking any trades that occur during restricted periods. Its operation requires no manual intervention, providing a disciplined, automated environment that strictly adheres to predefined schedules. By combining real-time monitoring, immediate trade management, and comprehensive logging, the system ensures traders operate within their strategic boundaries, especially important in regulated environments or institutional settings. The detailed logs support compliance audits and performance analysis, enabling continuous improvement.
+
+```
+//+------------------------------------------------------------------+
+//| Cancel order placed during restricted period                     |
+//+------------------------------------------------------------------+
+void CancelOrder(ulong ticket,string reason)
+  {
+   MqlTradeRequest req={};
+   MqlTradeResult res={};
+
+   req.action=TRADE_ACTION_REMOVE;
+   req.order=ticket;
+   req.comment="Blocked: "+reason;
+
+   OrderSend(req,res);
+  }
+//+------------------------------------------------------------------+
+```
+
+### Outcomes
+
+The implementation of the trading hours and news blackout enforcement system resulted in a consistently controlled execution environment where trading activity is no longer influenced by timing errors or overlooked market conditions. By embedding session boundaries and news blackout periods directly into the execution layer, the system enforces discipline at the structural level, ensuring that exposure occurs only under predefined and validated conditions.
+
+The visual dashboard reflects this behavior in real time, clearly indicating whether trading is permitted or blocked. When conditions fall outside the defined session windows, the system immediately transitions to a blocked state, preventing any form of trade execution. At the same time, it provides forward-looking information such as the next valid trading session, allowing preparation without guesswork or manual tracking.
+
+During valid trading periods, the system allows execution while maintaining continuous monitoring of upcoming restricted periods. The transition between allowed and blocked states occurs seamlessly, without lag or inconsistency, demonstrating that the underlying permission engine and refresh mechanism operate reliably under live conditions.
+
+The integration of news blackout logic further strengthens the system by automatically enforcing restricted periods around scheduled economic events. When no upcoming events are present, the system maintains clarity by explicitly indicating their absence, ensuring that traders are not left uncertain about current conditions.
+
+In addition to enforcement, the system maintains a transparent audit trail through real-time logging of all blocked trade attempts. Each record captures the timestamp, symbol, and reason for restriction, allowing precise review of system behavior and verification that discipline is consistently enforced without manual intervention.
+
+The observed results are consistent and verifiable. Trading constraints, once embedded directly into code, operate independently of attention or memory. Execution is no longer influenced by missed news events or poorly timed entries, but is instead governed strictly by predefined conditions. This shifts discipline from a subjective practice to a deterministic process within the trading environment.
+
+### Conclusion
+
+We implemented a structured enforcement layer that converts timing discipline into guaranteed system behavior within MQL5. The solution is composed of three coordinated components: a configuration layer defining trading sessions and news blackout intervals, a real-time dashboard for monitoring and control, and an enforcement Expert Advisor that evaluates and restricts trading activity at the execution level. The outcome is explicit and testable. Trade attempts outside defined trading hours are blocked, and exposure during restricted news periods is prevented or immediately neutralized. These controls apply uniformly to both manual trades and EAs, ensuring that no execution occurs during restricted periods. Each enforcement action is recorded and made available for audit and review.
+
+Success criteria are clearly defined: trades occur only within approved sessions, exposure to high-impact news is eliminated, and all violations are programmatically handled and logged. The system operates within MetaTrader 5’s event-driven architecture, providing precise and reliable control over execution timing. By embedding these constraints directly into the execution pipeline, trading becomes structurally disciplined. Market participation is limited to predefined conditions, removing reliance on discretion or memory. The result is a controlled, transparent, and rule-driven environment where discipline is enforced by design.
+
+The table below summarizes the files included in the downloadable package and their roles within the system.
+
+| File Name | Type | Location | Description |
+| --- | --- | --- | --- |
+| TradingHoursNews.mqh | MQL5 Include File | MQL5\Include\TradingDiscipline | Core logic module handling session schedules, news blackout definitions, permission checks, caching, and file management. |
+| TradingHoursNewsDashboard.mq5 | MQL5 Indicator | MQL5\Indicators | Visual dashboard that displays real-time trading status, upcoming sessions, news events, and logs, with dynamic labels and progress bars. |
+| TradingHoursNewsEnforcer.mq5 | MQL5 Expert Advisor | MQL5\Experts | Enforcement engine that intercepts trade requests, blocks trades during restricted periods, closes positions outside allowed periods, and logs all restricted attempts. |
+| NewsEvents.csv | CSV Data File | MQL5\Files | Contains scheduled economic events with pre- and post-blackout durations to restrict trading around high-volatility periods. |
+| TradingSessions.txt | Text Data File | MQL5\Files | Defines allowed trading hours for the system in human-readable format, which is parsed and enforced by the core logic. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21515.zip "Download all attachments in the single ZIP archive")
+
+[TradingHoursNews.mqh](https://www.mql5.com/en/articles/download/21515/TradingHoursNews.mqh "Download TradingHoursNews.mqh")
+(11.7 KB)
+
+[NewsEvents.csv](https://www.mql5.com/en/articles/download/21515/NewsEvents.csv "Download NewsEvents.csv")
+(0.05 KB)
+
+[TradingSessions.txt](https://www.mql5.com/en/articles/download/21515/TradingSessions.txt "Download TradingSessions.txt")
+(0.05 KB)
+
+[TradingHoursNewsDashboard.mq5](https://www.mql5.com/en/articles/download/21515/TradingHoursNewsDashboard.mq5 "Download TradingHoursNewsDashboard.mq5")
+(11 KB)
+
+[TradingHoursNewsEnforcer.mq5](https://www.mql5.com/en/articles/download/21515/TradingHoursNewsEnforcer.mq5 "Download TradingHoursNewsEnforcer.mq5")
+(5.42 KB)
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/21515/MQL5.zip "Download MQL5.zip")
+(8.85 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[From Novice to Expert: Automating Base-Candle Geometry for Liquidity Zones in MQL5](https://www.mql5.com/en/articles/21817)
+
+This article implements an MQL5 module that analyzes the lower‑timeframe bars inside each liquidity‑zone base candle. It detects swing points and applies objective rules to classify the internal structure as an ascending, descending, or symmetrical triangle; a rectangle; M; W; or undefined. The indicator displays geometry labels on the chart and adds the pattern to alerts, reducing manual lower‑timeframe inspection.
+
+[MQL5 Trading Tools (Part 28): Filling Sweep Polygons for Butterfly Curve in MQL5](https://www.mql5.com/en/articles/22129)
+
+We expand the capabilities of the MetaTrader 5 butterfly curve canvas by adding multi-layered wing fills, vein lines, scale dots, and a full body (abdomen, thorax, head, eyes, antennae). This article implements polygon fills with vertical and radial gradients, as well as filled circles and ellipses, all using supersampling antialiasing. You will also receive reusable MQL5 helper functions and a rendering order that transforms a simple curve into a customizable, detailed chart illustration.
+
+[Deterministic Oscillatory Search (DOS)](https://www.mql5.com/en/articles/18154)
+
+Deterministic Oscillatory Search (DOS) algorithm is an innovative global optimization method that combines the advantages of gradient and swarm algorithms without the use of random numbers. The fitness oscillation and slope mechanism allows DOS to explore complex search spaces in a deterministic manner.
+
+[MetaTrader 5 Machine Learning Blueprint (Part 13): Implementing Bet Sizing in MQL5](https://www.mql5.com/en/articles/22047)
+
+We build a production MQL5 bet‑sizing toolkit: utilities, snippets, and user‑level functions that mirror the Python originals. The methods cover probability‑to‑size mapping with overlap correction, dynamic forecast‑price sizing (calibrated sigmoid/power with limit price), occupancy‑based budgeting, and mixture‑model reserve sizing (EF3M). The result is a signed [−1, ..., 1] position plus diagnostics you can plug directly into order logic.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=asavypypfjiefdywsbundfnovsqdqrlg&s=822a63e372eca09eaaa973cc0f82be5093d6c353237035cd7209bf509f0bbb1e&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=qodjeuojoqadewehswvgasofmtbkxhci&ssn=1788779318678215593&ssn_dr=0&ssn_sr=0&fv_date=1788779318&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21515&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Engineering%20Trading%20Discipline%20into%20Code%20(Part%204)%3A%20Enforcing%20Trading%20Hours%20and%20News%20Disabling%20in%20MQL5%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877931818761611&fz_uniq=6450727857449209142&sv=2552)

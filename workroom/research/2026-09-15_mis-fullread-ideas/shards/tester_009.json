@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_009",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16315,
+      "title": "Atomic Orbital Search (AOS) algorithm: Modification",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16315.md"
+    },
+    {
+      "id": 16364,
+      "title": "Arithmetic Optimization Algorithm (AOA): From AOA to SOA (Simple Optimization Algorithm)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16364.md"
+    },
+    {
+      "id": 16494,
+      "title": "Cycles and trading",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16494.md"
+    },
+    {
+      "id": 16877,
+      "title": "Cyclic Parthenogenesis Algorithm (CPA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16877.md"
+    },
+    {
+      "id": 16992,
+      "title": "Neuroboids Optimization Algorithm (NOA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16992.md"
+    },
+    {
+      "id": 17047,
+      "title": "Chaos Game Optimization (CGO)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17047.md"
+    },
+    {
+      "id": 17143,
+      "title": "Circle Search Algorithm (CSA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17143.md"
+    },
+    {
+      "id": 17246,
+      "title": "Blood inheritance optimization (BIO)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17246.md"
+    },
+    {
+      "id": 17325,
+      "title": "Billiards Optimization Algorithm (BOA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17325.md"
+    },
+    {
+      "id": 17380,
+      "title": "Successful Restaurateur Algorithm (SRA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17380.md"
+    },
+    {
+      "id": 17455,
+      "title": "Using Deep Reinforcement Learning to Enhance Ilan Expert Advisor",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17455.md"
+    },
+    {
+      "id": 17497,
+      "title": "Neuroboids Optimization Algorithm 2 (NOA2)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17497.md"
+    }
+  ]
+}

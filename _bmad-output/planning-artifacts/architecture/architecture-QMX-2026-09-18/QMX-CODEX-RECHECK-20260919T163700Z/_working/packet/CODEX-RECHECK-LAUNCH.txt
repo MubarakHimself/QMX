@@ -1,0 +1,26 @@
+Resume as independent Codex architecture recheck, not a new Pass-I, not Documentation Factory, not epics.
+
+You previously challenged candidate qmx-workflows-arch-2026-09-18-a (Stage B). Grok Stage C then produced qmx-workflows-arch-2026-09-19-c and added AD-23..AD-31. Those new pages were not in the snapshot you approved. Stage B does not approve the new design.
+
+The operator is the intermediary. This packet is the Stage C repairs plus what happened after.
+
+ALREADY DONE — do not undo, do not re-run:
+- OD-01 is CLOSED from the original transcript (see OPERATOR-QUESTIONS.md). Book/BMS = default portfolio/risk/sizing implementation, not the ceiling. Replace or improve; QML, QMB, optional MIS, QMN, paper, and live adopt the selected composition. Never dummy Book. Sensing/research is not a trading composition. Sequential paper-then-live + L17 remain. QMN is the only venue importer.
+- Documentation Factory already ran in a later Grok session. It folded the spine into docs/ (ADR-0024, L36 named amendment DEC-0448, SCN-0018..SCN-0022, DEC-0414..DEC-0451). That fold is uncommitted. A docs fold is not your approval of AD-23..AD-31.
+- Epics-and-stories is paused until Grok reconciles YOUR return. Do not start it.
+
+SCOPE — challenge only the material repairs:
+AD-23 Alternative Trading Composition and admission; AD-24 invocation/grants; AD-25 fencing; AD-26 outbox/JobHandle/join; AD-27 checkpoint; AD-28 streams; AD-29 session CAS/change-request; AD-30 package lifecycle/pin; AD-31 recipe-definition identity; CONTRACTS.md payloads vs spine; and whether the already-folded ADR-0024 / SCN-0018..0022 drifted from those ADs.
+
+Preserve all 85 scenario IDs. Pass-I rows are immutable requirements (SHA-256 1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8). Do not re-derive Pass-I. Do not treat sensing as ATC. Dummy Book remains INVALID_INPUT. QMA AD-17 JobHandle vocabulary is parent law (never succeeded / awaiting_approval on a handle). Cheap-veto A1–A6 are sitting field catalogues — challenge them if they are wrong; they are not operator-spoken schemas.
+
+Read the attached packet (CODEX-RECHECK-HANDOFF.md lists the files). Do not require the whole original discovery zip.
+
+Return:
+1. Findings against AD-23..AD-31 and CONTRACTS.md
+2. Whether any AF-01..AF-20 disposition is still open after Stage C
+3. Docs-vs-spine drift in ADR-0024 / SCN-0018..0022 / L36 if you see it
+4. Whether these machines are architecture-complete enough for Grok to desk-fix docs, then resume epics
+5. Exact file/AD citations
+
+Do not ratify. Do not edit QMX production code. Do not start or re-run Documentation Factory. Do not start epics-and-stories. Do not implement. Pack a return zip the operator can hand back to Grok.

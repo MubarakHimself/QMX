@@ -1,0 +1,114 @@
+4: title: "Using the MQL5 Economic Calendar for News Filter (Part 3): Surviving Terminal Restarts During News Window"
+11: series_title: "Using the MQL5 Economic Calendar for News Filter (): Surviving Terminal Restarts During News Window"
+20: # Using the MQL5 Economic Calendar for News Filter (Part 3): Surviving Terminal Restarts During News Window
+25: | 31 March 2026 at 06:35
+36: ### Introduction
+40: We already have a news filter that temporarily removes SL/TP and restores them after a news window in [Part 2](https://www.mql5.com/en/articles/21446) of this series. The existing implementation, however, keeps its state only in memory: savedStops[] and the newsSuspended flag. If a restart or recompile occurs between SuspendStops(true) and SuspendStops(false), that in-memory state is lost. The EA 
+54: ### Designing the Persistent Storage Model
+70: - The ticket number to identify the position.
+71: - The original stop-loss to restore it later.
+72: - The original take-profit to also restore later.
+87: ```
+93: ```
+101: ```
+111: ```
+119: ```
+121: ```
+123: On restart, the EA reads Harbinger\_Stop\_Count and loops from i = 0 to count - 1 to reconstruct savedStops[].
+133: News window active—SuspendStops(true) is called.  
+135: - It clears the previously saved stops array,
+136: - iterates through open positions, storing each ticket/SL/TP in savedStops[], and removing the stops, and
+137: - immediately after, it calls a function—SaveStopsToGlobals()—to write the entire array to global variables of the terminal.
+139: Terminal restarts during the news window—the EA is reloaded.
+141: - In OnInit(), we call another function—LoadStopsFromGlobals().
+142: - If the global count variable exists, we read back all saved stops into the savedStops[] array and set newsSuspended = true.
+143: - The EA now knows exactly which trades are suspended and what their original stops were.
+145: News window ends—SuspendStops(false) is called.
+147: - It uses the savedStops[] array to restore each trade's stops via RestoreStops().
+148: - After restoration, it clears the array and calls ClearSavedStopsFromGlobals() to delete all related global variables.
+156: - Simplicity: Global variables are managed directly by the MetaTrader terminal. No need to handle the file paths, permission issues, or custom serialization formats.
+157: - Speed: Reading and writing to global variables is significantly faster than file I/O, which is important because we perform these operations only during state transition (once per news window), but still we want minimal overhead.
+158: - Automatic synchronization: The terminal ensures global variables are saved to disk automatically and survive a restart. With files, you must manually manage flushing, closing handles, and reopening after a restart.
+159: - No external dependencies: The code remains self-contained.
+167: 3. Cleanup: Always delete global variables after the news window ends to avoid accumulating stale data. Our ClearSavedStopsFromGlobals() will handle this.
+168: 4. Restoration on restart: When loading saved stops in OnInit(), we do not automatically restore them—we simply restore the EA's memory. The actual restoration still happens only when SuspendStops(false) is called after the news window ends. This is intentional, because we don't know if the news window is still active or not; the transition logic will handle it on the next tick.
+176: - three new functions: SaveStopsToGlobals(), LoadStopsFromGlobals(), and ClearSavedStopsFromGlobals().
+177: - Calls to these functions at the appropriate points in SuspendStops() and OnInit().
+178: - Minor adjustments to ensure the state flag (newsSuspended) is correctly restored.
+182: ### Implementation
+192: ```
+194: ```
+202: ```
+207: ```
+211: Now we store each trade's ticket, stop-loss, and take-profit. We iterate through the savedStops[] array (which was already built during SuspendStops(true)).
+217: ```
+224: ```
+228: ```
+243:       GlobalVariableSet(base + "_Ticket", (double)savedStops[i].ticket);
+244:       GlobalVariableSet(base + "_SL", savedStops[i].sl);
+245:       GlobalVariableSet(base + "_TP", savedStops[i].tp);
+249: ```
+261: ```
+267: ```
+269: The EA must explicitly read and rebuild its internal state. Without this step, stops will remain removed, the savedStops[] array will stay empty, and newsSuspended will default to false. Which brings us back to the original problem of state loss.
+271: The LoadStopsFromGlobals() function will detect if saved data exists, rebuild the savedStops[] array, and prepare the EA to continue execution. Let's implement the following steps.
+277: ```
+283: ```
+287: Step 2: Rebuilding the SavedStops[] array
+291: ```
+303:   savedStops[i].ticket = (ulong)GlobalVariableGet(base + "_Ticket");
+304:   savedStops[i].sl = GlobalVariableGet(base + "_SL");
+305:   savedStops[i].tp = GlobalVariableGet(base + "_TP");
+307: ```
+315: ```
+320: ```
+324: ```
+347:       savedStops[i].ticket = (ulong)GlobalVariableGet(base + "_Ticket");
+348:       savedStops[i].sl = GlobalVariableGet(base + "_SL");
+349:       savedStops[i].tp = GlobalVariableGet(base + "_TP");
+356: ```
+358: This function will be called inside OnInit. We do not restore stops immediately after loading; we are only rebuilding memory and restoring system state because we don't know if the news window is still active, and immediate restoration could break the logic. Instead, the EA waits for the normal flow, and when the news window ends, SuspendStops(false) handles restoration. This keeps the system dete
+360: At the end of this step, the system can now survive terminal restarts, recover suspended trades accurately, and maintain logical continuity. We still have to clear persistent data (clean-up mechanism), where we will implement ClearSavedStopsFromGlobals()—a proper deletion of global variables.
+364: At this stage, we have built a persistent cycle, saved suspension data before risk exposure, loaded data after a restart, and the EA now resumes correctly. However, if the stored global variables are not deleted, the EA may detect stale data even when no suspension is active. It may then rebuild an outdated savedStops[] and operate on non-existent positions. Global variables of a terminal persist 
+366: We now implement the ClearSavedStopsFromGlobals() function in 3 steps that will delete all stored trade variables, remove the count variable, and reset the suspension flag.
+372: ```
+380: ```
+388: ```
+399: ```
+407: ```
+410: ```
+416: ```
+444: ```
+448: ### Integrating Persistence into News Filter
+452: 1. Update the SuspendStops() function with persistence.
+455: To update SuspendStops(), we inject SaveStopsToGlobals() after stops are removed and ClearSavedStopsFromGlobals() after restoration.
+457: ```
+469:       ArrayResize(savedStops, 0); // Clear previous list
+479:             savedStops[idx].sl = PositionGetDouble(POSITION_SL);
+480:             savedStops[idx].tp = PositionGetDouble(POSITION_TP);
+495:       for(int k = 0; k < ArraySize(savedStops); k++)
+507: ```
+509: Next, we reconstruct the OnInit function by calling the LoadStopsFromGlobals() into it.
+511: ```
+523:       Print("Recovered suspended trades from previous session.");
+526: // Pre-load calendar if enabled to avoid lag on first tick
+531: ```
+537: - stops are removed,
+538: - data is stored in memory, and
+539: - in-memory data is persisted globally.
+543: - OnInit() LoadStopsFromGlobals(), and
+544: - the system resumes with full size.
+548: - stops are restored, and
+549: - persistent data is deleted.
+557: 1. Multiple positions suspended: the savedStops[] array stores each trade separately. When saving, we loop through all positions; when loading, we rebuild the exact list.
+558: 2. Trades manually closed while suspended: If a position is closed by the trader (or another EA) during the suspension window, it will no longer exist when we later try to restore its stops. Our RestoreStops() function first checks PositionSelectByTicket(); if the ticket is invalid, it simply skips that entry. After restoration, the savedStops[] array is cleared so stale references are not kept.
+559: 3. Restart after the news window has already ended: If the EA restarts after the news window has ended, the global variable would have been deleted by ClearSavedStopsFromGlobals() at the end of the previous suspension cycle. Therefore, LoadStopsFromGlobals() will find no saved data, and the EA starts with newsSuspended = false—exactly as it should.
+567: Testing is essential to confirm that the persistent state survives a restart, because this implementation directly affects risk management and overall exposure. We will simulate a restart during an active news window and observe the log messages.
+569: Attach the EA to a chart with EnableNewsFilter = true, SuspendStopsDuringNews = true, and a small news window (e.g., NewsMinutesBefore = 1, NewsMinutesAfter = 1 for quick testing; I used 15 minutes before and after to have enough window to evaluate the situation). Ensure that there is at least one open trade with visible stop-loss and take-profit levels from the EA.
+577: When a relevant news window begins, the SL/TP of any open trades gets suspended.
+579: While the news window is active, we will simulate a restart by recompiling the EA (right-click EA in the navigator —> Modify —> Compile) or restart the terminal (I simply changed an input parameter, then allowed the EA to recompile). Below you can see in the image that stops were removed for the news window and the EA later reinitializes for the second time inside an active news window.
+583: Wait for the end of the news window. The log will show the restored SL/TP, a behavior that wouldn't have occurred if we had not persisted the storage of stop values. Below is an image of restored stops:
+593: ### Conclusion
+595: We solved the state-loss gap by persisting the suspension snapshot in terminal global variables. Recovery is defined as follows: SaveStopsToGlobals() writes state, LoadStopsFromGlobals() restores it, ClearSavedStopsFromGlobals() removes it after restoration. SaveStopsToGlobals() is called immediately after SuspendStops(true) completes, LoadStopsFromGlobals() runs in OnInit(), and ClearSavedStopsFr
+597: Practical result: you can restart the terminal, recompile, or reboot the VPS during an active news window and the EA will recover the exact list of suspended tickets and their original SL/TP. The EA does not auto-restore stops on load; it reconstructs state so the normal suspension lifecycle (and safety checks such as skipping closed tickets or adjusting invalid levels) proceeds deterministically.
+636: ](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=vljwvezfjkfbvviocwskggexlvgykvob&s=70cf8e354b9a125332533ffb65d7365abe8dde5b5c1ede9caac479a9e9df4f25&uid=&ref=https://www.mql5.com/en/articles/21803&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6468339886242532479)

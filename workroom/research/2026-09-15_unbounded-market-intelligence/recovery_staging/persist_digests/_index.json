@@ -1,0 +1,217 @@
+[
+  {
+    "id": 2930,
+    "title": "Calculating the Hurst exponent",
+    "chars": 51843
+  },
+  {
+    "id": 22484,
+    "title": "Beyond GARCH (Part II): Measuring the Fractal Dimension of Markets",
+    "chars": 45935
+  },
+  {
+    "id": 23488,
+    "title": "Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes",
+    "chars": 68474
+  },
+  {
+    "id": 22754,
+    "title": "Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades",
+    "chars": 44506
+  },
+  {
+    "id": 21142,
+    "title": "Applying L1 Trend Filtering in MetaTrader 5",
+    "chars": 203721
+  },
+  {
+    "id": 22553,
+    "title": "Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+    "chars": 41502
+  },
+  {
+    "id": 15222,
+    "title": "MQL5 Wizard Techniques you should know (Part 26): Moving Averages and the Hurst Exponent",
+    "chars": 32524
+  },
+  {
+    "id": 6834,
+    "title": "Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+    "chars": 33315
+  },
+  {
+    "id": 22519,
+    "title": "Beyond GARCH (Part V): Fitting the Multifractal Spectrum in MQL5",
+    "chars": 41067
+  },
+  {
+    "id": 21299,
+    "title": "Beyond GARCH (Part IV): Partition Analysis in MQL5",
+    "chars": 56961
+  },
+  {
+    "id": 22438,
+    "title": "Beyond GARCH (Part I): Mandelbrot's MMAR versus Engle's GARCH",
+    "chars": 48976
+  },
+  {
+    "id": 22476,
+    "title": "Beyond GARCH (Part III): Building the MMAR and the Verdict",
+    "chars": 49595
+  },
+  {
+    "id": 22638,
+    "title": "Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+    "chars": 56871
+  },
+  {
+    "id": 23171,
+    "title": "Building Volatility Models in MQL5 (Part IV): Implementing Long Memory Volatility Processes, FIGARCH, and HARCH",
+    "chars": 125611
+  },
+  {
+    "id": 21743,
+    "title": "Developing Market Entropy Indicator: Trading System Based on Information Theory",
+    "chars": 54554
+  },
+  {
+    "id": 21742,
+    "title": "Automating Market Entropy Indicator: Trading System Based on Information Theory",
+    "chars": 56425
+  },
+  {
+    "id": 22220,
+    "title": "Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility",
+    "chars": 82904
+  },
+  {
+    "id": 22756,
+    "title": "Feature Engineering for ML (Part 7): Entropy Features in Python",
+    "chars": 24183
+  },
+  {
+    "id": 23077,
+    "title": "Feature Engineering for ML (Part 8): Entropy Features in MQL5",
+    "chars": 37834
+  },
+  {
+    "id": 23351,
+    "title": "Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy",
+    "chars": 61604
+  },
+  {
+    "id": 23451,
+    "title": "Ordinal Pattern Transition Networks in MQL5",
+    "chars": 63485
+  },
+  {
+    "id": 11487,
+    "title": "MQL5 Wizard techniques you should know (Part 03): Shannon's Entropy",
+    "chars": 34069
+  },
+  {
+    "id": 6351,
+    "title": "Grokking market \"memory\" through differentiation and entropy analysis",
+    "chars": 40297
+  },
+  {
+    "id": 17273,
+    "title": "The Kalman Filter for Forex Mean-Reversion Strategies",
+    "chars": 32353
+  },
+  {
+    "id": 3886,
+    "title": "Using the Kalman Filter for price direction prediction",
+    "chars": 33206
+  },
+  {
+    "id": 23112,
+    "title": "MQL5 Wizard Techniques you should know (Part 98): Using an Unscented Kalman Filter and a Capsule Network in a Custom Signal Class",
+    "chars": 37442
+  },
+  {
+    "id": 23444,
+    "title": "Digital Signal Processing for Traders (Part 2): The Dominant Cycle, MAMA, and a Regime-Switching Expert Advisor",
+    "chars": 57979
+  },
+  {
+    "id": 23149,
+    "title": "Digital Signal Processing for Traders: Building Ehlers' Filter Library in MQL5",
+    "chars": 42062
+  },
+  {
+    "id": 16085,
+    "title": "MQL5 Wizard Techniques you should know (Part 42): ADX Oscillator",
+    "chars": 32239
+  },
+  {
+    "id": 18453,
+    "title": "An Introduction to the Study of Fractal Market Structures Using Machine Learning",
+    "chars": 28972
+  },
+  {
+    "id": 23565,
+    "title": "Feature Engineering for ML (Part 11): Fractal Features in Python",
+    "chars": 31343
+  },
+  {
+    "id": 23657,
+    "title": "Feature Engineering for ML (Part 12): Fractal Features in MQL5",
+    "chars": 34414
+  },
+  {
+    "id": 16747,
+    "title": "Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention",
+    "chars": 35898
+  },
+  {
+    "id": 23013,
+    "title": "MQL5 Wizard Techniques you should know (Part 96): Using Wavelet Thresholding and LSTM Network in a Custom Money Management Class",
+    "chars": 35952
+  },
+  {
+    "id": 20173,
+    "title": "Statistical Arbitrage Through Cointegrated Stocks (Part 7): Scoring System 2",
+    "chars": 46548
+  },
+  {
+    "id": 5451,
+    "title": "Econometric approach to finding market patterns: Autocorrelation, Heat Maps and Scatter Plots",
+    "chars": 31471
+  },
+  {
+    "id": 12129,
+    "title": "Measuring Indicator Information",
+    "chars": 30312
+  },
+  {
+    "id": 2118,
+    "title": "Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+    "chars": 46323
+  },
+  {
+    "id": 22539,
+    "title": "Beyond GARCH (Part VIII): The MMAR Library And Putting it to Work in an Expert Advisor",
+    "chars": 35814
+  },
+  {
+    "id": 3968,
+    "title": "Resolving entries into indicators",
+    "chars": 82828
+  },
+  {
+    "id": 17910,
+    "title": "MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning",
+    "chars": 50328
+  },
+  {
+    "id": 18566,
+    "title": "Detecting and Classifying Fractal Patterns Using Machine Learning",
+    "chars": 38832
+  },
+  {
+    "id": 13915,
+    "title": "MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves",
+    "chars": 36689
+  }
+]

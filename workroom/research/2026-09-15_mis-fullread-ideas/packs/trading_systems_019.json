@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_019",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_019",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18355,
+      "title": "Mining Central Bank Balance Sheet Data to Get a Picture of Global Liquidity",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18355.md"
+    },
+    {
+      "id": 18414,
+      "title": "Neural Networks in Trading: A Cross-Domain Time Series Forecasting Framework (TimeFound)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18414.md"
+    },
+    {
+      "id": 18447,
+      "title": "Neural Networks in Trading: A Cross-Domain Time Series Forecasting Framework (Conclusion)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18447.md"
+    },
+    {
+      "id": 18453,
+      "title": "An Introduction to the Study of Fractal Market Structures Using Machine Learning",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18453.md"
+    },
+    {
+      "id": 18499,
+      "title": "Neural Networks in Trading: An Intelligent Forecast Pipeline (Time-MoE)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18499.md"
+    },
+    {
+      "id": 18527,
+      "title": "Neural Networks in Trading: An Intelligent Forecast Pipeline (Sparse Mixture of Experts)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18527.md"
+    },
+    {
+      "id": 18548,
+      "title": "Neural Networks in Trading: An Intelligent Forecast Pipeline (Conclusion)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18548.md"
+    },
+    {
+      "id": 18553,
+      "title": "Application of the Grey Model in Technical Analysis of Financial Time Series",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18553.md"
+    },
+    {
+      "id": 18568,
+      "title": "Backtracking Search Algorithm (BSA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18568.md"
+    },
+    {
+      "id": 18592,
+      "title": "Analyzing Price Time Gaps in MQL5 (Part I): Building a Basic Indicator",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18592.md"
+    },
+    {
+      "id": 18596,
+      "title": "Neural Networks in Trading: Adaptive Periodic Segmentation (LightGTS)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18596.md"
+    },
+    {
+      "id": 18605,
+      "title": "Exchange Market Algorithm (EMA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18605.md"
+    }
+  ]
+}

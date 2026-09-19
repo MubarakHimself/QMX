@@ -1,0 +1,134 @@
+20: # Data Science and ML (Part 39): News + Artificial Intelligence, Would You Bet on it?
+25: | 13 May 2025 at 05:22
+38: - [Introduction](https://www.mql5.com/en/articles/17986#introduction)
+39: - [Collecting the news](https://www.mql5.com/en/articles/17986#collecting_the_news)
+40: - [Preparing news data for AI Models Training](https://www.mql5.com/en/articles/17986#preparing_news_data_for_ai_models_training)
+41: - [Training an AI model on news data](https://www.mql5.com/en/articles/17986#training_an_ai_model_on_news_data)
+42: - [News + AI Trading robot](https://www.mql5.com/en/articles/17986#news_ai_trading_robot_ea)
+43: - [Conclusion](https://www.mql5.com/en/articles/17986#conclusion)
+45: ### Introduction
+51: Since news describes what's happening in the world in a specific region or country and their expected outcomes, they are one of the best predictors of financial markets. For example, on EURUSD, a rising CPI indicated on the Core CPI news for the EUR currency could result in a bullish EUR as it often increases expectations of tighter monetary policy (rate hikes) and could also lead to a bearish USD
+61: ### Collecting the News
+69: ```
+74:     ENUM_CALENDAR_EVENT_SECTOR sector[];         //The sector a news is related to
+75:     ENUM_CALENDAR_EVENT_IMPORTANCE importance[]; //Event importance
+80: ```
+82: *This structure represents some of the news attributes provided by [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#:~:text=struct-,MqlCalendarEvent,-%7B%0A%C2%A0%C2%A0%C2%A0ulong) and [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#:~:text=struct-,MqlCalendarValue,-%7B%0A%C2%A0%C2%A0%C2%A0ulong).*
+86: ```
+96:    MqlCalendarValue values[]; //https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue
+99:          int all_news = CalendarValueHistory(values, rates[i].time, rates[i+1].time, NULL, NULL); //we obtain all the news with their values https://www.mql5.com/en/docs/calendar/calendarvaluehistory
+104:               CalendarEventById(values[n].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+106:               MqlCalendarCountry country; //The couhtry where the currency pair originates
+107:               CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+120: ```
+128: ```
+157:    MqlCalendarValue values[]; //https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue
+166:          int all_news = CalendarValueHistory(values, rates[i].time, rates[i+1].time, NULL, NULL); //we obtain all the news with their values https://www.mql5.com/en/docs/calendar/calendarvaluehistory
+171:               CalendarEventById(values[n].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+173:               MqlCalendarCountry country; //The couhtry where the currency pair originates
+174:               CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+206: ```
+216: ### Preparing News Data for AI Models Training
+220: ```
+224: ```
+228: |  | Time | Open | High | Low | Close | Name | Sector | Importance | Actual | Forecast | Previous |
+229: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+230: | 0 | 2023.01.02 01:00:00 | 1.06967 | 1.06976 | 1.06933 | 1.06935 | New Year's Day | CALENDAR\_SECTOR\_HOLIDAYS | CALENDAR\_IMPORTANCE\_NONE | 0.0 | 0.0 | 0.0 |
+231: | 1 | 2023.01.02 01:15:00 | 1.06934 | 1.06947 | 1.06927 | 1.06938 | New Year's Day | CALENDAR\_SECTOR\_HOLIDAYS | CALENDAR\_IMPORTANCE\_NONE | 0.0 | 0.0 | 0.0 |
+232: | 2 | 2023.01.02 01:30:00 | 1.06939 | 1.06943 | 1.06939 | 1.06942 | New Year's Day | CALENDAR\_SECTOR\_HOLIDAYS | CALENDAR\_IMPORTANCE\_NONE | 0.0 | 0.0 | 0.0 |
+233: | 3 | 2023.01.02 01:45:00 | 1.06943 | 1.06983 | 1.06942 | 1.06983 | New Year's Day | CALENDAR\_SECTOR\_HOLIDAYS | CALENDAR\_IMPORTANCE\_NONE | 0.0 | 0.0 | 0.0 |
+234: | 4 | 2023.01.02 02:00:00 | 1.06984 | 1.06989 | 1.06984 | 1.06989 | New Year's Day | CALENDAR\_SECTOR\_HOLIDAYS | CALENDAR\_IMPORTANCE\_NONE | 0.0 | 0.0 | 0.0 |
+238: ```
+240: ```
+244: ```
+263: ```
+273: Since after news releases the markets experiences huge volatility and unexpected spikes leading to a plenty of noise, let's create the target variable for 15 bars ahead (approximately 4 hours ahead in time).
+275: ```
+285: ```
+293: ```
+297: ```
+305: ```
+307: ```
+309: ```
+326: ```
+336: |  | Time | Open | High | Low | Close | Name | Sector | Importance | Actual | Forecast | Previous | Future Close | Signal |
+337: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+338: | 0 | 2023.01.02 01:00:00 | 1.06967 | 1.06976 | 1.06933 | 1.06935 | 162 | 4 | 3 | 0.0 | 0.0 | 0.0 | 1.06880 | 0 |
+339: | 1 | 2023.01.02 01:15:00 | 1.06934 | 1.06947 | 1.06927 | 1.06938 | 162 | 4 | 3 | 0.0 | 0.0 | 0.0 | 1.06888 | 0 |
+340: | 2 | 2023.01.02 01:30:00 | 1.06939 | 1.06943 | 1.06939 | 1.06942 | 162 | 4 | 3 | 0.0 | 0.0 | 0.0 | 1.06891 | 0 |
+341: | 3 | 2023.01.02 01:45:00 | 1.06943 | 1.06983 | 1.06942 | 1.06983 | 162 | 4 | 3 | 0.0 | 0.0 | 0.0 | 1.06892 | 0 |
+342: | 4 | 2023.01.02 02:00:00 | 1.06984 | 1.06989 | 1.06984 | 1.06989 | 162 | 4 | 3 | 0.0 | 0.0 | 0.0 | 1.06897 | 0 |
+346: ```
+360: ```
+364: ### Training an AI Model on News Data
+368: ```
+385: # Fit the model to the training data
+387: ```
+397: ```
+408: ```
+418: ```
+423: ```
+435: ```
+438: ```
+448: ```
+449: # Registering ONNX converter
+459: # Final conversion
+468: # And save.
+471: ```
+473: ### News + AI Trading Robot (EA)
+477: ```
+478: #define NEWS_CSV "EURUSD.PERIOD_M15.News.csv"         //For simulating news on the strategy tester, making testing possible
+480: #define SECTOR_CLASSES "Sector_classes.bin"
+481: #define NAME_CLASSES "Name_classes.bin"
+482: #define IMPORTANCE_CLASSES "Importance_classes.bin"
+483: #define LIGHTGBM_MODEL "lightgbm.EURUSD.news.M15.onnx" //AI model 
+487: #property  tester_file NEWS_CSV
+488: #property  tester_file SECTOR_CLASSES 
+489: #property  tester_file NAME_CLASSES
+490: #property  tester_file IMPORTANCE_CLASSES 
+491: #property  tester_file LIGHTGBM_MODEL
+492: ```
+496: ```
+499: #include <Trade\Trade.mqh>
+500: #include <Trade\PositionInfo.mqh>
+501: #include <pandas.mqh>   //https://www.mql5.com/en/articles/17030
+502: #include <Lightgbm.mqh> //For importing LightGBM model
+507: ```
+511: ```
+528: ```
+532: ```
+536: ```
+540: ```
+609: ```
+613: ```
+615: ```
+623: ```
+625: ```
+629: ```
+636: ```
+640: ```
+693:       int all_news = CalendarValueHistory(calendar_values, rates[0].time, rates[0].time+PeriodSeconds(timeframe), NULL, NULL); //we obtain all the news with their calendar_values https://www.mql5.com/en/docs/calendar/calendarvaluehistory
+701:            CalendarEventById(calendar_values[n].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+703:            MqlCalendarCountry country; //The couhtry where the currency pair originates
+704:            CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+714:                   news_data.actual = !MathIsValidNumber(calendar_values[n].GetActualValue()) ? 0 : calendar_values[n].GetActualValue();
+715:                   news_data.forecast = !MathIsValidNumber(calendar_values[n].GetForecastValue()) ? 0 : calendar_values[n].GetForecastValue();
+716:                   news_data.previous = !MathIsValidNumber(calendar_values[n].GetPreviousValue()) ? 0 : calendar_values[n].GetPreviousValue();
+733: ```
+741: ```
+779: ```
+787: - Symbol: EURUSD
+788: - Timeframe: PERIOD\_M15
+789: - Modelling: Open Prices Only
+797: ### Conclusion
+799: As you can see from the outcome from the strategy tester, the combination of news and a capable machine learning model (LightGBM) produced impressive predictive and trading outcomes on the year it was trained on.
+811: | Filename & Path | Description & Usage |
+812: | --- | --- |
+813: | Files\AI+NFP.mq5 | The main expert advisor for deploying AI models and news for trading & testing purposes. |
+814: | Files\Collect News.mq5 | A script for collecting news from MetaTrader 5 and exporting them to a CSV file. |
+815: | Include\Lightgbm.mqh | A library for loading and deploying the LightGBM model in ONNX format. |
+816: | Include\pandas.mqh | A library containing Pandas-Like Dataframe for data storage and manipulation. |
+817: | Files\\* | ONNX, CSV, and binary files used in this article can be located under this folder. |
+818: | [Python\nfp-ai.ipynb](https://www.kaggle.com/code/omegajoctan/nfp-ai/notebook?scriptVersionId=238381045 "https://www.kaggle.com/code/omegajoctan/nfp-ai/notebook?scriptVersionId=238381045") | Python's Jupyter notebook where all the python code for training, data cleaning, etc. can be found. |
+842: [Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs](https://www.mql5.com/en/articles/17999)
+844: In this article, we optimize our economic calendar with smart event filtering and targeted logging for faster, clearer backtesting in live and offline modes. We streamline event processing and focus logs on critical trade and dashboard events, enhancing strategy visualization. These improvements enable seamless testing and refinement of news-driven trading strategies.

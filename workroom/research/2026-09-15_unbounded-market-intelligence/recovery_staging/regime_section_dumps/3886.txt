@@ -1,0 +1,289 @@
+# Using the Kalman Filter for price direction prediction
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 13 December 2017 at 03:19
+39 298
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+41](https://www.mql5.com/en/forum/222402 "Comments")
+[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)
+### Introduction
+The charts of currency and stock rates always contain price fluctuations, which differ in frequency and amplitude. Our task is to determine the main trends based on these short and long movements. Some traders draw trendlines on the chart, others use indicators. In both cases, our purpose is to separate the true price movement from noise caused by the influence of minor factors that have a short-term effect on the price. In this article I propose using the Kalman filter to separate the major movement from the market noise.
+The idea of ​​using digital filters in trading is not new. For example, I have already [described](https://www.mql5.com/en/articles/3456) the use of low-pass filters. But there is no limit to perfection, so let us consider one more strategy and compare results.
+### 1. Kalman Filter Principle
+So, what is the Kalman filter and why is it interesting to us? Here is the definition of the filter from [Wikipedia](https://en.wikipedia.org/wiki/Kalman_filter "https://en.wikipedia.org/wiki/Kalman_filter"):
+***Kalman filter*** is an algorithm that uses a series of measurements observed over time, containing statistical noise and other inaccuracies.
+It means that the filter was originally designed to work with noisy data. Also, it is able to work with incomplete data. Another advantage is that it is designed for and applied in dynamic systems; our price chart belongs to such systems.
+The filter algorithm works in a two-step process:
+1. Extrapolation (prediction)
+2. Update (correction)
+#### 1.1. Extrapolation, Prediction of System Values
+The first phase of the filter operation algorithm utilizes an underlying model of the process being analyzed. Based on this model, a one-step forward prediction is formed.
+Where:
+- xk is the extrapolated value of the dynamic system at the k-th step,
+- Fk is the state transition model showing the dependence of the current system state on the previous state,
+- x^k-1 is the previous state of the system (filter value at the previous step),
+- Bk is the control-input model showing the control influence on the system,
+- uk is the control vector on the system.
+A control effect can be, for example, a news factor. However, in practice the effect is unknown and is omitted, while its influence refers to noise.
+Then the system's covariance error is predicted:
+Where:
+- Pk is the extrapolated covariance matrix of the dynamic system state vector,
+- Fk is the state transition model showing the dependence of the current system state on the previous state,
+- P^k-1 is the covariance matrix of the state vector updated at the previous step,
+- Qk is the covariance noise matrix of the process.
+#### 1.2. Update of System Values
+The second step of the filter algorithm starts with the measurement of the actual system state zk. The actually measured value of the system state is specified taking into account the true system state and the measurement error. In our case, the measurement error is the effects of noise on the dynamic system.
+To this moment, we have two different values that represent the state of a single dynamic process. They include the extrapolated value of the dynamic system calculated at the first step, and the actual measured value. Each of these values with a certain degree of probability characterizes the true state of our process, which, therefore, is somewhere between these two value. So, our goal is to determine the confidence, i.e. the extent, to which this or that value is trusted. Iterations of the Kalman filter's second phase are performed for this purpose.
+Using available data, we determine the deviation of the actual system state from the extrapolated value.
+Here:
+- yk is the deviation of the actual state of the system at the k-th step after extrapolation,
+- zk is the actual state of the system at the k-th step,
+- Hk is the measurement matrix that displays dependence of the actual system state on the calculated data (often takes a value of one in practice),
+- xk is the extrapolated value of the dynamic system at the k-th step.
+At the next step, a covariance matrix for the error vector is calculated:
+Here:
+- Sk is the covariance matrix of the error vector at the k-th step,
+- Hk is the measurement matrix that displays dependence of the actual system state on the calculated data,
+- Pk is the extrapolated covariance matrix of the dynamic system state vector,
+- Rk is the covariance matrix of the measurement noise.
+Then the optimal gain is determined. Gain reflects the confidence in the calculated and empirical values.
+Here:
+- Kk is the matrix of Kalman gain values,
+- Pk is the extrapolated covariance matrix of the dynamic system state vector,
+- Hk is the measurement matrix that displays dependence of the actual system state on the calculated data,
+- Sk is the covariance matrix of the error vector at the k-th step.
+Now, we use Kalman gain to update the system state value and the covariance matrix of the state vector estimate.
+Where:
+- x^k and x^k-1 are updated values at the k-th and k-1 step,
+- Kk is the matrix of Kalman gain values,
+- yk is the deviation of the actual state of the system at the k-th step after extrapolation.
+Where:
+
+----- METHOD/CLAIM SWEEP -----
+
+![Using the Kalman Filter for price direction prediction](https://c.mql5.com/i/articles/overlay.png)
+
+# Using the Kalman Filter for price direction prediction
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Introduction
+The charts of currency and stock rates always contain price fluctuations, which differ in frequency and amplitude. Our task is to determine the main trends based on these short and long movements. Some traders draw trendlines on the chart, others use indicators. In both cases, our purpose is to separate the true price movement from noise caused by the influence of minor factors that have a short-term effect on the price. In this article I propose using the Kalman filter to separate the major movement from the market noise.
+### 1. Kalman Filter Principle
+So, what is the Kalman filter and why is it interesting to us? Here is the definition of the filter from [Wikipedia](https://en.wikipedia.org/wiki/Kalman_filter "https://en.wikipedia.org/wiki/Kalman_filter"):
+***Kalman filter*** is an algorithm that uses a series of measurements observed over time, containing statistical noise and other inaccuracies.
+It means that the filter was originally designed to work with noisy data. Also, it is able to work with incomplete data. Another advantage is that it is designed for and applied in dynamic systems; our price chart belongs to such systems.
+The filter algorithm works in a two-step process:
+1. Extrapolation (prediction)
+#### 1.1. Extrapolation, Prediction of System Values
+The first phase of the filter operation algorithm utilizes an underlying model of the process being analyzed. Based on this model, a one-step forward prediction is formed.
+![State Prediction](https://c.mql5.com/2/29/1.1_05.png "State Prediction") (1.1)
+- xk is the extrapolated value of the dynamic system at the k-th step,
+- Fk is the state transition model showing the dependence of the current system state on the previous state,
+- x^k-1 is the previous state of the system (filter value at the previous step),
+- Bk is the control-input model showing the control influence on the system,
+![Prediction of the covariance matrix](https://c.mql5.com/2/29/1.2_05.png "Prediction of the covariance matrix") (1.2)
+
+Where:
+- Pk is the extrapolated covariance matrix of the dynamic system state vector,
+- P^k-1 is the covariance matrix of the state vector updated at the previous step,
+- Qk is the covariance noise matrix of the process.
+#### 1.2. Update of System Values
+The second step of the filter algorithm starts with the measurement of the actual system state zk. The actually measured value of the system state is specified taking into account the true system state and the measurement error. In our case, the measurement error is the effects of noise on the dynamic system.
+- yk is the deviation of the actual state of the system at the k-th step after extrapolation,
+- zk is the actual state of the system at the k-th step,
+- Hk is the measurement matrix that displays dependence of the actual system state on the calculated data (often takes a value of one in practice),
+- xk is the extrapolated value of the dynamic system at the k-th step.
+At the next step, a covariance matrix for the error vector is calculated:
+![The covariance matrix of the error vector](https://c.mql5.com/2/29/2.2_05.png "The covariance matrix of the error vector") (2.2)
+Here:
+- Sk is the covariance matrix of the error vector at the k-th step,
+- Hk is the measurement matrix that displays dependence of the actual system state on the calculated data,
+- Rk is the covariance matrix of the measurement noise.
+Then the optimal gain is determined. Gain reflects the confidence in the calculated and empirical values.
+![Kalman gain](https://c.mql5.com/2/29/2.3_05.png "Kalman gain")  (2.3)
+- Kk is the matrix of Kalman gain values,
+- Sk is the covariance matrix of the error vector at the k-th step.
+
+Now, we use Kalman gain to update the system state value and the covariance matrix of the state vector estimate.
+![Updated state of the system](https://c.mql5.com/2/29/2.4_05.png "Updated state of the system") (2.4)
+Where:
+- x^k and x^k-1 are updated values at the k-th and k-1 step,
+- yk is the deviation of the actual state of the system at the k-th step after extrapolation.
+![The updated covariance matrix of the vector](https://c.mql5.com/2/29/2.5_05.png "The updated covariance matrix of the vector") (2.5)
+- P^k is the updated covariance matrix of the dynamic system state vector,
+- I is the identity matrix,
+- Pk is the extrapolated covariance matrix of the dynamic system state vector.
+All the above can be summarized as the following scheme
+### 2. Practical Implementation of Kalman Filter
+Now, we've got an idea of ​​how the Kalman filter works. Let's move on to its practical implementation. The above matrix representation of filter formulas allows receiving data from several sources. I suggest building a filter at the bar close prices and simplify the matrix representation to a discrete one.
+#### 2.1. Initialization of Input Data
+Before starting to write the code, let us define input data.
+```
+class CKalman
+  {
+private:
+   bool              cb_AR_Flag;                   //Flag of autoregression calculation
+//--- Values of Kalman's filter
+   double            cd_X;                         // X
+   double            cda_F[];                      // F array
+CKalman::CKalman(uint bars, uint shift, string symbol, ENUM_TIMEFRAMES period)
+   ci_HistoryBars =  bars;
+
+I used an algorithm from the article [[1](https://www.mql5.com/en/articles/3886#practical_evaluation_of_the_adaptive_market)] to create an autoregressive model. Two private functions need to be added to the class for this purpose.
+bool CKalman::Autoregression(void)
+   //--- check for insufficient data
+Then we copy actual state transition coefficients to the cda\_F array, from where they can be further used to calculate new coefficients.
+#### 2.2. Price Movement Prediction
+After we have received all the initial data required for the filter operation, we can proceed to its practical implementation. The first step of Kalman Filter operation is the [one-step forward system state prediction](https://www.mql5.com/en/articles/3886#r1_1). Let us create the Forecast public function in which we will implement functions [1.1](https://www.mql5.com/en/articles/3886#f1_1). and [1.2](https://www.mql5.com/en/articles/3886#f1_2).
+double CKalman::Forecast()
+   if(!cb_AR_Flag)
+#### 2.3. Correction of the System State
+At the next phase, after receiving the actual bar close value, we correct the system state. For this purpose, let's create the public Correction function. In the function parameters, we will pass the actual system state value, i.e. the actual bar closing price.
+### 3. Practical Demonstration of the Kalman Filter
+Let's test how this Kalman filter based class works in practice. Let's create an indicator based on this class. At the opening of a new candlestick, the indicator calls the system update function and then calls the function predicting the close price of the current bar. The class functions are called in a reverse order, because we call the update (correction) function for the previous closed bar and a forecast for the current newly opened bar, whose closing price is yet unknown.
+The indicator will have two buffers. The predicted values of the system state will be added to the first buffer, and updated values will be added to the second one. I intentionally use two buffers so that the indicator would not be redrawn and we could see how the system is updated (corrected) at the second filter operation phase. The indicator code is simple and is available in the below attachment. Here is the result of the indicator operation.
+![Kalman Filter on the Chart](https://c.mql5.com/2/29/eurusd-m30-roboforex-cy-ltd-filtr-kalmanal1n.png "Kalman Filter on the Chart")
+Three broken lines are displayed on the chart:
+### 4. Creating a Trading Signals Module for the MQL5 Wizard
+We see on the above chart that the red system state prediction line is smoother than the black line showing the actual price. The blue line showing the corrected system state is always in between. In other words, the blue line above the red one indicates a bullish trend. Conversely, the blue line below the red one is an indication of a bearish trend. The intersection of the blue and red lines is a trend change signal.
+//| Type=SignalAdvanced                                                       |
+//| Name=Signals of Kalman's filter design by DNG                             |
+//| ShortName=Kalman_Filter                                                   |
+//| Class=CSignalKalman                                                       |
+//| Page=https://www.mql5.com/ru/articles/3886                                |
+//| Parameter=TimeFrame,ENUM_TIMEFRAMES,PERIOD_H1,Timeframe                   |
+//+------------------------------------------------------------------+
+class CSignalKalman: public CExpertSignal
+  {
+private:
+   uint              ci_ShiftPeriod;      //Period for shift
+   CKalman          *Kalman;              //Class of Kalman's filter
+   //---
+   datetime          cdt_LastCalcIndicators;
+```
+CSignalKalman::CSignalKalman(void):    ci_HistoryBars(3000),
+                                       ci_ShiftPeriod(0),
+                                       cdt_LastCalcIndicators(0)
+   if(CheckPointer(m_symbol)!=POINTER_INVALID)
+      Kalman=new CKalman(ci_HistoryBars,ci_ShiftPeriod,m_symbol.Name(),ce_Timeframe);
+  }
+bool CSignalKalman::CalculateIndicators(void)
+   //--- Check time of last calculation
+        {
+         Kalman=new CKalman(ci_HistoryBars,ci_ShiftPeriod,m_symbol.Name(),ce_Timeframe);
+         if(CheckPointer(Kalman)==POINTER_INVALID)
+           {
+      else
+         Kalman.Clear_AR_Flag();
+     }
+      bars=(int)fmax(ci_ShiftPeriod,1);
+      Kalman.Clear_AR_Flag();
+     {
+      cd_forecast=Kalman.Forecast();
+      cd_corretion=Kalman.Correction(close[i]);
+```
+
+First, we start the filter value recalculation function. If the recalculation of values fails, exit the function and return 0.
+int CSignalKalman::ShortCondition(void)
+  {
+   if(!CalculateIndicators())
+If the filter values ​​are successfully recalculated, compare the predicted value with the corrected one. If the predicted value is greater than the corrected one, the function returns a weight value. Otherwise 0 is returned.
+   int result=0;
+   //--- 
+   if(cd_corretion<cd_forecast)
+      result=80;
+   return result;
+  }
+### 5. Expert Advisor Testing
+A detailed description of Expert Advisor creation based on the signals module is provided in article [[1](https://www.mql5.com/en/articles/3456#para4)], so we skip this step. Note that for the testing purposes, the EA is only based on one [trading module](https://www.mql5.com/en/articles/3886#r4) described above with a static lot and without using a trailing stop.
+Testing results showed 49.33% of profitable trades. The profits of the highest and average profitable deal exceed the corresponding values of losing trades. In general, the EA testing showed profit for the selected period, and the profit factor was 1.56. Testing screenshots are provided below.
+![](https://c.mql5.com/2/30/settings.png)![](https://c.mql5.com/2/30/settings2.png)
+![Testing results on the price chart](https://c.mql5.com/2/29/eurusd-h1-roboforex-cy-ltd-test-sovetnika-po-filtru-kalmanah1q.png "Testing results on the price chart")
+  
+### Conclusion
+We have analyzed the principle of the Kalman filter and have created an indicator and an Expert Advisor on its basis. Testing has shown that this is a promising strategy and has helped reveal a number of bottlenecks that need to be addressed.
+### URL Links
+
+1. [Practical Evaluation of the Adaptive Market Following Method](https://www.mql5.com/en/articles/3456)
+2. [Analysis of the Main Characteristics of Time Series](https://www.mql5.com/en/articles/292)
+3. [AR Extrapolation of Price - Indicator for MetaTrader 5](https://www.mql5.com/en/code/129)
+4. [MQL5 Wizard: How to Create a Module of Trading Signals](https://www.mql5.com/en/articles/226)
+5. [Create Your Own Trading Robot in 6 Steps!](https://www.mql5.com/en/articles/367)
+| --- | --- | --- | --- |
+| 1 | Kalman.mqh | Class library | Kalman Filter class |
+| 2 | SignalKalman.mqh | Class library | A Kalman filter based trading signals module |
+| 3 | Kalman\_indy.mq5 | Indicator | The Kalman Filter indicator |
+| 4 | Kalman\_expert.mq5 | EA | An Expert Advisor based on the strategy utilizing the Kalman filter |
+| 5 | Kalman\_test.zip | Archive | The archive contains the EA testing results obtained by running the EA in the Strategy Tester. |
+Translated from Russian by MetaQuotes Ltd.   
+[Kalman\_test.zip](https://www.mql5.com/en/articles/download/3886/kalman_test.zip "Download Kalman_test.zip")
+(95.5 KB)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+We have analyzed the principle of the Kalman filter and have created an indicator and an Expert Advisor on its basis. Testing has shown that this is a promising strategy and has helped reveal a number of bottlenecks that need to be addressed.
+
+Please note that the article only provides general information and an example of creating an Expert Advisor, which in no way is a "Holy Grail" for use in real trading.
+
+I wish everyone a serious approach to trading and profitable trades!
+
+### URL Links
+
+1. [Practical Evaluation of the Adaptive Market Following Method](https://www.mql5.com/en/articles/3456)
+2. [Analysis of the Main Characteristics of Time Series](https://www.mql5.com/en/articles/292)
+3. [AR Extrapolation of Price - Indicator for MetaTrader 5](https://www.mql5.com/en/code/129)
+4. [MQL5 Wizard: How to Create a Module of Trading Signals](https://www.mql5.com/en/articles/226)
+5. [Create Your Own Trading Robot in 6 Steps!](https://www.mql5.com/en/articles/367)
+6. [MQL5 Wizard: New Version](https://www.mql5.com/en/articles/275)
+
+**Programs used in the article:**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | Kalman.mqh | Class library | Kalman Filter class |
+| 2 | SignalKalman.mqh | Class library | A Kalman filter based trading signals module |
+| 3 | Kalman\_indy.mq5 | Indicator | The Kalman Filter indicator |
+| 4 | Kalman\_expert.mq5 | EA | An Expert Advisor based on the strategy utilizing the Kalman filter |
+| 5 | Kalman\_test.zip | Archive | The archive contains the EA testing results obtained by running the EA in the Strategy Tester. |
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/3886>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/3886.zip "Download all attachments in the single ZIP archive")
+
+[Kalman\_test.zip](https://www.mql5.com/en/articles/download/3886/kalman_test.zip "Download Kalman_test.zip")
+(95.5 KB)
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/3886/mql5.zip "Download MQL5.zip")
+(290.55 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Resolving entries into indicators](https://c.mql5.com/2/30/eagoh7z681u4_pdq0h_2f_8dqlderd9j5.png)
+[Resolving entries into indicators](https://www.mql5.com/en/articles/3968)
+
+Different situations happen in trader’s life. Often, the history of successful trades allows us to restore a strategy, while looking at a loss history we try to develop and improve it. In both cases, we compare trades with known indicators. This article suggests methods of batch comparison of trades with a number of indicators.
+
+![R-squared as an estimation of quality of the strategy balance curve](https://c.mql5.com/2/30/eoezuq_R-hwedkf3.png)
+[R-squared as an estimation of quality of the strategy balance curve](https://www.mql5.com/en/articles/2358)
+
+This article describes the construction of the custom optimization criterion R-squared. This criterion can be used to estimate the quality of a strategy's balance curve and to select the most smoothly growing and stable strategies. The work discusses the principles of its construction and statistical methods used in estimation of properties and quality of this metric.
+
+![Creating a new trading strategy using a technology of resolving entries into indicators](https://c.mql5.com/2/30/MQL5-avatar-New_trade_system-002.png)
+[Creating a new trading strategy using a technology of resolving entries into indicators](https://www.mql5.com/en/articles/4192)
+
+The article suggests a technology helping everyone to create custom trading strategies by assembling an individual indicator set, as well as to develop custom market entry signals.
+
+![Comparing different types of moving averages in trading](https://c.mql5.com/2/29/zcacct00h_ape02uz5y_q4fbs_uexqftdan4_p48gwsf_v_v4e923xz_2.png)
+[Comparing different types of moving averages in trading](https://www.mql5.com/en/articles/3791)
+
+This article deals with seven types of moving averages (MA) and a trading strategy to work with them. We also test and compare various MAs at a single trading strategy and evaluate the efficiency of each moving average compared to others.
+
+[![](https://www.mql5.com/ff/si/5k7a2kbftss6k97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=sluvodmxijuhyrvwkeltvuiblamacvjk&ssn=1788804052909773890&ssn_dr=0&ssn_sr=0&fv_date=1788804052&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F3886&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Using%20the%20Kalman%20Filter%20for%20price%20direction%20prediction%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880405224276656&fz_uniq=5127817448551771603&sv=2552)

@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_023",
+  "section": "Trading",
+  "parent_shard": "trading_023",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 21905,
+      "title": "How to connect AI agents to MetaTrader 5 via MCP",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21905.md"
+    },
+    {
+      "id": 22187,
+      "title": "Position Management: Safe Pyramiding with a Unified Stop in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22187.md"
+    },
+    {
+      "id": 22190,
+      "title": "From Novice to Expert: Creating an MTF CRT Overlay Indicator in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22190.md"
+    },
+    {
+      "id": 22341,
+      "title": "Building a Divergence System: Creating the MPO4 Custom Indicator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22341.md"
+    },
+    {
+      "id": 22718,
+      "title": "AI Trading Platform: Why MetaTrader 5 Is the Best Choice for Algorithmic Trading with Python, ONNX, and AI Assistant",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22718.md"
+    },
+    {
+      "id": 22855,
+      "title": "Position Management: A Reusable Trade Journal with Live Maximum Adverse Excursion, Maximum Favorable Excursion, and R-Multiple Tracking in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22855.md"
+    },
+    {
+      "id": 22967,
+      "title": "Building a Compile-Time Unit Testing Framework in MQL5 Using Preprocessor Assertions",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22967.md"
+    },
+    {
+      "id": 23037,
+      "title": "Shape of Price: An Introduction to TDA and Takens Embedding in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23037.md"
+    },
+    {
+      "id": 23106,
+      "title": "From Cloud to Complex: The Vietoris-Rips Filtration in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23106.md"
+    },
+    {
+      "id": 23161,
+      "title": "Building a Divergence System (Part II): Adaptive SuperTrend Custom Indicator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23161.md"
+    },
+    {
+      "id": 23204,
+      "title": "MQL5 Bootstrap (II): Essential Validators for Robust Trading Systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23204.md"
+    },
+    {
+      "id": 23233,
+      "title": "Persistent Homology in MQL5: The Reduction Algorithm and the Persistence Diagram",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23233.md"
+    }
+  ]
+}

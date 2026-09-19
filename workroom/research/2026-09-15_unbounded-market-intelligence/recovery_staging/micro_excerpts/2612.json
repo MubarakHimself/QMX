@@ -1,0 +1,57 @@
+{
+  "id": 2612,
+  "title": "Testing trading strategies on real ticks",
+  "author_guess": "MetaQuotes",
+  "chars": 14105,
+  "n_paras": 48,
+  "headings": [
+    "# Testing trading strategies on real ticks",
+    "### Trading strategy",
+    "### Testing",
+    "### Comparing results of different test modes",
+    "###",
+    "### Trading systems depending on ticks",
+    "###",
+    "### Four tick generation modes",
+    "### Start developing a system with \"1 minute OHLC\" mode",
+    "### Next step – debugging and \"Every tick\" mode",
+    "### Accuracy vs speed"
+  ],
+  "intro": [
+    "# Testing trading strategies on real ticks",
+    "[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n—\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 4 August 2016 at 06:44",
+    "100 908\n[\n8](https://www.mql5.com/en/forum/93267 \"Comments\")",
+    "[MetaQuotes](https://www.mql5.com/en/users/metaquotes)",
+    "The article provides the results of testing a simple trading strategy in three modes: \"**1 minute OHLC**\" using only Open, High, Low and Close prices of minute bars; [detailed modeling](https://www.mql5.com/en/articles/75) in \"**Every tick**\" mode, as well as the most accurate \"**Every tick based on real ticks**\" mode applying actual historical data.",
+    "Comparing the results allows us to assess the quality in various modes, as well as helps us to use the tester more efficiently in order to receive results faster. \"1 minute OHLC\" mode allows receiving quick estimated test results, \"Every tick\" mode is closer to reality, while testing on real ticks is most accurate but time-consuming. Keep in mind that errors in a trading robot's logic may affect the number of trading operations making the strategy test results more susceptible to a selected test mode.",
+    "We have developed a simple trading strategy based on a range breakthrough within the last RangeLength bars. The trading rules are as follows: a range of the highest and lowest prices for the last N bars is calculated at the opening of a new bar. The default value of RangeLength parameter of the attached EA is 20 bars. It stands for the width of the window where we build the range.",
+    "After the first breakthrough of the range up- or downwards, the statistics on the incoming ticks starts accumulating (number of ticks above and below the broken range level). As soon as the number of incoming ticks exceeds (or is equal to) TicksForEnter=30, a decision on entering the market at the current price is made. If the range is broken upwards, the number of ticks above the breakout level should exceed the number of ticks below the level. In this case, the EA opens a long position. The opposite case leads to a short position."
+  ],
+  "keyword_hits": [
+    "The article provides the results of testing a simple trading strategy in three modes: \"**1 minute OHLC**\" using only Open, High, Low and Close prices of minute bars; [detailed modeling](https://www.mql5.com/en/articles/75) in \"**Every tick**\" mode, as well as the most accurate \"**Every tick based on real ticks**\" mode applying actual historical data.",
+    "Comparing the results allows us to assess the quality in various modes, as well as helps us to use the tester more efficiently in order to receive results faster. \"1 minute OHLC\" mode allows receiving quick estimated test results, \"Every tick\" mode is closer to reality, while testing on real ticks is most accurate but time-consuming. Keep in mind that errors in a trading robot's logic may affect the number of trading operations making the strategy test results more susceptible to a selected test mode.",
+    "An open position is closed after BarsForExit bars. As you can see, the rules are quite simple. See the screenshot below for more clarity:",
+    "Now, let's see how the EA test results change when applying one of the three different tick modeling modes.",
+    "### Comparing results of different test modes",
+    "Test results in different modes are displayed in the table. The first thing that catches the eye is the difference in the number of trading operations. Thus, all other test results are also different. Testing in \"1 minute OHLC\" took 1.57 seconds which is 23 times faster than in \"Every tick\" mode. Such a difference is important when optimizing the trading system inputs.",
+    "The balance and equity graphs are different as well. As we can see, this simple strategy is not impressive – growth periods are followed by drawdowns and the test graphs look more like a chain of coincidences. The strategy is certainly not suitable for real trading since results are similar to a coin toss.",
+    "Before testing a trading strategy, you should keep in mind that a price simulation mode you are going to select will affect the accuracy of results and amount of time spent in order to obtain them. If you need to quickly check and assess a trading strategy, use \"1 minute OHLC\" mode. It will allow you to evaluate the trading system potential in no time.",
+    "If preliminary results are satisfactory, you can continue debugging and analyzing the trading system using more accurate simulation modes. Here is where the strategy debugging in test mode comes in handy allowing you to set breakpoints and check the status of variables as well as execution of built-in conditions. You may stumble upon unpleasant surprises here if you have not considered some nuances of your system beforehand.",
+    "As we can see from the test results in three modes, traders can and should select a tick modeling mode that is most suitable to their trading strategies. If you test your system on a daily timeframe, \"**Open prices only**\" mode will most probably suit you best since the high test speed will not interfere with the obtained results.",
+    "If you are developing a scalping or arbitrage strategy or if your algorithm is based on indices or real-time synthetic indicators, then you will need \"**Every tick based on real ticks**\" mode. Testing will be much more time-consuming but you will obtain the results as close to reality as possible. Keep in mind though that history never repeats itself. Even the most thoroughly selected inputs cannot guarantee success when launching an EA on a real account."
+  ],
+  "tail": [
+    "[Download ZIP](https://www.mql5.com/en/articles/download/2612.zip \"Download all attachments in the single ZIP archive\")",
+    "[SimpleBreakOut.mq5](https://www.mql5.com/en/articles/download/2612/simplebreakout.mq5 \"Download SimpleBreakOut.mq5\")\n(20.38 KB)",
+    "**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.",
+    "[Graphical Interfaces VII: The Tabs Control (Chapter 2)](https://www.mql5.com/en/articles/2503)",
+    "The first chapter of seventh part introduced three classes of controls for creating tables: text label table (CLabelsTable), edit box table (CTable) and rendered table (CCanvasTable). In this article (chapter two) we are going to consider the Tabs control.",
+    "[Graphical Interfaces VII: the Tables Controls (Chapter 1)](https://www.mql5.com/en/articles/2500)",
+    "The seventh part of the series on MetaTrader graphical interfaces deals with three table types: text label, edit box and rendered one. Another important and frequently used controls are tabs allowing you to show/hide groups of other controls and develop space effective interfaces in your MQL applications.",
+    "[Graphical Interfaces VIII: The Calendar Control (Chapter 1)](https://www.mql5.com/en/articles/2537)",
+    "In the part VIII of the series of articles dedicated to creating graphical interfaces in MetaTrader, we will consider complex composite controls like calendars, tree view, and file navigator. Due to the large amount of information, there are separate articles written for every subject. The first chapter of this part describes the calendar control and its expanded version — a drop down calendar.",
+    "[The checks a trading robot must pass before publication in the Market](https://www.mql5.com/en/articles/2555)",
+    "Before any product is published in the Market, it must undergo compulsory preliminary checks in order to ensure a uniform quality standard. This article considers the most frequent errors made by developers in their technical indicators and trading robots. An also shows how to self-test a product before sending it to the Market.",
+    "[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F523%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dchoose.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&a=fyznzyduwsltgnhlftytumasbfgbwlqw&s=91bc0eca8f132d3df7d14cdb1baebac753aef179403d60dc83856af55a4d6769&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=byguomegylvpbgvztbtncdhtczijqxhi&ssn=1788804932698147436&ssn_dr=0&ssn_sr=0&fv_date=1788804932&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F2612&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Testing%20trading%20strategies%20on%20real%20ticks%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880493293848998&fz_uniq=6464134958640951620&sv=2552)"
+  ]
+}

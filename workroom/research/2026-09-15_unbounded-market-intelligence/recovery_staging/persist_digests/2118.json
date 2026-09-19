@@ -1,0 +1,40 @@
+{
+  "article_id": 2118,
+  "title": "Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+  "chars": 46323,
+  "heads": [
+    "# Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+    "### Problem",
+    "### The Idea",
+    "### The Pseudo-EA, First Approach",
+    "### Pseudo-EA, Improving",
+    "### The Pseudo-EA, Final Version",
+    "### Analysing the results in EXCEL, Plausibility Check",
+    "###",
+    "### Parameter Check",
+    "### Visual Mode",
+    "### Conclusion"
+  ],
+  "intro": "--- id: 2118 source_url: https://www.mql5.com/en/articles/2118 title: \"Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets\" author: \"\" author_url: published: 2016-04-13T15:27Z platform: \"MetaTrader 4\" section: \"Examples\" tags: [] series_title: \"\" series_part: source: mql5 language: en --- ![Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets](https://c.mql5.com/i/articles/overlay.png)\n\n[MetaTrader 4](https://www.mql5.com/en/articles/mt4) \u2014 [Examples](https://www.mql5.com/en/articles/mt4/examples) | 13 April 2016 at 11:27\n\n[Carl Schreiber](https://www.mql5.com/en/users/gooly)\n\nThere are too many parameters to optimize.",
+  "conclusion": "A trading-EA that uses the ADX would have to test 54,201 combinations just to optimize this single indicator - hoping that the ADX does what we want it to do! If the trading-EA is not as successful as we have hoped, it would be difficult to address the problem to start improving. After this optimizations that needs only a couple of minutes for all of its 54,201 combinations of the ADX we found out that:\n\n1. The ADX is capable to distinguish between flat and trend markets and 2. We were able to reduce 54,201 to 117 (= 13 (PER) \\* 1 (PRC) \\* 9 (LIM)). 3. The flat market's range is between 372 and 220 points (top 100). 4. The trend market's range is between 1,277 and 782 points.\n\nTherefore we can reduce the initial 2,168,040,000 combinations of the trading-EA to (117\\*40,000=) 4,680,000. That is only 0.21%, and it is either 99.7% faster or a lot better in case of the genetic optimization because more variations of other non-ADX parameters of the trading-EA will be checked. These were the reduced settings for our pseudo-EA:\n\nFurthermore, we get (it depends on the trading ideas, of course), some valuable information for criteria to enter a trade, to exit a trade, and to set or move stops and targets.",
+  "claim_hits": [
+    "title: \"Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets\"",
+    "![Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets](https://c.mql5.com/i/articles/overlay.png)",
+    "# Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+    "A trading EA with many indicators that have multiple parameters will need a lot of time for its optimization as there will be way too many combinations to test. What if we were able to reduce this amount of combinations before we start the optimization of the trading EA? In other words, before coding the trading EA we code a pseudo-EA that asks only specific questions to the market. We split a big problem into smaller ones and solve them separately. This pseudo-EA doesn't trade! As an example we",
+    "Imagine a short term trading idea for the trading EA that depends on knowing whether the market is flat to 'swing-trade' (trading back to the moving average) or it has a trend for a trend following strategy (trading away from the moving average). For this distinction our trading EA should use (only) the ADX on a higher timeframe - here 1h-bars. Beside the ADX the trading-EA might have 5 indicators (for its short term trade management). Each might have 4 parameters to set and and each of them has",
+    "total 2000\\*5\\*4 = 40,000. Let's now add the ADX. For each combination of the ADX' parameters, in theory, we have to pass additionally 40.000 calculations.",
+    "Here in this example we will set the ADX' Period (PER), its Price (PRC) and a Limit (LIM) so that we define a beginning trend by ADX (MODE\\_MAIN) rising above LIM and a flat market by falling below LIM. For the Period PER we might try 2,..,90 (Step1=> 89 different values), for the price we can choose 0,..,6 (=Close,..,Weighted, Step 1=> 7) and for LIM we try 4,..,90 (Step1 => 87). In total we have 89\\*7\\*87 = 54,201 combinations to test. Here is the setup of the Strategy Tester:",
+    "Of course, normally one would use such ranges for the optimization by the Strategy Tester, but firstly we should find meaningless results to see whether we are able to detect and exclude them, and secondly there are educational reasons to expand the ranges. Due to the fact that our pseudo-EA does not trade (no need to use every tick!) and we only have one indicator with 54,201 combinations to test, we can switch off the genetic mode and let the Tester calculate all combinations.",
+    "If we would not do this pre-Adx-optimization or we were not able to",
+    "reduce the number of the Adx combinations, we would have to multiply 40,000",
+    "combinations of other variables of the trading-EA with the ADX' 54,201 combinations and we would get 2,168,040,000 combinations for the",
+    "be able to reduce the Adx' parameter range drastically - that's OK, it is expected! We will get a",
+    "better understanding of the ADX as we will be able to see that the ADX is indeed",
+    "capable to distinguish between flat and trend markets - even if the detection of the flat market detection is a bit more lagging than the trend market (room for improvement?)! And furthermore we",
+    "trading EA due to the found ranges of the flat and trend markets. The",
+    "periods of the ADX are tested from PER: 11..20 (Step 1=> 10), PRC:",
+    "Now we need to determine the criteria for calculating the returned value: **OptVal**. We choose the range of the flat and trend markets, which is the difference between the highest High and the lowest Low of the actual market, and divide \"TrndRange\" by \"FlatRange\" so that the optimizer can maximize this:",
+    "double TrndRangHL, // sum of the highest High - lowest Low of the trend markets"
+  ]
+}

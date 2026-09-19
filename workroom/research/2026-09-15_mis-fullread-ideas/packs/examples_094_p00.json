@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_094_p00",
+  "section": "Examples",
+  "parent_shard": "examples_094",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "the mql5 standard library explorer"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 19341,
+      "title": "The MQL5 Standard Library Explorer (Part 1): Introduction with CTrade, CiMA, and CiATR",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Introduction with CTrade, CiMA, and CiATR",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19341.md"
+    },
+    {
+      "id": 19834,
+      "title": "The MQL5 Standard Library Explorer (Part 2): Connecting Library Components",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Connecting Library Components",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19834.md"
+    },
+    {
+      "id": 20041,
+      "title": "The MQL5 Standard Library Explorer (Part 3): Expert Standard Deviation Channel",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Expert Standard Deviation Channel",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20041.md"
+    },
+    {
+      "id": 20266,
+      "title": "The MQL5 Standard Library Explorer (Part 4): Custom Signal Library",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Custom Signal Library",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20266.md"
+    },
+    {
+      "id": 20289,
+      "title": "The MQL5 Standard Library Explorer (Part 5): Multiple Signal Expert",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Multiple Signal Expert",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20289.md"
+    },
+    {
+      "id": 20478,
+      "title": "The MQL5 Standard Library Explorer (Part 6): Optimizing a generated Expert Advisor",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Optimizing a generated Expert Advisor",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20478.md"
+    },
+    {
+      "id": 20892,
+      "title": "The MQL5 Standard Library Explorer (Part 7): Interactive Position Labeling with CCanvas",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Interactive Position Labeling with CCanvas",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20892.md"
+    },
+    {
+      "id": 21045,
+      "title": "The MQL5 Standard Library Explorer (Part 8) : The Hybrid Trades Journal Logging with CFile",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer () : The Hybrid Trades Journal Logging with CFile",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21045.md"
+    },
+    {
+      "id": 21279,
+      "title": "The MQL5 Standard Library Explorer (Part 9): Using ALGLIB to Filter Excessive MA Crossover Signals",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Using ALGLIB to Filter Excessive MA Crossover Signals",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21279.md"
+    },
+    {
+      "id": 21501,
+      "title": "The MQL5 Standard Library Explorer (Part 10): Polynomial Regression Channel",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Polynomial Regression Channel",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21501.md"
+    },
+    {
+      "id": 22059,
+      "title": "The MQL5 Standard Library Explorer (Part 12): Multi-Timeframe Composite-Score Dashboard",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Multi-Timeframe Composite-Score Dashboard",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22059.md"
+    },
+    {
+      "id": 23127,
+      "title": "The MQL5 Standard Library Explorer (Part 13): Implementing the Math Solvers Library in Trading",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Implementing the Math Solvers Library in Trading",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23127.md"
+    }
+  ]
+}

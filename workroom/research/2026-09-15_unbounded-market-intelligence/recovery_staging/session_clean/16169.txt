@@ -1,0 +1,2125 @@
+---
+id: 16169
+source_url: https://www.mql5.com/en/articles/16169
+title: "News Trading Made Easy (Part 5): Performing Trades (II)"
+author: ""
+author_url: 
+published: 2024-11-06T16:42Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: "News Trading Made Easy (): Performing Trades (II)"
+series_part: 5
+source: mql5
+language: en
+---
+
+# News Trading Made Easy (Part 5): Performing Trades (II)
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 6 November 2024 at 11:42
+
+4 544
+[
+6](https://www.mql5.com/en/forum/475985 "Comments")
+
+[Kabelo Frans Mampa](https://www.mql5.com/en/users/kaaiblo)
+
+### 
+
+### Introduction
+
+In this article, our main objective is to write the code to implement stop orders into the news trading expert, these stop orders will be used in a later article to trade news events. Furthermore, we will create functions to manage slippage for stop orders, close trades and perform validation checks to indicate whether a trade or an order can be opened. Trade management is crucial in any algorithmic trading system because it involves tasks such as opening and closing trades, adjusting stop-losses, and managing take-profits. Efficient trade management can help a trader capture more profit while minimizing exposure to adverse market movements.
+
+### Why use stop orders?
+
+  
+
+Using stop orders when trading news events is a common strategy because they help traders capitalize on the sharp price movements that often follow major economic releases, while also minimizing certain risks.
+
+Capturing Breakout Movements
+
+News events, such as economic reports or central bank announcements, often lead to sudden and significant price movements. These are known as breakouts. A stop order allows a trader to enter the market at a predefined price level when the price moves beyond a certain threshold, which is ideal for catching these breakout moves without having to manually monitor the market.
+
+- Buy Stop Order: Placed above the current market price. It triggers a buy order when the price rises, capturing upward momentum after positive news.
+- Sell Stop Order: Placed below the current market price. It triggers a sell order when the price drops, taking advantage of negative news.
+
+May help avoid Market Whipsaws
+
+News-related volatility can cause price fluctuations before a clear direction is established. Traders who enter positions too early may get caught in whipsaws—rapid movements in both directions that can hit stop losses. Stop orders help avoid these fake-outs by ensuring that the trade only triggers when the market commits to a direction beyond a specific price point.
+
+Limiting Over-Analyzing in Trading
+
+Trading around news events can be stressful due to fast market movements. Setting stop orders in advance allows traders to enter and exit positions without emotional interference or the need for the event direction. Once the orders are placed, the trader's decision is already made, removing the temptation to overreact to short-term price fluctuations. In context to this article this means that speeches and other news events that don't have an event impact can be traded with the use of stop orders, as direction is hard or impossible to predict beforehand.
+
+Minimizing Slippage
+
+By using stop orders, traders can avoid slippage associated with market orders placed during high-volatility periods. Although slippage can still occur, a stop order has a better chance of executing close to the intended level than a market order placed after the news has already caused a significant price change.
+
+Risk Management
+
+Stop orders help to automate risk management. For example, if a trader anticipates a volatile reaction to a news event, they can place both a buy stop and a sell stop order (straddle strategy). This approach helps the trader enter the market in either direction, depending on how the price breaks. Once triggered, the opposite stop order can be canceled to manage risk.
+
+Scenario:
+
+You’re trading the U.S. dollar around the Non-Farm Payrolls (NFP) announcement, one of the most market-moving news events. Expecting that the data will cause a major move in the EUR/USD pair, you place a buy stop order above the current price and a sell stop order below the current price (straddle strategy).
+
+- Positive NFP Data: The dollar strengthens, causing EUR/USD to fall, triggering your sell stop order.
+- Negative NFP Data: The dollar weakens, causing EUR/USD to rise, triggering your buy stop order.
+
+By using stop orders, you are prepared for movement in either direction, and you enter the market automatically once the price action confirms the breakout direction.
+
+### Account Properties Class
+
+The class CAccountProperties that inherits from the CAccountInfo class in MQL5. The purpose of this class is to extend CAccountInfo with a custom method for retrieving the total number of specific types of orders in the trading account, such as buy or sell limit/stop orders. This additional function will be used in the Trade management class to help ensure that the expert stays within the account's limit orders.
+
+For example: if the account limit orders are 200, this means that the user's account cannot exceed 200 orders, this includes open and pending orders. So if we want to open a buy-stop and sell-stop order, but the user's account has 199 orders, the expert will identify that there isn't sufficient orders left to open both a buy-stop and sell-stop order, so in this scenario no additional orders will be added to the user's account.
+
+Header and Includes:
+
+The code below includes the AccountInfo.mqh file from the MQL5 standard library. This file contains pre-defined functions and structures to access trading account information.
+
+```
+#include <Trade/AccountInfo.mqh>
+```
+
+CAccountProperties Class Definition:
+
+Inheritance: The class CAccountProperties inherits publicly from CAccountInfo. By inheriting, CAccountProperties gains access to the functions and data members of CAccountInfo.
+
+CAccountInfo provides essential account data such as balance, equity, free margin, etc.
+
+Purpose of the class: The CAccountProperties class adds a method (numOrders) that counts specific types of orders.
+
+```
+class CAccountProperties: public CAccountInfo
+```
+
+numOrders Function:
+
+The function numOrders() is where most of the action takes place. This function counts the number of specific order types (limit and stop orders) that are currently open in the trading account.
+
+- Return type: The function returns an integer.
+- Initialization: The variable num is initialized to 0. This will store the count of orders that match the desired types
+
+```
+int CAccountProperties::numOrders(void)
+{
+   int num=0;
+```
+
+Order Iteration:
+
+- OrdersTotal() is an MQL5 function that returns the total number of orders.
+- A loop is used to iterate through all of the orders, from index 0 to OrdersTotal() - 1.
+
+```
+for(int i=0; i<OrdersTotal(); i++)
+```
+
+Order Validation:
+
+- OrderGetTicket(i) is an MQL5 function that retrieves the ticket number for the order at index i. Each order has a unique ticket number.
+- If the ticket number is greater than 0, it means that the order is valid, and the code proceeds to check its type.
+
+```
+if(OrderGetTicket(i)>0)
+```
+
+Checking the Order Type:
+
+- OrderGetInteger(ORDER\_TYPE) retrieves the type of the order at index i. This value corresponds to an int that represents various types of orders (buy limit, sell stop, etc.).
+- The switch statement checks the type of each order and compares it with predefined order type constants.
+
+```
+switch(int(OrderGetInteger(ORDER_TYPE)))
+```
+
+Handling Specific Order Types:
+
+- Order types:
+
+- ORDER\_TYPE\_BUY\_LIMIT: A buy limit order.
+- ORDER\_TYPE\_BUY\_STOP: A buy stop order.
+- ORDER\_TYPE\_BUY\_STOP\_LIMIT: A buy stop limit order.
+- ORDER\_TYPE\_SELL\_LIMIT: A sell limit order.
+- ORDER\_TYPE\_SELL\_STOP: A sell stop order.
+- ORDER\_TYPE\_SELL\_STOP\_LIMIT: A sell stop limit order.
+
+For each recognized order type, the counter num is incremented. If the order is of any other type, the default case is triggered, and no action is taken.
+
+```
+case ORDER_TYPE_BUY_LIMIT:
+    num++;
+    break;
+case ORDER_TYPE_BUY_STOP:
+    num++;
+    break;
+case ORDER_TYPE_BUY_STOP_LIMIT:
+    num++;
+    break;
+case ORDER_TYPE_SELL_LIMIT:
+    num++;
+    break;
+case ORDER_TYPE_SELL_STOP:
+    num++;
+    break;
+case ORDER_TYPE_SELL_STOP_LIMIT:
+    num++;
+    break;
+default:
+    break;
+```
+
+Returning the Count:
+
+- After iterating through all the orders and counting the valid ones, the function returns the total count stored in num.
+
+```
+   return num;
+}
+```
+
+### Risk Management Class
+
+This class ensures that the trader’s exposure to market risk is controlled, limiting potential losses while allowing room for gains with that being said minor updates have been made to this class. The code below defines an enumeration OrderTypeSelection that is used to represent different types of order classifications. The user will be allowed to choose which of these types of orders they would prefer to trade with.
+
+```
+//-- Enumeration for Order type
+enum OrderTypeSelection
+  {
+   MarketPositionType,//MARKET POSITION
+   StopOrdersType,//STOP ORDERS
+   StopOrderType,//SINGLE STOP ORDER
+  } myOrderSelection;
+```
+
+Enumeration: OrderTypeSelection
+
+The OrderTypeSelection enum consists of three different values:
+
+MarketPositionType:
+
+- Represents a market position order.
+- This type opens based on the market's current price, that are executed immediately at the current price.
+- Requires event impact.
+
+StopOrdersType:
+
+- Represents stop orders.
+- Stop orders are conditional orders that execute only when the price reaches a certain level. Both buy-stop and sell-stop orders are opened.
+- Doesn't require event impact.
+
+StopOrderType:
+
+- Represents a single stop order.
+- An individual buy-stop or sell-stop order is opened.
+- Requires event impact.
+
+Variable Declaration: myOrderSelection
+
+- myOrderSelection is a variable that will store the current order type selected by the trader.
+
+Lot Size Normalization
+
+In the function below, the volume limit will change depending on the OrderTypeSelection, when the myOrderSelection is StopOrdersType(STOP ORDERS) the volume limit is halved to accommodate both the buy-stop and sell-stop order as both need to be opened at the same time, whereas MarketPositionType(MARKET POSITION) and StopOrderType(SINGLE STOP ORDER) only open single orders.
+
+```
+void CRiskManagement::NormalizeLotsize(double &Lotsize)
+{
+    // Adjust lot size to match symbol's step size or minimum size
+    if (Lotsize <= 0.0) return;
+    double VolumeLimit = (myOrderSelection != StopOrdersType) ? CSymbol.LotsLimit() : CSymbol.LotsLimit() / 2;
+    // Check and adjust if volume exceeds limits
+    // ...
+}
+```
+
+### Sessions Class
+
+The code below defines a CSessions class, which is responsible for managing and tracking the trading session times for a particular trading symbol. It uses methods from a base class CTimeManagement (included via Timemanagement.mqh) to determine if a trading session has started, ended, and to get the session end time. For context, we need to know when the trading session will end to close trades beforehand and set order expiration dates, this is to avoid overnight trading.
+
+Why avoid overnight trading?
+
+Increased Market Risk Due to Volatility
+
+Markets can be highly volatile overnight, especially in response to economic events, geopolitical developments, or news from other global markets. Since major events can occur outside normal trading hours, positions held overnight are exposed to unpredictable price movements. These moves can cause:
+
+- Significant gaps in price when the market opens the next day, potentially resulting in substantial gains or losses.
+- Limited ability to respond to rapid changes, since liquidity can be low and your ability to modify or exit positions quickly may be constrained.
+
+Limited Liquidity
+
+Liquidity tends to be lower during overnight trading sessions because fewer market participants are active. This can lead to:
+
+- Wider spreads between the bid and ask prices, increasing transaction costs.
+- Slippage, where trades execute at a different price than expected due to the lack of market depth.
+- Difficulty closing large positions without moving the market, potentially causing unfavorable price execution.
+
+Increased Risk of Gaps
+
+Overnight trading can expose traders to price gaps, where the price at market open is significantly different from the previous day’s close. Gaps can occur due to news releases or other events, and can result in:
+
+- Larger-than-expected losses, especially if the price moves against your position.
+- Stop-loss orders being ineffective, as gaps can skip over your predetermined stop levels, executing your order at a much worse price than expected.
+
+Interest Charges (Swap Fees)
+
+For certain instruments like Forex, holding positions overnight can result in swap fees or interest charges, depending on the interest rate difference between the currencies involved. These costs can accumulate over time and reduce profitability. Swap fees can:
+
+- Turn profitable trades into losing ones, especially if held for extended periods.
+- Vary depending on market conditions, making them harder to predict and plan for.
+
+Reduced Control Over Trade Execution
+
+During the night, especially in markets with limited or irregular hours, trade execution may be slower or less precise due to:
+
+- Broker operating hours: Some brokers may not support certain trade actions or modifications outside of their regular operating hours, reducing your ability to respond to market conditions.
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include "Timemanagement.mqh"
+//+------------------------------------------------------------------+
+//|Sessions Class                                                    |
+//+------------------------------------------------------------------+
+class CSessions:CTimeManagement
+  {
+public:
+                     CSessions(void) {}
+                    ~CSessions(void) {}
+   //--- Check if trading Session has began
+   bool              isSessionStart(int offsethour=0,int offsetmin=0);
+   //--- Check if trading Session has ended
+   bool              isSessionEnd(int offsethour=0,int offsetmin=45);
+   //--- Get Session End datetime
+   datetime          SessionEnd(int offsethour=0,int offsetmin=45);
+  };
+//+------------------------------------------------------------------+
+//|Check if trading Session has started                              |
+//+------------------------------------------------------------------+
+bool CSessions::isSessionStart(int offsethour=0,int offsetmin=0)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateFrom[],DateTo[];
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateFrom Array size
+         ArrayResize(DateFrom,int(ArraySize(DateFrom))+1,int(ArraySize(DateFrom))+2);
+         //--- Assign the last array index datefrom value
+         DateFrom[int(ArraySize(DateFrom))-1] = datefrom;
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateFrom.Size()>0)
+     {
+      /* Adjust DateFrom index zero date as the first index date will be the earliest date
+       from the whole array, we add the offset to this date only*/
+      DateFrom[0] = TimePlusOffset(DateFrom[0],MinutesS(offsetmin));
+      DateFrom[0] = TimePlusOffset(DateFrom[0],HoursS(offsethour));
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateFrom.Size(); i++)
+        {
+         //--- Check if the current time is within the trading session
+         if(TimeIsInRange(Time(Today(ReturnHour(DateFrom[i]),ReturnMinute(DateFrom[i])))
+                          ,Time(Today(ReturnHour(DateTo[i]),ReturnMinute(DateTo[i])))))
+           {
+            return true;
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return true;
+     }
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//|Check if trading Session has ended                                |
+//+------------------------------------------------------------------+
+bool CSessions::isSessionEnd(int offsethour=0,int offsetmin=45)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateTo.Size()>0)
+     {
+      //--- Assign lastdate a default value
+      lastdate = DateTo[0];
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateTo.Size(); i++)
+        {
+         //--- Check for the latest date in the array
+         if(DateTo[i]>lastdate)
+           {
+            lastdate = DateTo[i];
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return false;
+     }
+   /* get the current time and modify the hour and minute time to the lastdate variable
+   and assign the new datetime to sessionend variable*/
+   sessionend =  Time(Today(ReturnHour(lastdate),ReturnMinute(lastdate)));
+//--- Re-adjust the sessionend dates with the minute and hour offsets
+   sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+   sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+
+//--- Check if sessionend date is more than the current time
+   if(TimeTradeServer()<sessionend)
+     {
+      return false;
+     }
+   return true;
+  }
+
+//+------------------------------------------------------------------+
+//|Get Session End datetime                                          |
+//+------------------------------------------------------------------+
+datetime CSessions::SessionEnd(int offsethour=0,int offsetmin=45)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateTo.Size()>0)
+     {
+      //--- Assign lastdate a default value
+      lastdate = DateTo[0];
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateTo.Size(); i++)
+        {
+         //--- Check for the latest date in the array
+         if(DateTo[i]>lastdate)
+           {
+            lastdate = DateTo[i];
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return 0;
+     }
+   /* get the current time and modify the hour and minute time to the lastdate variable
+   and assign the new datetime to sessionend variable*/
+   sessionend = Time(Today(ReturnHour(lastdate),ReturnMinute(lastdate)));
+//--- Re-adjust the sessionend dates with the minute and hour offsets
+   sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+   sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+//--- return sessionend date
+   return sessionend;
+  }
+//+------------------------------------------------------------------+
+```
+
+Explanation of the Key Components
+
+Class Definition: CSessions
+
+- Inheritance:
+
+- The CSessions class inherits from CTimeManagement, so it has access to any time management-related methods and attributes defined in that base class.
+
+- Methods:
+
+- isSessionStart(int offsethour=0, int offsetmin=0):
+
+- Determines if a trading session has started by checking the current server time against the session start times. It also allows for optional time offsets
+
+- isSessionEnd(int offsethour=0, int offsetmin=45):
+
+- Determines if a trading session has ended, checking current server time against session end times. Like isSessionStart, it takes optional offsets (45 minutes default).
+
+- SessionEnd(int offsethour=0, int offsetmin=45):
+
+- Returns the datetime value of the end of the current trading session, adjusting with the provided offsets (default: 45 minutes).
+
+Method Details
+
+isSessionStart(int offsethour=0, int offsetmin=0)
+
+This method checks if the trading session has started based on server time and the trading symbol's session schedule.
+
+Variables:
+
+- datefrom, dateto: These are used to store the session start and end times for each trading day.
+- DateFrom[], DateTo[]: Arrays to hold the session start and end times after adjustments.
+
+Logic:
+
+- Session Retrieval:
+
+- The SymbolInfoSessionTrade function retrieves the trading session start (datefrom) and end (dateto) times for the current symbol and day of the week (retrieved by DayOfWeek(TimeTradeServer())).
+- If the session end time (dateto) is at midnight (00:00 or 24:00), the time is adjusted to one minute before midnight (23:59).
+
+- Array Manipulation:
+
+- The session start times (datefrom) are stored in the DateFrom[] array, and end times (dateto) are stored in the DateTo[] array.
+
+- Offset Application:
+
+- The method adjusts the first session's start time by the given offsethour and offsetmin using the helper functions MinutesS() and HoursS().
+
+- Check Current Time:
+
+- The method then iterates through the session times in DateFrom[] and DateTo[] and checks if the current server time (TimeTradeServer()) falls within any of the session intervals.
+- If a valid session is found, it returns true, indicating the session has started. Otherwise, it returns false.
+
+isSessionEnd(int offsethour=0, int offsetmin=45)
+
+This method checks if the trading session has ended.
+
+Variables:
+
+- Similar to isSessionStart(), but with a focus on end times (dateto).
+- lastdate: Stores the latest session end time to compare.
+- sessionend: Holds the final calculated session end time with offsets applied.
+
+Logic:
+
+- Session Retrieval:
+
+- Retrieves the session times (datefrom, dateto) as in isSessionStart().
+- It checks if there are any valid session times in DateTo[] and identifies the latest session end time (lastdate).
+
+- Offset Application:
+
+- Adjusts the session end time by applying the offsets (offsethour and offsetmin).
+
+- Compare with Server Time:
+
+- If the current time is before the adjusted session end time, it returns false, indicating the session is still ongoing. If the session has ended (current time is after sessionend), it returns true.
+
+SessionEnd(int offsethour=0, int offsetmin=45)
+
+This method returns the datetime value for the end of the current session, applying the provided time offsets.
+
+Logic:
+
+- Similar to isSessionEnd(), it retrieves session times, applies offsets, and returns the final adjusted session end time (sessionend).
+
+Summary of the Cons of Overnight Trading:
+
+- Increased volatility and unpredictable market movements.
+- Low liquidity, leading to wider spreads and higher costs.
+- Risk of price gaps, potentially leading to large losses.
+- Exposure to global events and their market impacts.
+- Interest charges or swap fees in Forex markets.
+- Reduced control over trade execution and decision-making.
+
+  
+  
+
+### Trade Management Class
+
+The class CTradeManagement extends CRiskManagement and contains functionality for managing trades, such as placing buy/sell orders, handling stop-loss and take-profit levels, and managing stop orders.
+
+Flowchart for opening a buy or sell order:
+
+```
++---------------------------+
+| Receive Trade Signal      |
++---------------------------+
+              |
+              V
++---------------------------+
+| Check for Available Margin|
++---------------------------+
+              |
+              V
++---------------------------+
+| Place Buy/Sell Order      |
++---------------------------+
+              |
+              V
++----------------------------+
+| Set Stop Loss & Take Profit|
++----------------------------+
+              |
+              V
++----------------------------+
+| Monitor Open Position      |
++----------------------------+
+              |
+        If conditions met:
+              |
+              V
++----------------------------+
+| Adjust SL/TP or Close Trade|
++----------------------------+
+```
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+#include <Trade\OrderInfo.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include "RiskManagement.mqh"
+#include "TimeManagement.mqh"
+#include "Sessions.mqh"
+
+//+------------------------------------------------------------------+
+//|TradeManagement class                                             |
+//+------------------------------------------------------------------+
+class CTradeManagement:CRiskManagement
+  {
+private:
+   CTrade            Trade;//Trade class object
+   CSymbolProperties CSymbol;//SymbolProperties class object
+   CTimeManagement   CTime;//TimeManagement class object
+   CSessions         CTS;//Sessions class object
+   bool              TradeResult;//boolean to store trade result
+   double            mySL;//double variable to store Stoploss
+   double            myTP;//double variable to store Takeprofit
+   uint              myDeviation;//store price deviation for stop orders
+   double            myOpenPrice;//store open price for stop orders
+   //--- Will retrieve if there are any open trades
+   bool              OpenTrade(ENUM_POSITION_TYPE Type,ulong Magic,string COMMENT=NULL);
+   //--- Will retrieve if there are any deals
+   bool              OpenedDeal(ENUM_DEAL_TYPE Type,ulong Magic,string COMMENT=NULL);
+   //--- Will retrieve if there are any open orders
+   bool              OpenOrder(ENUM_ORDER_TYPE Type,ulong Magic,string COMMENT=NULL);
+   //--  Check if trade is valid
+   bool              Valid_Trade(ENUM_POSITION_TYPE Type,double Price,double SL,double TP);
+   //-- Check if stop order is valid
+   bool              Valid_Order(ENUM_ORDER_TYPE Type,double Price,double SL,double TP);
+   //--- Will attempt to open buy trade
+   bool              Buy(double SL,double TP,ulong Magic,string COMMENT=NULL);
+   //--- Will attempt to open sell trade
+   bool              Sell(double SL,double TP,ulong Magic,string COMMENT=NULL);
+
+   //--- class to set and retrieve an order's properties
+   class OrderSettings
+     {
+   private:
+      struct TradeProperties
+        {
+         //store open-price,take-profit,stop-loss for stop orders
+         double         Open,Take,Stop;
+        } myTradeProp;
+   public:
+                     OrderSettings() {}
+      //--- Set order properties
+      void           Set(double myOpen,double myTake,double myStop)
+        {
+         //--- Set open-price
+         myTradeProp.Open=myOpen;
+         //--- Set take-profit
+         myTradeProp.Take=myTake;
+         //--- Set stop-loss
+         myTradeProp.Stop=myStop;
+        }
+      TradeProperties Get()
+        {
+         //--- retrieve order properties
+         return myTradeProp;
+        }
+     };
+
+   //--- Declare variables for different order types
+   OrderSettings     myBuyStop,mySellStop,myBuyTrade,mySellTrade;
+
+   //--- Will set buy-stop order properties
+   void              SetBuyStop(int SL,int TP);
+   //--- Will set buy position properties
+   void              SetBuyTrade(int SL,int TP,double OP);
+   //--- Will set sell-stop order properties
+   void              SetSellStop(int SL,int TP);
+   //--- Will set sell position properties
+   void              SetSellTrade(int SL,int TP,double OP);
+
+public:
+   //--- Class constructor
+                     CTradeManagement(uint deviation,string SYMBOL=NULL)
+                     :myDeviation(deviation)//Assign deviation value
+     {
+      //--- Set symbol name
+      CSymbol.SetSymbolName(SYMBOL);
+     }
+   //--- Class destructor
+                    ~CTradeManagement(void)
+     {
+     }
+   //--- Will attempt to open buy trade
+   bool              Buy(int SL,int TP,ulong Magic,string COMMENT=NULL);
+   //--- Will attempt to open sell trade
+   bool              Sell(int SL,int TP,ulong Magic,string COMMENT=NULL);
+   /*This function will delete a pending order if the previous opposing pending order is
+   opened into a position, this function is used when trading with StopOrdersType(STOP ORDERS)*/
+   void              FundamentalMode(string COMMENT_COMMON);
+   /* Function will attempt to re-adjust stop-losses or take-profit values that have
+   been changed due to slippage on an order when opening.
+   */
+   void              SlippageReduction(int SL,int TP,string COMMENT_COMMON);
+   //--- This function will open both buy-stop and sell-stop orders for StopOrdersType(STOP ORDERS)
+   bool              OpenStops(int SL,int TP,ulong Magic,string COMMENT=NULL);
+   //--- Will attempt to open a sell-stop order
+   bool              OpenSellStop(int SL,int TP,ulong Magic,string COMMENT=NULL);
+   //--- Will attempt to open a buy-stop order
+   bool              OpenBuyStop(int SL,int TP,ulong Magic,string COMMENT=NULL);
+   //--- Function will attempt to close all trades depending on the position comment
+   void              CloseTrades(string COMMENT_COMMON);
+  };
+// ...
+```
+
+Private Members:
+
+- Objects and variables:
+
+- CTrade Trade: Manages trade execution (buy/sell orders) etc.
+- CSymbolProperties CSymbol: Manages symbol properties.
+- CTimeManagement CTime: Handles time-related logic.
+- CSessions CTS: Manages sessions, which are related to trading hours.
+- bool TradeResult: A boolean flag for the result of a trade (success/failure).
+- double mySL: Stop-loss value.
+- double myTP: Take-profit value.
+- uint myDeviation;: Price deviation for stop orders.
+- double myOpenPrice: Stores the open price for stop orders.
+
+OrderSettings Inner Class:
+
+```
+class OrderSettings
+{
+private:
+   struct TradeProperties
+   {
+      double Open, Take, Stop;
+   } myTradeProp;
+public:
+   OrderSettings() {}
+   void Set(double myOpen, double myTake, double myStop)
+   {
+      myTradeProp.Open = myOpen;
+      myTradeProp.Take = myTake;
+      myTradeProp.Stop = myStop;
+   }
+   TradeProperties Get()
+   {
+      return myTradeProp;
+   }
+};
+```
+
+- Purpose: This inner class encapsulates the trade properties (open price, take-profit, stop-loss). It allows setting and getting these properties easily.
+
+- myTradeProp: A struct to hold trade properties.
+- Set(): Method to set the open, take-profit, and stop-loss values.
+- Get(): Retrieves the stored trade properties.
+
+- Variables using OrderSettings:
+
+> ```
+> OrderSettings myBuyStop, mySellStop, myBuyTrade, mySellTrade;
+> ```
+
+- These objects store the properties for different order types (buy-stop, sell-stop, buy-trade, sell-trade).
+
+The FundamentalMode function in the code below is designed to delete a pending stop order when its opposite order has been executed and opened as a position. This functionality is relevant for this strategy that use both buy-stop and sell-stop orders (such as straddle strategies) to enter positions in volatile markets. Once one of the stop orders is triggered and a position is opened, the remaining opposite order (which is now redundant) is deleted to avoid unnecessary trades.
+
+Example:
+
+Buy-stop is opened at 1.13118 and Sell-stop is opened at 1.12911, the Buy-stop is executed first with the journal message 'deal performed [#2 buy 0.01 EURUSD at 1.13134]'. So in this case the function will then delete/cancel the remaining sell-stop order with the journal message 'order canceled [#3 sell stop 0.01 EURUSD at 1.12911]' indicates in the image below.
+
+```
+//+------------------------------------------------------------------+
+//|This function will delete a pending order if the previous opposing|
+//|pending order is opened into a position, this function is used    |
+//|when trading with StopOrdersType(STOP ORDERS)                     |
+//+------------------------------------------------------------------+
+void CTradeManagement::FundamentalMode(string COMMENT_COMMON)
+  {
+//--- Iterate through all open positions if Orders are more than zero
+   for(int P=0; P<PositionsTotal()&&OrdersTotal()>0; P++)
+     {
+      //--- Check if Position ticket is above zero
+      if(PositionGetTicket(P)>0)
+        {
+         //--- Check if the Position's Symbol,Magic,Type,Comment is correct
+         if(PositionGetString(POSITION_SYMBOL)==CSymbol.GetSymbolName()&&
+            StringFind(PositionGetString(POSITION_COMMENT),COMMENT_COMMON)>=0)
+           {
+            //--- Iterate through all open orders
+            for(int O=0; O<OrdersTotal(); O++)
+              {
+               //--- Check if Order ticket is above zero
+               if(OrderGetTicket(O)>0)
+                 {
+                  //--- Check if the Order's Symbol,Magic,Comment is correct
+                  if(OrderGetString(ORDER_SYMBOL)==CSymbol.GetSymbolName()
+                     &&OrderGetInteger(ORDER_MAGIC)==PositionGetInteger(POSITION_MAGIC)
+                     &&StringFind(OrderGetString(ORDER_COMMENT),COMMENT_COMMON)>=0
+                     &&OrderGetString(ORDER_COMMENT)==PositionGetString(POSITION_COMMENT))
+                    {
+                     //--- Identify Position type
+                     switch(int(PositionGetInteger(POSITION_TYPE)))
+                       {
+                        /* In the case that the Position type is a buy and if the corresponding order type is
+                        a sell-stop then delete this order*/
+                        case  POSITION_TYPE_BUY:
+                           if(OrderGetInteger(ORDER_TYPE)==ORDER_TYPE_SELL_STOP)
+                             {
+                              //--- Delete the sell-stop order
+                              Trade.OrderDelete(OrderGetTicket(O));
+                             }
+                           break;
+                        /* In the case that the Position type is a sell and if the corresponding order type is
+                        a buy-stop then delete this order*/
+                        case POSITION_TYPE_SELL:
+                           if(OrderGetInteger(ORDER_TYPE)==ORDER_TYPE_BUY_STOP)
+                             {
+                              //--- Delete the sell-stop order
+                              Trade.OrderDelete(OrderGetTicket(O));
+                             }
+                           break;
+                        default:
+                           break;
+                       }
+                    }
+                 }
+              }
+           }
+        }
+     }
+  }
+```
+
+Function Purpose:
+
+The function ensures that when a pending order (e.g., a buy-stop or sell-stop order) is opened as a trade, the opposing order (e.g., sell-stop or buy-stop) is deleted. This prevents executing both orders, which could lead to undesired positions being opened.
+
+```
+void CTradeManagement::FundamentalMode(string COMMENT_COMMON)
+```
+
+- FundamentalMode: This function attempts to remove a pending stop order if the opposite position has been opened.
+- COMMENT\_COMMON: A string parameter used to identify trades/orders based on the comment associated with them.
+
+Loop Over Open Positions:
+
+```
+for(int P = 0; P < PositionsTotal() && OrdersTotal() > 0; P++)
+```
+
+- PositionsTotal(): Returns the total number of open positions.
+- OrdersTotal(): Returns the total number of pending orders.
+- This for loop iterates through all open positions and ensures there are pending orders to process.
+
+Position Ticket Validation:
+
+```
+if(PositionGetTicket(P) > 0)
+```
+
+- PositionGetTicket(P): Retrieves the ticket number of the position at index P.
+- Ensures the position ticket is valid (i.e., above zero).
+
+Check Position Properties:
+
+```
+if(PositionGetString(POSITION_SYMBOL) == CSymbol.GetSymbolName() &&
+   StringFind(PositionGetString(POSITION_COMMENT), COMMENT_COMMON) >= 0)
+```
+
+- PositionGetString(POSITION\_SYMBOL): Retrieves the symbol of the open position.
+- CSymbol.GetSymbolName(): Retrieves the symbol name for the symbol set in the constructor.
+- PositionGetString(POSITION\_COMMENT): Retrieves the comment associated with the position.
+- StringFind(PositionGetString(POSITION\_COMMENT), COMMENT\_COMMON): Checks if the COMMENT\_COMMON substring is present in the position's comment. It ensures the position belongs to the strategy/expert.
+
+Loop Over Open Orders:
+
+```
+for(int O = 0; O < OrdersTotal(); O++)
+```
+
+- Iterates through all open pending orders.
+
+Order Ticket Validation:
+
+```
+if(OrderGetTicket(O) > 0)
+```
+
+- OrderGetTicket(O): Retrieves the ticket number of the order at index O.
+- Ensures the order ticket is valid.
+
+Check Order Properties:
+
+```
+if(OrderGetString(ORDER_SYMBOL) == CSymbol.GetSymbolName() &&
+   OrderGetInteger(ORDER_MAGIC) == PositionGetInteger(POSITION_MAGIC) &&
+   StringFind(OrderGetString(ORDER_COMMENT), COMMENT_COMMON) >= 0 &&
+   OrderGetString(ORDER_COMMENT) == PositionGetString(POSITION_COMMENT))
+```
+
+- OrderGetString(ORDER\_SYMBOL): Retrieves the symbol associated with the order.
+- OrderGetInteger(ORDER\_MAGIC): Retrieves the magic number of the order (which helps identify orders for each event).
+- PositionGetInteger(POSITION\_MAGIC): Retrieves the magic number of the position to match it with the order's magic number.
+- OrderGetString(ORDER\_COMMENT): Retrieves the comment of the order.
+- Ensures that the order's symbol, magic number, and comment match the position's properties. This ensures that the pending order is related to the open position.
+
+Identify and Delete Opposing Orders:
+
+```
+switch(int(PositionGetInteger(POSITION_TYPE)))
+{
+   case POSITION_TYPE_BUY:
+      if(OrderGetInteger(ORDER_TYPE) == ORDER_TYPE_SELL_STOP)
+      {
+         Trade.OrderDelete(OrderGetTicket(O));
+      }
+      break;
+   case POSITION_TYPE_SELL:
+      if(OrderGetInteger(ORDER_TYPE) == ORDER_TYPE_BUY_STOP)
+      {
+         Trade.OrderDelete(OrderGetTicket(O));
+      }
+      break;
+   default:
+      break;
+}
+```
+
+- PositionGetInteger(POSITION\_TYPE): Retrieves the type of the open position (either POSITION\_TYPE\_BUY or POSITION\_TYPE\_SELL).
+- OrderGetInteger(ORDER\_TYPE): Retrieves the type of the pending order (either ORDER\_TYPE\_BUY\_STOP or ORDER\_TYPE\_SELL\_STOP).
+
+Switch Case:
+
+- If the position is a buy position (POSITION\_TYPE\_BUY), the function checks for a pending sell-stop order (ORDER\_TYPE\_SELL\_STOP). If found, this sell-stop order is deleted because it is no longer needed.
+- Similarly, if the position is a sell position (POSITION\_TYPE\_SELL), the function checks for a pending buy-stop order (ORDER\_TYPE\_BUY\_STOP). If found, this buy-stop order is deleted.
+
+Trade.OrderDelete(OrderGetTicket(O)): This method deletes the pending order using its ticket number, effectively removing the unnecessary opposing order after the corresponding position has been opened.
+
+The SlippageReduction function is designed to ensure that the stop-loss (SL) and take-profit (TP) levels of an open position are correctly set to their expected values. If slippage (the difference between the expected and actual price of an order execution) has caused the SL and TP to deviate from their intended values when the order was executed, the function adjusts the position to reflect the expected SL and TP.
+
+Example: A trader wants to open a buy-stop and sell-stop order to trade NFP. The trader wants a price deviation for both orders of 100 pips from current price, they also want a risk to reward ratio of 1:6 so they require a stop-loss of 100 pips and a take-profit of 600 pips. In this case, with reference to the image below, the buy-stop is placed at 1.13118 SL is set to 1.13018 and TP is set to 1.13718 maintaining the 1:6 ROI. Due to the volatility of the NFP event the buy trade is executed at an unfavorable price of 1.13134 indicated by the Journal message 'order performed buy 0.01 at 1.13134 [#2 buy stop 0.01 EURUSD at 1.13118]'.
+
+Slippage experienced for the buy-stop order:
+
+Slippage for the open-price will be calculated as - [Actual price - Expected price]/Point
+
+Expected price: 1.13118|Actual price: 1.13134 |Slippage: (1.13134 - 1.13118)/0.00001 -> 16 pips (price difference)
+
+Therefore, to maintain the ROI and stop-loss both the SL and TP values will be adjusted by 16 pips accordingly.
+
+```
+//+------------------------------------------------------------------+
+//|Function will attempt to re-adjust stop-losses or take-profit     |
+//|values that have been changed due to slippage on an order when    |
+//|opening.                                                          |
+//+------------------------------------------------------------------+
+void CTradeManagement::SlippageReduction(int SL,int TP,string COMMENT_COMMON)
+  {
+//--- Iterate through all open positions
+   for(int i=0; i<PositionsTotal(); i++)
+     {
+      ulong ticket = PositionGetTicket(i);
+      //--- Check if Position ticket is above zero
+      if(ticket>0)
+        {
+         //--- Check if the Position's Symbol,Comment is correct
+         if(PositionGetString(POSITION_SYMBOL)==CSymbol.GetSymbolName()
+            &&StringFind(PositionGetString(POSITION_COMMENT),COMMENT_COMMON)>=0)
+           {
+            //--- Identify Position type
+            switch(int(PositionGetInteger(POSITION_TYPE)))
+              {
+               case  POSITION_TYPE_BUY:
+                  //--- set expect buy trade properties
+                  SetBuyTrade(SL,TP,PositionGetDouble(POSITION_PRICE_OPEN));
+                  //--- assign sl price
+                  mySL = PositionGetDouble(POSITION_SL);
+                  //--- assign tp price
+                  myTP = PositionGetDouble(POSITION_TP);
+                  //--- Normalize sl price
+                  CSymbol.NormalizePrice(mySL);
+                  mySL = double(DoubleToString(mySL,CSymbol.Digits()));
+                  //--- Normalize tp price
+                  CSymbol.NormalizePrice(myTP);
+                  myTP = double(DoubleToString(myTP,CSymbol.Digits()));
+                  //--- check if expected properties match actual trade properties
+                  if((myBuyTrade.Get().Stop!=mySL||
+                      myBuyTrade.Get().Take!=myTP)
+                     &&Valid_Trade(POSITION_TYPE_BUY,myBuyTrade.Get().Open,
+                                   myBuyTrade.Get().Stop,myBuyTrade.Get().Take))
+                    {
+                     //--- Modify position to respect expected properties
+                     Trade.PositionModify(ticket,myBuyTrade.Get().Stop,myBuyTrade.Get().Take);
+                    }
+                  break;
+               case POSITION_TYPE_SELL:
+                  //--- set expect sell trade properties
+                  SetSellTrade(SL,TP,PositionGetDouble(POSITION_PRICE_OPEN));
+                  //--- assign sl price
+                  mySL = PositionGetDouble(POSITION_SL);
+                  //--- assign tp price
+                  myTP = PositionGetDouble(POSITION_TP);
+                  //--- Normalize sl price
+                  CSymbol.NormalizePrice(mySL);
+                  mySL = double(DoubleToString(mySL,CSymbol.Digits()));
+                  //--- Normalize tp price
+                  CSymbol.NormalizePrice(myTP);
+                  myTP = double(DoubleToString(myTP,CSymbol.Digits()));
+                  //--- check if expected properties match actual trade properties
+                  if((mySellTrade.Get().Stop!=mySL||
+                      mySellTrade.Get().Take!=myTP)
+                     &&Valid_Trade(POSITION_TYPE_SELL,mySellTrade.Get().Open,
+                                   mySellTrade.Get().Stop,mySellTrade.Get().Take))
+                    {
+                     //--- Modify position to respect expected properties
+                     Trade.PositionModify(ticket,mySellTrade.Get().Stop,mySellTrade.Get().Take);
+                    }
+                  break;
+               default:
+                  break;
+              }
+           }
+        }
+     }
+  }
+```
+
+Function Purpose:
+
+The goal of this function is to:
+
+1. Check each open position.
+2. Verify if the stop-loss and take-profit values for the position match the expected values.
+3. If they do not match due to slippage, the position is modified to reflect the correct SL and TP values.
+
+```
+void CTradeManagement::SlippageReduction(int SL, int TP, string COMMENT_COMMON)
+```
+
+- SlippageReduction: The function's name reflects its purpose—adjusting the SL and TP if they have been impacted by slippage during order execution.
+
+Parameters:
+
+- SL: Expected stop-loss value.
+- TP: Expected take-profit value.
+- COMMENT\_COMMON: A string used to filter and identify trades that belong to this Expert.
+
+Loop Through Open Positions:
+
+```
+for (int i = 0; i < PositionsTotal(); i++)
+{
+    ulong ticket = PositionGetTicket(i);
+```
+
+- PositionsTotal(): This function returns the number of open positions.
+- PositionGetTicket(i): Retrieves the ticket number for the position at index i. A ticket uniquely identifies an open position.
+
+Position Ticket Validation:
+
+```
+if (ticket > 0)
+```
+
+- Ensures that the position has a valid ticket number before proceeding to the next steps
+
+Check Position Properties:
+
+```
+if (PositionGetString(POSITION_SYMBOL) == CSymbol.GetSymbolName() &&
+    StringFind(PositionGetString(POSITION_COMMENT), COMMENT_COMMON) >= 0)
+```
+
+- PositionGetString(POSITION\_SYMBOL): Retrieves the symbol associated with the open position.
+- CSymbol.GetSymbolName(): Gets the symbol name for the trading strategy (e.g., "EURUSD").
+- PositionGetString(POSITION\_COMMENT): Retrieves the comment attached to the open position.
+- StringFind(): Checks if COMMENT\_COMMON is part of the position's comment, ensuring that the function only processes positions related to the current strategy.
+
+Identify and Handle Position Types (Buy or Sell):
+
+Case 1: Buy Position
+
+```
+case POSITION_TYPE_BUY:
+```
+
+- The function handles positions of type BUY.
+
+Set Expected Buy Trade Properties:
+
+```
+SetBuyTrade(SL, TP, PositionGetDouble(POSITION_PRICE_OPEN));
+```
+
+- SetBuyTrade(SL, TP, PositionGetDouble(POSITION\_PRICE\_OPEN)): Sets the expected stop-loss, take-profit, and open price for the buy trade. The function SetBuyTrade assigns these expected values to the myBuyTrade object.
+
+Assign Actual SL and TP Values:
+
+```
+mySL = PositionGetDouble(POSITION_SL);
+myTP = PositionGetDouble(POSITION_TP);
+```
+
+- PositionGetDouble(POSITION\_SL): Retrieves the actual stop-loss value from the open position.
+- PositionGetDouble(POSITION\_TP): Retrieves the actual take-profit value from the open position.
+
+Normalize SL and TP Values:
+
+```
+CSymbol.NormalizePrice(mySL);
+mySL = double(DoubleToString(mySL, CSymbol.Digits()));
+
+CSymbol.NormalizePrice(myTP);
+myTP = double(DoubleToString(myTP, CSymbol.Digits()));
+```
+
+- NormalizePrice(mySL): Normalizes the stop-loss value to the correct number of decimal places (based on the symbol's properties, e.g., currency pairs might have 4 or 5 decimal points).
+- DoubleToString(mySL, CSymbol.Digits()): Converts the normalized SL value to a string and then back to a double to ensure precision.
+- The same process is applied to the take-profit (myTP) value.
+
+Compare Expected and Actual SL/TP:
+
+```
+if ((myBuyTrade.Get().Stop != mySL || myBuyTrade.Get().Take != myTP) &&
+    Valid_Trade(POSITION_TYPE_BUY, myBuyTrade.Get().Open, myBuyTrade.Get().Stop, myBuyTrade.Get().Take))
+{
+    Trade.PositionModify(ticket, myBuyTrade.Get().Stop, myBuyTrade.Get().Take);
+}
+```
+
+- myBuyTrade.Get().Stop: Retrieves the expected stop-loss value.
+- mySL: The actual stop-loss value retrieved from the position.
+- If the actual SL and TP values do not match the expected ones, the function calls Trade.PositionModify to update the position and set the correct stop-loss and take-profit.
+- Valid\_Trade(): Checks if the trade parameters (price, SL, TP) are valid for modification before attempting to modify the position.
+
+Modify Position:
+
+```
+Trade.PositionModify(ticket, myBuyTrade.Get().Stop, myBuyTrade.Get().Take);
+```
+
+- This function modifies the position associated with the ticket to reflect the correct stop-loss and take-profit values based on the expected values.
+
+Case 2: Sell Position
+
+- This is similar as the process for Buy positions.
+
+The Valid\_Trade function checks whether a trade's parameters (such as price, stop-loss, and take-profit levels) are valid based on the type of trade (buy or sell) and the rules governing stop-loss and take-profit levels in relation to the current symbol's properties. The function returns true if the trade is valid and false if it is not.
+
+```
+//+------------------------------------------------------------------+
+//|Check if a trade is valid                                         |
+//+------------------------------------------------------------------+
+bool CTradeManagement::Valid_Trade(ENUM_POSITION_TYPE Type,double Price,double SL,double TP)
+  {
+//--- Identify Position type
+   switch(Type)
+     {
+      case  POSITION_TYPE_BUY:
+         if((Price<TP||TP==0)&&(Price>SL||SL==0)&&
+            ((int((Price-SL)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(SL==0))&&
+            ((int((TP-Price)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(TP==0))&&
+            Price>0
+           )
+           {
+            //--- Trade properties are valid.
+            return true;
+           }
+         break;
+      case POSITION_TYPE_SELL:
+         if((Price>TP||TP==0)&&(Price<SL||SL==0)&&
+            ((int((Price-TP)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(TP==0))&&
+            ((int((SL-Price)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(SL==0))&&
+            Price>0
+           )
+           {
+            //--- Trade properties are valid.
+            return true;
+           }
+         break;
+      default://Unknown
+         return false;
+         break;
+     }
+//--- Trade properties are not valid.
+   Print("Something went wrong, SL/TP/Open-Price is incorrect!");
+   return false;
+  }
+```
+
+Function Purpose:
+
+The purpose of this function is to:
+
+1. Validate the trade parameters (price, SL, and TP) for buy or sell positions.
+2. Ensure that the stop-loss and take-profit levels are set correctly relative to the opening price and that they meet the symbol's stop level requirements.
+
+Parameters:
+
+```
+bool CTradeManagement::Valid_Trade(ENUM_POSITION_TYPE Type, double Price, double SL, double TP)
+```
+
+- Type: The type of position, either POSITION\_TYPE\_BUY (buy position) or POSITION\_TYPE\_SELL (sell position).
+- Price: The opening price of the trade.
+- SL: The stop-loss level for the trade.
+- TP: The take-profit level for the trade.
+
+Switch Statement:
+
+The function uses a switch statement to handle different types of positions (buy or sell) and applies different validation logic for each case.
+
+Case 1: Buy Position
+
+```
+case POSITION_TYPE_BUY:
+```
+
+The logic for a buy position checks the following conditions:
+
+Take-Profit (TP) Validation:
+
+```
+if ((Price < TP || TP == 0)
+```
+
+- The take-profit level must be greater than the opening price (Price < TP), or it can be set to zero (no take-profit).
+
+Stop-Loss (SL) Validation:
+
+```
+(Price > SL || SL == 0)
+```
+
+- The stop-loss level must be less than the opening price (Price > SL), or it can be set to zero (no stop-loss).
+
+Symbol's Stop Level Validation:
+
+- The symbol's stop level defines the minimum distance between the price and stop-loss/take-profit.
+- The stop-loss and take-profit levels must be a minimum distance (equal to or greater than the stop level) from the opening price.
+
+Stop-Loss Distance Validation:
+
+```
+((int((Price - SL) / CSymbol.Point()) >= CSymbol.StopLevel()) || SL == 0)
+```
+
+- The difference between the price and stop-loss must be at least the symbol's stop level (in points). If the stop-loss is set to zero, this condition is ignored.
+
+Take-Profit Distance Validation:
+
+```
+((int((TP - Price) / CSymbol.Point()) >= CSymbol.StopLevel()) || TP == 0)
+```
+
+- The difference between the take-profit and price must also meet the stop level requirement.
+
+Final Validation:
+
+```
+&& Price > 0
+```
+
+- The price must be greater than zero.
+
+If all these conditions are satisfied, the trade is considered valid, and the function returns true.
+
+Case 2: Sell Position
+
+For a sell position, the logic is similar but reversed.
+
+Default Case:
+
+```
+default:
+    return false;
+```
+
+If the position type is neither POSITION\_TYPE\_BUY nor POSITION\_TYPE\_SELL, the function returns false, indicating that the trade is not valid.
+
+Trade Properties Invalid:
+
+If any of the validation checks fail, the function logs an error message and returns false.
+
+```
+Print("Something went wrong, SL/TP/Open-Price is incorrect!");
+return false;
+```
+
+This message indicates that the stop-loss, take-profit, or open price is incorrect.
+
+This code below defines a method, Valid\_Order, which checks whether a stop order (either a BUY STOP or SELL STOP order) is valid by verifying the conditions for stop-loss (SL), take-profit (TP), price, and order deviation. The function returns true if the order is valid, and false otherwise.
+
+```
+//+------------------------------------------------------------------+
+//|Check if stop order is valid                                      |
+//+------------------------------------------------------------------+
+bool CTradeManagement::Valid_Order(ENUM_ORDER_TYPE Type,double Price,double SL,double TP)
+  {
+//--- Identify Order type
+   switch(Type)
+     {
+      case  ORDER_TYPE_BUY_STOP:
+         if((Price<TP||TP==0)&&(Price>SL||SL==0)&&(Price>CSymbol.Ask())&&
+            ((int((Price-SL)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(SL==0))&&
+            ((int((TP-Price)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(TP==0))&&
+            myDeviation>=uint(CSymbol.StopLevel())
+           )
+           {
+            //--- Order properties are valid.
+            return true;
+           }
+         break;
+      case ORDER_TYPE_SELL_STOP:
+         if((Price>TP||TP==0)&&(Price<SL||SL==0)&&(Price<CSymbol.Bid())&&
+            ((int((Price-TP)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(TP==0))&&
+            ((int((SL-Price)/CSymbol.Point())>=CSymbol.StopLevel())
+             ||(SL==0))&&
+            myDeviation>=uint(CSymbol.StopLevel())
+           )
+           {
+            //--- Order properties are valid.
+            return true;
+           }
+         break;
+      default://Other
+         return false;
+         break;
+     }
+//--- Order properties are not valid.
+   Print("Something went wrong, SL/TP/Deviation/Open-Price is incorrect!");
+   return false;
+  }
+```
+
+Overview:
+
+The function performs validation based on the type of stop order:
+
+1. BUY STOP: A buy-stop order is placed above the current market price (the ask price) and is triggered when the market price reaches or exceeds this level.
+2. SELL STOP: A sell-stop order is placed below the current market price (the bid price) and is triggered when the market price falls to or below this level.
+
+Parameters:
+
+```
+bool CTradeManagement::Valid_Order(ENUM_ORDER_TYPE Type, double Price, double SL, double TP)
+```
+
+- Type: The type of stop order (either ORDER\_TYPE\_BUY\_STOP or ORDER\_TYPE\_SELL\_STOP).
+- Price: The price at which the stop order is set.
+- SL: The stop-loss price associated with the stop order.
+- TP: The take-profit price associated with the stop order.
+
+Switch Statement:
+
+The switch statement handles different order types and applies distinct validation rules for each.
+
+Case 1: BUY STOP Order
+
+```
+case ORDER_TYPE_BUY_STOP:
+```
+
+For a BUY STOP order, the following conditions must be satisfied:
+
+Take-Profit (TP) Validation:
+
+```
+(Price < TP || TP == 0)
+```
+
+The take-profit price must be greater than the order price (Price < TP), or it can be set to zero (no take-profit).
+
+Stop-Loss (SL) Validation:
+
+```
+(Price > SL || SL == 0)
+```
+
+The stop-loss price must be less than the order price (Price > SL), or it can be set to zero (no stop-loss).
+
+Price Above Ask Price:
+
+```
+(Price > CSymbol.Ask())
+```
+
+The order price must be greater than the current ask price, which is a key condition for a BUY STOP order.
+
+Symbol’s Stop Level Validation: Stop-Loss Distance Validation:
+
+```
+((int((Price - SL) / CSymbol.Point()) >= CSymbol.StopLevel()) || SL == 0)
+```
+
+The difference between the order price and stop-loss must meet or exceed the symbol’s stop level, which is the minimum allowable distance in points between the order price and stop-loss level. If the stop-loss is set to zero, this condition is bypassed.
+
+Take-Profit Distance Validation:
+
+```
+((int((TP - Price) / CSymbol.Point()) >= CSymbol.StopLevel()) || TP == 0)
+```
+
+The difference between the take-profit and the order price must also meet the stop level requirement, or the take-profit can be zero.
+
+Price Deviation Validation:
+
+```
+myDeviation >= uint(CSymbol.StopLevel())
+```
+
+The price deviation (slippage tolerance) must be greater than or equal to the symbol’s stop level. Deviation allows the order to be executed even if the market price moves slightly beyond the set stop level.
+
+If all of these conditions are satisfied, the BUY STOP order is considered valid, and the function returns true.
+
+Case 2: SELL STOP Order
+
+For a SELL STOP order, the validation logic is the reverse of a BUY STOP order.
+
+Default Case:
+
+```
+default:
+    return false;
+```
+
+If the order type is neither ORDER\_TYPE\_BUY\_STOP nor ORDER\_TYPE\_SELL\_STOP, the function returns false, indicating that the order is not valid.
+
+Error Handling:
+
+If the conditions fail and the function cannot validate the order, it logs an error message:
+
+```
+Print("Something went wrong, SL/TP/Deviation/Open-Price is incorrect!");
+```
+
+This message informs the user that something is wrong with the stop-loss, take-profit, price deviation, or order price, making the order invalid.
+
+The code below defines a function SetBuyStop, responsible for setting the properties of a buy-stop order. It calculates the stop-loss (SL) and take-profit (TP) prices based on the given inputs and assigns them to the order. The function performs the following steps:
+
+1. Calculates the open price for the buy-stop order.
+2. Calculates and sets the stop-loss and take-profit prices relative to the open price.
+3. Normalizes the prices to ensure they are aligned with the symbol’s precision (number of decimal digits).
+
+```
+//+------------------------------------------------------------------+
+//|Will set buy-stop order properties                                |
+//+------------------------------------------------------------------+
+void CTradeManagement::SetBuyStop(int SL,int TP)
+  {
+//-- Get Open-price
+   myOpenPrice=CSymbol.Ask()+myDeviation*CSymbol.Point();
+   CSymbol.NormalizePrice(myOpenPrice);
+   NormalizeDouble(myOpenPrice,CSymbol.Digits());
+//--- Get SL value
+   mySL=SL*CSymbol.Point();
+   mySL=myOpenPrice-mySL;
+//--- Normalize the SL Price
+   CSymbol.NormalizePrice(mySL);
+   NormalizeDouble(mySL,CSymbol.Digits());
+//--- Get TP value
+   myTP=TP*CSymbol.Point();
+   myTP+=myOpenPrice;
+//--- Normalize the TP Price
+   CSymbol.NormalizePrice(myTP);
+   NormalizeDouble(myTP,CSymbol.Digits());
+//--- Set BuyStop properties
+   myBuyStop.Set(myOpenPrice,myTP,mySL);
+  }
+```
+
+Parameters:
+
+- SL: The stop-loss value in terms of points.
+- TP: The take-profit value in terms of points.
+
+```
+void CTradeManagement::SetBuyStop(int SL, int TP)
+```
+
+Both SL and TP are integer values representing the number of points (price increments) from the open price to the stop-loss or take-profit level.
+
+Step 1: Calculating the Open Price for the Buy-Stop Order
+
+```
+myOpenPrice = CSymbol.Ask() + myDeviation * CSymbol.Point();
+```
+
+- CSymbol.Ask() retrieves the current ask price for the symbol (currency pair or asset).
+- myDeviation \* CSymbol.Point() adds a deviation (price buffer) in terms of points to ensure the open price is placed above the current ask price. CSymbol.Point() returns the size of one point (smallest price change) for the symbol.
+
+Normalization:
+
+```
+CSymbol.NormalizePrice(myOpenPrice);
+NormalizeDouble(myOpenPrice, CSymbol.Digits());
+```
+
+- CSymbol.NormalizePrice(myOpenPrice) adjusts the price to align with the precision of the symbol (i.e., to a valid price format).
+- NormalizeDouble(myOpenPrice, CSymbol.Digits()) ensures the price is rounded to the correct number of decimal places defined by the symbol's precision (CSymbol.Digits()).
+
+Step 2: Calculating and Normalizing the Stop-Loss (SL) Price
+
+```
+mySL = SL * CSymbol.Point();
+mySL = myOpenPrice - mySL;
+```
+
+- SL \* CSymbol.Point() converts the integer stop-loss value (in points) to a price difference.
+- myOpenPrice - mySL calculates the stop-loss price by subtracting the stop-loss value (in points) from the open price. This is because a stop-loss for a buy-stop order is placed below the open price.
+
+Normalization:
+
+```
+CSymbol.NormalizePrice(mySL);
+NormalizeDouble(mySL, CSymbol.Digits());
+```
+
+- The stop-loss price is normalized and rounded to the correct precision, as explained above.
+
+Step 3: Calculating and Normalizing the Take-Profit (TP) Price
+
+```
+myTP = TP * CSymbol.Point();
+myTP += myOpenPrice;
+```
+
+- TP \* CSymbol.Point() converts the integer take-profit value (in points) to a price difference.
+- myTP += myOpenPrice adds this value to the open price because the take-profit for a buy-stop order is placed above the open price.
+
+Normalization:
+
+```
+CSymbol.NormalizePrice(myTP);
+NormalizeDouble(myTP, CSymbol.Digits());
+```
+
+- The take-profit price is normalized and rounded, similar to the stop-loss and open prices.
+
+Step 4: Assigning the Calculated Values to the Buy-Stop Order
+
+```
+myBuyStop.Set(myOpenPrice, myTP, mySL);
+```
+
+- myBuyStop.Set(myOpenPrice, myTP, mySL) assigns the calculated open price, take-profit, and stop-loss values to the myBuyStop order object.
+- The myBuyStop object will now hold the properties required to place the buy-stop order in the market.
+
+The SetBuyTrade function sets the properties for a buy position. It calculates and assigns the correct open price, stop-loss (SL), and take-profit (TP) for the trade. This function is used to configure the parameters for a buy position (not a pending order like a buy-stop). A buy position is opened at the current market price, with specified stop-loss and take-profit levels relative to the open price.
+
+Parameters:
+
+- SL: The stop-loss value in points (price increments).
+- TP: The take-profit value in points.
+- OP: The open price of the trade (the price at which the position is opened).
+
+Step 1: Setting the Open Price
+
+```
+myOpenPrice = OP;
+CSymbol.NormalizePrice(myOpenPrice);
+myOpenPrice = double(DoubleToString(myOpenPrice, CSymbol.Digits()));
+```
+
+- myOpenPrice = OP: The function takes the provided open price (OP) and assigns it to myOpenPrice.
+- CSymbol.NormalizePrice(myOpenPrice): This normalizes the open price according to the symbol's precision, ensuring that it matches the correct number of decimal places.
+- myOpenPrice = double(DoubleToString(myOpenPrice, CSymbol.Digits())): The price is further converted to a string and back to a double with the correct number of decimal digits (precision) for the symbol. This ensures consistency in handling price values, avoiding issues with floating-point precision.
+
+Step 2: Calculating and Normalizing the Stop-Loss (SL) Price
+
+```
+mySL = SL * CSymbol.Point();
+mySL = myOpenPrice - mySL;
+```
+
+- SL \* CSymbol.Point(): Converts the stop-loss value from points to an actual price difference. CSymbol.Point() returns the size of one point (the smallest possible price increment for the symbol).
+- myOpenPrice - mySL: The stop-loss price is set by subtracting the calculated stop-loss value from the open price. In a buy position, the stop-loss is placed below the open price to protect the trade from excessive losses.
+
+Normalization:
+
+```
+CSymbol.NormalizePrice(mySL);
+mySL = double(DoubleToString(mySL, CSymbol.Digits()));
+```
+
+- The stop-loss price is normalized to ensure it has the correct precision, and then it is rounded to the appropriate number of decimal places.
+
+Step 3: Calculating and Normalizing the Take-Profit (TP) Price
+
+```
+myTP = TP * CSymbol.Point();
+myTP += myOpenPrice;
+```
+
+- TP \* CSymbol.Point(): Converts the take-profit value from points to a price difference.
+- myTP += myOpenPrice: The take-profit price is added to the open price since, for a buy position, the take-profit is placed above the open price.
+
+Normalization:
+
+```
+CSymbol.NormalizePrice(myTP);
+myTP = double(DoubleToString(myTP, CSymbol.Digits()));
+```
+
+- The take-profit price is normalized and rounded to match the symbol’s precision.
+
+Step 4: Assigning the Calculated Values to the Buy Position
+
+```
+myBuyTrade.Set(myOpenPrice, myTP, mySL);
+```
+
+- myBuyTrade.Set(myOpenPrice, myTP, mySL): The calculated open price, stop-loss, and take-profit values are assigned to the myBuyTrade object. This object now holds all the relevant properties of the buy position that will be opened or modified.
+
+The OpenBuyStop function attempts to open a buy-stop order with specified stop-loss (SL), take-profit (TP), magic number, and optional comment.
+
+Parameters:
+
+- SL: Stop-loss value in points.
+- TP: Take-profit value in points.
+- Magic: Unique magic number to identify the order, typically used for expert advisors.
+- COMMENT: (Optional) A string comment to attach to the order for identification.
+
+```
+//+------------------------------------------------------------------+
+//|Will attempt to open a buy-stop order                             |
+//+------------------------------------------------------------------+
+bool CTradeManagement::OpenBuyStop(int SL,int TP,ulong Magic,string COMMENT=NULL)
+  {
+   SetBuyStop(SL,TP);
+//--- Set the order type for Risk management calculation
+   SetOrderType(ORDER_TYPE_BUY);
+//--- Set open price for Risk management calculation
+   OpenPrice = myBuyStop.Get().Open;
+//--- Set close price for Risk management calculation
+   ClosePrice = myBuyStop.Get().Stop;
+//--- Set Trade magic number
+   Trade.SetExpertMagicNumber(Magic);
+//--- Check if there are any open trades or opened deals or canceled deals already
+   if(!OpenOrder(ORDER_TYPE_BUY_STOP,Magic,COMMENT)&&!OpenedDeal(DEAL_TYPE_BUY,Magic,COMMENT)
+//--- Check if the buy-stop properties are valid
+      &&Valid_Order(ORDER_TYPE_BUY_STOP,myBuyStop.Get().Open,myBuyStop.Get().Stop,myBuyStop.Get().Take))
+     {
+      //--- Iterate through the Lot-sizes if they're more than max-lot
+      for(double i=Volume();i>=CSymbol.LotsMin()&&
+          /* Check if current number of orders +1 more orders is less than
+                 account orders limit.*/
+          (PositionsTotal()+Account.numOrders()+1)<Account.LimitOrders()
+          ;i-=CSymbol.LotsMax())
+        {
+         //--- normalize Lot-size
+         NormalizeLotsize(i);
+         /* Open buy-stop order with a Lot-size not more than max-lot and set order expiration
+         to the Symbol's session end time for the current day.
+         */
+         if(!Trade.BuyStop((i>CSymbol.LotsMax())?CSymbol.LotsMax():i,myBuyStop.Get().Open,
+                           CSymbol.GetSymbolName(),myBuyStop.Get().Stop,myBuyStop.Get().Take,
+                           ORDER_TIME_SPECIFIED,CTS.SessionEnd(),COMMENT))
+           {
+            //--- Order failed to open
+            return false;
+           }
+        }
+     }
+   else
+     {
+      //--- Order failed
+      return false;
+     }
+//--- Return trade result.
+   return true;
+  }
+```
+
+Step 1: Set Buy-Stop Properties
+
+```
+SetBuyStop(SL, TP);
+```
+
+- This line calls the SetBuyStop method (explained earlier) to calculate and set the open price, stop-loss, and take-profit for the buy-stop order.
+- The result is stored in the myBuyStop object, which holds the key properties for the buy-stop order (open price, SL, and TP).
+
+Step 2: Set Order Type for Risk Management
+
+```
+SetOrderType(ORDER_TYPE_BUY);
+```
+
+- This sets the internal order type to ORDER\_TYPE\_BUY. Although this is a buy-stop order, it is still fundamentally a buy order, and this is used to calculate risk management metrics like stop-loss, take-profit, and position sizing.
+
+Step 3: Set Open and Close Prices for Risk Management
+
+```
+OpenPrice = myBuyStop.Get().Open;
+ClosePrice = myBuyStop.Get().Stop;
+```
+
+- OpenPrice: This is set to the calculated open price of the buy-stop order (myBuyStop.Get().Open).
+- ClosePrice: This is set to the calculated stop-loss price of the buy-stop order (myBuyStop.Get().Stop).
+
+Step 4: Set Magic Number
+
+```
+Trade.SetExpertMagicNumber(Magic);
+```
+
+- This sets the magic number for the order using Trade.SetExpertMagicNumber. The magic number uniquely identifies the order, which is helpful when managing trades opened by an expert advisor.
+
+Step 5: Check for Open Trades or Deals
+
+```
+if (!OpenOrder(ORDER_TYPE_BUY_STOP, Magic, COMMENT) && !OpenedDeal(DEAL_TYPE_BUY, Magic, COMMENT)
+```
+
+- OpenOrder: This checks whether there are any pending buy-stop orders already opened with the same magic number and comment. If one exists, the function skips opening a new order.
+- OpenedDeal: This checks whether there is already a buy position opened using the same magic number and comment. If such a deal exists, the function avoids opening a new one.
+
+Step 6: Validate Buy-Stop Order Properties
+
+```
+&& Valid_Order(ORDER_TYPE_BUY_STOP, myBuyStop.Get().Open, myBuyStop.Get().Stop, myBuyStop.Get().Take))
+```
+
+- This checks whether the calculated buy-stop order properties are valid using the Valid\_Order method (explained earlier). The method checks that the open price, stop-loss, and take-profit are correct, and that the order adheres to the symbol's rules (e.g., minimum stop level, point value, etc.).
+
+Step 7: Iterate Through Lot Sizes
+
+```
+for (double i = Volume(); i >= CSymbol.LotsMin() && (PositionsTotal() + Account.numOrders() + 1) < Account.LimitOrders(); i -= CSymbol.LotsMax())
+```
+
+- Volume(): This retrieves the current trade volume (lot size) for the order.
+- The loop starts from the current volume (i = Volume()), and as long as:
+
+1. The lot size is greater than or equal to the minimum lot size (CSymbol.LotsMin()).
+2. The total number of positions plus the account's existing orders is less than the account's order limit (Account.LimitOrders()).
+
+It reduces the lot size in increments of the maximum lot size (CSymbol.LotsMax()) for each iteration to ensure that the order complies with volume limits.
+
+Step 8: Normalize Lot Size
+
+```
+NormalizeLotsize(i);
+```
+
+- The lot size (i) is normalized, ensuring it is adjusted to meet the symbol's precision rules.
+
+Step 9: Attempt to Open Buy-Stop Order
+
+```
+if (!Trade.BuyStop((i > CSymbol.LotsMax()) ? CSymbol.LotsMax() : i, myBuyStop.Get().Open, CSymbol.GetSymbolName(), 
+myBuyStop.Get().Stop, myBuyStop.Get().Take, ORDER_TIME_SPECIFIED, CTS.SessionEnd(), COMMENT))
+```
+
+- Trade.BuyStop(): This attempts to place the buy-stop order with the following parameters:
+
+1. Lot size: The lot size is capped at CSymbol.LotsMax() (the symbol’s maximum allowed lot size). If (i) is larger than the maximum lot size, it uses the maximum; otherwise, it uses the current lot size (i).
+2. Open price: The price at which the buy-stop order should be executed.
+3. Symbol name: The name of the trading symbol (currency pair etc.).
+4. Stop-loss: The calculated stop-loss price for the order.
+5. Take-profit: The calculated take-profit price for the order.
+6. Order expiration time: The order is set to expire at the end of the symbol's trading session on the current day (CTS.SessionEnd()).
+7. Comment: The optional comment provided earlier.
+
+If the order fails to open, the function returns false, indicating that the buy-stop order was not successfully placed.
+
+Step 10: Return Result
+
+```
+return true;
+```
+
+- If the order is successfully opened, the function returns true, indicating that the buy-stop order was placed successfully.
+
+OpenSellStop function
+
+For the OpenSellStop function, the function logic is similar to the OpenBuyStop function explain earlier.
+
+The function OpenStops attempts to open both buy-stop and sell-stop orders.
+
+```
+//+------------------------------------------------------------------+
+//|This function will open both buy-stop and sell-stop orders for    |
+//|StopOrdersType(STOP ORDERS)                                       |
+//+------------------------------------------------------------------+
+bool CTradeManagement::OpenStops(int SL,int TP,ulong Magic,string COMMENT=NULL)
+  {
+//--- Set buy-stop properties
+   SetBuyStop(SL,TP);
+//--- Set sell-stop properties
+   SetSellStop(SL,TP);
+//--- Set the order type for Risk management calculation
+   SetOrderType(ORDER_TYPE_BUY);
+//--- Set open price for Risk management calculation
+   OpenPrice = myBuyStop.Get().Open;
+//--- Set close price for Risk management calculation
+   ClosePrice = myBuyStop.Get().Stop;
+//--- Set Trade magic number
+   Trade.SetExpertMagicNumber(Magic);
+//--- Check if there are any open trades or opened deals or canceled deals already
+   if(!OpenOrder(ORDER_TYPE_BUY_STOP,Magic,COMMENT)&&!OpenedDeal(DEAL_TYPE_BUY,Magic,COMMENT)
+      &&!OpenedDeal(DEAL_TYPE_BUY_CANCELED,Magic,COMMENT)
+//--- Check if the buy-stop properties are valid
+      &&Valid_Order(ORDER_TYPE_BUY_STOP,myBuyStop.Get().Open,myBuyStop.Get().Stop,myBuyStop.Get().Take)
+      &&!OpenOrder(ORDER_TYPE_SELL_STOP,Magic,COMMENT)
+      &&!OpenedDeal(DEAL_TYPE_SELL,Magic,COMMENT)&&!OpenedDeal(DEAL_TYPE_SELL_CANCELED,Magic,COMMENT)
+//--- Check if the sell-stop properties are valid
+      &&Valid_Order(ORDER_TYPE_SELL_STOP,mySellStop.Get().Open,mySellStop.Get().Stop,mySellStop.Get().Take))
+     {
+      //--- Iterate through the Lot-sizes if they're more than max-lot
+      for(double i=Volume();i>=CSymbol.LotsMin()&&
+          /* Check if current number of orders +2 more orders is less than
+             account orders limit.*/
+          (PositionsTotal()+Account.numOrders()+2)<Account.LimitOrders()
+          ;i-=CSymbol.LotsMax())
+        {
+         //--- normalize Lot-size
+         NormalizeLotsize(i);
+         /* Open orders with a Lot-size not more than max-lot and set order expiration
+         to the Symbol's session end time for the current day.
+         */
+         if(!Trade.BuyStop((i>CSymbol.LotsMax())?CSymbol.LotsMax():i,myBuyStop.Get().Open,
+                           CSymbol.GetSymbolName(),myBuyStop.Get().Stop,myBuyStop.Get().Take,
+                           ORDER_TIME_SPECIFIED,CTS.SessionEnd(),COMMENT)
+            ||!Trade.SellStop((i>CSymbol.LotsMax())?CSymbol.LotsMax():i,mySellStop.Get().Open,
+                              CSymbol.GetSymbolName(),mySellStop.Get().Stop,mySellStop.Get().Take,
+                              ORDER_TIME_SPECIFIED,CTS.SessionEnd(),COMMENT))
+           {
+            //--- one or more orders failed to open.
+            return false;
+           }
+        }
+     }
+   else
+     {
+      //--- Orders failed
+      return false;
+     }
+//--- Return trade result.
+   return true;
+  }
+```
+
+Step 1: Set Buy-Stop and Sell-Stop Properties
+
+```
+SetBuyStop(SL, TP);
+SetSellStop(SL, TP);
+```
+
+- SetBuyStop: This method calculates and sets the open price, stop-loss, and take-profit for the buy-stop order. These values are stored in the myBuyStop object.
+- SetSellStop: Similarly, this method calculates and sets the open price, stop-loss, and take-profit for the sell-stop order, stored in the mySellStop object.
+
+Step 2: Set Order Type for Risk Management
+
+```
+SetOrderType(ORDER_TYPE_BUY);
+```
+
+- This sets the internal order type for risk management calculation to a buy order, even though both buy-stop and sell-stop orders are being placed. This setting is used later to assess the risk based on the buy order's stop-loss and take-profit.
+
+Step 3: Set Open and Close Prices for Risk Management
+
+```
+OpenPrice = myBuyStop.Get().Open;
+ClosePrice = myBuyStop.Get().Stop;
+```
+
+- OpenPrice: The calculated open price for the buy-stop order.
+- ClosePrice: The calculated stop-loss price for the buy-stop order. These prices are used for internal risk management calculations.
+
+Step 4: Set Magic Number
+
+```
+Trade.SetExpertMagicNumber(Magic);
+```
+
+- This assigns the magic number to the trade, which uniquely identifies orders managed by the expert advisor (EA).
+
+Step 5: Check for Existing Orders or Deals
+
+```
+if(!OpenOrder(ORDER_TYPE_BUY_STOP, Magic, COMMENT) && !OpenedDeal(DEAL_TYPE_BUY, Magic, COMMENT)
+   && !OpenedDeal(DEAL_TYPE_BUY_CANCELED, Magic, COMMENT)
+```
+
+- OpenOrder: Checks if there is already an open buy-stop order with the same magic number and comment. If one exists, no new buy-stop order will be opened.
+- OpenedDeal: Checks if there is already an active or canceled buy position with the same magic number and comment. If one exists, no new buy-stop order will be placed.
+
+Step 6: Validate Buy-Stop Order Properties
+
+```
+&& Valid_Order(ORDER_TYPE_BUY_STOP, myBuyStop.Get().Open, myBuyStop.Get().Stop, myBuyStop.Get().Take)
+```
+
+- Valid\_Order: This validates the buy-stop order properties (open price, stop-loss, take-profit) to ensure they conform to the symbol’s rules (e.g., minimum stop level). If the validation passes, it proceeds to check the sell-stop order.
+
+Step 7: Check for Existing Sell Orders or Deals
+
+```
+&& !OpenOrder(ORDER_TYPE_SELL_STOP, Magic, COMMENT) && !OpenedDeal(DEAL_TYPE_SELL, Magic, COMMENT)
+&& !OpenedDeal(DEAL_TYPE_SELL_CANCELED, Magic, COMMENT)
+```
+
+- Similar to the buy-stop checks, these conditions check whether there is already a sell-stop order, an active sell deal, or a canceled sell deal with the same magic number and comment. If one exists, the function avoids placing a new sell-stop order.
+
+Step 8: Validate Sell-Stop Order Properties
+
+```
+&& Valid_Order(ORDER_TYPE_SELL_STOP, mySellStop.Get().Open, mySellStop.Get().Stop, mySellStop.Get().Take))
+```
+
+- Valid\_Order: This validates the sell-stop order properties (open price, stop-loss, take-profit). If validation passes, it proceeds to open both buy-stop and sell-stop orders.
+
+Step 9: Iterate Through Lot Sizes
+
+```
+for (double i = Volume(); i >= CSymbol.LotsMin() && (PositionsTotal() + Account.numOrders() + 2) < Account.LimitOrders(); i -= CSymbol.LotsMax())
+```
+
+- Volume(): Retrieves the current trade volume (lot size).
+- The loop starts with the full volume (i = Volume()) and decreases the lot size (i -= CSymbol.LotsMax()) if it exceeds the maximum allowed lot size (CSymbol.LotsMax()).
+- It ensures that the total number of open positions and pending orders is within the account's limit (Account.LimitOrders()).
+
+The loop ensures that if the lot size exceeds the symbol's maximum allowed lot size, it will split the orders into multiple smaller ones.
+
+Step 10: Normalize Lot Size
+
+```
+NormalizeLotsize(i);
+```
+
+- The lot size (i) is normalized to conform to the symbol's allowed precision.
+
+Step 11: Attempt to Open Buy-Stop and Sell-Stop Orders
+
+```
+if(!Trade.BuyStop((i > CSymbol.LotsMax()) ? CSymbol.LotsMax() : i, myBuyStop.Get().Open,
+                  CSymbol.GetSymbolName(), myBuyStop.Get().Stop, myBuyStop.Get().Take,
+                  ORDER_TIME_SPECIFIED, CTS.SessionEnd(), COMMENT)
+   || !Trade.SellStop((i > CSymbol.LotsMax()) ? CSymbol.LotsMax() : i, mySellStop.Get().Open,
+                     CSymbol.GetSymbolName(), mySellStop.Get().Stop, mySellStop.Get().Take,
+                     ORDER_TIME_SPECIFIED, CTS.SessionEnd(), COMMENT))
+```
+
+- Trade.BuyStop: Attempts to place a buy-stop order with the following parameters:
+
+- Lot size: If the current lot size (i) exceeds the maximum allowed (CSymbol.LotsMax()), it places the order with the maximum allowed lot size.
+- Open price: The calculated open price for the buy-stop order.
+- Symbol name: The name of the trading instrument.
+- Stop-loss: The stop-loss price for the buy-stop order.
+- Take-profit: The take-profit price for the buy-stop order.
+- Expiration time: Set to the end of the symbol's trading session for the current day (CTS.SessionEnd()).
+- Comment: An optional comment to describe the order.
+
+- Trade.SellStop: Similarly, attempts to place a sell-stop order with the same logic as the buy-stop order.
+
+If either order fails to open, the function returns false.
+
+Step 12: Return Result
+
+```
+return true;
+```
+
+- If both the buy-stop and sell-stop orders are successfully opened, the function returns true. If any part of the process fails, the function returns false.
+
+The CloseTrades function is designed to close all open positions that match a specified comment (COMMENT\_COMMON).
+
+```
+//+------------------------------------------------------------------+
+//|Function will attempt to close all trades depending on the        |
+//|position comment                                                  |
+//+------------------------------------------------------------------+
+void CTradeManagement::CloseTrades(string COMMENT_COMMON)
+  {
+//--- Iterate through all open positions
+   for(int i=0; i<PositionsTotal(); i++)
+     {
+      ulong ticket = PositionGetTicket(i);
+      //--- Check if Position ticket is above zero
+      if(ticket>0)
+        {
+         //--- Check if the Position's Symbol,Comment is correct
+         if(PositionGetString(POSITION_SYMBOL)==CSymbol.GetSymbolName()
+            &&StringFind(PositionGetString(POSITION_COMMENT),COMMENT_COMMON)>=0)
+           {
+            //--- close trade.
+            Trade.PositionClose(ticket);
+           }
+        }
+     }
+  }
+```
+
+Step 1: Iterate Through All Open Positions
+
+```
+for (int i = 0; i < PositionsTotal(); i++)
+```
+
+- PositionsTotal(): Returns the total number of open positions.
+- This loop iterates over all currently open positions. The variable i is the index of the position, ranging from 0 to PositionsTotal() - 1.
+
+Step 2: Get the Position's Ticket Number
+
+```
+ulong ticket = PositionGetTicket(i);
+```
+
+- PositionGetTicket(i): Retrieves the ticket number of the open position at index i. The ticket number is a unique identifier for each position.
+- The ticket number is stored in the variable ticket.
+
+Step 3: Check if Ticket is Valid
+
+```
+if (ticket > 0)
+```
+
+- This checks if the ticket number is greater than zero, ensuring that the retrieved ticket is valid before proceeding. A ticket number of 0 would indicate that no position exists at the given index, which would not be a valid state.
+
+Step 4: Validate Position Symbol and Comment
+
+```
+if (PositionGetString(POSITION_SYMBOL) == CSymbol.GetSymbolName() 
+    && StringFind(PositionGetString(POSITION_COMMENT), COMMENT_COMMON) >= 0)
+```
+
+- PositionGetString(POSITION\_SYMBOL): Retrieves the symbol name of the position at index i (e.g., currency pair).
+- CSymbol.GetSymbolName(): Retrieves the symbol name associated with the CSymbol object.
+- The first condition checks if the symbol of the position matches the symbol managed by CSymbol.
+- PositionGetString(POSITION\_COMMENT): Retrieves the comment string attached to the open position.
+- StringFind(PositionGetString(POSITION\_COMMENT), COMMENT\_COMMON): Checks if the specified COMMENT\_COMMON string is present in the position's comment.
+
+- If the comment contains COMMENT\_COMMON, the function returns an index where the match starts.
+- The condition >= 0 ensures that it only passes if the comment contains the substring.
+
+This ensures that only positions with the matching symbol and comment are selected for closure.
+
+Step 5: Close the Trade
+
+```
+Trade.PositionClose(ticket);
+```
+
+- Trade.PositionClose(ticket): Attempts to close the open position identified by the ticket number.
+- If the position matches the conditions (correct symbol and contains the specified comment), it is closed using this method.
+
+### Conclusion
+
+In this article, we implemented the code to open stop orders and check the validity of trades and orders before opening them. We created a function called FundamentalModewhich handles a special trading mode by managing opposing stop orders. Furthermore, slippage reduction for stop orders was implemented, mitigating the risk of price slippage during volatile market conditions caused by the news releases.
+
+Key Takeaways:
+
+- Precision in Execution: The Trade Management Class handles all aspects of placing, modifying, and closing trades, ensuring that trade execution is precise, even in volatile markets.
+- Real-Time Adjustments: The ability to dynamically adjust stop losses and take profits ensures the EA responds to real-time market changes, allowing for better risk management.
+- Slippage Management: By accounting for slippage and implementing logic to adjust trade parameters dynamically, the Trade Management class ensures that trades are executed as close as possible to intended conditions, reducing potential losses.
+
+Thank you for your time, I'm looking forward to providing more value in the next article :)
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16169.zip "Download all attachments in the single ZIP archive")
+
+[NewsTrading\_Part5.zip](https://www.mql5.com/en/articles/download/16169/newstrading_part5.zip "Download NewsTrading_Part5.zip")
+(598.37 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Multiple Symbol Analysis With Python And MQL5 (Part II): Principal Components Analysis For Portfolio Optimization](https://www.mql5.com/en/articles/16273)
+
+Managing trading account risk is a challenge for all traders. How can we develop trading applications that dynamically learn high, medium, and low-risk modes for various symbols in MetaTrader 5? By using PCA, we gain better control over portfolio variance. I’ll demonstrate how to create applications that learn these three risk modes from market data fetched from MetaTrader 5.
+
+[How to view deals directly on the chart without weltering in trading history](https://www.mql5.com/en/articles/15026)
+
+In this article, we will create a simple tool for convenient viewing of positions and deals directly on the chart with key navigation. This will allow traders to visually examine individual deals and receive all the information about trading results right on the spot.
+
+[Stepwise feature selection in MQL5](https://www.mql5.com/en/articles/16285)
+
+In this article, we introduce a modified version of stepwise feature selection, implemented in MQL5. This approach is based on the techniques outlined in Modern Data Mining Algorithms in C++ and CUDA C by Timothy Masters.
+
+[Requesting in Connexus (Part 6): Creating an HTTP Request and Response](https://www.mql5.com/en/articles/16182)
+
+In this sixth article of the Connexus library series, we will focus on a complete HTTP request, covering each component that makes up a request. We will create a class that represents the request as a whole, which will help us bring together the previously created classes.
+
+[What's wrong with regular VPS?
+Here are the 8 most common problems that algorithmic traders may encounter
+Read
+
+](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/450486&a=drhremihlwuaqyvgpzfddbtmgciejpba&s=c37d25bcceb93ed153b814e6ba4d4839461a9b2d68dd82b95b142be06d310f3f&uid=&ref=https://www.mql5.com/en/articles/16169&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5125451935183946492)

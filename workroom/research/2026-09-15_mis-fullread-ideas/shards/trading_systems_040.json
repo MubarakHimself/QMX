@@ -1,0 +1,73 @@
+{
+  "shard_id": "trading_systems_040",
+  "section": "Trading systems",
+  "n": 7,
+  "series_in_shard": [
+    "introduction to mql5"
+  ],
+  "articles": [
+    {
+      "id": 17574,
+      "title": "Introduction to MQL5 (Part 14): A Beginner's Guide to Building Custom Indicators (III)",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Building Custom Indicators (III)",
+      "series_key": "introduction to mql5",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17574.md"
+    },
+    {
+      "id": 17689,
+      "title": "Introduction to MQL5 (Part 15): A Beginner's Guide to Building Custom Indicators (IV)",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Building Custom Indicators (IV)",
+      "series_key": "introduction to mql5",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17689.md"
+    },
+    {
+      "id": 18884,
+      "title": "Introduction to MQL5 (Part 19): Automating Wolfe Wave Detection",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): Automating Wolfe Wave Detection",
+      "series_key": "introduction to mql5",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18884.md"
+    },
+    {
+      "id": 19856,
+      "title": "Introduction to MQL5 (Part 22): Building an Expert Advisor for the 5-0 Harmonic Pattern",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): Building an Expert Advisor for the 5-0 Harmonic Pattern",
+      "series_key": "introduction to mql5",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19856.md"
+    },
+    {
+      "id": 19968,
+      "title": "Introduction to MQL5 (Part 25): Building an EA that Trades with Chart Objects (II)",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): Building an EA that Trades with Chart Objects (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19968.md"
+    },
+    {
+      "id": 20591,
+      "title": "Introduction to MQL5 (Part 32): Mastering API and WebRequest Function in MQL5 (VI)",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (VI)",
+      "series_key": "introduction to mql5",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20591.md"
+    },
+    {
+      "id": 21728,
+      "title": "Introduction to MQL5 (Part 43): Beginner Guide to File Handling in MQL5 (V)",
+      "section": "Trading systems",
+      "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (V)",
+      "series_key": "introduction to mql5",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21728.md"
+    }
+  ]
+}

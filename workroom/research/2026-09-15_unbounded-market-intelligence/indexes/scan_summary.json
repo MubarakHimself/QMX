@@ -1,0 +1,33 @@
+{
+  "sqlite_rows": 3315,
+  "ok": 3057,
+  "failed": 258,
+  "body_scan_ok": 3057,
+  "body_scan_fail": 0,
+  "family_article_counts_body": {
+    "regime": 2498,
+    "session_calendar": 1506,
+    "network_physics": 951,
+    "ml_sequence": 1757,
+    "placement_filter": 1685,
+    "microstructure": 2020,
+    "persistence": 747,
+    "risk_portfolio": 1337,
+    "changeover": 212,
+    "information": 127,
+    "volatility": 665
+  },
+  "family_article_counts_title": {
+    "ml_sequence": 285,
+    "session_calendar": 62,
+    "regime": 91,
+    "persistence": 52,
+    "changeover": 11,
+    "risk_portfolio": 48,
+    "microstructure": 53,
+    "network_physics": 8,
+    "placement_filter": 24,
+    "volatility": 16,
+    "information": 3
+  }
+}

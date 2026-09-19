@@ -1,0 +1,207 @@
+20: # News Trading Made Easy (Part 4): Performance Enhancement
+25: | 30 October 2024 at 07:10
+36: ### Introduction
+40: Another method we will utilize to improve performance is to cluster the news events based on their hours, so this means that for each hour of the day, we will have an array that will store event information for a specific hour only. When we need the event information for the current hour if there are any, we will use a switch statement to access the array that holds the event information for the h
+42: ### Time Variables Class
+44: Previously this class was used to declare an array with a fixed size of 2000 indexes that would store candle times and will be used in the Candle Properties class to check if this stored candle time is equal to the current candle time to essentially identify if a new candle has formed or not. On this occasion, we will expand upon this class to declare enumerations for time and functions that will 
+48: ```
+232:    //--- Convert Integer to the Enumeration HOURLY
+271: //|Convert Integer to the Enumeration HOURLY                         |
+294: ```
+296: The code below defines an enumeration named HOURLY. An enumeration (enum) is a user-defined data type that consists of a set of named integer constants. It is often used when you want to represent a specific set of values with meaningful names, making your code more readable.
+298: ```
+324:    H24=0    // Represents Hour 00 (Midnight)
+326: ```
+330: Each value in the enumeration corresponds to a specific hour of the day, starting from H1=1 for the first hour, H2=2, and so on, up to H23=23 for the 23rd hour. H24=0 is used to represent midnight (00:00 hours). You can use names like H1, H2, etc., in your code to make it more intuitive when dealing with time-related data. Instead of using raw numbers for hours, I prefer to use HOURLY values.
+334: ```
+335: HOURLY current_hour = H10; // Setting the current hour to 10:00 AM
+340: ```
+342: In this example above, current\_hour is assigned the value H10, and it checks if the current hour is H10, printing a message accordingly. This makes the code easier to read and understand, especially when working with countless time-based operations.
+346: This enumeration defines constants for each minute of an hour, from M0 (00) to M59 (59) this is as there are 59 minutes in every hour.
+348: ```
+353: ```
+359: - M0 represents minute 00.
+360: - M30 represents minute 30.
+370: - Less customization: This is a disadvantage as the user/trader may want to only open trades 5s before an event due to the occasional volatility that occurs before a high-impact event happens, this means that your stoploss could be triggered merely based on how early you enter your trade before the 
+374: - Fixed schedule: This is an advantage as we can set the expert to only check to enter a trade within 30 second intervals, this will drastically improve the back-testing speed. The reason this reduces the back-testing runtime is merely because we don't have to use the computer's resources as often. 
+382: - Slippage: The prices of the asset or symbol are changing incredibly frequently that the price the user/trader wished to enter/exit the market is no longer available and a less favorable/expected price is utilized. Unpredictability is the main disadvantage with slippage.
+383: - Spreads: Wide spreads are more common, limiting the trader's potential for profitability.
+384: - Off quotes/unavailable: Trades may be terminated completely, meaning the trader losses their ability to benefit from a potentially lucrative move in the asset/market.
+388: ```
+393: ```
+399: ```
+404: ```
+408: - S0 represents second 00.
+409: - S30 represents second 30.
+411: The function below converts an integer (Hour) to the corresponding value from the HOURLY enumeration. It ensures that the value passed (in the Hour variable) is valid (within 0 to 23) and then returns the corresponding HOURLY enum value.
+413: - Return type: HOURLY – This means the function returns a value from the HOURLY enum, which we discussed earlier. This enum contains values corresponding to the 24 hours of the day, where H1=1, H2=2, ..., H23=23, and H24=0.
+414: - Function name: Hourly. It is a method belonging to this CTimeVariables class, as indicated by the scope resolution operator (::). So, it's part of the CTimeVariables class.
+415: - Parameter:
+417: > - uint Hour: This is an unsigned integer representing an hour, and it is passed as a parameter to the function.
+419: ```
+424: ```
+432: - This checks whether the Hour value exceeds 23. Since valid hours range from 0 to 23 (24 hours in a day), any value greater than 23 is invalid.
+436: - If Hour > 23 (invalid hour), the function will return HOURLY(0), which corresponds to H24=0 (midnight or 00:00).
+440: - If Hour is within the valid range (0 to 23), it converts the Hour integer to its corresponding value in the HOURLY enum. For example, if Hour = 10, it returns HOURLY(10), which corresponds to H10.
+442: ```
+444: ```
+448: - If you call Hourly(10), the function will return HOURLY(10) (which is the enum value for 10:00 AM).
+449: - If you call Hourly(25), since 25 is not a valid hour, the function will return HOURLY(0) (which corresponds to 00:00 or midnight).
+453: - Handling invalid hours: The function ensures that if the Hour value is outside the valid range (greater than 23), it defaults to HOURLY(0), which is equivalent to midnight.
+454: - Conversion: The function efficiently converts an integer hour to an HOURLY enum value, making it easier to use in time-based logic.
+460: ```
+465: ```
+473: ```
+478: ```
+494: - In volatile markets, particularly during major news events (like NFP or central bank announcements), precision down to the second becomes critical, as large price movements can happen in milliseconds.
+495: - In low volatility conditions, using minute-level precision might be sufficient for placing trades, as price movements tend to be slower.
+497: ### DB Access Reduction
+501: - At the beginning of each new day we load all the news events that will or have occurred during the current day, ideally. This data will be stored into a structure array in which the program will display the event objects on the chart showing the time of the event and the name etc.
+502: - When an event has occurred or is occurring, the expert will again access the database in memory to retrieve the next occurring event information for the same day if any.
+510: ```
+524: ```
+526: If the current time is 11am, there is no point in checking if the time 14pm is a match, and constantly iterating through this array for every new tick on the chart when event times are still unreachable will further affect the operational speed of the expert. With this in mind, a simple solution to this problem would be to at least separate the array into different hours of the day and the expert 
+532: - Scenario: A trader employs an EA that monitors major news releases like the U.S. Non-Farm Payrolls (NFP), scheduled for 14:30. The EA is programmed to place a buy-stop or sell-stop order based on the news outcome. Without optimization, the EA continuously accesses the database every second during 
+533: - Solution with DB Access Reduction: Instead of continuous database access, the EA loads all events for the day at 00:00 and segments them by hour. When the time approaches 14:00, the EA only checks events within the 14pm hour array and skips any event checks outside this time window. When 14:30 arr
+535: We will create a new folder in the project called TimeSeries, this folder will hold the two classes that will create the arrays for each hour of the day and retrieve these array values for each hour of the day.
+539: ### Time By Hour Class
+541: The code below defines a class CTimeByHour, which is designed to manage and retrieve time and event data for each hour of the day. The class uses several components, such as structures, arrays, and the concept of object-oriented programming (OOP). This class's purpose is to create array objects for each hour of the day when there is 24-hours, meaning we will declare 24 array objects. These array o
+543: ```
+545: //|                                                   TimeByHour.mqh |
+549: #property copyright "Copyright 2024, MetaQuotes Ltd."
+550: #property link      "https://www.mql5.com"
+551: #include <Object.mqh>
+552: #include <Arrays\ArrayObj.mqh>
+553: #include "../TimeVariables.mqh"
+554: #include "../CommonVariables.mqh"
+555: #include "../TimeManagement.mqh"
+556: //--- Structure to store time data in Hour and Minute
+565: //|TimeByHour class                                                  |
+576:                      CTimeByHour(HOURLY myHour,MINUTELY myMinute,Calendar &myEventData):
+577:       //--- Assign integer variables Hour and Minute with time data from myHour and myMinute respectively
+584:    virtual void      myTime(Calendar &myNews[]);
+585:    //--- Array object declarations for each hour of the day
+587:    //--- Integer variables to store time data in hour and minute format
+590:    //--- Calendar structure variable to store event info
+600:    //--- Retrieve array object for an individual hour
+601:    CObject           *getTime(HOURLY myHour)
+637:    //--- Function to retrieve timedata and calendar info for a specific hour of the day via parameters passed by reference
+638:    void              GetDataForHour(HOURLY myHour,TimeDate &TimeData[],Calendar &Events[])
+643:       //--- retrieve array object for the specific hour
+661: ```
+665: - TimeDate: A structure to store time data, with Hour and Minute as integer fields.
+666: - myTimeData[]: An array of TimeDate structure to hold the time data for multiple hours.
+668: ```
+674: ```
+676: - myEvents[]: An array of Calendar type, intended to store event data in parallel with myTimeData.
+678: ```
+680: ```
+684: - CTimeByHour: A class that extends CObject. This class manages time and event data by hour.
+686: ```
+688: ```
+692: - CTimeManagement and CTimeVariables: These are objects of custom classes (CTimeManagement, CTimeVariables) included from TimeManagement.mqh and TimeVariables.mqh, managing time-related data and variables.
+694: ```
+698: ```
+702: - This is a parameterized constructor for the class. It initializes two integer variables (Hour and Minute) using HOURLY and MINUTELY enums, and assigns event information (myEventData) to myEData.
+704: ```
+706:    CTimeByHour(HOURLY myHour, MINUTELY myMinute, Calendar &myEventData):
+711: ```
+715: - myH1 ... myH24: Pointers to CArrayObj objects, each corresponding to a specific hour (01 through 24) of the day. Each CArrayObj holds an array of objects for a specific hour.
+716: - Hour and Minute: Integer variables for storing time.
+717: - myEData: A Calendar object that stores event information.
+719: ```
+724: ```
+728: - CTimeByHour(void): A default constructor that doesn’t initialize anything.
+729: - getmyTime: A pointer to an array object that holds the time data for a specific hour.
+731: ```
+735: ```
+739: - getTime(HOURLY myHour): A method that uses a switch statement to retrieve the appropriate CArrayObj object for a specific hour of the day based on the HOURLY enum. Each case corresponds to one hour (e.g., H1, H2, ... H24).
+741: ```
+752: ```
+756: - ~CTimeByHour(void): The destructor cleans up dynamically allocated memory by calling delete on the CArrayObj pointers (myH1 ... myH24) and other class pointers.
+758: ```
+765: ```
+769: - GetDataForHour: This method retrieves time and event data for a specific hour (myHour).
+770: - ArrayRemove: Clears the arrays (TimeData[], Events[]).
+771: - getmyTime = getTime(myHour): Fetches the array object for the specified hour.
+772: - for loop: Iterates over all the items in the retrieved CArrayObj (i.e., time and event data for each entry).
+773: - ArrayResize: Dynamically resizes the arrays (TimeData[], Events[]) to fit the new data.
+774: - myClass: Refers to the current object being processed in the array.
+776: For each object, the method assigns the Hour, Minute, and myEData to the corresponding index in the TimeData[] and Events[] arrays.
+778: ```
+779: void GetDataForHour(HOURLY myHour, TimeDate &TimeData[], Calendar &Events[])
+797: ```
+799: ### Time By Day Class
+801: This class will be responsible for assigning values to the array objects declared previously in the TimeByHour header file, as well as retrieving these values and sorting for the specific hour and minute stored in the relevant array object. The code starts by importing other files: TimeByHour.mqh, which handles hour-level time data, and CommonVariables.mqh, which contains shared constants and vari
+803: ```
+809: #property copyright "Copyright 2024, MetaQuotes Ltd."
+810: #property link      "https://www.mql5.com"
+811: #include "TimeByHour.mqh"
+812: #include "../CommonVariables.mqh"
+822:    void              DatePerMinute(TimeDate &TData[],Calendar &EData[],MINUTELY min,TimeDate &TimeData[],Calendar &EventData[])
+840:    //--- Function to set time for array objects based on calendar array myNews
+841:    void              SetmyTime(Calendar &myNews[])
+845:       //--- clean arrays in parallel declared in TimeByHour header file
+851:    //--- Function to get time for the specific hour and minute for news events
+852:    void              GetmyTime(HOURLY myHour,MINUTELY myMinute,TimeDate &TimeData[],Calendar &Events[])
+854:       //--- clean arrays in parallel declared in TimeByHour header file
+857:       //--- Declare temporary arrays to get news data for a specific hour
+860:       //--- Get Data for the specific hour of the day
+862:       //--- Filter the Data for a specific Minute of the hour
+885: //|Add data to Array Objects for each Hour of the day                |
+887: void              CTimeByHour::myTime(Calendar &myNews[])
+889: //--- Iterate through myNews calendar array
+892:       //--- Assign datetime from myNews calendar array
+894:       //--- Assign HOURLY Enumeration value from datetime variable Date
+895:       HOURLY myHour = CTV.Hourly(CTime.ReturnHour(Date));
+898:       //--- Switch statement to identify each value scenario for myHour
+903:             myH1.Add(new CTimeByHour(myHour,myMinute,myNews[i]));
+907:             myH2.Add(new CTimeByHour(myHour,myMinute,myNews[i]));
+911:             myH3.Add(new CTimeByHour(myHour,myMinute,myNews[i]));
+915:             //--- add array obj values for 24|00 Hour
+916:             myH24.Add(new CTimeByHour(myHour,myMinute,myNews[i]));
+934: ```
+938: - This function is used to clear (or reset) all the array objects that store hourly time data.
+940: ```
+942: ```
+944: The function below filters time data (TData[]) and calendar event data (EData[]) to retain only the entries that match a specific minute (represented by the min argument).
+946: - It iterates through TData[], and for each element, it checks whether the minute matches min. If it matches, the arrays TimeData[] and EventData[] are resized, and the corresponding data from TData[] and EData[] is copied into them.
+948: ```
+949: void DatePerMinute(TimeDate &TData[], Calendar &EData[], MINUTELY min, TimeDate &TimeData[], Calendar &EventData[]);
+950: ```
+954: The function below resets and assigns new time and event data for the day. It uses the myTime method from CTimeByHour, which processes time data at the hour level based on news events passed in myNews[].
+956: - First, it clears the previous stored time and event data using Clear().
+957: - It then removes all data from the parallel arrays (myTimeData and myEvents) and sets new values using the myTime() function inherited from CTimeByHour.
+959: ```
+961: ```
+963: The function below retrieves time data for a specific hour (myHour) and minute (myMinute).
+965: - It first clears the arrays myTimeData and myEvents.
+966: - Temporary arrays myTData[] and myData[] are declared to hold time and event data.
+967: - GetDataForHour() is called to populate the temporary arrays with data for the specified hour.
+968: - The data is further filtered for the specific minute using DatePerMinute().
+970: ```
+971: void GetmyTime(HOURLY myHour, MINUTELY myMinute, TimeDate &TimeData[], Calendar &Events[]);
+972: ```
+976: - The constructor initializes array objects for each hour of the day (1 to 24). These array objects will store time and event data for specific hours.
+978: ```
+981:    // Initialize array objects for each hour
+986: ```
+990: This function is defined in CTimeByHour and is inherited by CTimeByDay. It processes the myNews[] array and associates the events with specific hours of the day.
+992: - For each event in myNews[], it extracts the hour and minute of the event.
+993: - It uses a switch statement to decide which hourly array object (e.g., myH1, myH2, etc.) should store the time and event data.
+994: - Each time event is added as a CTimeByHour object to the corresponding array object.
+996: ```
+1000:    HOURLY myHour = CTV.Hourly(CTime.ReturnHour(Date));
+1004: ```
+1008: - This function clears all the hourly array objects (myH1, myH2, etc.), essentially resetting the time data stored for each hour.
+1010: ```
+1018: ```
+1020: ### Conclusion
+1022: In this article, the methods to improve the performance of the Expert was demonstrated, by dividing event times into separate arrays for each hour of the day and reducing the frequency at which the calendar database in-memory is accessed. By structuring time values as enumerations (MINUTELY, SECONDLY), the code becomes easier to manage and interpret, reducing the risk of logical errors.
+1024: The enumerations MINUTELY, SECONDLY, and PRESECONDLY represent the minutes, seconds, and pre-event time respectively, providing better readability and control over time intervals. The conversion functions make it easy to work with integers as inputs, ensuring they are converted to meaningful enumerated values. The CTimeByHour class provides a mechanism to store, retrieve, and manage time and event
+1028: - Efficient DB Access: Events are loaded only once per day and stored in memory, reducing unnecessary database queries.
+1029: - Time Segmentation: By splitting events into hourly buckets, the EA only checks relevant events, improving speed and reducing CPU load.
+1030: - Scalability: The method proposed is scalable for days with many events, ensuring consistent performance throughout the trading day.
+1031: - Increased Responsiveness: By focusing on events in the relevant time frame, the EA can react faster to market events, which is critical for news-based strategies.
+1047: [Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar](https://www.mql5.com/en/articles/16223)
+1049: In this article, we explore how to use the MQL5 Economic Calendar for trading by first understanding its core functionalities. We then implement key functions of the Economic Calendar in MQL5 to extract relevant news data for trading decisions. Finally, we conclude by showcasing how to utilize this information to enhance trading strategies effectively.

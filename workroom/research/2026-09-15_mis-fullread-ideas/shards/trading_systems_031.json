@@ -1,0 +1,92 @@
+{
+  "shard_id": "trading_systems_031",
+  "section": "Trading systems",
+  "n": 9,
+  "series_in_shard": [
+    "category theory in mql5",
+    "chaos theory in trading"
+  ],
+  "articles": [
+    {
+      "id": 12437,
+      "title": "Category Theory in MQL5 (Part 6): Monomorphic Pull-Backs and Epimorphic Push-Outs",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): Monomorphic Pull-Backs and Epimorphic Push-Outs",
+      "series_key": "category theory in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12437.md"
+    },
+    {
+      "id": 12873,
+      "title": "Category Theory in MQL5 (Part 12): Orders",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): Orders",
+      "series_key": "category theory in mql5",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12873.md"
+    },
+    {
+      "id": 13156,
+      "title": "Category Theory in MQL5 (Part 17): Functors and Monoids",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): Functors and Monoids",
+      "series_key": "category theory in mql5",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13156.md"
+    },
+    {
+      "id": 13273,
+      "title": "Category Theory in MQL5 (Part 19): Naturality Square Induction",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): Naturality Square Induction",
+      "series_key": "category theory in mql5",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13273.md"
+    },
+    {
+      "id": 13348,
+      "title": "Category Theory in MQL5 (Part 20): A detour to Self-Attention and the Transformer",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): A detour to Self-Attention and the Transformer",
+      "series_key": "category theory in mql5",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13348.md"
+    },
+    {
+      "id": 13390,
+      "title": "Category Theory in MQL5 (Part 21): Natural Transformations with LDA",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): Natural Transformations with LDA",
+      "series_key": "category theory in mql5",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13390.md"
+    },
+    {
+      "id": 13416,
+      "title": "Category Theory in MQL5 (Part 22): A different look at Moving Averages",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): A different look at Moving Averages",
+      "series_key": "category theory in mql5",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13416.md"
+    },
+    {
+      "id": 13456,
+      "title": "Category Theory in MQL5 (Part 23): A different look at the Double Exponential Moving Average",
+      "section": "Trading systems",
+      "series_title": "Category Theory in MQL5 (): A different look at the Double Exponential Moving Average",
+      "series_key": "category theory in mql5",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13456.md"
+    },
+    {
+      "id": 15445,
+      "title": "Chaos theory in trading (Part 2): Diving deeper",
+      "section": "Trading systems",
+      "series_title": "Chaos theory in trading (): Diving deeper",
+      "series_key": "chaos theory in trading",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15445.md"
+    }
+  ]
+}

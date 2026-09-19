@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_026",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 5358,
+      "title": "Reversal patterns: Testing the Head and Shoulders pattern",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5358.md"
+    },
+    {
+      "id": 5486,
+      "title": "Programming a Deep Neural Network from Scratch using MQL Language",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5486.md"
+    },
+    {
+      "id": 5543,
+      "title": "The power of ZigZag (part I). Developing the base class of the indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5543.md"
+    },
+    {
+      "id": 5544,
+      "title": "The power of ZigZag (part II). Examples of receiving, processing and displaying data",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5544.md"
+    },
+    {
+      "id": 5563,
+      "title": "Developing graphical interfaces for Expert Advisors and indicators based on .Net Framework and C#",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5563.md"
+    },
+    {
+      "id": 5572,
+      "title": "Using MATLAB 2018 computational capabilities in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5572.md"
+    },
+    {
+      "id": 5654,
+      "title": "Library for easy and quick development of MetaTrader programs (part I). Concept, data management and first results",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5654.md"
+    },
+    {
+      "id": 5669,
+      "title": "Library for easy and quick development of MetaTrader programs (part II). Collection of historical orders and deals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5669.md"
+    },
+    {
+      "id": 5687,
+      "title": "Library for easy and quick development of MetaTrader programs (part III). Collection of market orders and positions, search and sorting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5687.md"
+    },
+    {
+      "id": 5724,
+      "title": "Library for easy and quick development of MetaTrader programs (part IV): Trading events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5724.md"
+    },
+    {
+      "id": 6211,
+      "title": "Library for easy and quick development of MetaTrader programs (part V): Classes and collection of trading events, sending events to the program",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6211.md"
+    },
+    {
+      "id": 6383,
+      "title": "Library for easy and quick development of MetaTrader programs (part VI): Netting account events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6383.md"
+    }
+  ]
+}

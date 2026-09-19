@@ -1,0 +1,22 @@
+{
+  "pack_id": "trading_029_p01",
+  "section": "Trading",
+  "parent_shard": "trading_029",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "creating an ea that works automatically"
+  ],
+  "n": 1,
+  "articles": [
+    {
+      "id": 11318,
+      "title": "Creating an EA that works automatically (Part 14): Automation (VI)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (VI)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11318.md"
+    }
+  ]
+}

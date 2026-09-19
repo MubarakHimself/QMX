@@ -1,0 +1,293 @@
+# Evaluating the ability of Fractal index and Hurst exponent to predict financial time series
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 11 July 2019 at 06:07
+16 485
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+41](https://www.mql5.com/en/forum/317674 "Comments")
+[Roman Korotchenko](https://www.mql5.com/en/users/solitonic)
+### Introduction
+The modern financial market is an example of a "natural" complexly balanced system. On the one hand, the market is pretty chaotic, because it
+is influenced by a large number of participants. On the other hand, the market is characterized by definite stable processes, which are
+determined by the market participants' actions. One of econophysics tasks concerns the description of social interaction processes,
+which form the price dynamics observed on the exchange. Therefore, it is highly desirable to define and present specific properties of
+financial time series, which will distinguish such data from other natural processes. In modern theories, price series are defined as
+different-scale fractals (from several minutes to dozens of years).
+They show a much more complicated behavior, than many model and natural processes [3]. One of the tools for finding out the details of such
+behavior is the numerical analysis of the series, the purpose of which is to study the dynamics of the series. The typical algorithms for the
+reliable evaluation of fractal dimension require large datasets (about 10,000-100,000 samples), which characterize a series over a long
+time interval, during which the behavior can change, and sometimes it can change repeatedly. For real trading tasks, we need methods to
+determine the local fractal characteristics of a series. In this article, we will discuss and demonstrate a method for determining the
+fractal dimension of the series of price sequences, using the numerical method described in [1, 2].
+### The concept of fractal dimension and statistical properties of time series
+The fractal dimension estimates how the data set takes up space. There are many methods for estimating the fractal dimension. Their common
+feature is that volume or area are calculated in the space, in which this set is located. Let us use the example of the time series for the
+financial instrument, which consists of Close prices {Close(t)}. If the {Close(t)} series levels are independent, there are no clear
+trends on the symbol chart, while the behavior will be similar to the "white noise". The value of the fractal dimension
+***D*** will be close to the value of the topological dimension of the plane, in other words  ***D->2***.
+If the {Close(t)} series levels are not independent, the D value will be significantly less than 2, which indicates that the time series has a
+"memory", i.e. upward and downward trends will be observed at some time intervals, alternating with the undefined periods (Fig. 1).
+Fig.1. An example of a random series and a series with a trend, and the corresponding
+fractal dimension
+### Fractal dimension evaluation methods and their features
+There are different methods for calculating the fractal dimension of a time series. Let us consider the evaluation method utilizing the Hurst
+exponent.
+The Hurst exponent H is determined based on the following equation
+                              (1a)
+where the angle brackets indicate time averaging. The relationship of the Hurst exponent with the fractal
+dimension is obtained by the method of normalized range or by the R/S analysis based on the following equations
+> > ***DH = 2-H***
+> >
+> > **H = log(R/ S) / log(N / 2)** (1b)
+where **R** — max {Close(t)} - min {Close(t)},  i = 1..N is the range of the Close(t) series deviations,  **S** — is the
+standard deviation of Close(t) values. The method was described in more detail in the article
+[Calculating the Hurst exponent](https://www.mql5.com/en/articles/2930) by Dmitry Piskarev.
+If the Hurst exponent for the time series is in the range between 0.5 and 1, such a series is considered to be persistent, or trend-resistant,
+which means that the {Close(t)} series is not random, contains a trend and the behavior of the series can be predicted with a good enough
+accuracy. The closer the
+**H** value to 1, the greater is the correlation between the {Close(t)} series values.
+The disadvantage of this method is that a large amount of data (thousands of data series values) is needed in order to obtain a reliable
+estimate of the Hurst exponent, otherwise the estimates obtained may be incorrect. In addition, the series values must have a normal
+distribution law, which is not always the case. Since the reliable calculation of both DH and H requires a large representative sample of a
+large data amount, the series behavior can repeatedly change during the relevant long trading period. In order to link the local dynamics of
+the analyzed process with the fractal dimension of the observed series, we need to locally determine the
+***D*** dimension.
+### Fractal dimension estimation based on minimum covered area
+A more efficient method when forecasting econometric series is the one based on the calculation of the minimum coverage dimension
+Hausdorff suggested the following formula for determining a fractal:
+where 
+is the lowest number of balls of radius 
+which cover this set. Note that if the original set is in Euclidean space, any other simple shapes (such as cells) can be used for the
+
+----- METHOD/CLAIM SWEEP -----
+
+![Evaluating the ability of Fractal index and Hurst exponent to predict financial time series](https://c.mql5.com/i/articles/overlay.png)
+
+# Evaluating the ability of Fractal index and Hurst exponent to predict financial time series
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Introduction
+The modern financial market is an example of a "natural" complexly balanced system. On the one hand, the market is pretty chaotic, because it
+financial time series, which will distinguish such data from other natural processes. In modern theories, price series are defined as
+different-scale fractals (from several minutes to dozens of years).
+They show a much more complicated behavior, than many model and natural processes [3]. One of the tools for finding out the details of such
+time interval, during which the behavior can change, and sometimes it can change repeatedly. For real trading tasks, we need methods to
+determine the local fractal characteristics of a series. In this article, we will discuss and demonstrate a method for determining the
+fractal dimension of the series of price sequences, using the numerical method described in [1, 2].
+### The concept of fractal dimension and statistical properties of time series
+The fractal dimension estimates how the data set takes up space. There are many methods for estimating the fractal dimension. Their common
+feature is that volume or area are calculated in the space, in which this set is located. Let us use the example of the time series for the
+financial instrument, which consists of Close prices {Close(t)}. If the {Close(t)} series levels are independent, there are no clear
+Fig.1. An example of a random series and a series with a trend, and the corresponding
+fractal dimension
+### Fractal dimension evaluation methods and their features
+There are different methods for calculating the fractal dimension of a time series. Let us consider the evaluation method utilizing the Hurst
+
+exponent.
+The Hurst exponent H is determined based on the following equation
+![Hurst coefficient definition](https://c.mql5.com/2/36/b4d2a.png "Hurst coefficient definition") 
+                              (1a)
+where the angle brackets indicate time averaging. The relationship of the Hurst exponent with the fractal
+dimension is obtained by the method of normalized range or by the R/S analysis based on the following equations
+standard deviation of Close(t) values. The method was described in more detail in the article
+[Calculating the Hurst exponent](https://www.mql5.com/en/articles/2930) by Dmitry Piskarev.
+If the Hurst exponent for the time series is in the range between 0.5 and 1, such a series is considered to be persistent, or trend-resistant,
+which means that the {Close(t)} series is not random, contains a trend and the behavior of the series can be predicted with a good enough
+accuracy. The closer the
+The disadvantage of this method is that a large amount of data (thousands of data series values) is needed in order to obtain a reliable
+estimate of the Hurst exponent, otherwise the estimates obtained may be incorrect. In addition, the series values must have a normal
+distribution law, which is not always the case. Since the reliable calculation of both DH and H requires a large representative sample of a
+large data amount, the series behavior can repeatedly change during the relevant long trading period. In order to link the local dynamics of
+### Fractal dimension estimation based on minimum covered area
+A more efficient method when forecasting econometric series is the one based on the calculation of the minimum coverage dimension
+![Hausdorff Fractal](https://c.mql5.com/2/36/lg41b.png "Hausdorff Fractal").
+where 
+![mu](https://c.mql5.com/2/36/22y4d.png "mu")is
+referred to as the fractal index.
+
+The dependence of the minimal cover area from different 
+Reference [2] states that the fractal dimension which is calculated using the cell covering and covering with
+rectangle, based on the function variation, coincide. An important property of the algorithm which uses function variations, is its much
+faster convergence, which allows determining of the time series fractal dimension value locally, using a small set of values.
+![mu](https://c.mql5.com/2/36/22y4d.png "mu"),
+the fractal index, which is the local characteristic of the time series. As is shown in reference [1], the
+![](https://c.mql5.com/2/36/g864e.png)determining accuracy is
+much higher that the accuracy of determining of other fractal characteristics, such as the cellular dimension
+![](https://c.mql5.com/2/36/c9h4_c.png) or the dimension
+calculated based on the Hurst exponent. In addition, the method has no limitations on the distribution of series
+![](https://c.mql5.com/2/36/niw2c.png). Reference [1]
+also shows that a reliable estimate can be obtained if the time series
+The fractal dimension can be evaluated using either the cell dimension method or the Hurst index. As an example,
+let us consider Lukoil stock quotes (MICEX) before the crisis, which happened at the beginning of the century. This time can be interpreted
+as a stable trend with a gradual increase (persistent series). Fig. 4 shows the results of the fractal dimension evaluation in 1999.
+![FractalDimensionLHOL](https://c.mql5.com/2/36/4be6.png "FractalDimensionLHOL")
+Fig. 4. a) LS approximation of the fractal measure using the cell covering (D=1.1894),
+b) Log-log plot of the numerical estimate of the Hurst parameter (D=1.6)
+The fractal dimension of the series ***D*** = 1.18 points to its persistent trendy nature. A value close to one indicates
+the nearing end of the trend, which happened in 2000-2001. Hurst exponent value
+***H***=0.40. Pay attention to the relatively low coefficient of determination ***R
+2******=*** 0.56 with the confidence interval of 0.95. According to formulas (1), the fractal dimension calculated
+by the Hurst exponent is equal to
+***D*** = 1.6, which indicates the random behavior of a series and an increased level of stochasticity. However, this does not
+concern Lukoil stocks in the period of 1999.
+
+Another interesting and illustrative example of the fractal index and Hurst exponent estimation accuracy as of local indicators of time series
+is provided in reference [2]. This parameter assessment is more appropriate for the trading tasks related to market analysis of the
+operational qualitative and quantitative behavior of time series. The source price series of Alcoa Inc., including 8145 points, was
+- ***H*** — Hurst exponent;
+- ![mu](https://c.mql5.com/2/36/22y4d.png "mu")—
+  fractal index;
+- ![](https://c.mql5.com/2/36/delta1.png)— width 95 %
+  of the confidence interval for
+![Fig.5a delta_H(t), delta_mu(t)](https://c.mql5.com/2/36/ftb7a.png "Fig.5a delta_H(t), delta_mu(t)")
+Fig. 5a. Typical fragment of the time
+![Fig. 5b. K_h(t), K_mu(t)](https://c.mql5.com/2/36/wmv7b.png "Fig. 5b. K_h(t), K_mu(t)")
+Fig. 5b. The
+![mu](https://c.mql5.com/2/36/22y4d.png "mu")in
+relation to other fractal indicators (including in particular the Hurst exponent) is that the corresponding
+![AmplSum](https://c.mql5.com/2/36/e1m2h.png "AmplSum")value
+quickly enters the asymptotic mode. This enables the use of
+### The correlation of the time series nature and the fractal index
+Anyone willing to use an indicator based on the fractal index should know some of its specific features [2].
+The fractal index and Hurst exponent are related as
+![mu](https://c.mql5.com/2/36/22y4d.png "mu")***=
+1-H***, which enables the inheritance of classification variants from chaotic time series:
+
+### Indicator for evaluating Fractal index and Hurst exponent
+Successful trading on a scale of days, weeks and months is associated with an understanding of the chaotic state of financial time series. Based
+The indicator evaluates the fractal index, the confidence interval for it, the values of the coefficient of determination and the Hurst
+exponent. The below charts show the aforementioned
+![Fractal Index](https://c.mql5.com/2/36/MUut3_2.png "Fractal Index"),
+![](https://c.mql5.com/2/36/deltaMuwtn.png),
+and
+shifted by one count. Since the length of the evaluation window (interval) is equal to the power of two, we can obtain a set of values and
+evaluate the fractal index by performing the linear approximation of the set.
+```
+double CFractalIndexLine::CalculateFractalIndex(const double &series[],const int N0,const int N1,
+                                                const double hourSampling,int CountFragmentScale=0)
+  {
+//
+// RESULT
+// the fractal index (Mu), the Hurst index (Hurst), the Confidence interval 95% (ConfInterval[2], 
+// coefficient of determination (R2det) - the closer to 1, the more accurately the calculation points fall on the approximating line
+// determining stability for coefficient KR2 = 1-R2det. The closer to zero, the more accurate the calculated value of Mu
+   Mu=fCalculateConfidenceIntervalMU(LogDeltaScales,LogAmplVariations,Count,ConfInterval,R2det);
+   Hurst=1-Mu;		// Hurst exponent
+   KR2=1-R2det;
+
+double CFractalIndexLine::CalcAmplVariation(const int NumPartDivide,int idxAmplVar=-1)
+// If idxAmplVar=-1, then index in the array is determined automatically (based on the contribution of the power of two in NumPartDivide)
+### Demonstration of indicator operation on real data
+We call the indicator, requesting the evaluation of 600 days with the evaluation window of 64 points. The result contains 536 values of the
+fractal index and it is shown in Fig.6.
+![FigGAZP](https://c.mql5.com/2/36/GAZP.png "FigGAZP")
+The figure shows the correlation of the index values and the behavior of prices. The blue color of the index graph corresponds to the trend
+state of the system, indicates the trend stability and the ability to predict future behavior. Violet color indicates anti-persistence of
+the "pink noise" type, which corresponds to "negative" memory and flat. Yellow corresponds to the "Brownian motion", i.e. the movement is
+random and cannot be predicted.
+### Conclusions
+Local fractal analysis can be interesting in trading for the following purposes:
+1. Determining of disorder, i.e. of the moment when statistical characteristics of a time series change;
+It should be taken into account that the scale for determining index ***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** with
+a suitable accuracy is two orders of magnitude less than a similar scale for calculating the Hurst exponent H. This difference allows
+using index
+***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** as
+the local fractal index. That is why it can be considered that index
+***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** describes
+the stability of a time series. Case  
+0.5** is considered to be the Brownian motion. Thus, using function **![](https://c.mql5.com/2/36/uzi4e.png)**we
+can classify initial price series and provide basis for forecasts.
+
+### List of References
+1. Dubovikov M.M., Starchenko N.V. Econophysics and fractal analysis of financial time series
+[FRACTAL\_upd.zip](https://www.mql5.com/en/articles/download/6834/fractal_upd.zip "Download FRACTAL_upd.zip")
+(18.5 KB)
+[fFractalSegmentSeriesAnalysis.mqh](https://www.mql5.com/en/articles/download/6834/ffractalsegmentseriesanalysis.mqh "Download fFractalSegmentSeriesAnalysis.mqh")
+(0.75 KB)
+![Library for easy and quick development of MetaTrader programs (part VII): StopLimit order activation events, preparing the functionality for order and position modification events](https://c.mql5.com/2/36/MQL5-avatar-doeasy__2.png)
+[Library for easy and quick development of MetaTrader programs (part VII): StopLimit order activation events, preparing the functionality for order and position modification events](https://www.mql5.com/en/articles/6482)
+In the previous articles, we started creating a large cross-platform library simplifying the development of programs for MetaTrader 5 and MetaTrader 4 platforms. In the sixth part, we trained the library to work with positions on netting accounts. Here we will implement tracking StopLimit orders activation and prepare the functionality to track order and position modification events.
+![Grokking market "memory" through differentiation and entropy analysis](https://c.mql5.com/2/36/snip_20190614154924__2.png)
+[Grokking market "memory" through differentiation and entropy analysis](https://www.mql5.com/en/articles/6351)
+The scope of use of fractional differentiation is wide enough. For example, a differentiated series is usually input into machine learning algorithms. The problem is that it is necessary to display new data in accordance with the available history, which the machine learning model can recognize. In this article we will consider an original approach to time series differentiation. The article additionally contains an example of a self optimizing trading system based on a received differentiated series.
+![Library for easy and quick development of MetaTrader programs (part VI): Netting account events](https://c.mql5.com/2/36/MQL5-avatar-doeasy__1.png)
+[Library for easy and quick development of MetaTrader programs (part VI): Netting account events](https://www.mql5.com/en/articles/6383)
+In the previous articles, we started creating a large cross-platform library simplifying the development of programs for MetaTrader 5 and MetaTrader 4 platforms. In the fifth part of the article series, we created trading event classes and the event collection, from which the events are sent to the base object of the Engine library and the control program chart. In this part, we will let the library to work on netting accounts.
+[![](https://www.mql5.com/ff/sh/592yc11u3j4rs5z9z2/01.png)
+How AI helps create robots for MetaTrader 5
+Learn from our book "Neural Networks in Algo Trading with MQL5"
+Read](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/6834&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6360124817965476435)
+
+----- CONCLUSION -----
+
+### Conclusions
+
+Local fractal analysis can be interesting in trading for the following purposes:
+
+1. Determining of disorder, i.e. of the moment when statistical characteristics of a time series change;
+2. Prediction of a time series.
+
+It should be taken into account that the scale for determining index ***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** with
+a suitable accuracy is two orders of magnitude less than a similar scale for calculating the Hurst exponent H. This difference allows
+using index
+***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** as
+the local fractal index. That is why it can be considered that index
+***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** describes
+the stability of a time series. Case  
+***![mu](https://c.mql5.com/2/36/22y4d.png "mu")*** **<0.5**can be interpreted as a trend, and case ***![mu](https://c.mql5.com/2/36/22y4d.png "mu")* >0.5**can be treated as a flat. ***![mu](https://c.mql5.com/2/36/22y4d.png "mu")* ~
+0.5** is considered to be the Brownian motion. Thus, using function **![](https://c.mql5.com/2/36/uzi4e.png)**we
+can classify initial price series and provide basis for forecasts.
+
+### List of References
+
+1. Dubovikov M.M., Starchenko N.V. Econophysics and fractal analysis of financial time series
+2. Dubovikov M.M., Starchenko N.V. Econophysics and analysis of financial time series // Collected. "ECONOPHYSICS. Modern physics in search
+   of economic theory"
+3. Peters, J. Chaos and Order in the Capital Markets A New View of Cycles, Prices and Market Volatility
+4. [Krivonosova
+   E.K., Pervadchuk V.P., Krivonosova E.A.Comparison of the fractal characteristics of time series of economic indicators](https://www.science-education.ru/pdf/2014/6/701.pdf "https://www.science-education.ru/pdf/2014/6/701.pdf")
+5. Starchenko N.V. Local fractal analysis in physical applications.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/6834>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/6834.zip "Download all attachments in the single ZIP archive")
+
+[FRACTAL\_upd.zip](https://www.mql5.com/en/articles/download/6834/fractal_upd.zip "Download FRACTAL_upd.zip")
+(18.5 KB)
+
+[fFractalSegmentSeriesAnalysis.mqh](https://www.mql5.com/en/articles/download/6834/ffractalsegmentseriesanalysis.mqh "Download fFractalSegmentSeriesAnalysis.mqh")
+(0.75 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Price velocity measurement methods](https://c.mql5.com/2/36/Article_Logo__1.png)
+[Price velocity measurement methods](https://www.mql5.com/en/articles/6947)
+
+There are multiple different approaches to market research and analysis. The main ones are technical and fundamental. In technical analysis, traders collect, process and analyze numerical data and parameters related to the market, including prices, volumes, etc. In fundamental analysis, traders analyze events and news affecting the markets directly or indirectly. The article deals with price velocity measurement methods and studies trading strategies based on that methods.
+
+![Library for easy and quick development of MetaTrader programs (part VII): StopLimit order activation events, preparing the functionality for order and position modification events](https://c.mql5.com/2/36/MQL5-avatar-doeasy__2.png)
+[Library for easy and quick development of MetaTrader programs (part VII): StopLimit order activation events, preparing the functionality for order and position modification events](https://www.mql5.com/en/articles/6482)
+
+In the previous articles, we started creating a large cross-platform library simplifying the development of programs for MetaTrader 5 and MetaTrader 4 platforms. In the sixth part, we trained the library to work with positions on netting accounts. Here we will implement tracking StopLimit orders activation and prepare the functionality to track order and position modification events.
+
+![Grokking market "memory" through differentiation and entropy analysis](https://c.mql5.com/2/36/snip_20190614154924__2.png)
+[Grokking market "memory" through differentiation and entropy analysis](https://www.mql5.com/en/articles/6351)
+
+The scope of use of fractional differentiation is wide enough. For example, a differentiated series is usually input into machine learning algorithms. The problem is that it is necessary to display new data in accordance with the available history, which the machine learning model can recognize. In this article we will consider an original approach to time series differentiation. The article additionally contains an example of a self optimizing trading system based on a received differentiated series.
+
+![Library for easy and quick development of MetaTrader programs (part VI): Netting account events](https://c.mql5.com/2/36/MQL5-avatar-doeasy__1.png)
+[Library for easy and quick development of MetaTrader programs (part VI): Netting account events](https://www.mql5.com/en/articles/6383)
+
+In the previous articles, we started creating a large cross-platform library simplifying the development of programs for MetaTrader 5 and MetaTrader 4 platforms. In the fifth part of the article series, we created trading event classes and the event collection, from which the events are sent to the base object of the Engine library and the control program chart. In this part, we will let the library to work on netting accounts.
+
+[![](https://www.mql5.com/ff/sh/592yc11u3j4rs5z9z2/01.png)
+
+How AI helps create robots for MetaTrader 5
+Learn from our book "Neural Networks in Algo Trading with MQL5"
+Read](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/6834&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6360124817965476435)

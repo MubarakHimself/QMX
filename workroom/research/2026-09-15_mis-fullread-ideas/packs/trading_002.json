@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_002",
+  "section": "Trading",
+  "parent_shard": "trading_002",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1445,
+      "title": "Problems of Technical Analysis Revisited",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1445.md"
+    },
+    {
+      "id": 1446,
+      "title": "What Is a Martingale?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1446.md"
+    },
+    {
+      "id": 1448,
+      "title": "Sound Alerts in Indicators",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1448.md"
+    },
+    {
+      "id": 1455,
+      "title": "Principles of Time Transformation in Intraday Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1455.md"
+    },
+    {
+      "id": 1458,
+      "title": "Terminal Service Client. How to Make Pocket PC a Big Brother's Friend",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1458.md"
+    },
+    {
+      "id": 1465,
+      "title": "Trading Strategy Based on Pivot Points Analysis",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1465.md"
+    },
+    {
+      "id": 1471,
+      "title": "Poll: Traders\u2019 Estimate of the Mobile Terminal",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1471.md"
+    },
+    {
+      "id": 1476,
+      "title": "Automated Choice of Brokerage Company for an Efficient Operation of Expert Advisors",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1476.md"
+    },
+    {
+      "id": 1481,
+      "title": "What is Martingale and Is It Reasonable to Use It?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1481.md"
+    },
+    {
+      "id": 1482,
+      "title": "Price Forecasting Using Neural Networks",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1482.md"
+    },
+    {
+      "id": 1492,
+      "title": "Mathematics in Trading: How to Estimate Trade Results",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1492.md"
+    },
+    {
+      "id": 1505,
+      "title": "Betting Modeling as Means of Developing \"Market Intuition\"",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1505.md"
+    }
+  ]
+}

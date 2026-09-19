@@ -1,0 +1,39 @@
+{
+  "article_id": 6834,
+  "title": "Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+  "chars": 33315,
+  "heads": [
+    "# Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+    "### Introduction",
+    "### The concept of fractal dimension and statistical properties of time series",
+    "### Fractal dimension evaluation methods and their features",
+    "### Fractal dimension estimation based on minimum covered area",
+    "### The correlation of the time series nature and the fractal index",
+    "### Indicator for evaluating Fractal index and Hurst exponent",
+    "### Demonstration of indicator operation on real data",
+    "### Conclusions",
+    "### List of References"
+  ],
+  "intro": "--- id: 6834 source_url: https://www.mql5.com/en/articles/6834 title: \"Evaluating the ability of Fractal index and Hurst exponent to predict financial time series\" author: \"\" author_url: published: 2019-07-11T10:07Z platform: \"MetaTrader 5\" section: \"Trading systems\" tags: [] series_title: \"\" series_part: source: mql5 language: en --- ![Evaluating the ability of Fractal index and Hurst exponent to predict financial time series](https://c.mql5.com/i/articles/overlay.png)\n\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5) \u2014 [Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems) | 11 July 2019 at 06:07\n\n[Roman Korotchenko](https://www.mql5.com/en/users/solitonic)\n\nThe modern financial market is an example of a \"natural\" complexly balanced system. On the one hand, the market is pretty chaotic, because it is influenced by a large number of participants. On the other hand, the market is characterized by definite stable processes, which are determined by the market participants' actions. One of econophysics tasks concerns the description of social interaction processes, which form the price dynamics observed on the exchange. Therefore, it is highly desirable to define and present specific properties of financial time series, which will distinguish such data from other natural processes. In modern theories, price series are defined as different-scale fractals (from several minutes to dozens of years).",
+  "conclusion": "Local fractal analysis can be interesting in trading for the following purposes:\n\n1. Determining of disorder, i.e. of the moment when statistical characteristics of a time series change; 2. Prediction of a time series.\n\nIt should be taken into account that the scale for determining index ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")*** with a suitable accuracy is two orders of magnitude less than a similar scale for calculating the Hurst exponent H. This difference allows using index ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")*** as the local fractal index. That is why it can be considered that index ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")*** describes the stability of a time series. Case ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")*** **<0.5**can be interpreted as a trend, and case ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")* >0.5**can be treated as a flat. ***![mu](https://c.mql5.com/2/36/22y4d.png \"mu\")* ~ 0.5** is considered to be the Brownian motion. Thus, using function **![](https://c.mql5.com/2/36/uzi4e.png)**we can classify initial price series and provide basis for forecasts.\n\n1. Dubovikov M.M., Starchenko N.V. Econophysics and fractal analysis of financial time series 2. Dubovikov M.M., Starchenko N.V. Econophysics and analysis of financial time series // Collected. \"ECONOPHYSICS. Modern physics in search of economic theory\" 3. Peters, J. Chaos and Order in the Capital Markets A New View of Cycles, Prices and Market Volatility 4. [Krivonosova E.K., Pervadchuk V.P., Krivonosova E.A.Comparison of the fractal characteristics of time series of economic indicators](https://www.science-education.ru/pdf/2014/6/701.pdf \"https://www.science-education.ru/pdf/2014/6/701.pdf\") 5. Starchenko N.V. Local fractal analysis in physical applications.",
+  "claim_hits": [
+    "title: \"Evaluating the ability of Fractal index and Hurst exponent to predict financial time series\"",
+    "![Evaluating the ability of Fractal index and Hurst exponent to predict financial time series](https://c.mql5.com/i/articles/overlay.png)",
+    "# Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+    "reliable evaluation of fractal dimension require large datasets (about 10,000-100,000 samples), which characterize a series over a long",
+    "fractal dimension of the series of price sequences, using the numerical method described in [1, 2].",
+    "### The concept of fractal dimension and statistical properties of time series",
+    "The fractal dimension estimates how the data set takes up space. There are many methods for estimating the fractal dimension. Their common",
+    "trends on the symbol chart, while the behavior will be similar to the \"white noise\". The value of the fractal dimension",
+    "\"memory\", i.e. upward and downward trends will be observed at some time intervals, alternating with the undefined periods (Fig. 1).",
+    "Fig.1. An example of a random series and a series with a trend, and the corresponding",
+    "There are different methods for calculating the fractal dimension of a time series. Let us consider the evaluation method utilizing the Hurst",
+    "The Hurst exponent H is determined based on the following equation",
+    "![Hurst coefficient definition](https://c.mql5.com/2/36/b4d2a.png \"Hurst coefficient definition\")",
+    "where the angle brackets indicate time averaging. The relationship of the Hurst exponent with the fractal",
+    "dimension is obtained by the method of normalized range or by the R/S analysis based on the following equations",
+    "where **R** \u2014 max {Close(t)} - min {Close(t)}, i = 1..N is the range of the Close(t) series deviations, **S** \u2014 is the",
+    "[Calculating the Hurst exponent](https://www.mql5.com/en/articles/2930) by Dmitry Piskarev.",
+    "If the Hurst exponent for the time series is in the range between 0.5 and 1, such a series is considered to be persistent, or trend-resistant,"
+  ]
+}

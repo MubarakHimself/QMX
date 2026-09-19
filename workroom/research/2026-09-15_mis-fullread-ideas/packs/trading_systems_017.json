@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_017",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_017",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17735,
+      "title": "Statistical Arbitrage Through Mean Reversion in Pairs Trading: Beating the Market by Math",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17735.md"
+    },
+    {
+      "id": 17739,
+      "title": "Neural Networks in Trading: Skill Hierarchy for Adaptive Agent Behavior (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17739.md"
+    },
+    {
+      "id": 17755,
+      "title": "Algorithmic Trading Strategies: AI and Its Road to Golden Pinnacles",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17755.md"
+    },
+    {
+      "id": 17796,
+      "title": "Neural Networks in Trading: Actor\u2014Director\u2014Critic",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17796.md"
+    },
+    {
+      "id": 17800,
+      "title": "Pair Trading: Algorithmic Trading with Auto Optimization Based on Z-Score Differences",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17800.md"
+    },
+    {
+      "id": 17811,
+      "title": "Trend Criteria. Conclusion",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17811.md"
+    },
+    {
+      "id": 17819,
+      "title": "Neural Networks in Trading: Actor\u2014Director\u2014Critic (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17819.md"
+    },
+    {
+      "id": 17901,
+      "title": "Neural Networks in Trading: LSTM Optimization for Multivariate Time Series Forecasting (DA-CG-LSTM)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17901.md"
+    },
+    {
+      "id": 17934,
+      "title": "Advanced Order Execution Algorithms in MQL5: TWAP, VWAP, and Iceberg Orders",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17934.md"
+    },
+    {
+      "id": 17939,
+      "title": "Neural Networks in Trading: LSTM Optimization for Multivariate Time Series Forecasting (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17939.md"
+    },
+    {
+      "id": 17947,
+      "title": "Forex Arbitrage Trading: A Matrix Trading System for Return to Fair Value with Risk Control",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17947.md"
+    },
+    {
+      "id": 18004,
+      "title": "Neural Networks in Trading: Time Series Forecasting Using Adaptive Modal Decomposition (ACEFormer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18004.md"
+    }
+  ]
+}

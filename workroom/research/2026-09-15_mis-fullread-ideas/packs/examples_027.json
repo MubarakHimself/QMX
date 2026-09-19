@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_027",
+  "section": "Examples",
+  "parent_shard": "examples_027",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 6482,
+      "title": "Library for easy and quick development of MetaTrader programs (part VII): StopLimit order activation events, preparing the functionality for order and position modification events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6482.md"
+    },
+    {
+      "id": 6595,
+      "title": "Library for easy and quick development of MetaTrader programs (part VIII): Order and position modification events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6595.md"
+    },
+    {
+      "id": 6651,
+      "title": "Library for easy and quick development of MetaTrader programs (part IX): Compatibility with MQL4 - Preparing data",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6651.md"
+    },
+    {
+      "id": 6767,
+      "title": "Library for easy and quick development of MetaTrader programs (part X): Compatibility with MQL4 - Events of opening a position and activating pending orders",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6767.md"
+    },
+    {
+      "id": 6921,
+      "title": "Library for easy and quick development of MetaTrader programs (part XI). Compatibility with MQL4 - Position closure events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6921.md"
+    },
+    {
+      "id": 6947,
+      "title": "Price velocity measurement methods",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6947.md"
+    },
+    {
+      "id": 6952,
+      "title": "Library for easy and quick development of MetaTrader programs (part XII): Account object class and collection of account objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6952.md"
+    },
+    {
+      "id": 6995,
+      "title": "Library for easy and quick development of MetaTrader programs (part XIII): Account object events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6995.md"
+    },
+    {
+      "id": 7014,
+      "title": "Library for easy and quick development of MetaTrader programs (part XIV): Symbol object",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7014.md"
+    },
+    {
+      "id": 7031,
+      "title": "Practical application of neural networks in trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7031.md"
+    },
+    {
+      "id": 7041,
+      "title": "Library for easy and quick development of MetaTrader programs (part XV): Collection of symbol objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7041.md"
+    },
+    {
+      "id": 7071,
+      "title": "Library for easy and quick development of MetaTrader programs (part XVI): Symbol collection events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7071.md"
+    }
+  ]
+}

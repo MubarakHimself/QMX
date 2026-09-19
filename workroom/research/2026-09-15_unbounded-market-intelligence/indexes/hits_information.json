@@ -1,0 +1,1272 @@
+[
+  {
+    "article_id": 16416,
+    "title": "Mutual information as criteria for Stepwise Feature Selection",
+    "section": "Statistics and analysis",
+    "published": "2024-11-21T09:53Z",
+    "md_relpath": "md/16416.md",
+    "fetch_status": "ok",
+    "hits": 68,
+    "chars": 77386
+  },
+  {
+    "article_id": 15393,
+    "title": "Causal analysis of time series using transfer entropy",
+    "section": "Examples",
+    "published": "2024-07-26T19:26Z",
+    "md_relpath": "md/15393.md",
+    "fetch_status": "ok",
+    "hits": 66,
+    "chars": 57292
+  },
+  {
+    "article_id": 23077,
+    "title": "Feature Engineering for ML (Part 8): Entropy Features in MQL5",
+    "section": "Trading systems",
+    "published": "2026-06-30T14:41Z",
+    "md_relpath": "md/23077.md",
+    "fetch_status": "ok",
+    "hits": 20,
+    "chars": 37834
+  },
+  {
+    "article_id": 22756,
+    "title": "Feature Engineering for ML (Part 7): Entropy Features in Python",
+    "section": "Trading systems",
+    "published": "2026-06-29T12:43Z",
+    "md_relpath": "md/22756.md",
+    "fetch_status": "ok",
+    "hits": 16,
+    "chars": 24183
+  },
+  {
+    "article_id": 13706,
+    "title": "Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models",
+    "section": "Machine learning",
+    "published": "2024-01-17T10:58Z",
+    "md_relpath": "md/13706.md",
+    "fetch_status": "ok",
+    "hits": 15,
+    "chars": 59663
+  },
+  {
+    "article_id": 11487,
+    "title": "MQL5 Wizard techniques you should know (Part 03): Shannon's Entropy",
+    "section": "Tester",
+    "published": "2022-09-26T16:41Z",
+    "md_relpath": "md/11487.md",
+    "fetch_status": "ok",
+    "hits": 13,
+    "chars": 34069
+  },
+  {
+    "article_id": 12739,
+    "title": "Category Theory (Part 9): Monoid-Actions",
+    "section": "Tester",
+    "published": "2023-06-09T13:39Z",
+    "md_relpath": "md/12739.md",
+    "fetch_status": "ok",
+    "hits": 13,
+    "chars": 39777
+  },
+  {
+    "article_id": 17241,
+    "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Final Part)",
+    "section": "Trading systems",
+    "published": "2026-01-16T15:56Z",
+    "md_relpath": "md/17241.md",
+    "fetch_status": "ok",
+    "hits": 11,
+    "chars": 51563
+  },
+  {
+    "article_id": 21339,
+    "title": "MQL5 Trading Tools (Part 26): Integrating Frequency Binning, Entropy, and Chi-Square in Visual Analyzer",
+    "section": "Trading systems",
+    "published": "2026-03-31T09:23Z",
+    "md_relpath": "md/21339.md",
+    "fetch_status": "ok",
+    "hits": 11,
+    "chars": 71465
+  },
+  {
+    "article_id": 23488,
+    "title": "Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes",
+    "section": "Trading",
+    "published": "2026-08-05T12:47Z",
+    "md_relpath": "md/23488.md",
+    "fetch_status": "ok",
+    "hits": 9,
+    "chars": 68474
+  },
+  {
+    "article_id": 15997,
+    "title": "Neural Networks in Trading: Generalized 3D Referring Expression Segmentation",
+    "section": "Trading systems",
+    "published": "2025-05-15T13:08Z",
+    "md_relpath": "md/15997.md",
+    "fetch_status": "ok",
+    "hits": 8,
+    "chars": 72484
+  },
+  {
+    "article_id": 22220,
+    "title": "Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility",
+    "section": "Examples",
+    "published": "2026-05-19T11:21Z",
+    "md_relpath": "md/22220.md",
+    "fetch_status": "ok",
+    "hits": 8,
+    "chars": 82904
+  },
+  {
+    "article_id": 15445,
+    "title": "Chaos theory in trading (Part 2): Diving deeper",
+    "section": "Trading systems",
+    "published": "2025-02-03T12:26Z",
+    "md_relpath": "md/15445.md",
+    "fetch_status": "ok",
+    "hits": 7,
+    "chars": 55394
+  },
+  {
+    "article_id": 20317,
+    "title": "Overcoming The Limitation of Machine Learning (Part 8): Nonparametric Strategy Selection",
+    "section": "Trading systems",
+    "published": "2025-11-25T11:41Z",
+    "md_relpath": "md/20317.md",
+    "fetch_status": "ok",
+    "hits": 7,
+    "chars": 47655
+  },
+  {
+    "article_id": 22288,
+    "title": "Recurrence Quantification Analysis (RQA) in MQL5: Building a Complete Analysis Library",
+    "section": "Indicators",
+    "published": "2026-05-01T16:18Z",
+    "md_relpath": "md/22288.md",
+    "fetch_status": "ok",
+    "hits": 6,
+    "chars": 54670
+  },
+  {
+    "article_id": 13842,
+    "title": "Building Your First Glass-box Model Using Python And MQL5",
+    "section": "Trading systems",
+    "published": "2024-01-11T09:59Z",
+    "md_relpath": "md/13842.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 80106
+  },
+  {
+    "article_id": 15575,
+    "title": "Gain an Edge Over Any Market (Part III): Visa Spending Index",
+    "section": "Examples",
+    "published": "2024-08-26T08:06Z",
+    "md_relpath": "md/15575.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 47194
+  },
+  {
+    "article_id": 16867,
+    "title": "Neural Networks in Trading: A Multimodal, Tool-Augmented Agent for Financial Markets (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-10-23T08:12Z",
+    "md_relpath": "md/16867.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 48703
+  },
+  {
+    "article_id": 18447,
+    "title": "Neural Networks in Trading: A Cross-Domain Time Series Forecasting Framework (Conclusion)",
+    "section": "Trading systems",
+    "published": "2026-08-11T12:35Z",
+    "md_relpath": "md/18447.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 60383
+  },
+  {
+    "article_id": 18499,
+    "title": "Neural Networks in Trading: An Intelligent Forecast Pipeline (Time-MoE)",
+    "section": "Trading systems",
+    "published": "2026-08-12T08:58Z",
+    "md_relpath": "md/18499.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 37732
+  },
+  {
+    "article_id": 23451,
+    "title": "Ordinal Pattern Transition Networks in MQL5",
+    "section": "Trading",
+    "published": "2026-07-28T08:26Z",
+    "md_relpath": "md/23451.md",
+    "fetch_status": "ok",
+    "hits": 5,
+    "chars": 63485
+  },
+  {
+    "article_id": 15762,
+    "title": "Reimagining Classic Strategies (Part VIII): Currency Markets And Precious Metals on the USDCAD",
+    "section": "Examples",
+    "published": "2024-09-05T11:06Z",
+    "md_relpath": "md/15762.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 44653
+  },
+  {
+    "article_id": 16192,
+    "title": "Neural Networks in Trading: Contrastive Pattern Transformer (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-06-11T06:04Z",
+    "md_relpath": "md/16192.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 49022
+  },
+  {
+    "article_id": 16916,
+    "title": "Neural Networks in Trading: A Multi-Agent System with Conceptual Reinforcement (FinCon)",
+    "section": "Trading systems",
+    "published": "2025-10-31T09:34Z",
+    "md_relpath": "md/16916.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 35688
+  },
+  {
+    "article_id": 17069,
+    "title": "Neural Networks in Trading: Hierarchical Dual-Tower Transformer (Hidformer)",
+    "section": "Trading systems",
+    "published": "2025-11-19T06:52Z",
+    "md_relpath": "md/17069.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 44985
+  },
+  {
+    "article_id": 17675,
+    "title": "Neural Networks in Trading: Anomaly Detection in the Frequency Domain (Final Part)",
+    "section": "Trading systems",
+    "published": "2026-06-08T12:13Z",
+    "md_relpath": "md/17675.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 60783
+  },
+  {
+    "article_id": 17739,
+    "title": "Neural Networks in Trading: Skill Hierarchy for Adaptive Agent Behavior (Final Part)",
+    "section": "Trading systems",
+    "published": "2026-06-11T13:00Z",
+    "md_relpath": "md/17739.md",
+    "fetch_status": "ok",
+    "hits": 4,
+    "chars": 57580
+  },
+  {
+    "article_id": 13729,
+    "title": "The Disagreement Problem: Diving Deeper into The Complexity Explainability in AI",
+    "section": "Machine learning",
+    "published": "2024-03-08T12:54Z",
+    "md_relpath": "md/13729.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 52381
+  },
+  {
+    "article_id": 14494,
+    "title": "Practicing the development of trading strategies",
+    "section": "Trading",
+    "published": "2024-07-30T11:47Z",
+    "md_relpath": "md/14494.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 30141
+  },
+  {
+    "article_id": 14505,
+    "title": "Neural Networks Made Easy (Part 81): Context-Guided Motion Analysis (CCMR)",
+    "section": "Trading systems",
+    "published": "2024-07-29T13:58Z",
+    "md_relpath": "md/14505.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 70145
+  },
+  {
+    "article_id": 15024,
+    "title": "Neural Networks Made Easy (Part 93): Adaptive Forecasting in Frequency and Time Domains (Final Part)",
+    "section": "Trading systems",
+    "published": "2024-11-20T16:17Z",
+    "md_relpath": "md/15024.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 63899
+  },
+  {
+    "article_id": 15405,
+    "title": "MQL5 Wizard Techniques you should know (Part 29): Continuation on Learning Rates with MLPs",
+    "section": "Trading systems",
+    "published": "2024-07-26T16:54Z",
+    "md_relpath": "md/15405.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 43102
+  },
+  {
+    "article_id": 15407,
+    "title": "Twitter Sentiment Analysis with Sockets",
+    "section": "Integration",
+    "published": "2024-07-26T17:00Z",
+    "md_relpath": "md/15407.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 31365
+  },
+  {
+    "article_id": 15498,
+    "title": "Neural Networks in Trading: Injection of Global Information into Independent Channels (InjectTST)",
+    "section": "Trading systems",
+    "published": "2025-02-21T13:55Z",
+    "md_relpath": "md/15498.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 66342
+  },
+  {
+    "article_id": 15927,
+    "title": "Price Action Analysis Toolkit Development (Part 2):  Analytical Comment Script",
+    "section": "Examples",
+    "published": "2024-11-22T10:54Z",
+    "md_relpath": "md/15927.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 26547
+  },
+  {
+    "article_id": 16214,
+    "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling",
+    "section": "Machine learning",
+    "published": "2024-12-02T10:17Z",
+    "md_relpath": "md/16214.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 32845
+  },
+  {
+    "article_id": 16328,
+    "title": "Creating a Trading Administrator Panel in MQL5 (Part VI):Trade Management Panel (II)",
+    "section": "Examples",
+    "published": "2024-11-22T13:39Z",
+    "md_relpath": "md/16328.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 82016
+  },
+  {
+    "article_id": 16390,
+    "title": "Data Science and ML (Part 32): Keeping your AI models updated, Online Learning",
+    "section": "Statistics and analysis",
+    "published": "2024-11-21T09:46Z",
+    "md_relpath": "md/16390.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 47906
+  },
+  {
+    "article_id": 16631,
+    "title": "Neural Networks in Trading: An Ensemble of Agents with Attention Mechanisms (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-09-15T12:01Z",
+    "md_relpath": "md/16631.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 51349
+  },
+  {
+    "article_id": 16816,
+    "title": "Neural Networks in Trading: An Agent with Layered Memory (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-10-17T06:03Z",
+    "md_relpath": "md/16816.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 51235
+  },
+  {
+    "article_id": 17104,
+    "title": "Neural Networks in Trading: Hierarchical Dual-Tower Transformer (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-11-25T15:35Z",
+    "md_relpath": "md/17104.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 44098
+  },
+  {
+    "article_id": 18914,
+    "title": "Neural Networks in Trading: An End-to-End Multivariate Time Series Forecasting Model (Conclusion)",
+    "section": "Trading systems",
+    "published": "2026-09-03T07:31Z",
+    "md_relpath": "md/18914.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 65147
+  },
+  {
+    "article_id": 21743,
+    "title": "Developing Market Entropy Indicator: Trading System Based on Information Theory",
+    "section": "Examples",
+    "published": "2026-03-27T11:20Z",
+    "md_relpath": "md/21743.md",
+    "fetch_status": "ok",
+    "hits": 3,
+    "chars": 54554
+  },
+  {
+    "article_id": 6351,
+    "title": "Grokking market \"memory\" through differentiation and entropy analysis",
+    "section": "Trading",
+    "published": "2019-07-17T14:48Z",
+    "md_relpath": "md/6351.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 40297
+  },
+  {
+    "article_id": 10922,
+    "title": "Matrix and Vector operations in MQL5",
+    "section": "Examples",
+    "published": "2022-09-26T10:04Z",
+    "md_relpath": "md/10922.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 61234
+  },
+  {
+    "article_id": 11172,
+    "title": "Neural networks made easy (Part 20): Autoencoders",
+    "section": "Trading systems",
+    "published": "2022-09-29T11:43Z",
+    "md_relpath": "md/11172.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 47208
+  },
+  {
+    "article_id": 11467,
+    "title": "Learn how to design a trading system by Accelerator Oscillator",
+    "section": "Trading",
+    "published": "2022-09-28T14:48Z",
+    "md_relpath": "md/11467.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 34681
+  },
+  {
+    "article_id": 11468,
+    "title": "Learn how to design a trading system by Awesome Oscillator",
+    "section": "Trading",
+    "published": "2022-09-21T13:20Z",
+    "md_relpath": "md/11468.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 35184
+  },
+  {
+    "article_id": 13212,
+    "title": "Neural networks made easy (Part 55): Contrastive intrinsic control (CIC)",
+    "section": "Trading systems",
+    "published": "2023-12-21T12:59Z",
+    "md_relpath": "md/13212.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 92267
+  },
+  {
+    "article_id": 13551,
+    "title": "Neural networks are easy (Part 59): Dichotomy of Control (DoC)",
+    "section": "Trading systems",
+    "published": "2024-02-19T15:56Z",
+    "md_relpath": "md/13551.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 58536
+  },
+  {
+    "article_id": 15288,
+    "title": "Portfolio Optimization in Python and MQL5",
+    "section": "Statistics and analysis",
+    "published": "2024-07-15T12:44Z",
+    "md_relpath": "md/15288.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 51202
+  },
+  {
+    "article_id": 15610,
+    "title": "Reimagining Classic Strategies (Part VI): Multiple Time-Frame Analysis",
+    "section": "Examples",
+    "published": "2024-08-20T14:26Z",
+    "md_relpath": "md/15610.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 50993
+  },
+  {
+    "article_id": 15859,
+    "title": "Neural Networks in Trading: Scene-Aware Object Detection (HyperDet3D)",
+    "section": "Trading systems",
+    "published": "2025-04-17T13:46Z",
+    "md_relpath": "md/15859.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 62791
+  },
+  {
+    "article_id": 15882,
+    "title": "Neural Networks in Trading: Exploring the Local Structure of Data",
+    "section": "Trading systems",
+    "published": "2025-04-23T14:24Z",
+    "md_relpath": "md/15882.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 50497
+  },
+  {
+    "article_id": 15886,
+    "title": "Self Optimizing Expert Advisor With MQL5 And Python (Part IV): Stacking Models",
+    "section": "Examples",
+    "published": "2024-09-19T16:07Z",
+    "md_relpath": "md/15886.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 54417
+  },
+  {
+    "article_id": 15928,
+    "title": "Neural Networks in Trading: Superpoint Transformer (SPFormer)",
+    "section": "Trading systems",
+    "published": "2025-05-06T13:26Z",
+    "md_relpath": "md/15928.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 57111
+  },
+  {
+    "article_id": 16570,
+    "title": "Neural Networks in Trading: A Multi-Agent Self-Adaptive Model (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-09-01T06:05Z",
+    "md_relpath": "md/16570.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 49098
+  },
+  {
+    "article_id": 16937,
+    "title": "Neural Networks in Trading: A Multi-Agent System with Conceptual Reinforcement (Final Part)",
+    "section": "Trading systems",
+    "published": "2025-11-03T06:34Z",
+    "md_relpath": "md/16937.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 42119
+  },
+  {
+    "article_id": 17487,
+    "title": "Neural Networks in Trading: Dual Clustering of Multivariate Time Series (Final Part)",
+    "section": "Trading systems",
+    "published": "2026-03-23T14:06Z",
+    "md_relpath": "md/17487.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 46390
+  },
+  {
+    "article_id": 18453,
+    "title": "An Introduction to the Study of Fractal Market Structures Using Machine Learning",
+    "section": "Trading systems",
+    "published": "2026-05-27T11:51Z",
+    "md_relpath": "md/18453.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 28972
+  },
+  {
+    "article_id": 18785,
+    "title": "Quantum Neural Network in MQL5 (Part II): Training a Neural Network with Backpropagation on ALGLIB Markov Matrices",
+    "section": "Indicators",
+    "published": "2026-06-22T10:34Z",
+    "md_relpath": "md/18785.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 35959
+  },
+  {
+    "article_id": 19781,
+    "title": "MQL5 Wizard Techniques you should know (Part 81):  Using Patterns of Ichimoku and the ADX-Wilder with Beta VAE Inference Learning",
+    "section": "Integration",
+    "published": "2025-10-06T08:31Z",
+    "md_relpath": "md/19781.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 37047
+  },
+  {
+    "article_id": 20518,
+    "title": "Quantum Computing and Gradient Boosting in EURUSD Trading",
+    "section": "Integration",
+    "published": "2026-09-01T08:46Z",
+    "md_relpath": "md/20518.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 41813
+  },
+  {
+    "article_id": 20530,
+    "title": "Reimagining Classic Strategies (Part 20): Modern Stochastic Oscillators",
+    "section": "Examples",
+    "published": "2025-12-19T13:33Z",
+    "md_relpath": "md/20530.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 38671
+  },
+  {
+    "article_id": 24057,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+    "section": "Machine learning",
+    "published": "2026-09-03T11:55Z",
+    "md_relpath": "md/24057.md",
+    "fetch_status": "ok",
+    "hits": 2,
+    "chars": 34879
+  },
+  {
+    "article_id": 736,
+    "title": "Technical Indicators and Digital Filters",
+    "section": "Integration",
+    "published": "2013-10-21T14:08Z",
+    "md_relpath": "md/736.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 31612
+  },
+  {
+    "article_id": 8038,
+    "title": "Probability theory and mathematical statistics with examples (part I): Fundamentals and elementary theory",
+    "section": "Statistics and analysis",
+    "published": "2020-10-30T09:08Z",
+    "md_relpath": "md/8038.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 51206
+  },
+  {
+    "article_id": 8136,
+    "title": "Price series discretization, random component and noise",
+    "section": "Statistics and analysis",
+    "published": "2020-11-23T07:47Z",
+    "md_relpath": "md/8136.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 39921
+  },
+  {
+    "article_id": 8231,
+    "title": "A scientific approach to the development of trading algorithms",
+    "section": "Trading",
+    "published": "2020-12-07T09:05Z",
+    "md_relpath": "md/8231.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 43543
+  },
+  {
+    "article_id": 8819,
+    "title": "Neural networks made easy (Part 9): Documenting the work",
+    "section": "Examples",
+    "published": "2021-02-09T11:13Z",
+    "md_relpath": "md/8819.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 36281
+  },
+  {
+    "article_id": 11245,
+    "title": "Neural networks made easy (Part 22): Unsupervised learning of recurrent models",
+    "section": "Integration",
+    "published": "2022-10-11T08:21Z",
+    "md_relpath": "md/11245.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 61476
+  },
+  {
+    "article_id": 11977,
+    "title": "MQL5 Cookbook \u2014 Macroeconomic events database",
+    "section": "Examples",
+    "published": "2023-03-15T15:44Z",
+    "md_relpath": "md/11977.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 101548
+  },
+  {
+    "article_id": 12129,
+    "title": "Measuring Indicator Information",
+    "section": "Examples",
+    "published": "2023-02-07T15:57Z",
+    "md_relpath": "md/12129.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 30312
+  },
+  {
+    "article_id": 12250,
+    "title": "Developing a Replay System (Part 64): Playing the service (V)",
+    "section": "Examples",
+    "published": "2025-04-14T14:46Z",
+    "md_relpath": "md/12250.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38796
+  },
+  {
+    "article_id": 12783,
+    "title": "Neural networks made easy (Part 45): Training state exploration skills",
+    "section": "Trading systems",
+    "published": "2023-10-30T10:30Z",
+    "md_relpath": "md/12783.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 48730
+  },
+  {
+    "article_id": 12816,
+    "title": "Neural networks made easy (Part 46): Goal-conditioned reinforcement learning (GCRL)",
+    "section": "Trading systems",
+    "published": "2023-10-31T12:07Z",
+    "md_relpath": "md/12816.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 61901
+  },
+  {
+    "article_id": 12985,
+    "title": "Market Simulation (Part 21): First Steps with SQL (IV)",
+    "section": "Tester",
+    "published": "2026-06-02T11:30Z",
+    "md_relpath": "md/12985.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 27615
+  },
+  {
+    "article_id": 13055,
+    "title": "Neural networks made easy (Part 52): Research with optimism and distribution correction",
+    "section": "Trading systems",
+    "published": "2023-11-29T13:47Z",
+    "md_relpath": "md/13055.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 59353
+  },
+  {
+    "article_id": 13639,
+    "title": "Neural networks made easy (Part 61): Optimism issue in offline reinforcement learning",
+    "section": "Trading systems",
+    "published": "2024-03-05T12:00Z",
+    "md_relpath": "md/13639.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 59618
+  },
+  {
+    "article_id": 13712,
+    "title": "Neural networks made easy (Part 63): Unsupervised Pretraining for Decision Transformer (PDT)",
+    "section": "Trading systems",
+    "published": "2024-03-15T08:37Z",
+    "md_relpath": "md/13712.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 65962
+  },
+  {
+    "article_id": 14454,
+    "title": "The Group Method of Data Handling: Implementing the Multilayered Iterative Algorithm in MQL5",
+    "section": "Examples",
+    "published": "2024-03-29T11:01Z",
+    "md_relpath": "md/14454.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 115871
+  },
+  {
+    "article_id": 15182,
+    "title": "Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+    "section": "Expert Advisors",
+    "published": "2024-07-18T14:49Z",
+    "md_relpath": "md/15182.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38094
+  },
+  {
+    "article_id": 15781,
+    "title": "Self Optimizing Expert Advisor with MQL5 And Python (Part III): Cracking The Boom 1000 Algorithm",
+    "section": "Examples",
+    "published": "2024-09-09T15:42Z",
+    "md_relpath": "md/15781.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 43419
+  },
+  {
+    "article_id": 15820,
+    "title": "Neural Networks in Trading: Transformer for the Point Cloud (Pointformer)",
+    "section": "Trading systems",
+    "published": "2025-04-15T14:26Z",
+    "md_relpath": "md/15820.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 42615
+  },
+  {
+    "article_id": 15973,
+    "title": "Neural Networks in Trading: Mask-Attention-Free Approach to Price Movement Forecasting",
+    "section": "Trading systems",
+    "published": "2025-05-12T15:00Z",
+    "md_relpath": "md/15973.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 52860
+  },
+  {
+    "article_id": 16243,
+    "title": "Neural Networks in Trading: Node-Adaptive Graph Representation with NAFS",
+    "section": "Trading systems",
+    "published": "2025-06-13T13:56Z",
+    "md_relpath": "md/16243.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38765
+  },
+  {
+    "article_id": 16439,
+    "title": "Neural Networks in Trading: A Parameter-Efficient Transformer with Segmented Attention (PSformer)",
+    "section": "Trading systems",
+    "published": "2025-08-13T10:37Z",
+    "md_relpath": "md/16439.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 40500
+  },
+  {
+    "article_id": 16686,
+    "title": "Neural Networks in Trading: A Hybrid Trading Framework with Predictive Coding (StockFormer)",
+    "section": "Trading systems",
+    "published": "2025-09-16T09:25Z",
+    "md_relpath": "md/16686.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 52893
+  },
+  {
+    "article_id": 16850,
+    "title": "Neural Networks in Trading: A Multimodal, Tool-Augmented Agent for Financial Markets (FinAgent)",
+    "section": "Trading systems",
+    "published": "2025-10-21T13:32Z",
+    "md_relpath": "md/16850.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38544
+  },
+  {
+    "article_id": 17210,
+    "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Chimera)",
+    "section": "Trading systems",
+    "published": "2026-01-15T07:58Z",
+    "md_relpath": "md/17210.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 41437
+  },
+  {
+    "article_id": 17371,
+    "title": "Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Final Part)",
+    "section": "Trading systems",
+    "published": "2026-03-05T09:45Z",
+    "md_relpath": "md/17371.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 45878
+  },
+  {
+    "article_id": 17512,
+    "title": "Forex arbitrage trading: Analyzing synthetic currencies movements and their mean reversion",
+    "section": "Integration",
+    "published": "2026-01-16T12:45Z",
+    "md_relpath": "md/17512.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 31958
+  },
+  {
+    "article_id": 17520,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 1): Data Leakage and Timestamp Fixes",
+    "section": "Trading systems",
+    "published": "2025-06-26T08:57Z",
+    "md_relpath": "md/17520.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 41030
+  },
+  {
+    "article_id": 17668,
+    "title": "MQL5 Wizard Techniques you should know (Part 58): Reinforcement Learning (DDPG) with Moving Average and Stochastic Oscillator Patterns",
+    "section": "Integration",
+    "published": "2025-04-03T11:53Z",
+    "md_relpath": "md/17668.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 25014
+  },
+  {
+    "article_id": 17760,
+    "title": "Coral Reefs Optimization (CRO)",
+    "section": "Trading",
+    "published": "2026-03-27T14:55Z",
+    "md_relpath": "md/17760.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 65783
+  },
+  {
+    "article_id": 17803,
+    "title": "Table and Header Classes based on a table model in MQL5: Applying the MVC concept",
+    "section": "Examples",
+    "published": "2025-11-25T08:47Z",
+    "md_relpath": "md/17803.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 132636
+  },
+  {
+    "article_id": 17938,
+    "title": "MQL5 Wizard Techniques you should know (Part 62): Using Patterns of ADX and CCI with Reinforcement-Learning TRPO",
+    "section": "Trading systems",
+    "published": "2025-05-02T13:04Z",
+    "md_relpath": "md/17938.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 43907
+  },
+  {
+    "article_id": 18004,
+    "title": "Neural Networks in Trading: Time Series Forecasting Using Adaptive Modal Decomposition (ACEFormer)",
+    "section": "Trading systems",
+    "published": "2026-07-03T12:52Z",
+    "md_relpath": "md/18004.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 44716
+  },
+  {
+    "article_id": 18116,
+    "title": "Neural Networks in Trading: Generalizing Time Series Without Data-Specific Dependence (Mamba4Cast)",
+    "section": "Trading systems",
+    "published": "2026-07-08T06:10Z",
+    "md_relpath": "md/18116.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38063
+  },
+  {
+    "article_id": 18246,
+    "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Mantis)",
+    "section": "Trading systems",
+    "published": "2026-08-05T12:40Z",
+    "md_relpath": "md/18246.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 41891
+  },
+  {
+    "article_id": 18291,
+    "title": "Mastering Log Records (Part 7): How to Show Logs on Chart",
+    "section": "Examples",
+    "published": "2025-05-29T13:49Z",
+    "md_relpath": "md/18291.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 35837
+  },
+  {
+    "article_id": 18354,
+    "title": "Biogeography-Based Optimization (BBO)",
+    "section": "Trading",
+    "published": "2026-05-15T12:04Z",
+    "md_relpath": "md/18354.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 52441
+  },
+  {
+    "article_id": 18355,
+    "title": "Mining Central Bank Balance Sheet Data to Get a Picture of Global Liquidity",
+    "section": "Trading systems",
+    "published": "2026-04-30T14:37Z",
+    "md_relpath": "md/18355.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 28737
+  },
+  {
+    "article_id": 18527,
+    "title": "Neural Networks in Trading: An Intelligent Forecast Pipeline (Sparse Mixture of Experts)",
+    "section": "Trading systems",
+    "published": "2026-08-13T11:29Z",
+    "md_relpath": "md/18527.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 56067
+  },
+  {
+    "article_id": 18864,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 2): Labeling Financial Data for Machine Learning",
+    "section": "Trading",
+    "published": "2025-08-22T13:57Z",
+    "md_relpath": "md/18864.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 62008
+  },
+  {
+    "article_id": 19012,
+    "title": "Forecasting in Trading Using Grey Models",
+    "section": "Examples",
+    "published": "2026-06-29T10:29Z",
+    "md_relpath": "md/19012.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 20758
+  },
+  {
+    "article_id": 19013,
+    "title": "Gaussian Processes in Machine Learning (Part 2): Implementing and Testing a Classification Model in MQL5",
+    "section": "Indicators",
+    "published": "2026-06-26T14:06Z",
+    "md_relpath": "md/19013.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 120119
+  },
+  {
+    "article_id": 19035,
+    "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 04): time, date, and datetime modules from Python",
+    "section": "Trading systems",
+    "published": "2025-11-25T11:58Z",
+    "md_relpath": "md/19035.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 43913
+  },
+  {
+    "article_id": 19047,
+    "title": "Developing a Neural Network Trading Robot Based on Mamba with Selective State Space Models",
+    "section": "Trading systems",
+    "published": "2026-07-01T07:42Z",
+    "md_relpath": "md/19047.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 32949
+  },
+  {
+    "article_id": 20239,
+    "title": "Mastering Kagi Charts in MQL5 (Part I): Creating the Indicator",
+    "section": "Indicators",
+    "published": "2025-11-25T11:53Z",
+    "md_relpath": "md/20239.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 83762
+  },
+  {
+    "article_id": 20309,
+    "title": "Developing a Trading Strategy: The Flower Volatility Index Trend-Following Approach",
+    "section": "Trading",
+    "published": "2025-11-24T15:09Z",
+    "md_relpath": "md/20309.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 37788
+  },
+  {
+    "article_id": 20535,
+    "title": "Combining LLM, CatBoost, and Quantum Computing into a Unified Trading System",
+    "section": "Trading systems",
+    "published": "2026-09-03T14:05Z",
+    "md_relpath": "md/20535.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 45671
+  },
+  {
+    "article_id": 21728,
+    "title": "Introduction to MQL5 (Part 43): Beginner Guide to File Handling in MQL5 (V)",
+    "section": "Trading systems",
+    "published": "2026-03-27T10:23Z",
+    "md_relpath": "md/21728.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 37950
+  },
+  {
+    "article_id": 21742,
+    "title": "Automating Market Entropy Indicator: Trading System Based on Information Theory",
+    "section": "Examples",
+    "published": "2026-04-21T08:53Z",
+    "md_relpath": "md/21742.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 56425
+  },
+  {
+    "article_id": 21829,
+    "title": "Creating Custom Indicators in MQL5 (Part 10): Enhancing the Footprint Chart with Per-Bar Volume Sentiment Information Box",
+    "section": "Trading systems",
+    "published": "2026-03-27T11:34Z",
+    "md_relpath": "md/21829.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 86216
+  },
+  {
+    "article_id": 21833,
+    "title": "Building a Research-Grounded Grid EA in MQL5: Why Most Grid EAs Fail and What Taranto Proved",
+    "section": "Trading",
+    "published": "2026-03-27T10:16Z",
+    "md_relpath": "md/21833.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 55573
+  },
+  {
+    "article_id": 22614,
+    "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 3): Restart-Aware Breakeven and Trailing Systems",
+    "section": "Expert Advisors",
+    "published": "2026-06-29T14:24Z",
+    "md_relpath": "md/22614.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 30967
+  },
+  {
+    "article_id": 22615,
+    "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 4): Trade-State Reconciliation and Safe Mode Recovery",
+    "section": "Expert Advisors",
+    "published": "2026-06-30T11:20Z",
+    "md_relpath": "md/22615.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 25437
+  },
+  {
+    "article_id": 22734,
+    "title": "Feature Engineering for ML (Part 6): Microstructural Features in MQL5",
+    "section": "Trading systems",
+    "published": "2026-06-18T10:40Z",
+    "md_relpath": "md/22734.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38024
+  },
+  {
+    "article_id": 22796,
+    "title": "Price Action Analysis Toolkit Development (Part 71): Weekend Gap Structure Mapping in MQL5",
+    "section": "Trading systems",
+    "published": "2026-06-08T12:29Z",
+    "md_relpath": "md/22796.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 47080
+  },
+  {
+    "article_id": 22938,
+    "title": "Market Microstructure in MQL5 (Part 5): Microstructure Noise",
+    "section": "Indicators",
+    "published": "2026-06-15T13:44Z",
+    "md_relpath": "md/22938.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 50421
+  },
+  {
+    "article_id": 22990,
+    "title": "Building an Object-Oriented Session VWAP Engine in MQL5",
+    "section": "Trading systems",
+    "published": "2026-06-29T14:18Z",
+    "md_relpath": "md/22990.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 34060
+  },
+  {
+    "article_id": 23037,
+    "title": "Shape of Price: An Introduction to TDA and Takens Embedding in MQL5",
+    "section": "Trading",
+    "published": "2026-06-18T12:07Z",
+    "md_relpath": "md/23037.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 39581
+  },
+  {
+    "article_id": 23096,
+    "title": "Measuring What Matters (Part 1) : Portfolio Risk Decomposition in MQL5",
+    "section": "Examples",
+    "published": "2026-06-30T14:47Z",
+    "md_relpath": "md/23096.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 36396
+  },
+  {
+    "article_id": 23100,
+    "title": "Engineering Trading Discipline into Code (Part 8): Building a Setup Confirmation and Trade Authorization Layer in MQL5",
+    "section": "Trading systems",
+    "published": "2026-06-30T14:50Z",
+    "md_relpath": "md/23100.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 68109
+  },
+  {
+    "article_id": 23156,
+    "title": "Persistent Key-Value Store in MQL5: Using Flat Files as a Lightweight Database for EA State",
+    "section": "Trading systems",
+    "published": "2026-06-30T11:09Z",
+    "md_relpath": "md/23156.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 89836
+  },
+  {
+    "article_id": 23286,
+    "title": "Persistence Entropy as a Market Regime Indicator in MQL5",
+    "section": "Trading",
+    "published": "2026-07-15T17:35Z",
+    "md_relpath": "md/23286.md",
+    "fetch_status": "ok",
+    "hits": 1,
+    "chars": 38860
+  }
+]

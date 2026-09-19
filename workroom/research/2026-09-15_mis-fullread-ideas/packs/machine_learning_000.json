@@ -1,0 +1,119 @@
+{
+  "pack_id": "machine_learning_000",
+  "section": "Machine learning",
+  "parent_shard": "machine_learning_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12373,
+      "title": "How to use ONNX models in MQL5",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12373.md"
+    },
+    {
+      "id": 12433,
+      "title": "An example of how to ensemble ONNX models in MQL5",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12433.md"
+    },
+    {
+      "id": 13656,
+      "title": "Neural Network in Practice: Secant Line",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13656.md"
+    },
+    {
+      "id": 13670,
+      "title": "Neural Network in Practice: Least Squares",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13670.md"
+    },
+    {
+      "id": 13696,
+      "title": "Neural Network in Practice: Straight Line Function",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13696.md"
+    },
+    {
+      "id": 13706,
+      "title": "Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13706.md"
+    },
+    {
+      "id": 13710,
+      "title": "Neural Network in Practice: Pseudoinverse (I)",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13710.md"
+    },
+    {
+      "id": 13729,
+      "title": "The Disagreement Problem: Diving Deeper into The Complexity Explainability in AI",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13729.md"
+    },
+    {
+      "id": 13733,
+      "title": "Neural Network in Practice: Pseudoinverse (II)",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13733.md"
+    },
+    {
+      "id": 13744,
+      "title": "Neural Network in Practice: Sketching a Neuron",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13744.md"
+    },
+    {
+      "id": 13745,
+      "title": "Neural Network in Practice: The First Neuron",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13745.md"
+    },
+    {
+      "id": 13748,
+      "title": "Neural Networks in Practice: Practice Makes Perfect",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13748.md"
+    }
+  ]
+}

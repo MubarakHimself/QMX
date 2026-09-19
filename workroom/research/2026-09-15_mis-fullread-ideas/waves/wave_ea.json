@@ -1,0 +1,707 @@
+{
+  "packs": [
+    {
+      "pack_id": "expert_advisors_000",
+      "section": "Expert Advisors",
+      "parent_shard": "expert_advisors_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 706,
+          "title": "Creating Neural Network EAs Using MQL5 Wizard and Hlaiman EA Generator",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\706.md"
+        },
+        {
+          "id": 1589,
+          "title": "Building an Interactive Application to Display RSS Feeds in MetaTrader 5",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1589.md"
+        },
+        {
+          "id": 3299,
+          "title": "An Analysis of Why Expert Advisors Fail",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3299.md"
+        },
+        {
+          "id": 5337,
+          "title": "DIY multi-threaded asynchronous MQL5 WebRequest",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5337.md"
+        },
+        {
+          "id": 5472,
+          "title": "Practical Use of Kohonen Neural Networks in Algorithmic Trading. Part I. Tools",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5472.md"
+        },
+        {
+          "id": 7318,
+          "title": "Building an Expert Advisor using separate modules",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7318.md"
+        },
+        {
+          "id": 10954,
+          "title": "Video: Simple automated trading \u2013 How to create a simple Expert Advisor with MQL5",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10954.md"
+        },
+        {
+          "id": 10962,
+          "title": "Video: How to setup MetaTrader 5 and MQL5 for simple automated trading",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10962.md"
+        },
+        {
+          "id": 14424,
+          "title": "Seasonality Filtering and time period for Deep Learning ONNX models with python for EA",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14424.md"
+        },
+        {
+          "id": 16029,
+          "title": "Forecasting exchange rates using classic machine learning methods: Logit and Probit models",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16029.md"
+        },
+        {
+          "id": 16124,
+          "title": "Feature Engineering With Python And MQL5 (Part II): Angle Of Price",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16124.md"
+        },
+        {
+          "id": 18759,
+          "title": "Quantum Neural Network in MQL5 (Part I): Creating the Include File",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18759.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "expert_advisors_001",
+      "section": "Expert Advisors",
+      "parent_shard": "expert_advisors_001",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "creating an ea that works automatically",
+        "csv data analysis",
+        "custom indicator workshop"
+      ],
+      "n": 11,
+      "articles": [
+        {
+          "id": 18890,
+          "title": "Quantum Neural Network in MQL5 (Part III): A Virtual Quantum Processor Based on Qubits",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18890.md"
+        },
+        {
+          "id": 18916,
+          "title": "Training a nonlinear U-Transformer on the residuals of a linear autoregressive model",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18916.md"
+        },
+        {
+          "id": 19439,
+          "title": "Developing Trading Strategies with the Parafrac and Parafrac V2 Oscillators: Single Entry Performance Insights",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19439.md"
+        },
+        {
+          "id": 19911,
+          "title": "Building a Smart Trade Manager in MQL5: Automate Break-Even, Trailing Stop, and Partial Close",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19911.md"
+        },
+        {
+          "id": 22277,
+          "title": "Keeping Memory Across Restarts: EA State Persistence Using Binary Files in MQL5",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22277.md"
+        },
+        {
+          "id": 22930,
+          "title": "Building a Type-Safe Event Bus in MQL5: Decoupling EA Components Without Global Variables",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22930.md"
+        },
+        {
+          "id": 23093,
+          "title": "Building Automated Daily Trading Reports with the SendMail Function",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23093.md"
+        },
+        {
+          "id": 23361,
+          "title": "Building a Synthetic Custom Symbol in MQL5 Using Multi-Symbol Price Averaging",
+          "section": "Expert Advisors",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23361.md"
+        },
+        {
+          "id": 23065,
+          "title": "CSV Data Analysis (Part 5): Real-Time CSV Streaming from Live MetaTrader 5 Sessions",
+          "section": "Expert Advisors",
+          "series_title": "CSV Data Analysis (): Real-Time CSV Streaming from Live MetaTrader 5 Sessions",
+          "series_key": "csv data analysis",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23065.md"
+        },
+        {
+          "id": 11216,
+          "title": "Creating an EA that works automatically (Part 01): Concepts and structures",
+          "section": "Expert Advisors",
+          "series_title": "Creating an EA that works automatically (): Concepts and structures",
+          "series_key": "creating an ea that works automatically",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11216.md"
+        },
+        {
+          "id": 21856,
+          "title": "Custom Indicator Workshop (Part 4) : Automating UT Bot Alerts into a Trading Expert Advisor",
+          "section": "Expert Advisors",
+          "series_title": "Custom Indicator Workshop () : Automating UT Bot Alerts into a Trading Expert Advisor",
+          "series_key": "custom indicator workshop",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21856.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "expert_advisors_002",
+      "section": "Expert Advisors",
+      "parent_shard": "expert_advisors_002",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "data label for time series  mining",
+        "data label for time series mining",
+        "data science and machine learning",
+        "data science and ml"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 15182,
+          "title": "Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+          "series_key": "data science and ml",
+          "series_part": 26,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15182.md"
+        },
+        {
+          "id": 15259,
+          "title": "Data Science and ML (Part 27): Convolutional Neural Networks (CNNs) in MetaTrader 5 Trading Bots \u2014 Are They Worth It?",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): Convolutional Neural Networks (CNNs) in MetaTrader 5 Trading Bots \u2014 Are They Worth It?",
+          "series_key": "data science and ml",
+          "series_part": 27,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15259.md"
+        },
+        {
+          "id": 17469,
+          "title": "Data Science and ML (Part 35): NumPy in MQL5 \u2013 The Art of Making Complex Algorithms with Less Code",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): NumPy in MQL5 \u2013 The Art of Making Complex Algorithms with Less Code",
+          "series_key": "data science and ml",
+          "series_part": 35,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17469.md"
+        },
+        {
+          "id": 17886,
+          "title": "Data Science and ML (Part 38): AI Transfer Learning in Forex Markets",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): AI Transfer Learning in Forex Markets",
+          "series_key": "data science and ml",
+          "series_part": 38,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17886.md"
+        },
+        {
+          "id": 17986,
+          "title": "Data Science and ML (Part 39): News + Artificial Intelligence, Would You Bet on it?",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): News + Artificial Intelligence, Would You Bet on it?",
+          "series_key": "data science and ml",
+          "series_part": 39,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17986.md"
+        },
+        {
+          "id": 18078,
+          "title": "Data Science and ML (Part 40): Using Fibonacci Retracements in Machine Learning data",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): Using Fibonacci Retracements in Machine Learning data",
+          "series_key": "data science and ml",
+          "series_part": 40,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18078.md"
+        },
+        {
+          "id": 18497,
+          "title": "Data Science and ML (Part 43): Hidden Patterns Detection in Indicators Data Using Latent Gaussian Mixture Models (LGMM)",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and ML (): Hidden Patterns Detection in Indicators Data Using Latent Gaussian Mixture Models (LGMM)",
+          "series_key": "data science and ml",
+          "series_part": 43,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18497.md"
+        },
+        {
+          "id": 11615,
+          "title": "Data Science and Machine Learning (Part 08): K-Means Clustering in plain MQL5",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and Machine Learning (): K-Means Clustering in plain MQL5",
+          "series_key": "data science and machine learning",
+          "series_part": 8,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11615.md"
+        },
+        {
+          "id": 15114,
+          "title": "Data Science and Machine Learning (Part 25): Forex Timeseries Forecasting Using a Recurrent Neural Network (RNN)",
+          "section": "Expert Advisors",
+          "series_title": "Data Science and Machine Learning (): Forex Timeseries Forecasting Using a Recurrent Neural Network (RNN)",
+          "series_key": "data science and machine learning",
+          "series_part": 25,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15114.md"
+        },
+        {
+          "id": 13225,
+          "title": "Data label for time series  mining(Part 1)\uff1aMake a dataset with trend markers through the EA operation chart",
+          "section": "Expert Advisors",
+          "series_title": "Data label for time series  mining()\uff1aMake a dataset with trend markers through the EA operation chart",
+          "series_key": "data label for time series  mining",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13225.md"
+        },
+        {
+          "id": 13255,
+          "title": "Data label for time series mining (Part 3)\uff1aExample for using label data",
+          "section": "Expert Advisors",
+          "series_title": "Data label for time series mining ()\uff1aExample for using label data",
+          "series_key": "data label for time series mining",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13255.md"
+        },
+        {
+          "id": 13254,
+          "title": "Data label for time series mining (Part 5)\uff1aApply and Test in EA Using Socket",
+          "section": "Expert Advisors",
+          "series_title": "Data label for time series mining ()\uff1aApply and Test in EA Using Socket",
+          "series_key": "data label for time series mining",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13254.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "expert_advisors_003",
+      "section": "Expert Advisors",
+      "parent_shard": "expert_advisors_003",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "data label for timeseries mining",
+        "engineering a self-healing expert advisor in mql5",
+        "experiments with neural networks",
+        "introduction to mql5"
+      ],
+      "n": 11,
+      "articles": [
+        {
+          "id": 13253,
+          "title": "Data label for timeseries mining (Part 2)\uff1aMake datasets with trend markers using Python",
+          "section": "Expert Advisors",
+          "series_title": "Data label for timeseries mining ()\uff1aMake datasets with trend markers using Python",
+          "series_key": "data label for timeseries mining",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13253.md"
+        },
+        {
+          "id": 22532,
+          "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 1): Persistent Trade State Architecture",
+          "section": "Expert Advisors",
+          "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Persistent Trade State Architecture",
+          "series_key": "engineering a self-healing expert advisor in mql5",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22532.md"
+        },
+        {
+          "id": 22613,
+          "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 2): Restart-Safe Virtual Trade Protection",
+          "section": "Expert Advisors",
+          "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Restart-Safe Virtual Trade Protection",
+          "series_key": "engineering a self-healing expert advisor in mql5",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22613.md"
+        },
+        {
+          "id": 22614,
+          "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 3): Restart-Aware Breakeven and Trailing Systems",
+          "section": "Expert Advisors",
+          "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Restart-Aware Breakeven and Trailing Systems",
+          "series_key": "engineering a self-healing expert advisor in mql5",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22614.md"
+        },
+        {
+          "id": 22615,
+          "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 4): Trade-State Reconciliation and Safe Mode Recovery",
+          "section": "Expert Advisors",
+          "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Trade-State Reconciliation and Safe Mode Recovery",
+          "series_key": "engineering a self-healing expert advisor in mql5",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22615.md"
+        },
+        {
+          "id": 22616,
+          "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 5): Real-Time Recovery Dashboard (Final Part)",
+          "section": "Expert Advisors",
+          "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Real-Time Recovery Dashboard (Final Part)",
+          "series_key": "engineering a self-healing expert advisor in mql5",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22616.md"
+        },
+        {
+          "id": 11949,
+          "title": "Experiments with neural networks (Part 3): Practical application",
+          "section": "Expert Advisors",
+          "series_title": "Experiments with neural networks (): Practical application",
+          "series_key": "experiments with neural networks",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11949.md"
+        },
+        {
+          "id": 14099,
+          "title": "Introduction to MQL5 (Part 3): Mastering the Core Elements of MQL5",
+          "section": "Expert Advisors",
+          "series_title": "Introduction to MQL5 (): Mastering the Core Elements of MQL5",
+          "series_key": "introduction to mql5",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14099.md"
+        },
+        {
+          "id": 14232,
+          "title": "Introduction to MQL5 (Part 4): Mastering Structures, Classes, and Time Functions",
+          "section": "Expert Advisors",
+          "series_title": "Introduction to MQL5 (): Mastering Structures, Classes, and Time Functions",
+          "series_key": "introduction to mql5",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14232.md"
+        },
+        {
+          "id": 17296,
+          "title": "Introduction to MQL5 (Part 13): A Beginner's Guide to Building Custom Indicators (II)",
+          "section": "Expert Advisors",
+          "series_title": "Introduction to MQL5 (): A Beginner's Guide to Building Custom Indicators (II)",
+          "series_key": "introduction to mql5",
+          "series_part": 13,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17296.md"
+        },
+        {
+          "id": 21160,
+          "title": "Introduction to MQL5 (Part 39): Beginner Guide to File Handling in MQL5 (I)",
+          "section": "Expert Advisors",
+          "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (I)",
+          "series_key": "introduction to mql5",
+          "series_part": 39,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21160.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "expert_advisors_004",
+      "section": "Expert Advisors",
+      "parent_shard": "expert_advisors_004",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "larry williams market secrets",
+        "metatrader 5 machine learning blueprint",
+        "mql5 wizard techniques you should know",
+        "neural networks made easy"
+      ],
+      "n": 10,
+      "articles": [
+        {
+          "id": 21127,
+          "title": "Larry Williams Market Secrets (Part 10): Automating Smash Day Reversal Patterns",
+          "section": "Expert Advisors",
+          "series_title": "Larry Williams Market Secrets (): Automating Smash Day Reversal Patterns",
+          "series_key": "larry williams market secrets",
+          "series_part": 10,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21127.md"
+        },
+        {
+          "id": 21391,
+          "title": "Larry Williams Market Secrets (Part 13): Automating Hidden Smash Day Reversal Patterns",
+          "section": "Expert Advisors",
+          "series_title": "Larry Williams Market Secrets (): Automating Hidden Smash Day Reversal Patterns",
+          "series_key": "larry williams market secrets",
+          "series_part": 13,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21391.md"
+        },
+        {
+          "id": 13630,
+          "title": "MQL5 Wizard Techniques you should know (Part 07): Dendrograms",
+          "section": "Expert Advisors",
+          "series_title": "MQL5 Wizard Techniques you should know (): Dendrograms",
+          "series_key": "mql5 wizard techniques you should know",
+          "series_part": 7,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13630.md"
+        },
+        {
+          "id": 14142,
+          "title": "MQL5 Wizard Techniques you should know (Part 11): Number Walls",
+          "section": "Expert Advisors",
+          "series_title": "MQL5 Wizard Techniques you should know (): Number Walls",
+          "series_key": "mql5 wizard techniques you should know",
+          "series_part": 11,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14142.md"
+        },
+        {
+          "id": 22047,
+          "title": "MetaTrader 5 Machine Learning Blueprint (Part 13):  Implementing Bet Sizing in MQL5",
+          "section": "Expert Advisors",
+          "series_title": "MetaTrader 5 Machine Learning Blueprint ():  Implementing Bet Sizing in MQL5",
+          "series_key": "metatrader 5 machine learning blueprint",
+          "series_part": 13,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22047.md"
+        },
+        {
+          "id": 11804,
+          "title": "Neural networks made easy (Part 34): Fully Parameterized Quantile Function",
+          "section": "Expert Advisors",
+          "series_title": "Neural networks made easy (): Fully Parameterized Quantile Function",
+          "series_key": "neural networks made easy",
+          "series_part": 34,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11804.md"
+        },
+        {
+          "id": 12508,
+          "title": "Neural networks made easy (Part 38): Self-Supervised Exploration via Disagreement",
+          "section": "Expert Advisors",
+          "series_title": "Neural networks made easy (): Self-Supervised Exploration via Disagreement",
+          "series_key": "neural networks made easy",
+          "series_part": 38,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12508.md"
+        },
+        {
+          "id": 12558,
+          "title": "Neural networks made easy (Part 39): Go-Explore, a different approach to exploration",
+          "section": "Expert Advisors",
+          "series_title": "Neural networks made easy (): Go-Explore, a different approach to exploration",
+          "series_key": "neural networks made easy",
+          "series_part": 39,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12558.md"
+        },
+        {
+          "id": 12584,
+          "title": "Neural networks made easy (Part 40): Using Go-Explore on large amounts of data",
+          "section": "Expert Advisors",
+          "series_title": "Neural networks made easy (): Using Go-Explore on large amounts of data",
+          "series_key": "neural networks made easy",
+          "series_part": 40,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12584.md"
+        },
+        {
+          "id": 12605,
+          "title": "Neural networks made easy (Part 41): Hierarchical models",
+          "section": "Expert Advisors",
+          "series_title": "Neural networks made easy (): Hierarchical models",
+          "series_key": "neural networks made easy",
+          "series_part": 41,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12605.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "experts_000",
+      "section": "Experts",
+      "parent_shard": "experts_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "introduction to mql5",
+        "larry williams market secrets",
+        "risk-based trade placement ea with on-chart ui"
+      ],
+      "n": 8,
+      "articles": [
+        {
+          "id": 16066,
+          "title": "Reimagining Classic Strategies (Part X): Can AI Power The MACD?",
+          "section": "Experts",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16066.md"
+        },
+        {
+          "id": 17531,
+          "title": "Predicting Renko Bars with CatBoost AI",
+          "section": "Experts",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17531.md"
+        },
+        {
+          "id": 18253,
+          "title": "ARIMA Forecasting Indicator in MQL5",
+          "section": "Experts",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18253.md"
+        },
+        {
+          "id": 18281,
+          "title": "CAPM Model Indicator for the Forex Market",
+          "section": "Experts",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18281.md"
+        },
+        {
+          "id": 19958,
+          "title": "Kohonen Self-Organizing Maps in an MQL5 Expert Advisor",
+          "section": "Experts",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19958.md"
+        },
+        {
+          "id": 21309,
+          "title": "Introduction to MQL5 (Part 41): Beginner Guide to File Handling in MQL5 (III)",
+          "section": "Experts",
+          "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (III)",
+          "series_key": "introduction to mql5",
+          "series_part": 41,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21309.md"
+        },
+        {
+          "id": 20941,
+          "title": "Larry Williams Market Secrets (Part 7): An Empirical Study of the Trade Day of the Week Concept",
+          "section": "Experts",
+          "series_title": "Larry Williams Market Secrets (): An Empirical Study of the Trade Day of the Week Concept",
+          "series_key": "larry williams market secrets",
+          "series_part": 7,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20941.md"
+        },
+        {
+          "id": 20159,
+          "title": "Risk-Based Trade Placement EA with On-Chart UI (Part 2): Adding Interactivity and Logic",
+          "section": "Experts",
+          "series_title": "Risk-Based Trade Placement EA with On-Chart UI (): Adding Interactivity and Logic",
+          "series_key": "risk-based trade placement ea with on-chart ui",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20159.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "interviews_000",
+      "section": "Interviews",
+      "parent_shard": "interviews_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 3,
+      "articles": [
+        {
+          "id": 623,
+          "title": "Interview with Sergey Pankratyev (ATC 2012)",
+          "section": "Interviews",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\623.md"
+        },
+        {
+          "id": 624,
+          "title": "Interview with Alexey Masterov (ATC 2012)",
+          "section": "Interviews",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\624.md"
+        },
+        {
+          "id": 22768,
+          "title": "How We Built the Most Powerful Machine Learning-Powered Trading Platform: The Evolution of MQL and MetaTrader Through Archives, Forums, and Releases",
+          "section": "Interviews",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22768.md"
+        }
+      ]
+    }
+  ]
+}

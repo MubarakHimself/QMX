@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_035",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 12627,
+      "title": "Matrices and vectors in MQL5: Activation functions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12627.md"
+    },
+    {
+      "id": 12701,
+      "title": "Frequency domain representations of time series: The Power Spectrum",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12701.md"
+    },
+    {
+      "id": 12772,
+      "title": "Evaluating ONNX models using regression metrics",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12772.md"
+    },
+    {
+      "id": 12900,
+      "title": "Structures in MQL5 and methods for printing their data",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12900.md"
+    },
+    {
+      "id": 12905,
+      "title": "Studying PrintFormat() and applying ready-made examples",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12905.md"
+    },
+    {
+      "id": 12953,
+      "title": "StringFormat(). Review and ready-made examples",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12953.md"
+    },
+    {
+      "id": 13052,
+      "title": "Trade transactions. Request and response structures, description and logging",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13052.md"
+    },
+    {
+      "id": 13162,
+      "title": "Monte Carlo Permutation Tests in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13162.md"
+    },
+    {
+      "id": 13169,
+      "title": "GUI: Tips and Tricks for creating your own Graphic Library in MQL",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13169.md"
+    },
+    {
+      "id": 13179,
+      "title": "Making a dashboard to display data in indicators and EAs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13179.md"
+    },
+    {
+      "id": 13289,
+      "title": "ALGLIB numerical analysis library in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13289.md"
+    },
+    {
+      "id": 13324,
+      "title": "DRAKON visual programming language \u2014 communication tool for MQL developers and customers",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13324.md"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_088_p02",
+  "section": "Examples",
+  "parent_shard": "examples_088",
+  "part_index": 2,
+  "part_count": 4,
+  "series_in_pack": [
+    "price action analysis toolkit development"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 20097,
+      "title": "Price Action Analysis Toolkit Development (Part 48): Multi-Timeframe Harmony Index with Weighted Bias Dashboard",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Multi-Timeframe Harmony Index with Weighted Bias Dashboard",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 48,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20097.md"
+    },
+    {
+      "id": 20168,
+      "title": "Price Action Analysis Toolkit Development (Part 49): Integrating Trend, Momentum, and Volatility Indicators into One MQL5 System",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Integrating Trend, Momentum, and Volatility Indicators into One MQL5 System",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 49,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20168.md"
+    },
+    {
+      "id": 20262,
+      "title": "Price Action Analysis Toolkit Development (Part 50): Developing the RVGI, CCI and SMA Confluence Engine in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Developing the RVGI, CCI and SMA Confluence Engine in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 50,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20262.md"
+    },
+    {
+      "id": 20313,
+      "title": "Price Action Analysis Toolkit Development (Part 51): Revolutionary Chart Search Technology for Candlestick Pattern Discovery",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Revolutionary Chart Search Technology for Candlestick Pattern Discovery",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 51,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20313.md"
+    },
+    {
+      "id": 20387,
+      "title": "Price Action Analysis Toolkit Development (Part 52): Master Market Structure with Multi-Timeframe Visual Analysis",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Master Market Structure with Multi-Timeframe Visual Analysis",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 52,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20387.md"
+    },
+    {
+      "id": 20995,
+      "title": "Price Action Analysis Toolkit Development (Part 56): Reading Session Acceptance and Rejection with CPI",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Reading Session Acceptance and Rejection with CPI",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 56,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20995.md"
+    },
+    {
+      "id": 20996,
+      "title": "Price Action Analysis Toolkit Development (Part 57): Developing a Market State Classification Module in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Developing a Market State Classification Module in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 57,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20996.md"
+    },
+    {
+      "id": 21197,
+      "title": "Price Action Analysis Toolkit Development (Part 59): Using Geometric Asymmetry to Identify Precision Breakouts from Fractal Consolidation",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Using Geometric Asymmetry to Identify Precision Breakouts from Fractal Consolidation",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 59,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21197.md"
+    },
+    {
+      "id": 21226,
+      "title": "Price Action Analysis Toolkit Development (Part 60):  Objective Swing-Based Trendlines for Structural Analysis",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development ():  Objective Swing-Based Trendlines for Structural Analysis",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 60,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21226.md"
+    },
+    {
+      "id": 21277,
+      "title": "Price Action Analysis Toolkit Development (Part 61): Structural Slanted Trendline Breakouts with 3-Swing Validation",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Structural Slanted Trendline Breakouts with 3-Swing Validation",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 61,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21277.md"
+    },
+    {
+      "id": 21443,
+      "title": "Price Action Analysis Toolkit Development (Part 62): Building an Adaptive Parallel Channel Detection and Breakout System in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building an Adaptive Parallel Channel Detection and Breakout System in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 62,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21443.md"
+    },
+    {
+      "id": 21518,
+      "title": "Price Action Analysis Toolkit Development (Part 63): Automating Rising and Falling Wedge Detection in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Automating Rising and Falling Wedge Detection in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 63,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21518.md"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "pack_id": "tester_020",
+  "section": "Tester",
+  "parent_shard": "tester_020",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "markets positioning codex in mql5",
+    "multilayer perceptron and backpropagation algorithm",
+    "price action analysis toolkit development",
+    "python-metatrader 5 strategy tester",
+    "trading with the mql5 economic calendar",
+    "using the mql5 economic calendar for news filter"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 20020,
+      "title": "Markets Positioning Codex in MQL5 (Part 1): Bitwise Learning for Nvidia",
+      "section": "Tester",
+      "series_title": "Markets Positioning Codex in MQL5 (): Bitwise Learning for Nvidia",
+      "series_key": "markets positioning codex in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20020.md"
+    },
+    {
+      "id": 20045,
+      "title": "Markets Positioning Codex in MQL5 (Part 2):  Bitwise Learning, with Multi-Patterns for Nvidia",
+      "section": "Tester",
+      "series_title": "Markets Positioning Codex in MQL5 ():  Bitwise Learning, with Multi-Patterns for Nvidia",
+      "series_key": "markets positioning codex in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20045.md"
+    },
+    {
+      "id": 9875,
+      "title": "Multilayer perceptron and backpropagation algorithm (Part 3): Integration with the Strategy Tester - Overview (I).",
+      "section": "Tester",
+      "series_title": "Multilayer perceptron and backpropagation algorithm (): Integration with the Strategy Tester - Overview (I).",
+      "series_key": "multilayer perceptron and backpropagation algorithm",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9875.md"
+    },
+    {
+      "id": 20851,
+      "title": "Price Action Analysis Toolkit Development (Part 54): Filtering Trends with EMA and Smoothed Price Action",
+      "section": "Tester",
+      "series_title": "Price Action Analysis Toolkit Development (): Filtering Trends with EMA and Smoothed Price Action",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 54,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20851.md"
+    },
+    {
+      "id": 21109,
+      "title": "Price Action Analysis Toolkit Development (Part 58): Range Contraction Analysis and Maturity Classification Module",
+      "section": "Tester",
+      "series_title": "Price Action Analysis Toolkit Development (): Range Contraction Analysis and Maturity Classification Module",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 58,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21109.md"
+    },
+    {
+      "id": 22607,
+      "title": "Price Action Analysis Toolkit Development (Part 70): Turning Flag Pattern Signals into Automated Trade Execution",
+      "section": "Tester",
+      "series_title": "Price Action Analysis Toolkit Development (): Turning Flag Pattern Signals into Automated Trade Execution",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 70,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22607.md"
+    },
+    {
+      "id": 20455,
+      "title": "Python-MetaTrader 5 Strategy Tester (Part 02): Dealing with Bars, Ticks, and Overloading Built-in Functions in a Simulator",
+      "section": "Tester",
+      "series_title": "Python-MetaTrader 5 Strategy Tester (): Dealing with Bars, Ticks, and Overloading Built-in Functions in a Simulator",
+      "series_key": "python-metatrader 5 strategy tester",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20455.md"
+    },
+    {
+      "id": 17603,
+      "title": "Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis",
+      "section": "Tester",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Preparing for Strategy Testing with Resource-Based News Event Analysis",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17603.md"
+    },
+    {
+      "id": 22231,
+      "title": "Using the MQL5 Economic Calendar for News Filter (Part 4): Accurate Backtesting with Static Data",
+      "section": "Tester",
+      "series_title": "Using the MQL5 Economic Calendar for News Filter (): Accurate Backtesting with Static Data",
+      "series_key": "using the mql5 economic calendar for news filter",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22231.md"
+    }
+  ]
+}

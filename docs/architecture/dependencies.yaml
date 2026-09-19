@@ -26,6 +26,9 @@ components:
       kind under CT-06's addable-kinds law with no new CT number. Authoring by
       an application-layer library creates no import edge into qmf-registry.
       (DEC-0173, DEC-0175, DEC-0176)
+      Workflows 2026-09-19: no new registry kind and no new depends_on edge;
+      CT-06 recipe kind stays deferred; ContributionHit is never a registry
+      kind (DEC-0444, DEC-0415, DEC-0446).
 
   - id: COMP-QMF-DATA
     name: qmf-data
@@ -36,6 +39,10 @@ components:
     depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-11, CT-12, CT-13, CT-14]
     spec: docs/components/qmf-data.md
+    notes: >-
+      Workflows 2026-09-19: data recipes are a COMP-QMB wrap of this package;
+      RecipeDefinition identity is distinct from output release fp1; no new
+      depends_on edge and no new CT (DEC-0425, DEC-0444, DEC-0446).
 
   - id: COMP-QMF-INDICATORS
     name: qmf-indicators
@@ -96,6 +103,10 @@ components:
       not end-to-end demonstrated; the venue command CT-19 gains the
       fifth kind amend_protection, owned by COMP-QMF-VENUE. (DEC-0143, DEC-0145,
       DEC-0158)
+      Workflows 2026-09-19: Book/BMS remain default accounting/risk shapes for
+      ATC PolicyPair — default implementations, not the kit ceiling; dummy
+      Book stays INVALID_INPUT; no new depends_on edge (DEC-0424, DEC-0436,
+      DEC-0448, DEC-0446).
 
   - id: COMP-QMB
     name: QMB (experimentation/backtesting library + qmb CLI)
@@ -129,6 +140,9 @@ components:
       Registry state arrives as immutable fingerprinted as-of sets over a
       passive file-sync hub — dumb storage, never the dead DEC-0084 central
       service (DEC-0165).
+      Workflows 2026-09-19: owns recipe definition wrap of qmf-data and ATC
+      eval/journal (composition_class: alternative); no new COMP and no new
+      depends_on edge (DEC-0425, DEC-0436, DEC-0446).
 
   - id: COMP-QML
     name: QML (bot-authoring library)
@@ -173,6 +187,9 @@ components:
       ladder; no new depends_on; no new interface CT; hypotheses are not a
       registry kind. Inspect integration@8510c03: graduate_to_governed exists;
       Stage 0 types do not (DEC-0395, DEC-0406).
+      Workflows 2026-09-19: ATC PolicyPair authoring owner; Stage 0 graph is
+      never a workflow executor; no new depends_on edge (DEC-0436, DEC-0411,
+      DEC-0446, DEC-0451).
 
   - id: COMP-QMN
     name: trading-node
@@ -216,6 +233,10 @@ components:
       unix-socket powers channel (SO_PEERCRED), and the just node-… operations
       toolkit is DevOps tooling, never a trading control (DEC-0202, DEC-0211,
       DEC-0234).
+      Workflows 2026-09-19: sequential fencing / ATC seat after paper+L17;
+      QMN remains the only venue importer; no new depends_on edge
+      (DEC-0438, DEC-0436, DEC-0448, DEC-0446). QML→QMB→QMN e2e unsupported at
+      270e992 (DEC-0450).
 
   - id: COMP-QMF-CALENDAR-FOREX
     name: qmf-calendar-forex (forex market-hours calendar extension)
@@ -325,6 +346,10 @@ components:
       through a core-defined port and is implemented in the daemon; qma-core
       runs nothing (DEC-0335). CT-04 and CT-05 are the parent qmf-core refusal
       and serialization contracts it reuses.
+      Workflows 2026-09-19: Operation descriptor surface + DAG validator
+      ownership with daemon; no new COMP and no new depends_on edge
+      (DEC-0416, DEC-0419, DEC-0446). InvocationEnvelope/GrantRecord specified
+      not implemented at 270e992 (DEC-0437, DEC-0450).
 
   - id: COMP-QMA-WIRE
     name: qma-wire
@@ -347,6 +372,10 @@ components:
       Transport posture: loopback default, TLS with recorded config otherwise,
       remote workers dial out and the daemon never dials in. The
       qma-ui-contract is a deferred stub (GAP-0081).
+      Workflows 2026-09-19: ContributionHit DTO + pin/tombstone and UI
+      contribution DTOs are additive CT-40 family — no new CT number; chrome
+      stays GAP-0081; no new depends_on edge (DEC-0415, DEC-0430, DEC-0446,
+      DEC-0449). ContributionHit not on wire at 270e992 (DEC-0450).
 
   - id: COMP-QMA-DAEMON
     name: qma-daemon
@@ -385,3 +414,8 @@ components:
       path (DEC-0305, DEC-0334, DEC-0338, DEC-0339, DEC-0341, DEC-0342,
       DEC-0343, DEC-0344, DEC-0347). CT-13 is the parent journal contract, CT-06
       and CT-07 the parent registry surfaces it reads under the narrowing.
+      Workflows 2026-09-19: product_session journal projection, Task Graph
+      edges + outbox, pack lifecycle / export scanner — connect/extend in
+      place; no new store class and no new depends_on edge (DEC-0421,
+      DEC-0420, DEC-0439, DEC-0443, DEC-0446). product_session and durable
+      edges absent at 270e992 (DEC-0450).

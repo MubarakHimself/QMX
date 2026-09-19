@@ -1,0 +1,1766 @@
+---
+id: 16170
+source_url: https://www.mql5.com/en/articles/16170
+title: "News Trading Made Easy (Part 6): Performing Trades (III)"
+author: ""
+author_url: 
+published: 2025-01-10T09:58Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: "News Trading Made Easy (): Performing Trades (III)"
+series_part: 6
+source: mql5
+language: en
+---
+
+# News Trading Made Easy (Part 6): Performing Trades (III)
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 10 January 2025 at 04:58
+
+4 428
+[
+2](https://www.mql5.com/en/forum/479401 "Comments")
+
+[Kabelo Frans Mampa](https://www.mql5.com/en/users/kaaiblo)
+
+### Introduction
+
+In this article we will make improvements to the storage database, new views will be added to present data such as displaying dates for the last news event or the next news event for each unique event in the [MQL5 Economic calendar](https://www.mql5.com/en/economic-calendar) this will improve the user's experience when using the program as it will bring awareness to future or past events. In addition, the expert input menu will be expanded upon to accommodate news filtration and the stop order entry methods.
+
+Furthermore, the expert code will be updated to utilize the previous code written to reduce the expert runtime in the strategy tester from the article 'News Trading Made Easy (Part 4): Performance Enhancement' as well as the code from the article '[News Trading Made Easy (Part 5): Performing Trades (II)](https://www.mql5.com/en/articles/16169)' where we manage slippage and open stop orders.
+
+### 
+
+### News Settings Inputs
+
+- SELECT NEWS OPTION: This option's purpose is to allow for different News profiles. The different profiles are:
+
+- NEWS SETTINGS: In this News profile the user/trader can filter news events to their liking based on:
+
+1. CALENDAR IMPORTANCE
+2. EVENT FREQUENCY
+3. EVENT SECTOR
+4. EVENT TYPE
+5. EVENT CURRENCY
+
+- CUSTOM NEWS EVENTS: In this News profile the user/trader can filter news events to their liking depending on the event ids entered as input, with up to 14 event IDs per input.
+
+### Trade Settings Inputs
+
+- SELECT TRADE ENTRY OPTION: This option's purpose is to allow for different trade entry methods. These method are namely:
+
+- MARKET POSITION: In this trade entry method, trades will only happen through market execution(Buy or Sell trades). The main requirement is that any news event being chosen to trade in this trade entry selection must have an event impact to know the direction of the trade(long or short) before hand.
+- STOP ORDERS: In this trade entry method, trades will only be executed with a Buy-Stop and Sell-Stop order before any chosen news event occurs. The main requirement is that the user/trader should set a price deviation for the expert to have a price buffer to place the Buy-Stop and Sell-Stop order. Once either the Buy-Stop or Sell-Stop is triggered the opposing order will be deleted. For example when the Buy-Stop and Sell-Stop order is placed before NFP(news event) and the Buy-Stop order is triggered meaning a buy position is executed once a certain price is reached the expert will actively delete the remaining Sell-Stop order. This trade entry method does not require an event impact to place trades before hand.
+- SINGLE STOP ORDER: In this trade entry method, trades will only be executed with either a Buy-Stop or Sell-Stop order. The two main requirements is:
+
+1. Any news event being chosen to trade in this trade entry selection must have an event impact to know the direction of the order(Buy-Stop or Sell-Stop) before hand.
+2. The user/trader should set a price deviation for the expert to have a price buffer to place either the Buy-Stop or Sell-Stop order.
+
+### News Class
+
+In this header file called News.mqh we will declare an enumeration called NewsSelection outside the CNews class, the purpose for the enumeration is to allow the users/traders to select different news profiles within the expert's input, we will also have a variable called myNewsSelection that will store the user's/trader's preferred selection. Furthermore we will declare a structure called CustomEvent. This structure will store the boolean value which decides whether to filter for the event ids in the EventIds string array within the structure, in addition the structure has variables declared such as CEvent1, this variable will act as 1 of 5 choices the user/trader can filter custom event ids.
+
+Enumerations:
+
+- NewsSelection: Defines two profiles:
+
+1. News\_Select\_Custom\_Events: For custom news events.
+2. News\_Select\_Settings: For news settings.
+
+- myNewsSelection is a variable of this enum type that stores the current news profile selection.
+
+Structures:
+
+- CustomEvent: A structure for storing custom event IDs and a flag (useEvents) indicating whether these events should be included in the query.
+
+- There are five variables: CEvent1, CEvent2, CEvent3, CEvent4, and CEvent5 of type CustomEvent, each representing a separate group of events.
+
+```
+//--- Enumeration for News Profiles
+enum NewsSelection
+  {
+   News_Select_Custom_Events,//CUSTOM NEWS EVENTS
+   News_Select_Settings//NEWS SETTINGS
+  } myNewsSelection;
+
+//--- Structure to store event ids and whether to use these ids
+struct CustomEvent
+  {
+   bool              useEvents;
+   string            EventIds[];
+  } CEvent1,CEvent2,CEvent3,CEvent4,CEvent5;
+```
+
+Enumeration CalendarComponents:
+
+- CalendarComponents: Enumerates various components of the economic calendar such as tables and views used to structure data related to DST (Daylight Saving Time) schedules, event information, and currency data.
+
+Within the CalendarComponents enumeration we have added two new values:
+
+1. RecentEventInfo\_View
+2. UpcomingEventInfo\_View
+
+```
+   //-- To keep track of what is in our database
+   enum CalendarComponents
+     {
+      // ...
+      RecentEventInfo_View,//View for Recent Dates For Events
+      UpcomingEventInfo_View,//View for Upcoming Dates For Events
+      // ...
+     };
+```
+
+Function GetCalendar(CalendarData &Data[]):
+
+- This function retrieves all relevant calendar data from the calendar database in storage and stores it in the Data array.
+- It opens a database (NEWS\_DATABASE\_FILE) and executes a SQL query based on the current news selection (myNewsSelection).
+- Depending on whether News\_Select\_Custom\_Events or News\_Select\_Settings is selected, a different SQL query is generated to fetch event information.
+- Custom Events: Joins the MQL5Calendar table and the TimeSchedule table to retrieve custom news events using a filter based on custom event IDs.
+- News Settings: Retrieves event data filtered by user-specified settings like importance, frequency, sector, type, and currency.
+- The function processes the SQL query results and stores the fetched data in the Data array.
+- If the database query fails, it prints an error and the failed SQL query.
+
+```
+   //--- Will Retrieve all relevant Calendar data for DB in Memory from DB in Storage
+   void              GetCalendar(CalendarData &Data[])
+     {
+// ...
+      string SqlRequest;
+
+      //--- switch statement for different News Profiles
+      switch(myNewsSelection)
+        {
+         case  News_Select_Custom_Events://CUSTOM NEWS EVENTS
+            //--- Get filtered calendar DB data
+            SqlRequest = StringFormat("Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,"
+                                      "MQ.EventCode,MQ.EventSector,MQ.EventForecast,MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,"
+                                      "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+                                      "Inner Join %s TS on TS.ID=MQ.ID Where %s OR %s OR %s OR %s OR %s;",
+                                      CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+                                      Request_Events(CEvent1),Request_Events(CEvent2),Request_Events(CEvent3),
+                                      Request_Events(CEvent4),Request_Events(CEvent5));
+            break;
+         case News_Select_Settings://NEWS SETTINGS
+            //--- Get filtered calendar DB data
+            SqlRequest = StringFormat("Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,"
+                                      "MQ.EventCode,MQ.EventSector,MQ.EventForecast,MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,"
+                                      "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+                                      "Inner Join %s TS on TS.ID=MQ.ID "
+                                      "Where %s and %s and %s and %s and %s;",
+                                      CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+                                      Request_Importance(myImportance),Request_Frequency(myFrequency),
+                                      Request_Sector(mySector),Request_Type(myType),Request_Currency(myCurrency));
+            break;
+         default://Unknown
+            break;
+        }
+// ...
+```
+
+Function Request\_Events(CustomEvent &CEvent):
+
+- This function generates a SQL WHERE clause for querying the database based on custom event IDs stored in the CustomEvent structure.
+- It checks if useEvents is true. If so, it adds each event ID from the CEvent.EventIds[] array to the SQL query.
+
+```
+   //--- Retrieve Sql request string for custom event ids
+   string            Request_Events(CustomEvent &CEvent)
+     {
+      //--- Default request string
+      string EventReq="MQ.EventId='0'";
+      //--- Check if this Custom event should be included in the SQL request
+      if(CEvent.useEvents)
+        {
+         //--- Get request for first event id
+         EventReq=StringFormat("(MQ.EventId='%s'",
+                               (CEvent.EventIds.Size()>0)?
+                               CEvent.EventIds[0]:"0");
+         //--- Iterate through remaining event ids and add to the SQL request
+         for(uint i=1;i<CEvent.EventIds.Size();i++)
+           {
+            EventReq+=StringFormat(" OR MQ.EventId='%s'",CEvent.EventIds[i]);
+           }
+         EventReq+=")";
+        }
+      //--- Return SQL request for custom event ids
+      return EventReq;
+     }
+```
+
+Public Class Members:
+
+Updates are made to these functions: EconomicDetailsMemory,EconomicNextEvent and isEvent.
+
+- EconomicDetailsMemory: Fetches values from the in-memory calendar database.
+- EconomicNextEvent: Updates the structure variable with the next event's data.
+- isEvent: Checks if a news event is about to occur and modifies the passed parameters accordingly.
+
+```
+   //Public declarations accessable via a class's Object
+public:
+  // ...
+   void              EconomicDetailsMemory(Calendar &NewsTime[],datetime date,bool ImpactRequired);//Gets values from the MQL5 DB Calendar in Memory
+   void              EconomicNextEvent();//Will update UpcomingNews structure variable with the next event data
+ // ...
+   //--- Checks if a news event is occurring and modifies the parameters passed by reference
+   bool              isEvent(uint SecondsPreEvent,string &Name,string &Importance,string &Code);
+```
+
+In the function EconomicDetailsMemory the purpose is to retrieve economic calendar event data from an in-memory database (DBMemory) for a specific date, optionally considering the event impact, and stores the data in an array NewsTime[].
+
+- The function fetches economic event details from a database for a specified date and stores them in the NewsTime[] array.
+- If ImpactRequired is true, it retrieves the event’s previous and forecast values and assigns the impact based on historical data.
+- If ImpactRequired is false, it simply retrieves the current day's and next event's data.
+- The results are fetched using a prepared SQL query and stored in the NewsTime[] array, which is resized dynamically based on the number of events retrieved.
+
+```
+//+------------------------------------------------------------------+
+//|Gets values from the MQL5 DB Calendar in Memory                   |
+//+------------------------------------------------------------------+
+void CNews::EconomicDetailsMemory(Calendar &NewsTime[],datetime date,bool ImpactRequired)
+  {
+//--- SQL query to retrieve news data for a certain date
+   string request_text;
+//--- Check if Event impact is required for retrieving news events
+   if(ImpactRequired)
+     {
+      request_text=StringFormat("WITH DAILY_EVENTS AS(SELECT M.EVENTID as 'E_ID',M.COUNTRY,M.EVENTNAME as 'Name',M.EVENTTYPE as"
+                                " 'Type',M.EVENTIMPORTANCE as 'Importance',M.%s as 'Time',M.EVENTCURRENCY as 'Currency',M.EVENTCODE"
+                                " as 'Code',M.EVENTSECTOR as 'Sector',M.EVENTFORECAST as 'Forecast',M.EVENTPREVALUE as 'PREVALUE',"
+                                "M.EVENTFREQUENCY as 'Freq' FROM %s M WHERE DATE(REPLACE(Time,'.','-'))=DATE(REPLACE('%s','.','-'))"
+                                " AND (Forecast<>'None' AND Prevalue<>'None')),DAILY_IMPACT AS(SELECT DE.E_ID,DE.COUNTRY,DE.Name,"
+                                "DE.Type,DE.Importance,DE.Time,DE.Currency,DE.Code,DE.Sector,DE.Forecast,DE.Prevalue,DE.Freq,"
+                                "MC.EVENTIMPACT as 'IMPACT', RANK() OVER(PARTITION BY DE.E_ID,DE.Time ORDER BY MC.%s DESC)DateOrder"
+                                " FROM %s MC INNER JOIN DAILY_EVENTS DE on DE.E_ID=MC.EVENTID WHERE DATE(REPLACE(MC.%s,'.','-'))<"
+                                "DATE(REPLACE(DE.Time,'.','-')) AND DATE(REPLACE(MC.%s,'.','-'))>=DATE(REPLACE(DE.Time,'.','-'),"
+                                "'-24 months') AND (MC.EVENTFORECAST<>'None' AND MC.EVENTPREVALUE<>'None' AND (CASE WHEN Forecast>"
+                                "Prevalue THEN 'more' WHEN Forecast<Prevalue THEN 'less' ELSE 'equal' END)=(CASE WHEN MC.EVENTFORECAST"
+                                ">MC.EVENTPREVALUE THEN 'more' WHEN MC.EVENTFORECAST<MC.EVENTPREVALUE THEN 'less' ELSE 'equal' END)) "
+                                "ORDER BY MC.%s),DAILY_EVENTS_RECORDS AS(SELECT * FROM DAILY_IMPACT WHERE DateOrder=1 ORDER BY Time"
+                                " ASC),NEXT_EVENT AS(SELECT M.EVENTID as 'E_ID',M.COUNTRY,M.EVENTNAME as 'Name',M.EVENTTYPE as 'Type',"
+                                "M.EVENTIMPORTANCE as 'Importance',M.%s as 'Time',M.EVENTCURRENCY as 'Currency',M.EVENTCODE as 'Code',"
+                                "M.EVENTSECTOR as 'Sector',M.EVENTFORECAST as 'Forecast',M.EVENTPREVALUE as 'PREVALUE',M.EVENTFREQUENCY"
+                                " as 'Freq' FROM %s M WHERE DATE(REPLACE(Time,'.','-'))>DATE(REPLACE('%s','.','-'))  AND (Forecast<>"
+                                "'None' AND Prevalue<>'None' AND DATE(REPLACE(Time,'.','-'))<=DATE(REPLACE('%s','.','-'),'+60 days'))),"
+                                "NEXT_IMPACT AS(SELECT NE.E_ID,NE.COUNTRY,NE.Name,NE.Type,NE.Importance,NE.Time,NE.Currency,NE.Code"
+                                ",NE.Sector,NE.Forecast,NE.Prevalue,NE.Freq,MC.EVENTIMPACT as 'IMPACT',RANK() OVER(PARTITION BY "
+                                "NE.E_ID,NE.Time ORDER BY MC.%s DESC)DateOrder FROM %s MC INNER JOIN NEXT_EVENT NE on NE.E_ID=MC.EVENTID "
+                                "WHERE DATE(REPLACE(MC.%s,'.','-'))<DATE(REPLACE(NE.Time,'.','-')) AND DATE(REPLACE(MC.%s,'.','-'))>="
+                                "DATE(REPLACE(NE.Time,'.','-'),'-24 months') AND (MC.EVENTFORECAST<>'None' AND MC.EVENTPREVALUE<>'None'"
+                                " AND (CASE WHEN Forecast>Prevalue THEN 'more' WHEN Forecast<Prevalue THEN 'less' ELSE 'equal' END)="
+                                "(CASE WHEN MC.EVENTFORECAST>MC.EVENTPREVALUE THEN 'more' WHEN MC.EVENTFORECAST<MC.EVENTPREVALUE THEN "
+                                "'less' ELSE 'equal' END)) ORDER BY MC.%s),NEXT_EVENT_RECORD AS(SELECT * FROM NEXT_IMPACT WHERE "
+                                "DateOrder=1 ORDER BY Time ASC LIMIT 1),ALL_EVENTS AS(SELECT * FROM NEXT_EVENT_RECORD UNION ALL "
+                                "SELECT * FROM DAILY_EVENTS_RECORDS)SELECT E_ID,Country,Name,Type,Importance,Time,Currency,Code,"
+                                "Sector,Forecast,Prevalue,Impact,Freq FROM ALL_EVENTS GROUP BY Time ORDER BY Time Asc;",
+                                EnumToString(MySchedule),DBMemory.name,TimeToString(date),EnumToString(MySchedule),DBMemory.name,
+                                EnumToString(MySchedule),EnumToString(MySchedule),EnumToString(MySchedule),EnumToString(MySchedule)
+                                ,DBMemory.name,TimeToString(date),TimeToString(date),EnumToString(MySchedule),DBMemory.name,
+                                EnumToString(MySchedule),EnumToString(MySchedule),EnumToString(MySchedule));
+     }
+   else
+     {
+      /*
+      Within this request we select all the news events that will occur or have occurred in the current day and the next news
+      event after the current day
+      */
+      request_text=StringFormat("WITH DAILY_EVENTS AS(SELECT M.EVENTID as 'E_ID',M.COUNTRY,M.EVENTNAME as 'Name',M.EVENTTYPE as"
+                                " 'Type',M.EVENTIMPORTANCE as 'Importance',M.%s as 'Time',M.EVENTCURRENCY as 'Currency',M.EVENTCODE"
+                                " as 'Code',M.EVENTSECTOR as 'Sector',M.EVENTFORECAST as 'Forecast',M.EVENTPREVALUE as 'PREVALUE'"
+                                ",M.EVENTFREQUENCY as 'Freq',M.EVENTIMPACT as 'Impact' FROM %s M WHERE DATE(REPLACE(Time,'.','-'))"
+                                "=DATE(REPLACE('%s','.','-'))),DAILY_EVENTS_RECORDS AS(SELECT * FROM DAILY_EVENTS ORDER BY Time ASC)"
+                                ",NEXT_EVENT AS(SELECT M.EVENTID as 'E_ID',M.COUNTRY,M.EVENTNAME as 'Name',M.EVENTTYPE as 'Type',"
+                                "M.EVENTIMPORTANCE as 'Importance',M.%s as 'Time',M.EVENTCURRENCY as 'Currency',M.EVENTCODE as "
+                                "'Code',M.EVENTSECTOR as 'Sector',M.EVENTFORECAST as 'Forecast',M.EVENTPREVALUE as 'PREVALUE',"
+                                "M.EVENTFREQUENCY as 'Freq',M.EVENTIMPACT as 'Impact' FROM %s M WHERE DATE(REPLACE(Time,'.','-'))"
+                                ">DATE(REPLACE('%s','.','-')) AND (DATE(REPLACE(Time,'.','-'))<=DATE(REPLACE('%s','.','-'),"
+                                "'+60 days'))),NEXT_EVENT_RECORD AS(SELECT * FROM NEXT_EVENT ORDER BY Time ASC LIMIT 1),"
+                                "ALL_EVENTS AS(SELECT * FROM NEXT_EVENT_RECORD UNION ALL SELECT * FROM "
+                                "DAILY_EVENTS_RECORDS)SELECT * FROM ALL_EVENTS GROUP BY Time ORDER BY Time Asc;",
+                                EnumToString(MySchedule),DBMemory.name,TimeToString(date),EnumToString(MySchedule),DBMemory.name,
+                                TimeToString(date),TimeToString(date));
+     }
+// ...
+```
+
+Function Signature
+
+- Arguments:
+
+- Calendar &NewsTime[]: An array of Calendar structures (each holding event details), which will be filled with the retrieved data.
+- datetime date: The specific date for which economic events are retrieved.
+- bool ImpactRequired: A flag indicating whether the event impact should be factored into the query.
+
+SQL Query Construction Based on Impact Requirement
+
+The SQL query differs based on whether ImpactRequired is set to true or false. This is as when true the news events require an event impact for the trading direction for the event, when false the event impact is not required as the event direction is not necessary to open a trade.
+
+A. If ImpactRequired is true
+
+This query is more complex and involves multiple parts:
+
+- The query retrieves economic events for the given date and also considers the next upcoming event after the current day.
+- It looks for previous events within the last 24 months where both forecast and prevalue are available and compares them to the current event.
+- If the forecast value is larger than the prevalue (or vice versa) or even equal, it matches this with the historical event having the same trend (forecast > prevalue or forecast < prevalue or forecast = prevalue).
+- It assigns the event impact from the past event to the current event.
+
+Here’s an outline of how the query is constructed:
+
+```
+"WITH DAILY_EVENTS AS(...) , DAILY_IMPACT AS(...) , NEXT_EVENT AS(...), NEXT_IMPACT AS(...), 
+ALL_EVENTS AS(...) SELECT * FROM ALL_EVENTS GROUP BY Time ORDER BY Time Asc;"
+```
+
+- DAILY\_EVENTS: Selects all economic events for the specified date from the calendar. Events with a valid Forecast and Prevalue are selected.
+- DAILY\_IMPACT: This finds historical events (within the last 24 months) where the trend of Forecast and Prevalue (greater/less than or equal) is similar to the current event. It ranks events by date to find the most recent matching event and assigns its impact to the current event.
+- NEXT\_EVENT: Selects the next upcoming event after the current day.
+- NEXT\_IMPACT: Similar to DAILY\_IMPACT, it retrieves the most recent past event that matches the trend of forecast/prevalue and assigns its impact to the next event.
+- ALL\_EVENTS: Combines DAILY\_EVENTS\_RECORDS (for the current day) and NEXT\_EVENT\_RECORD (for the next event) and orders them by time.
+
+B. If ImpactRequired is false
+
+If the impact is not required, the query is simpler:
+
+- It retrieves all events for the current day and the next event after the current day (within 60 days).
+
+The SQL query outline:
+
+```
+"WITH DAILY_EVENTS AS(...) , NEXT_EVENT AS(...), ALL_EVENTS AS(...) SELECT * FROM ALL_EVENTS GROUP BY Time ORDER BY Time Asc;"
+```
+
+- DAILY\_EVENTS: Retrieves the economic events for the current day.
+- NEXT\_EVENT: Retrieves the next upcoming event after the current day within the next 60 days.
+- ALL\_EVENTS: Combines both the daily events and the next event and orders them by time.
+
+SQL Query Execution
+
+```
+int request = DatabasePrepare(DBMemoryConnection, request_text);
+```
+
+- DatabasePrepare: Prepares the SQL query for execution. The result is stored in request, which is a handle to the query. This handle will be used to fetch the data.
+- Error Handling: If the request fails (request == INVALID\_HANDLE), it prints the error message and the SQL query for debugging purposes.
+
+Reading the Results
+
+```
+Calendar ReadDB_Data;
+ArrayRemove(NewsTime, 0, WHOLE_ARRAY);
+for (int i = 0; DatabaseReadBind(request, ReadDB_Data); i++)
+{
+    ArrayResize(NewsTime, i + 1, i + 2);
+    NewsTime[i] = ReadDB_Data;
+}
+```
+
+- ArrayRemove: Clears the NewsTime[] array to prepare it for new data.
+- DatabaseReadBind: Fetches the results from the prepared query, binding each result row to the ReadDB\_Data variable, which is a Calendar structure.
+- ArrayResize: Resizes the NewsTime[] array to accommodate the new data. For each row returned by DatabaseReadBind, the array grows by 1 element.
+- NewsTime[i] = ReadDB\_Data: Copies the retrieved data into the NewsTime[] array.
+
+Finalizing the Query
+
+```
+DatabaseFinalize(request);
+```
+
+- DatabaseFinalize: Cleans up the resources allocated by DatabasePrepare, releasing the query handle.
+
+The function EconomicNextEvent is responsible for identifying the next upcoming economic news event and updating the UpcomingNews variable with its details.
+
+- The function looks through all the events in the CalendarArray and finds the one that is the next upcoming event, based on the server time (TimeTradeServer()).
+- It updates the UpcomingNews structure with the details of this next event.
+- The logic ensures that only future events (relative to the server time) are considered, and the soonest upcoming event is selected.
+
+```
+//+------------------------------------------------------------------+
+//|Will update UpcomingNews structure variable with the next news    |
+//|event data                                                        |
+//+------------------------------------------------------------------+
+void CNews::EconomicNextEvent()
+  {
+//--- Declare unassigned Calendar structure variable Next
+   Calendar Next;
+//--- assign empty values to Calendar structure variable UpcomingNews
+   UpcomingNews = Next;
+//--- assign default date
+   datetime NextEvent=0;
+//--- Iterate through CalendarArray to retrieve news events
+   for(uint i=0;i<CalendarArray.Size();i++)
+     {
+      //--- Check for next earliest news event from CalendarArray
+      if((NextEvent==0)||(TimeTradeServer()<datetime(CalendarArray[i].EventDate)
+                          &&NextEvent>datetime(CalendarArray[i].EventDate))||(NextEvent<TimeTradeServer()))
+        {
+         //--- assign values from the CalendarArray
+         NextEvent = datetime(CalendarArray[i].EventDate);
+         Next = CalendarArray[i];
+        }
+     }
+//--- assign the next news event data into UpcomingNews variable
+   UpcomingNews = Next;
+  }
+```
+
+Declare Unassigned Calendar Structure
+
+```
+Calendar Next;
+```
+
+- The variable Next is declared as a Calendar structure (a custom structure holding event details like event date, name, country, etc.).
+- Initially, it is unassigned and will later hold the data of the next economic event.
+
+Assign Empty Values to UpcomingNews
+
+```
+UpcomingNews = Next;
+```
+
+- UpcomingNews is a global or class-level variable (another Calendar structure) that stores the details of the next upcoming event.
+- At the start, it is reset to the default (empty) values of the Next variable.
+
+Assign Default Date
+
+```
+datetime NextEvent = 0;
+```
+
+- The NextEvent variable is initialized to 0, which means no event has been assigned yet.
+- NextEvent will store the timestamp (in datetime format) of the next economic event during the loop.
+
+Iterate Through the CalendarArray
+
+```
+for (uint i = 0; i < CalendarArray.Size(); i++)
+```
+
+- CalendarArray is an array that holds the details of economic events.
+- The for loop iterates through each element of this array (each representing an event), checking if the event qualifies as the next upcoming event.
+
+Check Conditions for the Next Event
+
+```
+if ((NextEvent == 0) || (TimeTradeServer() < datetime(CalendarArray[i].EventDate) && 
+NextEvent > datetime(CalendarArray[i].EventDate)) || (NextEvent < TimeTradeServer()))
+```
+
+This if statement checks several conditions to determine if the current event in the array (CalendarArray[i]) is the next news event:
+
+- First Condition: (NextEvent == 0)
+
+- If NextEvent is still 0 (no event has been assigned yet), the current event will be selected as the next event.
+
+- Second Condition: (TimeTradeServer() < datetime(CalendarArray[i].EventDate) && NextEvent > datetime(CalendarArray[i].EventDate))
+
+- This checks if the current event in the array (CalendarArray[i]) happens after the current server time (TimeTradeServer()) and is earlier than the event currently stored in NextEvent. If true, the current event becomes the next event.
+
+- Third Condition: (NextEvent < TimeTradeServer())
+
+- If the event currently stored in NextEvent has already occurred (is in the past), the function continues searching for a valid future event.
+
+Assign Values from the CalendarArray
+
+```
+NextEvent = datetime(CalendarArray[i].EventDate);
+Next = CalendarArray[i];
+```
+
+- If any of the conditions are satisfied, the current event in CalendarArray[i] is determined to be the next event:
+
+- NextEvent is updated to the event date of the current event.
+- Next is updated to hold all details (date, name, type, etc.) of the current event.
+
+Assign the Next Event to UpcomingNews
+
+```
+UpcomingNews = Next;
+```
+
+- After the loop finishes iterating through CalendarArray, the variable UpcomingNews is updated with the details of the next upcoming event (stored in Next).
+- The function ensures that the first future event found, relative to the current server time, is stored in UpcomingNews.
+
+In the function isEvent checks if a news event is about to occur or is currently occurring within a specific time range. The purpose of this function is to check if any news event from the CalendarArray is happening or about to happen, based on a time offset. If such an event is found, it provides details about the event such as its name, importance, and code.
+
+- This function iterates through the CalendarArray (which holds the data of economic events) and checks if any event is occurring or about to occur within a time range defined by SecondsPreEvent.
+- If such an event is found, it updates the Name, Importance, and Code with the event’s details and returns true.
+- If no event is found within the defined time range, it returns false and leaves Name, Importance, and Code unchanged (or set to default/NULL)
+
+```
+//+------------------------------------------------------------------+
+//|Checks if News is event is about to occur or is occurring         |
+//+------------------------------------------------------------------+
+bool CNews::isEvent(uint SecondsPreEvent,string &Name,string &Importance,string &Code)
+  {
+//--- assign default value
+   Name=NULL;
+//--- Iterate through CalendarArray
+   for(uint i=0;i<CalendarArray.Size();i++)
+     {
+      //--- Check if news event is within a timespan
+      if(CTime.TimeIsInRange(CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate),SecondsPreEvent),
+                             CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate),59)))
+        {
+         //--- assign appropriate CalendarArray values
+         Name=CalendarArray[i].EventName;
+         Importance=CalendarArray[i].EventImportance;
+         Code=CalendarArray[i].EventCode;
+         //--- news event is currently within the timespan
+         return true;
+        }
+     }
+//--- no news event is within the current timespan.
+   return false;
+  }
+```
+
+Parameters:
+
+- uint SecondsPreEvent: The number of seconds before the event during which the event is considered "upcoming."
+- string &Name: A reference to a string that will store the name of the event if it’s within the defined time range.
+- string &Importance: A reference to a string that will store the importance level of the event if found.
+- string &Code: A reference to a string that will store the event code.
+
+Assign Default Value to Name
+
+```
+Name = NULL;
+```
+
+- The variable Name is initialized to NULL. If no event is found within the specified time range, Name will remain NULL.
+- This ensures that Name is only updated if an event is found within the timespan.
+
+Iterate Through the CalendarArray
+
+```
+for (uint i = 0; i < CalendarArray.Size(); i++)
+```
+
+- The loop goes through every element in the CalendarArray, where each element represents a news event.
+- The loop will check each event to see if it falls within the specified time range around the current time.
+
+Check If the Event is Within the Time Range
+
+```
+if (CTime.TimeIsInRange(CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate), SecondsPreEvent),
+                        CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate), 59)))
+```
+
+- CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate), SecondsPreEvent):
+
+- This function call checks if the event’s date (CalendarArray[i].EventDate) minus the SecondsPreEvent value is in the past.
+- Essentially, it defines the lower boundary of the time window (how many seconds before the event).
+
+- CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate), 59):
+
+- This function checks if the event’s date plus 59 seconds is in the future, defining the upper boundary of the time window (how long the event is considered active).
+
+- The function CTime.TimeIsInRange checks if the current time falls within this time range. If the current time is within this range, it means the event is about to occur or is already occurring.
+
+Assign Values from CalendarArray
+
+```
+Name = CalendarArray[i].EventName;
+Importance = CalendarArray[i].EventImportance;
+Code = CalendarArray[i].EventCode;
+```
+
+- If the event is found to be within the specified time range, the relevant details (event name, importance, and code) are extracted from the CalendarArray and assigned to the reference parameters:
+
+- Name: The name of the news event.
+- Importance: The importance level of the news event.
+- Code: The event code.
+
+Return true if an Event is Found
+
+```
+return true;
+```
+
+- If a news event is found within the time range, the function returns true , indicating that a relevant event is currently happening or is about to happen.
+
+Return false if No Event is Found
+
+```
+return false;
+```
+
+- If the loop finishes iterating through all events in CalendarArray and no event is found within the specified time range, the function returns false, indicating no relevant event is occurring.
+
+Constructor CNews::CNews(void):
+
+- Initializes the class by setting up SQL DROP, CREATE, and INSERT statements for different components of the economic calendar.
+
+- Tables: Defines tables like AutoDST, Record, TimeSchedule, and MQL5Calendar.
+- Views: Defines views for different DST schedules (Calendar\_AU, Calendar\_UK, etc.), event information, currencies, and recent/upcoming event dates.
+- Triggers: Defines triggers like OnlyOne\_AutoDST and OnlyOne\_Record to ensure only one record exists in specific tables.
+
+Each component (table, view, or trigger) is initialized with its respective SQL commands, including the creation, insertion, and dropping of records.
+
+SQL View Creation:
+
+- For each DST schedule and calendar component, specific SQL views are defined to structure data according to various criteria (e.g., by event importance, currency, or event date). For example:
+
+- View for Upcoming Events: Displays upcoming event dates along with the day of the week and event details.
+- View for Recent Events: Similar to upcoming events, but retrieves recent event dates.
+
+SQL Trigger:
+
+- Triggers are used to ensure that only one record exists in the AutoDST and Record tables at any given time by deleting existing records before an insert operation.
+
+```
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CNews::CNews(void):DropRequest("PRAGMA foreign_keys = OFF; "
+                                  "PRAGMA secure_delete = ON; "
+                                  "Drop %s IF EXISTS '%s'; "
+                                  "Vacuum; "
+                                  "PRAGMA foreign_keys = ON;")//Sql drop statement
+  {
+// ...
+   string views[] = {"AU","NONE","UK","US"};
+//-- Sql statement for creating the table views for each DST schedule
+   string view_sql = "CREATE VIEW IF NOT EXISTS Calendar_%s "
+                     "AS "
+                     "SELECT C.Eventid as 'ID',C.Eventname as 'Name',C.Country as 'Country', "
+                     "(CASE WHEN Date(REPLACE(T.DST_%s,'.','-'))<R.Date THEN CONCAT(T.DST_%s,' | Yesterday') "
+                     "WHEN Date(REPLACE(T.DST_%s,'.','-'))=R.Date THEN CONCAT(T.DST_%s,' | Today') "
+                     "WHEN Date(REPLACE(T.DST_%s,'.','-'))>R.Date THEN CONCAT(T.DST_%s,' | Tomorrow') END) as "
+                     "'Date',C.EventCurrency as 'Currency',Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','')"
+                     " as 'Importance' from MQL5Calendar C,Record R Inner join TimeSchedule T on C.ID=T.ID Where"
+                     " DATE(REPLACE(T.DST_%s,'.','-'))>=DATE(R.Date,'-1 day') AND DATE(REPLACE(T.DST_%s,'.','-'))"
+                     "<=DATE(R.Date,'+1 day') Order by T.DST_%s Asc;";
+// ...
+//--- initializing properties for the EventInfo view
+   CalendarContents[5].Content = EventInfo_View;
+   CalendarContents[5].name = "Event Info";
+   CalendarContents[5].sql = "CREATE VIEW IF NOT EXISTS 'Event Info' "
+                             "AS SELECT DISTINCT MC.EVENTID as 'ID',MC.COUNTRY as 'Country',MC.EVENTNAME as 'Name',"
+                             "REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',"
+                             "REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',MC.EVENTCURRENCY as 'Currency',"
+                             "REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',MC.EVENTCODE as 'Code' "
+                             "FROM MQL5Calendar MC ORDER BY \"Country\" Asc,"
+                             "CASE \"Importance\" WHEN 'HIGH' THEN 1 WHEN 'MODERATE' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END,\"Sector\" Desc;";
+   CalendarContents[5].tbl_name = "Event Info";
+   CalendarContents[5].type = "view";
+// ...
+//--- initializing properties for the UpcomingEventInfo view
+   CalendarContents[7].Content = UpcomingEventInfo_View;
+   CalendarContents[7].name = "Upcoming Event Dates";
+   CalendarContents[7].sql = "CREATE VIEW IF NOT EXISTS 'Upcoming Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID as 'E_ID',"
+                             "M.COUNTRY as 'Country',M.EVENTNAME as 'Name',M.EVENTCURRENCY as 'Currency' FROM 'MQL5Calendar' M),"
+                             "INFO_DATE AS(SELECT E_ID,Country,Name,Currency,(SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,"
+                             "Record R INNER JOIN TIMESCHEDULE T ON T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))>R.Date AND "
+                             "E_ID=M.EVENTID ORDER BY Time ASC LIMIT 1) as 'Next Event Date' FROM UNIQUE_EVENTS) SELECT E_ID "
+                             "as 'ID',Country,Name,Currency,(CASE WHEN \"Next Event Date\" IS NULL THEN 'Unknown' ELSE "
+                             "\"Next Event Date\" END) as 'Upcoming Date',(CASE WHEN \"Next Event Date\"<>'Unknown' THEN "
+                             "(case cast (strftime('%w', DATE(REPLACE(\"Next Event Date\",'.','-'))) as integer) WHEN 0 THEN"
+                             " 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday' WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday'"
+                             " WHEN 5 THEN 'Friday' ELSE 'Saturday' END)  ELSE 'Unknown' END) as 'Day' FROM INFO_DATE Order BY "
+                             "\"Upcoming Date\" ASC;";
+   CalendarContents[7].tbl_name = "Upcoming Event Dates";
+   CalendarContents[7].type = "view";
+//--- initializing properties for the RecentEventInfo view
+   CalendarContents[8].Content = RecentEventInfo_View;
+   CalendarContents[8].name = "Recent Event Dates";
+   CalendarContents[8].sql = "CREATE VIEW IF NOT EXISTS 'Recent Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID"
+                             " as 'E_ID',M.COUNTRY as 'Country',M.EVENTNAME as 'Name',M.EVENTCURRENCY as 'Currency'"
+                             "FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,"
+                             "(SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON"
+                             " T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))<=R.Date AND E_ID=M.EVENTID ORDER BY Time DESC"
+                             " LIMIT 1) as 'Last Event Date' FROM UNIQUE_EVENTS) SELECT E_ID as 'ID',Country,Name,Currency"
+                             ",\"Last Event Date\" as 'Recent Date',(case cast (strftime('%w', DATE(REPLACE(\"Last Event Date\""
+                             ",'.','-'))) as integer) WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday' WHEN 3 THEN"
+                             " 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday' ELSE 'Saturday' END) as 'Day' FROM INFO_DATE"
+                             " Order BY \"Recent Date\" DESC;";
+   CalendarContents[8].tbl_name = "Recent Event Dates";
+   CalendarContents[8].type = "view";
+// ...
+```
+
+The query below is responsible for creating four similar but different views: Calendar\_AU, Calendar\_NONE, Calendar\_UK, and Calendar\_US. Each of these views pulls data from three tables: MQL5Calendar, Record, and TimeSchedule. These queries create views that display event details (ID, name, country, date, currency, and importance) for different time-zones (Australia, None/Default, UK, and US). The date of each event is labeled based on whether it occurred yesterday, today, or tomorrow relative to the current date, and the results are filtered to show events happening within one day of the current date. The views are sorted by the event date in the corresponding time-zone.
+
+We will use the view Calendar\_AU to explain.
+
+Fully visible Query:
+
+```
+CREATE VIEW IF NOT EXISTS Calendar_AU AS SELECT C.Eventid as 'ID',C.Eventname as 'Name',C.Country as 'Country', 
+(CASE WHEN Date(REPLACE(T.DST_AU,'.','-'))<R.Date THEN CONCAT(T.DST_AU,' | Yesterday') WHEN Date(REPLACE(T.DST_AU,'.','-'))=R.Date 
+THEN CONCAT(T.DST_AU,' | Today') WHEN Date(REPLACE(T.DST_AU,'.','-'))>R.Date THEN CONCAT(T.DST_AU,' | Tomorrow') END) as 'Date',
+C.EventCurrency as 'Currency',Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','') as 'Importance' from MQL5Calendar C,
+Record R Inner join TimeSchedule T on C.ID=T.ID Where DATE(REPLACE(T.DST_AU,'.','-'))>=DATE(R.Date,'-1 day') AND 
+DATE(REPLACE(T.DST_AU,'.','-'))<=DATE(R.Date,'+1 day') Order by T.DST_AU Asc;
+```
+
+CREATE VIEW IF NOT EXISTS Calendar\_AU, This creates a view named Calendar\_AU if it doesn't already exist. A view is essentially a virtual table created based on a query, allowing you to retrieve data without storing it again.
+
+SELECT Clause:
+
+```
+SELECT 
+    C.Eventid as 'ID',
+    C.Eventname as 'Name',
+    C.Country as 'Country',
+    (CASE 
+        WHEN Date(REPLACE(T.DST_AU,'.','-')) < R.Date THEN CONCAT(T.DST_AU, ' | Yesterday') 
+        WHEN Date(REPLACE(T.DST_AU,'.','-')) = R.Date THEN CONCAT(T.DST_AU, ' | Today') 
+        WHEN Date(REPLACE(T.DST_AU,'.','-')) > R.Date THEN CONCAT(T.DST_AU, ' | Tomorrow') 
+    END) as 'Date',
+    C.EventCurrency as 'Currency',
+    Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','') as 'Importance'
+```
+
+This portion of the query selects specific fields from the MQL5Calendar, Record, and TimeSchedule tables and formats the data accordingly:
+
+- C.Eventid is the event ID.
+- C.Eventname is the event name.
+- C.Country is the event's associated country.
+- A CASE statement is used to compare the date DST\_AU (Australian time-zone, stored in TimeSchedule) with R.Date (current date from the Record table) to label the event as either "Yesterday", "Today", or "Tomorrow".
+- C.EventCurrency is the currency related to the event.
+- Replace(C.EventImportance,'CALENDAR\_IMPORTANCE\_','') removes the prefix 'CALENDAR\_IMPORTANCE\_' from the EventImportance field, extracting only the relevant importance level (e.g., "HIGH" or "LOW").
+
+FROM Clause:
+
+```
+FROM 
+    MQL5Calendar C,
+    Record R
+    Inner join TimeSchedule T on C.ID=T.ID
+```
+
+- The query pulls data from three tables: MQL5Calendar (C), Record (R), and TimeSchedule (T).
+- The MQL5Calendar and Record tables are part of the FROM clause, and the TimeSchedule table is joined using INNER JOIN on the condition C.ID=T.ID, which means the ID from the MQL5Calendar table must match the ID in the TimeSchedule table.
+
+WHERE Clause:
+
+```
+WHERE 
+    DATE(REPLACE(T.DST_AU,'.','-')) >= DATE(R.Date,'-1 day') 
+    AND DATE(REPLACE(T.DST_AU,'.','-')) <= DATE(R.Date,'+1 day')
+```
+
+- This filters the results to only include events where the DST\_AU (the event date in Australian time-zone) is within one day before or after the current date (R.Date).
+
+ORDER BY Clause:
+
+```
+ORDER BY T.DST_AU Asc;
+```
+
+- This sorts the events in ascending order based on DST\_AU, the date in Australian time.
+
+Key Concepts:
+
+- Date and Time Formatting: The REPLACE() function is used to replace periods . with hyphens - in the DST\_ columns, which are stored as strings representing dates (e.g., 2024.09.23 is converted to 2024-09-23).
+- Conditional Logic: The CASE statement checks if the event date (DST\_AU, DST\_NONE, DST\_UK, or DST\_US) is before, equal to, or after the current date (R.Date), and adds a label accordingly ("Yesterday", "Today", or "Tomorrow").
+- Filtering: The WHERE clause ensures that only events that fall within the range of one day before or after the current date are included in the view.
+- Importance Extraction: The REPLACE() function removes the prefix from the EventImportance column to display only the relevant importance level (e.g., "HIGH", "MEDIUM", or "LOW").
+
+Calendar\_AU view output data:
+
+```
+ID      	Name    					Country 	Date    			Currency        Importance
+392080012       Autumnal Equinox Day    			Japan   	2024.09.22 02:00 | Yesterday    JPY     	NONE
+554010007       Exports 					New Zealand     2024.09.23 00:45 | Today        NZD     	LOW
+554010008       Imports 					New Zealand     2024.09.23 00:45 | Today        NZD     	LOW
+// ...
+710010010       Heritage Day    				South Africa    2024.09.24 02:00 | Tomorrow     ZAR     	NONE
+36030005        RBA Rate Statement      			Australia       2024.09.24 07:30 | Tomorrow     AUD     	MODERATE
+// ...
+```
+
+The query below creates a view named 'Event Info' that selects and organizes event information from the MQL5Calendar table. This view extracts distinct event information from the MQL5Calendar table and formats the data for easier reading and analysis. It cleans up the field names by removing unnecessary prefixes (CALENDAR\_TYPE\_, CALENDAR\_SECTOR\_, etc.).
+
+```
+CREATE VIEW IF NOT EXISTS 'Event Info' AS SELECT DISTINCT MC.EVENTID as 'ID',MC.COUNTRY as 'Country',MC.EVENTNAME as 'Name',
+REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',
+REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',MC.EVENTCURRENCY as 'Currency',
+REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',MC.EVENTCODE as 'Code' FROM MQL5Calendar MC 
+ORDER BY "Country" Asc,CASE "Importance" WHEN 'HIGH' THEN 1 WHEN 'MODERATE' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END,"Sector" Desc;
+```
+
+CREATE VIEW IF NOT EXISTS 'Event Info'
+
+This part creates a view called 'Event Info' if it doesn’t already exist. A view in SQL is a virtual table based on the result of a SELECT query, allowing you to encapsulate a complex query and reference it like a table.
+
+SELECT DISTINCT Clause:
+
+```
+SELECT DISTINCT 
+    MC.EVENTID as 'ID',
+    MC.COUNTRY as 'Country',
+    MC.EVENTNAME as 'Name',
+    REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',
+    REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',
+    REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',
+    MC.EVENTCURRENCY as 'Currency',
+    REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',
+    MC.EVENTCODE as 'Code'
+```
+
+This section retrieves distinct rows (removing duplicates) from the MQL5Calendar table (MC is an alias for this table) and selects specific columns to form the view.
+
+Selected Fields:
+
+- MC.EVENTID as 'ID': Retrieves the unique ID of each event and renames it to 'ID'.
+- MC.COUNTRY as 'Country': Retrieves the country associated with the event.
+- MC.EVENTNAME as 'Name': Retrieves the event name.
+
+Data Transformation Using REPLACE():
+
+Several fields use the REPLACE() function to remove prefixes like CALENDAR\_TYPE\_, CALENDAR\_SECTOR\_, CALENDAR\_IMPORTANCE\_, and CALENDAR\_FREQUENCY\_, leaving only the meaningful part of the field:
+
+- REPLACE(MC.EVENTTYPE,'CALENDAR\_TYPE\_','') as 'Type': Removes the CALENDAR\_TYPE\_ prefix from the EVENTTYPE field to get a cleaner value (e.g., instead of CALENDAR\_TYPE\_CONSUMER, you get CONSUMER).
+- REPLACE(MC.EVENTSECTOR,'CALENDAR\_SECTOR\_','') as 'Sector': Removes the CALENDAR\_SECTOR\_ prefix from the EVENTSECTOR field to get the sector name.
+- REPLACE(MC.EVENTIMPORTANCE,'CALENDAR\_IMPORTANCE\_','') as 'Importance': Removes the CALENDAR\_IMPORTANCE\_ prefix from the EVENTIMPORTANCE field to show the importance level (e.g., HIGH, MODERATE, LOW).
+- MC.EVENTCURRENCY as 'Currency': Retrieves the currency involved in the event.
+- REPLACE(MC.EVENTFREQUENCY,'CALENDAR\_FREQUENCY\_','') as 'Frequency': Removes the CALENDAR\_FREQUENCY\_ prefix from the EVENTFREQUENCY field, providing the event's frequency (e.g., MONTHLY or QUARTERLY).
+- MC.EVENTCODE as 'Code': Retrieves the event code without any transformation.
+
+FROM Clause:
+
+```
+FROM MQL5Calendar MC
+```
+
+The query pulls data from the MQL5Calendar table, aliased as MC.
+
+ORDER BY Clause:
+
+```
+ORDER BY 
+    "Country" Asc,
+    CASE "Importance"
+        WHEN 'HIGH' THEN 1
+        WHEN 'MODERATE' THEN 2
+        WHEN 'LOW' THEN 3
+        ELSE 4
+    END,
+    "Sector" Desc
+```
+
+This section orders the data by multiple fields to organize the output of the view.
+
+Ordering by Country (Ascending):
+
+- The first sorting criterion is Country in ascending order (Asc), meaning the events are grouped and sorted alphabetically by the country field.
+
+Ordering by Importance (Custom Ordering):
+
+- The CASE statement sorts the Importance levels based on a custom priority:
+
+- 'HIGH' importance is assigned a value of 1 (highest priority).
+- 'MODERATE' importance is assigned a value of 2.
+- 'LOW' importance is assigned a value of 3.
+- Any other value (e.g., NONE) is assigned a value of 4, which is the lowest priority.
+
+This means that events with HIGH importance will appear first, followed by MODERATE, LOW, and then NONE importance level.
+
+Ordering by Sector (Descending):
+
+- Finally, the events are ordered by the Sector field in descending order (Desc). This might order sectors like MONEY, CONSUMER, etc., in reverse alphabetical order.
+
+'Event Info' view output data sample:
+
+```
+ID      	Country 	Name    				Type    	Sector  	Importance      Currency  Frequency Code
+36030008        Australia       RBA Interest Rate Decision      	INDICATOR       MONEY   	HIGH    	AUD       NONE      AU
+36030006        Australia       RBA Governor Lowe Speech        	EVENT   	MONEY   	HIGH    	AUD       NONE      AU
+36010003        Australia       Employment Change       		INDICATOR       JOBS    	HIGH    	AUD       MONTH     AU
+// ...
+36010036        Australia       Current Account 			INDICATOR       TRADE   	MODERATE        AUD       QUARTER   AU
+36010011        Australia       Trade Balance   			INDICATOR       TRADE   	MODERATE        AUD       MONTH     AU
+36010029        Australia       PPI q/q 				INDICATOR       PRICES  	MODERATE        AUD       QUARTER   AU
+// ...
+36010009        Australia       Exports m/m     			INDICATOR       TRADE   	LOW     	AUD       MONTH     AU
+36010010        Australia       Imports m/m     			INDICATOR       TRADE   	LOW     	AUD       MONTH     AU
+36010037        Australia       Net Exports Contribution        	INDICATOR       TRADE   	LOW     	AUD       QUARTER   AU
+// ...
+76020002        Brazil  	BCB Interest Rate Decision      	INDICATOR       MONEY   	HIGH    	BRL       NONE      BR
+// ...
+```
+
+The query below creates a view called 'Recent Event Dates', which provides a summary of the most recent events from the MQL5Calendar table, along with the day of the week on which the event occurred. This view provides a list of recent events from the MQL5Calendar table, along with the day of the week the event occurred. It focuses on the most recent event for each distinct event in the calendar.
+
+```
+CREATE VIEW IF NOT EXISTS 'Recent Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID as 'E_ID',M.COUNTRY as 'Country',
+M.EVENTNAME as 'Name',M.EVENTCURRENCY as 'Currency'FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,
+(SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))
+<=R.Date AND E_ID=M.EVENTID ORDER BY Time DESC LIMIT 1) as 'Last Event Date' FROM UNIQUE_EVENTS) SELECT E_ID as 'ID',Country,Name,
+Currency,"Last Event Date" as 'Recent Date',(case cast (strftime('%w', DATE(REPLACE("Last Event Date",'.','-'))) as integer) WHEN 0 
+THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday' WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday' ELSE 
+'Saturday' END) as 'Day' FROM INFO_DATE Order BY "Recent Date" DESC;
+```
+
+CREATE VIEW IF NOT EXISTS 'Recent Event Dates'
+
+This part creates a view called 'Recent Event Dates' if it doesn’t already exist.
+
+WITH Clause: Common Table Expressions (CTEs)
+
+This part defines two Common Table Expressions (CTEs) that simplify the query logic by breaking it down into intermediate steps.
+
+CTE 1: UNIQUE\_EVENTS
+
+```
+WITH UNIQUE_EVENTS AS (
+    SELECT DISTINCT 
+        M.EVENTID as 'E_ID',
+        M.COUNTRY as 'Country',
+        M.EVENTNAME as 'Name',
+        M.EVENTCURRENCY as 'Currency'
+    FROM 'MQL5Calendar' M
+)
+```
+
+- This CTE (UNIQUE\_EVENTS) extracts distinct events from the MQL5Calendar table.
+- It selects the event's ID (EVENTID), country, name, and currency, ensuring that each event is listed only once (DISTINCT removes duplicate entries).
+
+Columns selected in UNIQUE\_EVENTS:
+
+- M.EVENTID as 'E\_ID': The unique event ID.
+- M.COUNTRY as 'Country': The country associated with the event.
+- M.EVENTNAME as 'Name': The name of the event.
+- M.EVENTCURRENCY as 'Currency': The currency associated with the event.
+
+CTE 2: INFO\_DATE
+
+```
+INFO_DATE AS (
+    SELECT 
+        E_ID,
+        Country,
+        Name,
+        Currency,
+        (
+            SELECT 
+                T.DST_NONE as 'Time'
+            FROM 
+                MQL5Calendar M, 
+                Record R 
+                INNER JOIN TimeSchedule T ON T.ID = M.ID 
+            WHERE 
+                DATE(REPLACE(Time, '.', '-')) <= R.Date 
+                AND E_ID = M.EVENTID 
+            ORDER BY 
+                Time DESC 
+            LIMIT 1
+        ) as 'Last Event Date'
+    FROM UNIQUE_EVENTS
+)
+```
+
+This CTE (INFO\_DATE) adds a date field (Last Event Date) to the distinct events from the previous CTE. It does this by:
+
+- For each unique event (E\_ID, Country, Name, Currency), it selects the most recent event date from the TimeSchedule and MQL5Calendar tables.
+
+> Subquery Explanation:
+>
+> - The subquery retrieves the field DST\_NONE from the TimeSchedule table (joined with the MQL5Calendar and Record tables), which represents a timestamp or event time.
+> - The DATE(REPLACE(Time, '.', '-')) <= R.Date condition ensures that the date for the event (Time, after replacing periods . with hyphens - to form a valid date format) is less than or equal to the current date in the Record table (R.Date).
+> - The events are sorted in descending order by time (ORDER BY Time DESC), and LIMIT 1 ensures that only the most recent event time is retrieved.
+
+Fields in INFO\_DATE:
+> - E\_ID: The event ID from the UNIQUE\_EVENTS CTE.
+> - Country: The country from the UNIQUE\_EVENTS CTE.
+> - Name: The event name from the UNIQUE\_EVENTS CTE.
+> - Currency: The currency from the UNIQUE\_EVENTS CTE.
+> - Last Event Date: The most recent event date for each event, retrieved from the MQL5Calendar and TimeSchedule tables.
+
+Main Query: Final Selection and Transformation
+
+```
+SELECT 
+    E_ID as 'ID',
+    Country,
+    Name,
+    Currency,
+    "Last Event Date" as 'Recent Date',
+    (
+        CASE CAST (strftime('%w', DATE(REPLACE("Last Event Date", '.', '-'))) AS INTEGER)
+        WHEN 0 THEN 'Sunday'
+        WHEN 1 THEN 'Monday'
+        WHEN 2 THEN 'Tuesday'
+        WHEN 3 THEN 'Wednesday'
+        WHEN 4 THEN 'Thursday'
+        WHEN 5 THEN 'Friday'
+        ELSE 'Saturday'
+        END
+    ) as 'Day'
+FROM INFO_DATE
+ORDER BY "Recent Date" DESC;
+```
+
+The main part of the query selects the final result from the INFO\_DATE CTE and includes the following fields:
+
+- E\_ID as 'ID': The event ID, renamed as 'ID'.
+- Country: The country associated with the event.
+- Name: The event name.
+- Currency: The currency related to the event.
+- "Last Event Date" as 'Recent Date': The most recent event date, renamed as 'Recent Date'.
+
+Day of the Week Calculation:
+
+- The query uses strftime('%w', DATE(REPLACE("Last Event Date", '.', '-'))), which converts the 'Last Event Date' into a valid date format and retrieves the day of the week.
+
+- %w returns an integer representing the day of the week, where 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+- The CASE statement maps the integer to the appropriate day name (e.g., 0 -> Sunday, 1 -> Monday, etc.).
+
+This provides a readable day of the week for each event.  
+
+Sorting the Results:
+
+```
+ORDER BY "Recent Date" DESC
+```
+
+The results are sorted by the 'Recent Date' in descending order, meaning the most recent events appear at the top of the list.
+
+'Recent Event Dates' view output data sample:
+
+```
+ID      	Country 	Name    					Currency        Recent Date     	Day
+554520001       New Zealand     CFTC NZD Non-Commercial Net Positions   	NZD     	2024.09.27 21:30        Friday
+999520001       European Union  CFTC EUR Non-Commercial Net Positions   	EUR     	2024.09.27 21:30        Friday
+392520001       Japan   	CFTC JPY Non-Commercial Net Positions   	JPY     	2024.09.27 21:30        Friday
+// ...
+```
+
+The query below creates a view called 'Upcoming Event Dates' to list upcoming events from the MQL5Calendar table. It includes the event's next date and the day of the week. The query has two key parts: it first identifies unique events, then it determines the next scheduled event date for each of those events.
+
+```
+CREATE VIEW IF NOT EXISTS 'Upcoming Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID as 'E_ID',M.COUNTRY as 'Country',M.EVENTNAME
+ as 'Name',M.EVENTCURRENCY as 'Currency' FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,(SELECT T.DST_NONE as 'Time' FROM
+ MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))>R.Date AND E_ID=M.EVENTID ORDER BY Time ASC 
+LIMIT 1) as 'Next Event Date' FROM UNIQUE_EVENTS) SELECT E_ID as 'ID',Country,Name,Currency,(CASE WHEN "Next Event Date" IS NULL THEN 'Unknown' 
+ELSE "Next Event Date" END) as 'Upcoming Date',(CASE WHEN "Next Event Date"<>'Unknown' THEN (case cast (strftime('%w', 
+DATE(REPLACE("Next Event Date",'.','-'))) as integer) WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday' WHEN 3 THEN 'Wednesday' 
+WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday' ELSE 'Saturday' END)  ELSE 'Unknown' END) as 'Day' FROM INFO_DATE Order BY "Upcoming Date" ASC;
+```
+
+CREATE VIEW IF NOT EXISTS 'Upcoming Event Dates'
+
+This creates a view named 'Upcoming Event Dates', but only if it doesn't already exist.
+
+WITH Clause: Common Table Expressions (CTEs)
+
+The query uses Common Table Expressions (CTEs), which help break down complex queries into simpler, reusable parts. There are two CTEs here: UNIQUE\_EVENTS and INFO\_DATE.
+
+CTE 1: UNIQUE\_EVENTS
+
+```
+WITH UNIQUE_EVENTS AS (
+    SELECT DISTINCT 
+        M.EVENTID as 'E_ID',
+        M.COUNTRY as 'Country',
+        M.EVENTNAME as 'Name',
+        M.EVENTCURRENCY as 'Currency'
+    FROM 'MQL5Calendar' M
+)
+```
+
+- This part selects unique events from the MQL5Calendar table.
+- It retrieves the event's ID (EVENTID), country, name, and currency, ensuring each event is listed only once using DISTINCT.
+
+The result of this CTE is a set of distinct events with their associated details.
+
+Columns in UNIQUE\_EVENTS:
+
+- E\_ID: The event's unique ID.
+- Country: The country where the event is associated.
+- Name: The name of the event.
+- Currency: The currency associated with the event.
+
+CTE 2: INFO\_DATE
+
+```
+INFO_DATE AS (
+    SELECT 
+        E_ID,
+        Country,
+        Name,
+        Currency,
+        (
+            SELECT 
+                T.DST_NONE as 'Time'
+            FROM 
+                MQL5Calendar M, 
+                Record R 
+                INNER JOIN TimeSchedule T ON T.ID=M.ID 
+            WHERE 
+                DATE(REPLACE(Time, '.', '-')) > R.Date 
+                AND E_ID = M.EVENTID 
+            ORDER BY Time ASC 
+            LIMIT 1
+        ) as 'Next Event Date'
+    FROM UNIQUE_EVENTS
+)
+```
+
+This CTE (INFO\_DATE) fetches the next event date for each unique event.
+
+- For each event (E\_ID, Country, Name, Currency), it looks for the upcoming event date in the TimeSchedule table (DST\_NONE field).
+
+Subquery Explanation:
+
+- The subquery retrieves the DST\_NONE field from the TimeSchedule table, which represents the time or date of the event.
+- The condition DATE(REPLACE(Time, '.', '-')) > R.Date ensures that only future events (dates greater than the current date, R.Date) are selected.
+- Events are sorted in ascending order by Time (ORDER BY Time ASC), so the earliest upcoming event date is picked (LIMIT 1 ensures only one date is returned).
+
+Columns in INFO\_DATE:
+
+- E\_ID: The event ID from UNIQUE\_EVENTS.
+- Country: The country of the event.
+- Name: The event name.
+- Currency: The currency of the event.
+- Next Event Date: The next upcoming event date, determined by the subquery.
+
+Main Query: Final Selection and Transformation
+
+```
+SELECT 
+    E_ID as 'ID',
+    Country,
+    Name,
+    Currency,
+    (CASE WHEN "Next Event Date" IS NULL THEN 'Unknown' ELSE "Next Event Date" END) as 'Upcoming Date',
+    (CASE WHEN "Next Event Date" <> 'Unknown' THEN 
+        (CASE CAST (strftime('%w', DATE(REPLACE("Next Event Date", '.', '-'))) AS INTEGER)
+            WHEN 0 THEN 'Sunday'
+            WHEN 1 THEN 'Monday'
+            WHEN 2 THEN 'Tuesday'
+            WHEN 3 THEN 'Wednesday'
+            WHEN 4 THEN 'Thursday'
+            WHEN 5 THEN 'Friday'
+            ELSE 'Saturday'
+        END)  
+    ELSE 'Unknown' END) as 'Day'
+FROM INFO_DATE
+ORDER BY "Upcoming Date" ASC;
+```
+
+The main query retrieves the final output from the INFO\_DATE CTE, transforming the results and adding additional logic to handle cases where there might be missing event dates (NULL values).
+
+Columns Selected:
+
+- E\_ID as 'ID': The event ID, renamed as 'ID'.
+- Country: The country associated with the event.
+- Name: The event name.
+- Currency: The currency related to the event.
+- Upcoming Date: This is based on the 'Next Event Date'. If the 'Next Event Date' is NULL, it will display 'Unknown'; otherwise, it will show the date.
+
+> ```
+> CASE WHEN "Next Event Date" IS NULL THEN 'Unknown' ELSE "Next Event Date" END
+> ```
+
+> This CASE statement checks whether there is a valid upcoming event date. If the date is NULL, it outputs 'Unknown'; otherwise, it displays the 'Next Event Date'.
+
+Day of the Week Calculation:
+
+- If the Next Event Date is not 'Unknown', the query converts the upcoming date into a day of the week using the following CASE statement:
+
+```
+CASE CAST (strftime('%w', DATE(REPLACE("Next Event Date", '.', '-'))) AS INTEGER)
+    WHEN 0 THEN 'Sunday'
+    WHEN 1 THEN 'Monday'
+    WHEN 2 THEN 'Tuesday'
+    WHEN 3 THEN 'Wednesday'
+    WHEN 4 THEN 'Thursday'
+    WHEN 5 THEN 'Friday'
+    ELSE 'Saturday'
+END
+```
+
+The strftime('%w', ...) function extracts the day of the week from the 'Next Event Date':
+
+- %w returns an integer representing the day of the week (0 = Sunday, 1 = Monday, etc.).
+- The CASE statement maps this integer to a day name (e.g., 0 -> Sunday).
+- If the Next Event Date is 'Unknown', the Day column will also display 'Unknown'.
+
+Ordering the Results:
+
+```
+ORDER BY "Upcoming Date" ASC;
+```
+
+The results are sorted by 'Upcoming Date' in ascending order, meaning the earliest upcoming events appear first.
+
+'Upcoming Date' view output data sample:
+
+```
+ID      	Country 	Name    						Currency	Upcoming Date		Day
+410020004       South Korea     Industrial Production y/y       			KRW     	2024.09.30 01:00        Monday
+410020005       South Korea     Retail Sales m/m        				KRW     	2024.09.30 01:00        Monday
+410020006       South Korea     Index of Services m/m   				KRW     	2024.09.30 01:00        Monday
+// ...
+36500001        Australia       S&P Global Manufacturing PMI    			AUD     	2024.10.01 01:00        Tuesday
+392030007       Japan   	Unemployment Rate       				JPY     	2024.10.01 01:30        Tuesday
+392050002       Japan   	Jobs to Applicants Ratio        			JPY     	2024.10.01 01:30        Tuesday
+// ...
+```
+
+### Expert Code
+
+This is the main program file where we implement the news trading strategy. The code below allows input settings for trading custom news event.
+
+```
+input Choice iCustom_Event_1=No;//USE EVENT IDs BELOW?
+input string iCustom_Event_1_IDs="";//EVENT IDs[Separate with a comma][MAX 14]
+input Choice iCustom_Event_2=No;//USE EVENT IDs BELOW?
+input string iCustom_Event_2_IDs="";//EVENT IDs[Separate with a comma][MAX 14]
+input Choice iCustom_Event_3=No;//USE EVENT IDs BELOW?
+input string iCustom_Event_3_IDs="";//EVENT IDs[Separate with a comma][MAX 14]
+input Choice iCustom_Event_4=No;//USE EVENT IDs BELOW?
+input string iCustom_Event_4_IDs="";//EVENT IDs[Separate with a comma][MAX 14]
+input Choice iCustom_Event_5=No;//USE EVENT IDs BELOW?
+input string iCustom_Event_5_IDs="";//EVENT IDs[Separate with a comma][MAX 14]
+```
+
+Explanation of Each Input:
+
+Choice iCustom\_Event\_1=No;
+
+- Type: Choice
+- Variable Name: iCustom\_Event\_1
+- Default Value: No
+- Description: This input allows the user to enable or disable the use of custom event IDs for event 1. The Choice type here is an enum type with two values, Yes or No. If set to Yes, the program will use the event IDs provided in the corresponding string input (iCustom\_Event\_1\_IDs).
+
+string iCustom\_Event\_1\_IDs="";
+
+- Type: string
+- Variable Name: iCustom\_Event\_1\_IDs
+- Default Value: An empty string ""
+- Description: This input allows the user to input a list of Event IDs for Custom Event 1. These IDs are expected to be separated by commas (e.g., "36010006,840030005,840030016"), and the maximum of 14 IDs is specified.
+
+ Initialization of Custom News Events
+
+```
+CEvent1.useEvents = Answer(iCustom_Event_1);
+StringSplit(iCustom_Event_1_IDs, ',', CEvent1.EventIds);
+CEvent2.useEvents = Answer(iCustom_Event_2);
+StringSplit(iCustom_Event_2_IDs, ',', CEvent2.EventIds);
+CEvent3.useEvents = Answer(iCustom_Event_3);
+StringSplit(iCustom_Event_3_IDs, ',', CEvent3.EventIds);
+CEvent4.useEvents = Answer(iCustom_Event_4);
+StringSplit(iCustom_Event_4_IDs, ',', CEvent4.EventIds);
+CEvent5.useEvents = Answer(iCustom_Event_5);
+StringSplit(iCustom_Event_5_IDs, ',', CEvent5.EventIds);
+```
+
+This block of code initializes several custom news event objects (CEvent1, CEvent2, etc.) and processes their related IDs.
+
+- CEvent1.useEvents = Answer(iCustom\_Event\_1);:
+
+- CEvent1 is a struct that holds information about a specific custom news event set. The useEvents flag is set using the Answer() function, which returns a boolean value (true or false) based on the input variable iCustom\_Event\_1.
+- If iCustom\_Event\_1 is true, the expert will use this custom event for trading logic; otherwise, it will ignore it.
+
+- StringSplit(iCustom\_Event\_1\_IDs, ',', CEvent1.EventIds);:
+
+- StringSplit() is a function that splits a string of event IDs (iCustom\_Event\_1\_IDs) by a comma (,), and the resulting list of event IDs is stored in CEvent1.EventIds.
+- iCustom\_Event\_1\_IDs is a string containing one or more event IDs, and the split function converts this string into an array of event IDs for further use in the trading logic.
+
+Similar code for CEvent2 through CEvent5.
+
+OnInit() Function
+
+This is the initialization function that gets called when the EA is launched or added to a chart.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//--- Assign if in LightMode or not
+   isLightMode=(iDisplayMode==Display_LightMode)?true:false;
+//--- call function for common initialization procedure
+   InitCommon();
+//--- store Init result
+   int InitResult;
+   if(!MQLInfoInteger(MQL_TESTER))//Checks whether the program is in the strategy tester
+     {
+      //--- initialization procedure outside strategy tester
+      InitResult=InitNonTester();
+     }
+   else
+     {
+      //--- initialization procedure inside strategy tester
+      InitResult=InitTester();
+     }
+//--- Create DB in memory
+   NewsObject.CreateEconomicDatabaseMemory();
+//--- Initialize Candle properties pointer object
+   CP = new CCandleProperties();
+//--- Retrieve news events for the current Daily period into array CalendarArray
+   NewsObject.EconomicDetailsMemory(CalendarArray,CTM.Time(TimeTradeServer(),0,0,0),
+                                    (iOrderType!=StopOrdersType)?true:false);
+//--- Initialize Common graphics class pointer object
+   CGraphics = new CCommonGraphics(Answer(iDisplay_Date),Answer(iDisplay_Spread),
+                                   Answer(iDisplay_NewsInfo),Answer(iDisplay_EventObj));
+   CGraphics.GraphicsRefresh(iSecondsPreEvent);//-- Create chart objects
+//--- Set Time
+   CDay.SetmyTime(CalendarArray);
+   /* create timer, if in the strategy tester set the timer to 30s else 100ms */
+   EventSetMillisecondTimer((!MQLInfoInteger(MQL_TESTER))?100:30000);
+//-- Initialize Trade Management class pointer object
+   Trade = new CTradeManagement(iDeviation);
+//--- return Init result
+   return InitResult;
+  }
+```
+
+Key Steps:
+
+Display Mode:
+
+- The EA checks whether it's running in light mode or dark mode (isLightMode).
+
+Common Initialization:
+
+- Calls the function InitCommon() to perform general initialization tasks.
+
+Strategy Tester Check:
+
+- It checks if the EA is running in the strategy tester mode using MQLInfoInteger(MQL\_TESTER) and then calls either InitNonTester() or InitTester() depending on the result.
+
+News Event Database:
+
+- The NewsObject.CreateEconomicDatabaseMemory() function initializes the in-memory database for economic events. This is where the EA stores news-related data.
+
+Initialize Candle Properties:
+
+- The class pointer CP for CCandleProperties is created. This class is responsible for managing candle properties like open, close, high, low, etc.
+
+Retrieve News Events:
+
+- The function NewsObject.EconomicDetailsMemory() retrieves the relevant news events based on the selected criteria. It filters news events for the current trading day.
+
+Initialize Graphical Objects:
+
+- The class CGraphics is initialized, which is responsible for creating graphical elements on the chart, such as visualizing news event data. The GraphicsRefresh() method ensures that the graphical objects are refreshed according to the configured time (iSecondsPreEvent).
+
+Set Time and Timer:
+
+- The CDay.SetmyTime() method processes the news event array and handles time management for trading.
+- A timer is set with different intervals depending on whether the EA is running in the tester or live mode (EventSetMillisecondTimer()), this is to provide performance when testing the expert in the strategy tester.
+
+Initialize Trade Management:
+
+- The Trade class pointer is initialized with iDeviation to open stop order trades if needed.
+
+Return Initialization Result:
+
+- The function returns the result of the initialization process.
+
+OnTimer Function
+
+The OnTimer() function is triggered periodically, executing every time a timer event is called.
+
+```
+//+------------------------------------------------------------------+
+//| Timer function                                                   |
+//+------------------------------------------------------------------+
+void OnTimer()
+  {
+   if(((!MQLInfoInteger(MQL_TESTER))?int(TimeTradeServer())%30==0:true))
+     {
+      //--- Store start-up time.
+      static datetime Startup_date = TimeTradeServer();
+      if(CTM.DateisToday(Startup_date)&&CP.NewCandle(0,PERIOD_D1)
+         &&MQLInfoInteger(MQL_TESTER))
+        {
+         //--- Retrieve news events for the current Daily period into array CalendarArray
+         NewsObject.EconomicDetailsMemory(CalendarArray,CTM.Time(TimeTradeServer(),0,0,0),
+                                          (iOrderType!=StopOrdersType)?true:false);
+         //--- Initialize Common graphics class pointer object
+         CGraphics = new CCommonGraphics(Answer(iDisplay_Date),Answer(iDisplay_Spread),
+                                         Answer(iDisplay_NewsInfo),Answer(iDisplay_EventObj));
+         CGraphics.GraphicsRefresh(iSecondsPreEvent);//-- Create chart objects
+         //--- Set Time
+         CDay.SetmyTime(CalendarArray);
+        }
+      //--- Run procedures
+      ExecutionOnTimer(Startup_date);
+      if(CTS.isSessionStart()&&!CTS.isSessionEnd())
+        {
+         //--- function to open trades
+         TradeTime();
+        }
+      //--- close trades within 45 min before end of session
+      if(CTS.isSessionStart()&&CTS.isSessionEnd()&&!CTS.isSessionEnd(0,0))
+        {
+         Trade.CloseTrades("NewsTrading");
+        }
+     }
+  }
+```
+
+Key Features:
+
+- Time-based Conditions: the if statement checks whether the code is running in the strategy tester or in real-time. If running in real-time(outside the strategy tester), it checks if the server time is divisible by 30 (for a 30-second interval).
+- Candle and News Update:
+
+- If today’s date matches the Startup\_date. If today is a new day and a new daily candle has formed (CP.NewCandle(0, PERIOD\_D1)), the expert fetches economic news for the current day using NewsObject.EconomicDetailsMemory.
+- It also updates the chart with new information.
+
+- Session Control: If the trading session has started (CTS.isSessionStart()) trades will be allowed during the session. The expert will also close trades if the session is about to end.
+
+ExecutionOnTimer Function
+
+```
+//+------------------------------------------------------------------+
+//|Execute program procedures in time intervals                      |
+//+------------------------------------------------------------------+
+void ExecutionOnTimer(datetime Startup_date)
+  {
+//--- Check if not start-up date
+   if(!CTM.DateisToday(Startup_date))
+     {
+      //--- Run every New Daily Candle
+      if(CP.NewCandle(1,PERIOD_D1))
+        {
+         //--- Check if not in strategy tester
+         if(!MQLInfoInteger(MQL_TESTER))
+           {
+            //--- Update/Create DB in Memory
+            NewsObject.CreateEconomicDatabaseMemory();
+           }
+         //--- retrieve news events for the current day
+         NewsObject.EconomicDetailsMemory(CalendarArray,CTM.Time(TimeTradeServer(),0,0,0),
+                                          (iOrderType!=StopOrdersType)?true:false);
+         //--- Set time from news events
+         CDay.SetmyTime(CalendarArray);
+         CGraphics.GraphicsRefresh(iSecondsPreEvent);//-- Create/Re-create chart objects
+        }
+      //--- Check if not in strategy tester
+      if(!MQLInfoInteger(MQL_TESTER))
+        {
+         //--- Run every New Hourly Candle
+         if(CP.NewCandle(2,PERIOD_H1))
+           {
+            //--- Check if DB in Storage needs an update
+            if(NewsObject.UpdateRecords())
+              {
+               //--- initialization procedure outside strategy tester
+               InitNonTester();
+              }
+           }
+        }
+     }
+   else
+     {
+      //--- Run every New Daily Candle
+      if(CP.NewCandle(3,PERIOD_D1))
+        {
+         //--- Update Event objects on chart
+         CGraphics.NewsEvent();
+        }
+     }
+//--- Update realtime Graphic every 1 min
+   if(CP.NewCandle(4,PERIOD_M1))
+     {
+      //--- get the news events for the next min ahead of time.
+      datetime Time_ahead = TimeTradeServer()+CTM.MinutesS();
+      CDay.GetmyTime(CTV.Hourly(CTM.ReturnHour(Time_ahead)),
+                     CTV.Minutely(CTV.Minutely(CTM.ReturnMinute(Time_ahead))),
+                     myTimeData,myEvents);
+      CGraphics.Block_2_Realtime(iSecondsPreEvent);
+     }
+  }
+```
+
+Key Features:
+
+- Daily Candle Update: It checks for new daily candles. If a new daily candle has been formed, the news database is updated (NewsObject.CreateEconomicDatabaseMemory()), and the news events for the day are retrieved.
+- Hourly Candle Update: If a new hourly candle is formed, the EA checks if the economic news database requires an update, and if so, it re-initializes the EA outside of the strategy tester mode (InitNonTester()).
+- Real-time Updates: Every minute, the EA updates real-time graphics on the chart and retrieves the news events for the next minute, preparing for trades accordingly.
+
+TradeTime Function
+
+This function manages trade execution around news events.
+
+```
+//+------------------------------------------------------------------+
+//|function to check trading time                                    |
+//+------------------------------------------------------------------+
+void TradeTime()
+  {
+//--- Iterate through the event times
+   for(uint i=0;i<myTimeData.Size();i++)
+     {
+      //--- Check if it is time to trade each news event
+      if(CTM.TimePreEvent(CTM.TimeMinusOffset(datetime(myEvents[i].EventDate),iSecondsPreEvent)
+                          ,datetime(myEvents[i].EventDate))
+         &&(CTM.isDayOfTheWeek(TradingDay)||iNewSelection==News_Select_Custom_Events))
+        {
+         //--- switch for order type selection
+         switch(iOrderType)
+           {
+            case StopOrdersType:// triggers for STOP ORDERS
+               StopOrders(myEvents[i]);
+               break;
+            default:// triggers for both MARKET POSITION & SINGLE STOP ORDER
+               SingleOrder(myEvents[i]);
+               break;
+           }
+        }
+     }
+  }
+```
+
+Key Features:
+
+- Event Time Checking: For each event in the myTimeData array, the EA checks if the current time is within the predefined "pre-event" time window (iSecondsPreEvent) before the actual event.
+- Day of the Week Filter: Trades are only opened if the current day matches the configured trading day (TradingDay), or if custom events are selected (iNewSelection == News\_Select\_Custom\_Events).
+- Order Type Selection: Based on the iOrderType input (market position or stop order(s)), the function either opens market orders or stop orders around the news event.
+
+SingleOrder Function
+
+This function opens single market or stop orders based on the impact of the news event.
+
+```
+//+------------------------------------------------------------------+
+//|function to open single order types                               |
+//+------------------------------------------------------------------+
+void SingleOrder(Calendar &NewsEvent)
+  {
+//--- Check each Impact value type
+   switch(NewsObject.IMPACT(NewsEvent.EventImpact))
+     {
+      //--- When Impact news is negative
+      case CALENDAR_IMPACT_NEGATIVE:
+         //--- Check if profit currency is news event currency
+         if(NewsEvent.EventCurrency==CSymbol.CurrencyProfit())
+           {
+            switch(iOrderType)
+              {
+               case  MarketPositionType:// triggers for MARKET POSITION
+                  //--- Open buy trade with Event id as Magic number
+                  Trade.Buy(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                            "NewsTrading-"+NewsEvent.EventCode);
+                  break;
+               case StopOrderType:// triggers for SINGLE STOP ORDER
+                  //--- Open buy-stop with Event id as Magic number
+                  Trade.OpenBuyStop(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                                    "NewsTrading-SStop-"+NewsEvent.EventCode);
+                  break;
+               default:
+                  break;
+              }
+           }
+         else
+           {
+            switch(iOrderType)
+              {
+               case  MarketPositionType:// triggers for MARKET POSITION
+                  //--- Open sell trade with Event id as Magic number
+                  Trade.Sell(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                             "NewsTrading-"+NewsEvent.EventCode);
+                  break;
+               case StopOrderType:// triggers for SINGLE STOP ORDER
+                  //--- Open buy-stop with Event id as Magic number
+                  Trade.OpenSellStop(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                                     "NewsTrading-SStop-"+NewsEvent.EventCode);
+                  break;
+               default:
+                  break;
+              }
+           }
+         break;
+      //--- When Impact news is positive
+      case CALENDAR_IMPACT_POSITIVE:
+         //--- Check if profit currency is news event currency
+         if(NewsEvent.EventCurrency==CSymbol.CurrencyProfit())
+           {
+            switch(iOrderType)
+              {
+               case  MarketPositionType:// triggers for MARKET POSITION
+                  //--- Open sell trade with Event id as Magic number
+                  Trade.Sell(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                             "NewsTrading-"+NewsEvent.EventCode);
+                  break;
+               case StopOrderType:// triggers for SINGLE STOP ORDER
+                  //--- Open sell-stop with Event id as Magic number
+                  Trade.OpenSellStop(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                                     "NewsTrading-SStop-"+NewsEvent.EventCode);
+                  break;
+               default:
+                  break;
+              }
+
+           }
+         else
+           {
+            switch(iOrderType)
+              {
+               case  MarketPositionType:// triggers for MARKET POSITION
+                  //--- Open buy trade with Event id as Magic number
+                  Trade.Buy(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                            "NewsTrading-"+NewsEvent.EventCode);
+                  break;
+               case StopOrderType:// triggers for SINGLE STOP ORDER
+                  //--- Open sell-stop with Event id as Magic number
+                  Trade.OpenBuyStop(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                                    "NewsTrading-SStop-"+NewsEvent.EventCode);
+                  break;
+               default:
+                  break;
+              }
+           }
+         break;
+      //--- Unknown
+      default:
+         break;
+     }
+  }
+```
+
+Key Features:
+
+- Impact Assessment: The EA evaluates the impact of the news event (NewsObject.IMPACT(NewsEvent.EventImpact)), which can be either negative or positive.
+
+- Negative Impact: If the news impact is negative and the event currency matches the account's profit currency, it opens a buy trade if the iOrderType is market position or a buy-stop order for stop orders. If the event currency does not match the profit currency, it opens a sell trade or sell-stop order.
+- Positive Impact: If the news impact is positive and the event currency matches the profit currency, it opens a sell trade or sell-stop order. If the event currency does not match, it opens a buy trade or buy-stop order.
+
+StopOrders Function
+
+This function handles the opening of both buy-stop and sell-stop orders simultaneously around the news event. Regardless of the event's impact, both types of stop orders are placed to catch price movements in either direction.
+
+```
+//+------------------------------------------------------------------+
+//|function to open orders                                           |
+//+------------------------------------------------------------------+
+void StopOrders(Calendar &NewsEvent)
+  {
+//--- Opens both buy-stop & sell-stop regardless of event impact
+   Trade.OpenStops(iStoploss,iTakeprofit,ulong(NewsEvent.EventId),
+                   "NewsTrading-Stops-"+NewsEvent.EventCode);
+  }
+```
+
+Key Features:
+
+- Buy-stop and Sell-stop Orders: Opens both types of stop orders, each linked to the specific event with the event's EventId used as the trade's magic number.
+
+OnTrade Function
+
+This function is triggered whenever a new trade event occurs. This function will be used to manage trades.
+
+```
+void OnTrade()
+{
+   //--- Check if time is within the trading session
+   if(CTS.isSessionStart() && !CTS.isSessionEnd(0,0))
+   {
+      //--- Run procedures
+      ExecutionOnTrade();
+   }
+}
+```
+
+- CTS.isSessionStart() and !CTS.isSessionEnd(0,0):
+
+- CTS (sessions class object) is used to check whether the current time falls within an active trading session.
+- isSessionStart() checks if the session has started.
+- !CTS.isSessionEnd(0,0) checks if the session has not yet ended. The arguments 0,0 represents the offset or buffer period before the session ends.
+- This ensures that trades are only adjusted if the current time is within an active trading session.
+
+- ExecutionOnTrade();:
+
+- If the session is active, the ExecutionOnTrade() function is called to handle the execution of necessary procedures related to the new trade.
+
+ExecutionOnTrade Function
+
+This function contains the logic that runs every time a new trade is executed.
+
+```
+void ExecutionOnTrade()
+{
+   //--- if stop orders, enable fundamental mode
+   if(iOrderType == StopOrdersType)
+   {
+      Trade.FundamentalMode("NewsTrading");
+   }
+   
+   //--- when stop order(s), enable slippage reduction
+   if(iOrderType != MarketPositionType)
+   {
+      Trade.SlippageReduction(iStoploss, iTakeprofit, "NewsTrading");
+   }
+}
+```
+
+- if (iOrderType == StopOrdersType):
+
+- This checks if the current trade is a stop order (StopOrdersType). If the condition is true, the code calls the Trade.FundamentalMode() function.
+
+- Trade.FundamentalMode("NewsTrading");:
+
+- This function enables Fundamental Mode,this function is responsible for deleting pending orders in the opposite direction.
+- "NewsTrading": This is the trade label/comment for the EA.
+
+- if(iOrderType != MarketPositionType):
+
+- This condition checks whether the input variable is not the enum MarketPositionType. If true, the code enables slippage reduction.
+
+- Trade.SlippageReduction(iStoploss, iTakeprofit, "NewsTrading"):
+
+- This function reduces slippage for non-market orders.
+- Slippage occurs when the executed price differs from the expected price, especially during volatile markets or news events.
+- By calling SlippageReduction(), the EA attempts to minimize this slippage.
+- Parameters:
+
+- iStoploss: The stop-loss value, which is the price at which the trade should automatically close to limit potential losses.
+- iTakeprofit: The take-profit value, which is the price at which the trade should automatically close to secure profits.
+- "NewsTrading": This is the trade label/comment for the EA.
+
+### 
+
+### 
+
+### Conclusion
+
+In this article, the expert allows users to define custom news events that the expert advisor will trade on. These events are initialized using user inputs, which are then parsed and handled accordingly by the expert. The Calendar database in storage was improved to provide additional information on the upcoming events and recent events in the form of views, each view's query was explained in detail. The OnTimer and OnTrade functions were added to control code execution based on specific timing conditions. Thank you for your time, I'm looking forward to providing more value in the next article :)
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16170.zip "Download all attachments in the single ZIP archive")
+
+[NewsTrading\_Part6.zip](https://www.mql5.com/en/articles/download/16170/newstrading_part6.zip "Download NewsTrading_Part6.zip")
+(639.7 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Artificial Electric Field Algorithm (AEFA)](https://www.mql5.com/en/articles/15162)
+
+The article presents an artificial electric field algorithm (AEFA) inspired by Coulomb's law of electrostatic force. The algorithm simulates electrical phenomena to solve complex optimization problems using charged particles and their interactions. AEFA exhibits unique properties in the context of other algorithms related to laws of nature.
+
+[Developing a multi-currency Expert Advisor (Part 14): Adaptive volume change in risk manager](https://www.mql5.com/en/articles/15085)
+
+The previously developed risk manager contained only basic functionality. Let's try to consider possible ways of its development, allowing us to improve trading results without interfering with the logic of trading strategies.
+
+[Reimagining Classic Strategies (Part 13): Minimizing The Lag in Moving Average Cross-Overs](https://www.mql5.com/en/articles/16758)
+
+Moving average cross-overs are widely known by traders in our community, and yet the core of the strategy has changed very little since its inception. In this discussion, we will present you with a slight adjustment to the original strategy, that aims to minimize the lag present in the trading strategy. All fans of the original strategy, could consider revising the strategy in accordance with the insights we will discuss today. By using 2 moving averages with the same period, we reduce the lag in the trading strategy considerably, without violating the foundational principles of the strategy.
+
+[Forex spread trading using seasonality](https://www.mql5.com/en/articles/14035)
+
+The article examines the possibilities of generating and providing reporting data on the use of the seasonality factor when trading spreads on Forex.
+
+[
+
+Use mql5.com login on metatrader.com
+
+Access our new hub for expert analytics, trading insights, global financial news, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/16170&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5125451351068394233)

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_053",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16562,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IX): Code Organization (II): Modularization",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16562.md"
+    },
+    {
+      "id": 16563,
+      "title": "Developing A Swing Entries Monitoring (EA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16563.md"
+    },
+    {
+      "id": 16588,
+      "title": "Artificial Tribe Algorithm (ATA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16588.md"
+    },
+    {
+      "id": 16655,
+      "title": "Black Hole Algorithm (BHA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16655.md"
+    },
+    {
+      "id": 16659,
+      "title": "The Inverse Fair Value Gap Trading Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16659.md"
+    },
+    {
+      "id": 16701,
+      "title": "Big Bang - Big Crunch (BBBC) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16701.md"
+    },
+    {
+      "id": 16729,
+      "title": "Chaos optimization algorithm (COA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16729.md"
+    },
+    {
+      "id": 16752,
+      "title": "Developing a Calendar-Based News Event Breakout Expert Advisor in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16752.md"
+    },
+    {
+      "id": 16845,
+      "title": "Functions for activating neurons during training: The key to fast convergence?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16845.md"
+    },
+    {
+      "id": 16952,
+      "title": "Visual assessment and adjustment of trading in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16952.md"
+    },
+    {
+      "id": 16957,
+      "title": "Robustness Testing on Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16957.md"
+    },
+    {
+      "id": 16963,
+      "title": "Time Evolution Travel Algorithm (TETA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16963.md"
+    }
+  ]
+}

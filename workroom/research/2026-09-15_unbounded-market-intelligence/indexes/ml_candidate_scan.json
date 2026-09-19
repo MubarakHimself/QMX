@@ -1,0 +1,862 @@
+[
+  {
+    "article_id": 24057,
+    "chars": 34879,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+    "counts": {
+      "catboost": 3,
+      "kmeans": 3,
+      "cluster": 69,
+      "walkforward": 1,
+      "regime": 3,
+      "meta_label": 2,
+      "calibration": 1
+    },
+    "head": "---\nid: 24057\nsource_url: https://www.mql5.com/en/articles/24057\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix\"\nauthor: \"\"\nauthor_url:\npublished: 2026-09-03T11:55Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Denoising, Detoning, and Clustering the Feature Correlation Matrix\"\nseries_part: 20\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 3 September 2026 at 07:55\n1 383\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/515554 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 23137,
+    "chars": 31165,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes",
+    "counts": {
+      "onnx": 1,
+      "cluster": 1,
+      "purge": 11,
+      "shuffle": 1,
+      "walkforward": 7,
+      "python": 2,
+      "regime": 49,
+      "meta_label": 3,
+      "triple_barrier": 2,
+      "calibration": 11,
+      "artifact_txt": 1
+    },
+    "head": "---\nid: 23137\nsource_url: https://www.mql5.com/en/articles/23137\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes\"\nauthor: \"\"\nauthor_url:\npublished: 2026-07-20T11:14Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Bagging Regimes\"\nseries_part: 19\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 20 July 2026 at 07:14\n1 217\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/513058 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 23304,
+    "chars": 56871,
+    "title": "Foundation Models for Trading (Part I): Porting Kronos to Native MQL5",
+    "counts": {
+      "onnx": 8,
+      "transformer": 23,
+      "kronos": 76,
+      "python": 7,
+      "multiclass": 6,
+      "embedding": 7,
+      "artifact_txt": 12
+    },
+    "head": "---\nid: 23304\nsource_url: https://www.mql5.com/en/articles/23304\ntitle: \"Foundation Models for Trading (Part I): Porting Kronos to Native MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2026-07-17T14:56Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Foundation Models for Trading (Part I): Porting Kronos to Native MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 17 July 2026 at 10:56\n1 402\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/512922 \"Comments\")\n[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)\n### Introduction"
+  },
+  {
+    "article_id": 23700,
+    "chars": 43511,
+    "title": "Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)",
+    "counts": {
+      "onnx": 1,
+      "shuffle": 1,
+      "walkforward": 5,
+      "vps": 1,
+      "python": 1,
+      "regime": 19,
+      "triple_barrier": 3,
+      "calibration": 16,
+      "artifact_txt": 5
+    },
+    "head": "---\nid: 23700\nsource_url: https://www.mql5.com/en/articles/23700\ntitle: \"Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-24T14:57Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"Online Machine Learning for Trade Signal Filtering in MQL5 ()\"\nseries_part: 1\nsource: mql5\nlanguage: en\n---\n# Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 24 August 2026 at 10:57\n1 584\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/515095 \"Comments\")\n[Adeolu Kayode Gbadebo](https://www.mql5.com/en/users/adeolu01)\n### Contents"
+  },
+  {
+    "article_id": 14926,
+    "chars": 54965,
+    "title": "Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?",
+    "counts": {
+      "lightgbm": 120,
+      "catboost": 2,
+      "xgboost": 84,
+      "onnx": 42,
+      "lstm": 1,
+      "gru": 1,
+      "python": 13,
+      "multiclass": 2,
+      "artifact_txt": 77
+    },
+    "head": "---\nid: 14926\nsource_url: https://www.mql5.com/en/articles/14926\ntitle: \"Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?\"\nauthor: \"\"\nauthor_url:\npublished: 2024-05-30T13:54Z\nplatform: \"MetaTrader 5\"\nsection: \"Statistics and analysis\"\ntags: []\nseries_title: \"Data Science and Machine Learning (): Why LightGBM and XGBoost outperform a lot of AI models?\"\nseries_part: 23\nsource: mql5\nlanguage: en\n---\n# Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Statistics and analysis](https://www.mql5.com/en/articles/mt5/statistics)\n| 30 May 2024 at 09:54\n7 776\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/467889 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\n### What are Gradient Boosted Trees?"
+  },
+  {
+    "article_id": 11147,
+    "chars": 35992,
+    "title": "Cross-validation and basics of causal inference in CatBoost models, export to ONNX format",
+    "counts": {
+      "catboost": 23,
+      "onnx": 37,
+      "kmeans": 1,
+      "cluster": 1,
+      "shuffle": 5,
+      "walkforward": 1,
+      "python": 2,
+      "meta_label": 2,
+      "river_online": 1,
+      "artifact_txt": 80
+    },
+    "head": "---\nid: 11147\nsource_url: https://www.mql5.com/en/articles/11147\ntitle: \"Cross-validation and basics of causal inference in CatBoost models, export to ONNX format\"\nauthor: \"\"\nauthor_url:\npublished: 2024-03-19T12:06Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Cross-validation and basics of causal inference in CatBoost models, export to ONNX format\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 19 March 2024 at 08:06\n3 355\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n19](https://www.mql5.com/en/forum/464220 \"Comments\")\n[Deleted]\n###"
+  },
+  {
+    "article_id": 8657,
+    "chars": 71695,
+    "title": "CatBoost machine learning algorithm from Yandex with no Python or R knowledge required",
+    "counts": {
+      "catboost": 69,
+      "cluster": 1,
+      "python": 6,
+      "artifact_txt": 99
+    },
+    "head": "---\nid: 8657\nsource_url: https://www.mql5.com/en/articles/8657\ntitle: \"CatBoost machine learning algorithm from Yandex with no Python or R knowledge required\"\nauthor: \"\"\nauthor_url:\npublished: 2020-12-01T16:30Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# CatBoost machine learning algorithm from Yandex with no Python or R knowledge required\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 1 December 2020 at 11:30\n13 494\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n80](https://www.mql5.com/en/forum/356941 \"Comments\")\n[Aleksey Vyazmikin](https://www.mql5.com/en/users/-aleks-)\n### Foreword"
+  },
+  {
+    "article_id": 8642,
+    "chars": 30269,
+    "title": "Gradient Boosting (CatBoost) in the development of trading systems. A naive approach",
+    "counts": {
+      "lightgbm": 1,
+      "catboost": 25,
+      "xgboost": 1,
+      "shuffle": 3,
+      "vps": 2,
+      "python": 10
+    },
+    "head": "---\nid: 8642\nsource_url: https://www.mql5.com/en/articles/8642\ntitle: \"Gradient Boosting (CatBoost) in the development of trading systems. A naive approach\"\nauthor: \"\"\nauthor_url:\npublished: 2020-11-17T10:10Z\nplatform: \"MetaTrader 5\"\nsection: \"Tester\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Gradient Boosting (CatBoost) in the development of trading systems. A naive approach\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)\n| 17 November 2020 at 05:10\n13 017\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n93](https://www.mql5.com/en/forum/355893 \"Comments\")\n[Deleted]\n### Introduction"
+  },
+  {
+    "article_id": 12373,
+    "chars": 48686,
+    "title": "How to use ONNX models in MQL5",
+    "counts": {
+      "onnx": 70,
+      "lstm": 19,
+      "shuffle": 1,
+      "python": 18,
+      "artifact_txt": 131
+    },
+    "head": "---\nid: 12373\nsource_url: https://www.mql5.com/en/articles/12373\ntitle: \"How to use ONNX models in MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2023-04-05T13:35Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# How to use ONNX models in MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 5 April 2023 at 09:35\n20 747\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n60](https://www.mql5.com/en/forum/444982 \"Comments\")\n[MetaQuotes](https://www.mql5.com/en/users/metaquotes)\n### Introduction"
+  },
+  {
+    "article_id": 12433,
+    "chars": 28066,
+    "title": "An example of how to ensemble ONNX models in MQL5",
+    "counts": {
+      "onnx": 19,
+      "lstm": 1,
+      "shuffle": 5,
+      "python": 2,
+      "multiclass": 1,
+      "artifact_txt": 44
+    },
+    "head": "---\nid: 12433\nsource_url: https://www.mql5.com/en/articles/12433\ntitle: \"An example of how to ensemble ONNX models in MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2023-04-12T10:48Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# An example of how to ensemble ONNX models in MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 12 April 2023 at 06:48\n8 251\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n7](https://www.mql5.com/en/forum/445398 \"Comments\")\n[MetaQuotes](https://www.mql5.com/en/users/metaquotes)\n### Introduction"
+  },
+  {
+    "article_id": 13451,
+    "chars": 725510,
+    "title": "Classification models in the Scikit-Learn library and their export to ONNX",
+    "counts": {
+      "onnx": 1533,
+      "transformer": 4,
+      "cluster": 2,
+      "shuffle": 11,
+      "python": 814,
+      "multiclass": 24,
+      "river_online": 7,
+      "calibration": 4,
+      "artifact_txt": 2384
+    },
+    "head": "---\nid: 13451\nsource_url: https://www.mql5.com/en/articles/13451\ntitle: \"Classification models in the Scikit-Learn library and their export to ONNX\"\nauthor: \"\"\nauthor_url:\npublished: 2023-10-13T13:41Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Classification models in the Scikit-Learn library and their export to ONNX\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 13 October 2023 at 09:41\n7 548\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/455642 \"Comments\")\n[MetaQuotes](https://www.mql5.com/en/users/metaquotes)\nThe development of technology has led to the emergence of a fundamentally new approach to building data processing algorithms. Previously, for solving each specific task, a clear formalization and development of corresponding algorithms were required."
+  },
+  {
+    "article_id": 22474,
+    "chars": 41578,
+    "title": "From Matrices to Models: How to Build an ML Pipeline in MQL5 and Export It to ONNX",
+    "counts": {
+      "onnx": 29,
+      "lstm": 7,
+      "shuffle": 3,
+      "python": 13,
+      "artifact_txt": 60
+    },
+    "head": "---\nid: 22474\nsource_url: https://www.mql5.com/en/articles/22474\ntitle: \"From Matrices to Models: How to Build an ML Pipeline in MQL5 and Export It to ONNX\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-14T14:38Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# From Matrices to Models: How to Build an ML Pipeline in MQL5 and Export It to ONNX\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 14 May 2026 at 10:38\n3 846\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n2](https://www.mql5.com/en/forum/509765 \"Comments\")\n[MetaQuotes](https://www.mql5.com/en/users/metaquotes)\n### Introduction"
+  },
+  {
+    "article_id": 20117,
+    "chars": 60910,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 8): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning",
+    "counts": {
+      "xgboost": 2,
+      "onnx": 1,
+      "cluster": 6,
+      "purge": 26,
+      "lookahead": 2,
+      "walkforward": 4,
+      "python": 3,
+      "regime": 10,
+      "triple_barrier": 9,
+      "calibration": 5,
+      "artifact_txt": 2
+    },
+    "head": "---\nid: 20117\nsource_url: https://www.mql5.com/en/articles/20117\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 8): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning\"\nauthor: \"\"\nauthor_url:\npublished: 2026-03-18T11:54Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning\"\nseries_part: 8\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 8): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 18 March 2026 at 07:54\n5 109\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/507028 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 19850,
+    "chars": 64947,
+    "title": "Machine Learning Blueprint (Part 4): The Hidden Flaw in Your Financial ML Pipeline \u2014 Label Concurrency",
+    "counts": {
+      "purge": 29,
+      "shuffle": 2,
+      "lookahead": 3,
+      "walkforward": 1,
+      "python": 1,
+      "multiclass": 1,
+      "meta_label": 15,
+      "triple_barrier": 37,
+      "calibration": 2
+    },
+    "head": "---\nid: 19850\nsource_url: https://www.mql5.com/en/articles/19850\ntitle: \"Machine Learning Blueprint (Part 4): The Hidden Flaw in Your Financial ML Pipeline \u2014 Label Concurrency\"\nauthor: \"\"\nauthor_url:\npublished: 2025-10-29T12:08Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"Machine Learning Blueprint (): The Hidden Flaw in Your Financial ML Pipeline \u2014 Label Concurrency\"\nseries_part: 4\nsource: mql5\nlanguage: en\n---\n# Machine Learning Blueprint (Part 4): The Hidden Flaw in Your Financial ML Pipeline \u2014 Label Concurrency\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 29 October 2025 at 08:08\n7 670\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/498960 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Introduction"
+  },
+  {
+    "article_id": 20059,
+    "chars": 109466,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 5): Sequential Bootstrapping\u2014Debiasing Labels, Improving Returns",
+    "counts": {
+      "onnx": 31,
+      "purge": 18,
+      "walkforward": 3,
+      "pickle": 8,
+      "python": 34,
+      "regime": 1,
+      "multiclass": 1,
+      "meta_label": 1,
+      "triple_barrier": 8,
+      "artifact_txt": 88
+    },
+    "head": "---\nid: 20059\nsource_url: https://www.mql5.com/en/articles/20059\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 5): Sequential Bootstrapping\u2014Debiasing Labels, Improving Returns\"\nauthor: \"\"\nauthor_url:\npublished: 2025-11-04T11:07Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Sequential Bootstrapping\u2014Debiasing Labels, Improving Returns\"\nseries_part: 5\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 5): Sequential Bootstrapping\u2014Debiasing Labels, Improving Returns\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 4 November 2025 at 06:07\n8 487\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/499313 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Introduction"
+  },
+  {
+    "article_id": 19253,
+    "chars": 37170,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 3): Trend-Scanning Labeling Method",
+    "counts": {
+      "transformer": 1,
+      "lookahead": 4,
+      "python": 1,
+      "regime": 1,
+      "meta_label": 4,
+      "triple_barrier": 10
+    },
+    "head": "---\nid: 19253\nsource_url: https://www.mql5.com/en/articles/19253\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 3): Trend-Scanning Labeling Method\"\nauthor: \"\"\nauthor_url:\npublished: 2025-10-06T09:04Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Trend-Scanning Labeling Method\"\nseries_part: 3\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 3): Trend-Scanning Labeling Method\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 6 October 2025 at 05:04\n9 036\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n5](https://www.mql5.com/en/forum/496921 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Introduction"
+  },
+  {
+    "article_id": 18864,
+    "chars": 62008,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 2): Labeling Financial Data for Machine Learning",
+    "counts": {
+      "lookahead": 2,
+      "python": 7,
+      "meta_label": 19,
+      "triple_barrier": 45
+    },
+    "head": "---\nid: 18864\nsource_url: https://www.mql5.com/en/articles/18864\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 2): Labeling Financial Data for Machine Learning\"\nauthor: \"\"\nauthor_url:\npublished: 2025-08-22T13:57Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Labeling Financial Data for Machine Learning\"\nseries_part: 2\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 2): Labeling Financial Data for Machine Learning\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 22 August 2025 at 09:57\n10 777\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/493807 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 22372,
+    "chars": 60566,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 14): Transaction Cost Modeling for Triple-Barrier Labels in MQL5",
+    "counts": {
+      "python": 12,
+      "triple_barrier": 13,
+      "calibration": 15,
+      "artifact_txt": 83
+    },
+    "head": "---\nid: 22372\nsource_url: https://www.mql5.com/en/articles/22372\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 14): Transaction Cost Modeling for Triple-Barrier Labels in MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-08T13:24Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Transaction Cost Modeling for Triple-Barrier Labels in MQL5\"\nseries_part: 14\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 14): Transaction Cost Modeling for Triple-Barrier Labels in MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 8 May 2026 at 09:24\n3 162\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/509462 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 21938,
+    "chars": 36808,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 12): Probability Calibration for Financial Machine Learning",
+    "counts": {
+      "onnx": 4,
+      "cluster": 1,
+      "purge": 31,
+      "walkforward": 10,
+      "regime": 1,
+      "triple_barrier": 1,
+      "calibration": 215,
+      "artifact_txt": 5
+    },
+    "head": "---\nid: 21938\nsource_url: https://www.mql5.com/en/articles/21938\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 12): Probability Calibration for Financial Machine Learning\"\nauthor: \"\"\nauthor_url:\npublished: 2026-04-16T11:24Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Probability Calibration for Financial Machine Learning\"\nseries_part: 12\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 12): Probability Calibration for Financial Machine Learning\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 16 April 2026 at 07:24\n3 462\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/508466 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 22040,
+    "chars": 37538,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 16): Nested CV for Unbiased Evaluation",
+    "counts": {
+      "purge": 21,
+      "walkforward": 59,
+      "python": 1,
+      "regime": 2,
+      "meta_label": 1,
+      "triple_barrier": 1,
+      "calibration": 68
+    },
+    "head": "---\nid: 22040\nsource_url: https://www.mql5.com/en/articles/22040\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 16): Nested CV for Unbiased Evaluation\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-20T12:12Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Nested CV for Unbiased Evaluation\"\nseries_part: 16\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 16): Nested CV for Unbiased Evaluation\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 20 May 2026 at 08:12\n1 797\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/510030 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 22516,
+    "chars": 40587,
+    "title": "Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning",
+    "counts": {
+      "onnx": 3,
+      "cluster": 4,
+      "lookahead": 7,
+      "walkforward": 2,
+      "vps": 1,
+      "python": 2,
+      "triple_barrier": 1,
+      "artifact_txt": 3
+    },
+    "head": "---\nid: 22516\nsource_url: https://www.mql5.com/en/articles/22516\ntitle: \"Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-13T07:54Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Feature Engineering for ML (): Session-Aware Time Features for Forex Machine Learning\"\nseries_part: 3\nsource: mql5\nlanguage: en\n---\n# Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 13 May 2026 at 03:54\n3 227\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/509700 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 10785,
+    "chars": 29965,
+    "title": "Neural networks made easy (Part 14): Data clustering",
+    "counts": {
+      "kmeans": 8,
+      "cluster": 90,
+      "python": 11
+    },
+    "head": "---\nid: 10785\nsource_url: https://www.mql5.com/en/articles/10785\ntitle: \"Neural networks made easy (Part 14): Data clustering\"\nauthor: \"\"\nauthor_url:\npublished: 2022-07-07T11:29Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"Neural networks made easy (): Data clustering\"\nseries_part: 14\nsource: mql5\nlanguage: en\n---\n# Neural networks made easy (Part 14): Data clustering\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 7 July 2022 at 07:29\n8 297\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n3](https://www.mql5.com/en/forum/428266 \"Comments\")\n[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)\n### Contents"
+  },
+  {
+    "article_id": 10947,
+    "chars": 52073,
+    "title": "Neural networks made easy (Part 15): Data clustering using MQL5",
+    "counts": {
+      "kmeans": 60,
+      "cluster": 156,
+      "python": 4
+    },
+    "head": "---\nid: 10947\nsource_url: https://www.mql5.com/en/articles/10947\ntitle: \"Neural networks made easy (Part 15): Data clustering using MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2022-07-20T12:58Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Neural networks made easy (): Data clustering using MQL5\"\nseries_part: 15\nsource: mql5\nlanguage: en\n---\n# Neural networks made easy (Part 15): Data clustering using MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 20 July 2022 at 08:58\n6 428\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/429030 \"Comments\")\n[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)\n### Table of contents"
+  },
+  {
+    "article_id": 10943,
+    "chars": 55131,
+    "title": "Neural networks made easy (Part 16): Practical use of clustering",
+    "counts": {
+      "kmeans": 49,
+      "cluster": 103,
+      "multiclass": 53,
+      "artifact_txt": 2
+    },
+    "head": "---\nid: 10943\nsource_url: https://www.mql5.com/en/articles/10943\ntitle: \"Neural networks made easy (Part 16): Practical use of clustering\"\nauthor: \"\"\nauthor_url:\npublished: 2022-07-26T15:59Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Neural networks made easy (): Practical use of clustering\"\nseries_part: 16\nsource: mql5\nlanguage: en\n---\n# Neural networks made easy (Part 16): Practical use of clustering\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 26 July 2022 at 11:59\n6 432\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n4](https://www.mql5.com/en/forum/429436 \"Comments\")\n[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)\n### Contents"
+  },
+  {
+    "article_id": 11615,
+    "chars": 42454,
+    "title": "Data Science and Machine Learning (Part 08): K-Means Clustering in plain MQL5",
+    "counts": {
+      "kmeans": 160,
+      "cluster": 229,
+      "vps": 1,
+      "artifact_txt": 1
+    },
+    "head": "---\nid: 11615\nsource_url: https://www.mql5.com/en/articles/11615\ntitle: \"Data Science and Machine Learning (Part 08): K-Means Clustering in plain MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2022-10-25T13:10Z\nplatform: \"MetaTrader 5\"\nsection: \"Expert Advisors\"\ntags: []\nseries_title: \"Data Science and Machine Learning (): K-Means Clustering in plain MQL5\"\nseries_part: 8\nsource: mql5\nlanguage: en\n---\n# Data Science and Machine Learning (Part 08): K-Means Clustering in plain MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Expert Advisors](https://www.mql5.com/en/articles/mt5/expert_advisors)\n| 25 October 2022 at 09:10\n5 507\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n3](https://www.mql5.com/en/forum/435186 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\nData is like garbage. You'd better know what you are going to do with it before you collect it."
+  },
+  {
+    "article_id": 13915,
+    "chars": 36689,
+    "title": "MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves",
+    "counts": {
+      "kmeans": 61,
+      "cluster": 90
+    },
+    "head": "---\nid: 13915\nsource_url: https://www.mql5.com/en/articles/13915\ntitle: \"MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves\"\nauthor: \"\"\nauthor_url:\npublished: 2023-12-19T11:51Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MQL5 Wizard Techniques you should know (): Pairing K-Means Clustering with Fractal Waves\"\nseries_part: 9\nsource: mql5\nlanguage: en\n---\n# MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 19 December 2023 at 06:51\n5 867\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/459269 \"Comments\")\n[Stephen Njuki](https://www.mql5.com/en/users/ssn)\n###"
+  },
+  {
+    "article_id": 14113,
+    "chars": 59720,
+    "title": "Deep Learning GRU model with Python to ONNX with EA, and GRU vs LSTM models",
+    "counts": {
+      "onnx": 15,
+      "lstm": 28,
+      "gru": 36,
+      "shuffle": 5,
+      "vps": 1,
+      "python": 6,
+      "artifact_txt": 16
+    },
+    "head": "---\nid: 14113\nsource_url: https://www.mql5.com/en/articles/14113\ntitle: \"Deep Learning GRU model with Python to ONNX  with EA, and GRU vs LSTM models\"\nauthor: \"\"\nauthor_url:\npublished: 2024-03-06T12:09Z\nplatform: \"MetaTrader 5\"\nsection: \"Tester\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Deep Learning GRU model with Python to ONNX with EA, and GRU vs LSTM models\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)\n| 6 March 2024 at 07:09\n7 654\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n2](https://www.mql5.com/en/forum/463613 \"Comments\")\n[Javier Santiago Gaston De Iriarte Cabrera](https://www.mql5.com/en/users/jsgaston)\n### Introduction"
+  },
+  {
+    "article_id": 20343,
+    "chars": 28402,
+    "title": "Training Neural Networks on Oscillators Without Look-Ahead Bias",
+    "counts": {
+      "onnx": 4,
+      "kronos": 1,
+      "lookahead": 19,
+      "python": 4,
+      "artifact_txt": 6
+    },
+    "head": "---\nid: 20343\nsource_url: https://www.mql5.com/en/articles/20343\ntitle: \"Training Neural Networks on Oscillators Without Look-Ahead Bias\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-20T07:05Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Training Neural Networks on Oscillators Without Look-Ahead Bias\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 20 August 2026 at 03:05\n1 535\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n8](https://www.mql5.com/en/forum/514904 \"Comments\")\n[Deleted]\n### Introduction to Look-Ahead Bias, or Why Machine Learning Models Do Not Work on New, Non-Stationary Data"
+  },
+  {
+    "article_id": 16487,
+    "chars": 37027,
+    "title": "Utilizing CatBoost Machine Learning model as a Filter for Trend-Following Strategies",
+    "counts": {
+      "catboost": 23,
+      "xgboost": 1,
+      "onnx": 7,
+      "hmm": 1,
+      "python": 6,
+      "multiclass": 2,
+      "artifact_txt": 56
+    },
+    "head": "---\nid: 16487\nsource_url: https://www.mql5.com/en/articles/16487\ntitle: \"Utilizing CatBoost Machine Learning model as a Filter for Trend-Following Strategies\"\nauthor: \"\"\nauthor_url:\npublished: 2024-12-09T11:06Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Utilizing CatBoost Machine Learning model as a Filter for Trend-Following Strategies\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 9 December 2024 at 06:06\n4 306\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n12](https://www.mql5.com/en/forum/477915 \"Comments\")\n[Zhuo Kai Chen](https://www.mql5.com/en/users/sicklemql)\n### Introduction"
+  },
+  {
+    "article_id": 23633,
+    "chars": 59181,
+    "title": "Machine Learning Without the Black Box: The Tsetlin Machine for Trading",
+    "counts": {
+      "onnx": 2,
+      "cluster": 1,
+      "shuffle": 1,
+      "vps": 2,
+      "python": 8,
+      "regime": 1,
+      "multiclass": 8,
+      "artifact_txt": 6
+    },
+    "head": "---\nid: 23633\nsource_url: https://www.mql5.com/en/articles/23633\ntitle: \"Machine Learning Without the Black Box: The Tsetlin Machine for Trading\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-14T05:22Z\nplatform: \"MetaTrader 5\"\nsection: \"Indicators\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Machine Learning Without the Black Box: The Tsetlin Machine for Trading\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Indicators](https://www.mql5.com/en/articles/mt5/examples_indicators)\n| 14 August 2026 at 01:22\n1 512\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n1](https://www.mql5.com/en/forum/514520 \"Comments\")\n[Hammad Dilber](https://www.mql5.com/en/users/homirana)\n## Contents"
+  },
+  {
+    "article_id": 14548,
+    "chars": 39534,
+    "title": "Time series clustering in causal inference",
+    "counts": {
+      "catboost": 8,
+      "onnx": 2,
+      "kmeans": 12,
+      "cluster": 199,
+      "gmm": 2,
+      "shuffle": 8,
+      "python": 1,
+      "regime": 2,
+      "artifact_txt": 2
+    },
+    "head": "---\nid: 14548\nsource_url: https://www.mql5.com/en/articles/14548\ntitle: \"Time series clustering in causal inference\"\nauthor: \"\"\nauthor_url:\npublished: 2024-08-06T16:56Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Time series clustering in causal inference\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 6 August 2024 at 12:56\n3 761\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n13](https://www.mql5.com/en/forum/471067 \"Comments\")\n[Deleted]\n**Introduction**"
+  },
+  {
+    "article_id": 17459,
+    "chars": 42504,
+    "title": "Neural Networks in Trading: Dual Clustering of Multivariate Time Series (DUET)",
+    "counts": {
+      "cluster": 29,
+      "purge": 3,
+      "multiclass": 6,
+      "calibration": 1
+    },
+    "head": "---\nid: 17459\nsource_url: https://www.mql5.com/en/articles/17459\ntitle: \"Neural Networks in Trading: Dual Clustering of Multivariate Time Series (DUET)\"\nauthor: \"\"\nauthor_url:\npublished: 2026-03-17T16:08Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Neural Networks in Trading: Dual Clustering of Multivariate Time Series (DUET)\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 17 March 2026 at 12:08\n3 359\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/506990 \"Comments\")\n[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)\n### Introduction"
+  },
+  {
+    "article_id": 13648,
+    "chars": 38634,
+    "title": "Quantization in machine learning (Part 2): Data preprocessing, table selection, training CatBoost models",
+    "counts": {
+      "catboost": 18,
+      "transformer": 3,
+      "shuffle": 2,
+      "python": 1,
+      "artifact_txt": 27
+    },
+    "head": "---\nid: 13648\nsource_url: https://www.mql5.com/en/articles/13648\ntitle: \"Quantization in machine learning (Part 2): Data preprocessing, table selection, training CatBoost models\"\nauthor: \"\"\nauthor_url:\npublished: 2024-03-14T12:09Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"Quantization in machine learning (): Data preprocessing, table selection, training CatBoost models\"\nseries_part: 2\nsource: mql5\nlanguage: en\n---\n# Quantization in machine learning (Part 2): Data preprocessing, table selection, training CatBoost models\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 14 March 2024 at 08:09\n1 960\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/463987 \"Comments\")\n[Aleksey Vyazmikin](https://www.mql5.com/en/users/-aleks-)\n###"
+  },
+  {
+    "article_id": 13706,
+    "chars": 59663,
+    "title": "Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models",
+    "counts": {
+      "catboost": 7,
+      "onnx": 2,
+      "shuffle": 3,
+      "walkforward": 1,
+      "vps": 1,
+      "python": 4,
+      "artifact_txt": 3
+    },
+    "head": "---\nid: 13706\nsource_url: https://www.mql5.com/en/articles/13706\ntitle: \"Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models\"\nauthor: \"\"\nauthor_url:\npublished: 2024-01-17T10:58Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 17 January 2024 at 05:58\n2 307\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/460759 \"Comments\")\n[Gamuchirai Zororo Ndawana](https://www.mql5.com/en/users/gamuchiraindawa)\n### Introduction"
+  },
+  {
+    "article_id": 20514,
+    "chars": 41747,
+    "title": "Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance",
+    "counts": {
+      "onnx": 16,
+      "python": 5,
+      "artifact_txt": 34
+    },
+    "head": "---\nid: 20514\nsource_url: https://www.mql5.com/en/articles/20514\ntitle: \"Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance\"\nauthor: \"\"\nauthor_url:\npublished: 2025-12-10T11:46Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"Overcoming The Limitation of Machine Learning (): Correlation-Based Feature Learning in Self-Supervised Finance\"\nseries_part: 9\nsource: mql5\nlanguage: en\n---\n# Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 10 December 2025 at 06:46\n2 425\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/501641 \"Comments\")\n[Gamuchirai Zororo Ndawana](https://www.mql5.com/en/users/gamuchiraindawa)\n### Introduction"
+  },
+  {
+    "article_id": 12261,
+    "chars": 43295,
+    "title": "Data Science and Machine Learning(Part 14): Finding Your Way in the Markets with Kohonen Maps",
+    "counts": {
+      "kmeans": 1,
+      "cluster": 122,
+      "python": 2,
+      "artifact_txt": 9
+    },
+    "head": "---\nid: 12261\nsource_url: https://www.mql5.com/en/articles/12261\ntitle: \"Data Science and Machine Learning(Part 14): Finding Your Way in the Markets with Kohonen Maps\"\nauthor: \"\"\nauthor_url:\npublished: 2023-03-28T12:51Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Data Science and Machine Learning(): Finding Your Way in the Markets with Kohonen Maps\"\nseries_part: 14\nsource: mql5\nlanguage: en\n---\n# Data Science and Machine Learning(Part 14): Finding Your Way in the Markets with Kohonen Maps\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 28 March 2023 at 08:51\n4 417\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/444448 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\n###"
+  },
+  {
+    "article_id": 13919,
+    "chars": 48867,
+    "title": "Data label for time series mining (Part 6)\uff1aApply and Test in EA Using ONNX",
+    "counts": {
+      "onnx": 64,
+      "shuffle": 18,
+      "python": 8,
+      "artifact_txt": 110
+    },
+    "head": "---\nid: 13919\nsource_url: https://www.mql5.com/en/articles/13919\ntitle: \"Data label for time series mining (Part 6)\uff1aApply and Test in EA Using ONNX\"\nauthor: \"\"\nauthor_url:\npublished: 2024-01-18T13:22Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"Data label for time series mining ()\uff1aApply and Test in EA Using ONNX\"\nseries_part: 6\nsource: mql5\nlanguage: en\n---\n# Data label for time series mining (Part 6)\uff1aApply and Test in EA Using ONNX\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 18 January 2024 at 08:22\n3 827\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n2](https://www.mql5.com/en/forum/460837 \"Comments\")\n[Yuqiang Pan](https://www.mql5.com/en/users/m_houk)\n### Introduction"
+  },
+  {
+    "article_id": 23488,
+    "chars": 68474,
+    "title": "Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes",
+    "counts": {
+      "catboost": 1,
+      "transformer": 1,
+      "cluster": 6,
+      "purge": 18,
+      "shuffle": 1,
+      "lookahead": 1,
+      "vps": 1,
+      "python": 10,
+      "regime": 27,
+      "embedding": 1,
+      "artifact_txt": 5
+    },
+    "head": "---\nid: 23488\nsource_url: https://www.mql5.com/en/articles/23488\ntitle: \"Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-05T12:47Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 5 August 2026 at 08:47\n1 116\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/514019 \"Comments\")\n[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)\n### Introduction"
+  },
+  {
+    "article_id": 13219,
+    "chars": 34200,
+    "title": "Quantization in machine learning (Part 1): Theory, sample code, analysis of implementation in CatBoost",
+    "counts": {
+      "catboost": 16,
+      "onnx": 3,
+      "vps": 1,
+      "python": 2,
+      "artifact_txt": 12
+    },
+    "head": "---\nid: 13219\nsource_url: https://www.mql5.com/en/articles/13219\ntitle: \"Quantization in machine learning (Part 1): Theory, sample code, analysis of implementation in CatBoost\"\nauthor: \"\"\nauthor_url:\npublished: 2024-03-01T13:03Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"Quantization in machine learning (): Theory, sample code, analysis of implementation in CatBoost\"\nseries_part: 1\nsource: mql5\nlanguage: en\n---\n# Quantization in machine learning (Part 1): Theory, sample code, analysis of implementation in CatBoost\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 1 March 2024 at 08:03\n3 841\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n8](https://www.mql5.com/en/forum/463395 \"Comments\")\n[Aleksey Vyazmikin](https://www.mql5.com/en/users/-aleks-)\n###"
+  },
+  {
+    "article_id": 13394,
+    "chars": 49275,
+    "title": "Mastering ONNX: The Game-Changer for MQL5 Traders",
+    "counts": {
+      "onnx": 133,
+      "lstm": 2,
+      "gru": 1,
+      "shuffle": 1,
+      "vps": 3,
+      "python": 23,
+      "artifact_txt": 279
+    },
+    "head": "---\nid: 13394\nsource_url: https://www.mql5.com/en/articles/13394\ntitle: \"Mastering ONNX: The Game-Changer for MQL5 Traders\"\nauthor: \"\"\nauthor_url:\npublished: 2023-10-17T13:24Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Mastering ONNX: The Game-Changer for MQL5 Traders\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 17 October 2023 at 09:24\n12 506\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n16](https://www.mql5.com/en/forum/455830 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\n*\"The ability to export and import AI models in ONNX format streamlines the development process, saving time and resources when integrating AI into diverse language ecosystems.\"*"
+  },
+  {
+    "article_id": 22527,
+    "chars": 24269,
+    "title": "Building an Object-Oriented ONNX Inference Engine in MQL5",
+    "counts": {
+      "onnx": 31,
+      "vps": 2,
+      "python": 11,
+      "regime": 2,
+      "embedding": 1,
+      "artifact_txt": 80
+    },
+    "head": "---\nid: 22527\nsource_url: https://www.mql5.com/en/articles/22527\ntitle: \"Building an Object-Oriented ONNX Inference Engine in MQL5\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-19T11:44Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Building an Object-Oriented ONNX Inference Engine in MQL5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 19 May 2026 at 07:44\n1 423\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/509969 \"Comments\")\n[Amanda Vitoria De Paula Pereira](https://www.mql5.com/en/users/kayruyuta)\nYou trained a model in Python, exported it to ONNX, and now want to run inference directly inside MQL5 without external Python processes, websockets, or unstable DLLs."
+  },
+  {
+    "article_id": 22912,
+    "chars": 47350,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 18): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit",
+    "counts": {
+      "onnx": 1,
+      "purge": 2,
+      "pickle": 5,
+      "vps": 2,
+      "triple_barrier": 1,
+      "calibration": 44,
+      "artifact_txt": 3
+    },
+    "head": "---\nid: 22912\nsource_url: https://www.mql5.com/en/articles/22912\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 18): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit\"\nauthor: \"\"\nauthor_url:\npublished: 2026-06-29T14:49Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit\"\nseries_part: 18\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 18): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 29 June 2026 at 10:49\n1 210\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/511919 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 21954,
+    "chars": 41521,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 17): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence",
+    "counts": {
+      "onnx": 26,
+      "transformer": 2,
+      "purge": 7,
+      "lookahead": 1,
+      "walkforward": 55,
+      "pickle": 6,
+      "python": 33,
+      "regime": 2,
+      "triple_barrier": 1,
+      "calibration": 45,
+      "artifact_txt": 88
+    },
+    "head": "---\nid: 21954\nsource_url: https://www.mql5.com/en/articles/21954\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 17): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence\"\nauthor: \"\"\nauthor_url:\npublished: 2026-06-04T13:00Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence\"\nseries_part: 17\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 17): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 4 June 2026 at 09:00\n1 960\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/510757 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 21823,
+    "chars": 58294,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline",
+    "counts": {
+      "onnx": 14,
+      "cluster": 1,
+      "purge": 4,
+      "lookahead": 1,
+      "pickle": 3,
+      "python": 1,
+      "regime": 3,
+      "meta_label": 5,
+      "triple_barrier": 7,
+      "artifact_txt": 20
+    },
+    "head": "---\nid: 21823\nsource_url: https://www.mql5.com/en/articles/21823\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline\"\nauthor: \"\"\nauthor_url:\npublished: 2026-03-26T14:04Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): Integrating Bayesian HPO into the Production Pipeline\"\nseries_part: 9\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 26 March 2026 at 10:04\n2 827\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/507414 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 20451,
+    "chars": 76483,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 7): From Scattered Experiments to Reproducible Results",
+    "counts": {
+      "onnx": 27,
+      "purge": 13,
+      "lookahead": 1,
+      "walkforward": 2,
+      "pickle": 4,
+      "python": 8,
+      "meta_label": 5,
+      "triple_barrier": 8,
+      "artifact_txt": 49
+    },
+    "head": "---\nid: 20451\nsource_url: https://www.mql5.com/en/articles/20451\ntitle: \"MetaTrader 5 Machine Learning Blueprint (Part 7): From Scattered Experiments to Reproducible Results\"\nauthor: \"\"\nauthor_url:\npublished: 2026-02-24T11:39Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"MetaTrader 5 Machine Learning Blueprint (): From Scattered Experiments to Reproducible Results\"\nseries_part: 7\nsource: mql5\nlanguage: en\n---\n# MetaTrader 5 Machine Learning Blueprint (Part 7): From Scattered Experiments to Reproducible Results\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 24 February 2026 at 06:39\n2 716\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/505855 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Introduction"
+  },
+  {
+    "article_id": 2029,
+    "chars": 74235,
+    "title": "Evaluation and selection of variables for machine learning models",
+    "counts": {
+      "cluster": 2
+    },
+    "head": "---\nid: 2029\nsource_url: https://www.mql5.com/en/articles/2029\ntitle: \"Evaluation and selection of variables for machine learning models\"\nauthor: \"\"\nauthor_url:\npublished: 2015-11-10T10:29Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Evaluation and selection of variables for machine learning models\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 10 November 2015 at 05:29\n26 222\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n48](https://www.mql5.com/en/forum/66888 \"Comments\")\n[Vladimir Perervenko](https://www.mql5.com/en/users/vlad1949)\n### Introduction"
+  },
+  {
+    "article_id": 8863,
+    "chars": 24561,
+    "title": "Finding seasonal patterns in the forex market using the CatBoost algorithm",
+    "counts": {
+      "catboost": 8,
+      "cluster": 5,
+      "gmm": 14,
+      "python": 1
+    },
+    "head": "---\nid: 8863\nsource_url: https://www.mql5.com/en/articles/8863\ntitle: \"Finding seasonal patterns in the forex market using the CatBoost algorithm\"\nauthor: \"\"\nauthor_url:\npublished: 2021-02-15T14:40Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Finding seasonal patterns in the forex market using the CatBoost algorithm\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 15 February 2021 at 09:40\n14 170\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n21](https://www.mql5.com/en/forum/362850 \"Comments\")\n[Deleted]\n### Introduction"
+  },
+  {
+    "article_id": 8743,
+    "chars": 31731,
+    "title": "Gradient boosting in transductive and active machine learning",
+    "counts": {
+      "catboost": 11,
+      "cluster": 6,
+      "gmm": 5,
+      "vps": 2,
+      "python": 7
+    },
+    "head": "---\nid: 8743\nsource_url: https://www.mql5.com/en/articles/8743\ntitle: \"Gradient boosting in transductive and active machine learning\"\nauthor: \"\"\nauthor_url:\npublished: 2021-01-12T08:36Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Gradient boosting in transductive and active machine learning\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 12 January 2021 at 03:36\n8 682\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n23](https://www.mql5.com/en/forum/360070 \"Comments\")\n[Deleted]\n### Introduction"
+  },
+  {
+    "article_id": 9138,
+    "chars": 40667,
+    "title": "Metamodels in machine learning and trading: Original timing of trading orders",
+    "counts": {
+      "catboost": 10,
+      "shuffle": 4,
+      "vps": 1,
+      "python": 1,
+      "artifact_txt": 2
+    },
+    "head": "---\nid: 9138\nsource_url: https://www.mql5.com/en/articles/9138\ntitle: \"Metamodels in machine learning and trading: Original timing of trading orders\"\nauthor: \"\"\nauthor_url:\npublished: 2022-08-17T13:35Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Metamodels in machine learning and trading: Original timing of trading orders\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 17 August 2022 at 09:35\n7 721\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n138](https://www.mql5.com/en/forum/430940 \"Comments\")\n[Deleted]\n### Introduction"
+  },
+  {
+    "article_id": 15033,
+    "chars": 65747,
+    "title": "Integrating Hidden Markov Models in MetaTrader 5",
+    "counts": {
+      "hmm": 64,
+      "pickle": 1,
+      "vps": 1,
+      "python": 18,
+      "artifact_txt": 36
+    },
+    "head": "---\nid: 15033\nsource_url: https://www.mql5.com/en/articles/15033\ntitle: \"Integrating Hidden Markov Models in MetaTrader 5\"\nauthor: \"\"\nauthor_url:\npublished: 2024-06-12T11:35Z\nplatform: \"MetaTrader 5\"\nsection: \"Integration\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Integrating Hidden Markov Models in MetaTrader 5\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Integration](https://www.mql5.com/en/articles/mt5/integration)\n| 12 June 2024 at 07:35\n5 793\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/468495 \"Comments\")\n[Francis Dube](https://www.mql5.com/en/users/ufranco)\n### Introduction"
+  },
+  {
+    "article_id": 16830,
+    "chars": 41523,
+    "title": "Hidden Markov Models for Trend-Following Volatility Prediction",
+    "counts": {
+      "cluster": 10,
+      "hmm": 36,
+      "python": 5,
+      "artifact_txt": 20
+    },
+    "head": "---\nid: 16830\nsource_url: https://www.mql5.com/en/articles/16830\ntitle: \"Hidden Markov Models for Trend-Following Volatility Prediction\"\nauthor: \"\"\nauthor_url:\npublished: 2025-01-16T11:48Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Hidden Markov Models for Trend-Following Volatility Prediction\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 16 January 2025 at 06:48\n6 608\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n1](https://www.mql5.com/en/forum/479743 \"Comments\")\n[Zhuo Kai Chen](https://www.mql5.com/en/users/sicklemql)\n### Introduction"
+  },
+  {
+    "article_id": 22754,
+    "chars": 44506,
+    "title": "Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades",
+    "counts": {
+      "purge": 4,
+      "walkforward": 5,
+      "python": 2,
+      "regime": 12,
+      "meta_label": 13,
+      "triple_barrier": 6,
+      "calibration": 3
+    },
+    "head": "---\nid: 22754\nsource_url: https://www.mql5.com/en/articles/22754\ntitle: \"Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades\"\nauthor: \"\"\nauthor_url:\npublished: 2026-06-26T08:12Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Meta-Labeling the Classics (): Filtering and Sizing ADX Trades\"\nseries_part: 2\nsource: mql5\nlanguage: en\n---\n# Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 26 June 2026 at 04:12\n1 688\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/511802 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 22755,
+    "chars": 35940,
+    "title": "Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades",
+    "counts": {
+      "onnx": 11,
+      "cluster": 4,
+      "purge": 2,
+      "lookahead": 3,
+      "python": 6,
+      "regime": 11,
+      "meta_label": 39,
+      "triple_barrier": 2,
+      "calibration": 5,
+      "artifact_txt": 28
+    },
+    "head": "---\nid: 22755\nsource_url: https://www.mql5.com/en/articles/22755\ntitle: \"Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-28T08:17Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"Meta-Labeling the Classics (): Filtering and Sizing Bollinger Band Trades\"\nseries_part: 3\nsource: mql5\nlanguage: en\n---\n# Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 28 August 2026 at 04:17\n1 855\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/515283 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 22274,
+    "chars": 30079,
+    "title": "Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades",
+    "counts": {
+      "cluster": 1,
+      "walkforward": 3,
+      "python": 1,
+      "regime": 5,
+      "meta_label": 23,
+      "triple_barrier": 4
+    },
+    "head": "---\nid: 22274\nsource_url: https://www.mql5.com/en/articles/22274\ntitle: \"Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades\"\nauthor: \"\"\nauthor_url:\npublished: 2026-05-29T10:43Z\nplatform: \"MetaTrader 5\"\nsection: \"Examples\"\ntags: []\nseries_title: \"Meta-Labeling the Classics (): Filtering and Sizing RSI Trades\"\nseries_part: 1\nsource: mql5\nlanguage: en\n---\n# Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 29 May 2026 at 06:43\n2 115\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/510411 \"Comments\")\n[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)\n### Table of Contents"
+  },
+  {
+    "article_id": 23676,
+    "chars": 59301,
+    "title": "Beyond the Mean and Standard Deviation: A Robust Statistics Library for MQL5 Indicators",
+    "counts": {
+      "python": 3,
+      "calibration": 2
+    },
+    "head": "---\nid: 23676\nsource_url: https://www.mql5.com/en/articles/23676\ntitle: \"Beyond the Mean and Standard Deviation: A Robust Statistics Library for MQL5 Indicators\"\nauthor: \"\"\nauthor_url:\npublished: 2026-08-21T14:33Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Beyond the Mean and Standard Deviation: A Robust Statistics Library for MQL5 Indicators\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 21 August 2026 at 10:33\n1 187\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/514995 \"Comments\")\n[Adeolu Kayode Gbadebo](https://www.mql5.com/en/users/adeolu01)\n### Contents"
+  },
+  {
+    "article_id": 23719,
+    "chars": 54933,
+    "title": "Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares",
+    "counts": {
+      "onnx": 1,
+      "purge": 1,
+      "walkforward": 1,
+      "regime": 4,
+      "meta_label": 3,
+      "calibration": 2,
+      "artifact_txt": 1
+    },
+    "head": "---\nid: 23719\nsource_url: https://www.mql5.com/en/articles/23719\ntitle: \"Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares\"\nauthor: \"Adedayo David Gbadebo\"\nauthor_url: https://www.mql5.com/en/users/adedayogbadebo2004\npublished: 2026-08-28T10:49Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 28 August 2026 at 06:49\n1 780\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/515292 \"Comments\")\n[Adedayo David Gbadebo](https://www.mql5.com/en/users/adedayogbadebo2004)\n### Contents"
+  },
+  {
+    "article_id": 16214,
+    "chars": 32845,
+    "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling",
+    "counts": {
+      "cluster": 2,
+      "python": 3,
+      "artifact_txt": 16
+    },
+    "head": "---\nid: 16214\nsource_url: https://www.mql5.com/en/articles/16214\ntitle: \"Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling\"\nauthor: \"\"\nauthor_url:\npublished: 2024-12-02T10:17Z\nplatform: \"MetaTrader 5\"\nsection: \"Machine learning\"\ntags: []\nseries_title: \"Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (): Introduction to GANs and Synthetic Data in Financial Modeling\"\nseries_part: 1\nsource: mql5\nlanguage: en\n---\n# Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Machine learning](https://www.mql5.com/en/articles/mt5/machine_learning)\n| 2 December 2024 at 05:17\n3 042\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/477492 \"Comments\")\n[LiviaObongo](https://www.mql5.com/en/users/liviaobongo)\nAlgorithmic trading relies on quality financial data, but issues like small or unbalanced samples can harm model reliability. Generative Adversarial Networks (GANs) offer a solution by generating synthetic data, enhancing dataset diversity and model robustness."
+  },
+  {
+    "article_id": 18885,
+    "chars": 64815,
+    "title": "Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?",
+    "counts": {
+      "lstm": 5,
+      "gru": 1,
+      "transformer": 71,
+      "lookahead": 4,
+      "pickle": 8,
+      "python": 6,
+      "embedding": 2,
+      "artifact_txt": 3
+    },
+    "head": "---\nid: 18885\nsource_url: https://www.mql5.com/en/articles/18885\ntitle: \"Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?\"\nauthor: \"\"\nauthor_url:\npublished: 2026-01-27T12:14Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading\"\ntags: []\nseries_title: \"Data Science and ML (): Are Transformers a Big Deal for Trading?\"\nseries_part: 48\nsource: mql5\nlanguage: en\n---\n# Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading](https://www.mql5.com/en/articles/mt5/trading)\n| 27 January 2026 at 07:14\n1 790\n[![](https://c.mql5.com/i/icons.svg#comments-usage)\n0](https://www.mql5.com/en/forum/504271 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\n**Contents**"
+  },
+  {
+    "article_id": 16940,
+    "chars": 37961,
+    "title": "Trend Prediction with LSTM for Trend-Following Strategies",
+    "counts": {
+      "catboost": 1,
+      "onnx": 12,
+      "lstm": 45,
+      "shuffle": 4,
+      "lookahead": 2,
+      "python": 5,
+      "artifact_txt": 49
+    },
+    "head": "---\nid: 16940\nsource_url: https://www.mql5.com/en/articles/16940\ntitle: \"Trend Prediction with LSTM for Trend-Following Strategies\"\nauthor: \"\"\nauthor_url:\npublished: 2025-02-05T10:28Z\nplatform: \"MetaTrader 5\"\nsection: \"Trading systems\"\ntags: []\nseries_title: \"\"\nseries_part:\nsource: mql5\nlanguage: en\n---\n# Trend Prediction with LSTM for Trend-Following Strategies\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 5 February 2025 at 05:28\n6 443\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n2](https://www.mql5.com/en/forum/480954 \"Comments\")\n[Zhuo Kai Chen](https://www.mql5.com/en/users/sicklemql)\n### Introduction"
+  },
+  {
+    "article_id": 15182,
+    "chars": 38094,
+    "title": "Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+    "counts": {
+      "onnx": 20,
+      "lstm": 68,
+      "gru": 62,
+      "python": 9,
+      "multiclass": 2,
+      "artifact_txt": 35
+    },
+    "head": "---\nid: 15182\nsource_url: https://www.mql5.com/en/articles/15182\ntitle: \"Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks\"\nauthor: \"\"\nauthor_url:\npublished: 2024-07-18T14:49Z\nplatform: \"MetaTrader 5\"\nsection: \"Expert Advisors\"\ntags: []\nseries_title: \"Data Science and ML (): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks\"\nseries_part: 26\nsource: mql5\nlanguage: en\n---\n# Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n\u2014\n[Expert Advisors](https://www.mql5.com/en/articles/mt5/expert_advisors)\n| 18 July 2024 at 10:49\n5 019\n[![](https://c.mql5.com/i/icons.svg#comments-white-usage)\n0](https://www.mql5.com/en/forum/470090 \"Comments\")\n[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)\n**Contents**"
+  }
+]

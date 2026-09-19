@@ -1,0 +1,119 @@
+{
+  "pack_id": "integration_002",
+  "section": "Integration",
+  "parent_shard": "integration_002",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 5706,
+      "title": "Extracting structured data from HTML pages using CSS selectors",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5706.md"
+    },
+    {
+      "id": 7117,
+      "title": "Applying network functions, or MySQL without DLL: Part I - Connector",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7117.md"
+    },
+    {
+      "id": 7495,
+      "title": "Applying network functions, or MySQL without DLL: Part II - Program for monitoring changes in signal properties",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7495.md"
+    },
+    {
+      "id": 7708,
+      "title": "How to create 3D graphics using DirectX in MetaTrader 5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7708.md"
+    },
+    {
+      "id": 10425,
+      "title": "DirectX Tutorial (Part I): Drawing the first triangle",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10425.md"
+    },
+    {
+      "id": 12308,
+      "title": "How to connect MetaTrader 5 to PostgreSQL",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12308.md"
+    },
+    {
+      "id": 12857,
+      "title": "Developing an MQTT client for MetaTrader 5: a TDD approach",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12857.md"
+    },
+    {
+      "id": 13538,
+      "title": "Regression models of the Scikit-learn Library and their export to ONNX",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13538.md"
+    },
+    {
+      "id": 13715,
+      "title": "The case for using Hospital-Performance Data with Perceptrons, this Q4, in weighing SPDR XLV's next Performance",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13715.md"
+    },
+    {
+      "id": 14330,
+      "title": "Working with ONNX models in float16 and float8 formats",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14330.md"
+    },
+    {
+      "id": 14677,
+      "title": "Developing an MQTT client for MetaTrader 5: a TDD approach \u2014 Final",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14677.md"
+    },
+    {
+      "id": 15033,
+      "title": "Integrating Hidden Markov Models in MetaTrader 5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15033.md"
+    }
+  ]
+}

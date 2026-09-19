@@ -1,0 +1,701 @@
+##### 15332 | Tester | Chaos theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent
+### Chaos theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+| 16 January 2025 at 10:58
+
+[img]
+4 439
+[[img]
+4](https://www.mql5.com/en/forum/479753 "Comments")
+
+[img]
+
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+
+### Introduction to chaos theory and its relation to financial markets
+What is chaos theory and how can it be applied to financial markets? We will deal with this issue in the article.
+
+I am going to write a series of articles that will answer the questions what chaos theory is and how the concept of chaos in the market, proposed by Bill Williams, differs from the conventional, scientifically based theory. How does the theory describe the market? How and in what areas of trading can it be applied?
+
+We will analyze both the theoretical basis and create a number of tools that can help traders in trading.
+
+### Chaos theory in market analysis
+Chaos theory offers a new perspective on the analysis of market dynamics, recognizing the complexity and unpredictability of financial markets. Unlike traditional methods, chaos theory takes into account the non-linearity and complexity of market processes.  
+  
+This approach helps explain why small events can lead to large market movements, and why long-term forecasts are often inaccurate. Chaos theory allows us to analyze phenomena such as market crashes and bubbles, providing new tools for more accurate and adaptive market analysis.
+
+### Lyapunov exponent and its application in financial time series analysis
+The Lyapunov exponent is a tool from chaos theory that helps us understand how sensitive a system is to initial conditions. In financial markets, this is important because it allows one to estimate how much prices will change with small changes in market conditions.  
+  
+If the Lyapunov exponent is positive, it means that the system behaves chaotically: small changes can lead to large fluctuations in the future. If the exponent is negative, the system is more stable and prices will change less.  
+  
+Using this exponent, you can determine when the market becomes more volatile and predictable. High values may indicate possible sharp price changes, which is useful for assessing risk and adjusting trading strategies.  
+  
+To calculate the Lyapunov exponent in financial data, it is necessary to create a phase space by analyzing how close points in this space diverge. This process requires choosing the right parameters, such as dimension and time delay.  
+  
+One important aspect of using the Lyapunov exponent is to estimate how long forecasts will be accurate. The higher the value of the exponent, the shorter the period, during which forecasts remain reliable. This is especially useful for short-term trading and risk management.  
+  
+Now we can start implementing the Lyapunov exponent in MQL5.
+
+### Conclusion
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/15332>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15332.zip "Download all attachments in the single ZIP archive")
+
+[Lyapunov\_Exponent\_Indicator.mq5](https://www.mql5.com/en/articles/download/15332/lyapunov_exponent_indicator.mq5 "Download Lyapunov_Exponent_Indicator.mq5")
+(12.14 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Neural Networks in Trading: Dual-Attention-Based Trend Prediction Model](https://www.mql5.com/en/articles/15255)
+
+We continue the discussion about the use of piecewise linear representation of time series, which was started in the previous article. Today we will see how to combine this method with other approaches to time series analysis to improve the price trend prediction quality.
+
+[img]
+[Developing a multi-currency Expert Advisor (Part 15): Preparing EA for real trading](https://www.mql5.com/en/articles/15294)
+
+As we gradually approach to obtaining a ready-made EA, we need to pay attention to issues that seem secondary at the stage of testing a trading strategy, but become important when moving on to real trading.
+
+[img]
+[Mastering Log Records (Part 3): Exploring Handlers to Save Logs](https://www.mql5.com/en/articles/16866)
+
+In this article, we will explore the concept of handlers in the logging library, understand how they work, and create three initial implementations: Console, Database, and File. We will cover everything from the basic structure of handlers to practical testing, preparing the ground for their full functionality in future articles.
+
+[img]
+[Hidden Markov Models for Trend-Following Volatility Prediction](https://www.mql5.com/en/articles/16830)
+
+[Best articles and CodeBase updates in MQL5.community channel
+
+
+----------------------------------------------------------------------
+
+
+##### 15393 | Examples | Causal analysis of time series using transfer entropy
+### Introduction
+
+
+### Transfer entropy
+[img]
+
+where y(t+1)​ is the future state of Y, y(t)​ is the past state of Y, and x(t) is the past state of X. This formulation highlights that transfer entropy measures how much the probability distribution of y(t+1)​ changes when considering the information from x(t) in addition to y(t)​.
+
+In 2009, Lionel Barnett, Adam Barrett, and Anil Seth co-authored the [paper](https://arxiv.org/abs/0910.4514 "https://arxiv.org/abs/0910.4514"), "Granger Causality and Transfer Entropy Are Equivalent for Gaussian Variables," demonstrating that when time series follow a Gaussian distribution, transfer entropy is equivalent to half of the F-statistic for Granger causality.
+
+[img]
+
+This result provides the definition of linear transfer entropy that we will implement in code later on. To account for non-linear causality, we extend the concept of uncertainty reduction by following Thomas Schreiber's work, which treats time series as a Markov process with distinct transition probability distributions.
+
+[img]
+
+[img]
+
+[img]
+
+In the case of the p-value, the goal is to obtain a probability as close to zero as possible. Whilst a z-score indicative of statistical significance should be above 3.0.
+
+### Conclusion
+| File | Description |
+| --- | --- |
+| Mql5\include\generate\_time\_series.mqh | contains functions for generating random time series |
+| Mql5\include\ np.mqh | a collection of vector and matrix utility functions |
+| Mql5\include\ OLS.mqh | contains the definition of the OLS class implementing ordinary least squares regression |
+| Mql5\include\ TestUtilities.mqh | provides a collection of tools used to prepare datasets for OLS evaluation |
+| Mql5\include\ transfer\_entropy | contains the definition of the CTransEntropy class which implement transfer entropy analysis |
+| Mql5\scripts\LagDetection.mq5 | a script that demonstrates the functionality of the CTransEntropy class |
+| Mql5\scripts\LagDetectionUsingSignificance.mq5 | a second script that illustrates a different approach to interpreting the result of using CTransEntropy |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15393.zip "Download all attachments in the single ZIP archive")
+
+[generate\_time\_series.mqh](https://www.mql5.com/en/articles/download/15393/generate_time_series.mqh "Download generate_time_series.mqh")
+(2.25 KB)
+
+[np.mqh](https://www.mql5.com/en/articles/download/15393/np.mqh "Download np.mqh")
+(51.13 KB)
+
+[OLS.mqh](https://www.mql5.com/en/articles/download/15393/ols.mqh "Download OLS.mqh")
+(13.36 KB)
+
+[TestUtilities.mqh](https://www.mql5.com/en/articles/download/15393/testutilities.mqh "Download TestUtilities.mqh")
+(4.36 KB)
+
+[transfer\_entropy.mqh](https://www.mql5.com/en/articles/download/15393/transfer_entropy.mqh "Download transfer_entropy.mqh")
+(17.22 KB)
+
+[LagDetection.mq5](https://www.mql5.com/en/articles/download/15393/lagdetection.mq5 "Download LagDetection.mq5")
+(2.43 KB)
+
+[LagDetectionUsingSignificance.mq5](https://www.mql5.com/en/articles/download/15393/lagdetectionusingsignificance.mq5 "Download LagDetectionUsingSignificance.mq5")
+(2.37 KB)
+
+[Mql5.zip](https://www.mql5.com/en/articles/download/15393/mql5.zip "Download Mql5.zip")
+(18.26 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and refl
+
+
+----------------------------------------------------------------------
+
+
+##### 15445 | Trading systems | Chaos theory in trading (Part 2): Diving deeper
+### Chaos theory in trading (Part 2): Diving deeper
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 3 February 2025 at 07:26
+
+[img]
+3 761
+[[img]
+0](https://www.mql5.com/en/forum/480825 "Comments")
+
+[img]
+
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+
+### Conclusion
+In this article, we looked at the application of chaos theory to the analysis and forecasting of financial markets. We studied key concepts such as phase space reconstruction, determining the optimal embedding dimension and time delay, and the nearest neighbor prediction method.
+
+The EA we developed demonstrates the potential of using chaos theory in algorithmic trading. Testing results on various currency pairs show that the strategy is capable of generating profit, although with varying degrees of success on different instruments.
+
+In conclusion, while chaos theory is not the Holy Grail for market forecasting, it does represent a promising direction for further research and development in the fields of financial analysis and algorithmic trading. It is clear that combining chaos theory methods with other approaches, such as machine learning and big data analytics, can open up new possibilities.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/15445>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15445.zip "Download all attachments in the single ZIP archive")
+
+[ChaosTheory.zip](https://www.mql5.com/en/articles/download/15445/chaostheory.zip "Download ChaosTheory.zip")
+(59.06 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[From Basic to Intermediate: Variables (II)](https://www.mql5.com/en/articles/15302)
+
+[img]
+[Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 2): Creating Synthetic Symbol for Testing](https://www.mql5.com/en/articles/16428)
+
+In this article we are creating a synthetic symbol using a Generative Adversarial Network (GAN) involves generating realistic Financial data that mimics the behavior of actual market instruments, such as EURUSD. The GAN model 
+
+
+----------------------------------------------------------------------
+
+
+##### 16416 | Statistics and analysis | Mutual information as criteria for Stepwise Feature Selection
+### Mutual information as criteria for Stepwise Feature Selection
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Statistics and analysis](https://www.mql5.com/en/articles/mt5/statistics)
+| 21 November 2024 at 04:53
+
+[img]
+2 225
+[[img]
+0](https://www.mql5.com/en/forum/476931 "Comments")
+
+[img]
+
+[Francis Dube](https://www.mql5.com/en/users/ufranco)
+
+### Introduction
+We will begin by discussing the estimation of mutual information for continuous variables, then delve into the feature selection process itself. Finally, we will illustrate the algorithm's effectiveness through examples involving both synthetic and real-world datasets.
+
+###
+
+### Conclusion
+All code referenced in the article is attached below. The following table describes all the source code files that accompany the article.
+
+| FileName | Description |
+| --- | --- |
+| MQL5/include/np.mqh | A header file of matrix and vector utility funtions. |
+| MQL5/include/mutualinfo.mqh | A header file containing the definition of Capm class which implements the adaptive partitioning method for estimating the mutual information of continous variables. And the definition of Cmrmr class that implements Stepwise feature selection based on Mutual information. |
+| MQL5/scripts/RelevanceMinusRedundancy.mq5 | A script demonstrating the use of the Cmrmr class using synthetic data |
+| MQL5/scripts/StepWiseFeatureSelectionByMutualInformation.mq5 | Another script also demonstrating the application of the Cmrmr class on a more realistic dataset. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16416.zip "Download all attachments in the single ZIP archive")
+
+[np.mqh](https://www.mql5.com/en/articles/download/16416/np.mqh "Download np.mqh")
+(74.16 KB)
+
+[mutualinfo.mqh](https://www.mql5.com/en/articles/download/16416/mutualinfo.mqh "Download mutualinfo.mqh")
+(26.74 KB)
+
+[RelevanceMinusRedundancy.mq5](https://www.mql5.com/en/articles/download/16416/relevanceminusredundancy.mq5 "Download RelevanceMinusRedundancy.mq5")
+(1.69 KB)
+
+[StepWiseFeatureSelectionByMutualInformation.mq5](https://www.mql5.com/en/articles/download/16416/stepwisefeatureselectionbymutualinformation.mq5 "Download StepWiseFeatureSelectionByMutualInformation.mq5")
+(7.39 KB)
+
+[Mql5.zip](https://www.mql5.com/en/articles/download/16416/mql5.zip "Download Mql5.zip")
+(19.35 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Price Action Analysis Toolkit Development (Part 2): Analytical Comment Script](https
+
+
+----------------------------------------------------------------------
+
+
+##### 17351 | Trading systems | Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Attraos)
+### Introduction
+
+
+### Conclusion
+In the next article, we will continue the implementation of these approaches, bringing it to completion with validation on real historical data.
+
+  
+
+#### List of references
+
+- [Attractor Memory for Long-Term Time Series Forecasting: A Chaos Perspective](https://arxiv.org/abs/2402.11463 "Attractor Memory for Long-Term Time Series Forecasting: A Chaos Perspective")
+- [Other articles from this series](https://www.mql5.com/en/search#!keyword=neural%20networks&author=DNG&method=2)
+
+  
+
+#### Programs Used in the Article
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | Research.mq5 | Expert Advisor | Expert Advisor for collecting samples |
+| 2 | ResearchRealORL.mq5 | Expert Advisor | Expert Advisor for collecting samples using the *[Real-ORL](https://www.mql5.com/en/articles/13854)* method |
+| 3 | Study.mq5 | Expert Advisor | Model training Expert Advisor |
+| 4 | Test.mq5 | Expert Advisor | Model Testing Expert Advisor |
+| 5 | Trajectory.mqh | Class library | System state and model architecture description structure |
+| 6 | NeuroNet.mqh | Class library | A library of classes for creating a neural network |
+| 7 | NeuroNet.cl | Code library | *OpenCL* program code |
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/17351>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17351.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/17351/mql5.zip "Download MQL5.zip")
+(2509.49 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Formulating Dynamic Multi-Pair EA (Part 7): Cross-Pair Correlation Mapping for Real-Time Trade Filtering](https://www.mql5.com/en/articles/21460)
+
+In this part, we will integrate a real-time correlation matrix into a mult
+
+
+----------------------------------------------------------------------
+
+
+##### 17371 | Trading systems | Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Final Part)
+### Introduction
+We continue developing our own vision on the approaches proposed by the authors of the *Attraos* framework. In the [previous article](https://www.mql5.com/en/articles/17351), we explored the theoretical aspects of the framework. The framework applies principles of chaos theory to solve time series forecasting problems.
+
+Applying a local evolution strategy in the frequency domain enables adaptation to changing market conditions while enhancing differences between attractors. This helps the model minimize errors and control attractor deviations, ensuring both stability and high forecast accuracy.
+
+The original visualization of the *Attraos* framework is provided below.
+
+[img]
+
+In the practical part of the previous article, we implemented the basic components on the *OpenCL* side. Today, we move on to creating objects in the main program.
+
+### Conclusion
+We explored the *Attraos* framework, which uses chaos theory concepts for time series forecasting. The framework integrates nonlinear analysis, phase space reconstruction, multi-resolution dynamic memory, and adaptive algorithms. These technologies enable more accurate forecasts and adaptive trading models.
+
+It is important to note that these conclusions are specific to this implementation. The original Attraos version was not tested in this article.
+
+  
+
+#### List of references
+
+- [Attractor Memory for Long-Term Time Series Forecasting: A Chaos Perspective](https://arxiv.org/abs/2402.11463 "Attractor Memory for Long-Term Time Series Forecasting: A Chaos Perspective")
+- [Other articles from this series](https://www.mql5.com/en/search#!keyword=neural%20networks&author=DNG&method=2)
+
+  
+
+#### Programs Used in the Article
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | Research.mq5 | Expert Advisor | Expert Advisor for collecting samples |
+| 2 | ResearchRealORL.mq5 | Expert Advisor | Expert Advisor for collecting samples using the *[Real-ORL](https://www.mql5.com/en/articles/13854)* method |
+| 3 | Study.mq5 | Expert Advisor | Model training Expert Advisor |
+| 4 | Test.mq5 | Expert Advisor | Model Testing Expert Advisor |
+| 5 | Trajectory.mqh | Class library | System state and model architecture description structure |
+| 6 | NeuroNet.mqh | Class library | A library of classes for creating a neural network |
+| 7 | NeuroNet.cl | Code library | *OpenCL* program code |
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/17371>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17371.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/17371/mql5.zip "Download MQL5.zip")
+(2509.49 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences r
+
+
+----------------------------------------------------------------------
+
+
+##### 17706 | Trading systems | Analyzing Overbought and Oversold Trends Via Chaos Theory Approaches
+### Practical application of the indicator
+Now that we understand how our indicator works, let's discuss its practical application. Like any oscillator, the Neural Attractor Oscillator can be used to determine if the market is overbought and oversold.
+
+[img]
+
+Imagine that you are watching a pendulum. When it deviates too far to the right, you know that soon it will start moving to the left. When it is too far to the left, it will soon go to the right. Our indicator operates the same way, but instead of mechanical forces that return the pendulum to the center, there are equilibrium market forces.
+
+**Entry signals subject to chaos**
+
+1. **Buy signal**: When the oscillator drops below the attractor’s lower boundary (which is dynamically adjusted depending on the Lyapunov exponent) and starts to rise, this can be a good point to enter a long position. Whereas, it is important to take into account the current value of the Lyapunov exponent: the lower it is, the more reliable the signal.
+2. **Sell signal**: When the oscillator rises above the attractor’s upper boundary and starts to fall, this may indicate a good point to enter a short position. Again, a low Lyapunov exponent increases the reliability of the signal.
+3. **Divergencies**: A particularly valuable and highly accurate signal of divergence between the indicator peaks and the price.
+
+Remember that during periods of high chaos (high Lyapunov exponent), even strong signals are less reliable, and you should reduce your position size or refrain from entering the market altogether.
+
+**Divergencies in the context of chaos theory**
+
+The Chaos Attractor Oscillator offers a new perspective on classic divergences. When the price forms a new extreme, but the oscillator does not, this may indicate not just a weakening trend, but a change in the attractor’s structure — the equilibrium point toward which the market is striving.
+
+[img]
+
+Particularly powerful signals arise when divergence coincides with a change in the Lyapunov exponent. For example, a transition from a positive to a negative value can indicate the formation of a new stable trend after a period of chaos.
+
+**Momentum optimization of the network**
+
+In our updated indicator, we have applied a Momentum 
+
+### Conclusion
+We have created not just another technical indicator, but a complete system for analyzing market chaos. The Chaos Attractor Oscillator combines the latest advances in chaos theory, fractal geometry, and neural networks, providing traders with a tool for navigating complex and unpredictable market conditions.
+
+A particular value of this indicator lies in its ability not only to generate trading signals, but also to evaluate the reliability of these signals through the Lyapunov exponent. This enables the trader to adapt their strategy to the current market conditions – to be aggressive when the system is predictable and cautious when it is chaotic.
+
+In the era of algorithmic trading and artificial intelligence, those who can best model the complex nature of the market gain an advantage. Chaos Attractor Oscillator is a step in that direction, allowing us to see order where others see only randomness.
+
+Remember that even the most advanced indicator is not a magic formula for success. Trading always requires discipline, risk management and understanding of the market context. But by arming yourself with a tool that allows you to peer into the very nature of market chaos, you gain a significant advantage on the path to consistent profits.
+
+Good luck in trading and may the chaos attractors be with you!
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/17706>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17706.zip "Download all attachments in the single ZIP archive")
+
+[NeuralAttractor\_v2.mq5](https://www.mql5.com/en/articles/download/17706/neuralattractor_v2.mq5 "Download NeuralAttractor_v2.mq5")
+(27.8 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[From Basic to Intermediate: Indicator (II)](https://www.mql
+
+
+----------------------------------------------------------------------
+
+
+##### 24057 | Machine learning | MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix
+### Introduction
+
+
+### Practical Considerations
+- Kernel bandwidth sensitivity: the MP fit's bandwidth was fixed at 0.15 in eigenvalue units throughout this article. Refitting it via cross-validation, as MLAM Section 2.8 suggests as an exercise, is worth doing once on a real panel rather than assumed transferable across panels of very different size.
+- Effective sample size is a diagnostic, not a certainty: the AR(1) approximation used here is a first-order correction. Features with more complex serial structure (long-memory processes, regime-dependent persistence) will not be fully captured by a single lag-1 autocorrelation coefficient, and the resulting *Teff* should be read as a more defensible estimate than raw bar count, not an exact one.
+- Re-fitting cadence: correlation structure among engineered features is not stationary across regimes. A denoising and clustering pass fit once on a multi-year window and never revisited will drift out of date; this pipeline is a research-time step to be re-run on a rolling or walk-forward basis, not a one-time calibration.
+- Market-component count: fixed at one for this single-instrument panel. Multi-instrument panels need this checked, not assumed.
+
+### Conclusion
+The next article uses the cluster assignment produced here as the input to clustered MDI and MDA, compared directly against the naive per-feature MDI, MDA, and SFI methods from AFML Chapter 8 on the same panel, closing the prerequisite named back in [Part 9](https://www.mql5.com/en/articles/21823 "Part 9: Integrating Bayesian HPO into the Production Pipeline").
+
+
+----------------------------------------------------------------------
+
+
+##### 6834 | Trading systems | Evaluating the ability of Fractal index and Hurst exponent to predict financial time series
+### Introduction
+The modern financial market is an example of a "natural" complexly balanced system. On the one hand, the market is pretty chaotic, because it
+is influenced by a large number of participants. On the other hand, the market is characterized by definite stable processes, which are
+determined by the market participants' actions. One of econophysics tasks concerns the description of social interaction processes,
+which form the price dynamics observed on the exchange. Therefore, it is highly desirable to define and present specific properties of
+financial time series, which will distinguish such data from other natural processes. In modern theories, price series are defined as
+different-scale fractals (from several minutes to dozens of years).
+
+They show a much more complicated behavior, than many model and natural processes [3]. One of the tools for finding out the details of such
+behavior is the numerical analysis of the series, the purpose of which is to study the dynamics of the series. The typical algorithms for the
+reliable evaluation of fractal dimension require large datasets (about 10,000-100,000 samples), which characterize a series over a long
+time interval, during which the behavior can change, and sometimes it can change repeatedly. For real trading tasks, we need methods to
+determine the local fractal characteristics of a series. In this article, we will discuss and demonstrate a method for determining the
+fractal dimension of the series of price sequences, using the numerical method described in [1, 2].
+
+
+----------------------------------------------------------------------
+
+
+##### 8038 | Statistics and analysis | Probability theory and mathematical statistics with examples (part I): Fundamentals and elementary theory
+Probability theory and mathematical statistics with examples (part I): Fundamentals and elementary theory
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Statistics and analysis](https://www.mql5.com/en/articles/mt5/statistics)
+| 30 October 2020 at 05:08
+
+[img]
+14 334
+[[img]
+82](https://www.mql5.com/en/forum/354543 "Comments")
+
+[img]
+
+[Aleksey Nikolayev](https://www.mql5.com/en/users/alexeynikolaev2)
+
+### **Contents**
+
+1. Introduction
+2. Theoretical foundations
+3. Elementary theory
+
+- 3.1. Combinatorial probability
+- 3.2. Bernoulli scheme
+
+4. Fundamentals of mathematical statistics
+5. Examples of applying mathematical statistics within the framework of the elementary theory
+
+- 5.1. Parameter point estimation
+- 5.2. Testing statistical hypotheses
+
+6. Conclusion
+7. Attached files
+
+### **1.Introduction**
+
+
+
+In fact, the topic of such a transition is very interesting, non-trivial, and deserves more detailed consideration. Hopefully, the related articles will appear on our forum someday. In this article, we will look at the very foundations of probability theory and mathematical statistics.
+
+### **2. Theoretical foundations**
+
+
+
+The image below shows an abstract ***Ω*** as a rectangle and several dots − elementary points belonging to it: ***ω1***, ***ω2*** and ***ω3***.
+
+[img]
+
+
+
+The image below shows ***Ω*** as a rectangle and two intersecting ***А*** and ***В*** events.
+
+[img]
+
+
+It is not clear how to depict the probability distribution in an image, but intuitively it can be likened to the distribution of unit mass over the ***Ω*** volume. In this comparison, an event is part of the volume, while the probability is a share of the mass within this part of the volume.
+
+
+
+
+### **3. Elementary theory**
+
+
+**3.1. Combinatorial probability**
+
+Let ***Ω*** consist of exactly ***N*** elementary outcomes, then the probability of events containing them in the quantity of ***m*** is equal to **m/N**. Probability calculations here consist of counting the number of options. 
+
+----------------------------------------------------------------------
+
+
+##### 16494 | Tester | Cycles and trading
+### Introduction
+The main task facing a trader is to predict price movements. Traders build their forecasts based on one model or another. One of the simplest and most visual models is the cyclical price movement model.
+
+The basic idea behind any cyclical pattern is that various factors interact to create cycles in price movement. These cycles may differ from each other in their duration and strength. If you know the parameters of these cycles, then trading operations will become very simple: open a buy position when the cycle has reached its minimum, sell when the cycle has reached its maximum.
+
+Let's see how this model can be used in practice.
+
+### Conclusion
+As you can see, using cyclical patterns in trading is quite justified. The main advantage of such models is that they have hundreds of combinations of parameters that give a stable result over a long period of time. The trader needs to select several dozen options that do not correlate with each other.
+
+In this article, I have only touched upon a few of the most popular oscillators. There are still quite a few solutions that can be used to build cyclic models (among other things).
+
+I tested the EA under the following conditions: EURUSD, H1, 2024.01.01 - 2024.10.30
+
+The following programs were used in writing this article:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| Harmonic Oscillator | EA | - ***iPeriod*** - moving average period - ***Type*** - moving average type - ***R*** - oscillator ratio, permissible value: 1 ... 399 |
+| Damped Harmonic Oscillator | EA | - ***S*** - dumping ratio, permissible value: -1000 ... +1000 |
+| scr Elliott wave | script | - ***A1***, ***A2*** - amplitudes of sinusoids - ***N1***, ***N2*** - periods of sinusoids - ***Width*** - line width - ***Pause*** - delay in displaying the result - ***Screenshot*** - if 'true', then the image is created and saved in the Files folder |
+| Elliott wave | EA | - ***R***, ***S*** - oscillator ratios, acceptable value: 0 ... 1000 |
+| Generalized Harmonic Oscillator | EA | permissible value of ratios: -1000 ... +1000 |
+| Sign Oscillator | EA |  |
+| Quadratic Oscillator | EA |  |
+| Van der Pol Oscillator | EA |  |
+| Duffing Oscillator | EA |  |
+| Log Oscillator | EA |  |
+| Non-Autonomous Oscillator | EA |  |
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/16494>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16494.zip "Download all attachments in the single ZIP archive")
+
+[Harmonic\_Oscillator.mq5](https://www.mql5.com/en/articles/download/16494/harmonic_oscillator.mq5 "Download Harmonic_Oscillator.mq5")
+(8.14 KB)
+
+[Damped\_Harmonic\_Oscillator.mq5](https://www.mql5.com/en/articles/download/16494/damped_harmonic_oscillator.mq5 "Download Damped_Harmonic_Oscillator.mq5")
+(8.36 KB)
+
+[scr\_Elliott\_wave.mq5](https:
+
+
+----------------------------------------------------------------------
+
+
+##### 18755 | Trading | Extremal Optimization (EO)
+### Introduction
+
+
+### Results update:
+1. **Sort** the entire population by fitness (the best at the beginning)
+2. **Update** the global best solution if an improvement is found
+
+- **popSize** — population size, number of agents in the population;
+- **tau** — power-law distribution that determines the probabilities of selecting elements;
+- **greedyStart** — proportion of agents with greedy initialization;
+- **eliteUpdate** — proportion of agents participating in the update per iteration.
+
+The **params** parameter array contains settings and copies the values of the original parameters for integration with the user interface or external control. Methods:  
+
+- **SetParams** — extract the current parameter values from the array and apply them;
+- **Init** — initialize the population taking into account the ranges of parameters and the number of epochs;
+- **Moving**— execute one step of the algorithm updating the state of the population;
+- **Revision** — updates evaluations or prepare for the next stage.
+
+Internal structures:  
+
+- **RankedComponent** — structure for storing the ranking of agent components by their quality (Fitness);
+- **RankedAgent** — structure for storing the ranking of the agents themselves according to their overall fitness.
+
+Internal variables and parameters:  
+
+- **compRanks** and **agentRanks** — arrays of structures for storing sorted components and agents;
+- **tau**, **greedyStart**, **eliteUpdate** control the behavior of the algorithm
+
+Internal methods:  
+
+- **ApplyExtremalOptimization** — basic mechanism for selecting and updating elements based on their ranks, taking into account the power law distribution.
+- **CalculateComponentFitness** — calculate the fitness of the agent component.
+- **SelectRankByPowerLaw** — select the rank of a component or agent using a power law distribution, which allows focusing on the worst elements.
+
+The class is intended for the application of the extreme optimization algorithm, especially in problems requiring the search for a high-quality solution by successively eliminating the least fit components in the population.
+
+[CODE]
+
+The initialization method of the EO class is responsible for preparing the initial conditions for further execution. I
+
+### Test results
+After testing, the algorithm did not show good results, so I decided to review all the original methods and make a modified version aimed at improving the convergence of the algorithm.
+
+EO|Extremal Optimization (Boettcher-Percus)|50.0|1.4|0.5|0.3|  
+=============================  
+5 Hilly's; Func runs: 10000; result: 0.5146369337195529  
+25 Hilly's; Func runs: 10000; result: 0.29089804555433085  
+500 Hilly's; Func runs: 10000; result: 0.25192095557138877  
+=============================  
+5 Forest's; Func runs: 10000; result: 0.367128650332966  
+25 Forest's; Func runs: 10000; result: 0.19477408852361866  
+500 Forest's; Func runs: 10000; result: 0.15367465708144543  
+=============================  
+5 Megacity's; Func runs: 10000; result: 0.2584615384615384  
+25 Megacity's; Func runs: 10000; result: 0.12707692307692314  
+500 Megacity's; Func runs: 10000; result: 0.09413846153846227  
+=============================  
+All score: 2.25271 (25.03%)
+
+Below is my own interpretation of this optimization method. We implement a new class that inherits the base optimization class.
+
+The constructor sets the initial parameters of the algorithm: population size, the number of worst solutions to be increased (improved), the probability of mutation, and the degrees of distribution for selection and mutation. The parameters are stored in an array of structures for further modification and customization.
+
+[CODE]
+
+The Init method is responsible for initializing the algorithm. The function takes as input arrays with minimum, maximum values and step for optimization parameters, as well as the total number of epochs (cycles) of the algorithm operation.
+
+Inside the method, the StandardInit function from the C\_AO base class is first called. This function performs general initialization, memory allocation, or setting up basic parameters related to ranges and steps for optimization parameters.
+
+If StandardInit fails, then the Init function also exits, returning 'false'. If StandardInit is successful, the method initializes the variables currentEpoch (current epoch) to 0 and totalEpochs (total number of epochs) to the value received in the epochsP parameter.
+
+At the end, the method returns '
+
+### Summary
+The presented compact modified implementation of EOm demonstrates an interesting example in the field of metaheuristic optimization: **a significant deviation from theoretical principles can lead to improved practical results**. The algorithm, which ranked 12th among 45 population-based methods, is actually a hybrid that retains only the key idea of the power-law distribution from the original EO.
+
+**"Resurrection" mechanism** of the worst agents prevents premature convergence, maintain population diversity, and create additional opportunities for exploration. **Simplification of the computational structure**: abandoning component-wise evaluation reduces computational complexity, and working directly with solutions speeds up convergence.
+
+This makes it a useful tool in the arsenal of population optimization methods, especially for problems where the balance between solution quality and computational cost is important.
+
+[img]
+
+***Figure 1. Color gradation of algorithms according to the corresponding tests***
+
+[img]
+
+*Figure 2. Histogram of algorithm testing results (scale from 0 to 100, the higher the better,**where 100 is the maximum possible theoretical result, in the archive there is a script for calculating the rating table)*
+
+**EOm pros and cons:**
+
+Pros:
+
+1. Simple implementation
+2. Fast and efficient
+3. Good results on discrete problems
+
+Cons:
+
+1. Large scatter of results on low-dimension functions
+2. Average results on "smooth" low-dimensional problems
+
+The article is accompanied by an archive with the current versions of the algorithm codes. The author of the article is not responsible for the absolute accuracy in the description of canonical algorithms. Changes have been made to many of them to improve search capabilities. The conclusions and judgments presented in the articles are based on the results of the experiments.
+
+- github: [https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5](https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5 "https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5")
+
+#### Programs used in the article
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | #C\_AO.mqh |
+
+
+----------------------------------------------------------------------
+

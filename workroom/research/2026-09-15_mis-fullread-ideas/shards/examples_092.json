@@ -1,0 +1,119 @@
+{
+  "shard_id": "examples_092",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [
+    "self optimizing expert advisors in mql5",
+    "simplifying databases in mql5"
+  ],
+  "articles": [
+    {
+      "id": 18471,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 8): Multiple Strategy Analysis (2)",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Multiple Strategy Analysis (2)",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18471.md"
+    },
+    {
+      "id": 18770,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 8): Multiple Strategy Analysis (3) \u2014 Weighted Voting Policy",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Multiple Strategy Analysis (3) \u2014 Weighted Voting Policy",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18770.md"
+    },
+    {
+      "id": 18793,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 9): Double Moving Average Crossover",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Double Moving Average Crossover",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18793.md"
+    },
+    {
+      "id": 18974,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 11): A Gentle Introduction to the Fundamentals of Linear Algebra",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): A Gentle Introduction to the Fundamentals of Linear Algebra",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18974.md"
+    },
+    {
+      "id": 18987,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 12): Building Linear Classifiers Using Matrix Factorization",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Building Linear Classifiers Using Matrix Factorization",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18987.md"
+    },
+    {
+      "id": 19132,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 13): A Gentle Introduction To Control Theory Using Matrix Factorization",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): A Gentle Introduction To Control Theory Using Matrix Factorization",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19132.md"
+    },
+    {
+      "id": 19382,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 14): Viewing Data Transformations as Tuning Parameters of Our Feedback Controller",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Viewing Data Transformations as Tuning Parameters of Our Feedback Controller",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19382.md"
+    },
+    {
+      "id": 20023,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 16): Supervised Linear System Identification",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Supervised Linear System Identification",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20023.md"
+    },
+    {
+      "id": 20238,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 17): Ensemble Intelligence",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Ensemble Intelligence",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20238.md"
+    },
+    {
+      "id": 23405,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 18): Time Lagged Independent Components Analysis",
+      "section": "Examples",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Time Lagged Independent Components Analysis",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23405.md"
+    },
+    {
+      "id": 19285,
+      "title": "Simplifying Databases in MQL5 (Part 1): Introduction to Databases and SQL",
+      "section": "Examples",
+      "series_title": "Simplifying Databases in MQL5 (): Introduction to Databases and SQL",
+      "series_key": "simplifying databases in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19285.md"
+    },
+    {
+      "id": 19594,
+      "title": "Simplifying Databases in MQL5 (Part 2): Using metaprogramming to create entities",
+      "section": "Examples",
+      "series_title": "Simplifying Databases in MQL5 (): Using metaprogramming to create entities",
+      "series_key": "simplifying databases in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19594.md"
+    }
+  ]
+}

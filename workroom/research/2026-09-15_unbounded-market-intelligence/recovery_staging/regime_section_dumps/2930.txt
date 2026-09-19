@@ -1,0 +1,276 @@
+# Calculating the Hurst exponent
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 3 April 2017 at 11:20
+30 657
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+42](https://www.mql5.com/en/forum/189215 "Comments")
+[Dmitriy Piskarev](https://www.mql5.com/en/users/thewhisper)
+### Introduction
+Defining the market dynamics is one of the main tasks of a trader. It is often too difficult to solve it using standard technical analysis tools. For example, МА or MACD may indicate a trend but we still need additional tools to evaluate its power and reliability. In the end, it may turn out to be a short-term spike that fades away quickly.
+You probably know the axiom: In order to trade Forex successfully, we need to know a bit more than other market participants. In this case, you will be able to be one step ahead selecting the most favorable entry points and ensuring a trade profitability. Successful trading is a combination of several advantages, including placing buy/sell orders precisely during a trend reversal, skillful use of fundamental and technical data, as well as complete absence of emotions. All these are key elements of the successful trading career.
+The *fractal analysis* may offer a comprehensive solution to many market evaluation issues. Fractals are often undeservedly neglected by traders and investors, although the fractal analysis of time series allows for efficient evaluation of a market trend and its reliability. The *Hurst* *exponent* is one of the basic values of fractal analysis.
+Before moving on to calculation, let's briefly consider the main provisions of the fractal analysis and have a closer look at the Hurst exponent.
+### 1. Fractal market hypothesis (FMH). Fractal analysis
+*Fractal* is a mathematical set possessing the self-similarity property. A self-similar object is exactly or approximately similar to a part of itself (i.e. the whole has the same shape as one or more of the parts). The most vivid example of the fractal structure is a "fractal tree":
+A self-similar object remains statistically similar in different scales — spatial or temporal.
+When applied to markets, "fractal" means "recurrent" or "cyclical".
+*Fractal dimension* defines how an object or a process fills the space and how its structure changes on various scales. When applying this definition to financial (or in our case — Forex) markets, we can state that the fractal dimension defines the degree of "irregularity" (variability) of a time series. Accordingly, a straight line has the dimension of d equal to one, random walk —  d=1.5, while in case of a fractal time series 1<d<1.5 or 1.5<d<1.
+"The purpose of the FMH is to give a model of investor behavior and market price movements that fits our observations... At any one time, prices may not reflect all available information, but only the information important to that investment horizon" — E. Peters, Fractal Market Analysis.
+We are not going to dwell on the concept of fractality in details assuming that our readers already have an idea of this analytical method. The comprehensive description of its application to financial markets can be found in "The (Mis)behavior of Markets. A Fractal View of Financial Turbulence" by B. Mandelbrot and R. Hudson, as well as "Fractal Market Analysis" and "Chaos and Order in the Capital Markets: A New View of Cycles, Prices, and Market Volatility" by E. Peters.
+### 2. R/S analysis and Hurst exponent
+#### 2.1. R/S analysis
+The key parameter of the fractal analysis is the Hurst exponent used to study time series. The greater the delay between two similar value pairs in a time series, the lesser the Hurst exponent.
+The exponent was introduced by *Harold Edwin Hurst* — an outstanding British hydrologist who worked on the Nile river dam project. In order to commence construction, Hurst needed to evaluate the fluctuations of the water level. Initially, it was assumed that the water inflow is a random, stochastic process. However, while studying records of the Nile floods for nine centuries, Hurst managed to detect patterns. This was the starting point in the study. It turned out that above average floods were followed by even stronger ones. After that, the process changed its direction and below average floods were followed by even weaker ones. These clearly were cycles with non-periodical duration.
+The Hurst's statistical model is based on Albert Einstein's work about the Brownian motion providing the model of random walk of particles. The idea behind the theory is that a distance (R) walked by a particle increases proportionally to the square root of the time (T):
+Let's re-phrase the equation: in case of a large number of tests, variation range (R) is equal to the square root of the number of tests (T). This equation was used by Hurst when proving that the Nile floods are not random.
+In order to form his method, the hydrologist used the X1..Xn time series of the river floods. The following algorithm called the **rescaled range method** or **R/S analysis** later was then applied:
+1. Calculating the average value, Xm, of the X1..Xn series
+2. Calculating the standard series deviation, S
+3. Normalization of the series by deducting the average value, Zr (where r=1..n), from each value
+4. Creating a cumulative time series Y1=Z1+Zr, where r=2..n
+5. Calculating the magnitude of the cumulative time series R=max(Y1..Yn)-min(Y1..Yn)
+6. Dividing the magnitude of the cumulative time series by the standard deviation (S).
+Hurst expanded the Einstein's equation converting it to the more general form:
+where с is a constant.
+Generally, the R/S value changes the scale with increasing of the time increment according to the dependence degree equal to **H** which is the **Hurst exponent.**
+According to Hurst, H would have been equal to 0.5 if the flood process had been random. However, during his observations, he found out that H=0.91! This means that the normalized magnitude changes faster than the square root of time. In other words, the system passes a longer distance than a random process meaning that past events have a significant impact on present and future ones.
+#### 2.2. Applying the theory to markets
+Subsequently, the Hurst exponent calculation method was applied to financial and stock markets. It includes normalizing data to the zero average and single standard deviation to compensate for the inflation component**.** In other words, we are dealing with the  **R/S analysis** again.
+How to interpret the Hurst exponent on the markets?   
+1. If the Hurst exponent is between 0.5 and 1, and it differs from the expected value by two and more standard deviations, the process is characterized by a long-term memory. In other words, there is **persistence**.
+This means all the following results strongly depend on the previous ones within a certain time period. The quote charts of the most reliable and influential companies represent the most illustrative **persistent time series**. US corporations like Apple, GE, Boeing, as well as Russian ones like Rosneft, Aeroflot and VTB can be named among others. The quote charts of these companies are displayed below. I believe, every investor can discern a familiar picture while looking at this charts — every new High and Low is higher than the previous one.
+*Aeroflot stock prices:*
+*Rosneft stock prices:*
+*VTM stock prices, **downward** persistent time series*
+2. If the Hurst exponent is different from the expected value by two or more standard deviations in absolute value and is between 0 and 0.5, this means we are dealing with **anti-persistent** time series.
+The system changes faster than a random one, i.e. it is prone to small but frequent changes. The **anti-persistent** process can be clearly seen on the 2-tier stock charts. During flat movements, "blue chip" price charts demonstrate anti-persistent behavior as well. Stock charts of Mechel, AvtoVAZ and Lenenergo provided below are vivid *examples of anti-persistent time series*.
+*Mechel preferred stocks:*
+*AvtoVAZ common stocks during a flat*
+*Lenenergo:*
+3. If the Hurst exponent is 0.5 or its value is different from the expected value by less than two standard deviations, the process is considered to be a random walk. No short- or long-term cyclical dependencies are expected. In trading, this means that technical analysis is of no much help since the current values are almost unaffected by the previous ones. So, it is better to use the fundamental analysis.
+The sample Hurst exponents for stock market instruments (securities of various corporations, industrial companies and goods) are provided in the table below. The calculation has been performed for the last 7 years. The "blue chips" have low exponent values demonstrating consolidation phase during the financial crisis. Interestingly, many 2-tier securities show persistence demonstrating robustness against the crisis.
+| Name | Hurst exponent, H |
+| --- | --- |
+| Gazprom | 0.552 |
+| VTB | 0.577 |
+| Magnit | 0.554 |
+| MTS | 0.543 |
+| Rosneft | 0.648 |
+| Aeroflot | 0.624 |
+
+----- METHOD/CLAIM SWEEP -----
+
+![Calculating the Hurst exponent](https://c.mql5.com/i/articles/overlay.png)
+
+# Calculating the Hurst exponent
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+### Introduction
+Defining the market dynamics is one of the main tasks of a trader. It is often too difficult to solve it using standard technical analysis tools. For example, МА or MACD may indicate a trend but we still need additional tools to evaluate its power and reliability. In the end, it may turn out to be a short-term spike that fades away quickly.
+The *fractal analysis* may offer a comprehensive solution to many market evaluation issues. Fractals are often undeservedly neglected by traders and investors, although the fractal analysis of time series allows for efficient evaluation of a market trend and its reliability. The *Hurst* *exponent* is one of the basic values of fractal analysis.
+Before moving on to calculation, let's briefly consider the main provisions of the fractal analysis and have a closer look at the Hurst exponent.
+### 1. Fractal market hypothesis (FMH). Fractal analysis
+*Fractal* is a mathematical set possessing the self-similarity property. A self-similar object is exactly or approximately similar to a part of itself (i.e. the whole has the same shape as one or more of the parts). The most vivid example of the fractal structure is a "fractal tree":
+![Fractal tree](https://c.mql5.com/2/26/fractal-tree4.png)
+A self-similar object remains statistically similar in different scales — spatial or temporal.
+*Fractal dimension* defines how an object or a process fills the space and how its structure changes on various scales. When applying this definition to financial (or in our case — Forex) markets, we can state that the fractal dimension defines the degree of "irregularity" (variability) of a time series. Accordingly, a straight line has the dimension of d equal to one, random walk —  d=1.5, while in case of a fractal time series 1<d<1.5 or 1.5<d<1.
+"The purpose of the FMH is to give a model of investor behavior and market price movements that fits our observations... At any one time, prices may not reflect all available information, but only the information important to that investment horizon" — E. Peters, Fractal Market Analysis.
+### 2. R/S analysis and Hurst exponent
+#### 2.1. R/S analysis
+  
+The key parameter of the fractal analysis is the Hurst exponent used to study time series. The greater the delay between two similar value pairs in a time series, the lesser the Hurst exponent.
+The exponent was introduced by *Harold Edwin Hurst* — an outstanding British hydrologist who worked on the Nile river dam project. In order to commence construction, Hurst needed to evaluate the fluctuations of the water level. Initially, it was assumed that the water inflow is a random, stochastic process. However, while studying records of the Nile floods for nine centuries, Hurst managed to detect patterns. This was the starting point in the study. It turned out that above average floods were followed by even stronger ones. After that, the process changed its direction and below average floods were followed by even weaker ones. These clearly were cycles with non-periodical duration.
+The Hurst's statistical model is based on Albert Einstein's work about the Brownian motion providing the model of random walk of particles. The idea behind the theory is that a distance (R) walked by a particle increases proportionally to the square root of the time (T):
+
+![](https://c.mql5.com/2/26/RS454.png)
+Let's re-phrase the equation: in case of a large number of tests, variation range (R) is equal to the square root of the number of tests (T). This equation was used by Hurst when proving that the Nile floods are not random.
+In order to form his method, the hydrologist used the X1..Xn time series of the river floods. The following algorithm called the **rescaled range method** or **R/S analysis** later was then applied:
+Hurst expanded the Einstein's equation converting it to the more general form:
+![](https://c.mql5.com/2/26/RS4544.png)
+Generally, the R/S value changes the scale with increasing of the time increment according to the dependence degree equal to **H** which is the **Hurst exponent.**
+According to Hurst, H would have been equal to 0.5 if the flood process had been random. However, during his observations, he found out that H=0.91! This means that the normalized magnitude changes faster than the square root of time. In other words, the system passes a longer distance than a random process meaning that past events have a significant impact on present and future ones.
+#### 2.2. Applying the theory to markets
+Subsequently, the Hurst exponent calculation method was applied to financial and stock markets. It includes normalizing data to the zero average and single standard deviation to compensate for the inflation component**.** In other words, we are dealing with the  **R/S analysis** again.
+How to interpret the Hurst exponent on the markets?   
+1. If the Hurst exponent is between 0.5 and 1, and it differs from the expected value by two and more standard deviations, the process is characterized by a long-term memory. In other words, there is **persistence**.
+This means all the following results strongly depend on the previous ones within a certain time period. The quote charts of the most reliable and influential companies represent the most illustrative **persistent time series**. US corporations like Apple, GE, Boeing, as well as Russian ones like Rosneft, Aeroflot and VTB can be named among others. The quote charts of these companies are displayed below. I believe, every investor can discern a familiar picture while looking at this charts — every new High and Low is higher than the previous one.
+2. If the Hurst exponent is different from the expected value by two or more standard deviations in absolute value and is between 0 and 0.5, this means we are dealing with **anti-persistent** time series.
+The system changes faster than a random one, i.e. it is prone to small but frequent changes. The **anti-persistent** process can be clearly seen on the 2-tier stock charts. During flat movements, "blue chip" price charts demonstrate anti-persistent behavior as well. Stock charts of Mechel, AvtoVAZ and Lenenergo provided below are vivid *examples of anti-persistent time series*.
+3. If the Hurst exponent is 0.5 or its value is different from the expected value by less than two standard deviations, the process is considered to be a random walk. No short- or long-term cyclical dependencies are expected. In trading, this means that technical analysis is of no much help since the current values are almost unaffected by the previous ones. So, it is better to use the fundamental analysis.
+The sample Hurst exponents for stock market instruments (securities of various corporations, industrial companies and goods) are provided in the table below. The calculation has been performed for the last 7 years. The "blue chips" have low exponent values demonstrating consolidation phase during the financial crisis. Interestingly, many 2-tier securities show persistence demonstrating robustness against the crisis.
+| Name | Hurst exponent, H |
+| --- | --- |
+| Gazprom | 0.552 |
+### 3. Defining cycles. Memory in the fractal analysis
+
+How can we be sure that our results are not random (trivial)? In order to answer this question, we should first study the RS analysis assuming that the analyzed system is of random nature. In other words, we should check the validity of the null hypothesis stating that the process is a random walk, and its structure is independent and normally distributed.
+#### 3.1. Calculating the expected R/S analysis value
+Let's introduce the concept of an **expected R/S analysis value**.
+As stated in "Fractal Market Analysis", provided equation is valid only for n>20. For n<20, use the following equation:
+![](https://c.mql5.com/2/26/RS1__1.png)
+1. calculate an expected value for each number of observations and display an obtained Log(E(R/S)) graph from Log(N) together with Log(R/S) from Log(N);
+2. calculated an expected dispersion of the Hurst exponent using the equation that is well known in the statistical theory
+![](https://c.mql5.com/2/26/Var.png)
+                     where       H is a Hurst exponent;
+                                     N – number of observations in the sample;
+     3. check the relevance of the obtained Hurst ratio by evaluating the number of standard deviations, by which H exceeds E(H). The result is considered relevant  if the relevance exceeds 2 in absolute magnitude.
+#### 3.2. Defining cycles
+Let's consider the following example. Plot two graphs for RS statistics and expected value E(R/S) and compare them with the market dynamics to find out whether calculation results match the quotes movement.
+The obtained results are easy to evaluate:
+1. if a chart on a logarithmic scale is a horizontal line on both axes, then we are dealing with an independent random process;
+#### 3.3. The concept of memory in the fractal analysis and how to define its depth
+  
+**3.4. Actual Hurst exponent values for currency pairs**
+We have finished the introduction of the fractal analysis theory basic principles. Before proceeding to the immediate implementation of the RS analysis using MQL5 programming language, let's consider some more examples.
+The table below shows Hurst exponent values for 11 Forex currency pairs on various timeframes and number of bars. Ratios are calculated by solving the regression using the least square (LS) method. As we can see, most currency pairs support the persistent process, although there are anti-persistent ones as well. But is this result significant? Can we trust these numbers? We will discuss this later.
+
+*Table 1. Analyzing the Hurst exponent for 2000 bars*
+| Symbol | H (D1) | H (H4) | H (H1) | H(15M) | H (5M) | E(H) |
+| --- | --- | --- | --- | --- | --- | --- |
+| EURUSD | 0.545 | 0,497 | 0.559 | 0.513 | 0.567 | 0.577 |
+*Table 2. Analyzing the Hurst exponent for 400 bars*
+| EURUSD | 0.545 | 0,497 | 0.513 | 0.604 | 0.617 | 0.578 |
+*Table 3. Hurst exponent calculation results for M15 and M5*
+| Symbol | H (15M) | Significance | H (5M) | Significance | E(H) |
+### 4. From theory to practice
+Now that we have obtained basic knowledge about the fractal analysis, the Hurst exponent and interpretation of its values, it is time to implement the idea using MQL5.
+Let's define the technical requirements the following way: we need a program that calculates the Hurst exponent for 1000 history bars on a specified pair.
+**Step 1.** Create a new script
+//+------------------------------------------------------------------+  
+#property copyright "Copyright 2016, Piskarev D.M."  
+#property link      "piskarev.dmitry25@gmail.com"  
+#property version   "1.00"  
+#property script\_show\_inputs   
+//| Script program start function                                    |  
+      Comment("Too few bars are available! Try another timeframe.");  
+      Sleep(10000);                                             //delay the label for 10 seconds  
+      Comment("");  
+      return;  
+
+**Step 4**. Calculate the Hurst exponent.
+For correct analysis, we need to divide the analyzed amount of history bars by subgroups so that the number of elements in each of them is not less than 10. In other words, we need to find dividers for 1000 with their values exceeding ten. There are 11 such dividers:
+Calculate using switch-case.
+//--- Calculate the composite Log(R/S)  
+        {                                             //besides, we consider all possible dividers  
+         switch(A)  
+           {  
+            case 1:                                   // 100 groups containing 10 elements each   
+//---Calculate the Beta regression ratio or the necessary Hurst exponent
+  
+//+------------------------------------------------------------------+  
+//|                                               hurst\_exponent.mq5 |  
+//|                                    Copyright 2016, Piskarev D.M. |  
+//|                                      piskarev.dmitry25@gmail.com |  
+#property copyright "Copyright 2016, Piskarev D.M."  
+#property link      "piskarev.dmitry25@gmail.com"  
+#property version   "1.00"  
+#property script\_show\_inputs  
+#property strict  
+input    string  symbol="EURUSD";  // Symbol  
+         Comment("Too few bars are available! Try another timeframe.");  
+         Sleep(10000);                                          //Delay the label for 10 seconds  
+         Comment("");  
+         return;  
+     {  
+      switch(A)  
+        {  
+         case 1:  
+//+----------------------------------------------------------------------+  
+//|  Calculate the Hurst exponent                                        |         
+   H=RegCulc1000(LogRS1,LogRS2,LogRS3,LogRS4,LogRS5,LogRS6,LogRS7,LogRS8,  
+   SumYX=Y1\*N[0]+Y2\*N[1]+Y3\*N[2]+Y4\*N[3]+Y5\*N[4]+Y6\*N[5]+Y7\*N[6]+Y8\*N[7]+Y9\*N[8]+Y10\*N[9]+Y11\*N[10];  
+//---Calculate the Beta regression ratio or the necessary Hurst exponent   
+   b=(11\*SumYX-SumY\*SumX)/(11\*SumXX-SumX\*SumX);  
+   return(b);  
+
+### **5. Software solutions**
+There are multiple software resources implementing the R/S analysis algorithm. However, the algorithm implementation is usually compressed leaving most of the analytical work for a user. One of such resources is Matlab package.
+There is also a MetaTrader 5 utility available in the [Market](https://www.mql5.com/en/market) called [Fractal Analysis](https://www.mql5.com/en/market/product/20597) allowing users to perform the fractal analysis of the financial markets. Let's have a closer look at it.
+#### 5.1. Inputs
+In fact, we need only the first three input parameters (Symbol, Number of bars and Timeframe) out of the entire variety.
+Also, pay attention to the Chart lifetime parameter setting the number of seconds, within which you are able to work with the utility. After clicking ОК, the analyzer appears in the upper left corner of the MetaTrader 5 main terminal window. The example is displayed on the below screenshot.
+![](https://c.mql5.com/2/26/34.png)
+This is an interactive area involving the use of MetaTrader 5 chart analysis tools since it is sometimes quite difficult to define a cycle length without special means.
+Curve and trend line equations are also present. Slopes of trend lines are used to define numerical Hurst exponents (H). Expected Hurst exponent (E) is calculated as well. These equations are in the right adjacent block. Dispersion, analysis significance and signal spectrum color are calculated there as well.
+For convenience, the program calculates the length of the analyzed period in days. Keep that in mind, when evaluating the significance of the history data.
+#### 5.2. Operation example
+We should define what symbol and timeframe to use for analysis. Let's take NZDCHF and have a look at the last quotes on **H1**.
+The results are displayed below:
+![](https://c.mql5.com/2/26/NZD__1.png)
+Thus, our hypothesis is confirmed, and the market demonstrates the considerable anti-persistent process on this horizon — the Hurst exponent H=0.490 which is almost three standard deviations lower than the expected value E=0.557.
+Let's fix the result and use a **slightly higher timeframe (H2)** and accordingly twice smaller number of bars in history (1000 values). The results are as follows:
+![](https://c.mql5.com/2/26/NZD1.png)
+We see the anti-persistent process again. The Hurst exponent H=0.469 is more than three standard deviations lower than the expected exponent value E=0.564.
+Now, let's try to **find cycles**.
+Now, let's analyze **M30** timeframe and 4000 values. We obtain the anti-persistent process with the Hurst exponent H = 0.492 and the expected value E=0.55 exceeding H by 3.6 standard deviations.
+
+![](https://c.mql5.com/2/26/TEST2.png)
+As a result, we obtain the period, within which the technical data is reliable enough and can be used to develop a trading strategy. As I have already mentioned, the calculation and analysis provided above are meant for the investment horizon of two months. This means the analysis is not relevant for intraday trading since it probably features its own ultra-short cyclical processes, the presence or absence of which we have to prove. If the cycles are not detected, the technical analysis loses its relevance and efficiency. In that case, news trading and defining the market sentiments are the most reasonable solutions.
+### Conclusion
+The fractal analysis is a certain synergy of technical, fundamental and statistical approach to forecasting the market dynamics. This is a versatile data processing method: R/S analysis and Hurst exponent are successfully used in geography, biology, physics and economics. The fractal analysis can be applied for developing scoring or estimation models applied by banks to analyze the solvency of borrowers.
+As I have already said at the beginning of the article: In order to trade on Forex successfully, we need to know a bit more than other investors. Anticipating some misunderstanding here, I would like to warn the reader that the market tends to "deceive" the analyst. Therefore, be sure to check the presence of a non-periodic cycle on higher and lower timeframes at all times. If it is not detected on other timeframes, the cycle is most probably just a market noise.
+[hurst\_exponent.mq5](https://www.mql5.com/en/articles/download/2930/hurst_exponent.mq5 "Download hurst_exponent.mq5")
+(23.53 KB)
+All channel indicators are displayed as three lines, including central, top and bottom lines. The drawing principle of the central line is similar to a moving average, while the moving average indicator is mostly used for drawing channels. The top and bottom lines are located at equal distances from the central line. This distance can be determined in points, as percent of price (the Envelopes indicator), using a standard deviation value (Bollinger Bands), or an ATR value (Keltner channel).
+![Graphical Interfaces X: Updates for the Rendered table and code optimization (build 10)](https://c.mql5.com/2/26/MQL5-avatar-X-Auto-table-001.png)
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&uid=&ref=https://www.mql5.com/en/articles/2930&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5127922821279412233)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+The fractal analysis is a certain synergy of technical, fundamental and statistical approach to forecasting the market dynamics. This is a versatile data processing method: R/S analysis and Hurst exponent are successfully used in geography, biology, physics and economics. The fractal analysis can be applied for developing scoring or estimation models applied by banks to analyze the solvency of borrowers.
+
+As I have already said at the beginning of the article: In order to trade on Forex successfully, we need to know a bit more than other investors. Anticipating some misunderstanding here, I would like to warn the reader that the market tends to "deceive" the analyst. Therefore, be sure to check the presence of a non-periodic cycle on higher and lower timeframes at all times. If it is not detected on other timeframes, the cycle is most probably just a market noise.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/2930>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/2930.zip "Download all attachments in the single ZIP archive")
+
+[hurst\_exponent.mq5](https://www.mql5.com/en/articles/download/2930/hurst_exponent.mq5 "Download hurst_exponent.mq5")
+(23.53 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Dmitriy Piskarev](https://c.mql5.com/avatar/2019/4/5CB305F4-2A13_big.PNG "Dmitriy Piskarev")
+
+[Dmitriy Piskarev](https://www.mql5.com/en/users/thewhisper "Dmitriy Piskarev")
+
+- [Russia](https://maps.google.com/?z=4&q=Russia "Lives")
+- [572](https://www.mql5.com/en/users/thewhisper/achievements "Rating")
+
+![A Universal Channel with the Graphical Interface](https://c.mql5.com/2/26/MQL5-avatar-Universalni-oscilyator-001.png)
+[A Universal Channel with the Graphical Interface](https://www.mql5.com/en/articles/2888)
+
+All channel indicators are displayed as three lines, including central, top and bottom lines. The drawing principle of the central line is similar to a moving average, while the moving average indicator is mostly used for drawing channels. The top and bottom lines are located at equal distances from the central line. This distance can be determined in points, as percent of price (the Envelopes indicator), using a standard deviation value (Bollinger Bands), or an ATR value (Keltner channel).
+
+![Graphical Interfaces X: Updates for the Rendered table and code optimization (build 10)](https://c.mql5.com/2/26/MQL5-avatar-X-Auto-table-001.png)
+[Graphical Interfaces X: Updates for the Rendered table and code optimization (build 10)](https://www.mql5.com/en/articles/3042)
+
+We continue to complement the Rendered table (CCanvasTable) with new features. The table will now have: highlighting of the rows when hovered; ability to add an array of icons for each cell and a method for switching them; ability to set or modify the cell text during the runtime, and more.
+
+![Graphical Interfaces X: Sorting, rebuilding the table and controls in the cells (build 11)](https://c.mql5.com/2/26/MQL5-avatar-X-tableSort-001.png)
+[Graphical Interfaces X: Sorting, rebuilding the table and controls in the cells (build 11)](https://www.mql5.com/en/articles/3104)
+
+We continue to add new features to the rendered table: data sorting, managing the number of columns and rows, setting the table cell types to place controls into them.
+
+![Visualize this! MQL5 graphics library similar to 'plot' of R language](https://c.mql5.com/2/25/visuai_data.png)
+[Visualize this! MQL5 graphics library similar to 'plot' of R language](https://www.mql5.com/en/articles/2866)
+
+When studying trading logic, visual representation in the form of graphs is of great importance. A number of programming languages popular among the scientific community (such as R and Python) feature the special 'plot' function used for visualization. It allows drawing lines, point distributions and histograms to visualize patterns. In MQL5, you can do the same using the CGraphics class.
+
+[![](https://www.mql5.com/ff/sh/ub4fqgrk4rkv8gz9z2/01.png)
+![](https://www.mql5.com/ff/sh/ub4fqgrk4rkv8gz9z2/02.png)
+
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&uid=&ref=https://www.mql5.com/en/articles/2930&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5127922821279412233)

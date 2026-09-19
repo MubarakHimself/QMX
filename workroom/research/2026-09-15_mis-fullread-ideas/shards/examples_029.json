@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_029",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 7418,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXVII): Working with trading requests - placing pending orders",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7418.md"
+    },
+    {
+      "id": 7438,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXVIII): Closure, removal and modification of pending trading requests",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7438.md"
+    },
+    {
+      "id": 7447,
+      "title": "Neural Networks Made Easy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7447.md"
+    },
+    {
+      "id": 7454,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXIX): Pending trading requests - request object classes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7454.md"
+    },
+    {
+      "id": 7468,
+      "title": "Manual charting and trading toolkit (Part I). Preparation: structure description and helper class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7468.md"
+    },
+    {
+      "id": 7481,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXX): Pending trading requests - managing request objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7481.md"
+    },
+    {
+      "id": 7521,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXXI): Pending trading requests - opening positions under certain conditions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7521.md"
+    },
+    {
+      "id": 7536,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXXII): Pending trading requests - placing orders under certain conditions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7536.md"
+    },
+    {
+      "id": 7554,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXXIII): Pending trading requests - closing positions under certain conditions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7554.md"
+    },
+    {
+      "id": 7569,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXXIV): Pending trading requests - removing and modifying orders and positions under certain conditions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7569.md"
+    },
+    {
+      "id": 7815,
+      "title": "Exploring options for creating multicolored candlesticks",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7815.md"
+    },
+    {
+      "id": 8111,
+      "title": "A system of voice notifications for trade events and signals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8111.md"
+    }
+  ]
+}

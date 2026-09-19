@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_026_p02",
+  "section": "Trading",
+  "parent_shard": "trading_026",
+  "part_index": 2,
+  "part_count": 4,
+  "series_in_pack": [
+    "automating trading strategies in mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 19077,
+      "title": "Automating Trading Strategies in MQL5 (Part 25): Trendline Trader with Least Squares Fit and Dynamic Signal Generation",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trendline Trader with Least Squares Fit and Dynamic Signal Generation",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19077.md"
+    },
+    {
+      "id": 19087,
+      "title": "Automating Trading Strategies in MQL5 (Part 26): Building a Pin Bar Averaging System for Multi-Position Trading",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Pin Bar Averaging System for Multi-Position Trading",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19087.md"
+    },
+    {
+      "id": 19111,
+      "title": "Automating Trading Strategies in MQL5 (Part 29): Creating a price action Gartley Harmonic Pattern system",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a price action Gartley Harmonic Pattern system",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19111.md"
+    },
+    {
+      "id": 19442,
+      "title": "Automating Trading Strategies in MQL5 (Part 30): Creating a Price Action AB-CD Harmonic Pattern with Visual Feedback",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action AB-CD Harmonic Pattern with Visual Feedback",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19442.md"
+    },
+    {
+      "id": 19449,
+      "title": "Automating Trading Strategies in MQL5 (Part 31): Creating a Price Action 3 Drives Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action 3 Drives Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19449.md"
+    },
+    {
+      "id": 19463,
+      "title": "Automating Trading Strategies in MQL5 (Part 32): Creating a Price Action 5 Drives Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action 5 Drives Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19463.md"
+    },
+    {
+      "id": 19479,
+      "title": "Automating Trading Strategies in MQL5 (Part 33): Creating a Price Action Shark Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action Shark Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19479.md"
+    },
+    {
+      "id": 19625,
+      "title": "Automating Trading Strategies in MQL5 (Part 34): Trendline Breakout System with R-Squared Goodness of Fit",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trendline Breakout System with R-Squared Goodness of Fit",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19625.md"
+    },
+    {
+      "id": 19638,
+      "title": "Automating Trading Strategies in MQL5 (Part 35): Creating a Breaker Block Trading System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Breaker Block Trading System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19638.md"
+    },
+    {
+      "id": 19674,
+      "title": "Automating Trading Strategies in MQL5 (Part 36): Supply and Demand Trading with Retest and Impulse Model",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Supply and Demand Trading with Retest and Impulse Model",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19674.md"
+    },
+    {
+      "id": 20031,
+      "title": "Automating Trading Strategies in MQL5 (Part 37): Regular RSI Divergence Convergence with Visual Indicators",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Regular RSI Divergence Convergence with Visual Indicators",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20031.md"
+    },
+    {
+      "id": 20157,
+      "title": "Automating Trading Strategies in MQL5 (Part 38): Hidden RSI Divergence Trading with Slope Angle Filters",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Hidden RSI Divergence Trading with Slope Angle Filters",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20157.md"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+# The MQL5 Standard Library Explorer (Part 6): Optimizing a generated Expert Advisor
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 27 January 2026 at 07:18
+2 135
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/504272 "Comments")
+[Clemence Benjamin](https://www.mql5.com/en/users/billionaire2024)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20478#contents)
+- [Implementation](https://www.mql5.com/en/articles/20478#para2)
+- [Testing](https://www.mql5.com/en/articles/20478#para3)
+- [Conclusion](https://www.mql5.com/en/articles/20478#para4)
+### 
+### Introduction
+After generating your Expert Advisor—whether through the MQL5 Wizard or from scratch—you might feel a surge of accomplishment as orders execute smoothly without errors. However, running it through the Strategy Tester often delivers a sobering reality: unimpressive results, marked by excessive drawdowns, overtrading, or inconsistent profitability. This is precisely where optimization steps in, allowing us to refine settings, logic, and constraints to unlock the EA's true potential and achieve more robust, sustainable performance.
+In the context of MQL5 development, optimization typically refers to the process of fine-tuning an Expert Advisor's parameters using MetaTrader 5's Strategy Tester. This involves systematically testing various input combinations—such as signal thresholds, periods, or weights—across historical data to identify configurations that maximize key metrics like net profit, profit factor, or Sharpe ratio while minimizing risks like maximum drawdown. While this definition emphasizes quantitative parameter tuning, true optimization encompasses a broader spectrum, including structural and systematic enhancements like the time-based filtering we'll explore here. These methods address foundational issues (e.g., overreaction to noise) before or alongside param tuning, ensuring the EA isn't just curve-fitted to past data but adaptable to real markets.
+Building directly on [Part 5](https://www.mql5.com/en/articles/20289), where we constructed a multi-signal Expert Advisor using the MQL5 Wizard, this installment dives into optimization. For beginners, that Part 5 milestone proves that fully functional trading systems can be assembled with minimal coding by leveraging the MQL5 Standard Library. Yet, as we shift from assembly to real-world viability, we'll explore various optimization methods—ranging from traditional parameter tuning to structural enhancements. Our primary focus here will be on systematic, structural optimization, particularly using time-based filters to curb excessive trading and overreaction to market noise.
+Even with these code-level refinements, the Strategy Tester remains indispensable: it allows us to rigorously test changes, observe quantitative improvements (e.g., reduced trade frequency or smoother equity curves), and compare new results against baseline backtests from before the modifications. For instance, varying time filters (e.g., restricting to high-volatility London/New York overlaps vs. quieter Asian sessions) can dramatically alter outcomes, highlighting how market dynamics shift across periods and underscoring the need for iterative testing to avoid over-optimization pitfalls like curve-fitting.
+Other key considerations in optimization include the risk of overfitting (where the EA excels in historical tests but fails live due to data-specific tweaks), the importance of out-of-sample validation (testing on unseen data via walk-forward analysis), and sensitivity to external factors like slippage, spreads, or news events. By blending structural governance with Tester-driven param adjustments, we create resilient systems—always verifying progress through comparative metrics to ensure genuine enhancements.
+We'll transition smoothly from diagnostics to hands-on implementation, ensuring you can apply these techniques without discarding the native framework.
+It is important to state from the outset that the signal modules provided by MetaQuotes are not poorly designed. On the contrary, they are computationally efficient, internally consistent, and grounded in well-defined market models. Each module encapsulates a clear interpretation of price behavior and exposes a standardized interface for participation in a collective decision-making process. The challenge we encounter is therefore not one of implementation quality but of contextual deployment.
+The moment our objective shifts from assembling an EA to improving its real-world performance, an in-depth level of understanding becomes essential. At this stage, working beyond the Wizard interface is no longer optional. While the Wizard excels at system construction, meaningful optimization requires direct interaction with the generated source code and an understanding of how signals behave across different market conditions.
+In this section, our focus transitions from assembly to refinement. Rather than immediately modifying execution logic or money management, we concentrate on the signal evaluation and voting mechanism itself. As we inspect the generated architecture, a critical insight emerges: the primary source of poor performance is not the signal logic but the absence of higher-level constraints such as market regime awareness and trading frequency control.
+The default voting system aggregates signal outputs efficiently and deterministically. Each signal module evaluates its internal market models, assigns a strength to its forecast, and contributes to a final decision through weighted averaging. This process is technically sound and computationally efficient. However, it operates under an implicit assumption: that signals should be allowed to vote continuously, regardless of market regime, volatility state, or recent trading activity.
+This assumption becomes problematic in practice. Markets transition between trending, ranging, volatile, and low-activity regimes, yet most signal modules are designed to perform optimally only under specific conditions. Without regime filtering, signals that are statistically valid in one environment continue firing in unsuitable conditions. At the same time, the absence of frequency constraints allows repeated confirmations of similar information to trigger excessive trade entries, even when no meaningful new market information has emerged.
+The equity curve produced by our initial multi-signal Expert Advisor makes this limitation clear. The losses observed are not the result of faulty indicators or inefficient code. Instead, they reflect a system that reacts too often and without sufficient contextual restraint. Market noise is repeatedly elevated to actionable information, leading to overtrading, amplified drawdowns, and gradual equity erosion.
+The conclusion is therefore not to replace the native signal modules, but to govern and extend them intelligently. Meaningful optimization focuses on controlling when signals are permitted to participate in decision-making, how frequently they are allowed to trigger trade actions, and under which market regimes their interpretations remain valid.
+Rather than modifying native source files directly, these improvements are best achieved by introducing custom signal layers—either by extending the behavior of existing signal logic externally or by developing new signal modules from first principles. This approach preserves the integrity and reliability of the native library while enabling precise control over signal behavior.
+Such optimization strategies include:
+- Regime classification (trend, range, volatility state)
+- Trading frequency throttling and cooldown logic
+- Time, session, and event-based filtering
+- Adaptive weighting and conditional signal participation
+- Custom signal modules designed to complement, rather than duplicate, native logic
+When these contextual layers are applied, the existing signal modules often perform far better than their default behavior suggests.
+In the sections that follow, we will examine the generated multi-signal Expert Advisor in detail and introduce systematic optimization techniques that operate at multiple levels: internal signal logic, EA inputs, regime filters, and decision-level constraints. By refining how signals are used rather than discarding them, we establish a disciplined path toward robust and sustainable performance improvements. From here, we'll transition into practical implementation, starting with time-based filtering to demonstrate how small, targeted code adjustments can dramatically reduce overtrading while paving the way for further parameter tuning in the Strategy Tester.
+**Inspecting the generated Multi-Signal Expert Advisor**
+As with any complex trading system, effective optimization begins by decomposing the problem into its observable components. Our Expert Advisor is no exception. The unfavorable equity curve, erratic backtest behavior, and dense journal logs are not random anomalies—they are direct, traceable consequences of how the EA’s internal logic interacts with market data. Every trade opened, every drawdown sustained, and every episode of overtrading stem from specific decision paths in the code. To achieve meaningful performance gains, we must first locate where decisions are formed, how frequently they occur, and under what conditions they are permitted to act.
+Rather than attempting to optimize every aspect simultaneously, our inspection strategy deliberately focuses on the decision-making core: the signal evaluation and voting mechanism. The code snippet below highlights the key signal modules included in our Wizard-generated Expert Advisor:
+```
+#include <Expert\Signal\SignalFibonacci.mqh>
+#include <Expert\Signal\SignalAC.mqh>
+#include <Expert\Signal\SignalMA.mqh>
+#include <Expert\Signal\SignalRSI.mqh>
+```
+These four modules—SignalFibonacci, SignalAC, SignalMA, and SignalRSI—constitute the analytical engine of the EA. Each interprets market data through its own lens, generates a directional forecast with an associated strength, and contributes to the collective vote that determines whether a trade is triggered. Components such as trailing stops and money management modules (which we will address in later parts) influence trade outcomes after the entry decision has already been made. If the signals themselves fire excessively, trigger in mismatched market regimes, or redundantly reinforce the same information, no downstream execution or position-sizing adjustment can fully compensate. Therefore, genuine optimization must start here: with the signals, their combination logic, and the governance rules that control their participation.
+This focused inspection serves a dual purpose. First, it reveals why the default configuration underperforms—often not because the indicators are flawed, but because they lack contextual restraint. Second, it identifies the exact levers available for improvement: signal weights, admission thresholds, voting thresholds, frequency controls, and conditional participation rules. By systematically examining these elements and testing the effects of targeted changes in the Strategy Tester, we can quantify improvements—comparing trade frequency, equity curve smoothness, drawdown statistics, and profit factor before and after each refinement. Varying parameters such as trading session windows or cooldown periods further demonstrate how sensitive results are to market context, reinforcing that structural governance and iterative tester validation are inseparable parts of a disciplined optimization process.
+In the subsections that follow, we will break down the critical aspects of this decision core:
+1. Signal composition and their intended market roles
+2. Weight configuration and its impact on dominance
+3. Thresholds that gate signal admission and trade execution
+4. The voting and collection mechanism—where the real aggregation happens
+5. Observed trading frequency as a diagnostic indicator of over-reaction
+**1. Signal composition and their intended market roles**
+```
+#include <Expert\Signal\SignalFibonacci.mqh>
+#include <Expert\Signal\SignalAC.mqh>
+#include <Expert\Signal\SignalMA.mqh>
+#include <Expert\Signal\SignalRSI.mqh>
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# The MQL5 Standard Library Explorer (Part 6): Optimizing a generated Expert Advisor
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20478#contents)
+- [Testing](https://www.mql5.com/en/articles/20478#para3)
+- [Conclusion](https://www.mql5.com/en/articles/20478#para4)
+### 
+### Introduction
+After generating your Expert Advisor—whether through the MQL5 Wizard or from scratch—you might feel a surge of accomplishment as orders execute smoothly without errors. However, running it through the Strategy Tester often delivers a sobering reality: unimpressive results, marked by excessive drawdowns, overtrading, or inconsistent profitability. This is precisely where optimization steps in, allowing us to refine settings, logic, and constraints to unlock the EA's true potential and achieve more robust, sustainable performance.
+In the context of MQL5 development, optimization typically refers to the process of fine-tuning an Expert Advisor's parameters using MetaTrader 5's Strategy Tester. This involves systematically testing various input combinations—such as signal thresholds, periods, or weights—across historical data to identify configurations that maximize key metrics like net profit, profit factor, or Sharpe ratio while minimizing risks like maximum drawdown. While this definition emphasizes quantitative parameter tuning, true optimization encompasses a broader spectrum, including structural and systematic enhancements like the time-based filtering we'll explore here. These methods address foundational issues (e.g., overreaction to noise) before or alongside param tuning, ensuring the EA isn't just curve-fitted to past data but adaptable to real markets.
+Building directly on [Part 5](https://www.mql5.com/en/articles/20289), where we constructed a multi-signal Expert Advisor using the MQL5 Wizard, this installment dives into optimization. For beginners, that Part 5 milestone proves that fully functional trading systems can be assembled with minimal coding by leveraging the MQL5 Standard Library. Yet, as we shift from assembly to real-world viability, we'll explore various optimization methods—ranging from traditional parameter tuning to structural enhancements. Our primary focus here will be on systematic, structural optimization, particularly using time-based filters to curb excessive trading and overreaction to market noise.
+It is important to state from the outset that the signal modules provided by MetaQuotes are not poorly designed. On the contrary, they are computationally efficient, internally consistent, and grounded in well-defined market models. Each module encapsulates a clear interpretation of price behavior and exposes a standardized interface for participation in a collective decision-making process. The challenge we encounter is therefore not one of implementation quality but of contextual deployment.
+The moment our objective shifts from assembling an EA to improving its real-world performance, an in-depth level of understanding becomes essential. At this stage, working beyond the Wizard interface is no longer optional. While the Wizard excels at system construction, meaningful optimization requires direct interaction with the generated source code and an understanding of how signals behave across different market conditions.
+The conclusion is therefore not to replace the native signal modules, but to govern and extend them intelligently. Meaningful optimization focuses on controlling when signals are permitted to participate in decision-making, how frequently they are allowed to trigger trade actions, and under which market regimes their interpretations remain valid.
+Rather than modifying native source files directly, these improvements are best achieved by introducing custom signal layers—either by extending the behavior of existing signal logic externally or by developing new signal modules from first principles. This approach preserves the integrity and reliability of the native library while enabling precise control over signal behavior.
+- Regime classification (trend, range, volatility state)
+- Trading frequency throttling and cooldown logic
+- Time, session, and event-based filtering
+```
+#include <Expert\Signal\SignalFibonacci.mqh>
+#include <Expert\Signal\SignalAC.mqh>
+#include <Expert\Signal\SignalMA.mqh>
+#include <Expert\Signal\SignalRSI.mqh>
+
+This focused inspection serves a dual purpose. First, it reveals why the default configuration underperforms—often not because the indicators are flawed, but because they lack contextual restraint. Second, it identifies the exact levers available for improvement: signal weights, admission thresholds, voting thresholds, frequency controls, and conditional participation rules. By systematically examining these elements and testing the effects of targeted changes in the Strategy Tester, we can quantify improvements—comparing trade frequency, equity curve smoothness, drawdown statistics, and profit factor before and after each refinement. Varying parameters such as trading session windows or cooldown periods further demonstrate how sensitive results are to market context, reinforcing that structural governance and iterative tester validation are inseparable parts of a disciplined optimization process.
+In the subsections that follow, we will break down the critical aspects of this decision core:
+2. Weight configuration and its impact on dominance
+3. Thresholds that gate signal admission and trade execution
+4. The voting and collection mechanism—where the real aggregation happens
+5. Observed trading frequency as a diagnostic indicator of over-reaction
+**3. Thresholds that gate signal admission and trade execution**
+input int Signal_ThresholdOpen  = 10;
+input int Signal_ThresholdClose = 10;
+Thresholds determine how strong the aggregated vote must be before action is taken. Low thresholds increase sensitivity but often result in:
+- Excessive trade frequency
+As highlighted in the documentation, thresholds are not cosmetic inputs—they are structural controls. Our inspection therefore includes varying threshold levels and observing:
+- trade density over time;
+- Cooldown logic
+- Regime gating
+- Conditional signal participation
+- Custom signal refinement or replacement
+This structured inspection—examining signal roles, weight distribution, thresholds, and observed trading frequency—forms the launchpad for implementation. Rather than guessing improvements, we identify concrete levers already exposed by the EA architecture and documentation. These observations guide us toward targeted optimization strategies aimed at improving a multi-signal Expert Advisor in a controlled, measurable, and repeatable manner.
+In the next stage, we move from inspection to implementation by developing time-filtering logic to gain direct control over when the Expert Advisor is allowed to trade. Parameter tuning is incorporated as a supporting step, requiring minimal coding and focusing primarily on adjusting values through experimentation to identify configurations that yield improved results—all while preserving the integrity of the native framework.
+### Implementation
+
+This stage is critical, as we shift our focus from analysis to execution through the direct implementation of time-filtering logic. By introducing controlled trading windows, we significantly reduce unnecessary trade frequency and gain precise authority over when the Expert Advisor is permitted to operate. These enhancements are implemented through minimal, targeted modifications to our custom code, allowing us to govern the EA’s behavior without disrupting its core signal architecture. Most optimization insights are reserved for the results section, as they largely involve fine-tuning input parameters rather than extensive coding—reinforcing the principle that disciplined control can often outperform complexity.
+1. Core Time Filtering Implementation
+The session management system operates directly on broker time, eliminating timezone complexities. The algorithm converts the current server time to a minute-based format for precise comparison with user-defined session boundaries. This approach handles both standard daytime sessions and overnight sessions through conditional logic that adjusts for midnight crossings. The system provides a robust temporal firewall that completely blocks trading activity outside specified hours while maintaining minimal computational overhead.
+### Testing
+The implementation of time-based filters has fundamentally transformed our expert advisor into a disciplined trading system, significantly reducing trade frequency while improving quality. By restricting operations to specific sessions and enforcing a maximum trade limit, we've gained precise control over execution timing and exposure. This strategic filtering eliminates unfavorable market conditions, resulting in fewer but higher-probability trades that demonstrate improved risk-adjusted returns and a more controlled equity curve progression.
+Time-filtered trading:  Multi-Signal Expert.
+![](https://c.mql5.com/2/190/terminal64_qQN1W6SWID__1.png)
+### 
+### Conclusion
+In this part, we successfully took a Wizard-generated multi-signal Expert Advisor and made it noticeably better—not by overhauling the entire system, but by adding one thoughtful control: time-based trading filters. This simple yet powerful change gave us direct authority over when the EA is allowed to open trades, shifting it from a reactive, noise-chasing machine to a more disciplined and restrained strategy. We saw clear improvements: fewer unnecessary trades, an improved equity curve, and drawdowns that felt far more controlled than before. These results prove that even modest structural tweaks can deliver real progress without complicating the codebase.
+| SignalFibonacci.mqh | 1.0 | Unmodified standard signal module reused from [Part 5](https://www.mql5.com/en/articles/20289). This file must be included to avoid compilation errors, as it provides the Fibonacci signal logic required by the EA. |
+| Multi-Signal\_Expert.mq5 | 1.1 | Updated Wizard-generated Expert Advisor enhanced with execution controls, optimized signal thresholds, and session-based trading restrictions. This version focuses on reducing trade frequency and improving trade quality without altering core signal logic. |
+**Attached files** |
+Meet our new site metatrader.com
+Real-time market data, expert analysis, interactive charts, trading insights, and more
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&uid=&ref=https://www.mql5.com/en/articles/20478&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6475748167957221662)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+In this part, we successfully took a Wizard-generated multi-signal Expert Advisor and made it noticeably better—not by overhauling the entire system, but by adding one thoughtful control: time-based trading filters. This simple yet powerful change gave us direct authority over when the EA is allowed to open trades, shifting it from a reactive, noise-chasing machine to a more disciplined and restrained strategy. We saw clear improvements: fewer unnecessary trades, an improved equity curve, and drawdowns that felt far more controlled than before. These results prove that even modest structural tweaks can deliver real progress without complicating the codebase.
+
+Along the way, several important lessons stood out. First, the most damaging performance issues often stem from trading too frequently and in the wrong market conditions, rather than from flawed indicators or weak logic. Second, introducing even a single well-chosen constraint—such as limiting activity to specific trading sessions—can dramatically cut overtrading and improve overall behavior. Third, timeframe choice plays a huge role: lower timeframes tend to generate more noise and more trades (which usually hurts results), while higher timeframes produce fewer but often more reliable signals. Finally, these kinds of structural improvements create a much stronger foundation. Once the EA is no longer overreacting, any subsequent parameter tuning in the Strategy Tester becomes far more meaningful and less prone to producing misleading “optimized” results.
+
+What we’ve covered here is just one piece of the optimization puzzle. There are many more powerful techniques we haven’t touched on yet—regime classification, adaptive signal weighting, cooldown periods after trades, volatility-based filters, event-driven exclusions, walk-forward analysis, Monte Carlo simulations, and much more. Each of these methods can take the EA to the next level, but they also increase complexity. That’s why we’re saving them for future parts of the series. As we gradually build toward more advanced topics, we’ll introduce these concepts one at a time, always testing them on the foundation we’re establishing now.
+
+I attached the full updated source code below so you can experiment with different trading windows, combine them with your own ideas, or see exactly how the filters were implemented. Optimization is an ongoing journey, and there’s still a lot more to discover together.
+
+Thank you for following along. Your comments, questions, test results, and suggestions are always welcome—they help guide where the series goes next. Until the next part—happy coding and safe trading.
+
+| Source File | Version | Description: |
+| --- | --- | --- |
+| SignalFibonacci.mqh | 1.0 | Unmodified standard signal module reused from [Part 5](https://www.mql5.com/en/articles/20289). This file must be included to avoid compilation errors, as it provides the Fibonacci signal logic required by the EA. |
+| Multi-Signal\_Expert.mq5 | 1.1 | Updated Wizard-generated Expert Advisor enhanced with execution controls, optimized signal thresholds, and session-based trading restrictions. This version focuses on reducing trade frequency and improving trade quality without altering core signal logic. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20478.zip "Download all attachments in the single ZIP archive")
+
+[Multi-Signal\_Expert.mq5](https://www.mql5.com/en/articles/download/20478/Multi-Signal_Expert.mq5 "Download Multi-Signal_Expert.mq5")
+(21.33 KB)
+
+[SignalFibonacci.mqh](https://www.mql5.com/en/articles/download/20478/SignalFibonacci.mqh "Download SignalFibonacci.mqh")
+(17.77 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Introduction to MQL5 (Part 37): Mastering API and WebRequest Function in MQL5 (XI)](https://c.mql5.com/2/191/20978-introduction-to-mql5-part-37-logo.png)
+[Introduction to MQL5 (Part 37): Mastering API and WebRequest Function in MQL5 (XI)](https://www.mql5.com/en/articles/20978)
+
+In this article, we show how to send authenticated requests to the Binance API using MQL5 to retrieve your account balance for all assets. Learn how to use your API key, server time, and signature to securely access account data, and how to save the response to a file for future use.
+
+![Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?](https://c.mql5.com/2/191/18885-data-science-and-ml-part-48-logo__1.png)
+[Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?](https://www.mql5.com/en/articles/18885)
+
+From ChatGPT to Gemini and many model AI tools for text, image, and video generation. Transformers have rocked the AI-world. But, are they applicable in the financial (trading) space? Let's find out.
+
+![Creating Custom Indicators in MQL5 (Part 6): Evolving RSI Calculations with Smoothing, Hue Shifts, and Multi-Timeframe Support](https://c.mql5.com/2/191/21083-creating-custom-indicators-logo__1.png)
+[Creating Custom Indicators in MQL5 (Part 6): Evolving RSI Calculations with Smoothing, Hue Shifts, and Multi-Timeframe Support](https://www.mql5.com/en/articles/21083)
+
+In this article, we build a versatile RSI indicator in MQL5 supporting multiple variants, data sources, and smoothing methods for improved analysis. We add hue shifts for color visuals, dynamic boundaries for overbought/oversold zones, and notifications for trend alerts. It includes multi-timeframe support with interpolation, offering us a customizable RSI tool for diverse strategies.
+
+![MQL5 Trading Tools (Part 13): Creating a Canvas-Based Price Dashboard with Graph and Stats Panels](https://c.mql5.com/2/191/21038-mql5-trading-tools-part-13-logo.png)
+[MQL5 Trading Tools (Part 13): Creating a Canvas-Based Price Dashboard with Graph and Stats Panels](https://www.mql5.com/en/articles/21038)
+
+In this article, we develop a canvas-based price dashboard in MQL5 using the CCanvas class to create interactive panels for visualizing recent price graphs and account statistics, with support for background images, fog effects, and gradient fills. The system includes draggable and resizable features via mouse event handling, theme toggling between dark and light modes with dynamic color adjustments, and minimize/maximize controls for efficient chart space management.
+
+[![](https://www.mql5.com/ff/sh/sm4wqgxpy6553ggyp2/e58a404395ac6c2a686c29931ee3d620.png)
+
+Meet our new site metatrader.com
+
+Real-time market data, expert analysis, interactive charts, trading insights, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&uid=&ref=https://www.mql5.com/en/articles/20478&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6475748167957221662)

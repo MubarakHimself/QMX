@@ -1,0 +1,119 @@
+{
+  "shard_id": "trading_systems_041",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [
+    "larry williams market secrets",
+    "low-frequency quantitative strategies in metatrader 5"
+  ],
+  "articles": [
+    {
+      "id": 20510,
+      "title": "Larry Williams Market Secrets (Part 3): Proving Non-Random Market Behavior with MQL5",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Proving Non-Random Market Behavior with MQL5",
+      "series_key": "larry williams market secrets",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20510.md"
+    },
+    {
+      "id": 20862,
+      "title": "Larry Williams Market Secrets (Part 6): Measuring Volatility Breakouts Using Market Swings",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Measuring Volatility Breakouts Using Market Swings",
+      "series_key": "larry williams market secrets",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20862.md"
+    },
+    {
+      "id": 21003,
+      "title": "Larry Williams Market Secrets (Part 8): Combining Volatility, Structure and Time Filters",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Combining Volatility, Structure and Time Filters",
+      "series_key": "larry williams market secrets",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21003.md"
+    },
+    {
+      "id": 21063,
+      "title": "Larry Williams Market Secrets (Part 9): Patterns to Profit",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Patterns to Profit",
+      "series_key": "larry williams market secrets",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21063.md"
+    },
+    {
+      "id": 21228,
+      "title": "Larry Williams Market Secrets (Part 12): Context Based Trading of Smash Day Reversals",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Context Based Trading of Smash Day Reversals",
+      "series_key": "larry williams market secrets",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21228.md"
+    },
+    {
+      "id": 21393,
+      "title": "Larry Williams Market Secrets (Part 15): Trading Hidden Smash Day Reversals with Market Context",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Trading Hidden Smash Day Reversals with Market Context",
+      "series_key": "larry williams market secrets",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21393.md"
+    },
+    {
+      "id": 21741,
+      "title": "Larry Williams Market Secrets (Part 16): Detecting and Trading the Oops Gap Reversal Pattern",
+      "section": "Trading systems",
+      "series_title": "Larry Williams Market Secrets (): Detecting and Trading the Oops Gap Reversal Pattern",
+      "series_key": "larry williams market secrets",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21741.md"
+    },
+    {
+      "id": 21679,
+      "title": "Low-Frequency Quantitative Strategies in Metatrader 5: (Part 1) Setting Up An OLAP-Friendly Data Store",
+      "section": "Trading systems",
+      "series_title": "Low-Frequency Quantitative Strategies in Metatrader 5: () Setting Up An OLAP-Friendly Data Store",
+      "series_key": "low-frequency quantitative strategies in metatrader 5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21679.md"
+    },
+    {
+      "id": 21811,
+      "title": "Low-Frequency Quantitative Strategies in Metatrader 5: (Part 2) Backtesting a Lead/Lag Analysis in SQL and in Metatrader 5",
+      "section": "Trading systems",
+      "series_title": "Low-Frequency Quantitative Strategies in Metatrader 5: () Backtesting a Lead/Lag Analysis in SQL and in Metatrader 5",
+      "series_key": "low-frequency quantitative strategies in metatrader 5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21811.md"
+    },
+    {
+      "id": 22783,
+      "title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (Part 3): A Regime-Adaptive Mean-Reversion Swing Trading System",
+      "section": "Trading systems",
+      "series_title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (): A Regime-Adaptive Mean-Reversion Swing Trading System",
+      "series_key": "low-frequency quantitative strategies in metatrader 5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22783.md"
+    },
+    {
+      "id": 23226,
+      "title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (Part 4): A Volatility-Adjusted Momentum-Based Intraday System",
+      "section": "Trading systems",
+      "series_title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (): A Volatility-Adjusted Momentum-Based Intraday System",
+      "series_key": "low-frequency quantitative strategies in metatrader 5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23226.md"
+    },
+    {
+      "id": 23543,
+      "title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (Part 5): Pre-Backtest Evaluation of Machine-Learning-Generated Signals Through Formulaic Alphas",
+      "section": "Trading systems",
+      "series_title": "Low-Frequency Quantitative Strategies in MetaTrader 5 (): Pre-Backtest Evaluation of Machine-Learning-Generated Signals Through Formulaic Alphas",
+      "series_key": "low-frequency quantitative strategies in metatrader 5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23543.md"
+    }
+  ]
+}

@@ -1,0 +1,5134 @@
+[
+  {
+    "id": 17781,
+    "path": "md/17781.md",
+    "match_count": 215,
+    "unique": 7,
+    "top_terms": [
+      [
+        "regime",
+        109
+      ],
+      [
+        "trending",
+        39
+      ],
+      [
+        "volatile",
+        30
+      ],
+      [
+        "ranging",
+        27
+      ],
+      [
+        "market condition",
+        7
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 250
+  },
+  {
+    "id": 23677,
+    "path": "md/23677.md",
+    "match_count": 207,
+    "unique": 2,
+    "top_terms": [
+      [
+        "garch",
+        201
+      ],
+      [
+        "regime",
+        6
+      ]
+    ],
+    "score": 217
+  },
+  {
+    "id": 23171,
+    "path": "md/23171.md",
+    "match_count": 182,
+    "unique": 3,
+    "top_terms": [
+      [
+        "garch",
+        162
+      ],
+      [
+        "hurst",
+        19
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 197
+  },
+  {
+    "id": 23444,
+    "path": "md/23444.md",
+    "match_count": 135,
+    "unique": 8,
+    "top_terms": [
+      [
+        "mama",
+        61
+      ],
+      [
+        "ehlers",
+        30
+      ],
+      [
+        "regime",
+        23
+      ],
+      [
+        "playbook",
+        12
+      ],
+      [
+        "trending",
+        6
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "chop",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 175
+  },
+  {
+    "id": 15541,
+    "path": "md/15541.md",
+    "match_count": 125,
+    "unique": 8,
+    "top_terms": [
+      [
+        "nash",
+        63
+      ],
+      [
+        "hmm",
+        37
+      ],
+      [
+        "hidden markov",
+        8
+      ],
+      [
+        "regime",
+        5
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "trending",
+        2
+      ]
+    ],
+    "score": 165
+  },
+  {
+    "id": 11930,
+    "path": "md/11930.md",
+    "match_count": 125,
+    "unique": 7,
+    "top_terms": [
+      [
+        "markov",
+        106
+      ],
+      [
+        "hidden markov",
+        6
+      ],
+      [
+        "hmm",
+        6
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "hidden_markov",
+        2
+      ],
+      [
+        "hidden-markov",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 160
+  },
+  {
+    "id": 22553,
+    "path": "md/22553.md",
+    "match_count": 112,
+    "unique": 4,
+    "top_terms": [
+      [
+        "hurst",
+        81
+      ],
+      [
+        "regime",
+        27
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 132
+  },
+  {
+    "id": 17917,
+    "path": "md/17917.md",
+    "match_count": 99,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hmm",
+        67
+      ],
+      [
+        "hidden markov",
+        19
+      ],
+      [
+        "regime",
+        9
+      ],
+      [
+        "markov",
+        3
+      ],
+      [
+        "hidden_markov",
+        1
+      ]
+    ],
+    "score": 124
+  },
+  {
+    "id": 21833,
+    "path": "md/21833.md",
+    "match_count": 68,
+    "unique": 10,
+    "top_terms": [
+      [
+        "regime",
+        33
+      ],
+      [
+        "ranging",
+        12
+      ],
+      [
+        "trending",
+        10
+      ],
+      [
+        "change point",
+        3
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "change_point",
+        1
+      ],
+      [
+        "chop",
+        1
+      ]
+    ],
+    "score": 118
+  },
+  {
+    "id": 22258,
+    "path": "md/22258.md",
+    "match_count": 105,
+    "unique": 2,
+    "top_terms": [
+      [
+        "garch",
+        104
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 115
+  },
+  {
+    "id": 18192,
+    "path": "md/18192.md",
+    "match_count": 70,
+    "unique": 8,
+    "top_terms": [
+      [
+        "markov",
+        29
+      ],
+      [
+        "market state",
+        18
+      ],
+      [
+        "sideways",
+        9
+      ],
+      [
+        "market_state",
+        6
+      ],
+      [
+        "marketstate",
+        4
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 110
+  },
+  {
+    "id": 22438,
+    "path": "md/22438.md",
+    "match_count": 73,
+    "unique": 6,
+    "top_terms": [
+      [
+        "garch",
+        62
+      ],
+      [
+        "hurst",
+        5
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 103
+  },
+  {
+    "id": 15222,
+    "path": "md/15222.md",
+    "match_count": 82,
+    "unique": 4,
+    "top_terms": [
+      [
+        "hurst",
+        71
+      ],
+      [
+        "trending",
+        5
+      ],
+      [
+        "ranging",
+        4
+      ],
+      [
+        "market condition",
+        2
+      ]
+    ],
+    "score": 102
+  },
+  {
+    "id": 15033,
+    "path": "md/15033.md",
+    "match_count": 71,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hmm",
+        53
+      ],
+      [
+        "hidden markov",
+        11
+      ],
+      [
+        "hidden_markov",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "markov",
+        2
+      ]
+    ],
+    "score": 96
+  },
+  {
+    "id": 18097,
+    "path": "md/18097.md",
+    "match_count": 50,
+    "unique": 8,
+    "top_terms": [
+      [
+        "markov",
+        32
+      ],
+      [
+        "market state",
+        7
+      ],
+      [
+        "regime",
+        4
+      ],
+      [
+        "sideways",
+        3
+      ],
+      [
+        "hidden markov",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "hmm",
+        1
+      ]
+    ],
+    "score": 90
+  },
+  {
+    "id": 10478,
+    "path": "md/10478.md",
+    "match_count": 69,
+    "unique": 4,
+    "top_terms": [
+      [
+        "sideways",
+        61
+      ],
+      [
+        "trending",
+        5
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 89
+  },
+  {
+    "id": 22484,
+    "path": "md/22484.md",
+    "match_count": 58,
+    "unique": 6,
+    "top_terms": [
+      [
+        "hurst",
+        40
+      ],
+      [
+        "garch",
+        10
+      ],
+      [
+        "fractal dimension",
+        5
+      ],
+      [
+        "fractal-dimension",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 88
+  },
+  {
+    "id": 22638,
+    "path": "md/22638.md",
+    "match_count": 65,
+    "unique": 4,
+    "top_terms": [
+      [
+        "garch",
+        45
+      ],
+      [
+        "regime",
+        13
+      ],
+      [
+        "hurst",
+        6
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 85
+  },
+  {
+    "id": 22807,
+    "path": "md/22807.md",
+    "match_count": 50,
+    "unique": 6,
+    "top_terms": [
+      [
+        "regime",
+        33
+      ],
+      [
+        "marketstate",
+        6
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        4
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 80
+  },
+  {
+    "id": 10528,
+    "path": "md/10528.md",
+    "match_count": 74,
+    "unique": 1,
+    "top_terms": [
+      [
+        "sideways",
+        74
+      ]
+    ],
+    "score": 79
+  },
+  {
+    "id": 21743,
+    "path": "md/21743.md",
+    "match_count": 47,
+    "unique": 6,
+    "top_terms": [
+      [
+        "regime",
+        33
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        4
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 77
+  },
+  {
+    "id": 22220,
+    "path": "md/22220.md",
+    "match_count": 62,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        54
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        3
+      ]
+    ],
+    "score": 77
+  },
+  {
+    "id": 23149,
+    "path": "md/23149.md",
+    "match_count": 47,
+    "unique": 6,
+    "top_terms": [
+      [
+        "ehlers",
+        33
+      ],
+      [
+        "regime",
+        7
+      ],
+      [
+        "garch",
+        3
+      ],
+      [
+        "mama",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 77
+  },
+  {
+    "id": 23137,
+    "path": "md/23137.md",
+    "match_count": 56,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        49
+      ],
+      [
+        "bagging regime",
+        4
+      ],
+      [
+        "bagging_regime",
+        2
+      ],
+      [
+        "bagging-regime",
+        1
+      ]
+    ],
+    "score": 76
+  },
+  {
+    "id": 3039,
+    "path": "md/3039.md",
+    "match_count": 66,
+    "unique": 2,
+    "top_terms": [
+      [
+        "sideways",
+        61
+      ],
+      [
+        "market condition",
+        5
+      ]
+    ],
+    "score": 76
+  },
+  {
+    "id": 10692,
+    "path": "md/10692.md",
+    "match_count": 68,
+    "unique": 1,
+    "top_terms": [
+      [
+        "sideways",
+        68
+      ]
+    ],
+    "score": 73
+  },
+  {
+    "id": 10592,
+    "path": "md/10592.md",
+    "match_count": 62,
+    "unique": 2,
+    "top_terms": [
+      [
+        "sideways",
+        60
+      ],
+      [
+        "market condition",
+        2
+      ]
+    ],
+    "score": 72
+  },
+  {
+    "id": 23372,
+    "path": "md/23372.md",
+    "match_count": 46,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        29
+      ],
+      [
+        "trending",
+        13
+      ],
+      [
+        "bagging regime",
+        2
+      ],
+      [
+        "garch",
+        1
+      ],
+      [
+        "hurst",
+        1
+      ]
+    ],
+    "score": 71
+  },
+  {
+    "id": 22476,
+    "path": "md/22476.md",
+    "match_count": 55,
+    "unique": 3,
+    "top_terms": [
+      [
+        "garch",
+        50
+      ],
+      [
+        "hurst",
+        4
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 70
+  },
+  {
+    "id": 20414,
+    "path": "md/20414.md",
+    "match_count": 32,
+    "unique": 7,
+    "top_terms": [
+      [
+        "market condition",
+        10
+      ],
+      [
+        "ranging",
+        6
+      ],
+      [
+        "trending",
+        6
+      ],
+      [
+        "strategy switch",
+        5
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "strategy-switch",
+        1
+      ]
+    ],
+    "score": 67
+  },
+  {
+    "id": 22290,
+    "path": "md/22290.md",
+    "match_count": 55,
+    "unique": 2,
+    "top_terms": [
+      [
+        "regime",
+        46
+      ],
+      [
+        "volatile",
+        9
+      ]
+    ],
+    "score": 65
+  },
+  {
+    "id": 23491,
+    "path": "md/23491.md",
+    "match_count": 44,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        20
+      ],
+      [
+        "volatile",
+        18
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "ranging",
+        3
+      ]
+    ],
+    "score": 64
+  },
+  {
+    "id": 21351,
+    "path": "md/21351.md",
+    "match_count": 37,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        17
+      ],
+      [
+        "volatile",
+        17
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 62
+  },
+  {
+    "id": 6834,
+    "path": "md/6834.md",
+    "match_count": 47,
+    "unique": 3,
+    "top_terms": [
+      [
+        "hurst",
+        27
+      ],
+      [
+        "fractal dimension",
+        18
+      ],
+      [
+        "fractaldimension",
+        2
+      ]
+    ],
+    "score": 62
+  },
+  {
+    "id": 15743,
+    "path": "md/15743.md",
+    "match_count": 39,
+    "unique": 4,
+    "top_terms": [
+      [
+        "markov",
+        36
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 59
+  },
+  {
+    "id": 2930,
+    "path": "md/2930.md",
+    "match_count": 49,
+    "unique": 2,
+    "top_terms": [
+      [
+        "hurst",
+        47
+      ],
+      [
+        "fractal dimension",
+        2
+      ]
+    ],
+    "score": 59
+  },
+  {
+    "id": 4534,
+    "path": "md/4534.md",
+    "match_count": 29,
+    "unique": 6,
+    "top_terms": [
+      [
+        "fractal dimension",
+        12
+      ],
+      [
+        "ehlers",
+        7
+      ],
+      [
+        "sideways",
+        7
+      ],
+      [
+        "fractal_dimension",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 59
+  },
+  {
+    "id": 18785,
+    "path": "md/18785.md",
+    "match_count": 23,
+    "unique": 7,
+    "top_terms": [
+      [
+        "markov",
+        10
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "marketstate",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 58
+  },
+  {
+    "id": 15445,
+    "path": "md/15445.md",
+    "match_count": 32,
+    "unique": 5,
+    "top_terms": [
+      [
+        "fractal dimension",
+        22
+      ],
+      [
+        "fractaldimension",
+        5
+      ],
+      [
+        "market mode",
+        3
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 57
+  },
+  {
+    "id": 19948,
+    "path": "md/19948.md",
+    "match_count": 22,
+    "unique": 7,
+    "top_terms": [
+      [
+        "regime",
+        5
+      ],
+      [
+        "fractal dimension",
+        5
+      ],
+      [
+        "trending",
+        4
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "ehlers",
+        3
+      ],
+      [
+        "market mode",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 57
+  },
+  {
+    "id": 20478,
+    "path": "md/20478.md",
+    "match_count": 27,
+    "unique": 6,
+    "top_terms": [
+      [
+        "regime",
+        13
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "ranging",
+        3
+      ],
+      [
+        "market mode",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 57
+  },
+  {
+    "id": 19797,
+    "path": "md/19797.md",
+    "match_count": 21,
+    "unique": 7,
+    "top_terms": [
+      [
+        "regime",
+        5
+      ],
+      [
+        "volatile",
+        5
+      ],
+      [
+        "sideways",
+        3
+      ],
+      [
+        "change-point",
+        3
+      ],
+      [
+        "bocpd",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 56
+  },
+  {
+    "id": 21299,
+    "path": "md/21299.md",
+    "match_count": 40,
+    "unique": 3,
+    "top_terms": [
+      [
+        "hurst",
+        34
+      ],
+      [
+        "garch",
+        5
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 55
+  },
+  {
+    "id": 23451,
+    "path": "md/23451.md",
+    "match_count": 35,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        20
+      ],
+      [
+        "trending",
+        9
+      ],
+      [
+        "ranging",
+        5
+      ],
+      [
+        "markov",
+        1
+      ]
+    ],
+    "score": 55
+  },
+  {
+    "id": 23734,
+    "path": "md/23734.md",
+    "match_count": 40,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        38
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "strategy switch",
+        1
+      ]
+    ],
+    "score": 55
+  },
+  {
+    "id": 15819,
+    "path": "md/15819.md",
+    "match_count": 34,
+    "unique": 4,
+    "top_terms": [
+      [
+        "nash",
+        27
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "hmm",
+        1
+      ],
+      [
+        "markov",
+        1
+      ]
+    ],
+    "score": 54
+  },
+  {
+    "id": 16971,
+    "path": "md/16971.md",
+    "match_count": 29,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market_condition",
+        13
+      ],
+      [
+        "market condition",
+        11
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "market_state",
+        1
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 54
+  },
+  {
+    "id": 15040,
+    "path": "md/15040.md",
+    "match_count": 33,
+    "unique": 4,
+    "top_terms": [
+      [
+        "markov",
+        21
+      ],
+      [
+        "market state",
+        6
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 53
+  },
+  {
+    "id": 18187,
+    "path": "md/18187.md",
+    "match_count": 42,
+    "unique": 2,
+    "top_terms": [
+      [
+        "market_state",
+        40
+      ],
+      [
+        "ranging",
+        2
+      ]
+    ],
+    "score": 52
+  },
+  {
+    "id": 22598,
+    "path": "md/22598.md",
+    "match_count": 37,
+    "unique": 3,
+    "top_terms": [
+      [
+        "hurst",
+        32
+      ],
+      [
+        "regime",
+        4
+      ],
+      [
+        "garch",
+        1
+      ]
+    ],
+    "score": 52
+  },
+  {
+    "id": 18453,
+    "path": "md/18453.md",
+    "match_count": 16,
+    "unique": 7,
+    "top_terms": [
+      [
+        "hurst",
+        6
+      ],
+      [
+        "fractal dimension",
+        3
+      ],
+      [
+        "market condition",
+        3
+      ],
+      [
+        "market mode",
+        1
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "regime",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 51
+  },
+  {
+    "id": 19577,
+    "path": "md/19577.md",
+    "match_count": 21,
+    "unique": 6,
+    "top_terms": [
+      [
+        "regime",
+        6
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "sideways",
+        4
+      ],
+      [
+        "mama",
+        4
+      ],
+      [
+        "markov",
+        1
+      ],
+      [
+        "ehlers",
+        1
+      ]
+    ],
+    "score": 51
+  },
+  {
+    "id": 21372,
+    "path": "md/21372.md",
+    "match_count": 26,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        18
+      ],
+      [
+        "volatile",
+        5
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 51
+  },
+  {
+    "id": 16143,
+    "path": "md/16143.md",
+    "match_count": 30,
+    "unique": 4,
+    "top_terms": [
+      [
+        "markov",
+        14
+      ],
+      [
+        "volatile",
+        8
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        3
+      ]
+    ],
+    "score": 50
+  },
+  {
+    "id": 23049,
+    "path": "md/23049.md",
+    "match_count": 25,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market state",
+        15
+      ],
+      [
+        "market_state",
+        5
+      ],
+      [
+        "marketstate",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 50
+  },
+  {
+    "id": 21742,
+    "path": "md/21742.md",
+    "match_count": 29,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        21
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 49
+  },
+  {
+    "id": 16914,
+    "path": "md/16914.md",
+    "match_count": 28,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        19
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "market condition",
+        3
+      ],
+      [
+        "trending",
+        3
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 20122,
+    "path": "md/20122.md",
+    "match_count": 33,
+    "unique": 3,
+    "top_terms": [
+      [
+        "marketstate",
+        21
+      ],
+      [
+        "market state",
+        6
+      ],
+      [
+        "market condition",
+        6
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 22783,
+    "path": "md/22783.md",
+    "match_count": 43,
+    "unique": 1,
+    "top_terms": [
+      [
+        "regime",
+        43
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 23158,
+    "path": "md/23158.md",
+    "match_count": 28,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        23
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "change point",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 23693,
+    "path": "md/23693.md",
+    "match_count": 33,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        31
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 23700,
+    "path": "md/23700.md",
+    "match_count": 23,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        19
+      ],
+      [
+        "chop",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 48
+  },
+  {
+    "id": 20996,
+    "path": "md/20996.md",
+    "match_count": 32,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market state",
+        24
+      ],
+      [
+        "market_state",
+        6
+      ],
+      [
+        "trending",
+        2
+      ]
+    ],
+    "score": 47
+  },
+  {
+    "id": 22539,
+    "path": "md/22539.md",
+    "match_count": 22,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hurst",
+        10
+      ],
+      [
+        "garch",
+        8
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 47
+  },
+  {
+    "id": 23013,
+    "path": "md/23013.md",
+    "match_count": 17,
+    "unique": 6,
+    "top_terms": [
+      [
+        "volatile",
+        10
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 47
+  },
+  {
+    "id": 1628,
+    "path": "md/1628.md",
+    "match_count": 31,
+    "unique": 3,
+    "top_terms": [
+      [
+        "markov",
+        22
+      ],
+      [
+        "hidden markov",
+        8
+      ],
+      [
+        "hmm",
+        1
+      ]
+    ],
+    "score": 46
+  },
+  {
+    "id": 22274,
+    "path": "md/22274.md",
+    "match_count": 20,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        9
+      ],
+      [
+        "regime",
+        5
+      ],
+      [
+        "ranging",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 45
+  },
+  {
+    "id": 22755,
+    "path": "md/22755.md",
+    "match_count": 25,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        11
+      ],
+      [
+        "trending",
+        8
+      ],
+      [
+        "ranging",
+        5
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 45
+  },
+  {
+    "id": 23488,
+    "path": "md/23488.md",
+    "match_count": 30,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        27
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 45
+  },
+  {
+    "id": 18251,
+    "path": "md/18251.md",
+    "match_count": 19,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        12
+      ],
+      [
+        "market mode",
+        3
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 44
+  },
+  {
+    "id": 18462,
+    "path": "md/18462.md",
+    "match_count": 19,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        7
+      ],
+      [
+        "volatile",
+        4
+      ],
+      [
+        "sideways",
+        3
+      ],
+      [
+        "market condition",
+        3
+      ],
+      [
+        "regime",
+        2
+      ]
+    ],
+    "score": 44
+  },
+  {
+    "id": 22263,
+    "path": "md/22263.md",
+    "match_count": 24,
+    "unique": 4,
+    "top_terms": [
+      [
+        "hurst",
+        12
+      ],
+      [
+        "regime",
+        7
+      ],
+      [
+        "fractal dimension",
+        4
+      ],
+      [
+        "fractal_dimension",
+        1
+      ]
+    ],
+    "score": 44
+  },
+  {
+    "id": 18807,
+    "path": "md/18807.md",
+    "match_count": 18,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        9
+      ],
+      [
+        "regime",
+        4
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 43
+  },
+  {
+    "id": 22754,
+    "path": "md/22754.md",
+    "match_count": 28,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        12
+      ],
+      [
+        "ranging",
+        11
+      ],
+      [
+        "trending",
+        5
+      ]
+    ],
+    "score": 43
+  },
+  {
+    "id": 23351,
+    "path": "md/23351.md",
+    "match_count": 23,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        15
+      ],
+      [
+        "trending",
+        5
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "chop",
+        1
+      ]
+    ],
+    "score": 43
+  },
+  {
+    "id": 16303,
+    "path": "md/16303.md",
+    "match_count": 27,
+    "unique": 3,
+    "top_terms": [
+      [
+        "markov",
+        25
+      ],
+      [
+        "market mode",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 42
+  },
+  {
+    "id": 19043,
+    "path": "md/19043.md",
+    "match_count": 12,
+    "unique": 6,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "garch",
+        3
+      ],
+      [
+        "ehlers",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 42
+  },
+  {
+    "id": 19958,
+    "path": "md/19958.md",
+    "match_count": 16,
+    "unique": 5,
+    "top_terms": [
+      [
+        "sideways",
+        6
+      ],
+      [
+        "ranging",
+        4
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "markov",
+        1
+      ]
+    ],
+    "score": 41
+  },
+  {
+    "id": 23055,
+    "path": "md/23055.md",
+    "match_count": 11,
+    "unique": 6,
+    "top_terms": [
+      [
+        "volatile",
+        4
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "chop",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 41
+  },
+  {
+    "id": 23127,
+    "path": "md/23127.md",
+    "match_count": 16,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        8
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "ranging",
+        2
+      ]
+    ],
+    "score": 41
+  },
+  {
+    "id": 20278,
+    "path": "md/20278.md",
+    "match_count": 20,
+    "unique": 4,
+    "top_terms": [
+      [
+        "markov",
+        8
+      ],
+      [
+        "market state",
+        6
+      ],
+      [
+        "market condition",
+        5
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 40
+  },
+  {
+    "id": 18004,
+    "path": "md/18004.md",
+    "match_count": 9,
+    "unique": 6,
+    "top_terms": [
+      [
+        "garch",
+        3
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "change point",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "regime",
+        1
+      ],
+      [
+        "hurst",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 18399,
+    "path": "md/18399.md",
+    "match_count": 14,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        8
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 20160,
+    "path": "md/20160.md",
+    "match_count": 19,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        12
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 23037,
+    "path": "md/23037.md",
+    "match_count": 19,
+    "unique": 4,
+    "top_terms": [
+      [
+        "trending",
+        8
+      ],
+      [
+        "ranging",
+        7
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 23103,
+    "path": "md/23103.md",
+    "match_count": 14,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        7
+      ],
+      [
+        "volatile",
+        4
+      ],
+      [
+        "change-point",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 23429,
+    "path": "md/23429.md",
+    "match_count": 14,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        4
+      ],
+      [
+        "change-point",
+        3
+      ],
+      [
+        "bocpd",
+        3
+      ],
+      [
+        "regime",
+        3
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 23618,
+    "path": "md/23618.md",
+    "match_count": 14,
+    "unique": 5,
+    "top_terms": [
+      [
+        "garch",
+        5
+      ],
+      [
+        "volatile",
+        4
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 39
+  },
+  {
+    "id": 17910,
+    "path": "md/17910.md",
+    "match_count": 13,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        4
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "regime",
+        3
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 38
+  },
+  {
+    "id": 20716,
+    "path": "md/20716.md",
+    "match_count": 8,
+    "unique": 6,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "garch",
+        1
+      ]
+    ],
+    "score": 38
+  },
+  {
+    "id": 22499,
+    "path": "md/22499.md",
+    "match_count": 13,
+    "unique": 5,
+    "top_terms": [
+      [
+        "garch",
+        6
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 38
+  },
+  {
+    "id": 15589,
+    "path": "md/15589.md",
+    "match_count": 12,
+    "unique": 5,
+    "top_terms": [
+      [
+        "nash",
+        5
+      ],
+      [
+        "hmm",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "hidden markov",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 16030,
+    "path": "md/16030.md",
+    "match_count": 27,
+    "unique": 2,
+    "top_terms": [
+      [
+        "markov",
+        25
+      ],
+      [
+        "volatile",
+        2
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 16061,
+    "path": "md/16061.md",
+    "match_count": 12,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market_state",
+        4
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 20289,
+    "path": "md/20289.md",
+    "match_count": 12,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "marketcondition",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 21279,
+    "path": "md/21279.md",
+    "match_count": 17,
+    "unique": 4,
+    "top_terms": [
+      [
+        "sideways",
+        10
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "ranging",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 22521,
+    "path": "md/22521.md",
+    "match_count": 17,
+    "unique": 4,
+    "top_terms": [
+      [
+        "hurst",
+        9
+      ],
+      [
+        "garch",
+        6
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 23144,
+    "path": "md/23144.md",
+    "match_count": 12,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "market condition",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 23168,
+    "path": "md/23168.md",
+    "match_count": 12,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "ehlers",
+        3
+      ],
+      [
+        "garch",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 23410,
+    "path": "md/23410.md",
+    "match_count": 27,
+    "unique": 2,
+    "top_terms": [
+      [
+        "regime",
+        22
+      ],
+      [
+        "trending",
+        5
+      ]
+    ],
+    "score": 37
+  },
+  {
+    "id": 18188,
+    "path": "md/18188.md",
+    "match_count": 16,
+    "unique": 4,
+    "top_terms": [
+      [
+        "fractal dimension",
+        9
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 18329,
+    "path": "md/18329.md",
+    "match_count": 11,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "markov",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 18914,
+    "path": "md/18914.md",
+    "match_count": 11,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market state",
+        5
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 18992,
+    "path": "md/18992.md",
+    "match_count": 11,
+    "unique": 5,
+    "top_terms": [
+      [
+        "trending",
+        4
+      ],
+      [
+        "ranging",
+        3
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "regime",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 21888,
+    "path": "md/21888.md",
+    "match_count": 21,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market state",
+        12
+      ],
+      [
+        "marketstate",
+        8
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 22537,
+    "path": "md/22537.md",
+    "match_count": 11,
+    "unique": 5,
+    "top_terms": [
+      [
+        "garch",
+        3
+      ],
+      [
+        "hurst",
+        3
+      ],
+      [
+        "ehlers",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 23159,
+    "path": "md/23159.md",
+    "match_count": 16,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        12
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "change point",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 36
+  },
+  {
+    "id": 16278,
+    "path": "md/16278.md",
+    "match_count": 10,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        2
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "market state",
+        2
+      ]
+    ],
+    "score": 35
+  },
+  {
+    "id": 20986,
+    "path": "md/20986.md",
+    "match_count": 10,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        4
+      ],
+      [
+        "market mode",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 35
+  },
+  {
+    "id": 21277,
+    "path": "md/21277.md",
+    "match_count": 10,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 35
+  },
+  {
+    "id": 22695,
+    "path": "md/22695.md",
+    "match_count": 10,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        6
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market-state",
+        1
+      ]
+    ],
+    "score": 35
+  },
+  {
+    "id": 15665,
+    "path": "md/15665.md",
+    "match_count": 9,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "marketcondition",
+        1
+      ],
+      [
+        "nash",
+        1
+      ],
+      [
+        "hmm",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 17865,
+    "path": "md/17865.md",
+    "match_count": 9,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 18605,
+    "path": "md/18605.md",
+    "match_count": 9,
+    "unique": 5,
+    "top_terms": [
+      [
+        "garch",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 21533,
+    "path": "md/21533.md",
+    "match_count": 9,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hidden markov",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "markov",
+        2
+      ],
+      [
+        "hidden_markov",
+        1
+      ],
+      [
+        "hmm",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 22032,
+    "path": "md/22032.md",
+    "match_count": 9,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hidden markov",
+        3
+      ],
+      [
+        "hmm",
+        2
+      ],
+      [
+        "markov",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "hidden_markov",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 22213,
+    "path": "md/22213.md",
+    "match_count": 14,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        9
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 22519,
+    "path": "md/22519.md",
+    "match_count": 14,
+    "unique": 4,
+    "top_terms": [
+      [
+        "fractal dimension",
+        5
+      ],
+      [
+        "garch",
+        4
+      ],
+      [
+        "hurst",
+        4
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 34
+  },
+  {
+    "id": 15720,
+    "path": "md/15720.md",
+    "match_count": 18,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        16
+      ],
+      [
+        "markov",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 33
+  },
+  {
+    "id": 16856,
+    "path": "md/16856.md",
+    "match_count": 13,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        5
+      ],
+      [
+        "market condition",
+        4
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 33
+  },
+  {
+    "id": 19519,
+    "path": "md/19519.md",
+    "match_count": 8,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        2
+      ],
+      [
+        "fractal dimension",
+        2
+      ],
+      [
+        "fractal_dimension",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 33
+  },
+  {
+    "id": 21376,
+    "path": "md/21376.md",
+    "match_count": 13,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        10
+      ],
+      [
+        "ehlers",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 33
+  },
+  {
+    "id": 22714,
+    "path": "md/22714.md",
+    "match_count": 23,
+    "unique": 2,
+    "top_terms": [
+      [
+        "garch",
+        22
+      ],
+      [
+        "hurst",
+        1
+      ]
+    ],
+    "score": 33
+  },
+  {
+    "id": 15332,
+    "path": "md/15332.md",
+    "match_count": 7,
+    "unique": 5,
+    "top_terms": [
+      [
+        "hidden markov",
+        3
+      ],
+      [
+        "garch",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 16700,
+    "path": "md/16700.md",
+    "match_count": 12,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        7
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 17736,
+    "path": "md/17736.md",
+    "match_count": 7,
+    "unique": 5,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 18116,
+    "path": "md/18116.md",
+    "match_count": 7,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        2
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 18144,
+    "path": "md/18144.md",
+    "match_count": 12,
+    "unique": 4,
+    "top_terms": [
+      [
+        "trending",
+        6
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "fractal dimension",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 18447,
+    "path": "md/18447.md",
+    "match_count": 7,
+    "unique": 5,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 19253,
+    "path": "md/19253.md",
+    "match_count": 12,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 20589,
+    "path": "md/20589.md",
+    "match_count": 22,
+    "unique": 2,
+    "top_terms": [
+      [
+        "garch",
+        21
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 22578,
+    "path": "md/22578.md",
+    "match_count": 12,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        6
+      ],
+      [
+        "market mode",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "market state",
+        2
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 23130,
+    "path": "md/23130.md",
+    "match_count": 7,
+    "unique": 5,
+    "top_terms": [
+      [
+        "markov",
+        2
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "garch",
+        1
+      ]
+    ],
+    "score": 32
+  },
+  {
+    "id": 18950,
+    "path": "md/18950.md",
+    "match_count": 11,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "markov",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 31
+  },
+  {
+    "id": 19669,
+    "path": "md/19669.md",
+    "match_count": 11,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "change-point",
+        3
+      ],
+      [
+        "bocpd",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 31
+  },
+  {
+    "id": 19890,
+    "path": "md/19890.md",
+    "match_count": 11,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        5
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 31
+  },
+  {
+    "id": 22341,
+    "path": "md/22341.md",
+    "match_count": 11,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 31
+  },
+  {
+    "id": 24057,
+    "path": "md/24057.md",
+    "match_count": 16,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market-mode",
+        12
+      ],
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 31
+  },
+  {
+    "id": 1351,
+    "path": "md/1351.md",
+    "match_count": 25,
+    "unique": 1,
+    "top_terms": [
+      [
+        "fractal dimension",
+        25
+      ]
+    ],
+    "score": 30
+  },
+  {
+    "id": 16537,
+    "path": "md/16537.md",
+    "match_count": 10,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        4
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 30
+  },
+  {
+    "id": 16560,
+    "path": "md/16560.md",
+    "match_count": 15,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        12
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 30
+  },
+  {
+    "id": 22291,
+    "path": "md/22291.md",
+    "match_count": 10,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        5
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 30
+  },
+  {
+    "id": 15767,
+    "path": "md/15767.md",
+    "match_count": 9,
+    "unique": 4,
+    "top_terms": [
+      [
+        "volatile",
+        4
+      ],
+      [
+        "trending",
+        3
+      ],
+      [
+        "regime",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 17546,
+    "path": "md/17546.md",
+    "match_count": 9,
+    "unique": 4,
+    "top_terms": [
+      [
+        "nash",
+        5
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "marketstate",
+        1
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 22063,
+    "path": "md/22063.md",
+    "match_count": 14,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        11
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 22978,
+    "path": "md/22978.md",
+    "match_count": 9,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        6
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 23352,
+    "path": "md/23352.md",
+    "match_count": 9,
+    "unique": 4,
+    "top_terms": [
+      [
+        "mama",
+        4
+      ],
+      [
+        "regime",
+        3
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "ehlers",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 3188,
+    "path": "md/3188.md",
+    "match_count": 9,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 29
+  },
+  {
+    "id": 16254,
+    "path": "md/16254.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "markov",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 16580,
+    "path": "md/16580.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "market_state",
+        2
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 16781,
+    "path": "md/16781.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 17906,
+    "path": "md/17906.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "trending",
+        3
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 19460,
+    "path": "md/19460.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 20220,
+    "path": "md/20220.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        4
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 21133,
+    "path": "md/21133.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        5
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 22756,
+    "path": "md/22756.md",
+    "match_count": 18,
+    "unique": 2,
+    "top_terms": [
+      [
+        "regime",
+        10
+      ],
+      [
+        "trending",
+        8
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 22921,
+    "path": "md/22921.md",
+    "match_count": 8,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 23742,
+    "path": "md/23742.md",
+    "match_count": 18,
+    "unique": 2,
+    "top_terms": [
+      [
+        "regime",
+        17
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 28
+  },
+  {
+    "id": 15476,
+    "path": "md/15476.md",
+    "match_count": 12,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        10
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 17458,
+    "path": "md/17458.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "hidden markov",
+        3
+      ],
+      [
+        "markov",
+        2
+      ],
+      [
+        "hidden_markov",
+        1
+      ],
+      [
+        "hmm",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 17479,
+    "path": "md/17479.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "trending",
+        3
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 17706,
+    "path": "md/17706.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "fractaldimension",
+        2
+      ],
+      [
+        "fractal dimension",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 17739,
+    "path": "md/17739.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        4
+      ],
+      [
+        "regime",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 17818,
+    "path": "md/17818.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 18037,
+    "path": "md/18037.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "ranging",
+        2
+      ],
+      [
+        "chop",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 19857,
+    "path": "md/19857.md",
+    "match_count": 12,
+    "unique": 3,
+    "top_terms": [
+      [
+        "trending",
+        9
+      ],
+      [
+        "fractal dimension",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 20329,
+    "path": "md/20329.md",
+    "match_count": 12,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        9
+      ],
+      [
+        "sideways",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 21142,
+    "path": "md/21142.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 21581,
+    "path": "md/21581.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "trending",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 21720,
+    "path": "md/21720.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "garch",
+        3
+      ],
+      [
+        "fractal dimension",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "hurst",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 22059,
+    "path": "md/22059.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "garch",
+        4
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 22194,
+    "path": "md/22194.md",
+    "match_count": 12,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "markov",
+        5
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 22503,
+    "path": "md/22503.md",
+    "match_count": 12,
+    "unique": 3,
+    "top_terms": [
+      [
+        "sideways",
+        4
+      ],
+      [
+        "market condition",
+        4
+      ],
+      [
+        "garch",
+        4
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 23192,
+    "path": "md/23192.md",
+    "match_count": 7,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 27
+  },
+  {
+    "id": 15406,
+    "path": "md/15406.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 15837,
+    "path": "md/15837.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        9
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "regime",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 15859,
+    "path": "md/15859.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 16280,
+    "path": "md/16280.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "markov",
+        2
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 16604,
+    "path": "md/16604.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        7
+      ],
+      [
+        "market_state",
+        3
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 17780,
+    "path": "md/17780.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 17877,
+    "path": "md/17877.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "regime",
+        3
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 17939,
+    "path": "md/17939.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "volatile",
+        2
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 17947,
+    "path": "md/17947.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        9
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "market mode",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 18916,
+    "path": "md/18916.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        8
+      ],
+      [
+        "regime",
+        2
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 19627,
+    "path": "md/19627.md",
+    "match_count": 6,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        3
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 20117,
+    "path": "md/20117.md",
+    "match_count": 16,
+    "unique": 2,
+    "top_terms": [
+      [
+        "regime",
+        10
+      ],
+      [
+        "trending",
+        6
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 20550,
+    "path": "md/20550.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "trending",
+        4
+      ],
+      [
+        "market mode",
+        3
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 20908,
+    "path": "md/20908.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        8
+      ],
+      [
+        "market state",
+        2
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 22937,
+    "path": "md/22937.md",
+    "match_count": 11,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        6
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "market state",
+        2
+      ]
+    ],
+    "score": 26
+  },
+  {
+    "id": 10672,
+    "path": "md/10672.md",
+    "match_count": 5,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 16085,
+    "path": "md/16085.md",
+    "match_count": 5,
+    "unique": 4,
+    "top_terms": [
+      [
+        "trending",
+        2
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "sideways",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 16300,
+    "path": "md/16300.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "market condition",
+        6
+      ],
+      [
+        "market state",
+        3
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 17526,
+    "path": "md/17526.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        4
+      ],
+      [
+        "ranging",
+        3
+      ],
+      [
+        "trending",
+        3
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 18842,
+    "path": "md/18842.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "trending",
+        7
+      ],
+      [
+        "volatile",
+        2
+      ],
+      [
+        "sideways",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 18873,
+    "path": "md/18873.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "volatile",
+        7
+      ],
+      [
+        "market condition",
+        2
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 22187,
+    "path": "md/22187.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "garch",
+        6
+      ],
+      [
+        "volatile",
+        3
+      ],
+      [
+        "ranging",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 22607,
+    "path": "md/22607.md",
+    "match_count": 5,
+    "unique": 4,
+    "top_terms": [
+      [
+        "market condition",
+        2
+      ],
+      [
+        "volatile",
+        1
+      ],
+      [
+        "ranging",
+        1
+      ],
+      [
+        "trending",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 22666,
+    "path": "md/22666.md",
+    "match_count": 5,
+    "unique": 4,
+    "top_terms": [
+      [
+        "garch",
+        2
+      ],
+      [
+        "market state",
+        1
+      ],
+      [
+        "market condition",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 22733,
+    "path": "md/22733.md",
+    "match_count": 10,
+    "unique": 3,
+    "top_terms": [
+      [
+        "regime",
+        8
+      ],
+      [
+        "trending",
+        1
+      ],
+      [
+        "volatile",
+        1
+      ]
+    ],
+    "score": 25
+  },
+  {
+    "id": 7782,
+    "path": "md/7782.md",
+    "match_count": 15,
+    "unique": 2,
+    "top_terms": [
+      [
+        "sideways",
+        14
+      ],
+      [
+        "market state",
+        1
+      ]
+    ],
+    "score": 25
+  }
+]

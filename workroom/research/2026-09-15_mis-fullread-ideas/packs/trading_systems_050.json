@@ -1,0 +1,59 @@
+{
+  "pack_id": "trading_systems_050",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_050",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "python-metatrader 5 strategy tester",
+    "self optimizing expert advisors in mql5"
+  ],
+  "n": 5,
+  "articles": [
+    {
+      "id": 18971,
+      "title": "Python-MetaTrader 5 Strategy Tester (Part 01): Trade Simulator",
+      "section": "Trading systems",
+      "series_title": "Python-MetaTrader 5 Strategy Tester (): Trade Simulator",
+      "series_key": "python-metatrader 5 strategy tester",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18971.md"
+    },
+    {
+      "id": 20917,
+      "title": "Python-MetaTrader 5 Strategy Tester (Part 04): Tester 101",
+      "section": "Trading systems",
+      "series_title": "Python-MetaTrader 5 Strategy Tester (): Tester 101",
+      "series_key": "python-metatrader 5 strategy tester",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20917.md"
+    },
+    {
+      "id": 20958,
+      "title": "Python-MetaTrader 5 Strategy Tester (Part 05): Multi-Symbols and Timeframes Strategy Tester",
+      "section": "Trading systems",
+      "series_title": "Python-MetaTrader 5 Strategy Tester (): Multi-Symbols and Timeframes Strategy Tester",
+      "series_key": "python-metatrader 5 strategy tester",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20958.md"
+    },
+    {
+      "id": 18873,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 10): Matrix Factorization",
+      "section": "Trading systems",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Matrix Factorization",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18873.md"
+    },
+    {
+      "id": 19891,
+      "title": "Self Optimizing Expert Advisors in MQL5 (Part 15): Linear System Identification",
+      "section": "Trading systems",
+      "series_title": "Self Optimizing Expert Advisors in MQL5 (): Linear System Identification",
+      "series_key": "self optimizing expert advisors in mql5",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19891.md"
+    }
+  ]
+}

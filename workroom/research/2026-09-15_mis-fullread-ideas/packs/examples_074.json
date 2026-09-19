@@ -1,0 +1,96 @@
+{
+  "pack_id": "examples_074",
+  "section": "Examples",
+  "parent_shard": "examples_074",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "doeasy. service functions",
+    "engineering trading discipline into code",
+    "fallacies"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 14339,
+      "title": "DoEasy. Service functions (Part 1): Price patterns",
+      "section": "Examples",
+      "series_title": "DoEasy. Service functions (): Price patterns",
+      "series_key": "doeasy. service functions",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14339.md"
+    },
+    {
+      "id": 14479,
+      "title": "DoEasy. Service functions (Part 2): Inside Bar pattern",
+      "section": "Examples",
+      "series_title": "DoEasy. Service functions (): Inside Bar pattern",
+      "series_key": "doeasy. service functions",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14479.md"
+    },
+    {
+      "id": 14710,
+      "title": "DoEasy. Service functions (Part 3): Outside Bar pattern",
+      "section": "Examples",
+      "series_title": "DoEasy. Service functions (): Outside Bar pattern",
+      "series_key": "doeasy. service functions",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14710.md"
+    },
+    {
+      "id": 21273,
+      "title": "Engineering Trading Discipline into Code (Part 1): Creating Structural Discipline in Live Trading with MQL5",
+      "section": "Examples",
+      "series_title": "Engineering Trading Discipline into Code (): Creating Structural Discipline in Live Trading with MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21273.md"
+    },
+    {
+      "id": 21313,
+      "title": "Engineering Trading Discipline into Code (Part 2): Building a Daily Trade Limit Enforcer for All Trades in MQL5",
+      "section": "Examples",
+      "series_title": "Engineering Trading Discipline into Code (): Building a Daily Trade Limit Enforcer for All Trades in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21313.md"
+    },
+    {
+      "id": 21995,
+      "title": "Engineering Trading Discipline into Code (Part 5): Account-Level Risk Enforcement in MQL5",
+      "section": "Examples",
+      "series_title": "Engineering Trading Discipline into Code (): Account-Level Risk Enforcement in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21995.md"
+    },
+    {
+      "id": 22560,
+      "title": "Engineering Trading Discipline into Code (Part 6): Building a Unified Discipline Framework in MQL5",
+      "section": "Examples",
+      "series_title": "Engineering Trading Discipline into Code (): Building a Unified Discipline Framework in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22560.md"
+    },
+    {
+      "id": 1526,
+      "title": "Fallacies, Part 1: Money Management is Secondary and Not Very Important",
+      "section": "Examples",
+      "series_title": "Fallacies, : Money Management is Secondary and Not Very Important",
+      "series_key": "fallacies",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1526.md"
+    },
+    {
+      "id": 1530,
+      "title": "Fallacies, Part 2. Statistics Is a Pseudo-Science, or a Chronicle of Nosediving Bread And Butter",
+      "section": "Examples",
+      "series_title": "Fallacies, . Statistics Is a Pseudo-Science, or a Chronicle of Nosediving Bread And Butter",
+      "series_key": "fallacies",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1530.md"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "pack_id": "trading_systems_042_p01",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_042",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "mql5 trading tools"
+  ],
+  "n": 10,
+  "articles": [
+    {
+      "id": 22129,
+      "title": "MQL5 Trading Tools (Part 28): Filling Sweep Polygons for Butterfly Curve in MQL5",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Filling Sweep Polygons for Butterfly Curve in MQL5",
+      "series_key": "mql5 trading tools",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22129.md"
+    },
+    {
+      "id": 22139,
+      "title": "MQL5 Trading Tools (Part 29): Step-by-Step Butterfly Animation on Canvas",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Step-by-Step Butterfly Animation on Canvas",
+      "series_key": "mql5 trading tools",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22139.md"
+    },
+    {
+      "id": 22303,
+      "title": "MQL5 Trading Tools (Part 33): Building a Rich Content Markup Documentation System for MQL5 Programs",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Building a Rich Content Markup Documentation System for MQL5 Programs",
+      "series_key": "mql5 trading tools",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22303.md"
+    },
+    {
+      "id": 22786,
+      "title": "MQL5 Trading Tools (Part 34): Replacing Native Chart Objects with an Interactive Canvas Drawing Layer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Replacing Native Chart Objects with an Interactive Canvas Drawing Layer",
+      "series_key": "mql5 trading tools",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22786.md"
+    },
+    {
+      "id": 22838,
+      "title": "MQL5 Trading Tools (Part 35): Adding Channel, Pitchfork, Gann, and Fibonacci Tools to the Canvas Drawing Layer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding Channel, Pitchfork, Gann, and Fibonacci Tools to the Canvas Drawing Layer",
+      "series_key": "mql5 trading tools",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22838.md"
+    },
+    {
+      "id": 22856,
+      "title": "MQL5 Trading Tools (Part 36): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer",
+      "series_key": "mql5 trading tools",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22856.md"
+    },
+    {
+      "id": 22923,
+      "title": "MQL5 Trading Tools (Part 37): Adding a Per-Object Property-Editing Ribbon to the Canvas Drawing Layer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding a Per-Object Property-Editing Ribbon to the Canvas Drawing Layer",
+      "series_key": "mql5 trading tools",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22923.md"
+    },
+    {
+      "id": 22977,
+      "title": "MQL5 Trading Tools (Part 38): Adding a Tabbed Settings Window for Editing Object Properties",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding a Tabbed Settings Window for Editing Object Properties",
+      "series_key": "mql5 trading tools",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22977.md"
+    },
+    {
+      "id": 22992,
+      "title": "MQL5 Trading Tools (Part 39): Adding a Pinned-Tools Ribbon for Quick Access to Favorite Tools",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding a Pinned-Tools Ribbon for Quick Access to Favorite Tools",
+      "series_key": "mql5 trading tools",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22992.md"
+    },
+    {
+      "id": 23120,
+      "title": "MQL5 Trading Tools (Part 40): Adding SQLite Persistence and Per-Timeframe Visibility to the Canvas Drawing Layer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding SQLite Persistence and Per-Timeframe Visibility to the Canvas Drawing Layer",
+      "series_key": "mql5 trading tools",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23120.md"
+    }
+  ]
+}

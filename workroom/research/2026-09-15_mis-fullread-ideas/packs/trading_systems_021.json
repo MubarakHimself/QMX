@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_021",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_021",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18958,
+      "title": "Artificial Atom Algorithm (A3)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18958.md"
+    },
+    {
+      "id": 19043,
+      "title": "Implementation of the Quantum Reservoir Computing (QRC) circuit",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19043.md"
+    },
+    {
+      "id": 19047,
+      "title": "Developing a Neural Network Trading Robot Based on Mamba with Selective State Space Models",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19047.md"
+    },
+    {
+      "id": 19187,
+      "title": "Dingo Optimization Algorithm Modification (DOAm)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19187.md"
+    },
+    {
+      "id": 19292,
+      "title": "Neural network trading EA based on PatchTST",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19292.md"
+    },
+    {
+      "id": 19317,
+      "title": "N-BEATS Network-Based Forex EA",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19317.md"
+    },
+    {
+      "id": 19345,
+      "title": "Trading Robot Based on a GPT Language Model",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19345.md"
+    },
+    {
+      "id": 19547,
+      "title": "How to build and optimize a cycle-based trading system (Detrended Price Oscillator - DPO)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19547.md"
+    },
+    {
+      "id": 19609,
+      "title": "Automating The Market Sentiment Indicator",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19609.md"
+    },
+    {
+      "id": 19682,
+      "title": "Implementing Partial Position Closing in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19682.md"
+    },
+    {
+      "id": 19780,
+      "title": "From Novice to Expert: Demystifying Hidden Fibonacci Retracement Levels",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19780.md"
+    },
+    {
+      "id": 19861,
+      "title": "Artificial Coronary Circulation Algorithm (ACCS)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19861.md"
+    }
+  ]
+}

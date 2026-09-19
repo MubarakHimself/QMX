@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QML
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK]
-decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0024, DEC-0090, DEC-0169, DEC-0186, DEC-0204, DEC-0259, DEC-0261, DEC-0270, DEC-0272, DEC-0280, DEC-0285, DEC-0286, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413]
-sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, SRC-19, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, docs/decisions/ADR-0023-qml-research-expansion.md, docs/architecture/dependencies.yaml, docs/contracts/ct-33-bot-definition.yaml, docs/contracts/ct-34-confluence.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-07-lineage-edge.yaml]
+decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0024, DEC-0090, DEC-0169, DEC-0186, DEC-0204, DEC-0259, DEC-0261, DEC-0270, DEC-0272, DEC-0280, DEC-0285, DEC-0286, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413, DEC-0415, DEC-0417, DEC-0424, DEC-0436, DEC-0445, DEC-0448, DEC-0449, DEC-0450]
+sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, SRC-19, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, docs/decisions/ADR-0023-qml-research-expansion.md, docs/decisions/ADR-0024-workflows-construction-kit.md, docs/architecture/dependencies.yaml, docs/contracts/ct-33-bot-definition.yaml, docs/contracts/ct-34-confluence.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-07-lineage-edge.yaml]
 generated: 2026-08-21
-verified: 2026-09-16
+verified: 2026-09-19
 stale_after: 90d
 ---
 
@@ -224,6 +224,28 @@ The 2026-09-16 architecture package absorbs the Stats staging mill as a **QML ex
 **Wiring inspect (2026-09-16).** On `integration@8510c032496bb870824ecc5c4f807e8a4e4f167e` (`8510c03`), `graduate_to_governed` exists; Stage 0 types do not; research-corpus still points at an in-memory two-file stub (DEC-0406). Class/test existence is not end-to-end demonstration (DEC-0286) (DEC-0406). This dated note does **not** overwrite the workbench CT-33/CT-34 `source-inspected` stamp on `integration@1b451a848d897e42f6e2c7fd9f2ea86fab7295f2` (DEC-0286).
 
 **Deferred gaps stay gaps.** GAP-0085 typed mechanism nouns stay deferred this increment (DEC-0413) (GAP-0085). GAP-0063 first generator algorithm stays deferred (GAP-0063). FR-RES-* identifiers live on GAP-0064; they do not rewrite the 2026-08-21 PRD and do not close GAP-0061 (DEC-0405) (GAP-0064). Implementation authorization remains factory-pipeline-only; first epic after docs is FEAT-0047 (AD-14 seed bind + Stage 0 view) (DEC-0394) (ADR-0023).
+
+## Workflows construction kit (2026-09-19)
+
+The 2026-09-18/19 Workflows construction-kit spine (`architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md`) is absorbed under [ADR-0024](../decisions/ADR-0024-workflows-construction-kit.md). Preflight is **reuse** — no sixth COMP, no new CT, no new `depends_on` edge (DEC-0445). Implementation authorization remains factory-pipeline-only (DEC-0445) (DEC-0450).
+
+### ATC adoption — authoring follows the selected composition (DEC-0436, DEC-0424)
+
+When an Alternative Trading Composition (ATC / `AlternativeRunConfig`) is selected, **QML authoring adopts that composition**. It does not stay secretly Book-shaped while QMB or QMN evaluate ATC (DEC-0436) (DEC-0424). Book/BMS remain the default accounting and risk/sizing implementations under L36, not the ceiling; a complete PolicyPair may occupy those roles without dummy records (DEC-0448) (DEC-0436). Sequential paper-then-live and L17 human promote remain (DEC-0436) (DEC-0448).
+
+**No dummy CT-33.** A CT-33 (or CT-22 / CT-27 / ATC PolicyPair) minted solely to satisfy a required field, or whose policy is identity / no-op / unlimited / pass-through, or a sentinel fp, is dummy and **`INVALID_INPUT`** at compile, register, validate, simulate, and seat (DEC-0424) (DEC-0448).
+
+### Stage 0 `graph` is not a workflow layer (DEC-0417, DEC-0411)
+
+A Stage 0 composition `graph` remains research meaning on the hypothesis. It is **not** a Graph Template, **not** a Task Graph, **not** a Board layout, **not** an ungoverned library call as workflow, and is never compiled to `run_slice`, a bot, or an order adapter (DEC-0417) (DEC-0411) (DEC-0386). The four Workflows layers stay distinct; Stage 0 is none of them (DEC-0417).
+
+### Hypotheses stay off the Library facade (DEC-0415, DEC-0449)
+
+Hypothesis listing stays on `qml.research` / `research_ref` and is **refused on the Library facade** (DEC-0415) (DEC-0449). DEC-0449 named-amends DEC-0389's two-class freeze to add ContributionHit for product discovery; the rest of DEC-0389 stands — no `hit_class: strats`, no `qml_candidate`, hypotheses remain off the Artifact rail until Stage 1 registration mints CT-33/CT-34 (DEC-0449) (DEC-0381).
+
+### Wiring honesty @ 270e992 (DEC-0450)
+
+On `integration@270e992995c2378ca63cf6343254ef8140a8c97e`, AlternativeRunConfig / PolicyPair are not in code; QML→QMB→QMN cross-component integration remains unsupported (P2-INT-001) (DEC-0450). Do not describe proposed ATC authoring connects as implemented (DEC-0450).
 
 ## Configuration
 

@@ -1,0 +1,29 @@
+{
+  "shard_id": "trading_systems_046",
+  "section": "Trading systems",
+  "n": 2,
+  "series_in_shard": [
+    "monochronic trading",
+    "multiple indicators on one chart"
+  ],
+  "articles": [
+    {
+      "id": 16171,
+      "title": "Monochronic Trading (Part 1): How to Detect Broker Timezone and DST in MQL5",
+      "section": "Trading systems",
+      "series_title": "Monochronic Trading (): How to Detect Broker Timezone and DST in MQL5",
+      "series_key": "monochronic trading",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16171.md"
+    },
+    {
+      "id": 10301,
+      "title": "Multiple indicators on one chart (Part 06): Turning MetaTrader 5 into a RAD system (II)",
+      "section": "Trading systems",
+      "series_title": "Multiple indicators on one chart (): Turning MetaTrader 5 into a RAD system (II)",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10301.md"
+    }
+  ]
+}

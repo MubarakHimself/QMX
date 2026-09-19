@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_033",
+  "section": "Examples",
+  "parent_shard": "examples_033",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 11826,
+      "title": "MQL5 Cookbook \u2014 Services",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11826.md"
+    },
+    {
+      "id": 11841,
+      "title": "Population optimization algorithms: Fish School Search (FSS)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11841.md"
+    },
+    {
+      "id": 11873,
+      "title": "Population optimization algorithms: Firefly Algorithm (FA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11873.md"
+    },
+    {
+      "id": 11915,
+      "title": "Population optimization algorithms: Bat algorithm (BA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11915.md"
+    },
+    {
+      "id": 11977,
+      "title": "MQL5 Cookbook \u2014 Macroeconomic events database",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11977.md"
+    },
+    {
+      "id": 11990,
+      "title": "Population optimization algorithms: Invasive Weed Optimization (IWO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11990.md"
+    },
+    {
+      "id": 12031,
+      "title": "Population optimization algorithms: Bacterial Foraging Optimization (BFO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12031.md"
+    },
+    {
+      "id": 12042,
+      "title": "Develop a Proof-of-Concept DLL with C++ multi-threading support for MetaTrader 5 on Linux",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12042.md"
+    },
+    {
+      "id": 12071,
+      "title": "MQL5 \u2014 You too can become a master of this language",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12071.md"
+    },
+    {
+      "id": 12072,
+      "title": "Population optimization algorithms: Gravitational Search Algorithm (GSA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12072.md"
+    },
+    {
+      "id": 12129,
+      "title": "Measuring Indicator Information",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12129.md"
+    },
+    {
+      "id": 12163,
+      "title": "Population optimization algorithms: Harmony Search (HS)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12163.md"
+    }
+  ]
+}

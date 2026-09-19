@@ -1,0 +1,135 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 2): Creating a News Dashboard Panel"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Creating a News Dashboard Panel"
+20: # Trading with the MQL5 Economic Calendar (Part 2): Creating a News Dashboard Panel
+25: | 11 November 2024 at 10:02
+36: ### Introduction
+38: In this article, we build upon our [previous exploration in Part 1](https://www.mql5.com/en/articles/16223) of the [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) Economic Calendar, where we focused on mastering the functions necessary to retrieve and analyze economic news events
+46: ### Designing the Dashboard Panel
+48: Designing the dashboard panel is a crucial step in creating an effective tool for monitoring economic news events using the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar). Our objective is to create a user-friendly and visually appealing interface that presents important information clearly and concisely. A well-structured dashboard will allow us to quickly assess the rel
+56: With a clear understanding of our objectives, let's dive into the automation process. In the previous article, we focused on mastering the functions of the MQL5 Economic Calendar to effectively retrieve and analyze economic news events. If you haven't already, please refer to that content to ensure you're well-prepared to follow along as we proceed with creating our news dashboard panel. Let's get
+58: ### Setting Up the Panel in MQL5
+64: ```
+75: ```
+79: - "objName:" This parameter represents the unique name of the rectangle label object. It serves as an identifier for the graphical element being created.
+80: - "xD and yD:**"** These parameters determine the X and Y distances from the corner where the rectangle label will be positioned. Think of them as the coordinates that define the top-left corner of the rectangle relative to the chart.
+81: - "xS and yS:" These parameters specify the width and height of the rectangle. The "xS" value determines how wide the rectangle will be horizontal, while "yS" controls its vertical height.
+85: - "clrBg:" The "clrBg" parameter represents the background color of the rectangle label. Choose a color that contrasts well with the chart background or complements other elements.
+86: - "widthBorder:" This parameter defines the width of the border around the rectangle. If you want a border, set a positive value; otherwise, use zero for no border.
+87: - "clrBorder:" Optional parameter for the border color. If you want a border, specify a color (e.g., "clrNONE" for no border color).
+88: - "borderType:" Specify the type of border for the rectangle. Options include flat, raised, or other styles. For a simple flat border, use [BORDER\_FLAT](https://www.mql5.com/en/docs/constants/objectconstants/enum_object_property).
+89: - "borderStyle:" If you choose a flat border, this parameter determines the line style (e.g., solid, dashed). Use [STYLE\_SOLID](https://www.mql5.com/en/docs/constants/objectconstants/enum_object_property) for a continuous line.
+95: ```
+101: ```
+107: ```
+109: ```
+115: ```
+131: ```
+135: ```
+137: ```
+141: - Chart id: This is the chart identifier. "0" refers to the current chart (chart ID). We’re adjusting the properties of an object within this chart.
+142: - Name: This is the name of the object. "objName" represents the unique name assigned to the rectangle label object.
+143: - Property id: This is the ID of the object property and its value can be one of the values of the [ENUM\_OBJECT\_PROPERTY\_INTEGER](https://www.mql5.com/en/docs/constants/objectconstants/enum_object_property#enum_object_property_integer) enumeration. [OBJPROP\_XDISTANCE](https://www.mql5.com/en/doc
+144: - Property value: This is the value of the property. The value assigned to "xD" determines how far to the right (or left, if negative) the top-left corner of our rectangle label will be positioned horizontally from the left edge of the chart.
+150: ```
+152: ```
+156: - CORNER\_LEFT\_UPPER: Center of coordinates is in the upper left corner of the chart.
+157: - CORNER\_LEFT\_LOWER: Center of coordinates is in the lower left corner of the chart.
+158: - CORNER\_RIGHT\_LOWER: Center of coordinates is in the lower right corner of the chart.
+159: - CORNER\_RIGHT\_UPPER: Center of coordinates is in the upper right corner of the chart.
+167: ```
+169: ```
+173: ```
+175: ```
+179: ```
+211: ```
+215: ```
+256: ```
+264: ```
+300: ```
+306: ```
+307: #define MAIN_REC "MAIN_REC"
+308: ```
+314: ```
+325: ```
+331: ```
+334: ```
+346: ```
+347: #define SUB_REC1 "SUB_REC1"
+348: #define SUB_REC2 "SUB_REC2"
+349: ```
+353: ```
+357: ```
+367: ```
+368: #define HEADER_LABEL "HEADER_LABEL"
+372: //--- Create the header label with text "MQL5 Economic Calendar"
+373: createLabel(HEADER_LABEL,50+3+5,50+5,"MQL5 Economic Calendar",clrWhite,15);
+374: ```
+376: Here, we define the label identifier "HEADER\_LABEL" with the value "HEADER\_LABEL" for consistency and ease of referencing this specific label throughout our code. This label will serve as the header for our dashboard panel, prominently displaying the title "MQL5 Economic Calendar".
+378: Then, using the "createLabel" function, we create the header label at the specified position. We set its X-coordinate as "50+3+5", positioning it slightly to the right of the main panel’s edge to ensure it aligns within the "SUB\_REC1" rectangle and does not overlap with any margins. The Y-coordinate, "50+5", places it a few pixels below the top edge of the main rectangle, ensuring readability. Fo
+384: ```
+385: string array_calendar[] = {"Date","Time","Cur.","Imp.","Event","Actual","Forecast","Previous"};
+387: ```
+389: We define two arrays to organize the labels and dimensions of buttons in the dashboard. The first array, "array\_calendar", contains strings for each column header we will display, specifying the type of information: "Date", "Time", "Cur." (Currency), "Imp." (Impact/Importance), "Event", "Actual", "Forecast", and "Previous". Each string represents a label for a data category, helping us understand
+391: The second array, "buttons", contains integers representing the widths (in pixels) for each button associated with the respective columns in "array\_calendar". These widths are tailored to each data type to ensure the layout remains aligned and visually organized. For example, "80" pixels for the "Date" column accommodate longer date formats, while narrower widths like "50" pixels are set for "Tim
+393: ```
+394: #define ARRAY_CALENDAR "ARRAY_CALENDAR"
+401: //--- Loop through the array_calendar elements to create buttons
+402: for (int i=0; i<ArraySize(array_calendar); i++){
+403:    //--- Create each button for calendar categories
+404:    createButton(ARRAY_CALENDAR+IntegerToString(i),startX,132,buttons[i],25,array_calendar[i],clrWhite,13,clrGreen,clrNONE,"Calibri Bold");
+407: ```
+409: Here, we initialize and position buttons based on the "array\_calendar" elements to label each category in our dashboard panel. First, we define the identifier "ARRAY\_CALENDAR" for the calendar button series. Then, we set "startX" to "59" as the initial x-coordinate, which will position the first button horizontally on the panel.
+411: We then use a [for loop](https://www.mql5.com/en/docs/basis/operators/for) to iterate through each item in "array\_calendar" to create a button. For each iteration, we call the "createButton" function and pass in a unique ID for each button by appending the loop index to "ARRAY\_CALENDAR". This ensures every button ID is unique, referencing categories such as "Date", "Time", "Cur.", etc. We specif
+417: ```
+421: MqlCalendarValue values[]; //--- Array to store calendar values
+423: //--- Define start and end time for calendar event retrieval
+431: //--- Retrieve historical calendar values within the specified time range
+432: int allValues = CalendarValueHistory(values,startTime,endTime,NULL,NULL);
+436: ```
+438: This gives us the historical event values as retrieved from the MQL5 Economic Calendar, and thus instead of just printing them, we can display them on the dashboard. Here is the logic we apply.
+440: ```
+441: #define TIME_LABEL "TIME_LABEL"
+445: //--- Create label displaying server time and total number of news events found
+446: createLabel(TIME_LABEL,70,85,"Server Time: "+TimeToString(TimeCurrent(),
+449: ```
+451: Here, we create a label to display the current server time along with the total number of news events retrieved. First, we define the identifier "TIME\_LABEL" to uniquely reference this label within our dashboard panel.
+453: Next, we call the "createLabel" function to generate the label itself. We specify the label's position by providing the coordinates "70" and "85", which dictate where the label will appear on the panel. The text for the label is dynamically constructed using the [TimeToString](https://www.mql5.com/en/docs/convert/timetostring) function, which formats the current server time retrieved by the [TimeC
+455: ```
+456: #define IMPACT_LABEL "IMPACT_LABEL"
+462: ```
+470: ```
+488: ```
+496: That was a success. We can now move on to adding the actual calendar data to the dashboard. However, before that, we will need to partition the second subframe so that we can give the panel a more professional look, rather than just placing data in it. We achieve that via the following logic.
+498: ```
+505: //--- Loop through each calendar value up to the maximum defined total
+518: ```
+522: Next, we initialize an integer variable "startY" with a value of "162", which serves as the starting y-coordinate for positioning the news data on the panel. We then enter a loop that iterates from "0" to "valuesTotal", effectively processing each calendar value we intend to display. Within this loop, we define the color for each row holder using an alternating pattern based on the current index "
+528: ```
+529: #define DATA_HOLDERS "DATA_HOLDERS"
+530: #define ARRAY_NEWS "ARRAY_NEWS"
+531: ```
+535: ```
+540: for (int k=0; k<ArraySize(array_calendar); k++){
+542:    MqlCalendarEvent event; //--- Declare event structure
+543:    CalendarEventById(values[i].event_id,event); //--- Retrieve event details by ID
+545:    MqlCalendarCountry country; //--- Declare country structure
+546:    CalendarCountryById(event.country_id,country); //--- Retrieve country details by event's country ID
+555:    string news_data[ArraySize(array_calendar)];
+562:    if (event.importance == CALENDAR_IMPORTANCE_LOW){importance_color=clrYellow;}
+563:    else if (event.importance == CALENDAR_IMPORTANCE_MODERATE){importance_color=clrOrange;}
+564:    else if (event.importance == CALENDAR_IMPORTANCE_HIGH){importance_color=clrRed;}
+572:    MqlCalendarValue value; //--- Declare calendar value structure
+573:    CalendarValueById(values[i].id,value); //--- Retrieve actual, forecast, and previous values
+582:       createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY-(22-12),news_data[k],importance_color,22,"Calibri");
+585:       createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY,news_data[k],clrBlack,12,"Calibri");
+591: ```
+593: Here, we initialize an integer variable called "startX" with a value of 65, which will serve as the starting x-coordinate for positioning each data entry related to calendar events. We then enter a loop that iterates through each column in the "array\_calendar" using the index "k". Within this loop, we declare a structure variable "event" of type [MqlCalendarEvent](https://www.mql5.com/en/docs/con
+595: Next, we declare another structure variable "country" of type [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) to hold information about the country associated with the calendar event. We use the [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid) function to populate "country" with details based on the event's coun
+597: We then prepare a string array called "news\_data" with a size equal to that of "array\_calendar" to store the information related to the event. The first element of "news\_data" is set to the event date, formatted as a string using the [TimeToString](https://www.mql5.com/en/docs/convert/timetostring) function with the "TIME\_DATE" flag. The second element captures the event time, formatted using 
+603: To fetch actual, forecast, and previous values for the event, we declare another structure variable called "value" of type [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) and use the [CalendarValueById](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) function to populate this structure based on the event's ID stored in "values[i].id". The
+609: That was a success. We now created an MQL5 Economic Calendar dashboard that displays the news data on the chart for easier referencing. As for the current milestone, we just get all the data. In the next parts of the series, we will improve the panel by integrating filters, integrating real-time data updates, and using the news data for trading purposes.
+611: ### Conclusion
+613: In conclusion, we have successfully laid the foundation for our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) by constructing an interactive dashboard panel that displays crucial economic events in a user-friendly format. By implementing features such as calendar data retrieval, visual categorization of events based on their importance, and intuitive labeling, we can sta
+615: In the upcoming parts of this series, we will integrate additional functionalities, such as news filters to help us focus on the most relevant information for our strategies in [MQL5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5"). We will also implement real-time updates to ensure that our panel reflects the
+621: [MQL5\_NEWS\_CALENDAR\_PART\_2.mq5](https://www.mql5.com/en/articles/download/16301/mql5_news_calendar_part_2.mq5 "Download MQL5_NEWS_CALENDAR_PART_2.mq5")
+631: This project aims to leverage the MQL5 algorithm to develop a comprehensive set of analysis tools for MetaTrader 5. These tools—ranging from scripts and indicators to AI models and expert advisors—will automate the market analysis process. At times, this development will yield tools capable of performing advanced analyses with no human involvement and forecasting outcomes to appropriate platforms.

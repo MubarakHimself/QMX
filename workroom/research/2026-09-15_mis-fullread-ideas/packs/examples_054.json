@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_054",
+  "section": "Examples",
+  "parent_shard": "examples_054",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16991,
+      "title": "Post-Factum trading analysis: Selecting trailing stops and new stop levels in the strategy tester",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16991.md"
+    },
+    {
+      "id": 16995,
+      "title": "Gating mechanisms in ensemble learning",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16995.md"
+    },
+    {
+      "id": 17044,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IX): Code Organization (III): Communication Module",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17044.md"
+    },
+    {
+      "id": 17085,
+      "title": "Feature Engineering With Python And MQL5 (Part III): Angle Of Price (2) Polar Coordinates",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17085.md"
+    },
+    {
+      "id": 17110,
+      "title": "Analyzing binary code of prices on the exchange (Part II): Converting to BIP39 and writing GPT model",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17110.md"
+    },
+    {
+      "id": 17273,
+      "title": "The Kalman Filter for Forex Mean-Reversion Strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17273.md"
+    },
+    {
+      "id": 17390,
+      "title": "An introduction to Receiver Operating Characteristic curves",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17390.md"
+    },
+    {
+      "id": 17396,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IX): Code Organization (IV): Trade Management Panel class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17396.md"
+    },
+    {
+      "id": 17397,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IX): Code Organization (V): AnalyticsPanel Class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17397.md"
+    },
+    {
+      "id": 17446,
+      "title": "Resampling techniques for prediction and classification assessment in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17446.md"
+    },
+    {
+      "id": 17450,
+      "title": "From Novice to Expert: Support and Resistance Strength Indicator (SRSI)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17450.md"
+    },
+    {
+      "id": 17457,
+      "title": "Visualizing Strategies in MQL5: Laying Out Optimization Results Across Criterion Charts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17457.md"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Automating Trade Entry with News Event Analysis and Countdown Timers"
+20: # Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers
+25: | 25 February 2025 at 05:19
+36: ### Introduction
+38: In this article, we take the next step in our MQL5 Economic Calendar series by automating trade entries based on real-time news analysis. Building on our [previous dashboard enhancements (Part 5)](https://www.mql5.com/en/articles/16404), we now integrate trading logic that scans news events using user-defined filters and time offsets, compares forecast and prior values, and automatically executes 
+48: ### Understanding the Trading Logic Requirements
+52: Filtering is critical to ensure that we only consider relevant news. Our system will thus use several filters: a currency filter to focus on selected currency pairs, an impact filter to limit events to those of a chosen significance level, and a time filter that restricts events to those within a predefined overall range. The user selects this from the dashboard. This layered filtering will help t
+60: ### Implementing the Trading Logic in MQL5
+64: ```
+65: #include <Trade\Trade.mqh> // Trading library for order execution
+79: input int        tradeOffsetHours   = 12;         // Offset hours (e.g., 12 hours)
+91: ```
+93: On the global scope, we include the "Trade\Trade.mqh" library using [#include](https://www.mql5.com/en/docs/basis/preprosessor/include) to enable order execution and declare a global "CTrade" object named "trade" for processing trades. We define an [enumerated](https://www.mql5.com/en/book/basis/builtin_types/enums) type "ETradeMode" with options "TRADE\_BEFORE", "TRADE\_AFTER", "NO\_TRADE", and "
+95: ```
+99:    //--- Log the call to CheckForNewsTrade with the current server time
+123:    //--- Retrieve historical calendar values (news events) within the defined time range
+125:    int totalValues = CalendarValueHistory(values, lowerBound, upperBound, NULL, NULL);
+135: ```
+137: Here, we define the "CheckForNewsTrade" function, which scans for news events and executes trades based on our selected criteria. We begin by logging its call with the [Print](https://www.mql5.com/en/docs/common/print) function, displaying the current server time obtained via the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function. We then check if trading is disab
+139: Next, the function calculates the overall event time range by setting "lowerBound" to the current time minus the number of seconds from the "start\_time" input (converted via the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) function) and "upperBound" to the current time plus the seconds from the "end\_time" input. This overall time range is then logged using [Print](https://w
+141: ```
+153:    if(!CalendarEventById(values[i].event_id, event))
+163:       CalendarCountryById(event.country_id, country);
+202:    //--- If time filtering is enabled and the event time exceeds the upper bound, skip the event
+204:       Print("Event ", event.name, " skipped due to time filter.");
+223: ```
+225: Here, we initialize candidate event variables using a [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variable ("candidateEventTime"), two "string" variables ("candidateEventName" and "candidateTradeSide"), and an "int" variable ("candidateEventID") set to -1. Then, we [loop](https://www.mql5.com/en/docs/basis/operators/for) through each event retrieved by the [CalendarValueH
+227: Next, we apply our filters: if currency filtering is enabled, we retrieve the event’s corresponding [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) structure via [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid) and check if its "currency" field matches any entry in the "curr\_filter\_selected" array; if not, we 
+231: ```
+237:       //--- If unable to retrieve calendar values, log the error and skip this event
+238:       if(!CalendarValueById(values[i].id, calValue)) {
+239:          Print("Error retrieving calendar value for event: ", event.name);
+242:       //--- Get the forecast value from the calendar data
+244:       //--- Get the previous value from the calendar data
+267: ```
+271: ```
+272: //--- Get the current trading server time
+274: //--- Calculate the offset in seconds based on trade offset hours, minutes, and seconds
+275: int offsetSeconds = tradeOffsetHours * 3600 + tradeOffsetMinutes * 60 + tradeOffsetSeconds;
+276: ```
+278: If the condition is met, we retrieve the event’s forecast and previous values using the [CalendarValueById](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) function to populate a [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure. If the retrieval fails, we log an error message and skip the event. We then extract the forecast and p
+282: ```
+302: ```
+306: ```
+308: if(!CalendarEventById(values[i].event_id, event))
+315: //--- Retrieve detailed calendar values for the candidate event
+318: if(!CalendarValueById(values[i].id, calValue)) {
+319:    Print("Error retrieving calendar value for candidate event: ", event.name);
+338: ```
+340: Before we open trades, we attempt to retrieve detailed information for the candidate event using the [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid) function to populate a [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) structure; if this retrieval fails, we immediately skip to the next event. We then check whether the
+342: Next, we retrieve the detailed calendar values for the event using [CalendarValueById](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) to populate a [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure, then extract the "forecast" and "previous" values using the "GetForecastValue" and "GetPreviousValue" methods, respectively; if eith
+344: ```
+373: ```
+377: ```
+402: ```
+404: First, we initialize a boolean flag "tradeResult" to store the outcome of our trade attempt. Then, we check the "candidateTradeSide"—if it is "BUY", we call the "trade.Buy" function with the specified "tradeLotSize", symbol ([\_Symbol](https://www.mql5.com/en/docs/predefined/_symbol)), and use the event's name as a comment, for uniqueness and easier identification; if "candidateTradeSide" is "SELL
+410: ### Creating and Managing Countdown Timers
+414: ```
+487: ```
+491: ```
+498:       //--- Calculate hours from the remaining seconds
+556: ```
+558: Here, we handle the post‐trade countdown scenario in detail. Once a trade is executed, we first use the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function to obtain the current server time and compare it with "tradedNewsTime", which stores the candidate event’s scheduled release time. If the current time is still before "tradedNewsTime", we calculate the remaining
+564: ```
+592: ```
+594: If the current time does not fall within the candidate event's trading window—that is, if the current time is not greater than or equal to "targetTime" (calculated as the candidate event's scheduled time minus the offset) and still not less than the candidate event's scheduled time, we assume that the current time is still before the trading window, so we calculate the remaining time until the can
+598: ```
+606: ```
+612: ```
+622: ```
+626: ```
+636: ```
+640: ```
+681:    //--- Check if the time filter is enabled
+683:       //--- Append the time filter information with the upper limit
+686:       //--- Indicate that the time filter is turned off
+692: ```
+696: Finally, we address the time filter by appending "Time: Up to " along with the string representation of the "end\_time" input (again using "[EnumToString](https://www.mql5.com/en/docs/convert/enumtostring)"), or "Time: Off" if disabled. Once all segments are concatenated, we output the complete filter information to the Experts log using the [Print](https://www.mql5.com/en/docs/common/print) funct
+698: ```
+727: ```
+729: Upon running the program, we have the following outcome.
+735: ### Testing the Trading Logic
+737: As for the backtesting, we waited for live trading news events, and upon the testing, the outcome was as illustrated in the video below.
+753: ### Conclusion
+755: In conclusion, we have successfully integrated automated trade entry into our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) system by using user-defined filters, precise time offsets, and dynamic countdown timers. Our solution scans for news events compares forecast and previous values, and automatically executes BUY or SELL orders based on clear calendar signals.
+763: [MQL5\_NEWS\_CALENDAR\_PART\_6.mq5](https://www.mql5.com/en/articles/download/17271/mql5_news_calendar_part_6.mq5 "Download MQL5_NEWS_CALENDAR_PART_6.mq5")
+773: Points of support and resistance are critical levels that signal potential trend reversals and continuations. Although identifying these levels can be challenging, once you pinpoint them, you’re well-prepared to navigate the market. For further assistance, check out the Quarters Drawer tool featured in this article, it will help you identify both primary and minor support and resistance levels.
+776: [Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy](https://www.mql5.com/en/articles/17239)
+778: In this article, we build an Expert Advisor in MQL5 for the Asian Breakout Strategy by calculating the session's high and low and applying trend filtering with a moving average. We implement dynamic object styling, user-defined time inputs, and robust risk management. Finally, we demonstrate backtesting and optimization techniques to refine the program.

@@ -1,0 +1,627 @@
+# Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 19 May 2026 at 07:21
+1 481
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+1](https://www.mql5.com/en/forum/509967 "Comments")
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22220#introduction)
+2. [Model and System Overview](https://www.mql5.com/en/articles/22220#model_and_system_overview)
+3. [Getting Started](https://www.mql5.com/en/articles/22220#getting_started)
+- [Getting Historical Data](https://www.mql5.com/en/articles/22220#GettingHistoricalData)
+- [Feature Engineering](https://www.mql5.com/en/articles/22220#feature_engineering)
+- [Model Definition](https://www.mql5.com/en/articles/22220#model_definition)
+- [Training Pipeline](https://www.mql5.com/en/articles/22220#training_pipeline)
+- [Flask Server](https://www.mql5.com/en/articles/22220#flask_server)
+- [Simple Execution Workflow](https://www.mql5.com/en/articles/22220#simple_execution_workflow)
+4. [Putting it all Together on MQL5](https://www.mql5.com/en/articles/22220#putting_it_all_together_on_mql5)
+5. [Live Inference](https://www.mql5.com/en/articles/22220#live_inference)
+6. [Conclusion](https://www.mql5.com/en/articles/22220#conclusion)
+### Introduction
+Traders face a persistent challenge in unpredictable financial markets. Volatility can shift dramatically within a single session, turning a stable trend into chaotic, whipsawing price action. Traditional technical indicators often lag in rapid regime changes, leaving traders exposed to sudden reversals, excessive drawdowns, or missed opportunities. Fixed stop-loss and take-profit levels that work well in calm conditions become dangerously inadequate during volatility spikes, while rigid position sizing fails to account for the ever-changing risk landscape. The result is a frustrating cycle of premature stopouts, oversized losses, and inconsistent performance that erodes both capital and confidence.
+This project addresses these challenges by calculating market entropy in real time. This quantitative approach continuously measures disorder and uncertainty in tick-level price data. By applying Shannon entropy to rolling windows of recent prices, the system instantly detects transitions between low, normal, high, and extreme volatility regimes. A neural network trained on entropy-derived features predicts directional probability, while an adaptive risk engine dynamically adjusts position size, stop-loss width, and take-profit targets based on the current market state. The pipeline collects MetaTrader 5 ticks, runs Flask-based inference, and executes trades automatically. It reacts in milliseconds instead of waiting for candle closes. This empowers traders with volatility-aware decision-making that protects capital during chaos and capitalizes on opportunity during calm.
+### Model and System Overview
+The system consists of two core components working in tandem: an MQL5 Expert Advisor running inside MetaTrader 5 and a Python Flask server handling model inference. On every tick, the EA collects the most recent 50 bid prices and calculates RSI. This data is packaged as a JSON payload and sent via an HTTP POST request to the Flask server running locally. The server receives the price window, computes Shannon entropy alongside several volatility and trend metrics, then passes these features through a pre-trained neural network. The model returns a directional probability between zero and one, which the server combines with the current volatility regime to generate a final signal.
+Raw tick data flows continuously into a rolling window where Shannon entropy measures market disorder. The resulting entropy score classifies the current volatility regime, which directly controls position sizing and stop distances.
+When the Flask server returns a BUY or SELL signal with sufficient confidence, the EA evaluates current market exposure before acting. If no position exists and cooldown periods have elapsed, a market order is placed using MetaTrader's CTrade class. Position size, stop-loss, and take-profit levels are all scaled by the volatility multiplier received from the server. If an opposite position already exists and reversal conditions are met, the EA closes the existing trade before opening a new one. All of this occurs continuously on tick data, allowing the system to detect and adapt to volatility shifts as they happen rather than waiting for candles to close.
+The EA sends tick data to the Flask server, where entropy features are extracted and passed through a neural network. The server returns a signal with adaptive risk parameters, and the EA executes the trade after validating position limits and cooldown constraints.
+### 
+### Getting Started
+#### Gather Historical Data
+```
+from datetime import datetime
+import MetaTrader5 as mt5
+import pandas as pd
+import pytz
+# Display MetaTrader5 package information
+print("MetaTrader5 package author:", mt5.__author__)
+print("MetaTrader5 package version:", mt5.__version__)
+# Pandas display settings
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1500)
+# Initialize MT5 connection
+if not mt5.initialize():
+    print("initialize() failed, error code =", mt5.last_error())
+    quit()
+# Define symbol
+symbol = "XAUUSD.m"
+# Ensure the symbol is available
+if not mt5.symbol_select(symbol, True):
+    print("Failed to select symbol:", symbol)
+    mt5.shutdown()
+    quit()
+# Set timezone to UTC
+timezone = pytz.timezone("Etc/UTC")
+# Define date range
+utc_from = datetime(2026, 1, 1, tzinfo=timezone)
+utc_to   = datetime(2026, 4, 1, tzinfo=timezone)
+# Get historical rates
+
+----- METHOD/CLAIM SWEEP -----
+
+
+![Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility](https://c.mql5.com/2/214/Data_Processing_Packages_600x314.jpg)
+# Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22220#introduction)
+5. [Live Inference](https://www.mql5.com/en/articles/22220#live_inference)
+6. [Conclusion](https://www.mql5.com/en/articles/22220#conclusion)
+### Introduction
+Traders face a persistent challenge in unpredictable financial markets. Volatility can shift dramatically within a single session, turning a stable trend into chaotic, whipsawing price action. Traditional technical indicators often lag in rapid regime changes, leaving traders exposed to sudden reversals, excessive drawdowns, or missed opportunities. Fixed stop-loss and take-profit levels that work well in calm conditions become dangerously inadequate during volatility spikes, while rigid position sizing fails to account for the ever-changing risk landscape. The result is a frustrating cycle of premature stopouts, oversized losses, and inconsistent performance that erodes both capital and confidence.
+This project addresses these challenges by calculating market entropy in real time. This quantitative approach continuously measures disorder and uncertainty in tick-level price data. By applying Shannon entropy to rolling windows of recent prices, the system instantly detects transitions between low, normal, high, and extreme volatility regimes. A neural network trained on entropy-derived features predicts directional probability, while an adaptive risk engine dynamically adjusts position size, stop-loss width, and take-profit targets based on the current market state. The pipeline collects MetaTrader 5 ticks, runs Flask-based inference, and executes trades automatically. It reacts in milliseconds instead of waiting for candle closes. This empowers traders with volatility-aware decision-making that protects capital during chaos and capitalizes on opportunity during calm.
+### Model and System Overview
+The system consists of two core components working in tandem: an MQL5 Expert Advisor running inside MetaTrader 5 and a Python Flask server handling model inference. On every tick, the EA collects the most recent 50 bid prices and calculates RSI. This data is packaged as a JSON payload and sent via an HTTP POST request to the Flask server running locally. The server receives the price window, computes Shannon entropy alongside several volatility and trend metrics, then passes these features through a pre-trained neural network. The model returns a directional probability between zero and one, which the server combines with the current volatility regime to generate a final signal.
+![](https://c.mql5.com/2/214/Entropy_calc_and_vol_reg_det_1.png)
+Raw tick data flows continuously into a rolling window where Shannon entropy measures market disorder. The resulting entropy score classifies the current volatility regime, which directly controls position sizing and stop distances.
+When the Flask server returns a BUY or SELL signal with sufficient confidence, the EA evaluates current market exposure before acting. If no position exists and cooldown periods have elapsed, a market order is placed using MetaTrader's CTrade class. Position size, stop-loss, and take-profit levels are all scaled by the volatility multiplier received from the server. If an opposite position already exists and reversal conditions are met, the EA closes the existing trade before opening a new one. All of this occurs continuously on tick data, allowing the system to detect and adapt to volatility shifts as they happen rather than waiting for candles to close.
+![](https://c.mql5.com/2/214/Signal_flow_and_trade_xctn_1.png)
+The EA sends tick data to the Flask server, where entropy features are extracted and passed through a neural network. The server returns a signal with adaptive risk parameters, and the EA executes the trade after validating position limits and cooldown constraints.
+### 
+
+### Getting Started
+#### Gather Historical Data
+```
+from datetime import datetime
+import MetaTrader5 as mt5
+import pandas as pd
+import pytz
+# Display MetaTrader5 package information
+print("MetaTrader5 package author:", mt5.__author__)
+print("MetaTrader5 package version:", mt5.__version__)
+# Pandas display settings
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1500)
+# Initialize MT5 connection
+if not mt5.initialize():
+    print("initialize() failed, error code =", mt5.last_error())
+# Define symbol
+symbol = "XAUUSD.m"
+# Ensure the symbol is available
+if not mt5.symbol_select(symbol, True):
+    print("Failed to select symbol:", symbol)
+
+# Set timezone to UTC
+timezone = pytz.timezone("Etc/UTC")
+# Define date range
+utc_from = datetime(2026, 1, 1, tzinfo=timezone)
+utc_to   = datetime(2026, 4, 1, tzinfo=timezone)
+# Get historical rates
+rates = mt5.copy_rates_range(symbol, mt5.TIMEFRAME_H1, utc_from, utc_to)
+# Shutdown MT5 connection
+mt5.shutdown()
+# Validate data
+if rates is None or len(rates) == 0:
+    print("No data retrieved. Check symbol or date range.")
+To get started, we will connect to MetaTrader 5 using its Python API and print basic package information. We then configure pandas display settings to make the output easier to read. After that, we initialize the connection and select the XAUUSD.m symbol to ensure it is available. We define a UTC time range using pytz so we can request accurate historical data. Next, we retrieve H1 price data, close the connection, and check if any data was returned. If data exists, we print a preview, convert it into a DataFrame, format the timestamps, and save the result to a CSV file for later use.
+#### Feature Engineering
+```
+def compute_entropy(returns, n_bins=10):
+    """
+    Compute normalized Shannon entropy of returns distribution.
+    Higher entropy = more uncertainty/volatility.
+    if len(returns) < 2:
+    
+    # Use percentile-based bins for better distribution
+    percentiles = np.linspace(0, 100, n_bins + 1)
+    bins = np.percentile(returns, percentiles)
+    bins = np.unique(bins)  # Remove duplicates
+    states = np.digitize(returns, bins[:-1])
+    values, counts = np.unique(states, return_counts=True)
+    probs = counts / counts.sum()
+    entropy = -np.sum(probs * np.log(probs + 1e-10))
+    max_entropy = np.log(len(values)) if len(values) > 1 else 1
+    # Also compute entropy of squared returns (volatility entropy)
+    squared_returns = returns ** 2
+    vol_bins = np.percentile(squared_returns, percentiles)
+    vol_bins = np.unique(vol_bins)
+    if len(vol_bins) >= 2:
+        vol_states = np.digitize(squared_returns, vol_bins[:-1])
+        vol_values, vol_counts = np.unique(vol_states, return_counts=True)
+        vol_probs = vol_counts / vol_counts.sum()
+        vol_entropy = -np.sum(vol_probs * np.log(vol_probs + 1e-10))
+        vol_max = np.log(len(vol_values)) if len(vol_values) > 1 else 1
+        vol_entropy_norm = vol_entropy / vol_max
+    else:
+        vol_entropy_norm = 0.0
+    
+    return entropy / max_entropy, vol_entropy_norm
+
+def compute_volatility_metrics(returns):
+    """Compute multiple volatility metrics"""
+    if len(returns) < 2:
+def compute_trend_strength(prices):
+    """Compute trend strength using linear regression R²"""
+    prices = np.array(prices, dtype=np.float32)
+    # Entropy metrics
+    entropy, vol_entropy = compute_entropy(returns)
+    # Volatility metrics
+    vol_metrics = compute_volatility_metrics(returns)
+    # Trend metrics
+    slope, r_squared = compute_trend_strength(prices)
+    # Mean and std of returns
+    # Normalize slope to [-1, 1] range
+    slope_norm = np.tanh(slope * 100) if not np.isnan(slope) and not np.isinf(slope) else 0.0
+    # Build feature vector (8 features)
+    features = np.array([
+        float(entropy),                    # 0: Market uncertainty
+        float(vol_entropy),                # 1: Volatility uncertainty  
+        float(mean_ret),                   # 2: Directional bias
+        float(std_ret),                    # 3: Volatility level
+    metrics = {
+        'entropy': float(entropy),
+        'vol_entropy': float(vol_entropy),
+        'mean_ret': float(mean_ret),
+        'std_ret': float(std_ret),
+
+In this code section, we start by building core mathematical tools using NumPy to transform raw price data into meaningful signals. We compute log returns to capture price changes in a stable way, and then measure market uncertainty using Shannon Entropy by grouping returns into percentile-based bins and calculating their probability distribution. We also extend this idea by computing entropy on squared returns, which helps us understand volatility behavior rather than just direction. Alongside entropy, we calculate additional volatility metrics such as standard deviation, mean absolute deviation, range, skewness, and kurtosis, which together describe how returns are distributed and whether the market is balanced or biased.
+We then analyze price structure by estimating trend strength using a linear regression approach, where the slope gives direction and the R² value shows how clean or noisy the trend is. After that, we combine everything into a single feature vector using the build\_features function, where we include entropy, volatility entropy, return statistics, trend strength, normalized slope, skewness, and a scaled RSI value. We also clean the data by removing invalid values and return both the feature array for model input and a metrics dictionary for monitoring. In this way, we move from raw prices to a structured representation of market behavior that an ML model can understand and use for decision-making.
+```
+class VolatilityRegimeDetector:
+    """Adaptive volatility regime detection using entropy history"""
+    
+    def __init__(self, window_size=50, history_size=100):
+        self.history_size = history_size
+        self.entropy_history = deque(maxlen=history_size)
+        self.vol_entropy_history = deque(maxlen=history_size)
+        self.std_history = deque(maxlen=history_size)
+        self.regime_history = deque(maxlen=20)
+        
+    def update(self, metrics):
+        """Update history and detect current regime"""
+        self.entropy_history.append(metrics['entropy'])
+        self.vol_entropy_history.append(metrics['vol_entropy'])
+        self.std_history.append(metrics['std_ret'])
+        return self.detect_regime(metrics)
+    def detect_regime(self, metrics):
+        """Detect current volatility regime with adaptive thresholds"""
+        entropy = metrics['entropy']
+        vol_entropy = metrics['vol_entropy']
+        if len(self.entropy_history) < 20:
+            # Not enough history - use static thresholds
+            if entropy > 0.7:
+                regime = "HIGH_VOLATILITY"
+                multiplier = 1.5
+                confidence_adj = 1.3
+            elif entropy < 0.3:
+                regime = "LOW_VOLATILITY"
+                multiplier = 0.7
+                confidence_adj = 0.8
+            else:
+                regime = "NORMAL"
+                multiplier = 1.0
+                confidence_adj = 1.0
+        else:
+            # Adaptive thresholds based on historical distribution
+            entropy_array = np.array(list(self.entropy_history))
+            mean_entropy = np.mean(entropy_array)
+            std_entropy = np.std(entropy_array)
+            
+            # Dynamic thresholds
+            high_threshold = min(0.85, mean_entropy + 1.5 * std_entropy)
+            low_threshold = max(0.15, mean_entropy - 1.5 * std_entropy)
+            extreme_threshold = min(0.95, mean_entropy + 2.5 * std_entropy)
+            # Regime detection
+            if entropy > extreme_threshold or vol_entropy > 0.9:
+                regime = "EXTREME_VOLATILITY"
+                multiplier = 2.5
+                confidence_adj = 2.0
+            elif entropy > high_threshold:
+                regime = "HIGH_VOLATILITY"
+                multiplier = 1.5
+                confidence_adj = 1.3
+            elif entropy < low_threshold:
+                regime = "LOW_VOLATILITY"
+                multiplier = 0.7
+                confidence_adj = 0.8
+            else:
+                regime = "NORMAL"
+                multiplier = 1.0
+                confidence_adj = 1.0
+        
+        self.regime_history.append(regime)
+        regime_change = self._detect_regime_change()
+        return {
+            'regime': regime,
+            'volatility_multiplier': multiplier,
+            'confidence_multiplier': confidence_adj,
+            'regime_change': regime_change,
+            'entropy_percentile': self._get_percentile(entropy),
+            'vol_entropy_percentile': self._get_percentile(vol_entropy, is_vol=True)
+        }
+    
+    def _get_percentile(self, value, is_vol=False):
+        """Calculate percentile of current value in history"""
+        history = self.vol_entropy_history if is_vol else self.entropy_history
+        if len(history) < 10:
+            return 50.0
+    def _detect_regime_change(self):
+        """Detect if regime has changed from previous state"""
+        if len(self.regime_history) < 2:
+            return False
+        return self.regime_history[-1] != self.regime_history[-2]
+    def get_adaptive_parameters(self, base_sl, base_tp, base_lot):
+        """Calculate adaptive trading parameters"""
+        if len(self.regime_history) == 0:
+            return base_sl, base_tp, base_lot, "NORMAL"
+        
+        current_regime = self.regime_history[-1]
+        if current_regime == "EXTREME_VOLATILITY":
+            sl_mult = 3.0
+            tp_mult = 2.0
+            lot_mult = 0.3
+        elif current_regime == "HIGH_VOLATILITY":
+            sl_mult = 1.8
+            tp_mult = 1.5
+            lot_mult = 0.6
+        elif current_regime == "LOW_VOLATILITY":
+            sl_mult = 0.7
+            tp_mult = 0.8
+
+Here we build a class that tracks entropy and volatility over time using rolling history stored in deques, and we use Shannon Entropy as the core signal to detect market regimes. On each update, we store the latest metrics and classify the market into LOW, NORMAL, HIGH, or EXTREME volatility. We first use fixed thresholds when there is little history. We then switch to adaptive thresholds based on the mean and standard deviation of past entropy values. Furthermore, we also compute percentiles to understand how extreme the current state is, detect regime changes, and return multipliers that adjust risk and confidence. Finally, we convert the detected regime into practical trading parameters by scaling stop loss, take profit, and lot size, so the system becomes adaptive to changing market conditions rather than using fixed settings.
+#### Model Definition
+```
+class EntropyModel(nn.Module):
+    """Enhanced model with 8 input features"""
+    def __init__(self, dropout_rate=0.2):
+#### Training Pipeline
+from Model import EntropyModel
+from Features import build_features
+# ------------------------------
+# 1. Load CSV data
+CSV_FILE = "XAUUSD_H1.csv"
+# Extract prices
+if 'close' not in df.columns:
+    print("Error: CSV must contain a 'close' column.")
+# 2. Feature Engineering
+WINDOW = 50
+HORIZON = 5
+# Calculate simple RSI for each point
+def calculate_rsi(prices, period=14):
+    if len(prices) < period + 1:
+
+# 3. Scaling
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+joblib.dump(scaler, "scaler.pkl")
+print("Scaler saved to scaler.pkl")
+```
+# 4. Train/Val Split
+split_idx = int(len(X) * 0.8)
+# ------------------------------
+X_train, X_val = X_scaled[:split_idx], X_scaled[split_idx:]
+# 5. Model Training
+model = EntropyModel()
+criterion = torch.nn.BCELoss()
+    loss.backward()
+    optimizer.step()
+    
+    # Validation
+        best_val_loss = val_loss
+        torch.save(model.state_dict(), "entropy_model.pth")
+    if (epoch + 1) % 5 == 0 or epoch == 0:
+print(f"\nTraining complete. Best validation loss: {best_val_loss:.6f}")
+print("Model saved to entropy_model.pth")
+
+# 6. Quick evaluation
+model.eval()
+with torch.no_grad():
+Here, we split the dataset into training and validation sets using an 80/20 ratio, and then convert both inputs and labels into tensors so they can be used with PyTorch. We initialize the model, define binary cross-entropy loss for classification, and use the Adam optimizer with weight decay to improve generalization. During training, we loop through epochs where we first train the model on the training data, then evaluate it on validation data without updating weights. We track the best validation loss and save the model whenever improvement occurs to avoid overfitting. Finally, we perform a quick evaluation by calculating training and validation accuracy based on a 0.5 threshold, which gives us a clear view of how well the model generalizes to unseen data.
+#### Flask Server
+```
+from Model import EntropyModel
+from Features import build_features, VolatilityRegimeDetector
+import logging
+# Load model and scaler
+try:
+    model = EntropyModel()
+    model.load_state_dict(torch.load("entropy_model.pth", map_location='cpu'))
+    model.eval()
+    print("Model loaded")
+# Fast regime detector with shorter history for tick-level responsiveness
+regime_detector = VolatilityRegimeDetector(window_size=50, history_size=50)
+# Track entropy for delta calculation
+entropy_history = deque(maxlen=10)
+last_entropy = None
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    global last_entropy
+    
+    try:
+        
+        # Track entropy for delta
+        current_entropy = metrics['entropy']
+        delta_entropy = 0.0 if last_entropy is None else current_entropy - last_entropy
+        last_entropy = current_entropy
+        entropy_history.append(current_entropy)
+        # Detect regime
+        regime_info = regime_detector.update(metrics)
+        # Scale and predict
+        # Adaptive signal with entropy momentum
+        signal = generate_adaptive_signal(prob, metrics, regime_info, delta_entropy)
+        confidence = calculate_confidence(prob, metrics, regime_info, delta_entropy)
+        return jsonify({
+            "probability": float(prob),
+            "entropy": float(metrics['entropy']),
+            "vol_entropy": float(metrics['vol_entropy']),
+            "delta_entropy": float(delta_entropy),
+            "signal": signal,
+            "regime": regime_info['regime'],
+            "volatility_multiplier": float(regime_info['volatility_multiplier']),
+            "confidence": float(confidence),
+            "entropy_momentum": float(calculate_entropy_momentum())
+        })
+        
+
+def generate_adaptive_signal(prob, metrics, regime_info, delta_entropy):
+    """Fast adaptive signal generation for tick-level trading."""
+    entropy = metrics['entropy']
+    regime = regime_info['regime']
+    
+    # Base thresholds
+    buy_threshold = 0.60
+    sell_threshold = 0.40
+    # Adjust for regime
+    if regime == "HIGH_VOLATILITY":
+        buy_threshold = 0.65
+        sell_threshold = 0.35
+    elif regime == "LOW_VOLATILITY":
+        buy_threshold = 0.55
+        sell_threshold = 0.45
+    # Entropy momentum adjustment
+    if delta_entropy > 0.02:  # Increasing entropy = increasing uncertainty
+        buy_threshold += 0.05
+        sell_threshold -= 0.05
+    if prob > buy_threshold:
+        return "BUY"
+    elif prob < sell_threshold:
+        return "SELL"
+    else:
+
+def calculate_confidence(prob, metrics, regime_info, delta_entropy):
+    """Confidence score with entropy penalty."""
+    base_conf = abs(prob - 0.5) * 2
+    
+    # Penalize high entropy
+    entropy_penalty = metrics['entropy'] * 0.3
+    # Penalize increasing entropy
+    if delta_entropy > 0:
+        entropy_penalty += delta_entropy * 2
+    confidence = base_conf - entropy_penalty
+    return max(0.0, min(1.0, confidence))
+def calculate_entropy_momentum():
+    """Calculate entropy momentum from history."""
+    if len(entropy_history) < 3:
+        return 0.0
+    hist = list(entropy_history)
+    return hist[-1] - hist[0]
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ready"})
+
+    print("\n" + "="*50)
+    print("TICK-LEVEL ENTROPY SERVER")
+    print("="*50)
+    app.run(host="127.0.0.1", port=5000, debug=False, threaded=True)
+This section sets up a REST API using Flask and loads the trained model and scaler for real-time predictions. We initialize a fast volatility regime detector and track entropy history to measure changes over time. When a request is received, we extract price data and RSI, compute features using the feature engine, and calculate entropy along with its change. We then detect the current market regime and use the scaler and model built with PyTorch to generate a probability. The API responds with key information such as entropy, volatility regime, prediction probability, and additional metrics that describe the current market state.
+We then generate a trading signal using adaptive logic that adjusts thresholds based on volatility regime and entropy movement. When entropy rises, we increase thresholds to reduce risk, and when conditions are stable, we allow easier trade entry. We also calculate a confidence score by combining model certainty with penalties for high or increasing entropy, which helps filter out unreliable trades. We compute entropy momentum to track how uncertainty evolves. Likewise, we also expose a health endpoint to confirm the server is running and ready to communicate with MetaTrader 5.
+#### Simple Execution WorkFlow
+  
+### 
+### Putting it all Together on MQL5
+```
+//+------------------------------------------------------------------+
+//|                                            Real-Time Entropy.mq5 |
+//|                             Git, Copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+#property copyright "Git, Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+#include <Trade/Trade.mqh>
+#include <Trade/PositionInfo.mqh>
+
+//--- Input parameters
+input bool     AdaptiveRiskEnabled = true;            // Adaptive position sizing
+input double   MinConfidenceThreshold = 0.4;          // Minimum confidence to trade
+input bool     AllowReversal      = true;             // Allow position reversal
+input int      MinMinutesBetweenTrades = 5;           // Minimum minutes between trades
+string          previousSignal = "HOLD";
+string          currentRegime = "NORMAL";
+double          currentConfidence = 0.0;
+double          currentVolMultiplier = 1.0;
+double          currentEntropy = 0.0;
+int             tickCount = 0;
+int             signalRepeatCount = 0;    // Track same signal repetitions
+   Print("╔══════════════════════════════════════════════════════════════╗");
+   Print("║              REAL-TIME ENTROPY INITIALIZED                   ║");
+   Print("╠══════════════════════════════════════════════════════════════╣");
+   Print("║ Symbol: ", _Symbol);
+In MQL5, we begin by importing the required trade and position-management libraries. The input parameters provide full control over the EA's behavior without requiring recompilation. We define the Flask server endpoint, the rolling window size for price collection, and base risk parameters including lot size and stop distances in points. Additional inputs govern request throttling, adaptive risk toggles, confidence thresholds, reversal permissions, and cooldown periods between trades. Global variables track the current market state, such as the latest tick, price history arrays, current signal and regime, confidence scores, and position counts. We also maintain flags for silent mode operation to prevent log spam when a position is already open and market conditions remain unchanged.
+During initialization, we configure the trade manager with our unique magic number and set it to synchronous mode for reliable execution. The tick and price arrays are sized according to the input parameters, and we immediately populate them with recent market data to avoid cold-start delays. A call to check symbol properties verifies that our lot size and stop levels are compatible with the broker's requirements. We count any existing positions managed by this EA to maintain accurate state awareness. Finally, a formatted panel prints all key configuration details to the expert's log.
+      SymbolInfoTick(_Symbol, tickArray[i]);
+      Sleep(10);
+     }
+   UpdatePriceWindow();
+      //--- Normal logging
+      PrintFormat("[TICK #%d] Signal: %s | Regime: %s | Conf: %.3f | Entropy: %.3f | Positions: %d",
+                  tickCount, currentSignal, currentRegime, currentConfidence, currentEntropy, positionCount);
+
+   //--- Check confidence threshold
+   if(currentConfidence < MinConfidenceThreshold)
+     {
+      Comment("Signal: ", currentSignal, " | Confidence LOW: ", DoubleToString(currentConfidence, 3));
+Upon receiving a response, we parse the signal, regime, confidence, and entropy values. A smart logging system activates silent mode when we already hold a position and the signal remains unchanged, which keeps the expert's journal clean during quiet periods. Before processing any trade, we validate that the confidence score meets our minimum threshold and that sufficient cooldown time has elapsed since the last execution. Only after passing these safeguards do we hand the signal off to our position management logic. The accompanying RSI function calculates the classic fourteen-period relative strength index using the most recent prices from our rolling window, providing a momentum context that complements the entropy features computed on the server side.
+```
+  {
+   char postData[], resultData[];
+   int len = StringLen(json);
+   currentSignal = ExtractStringValue(json, "signal");
+   currentRegime = ExtractStringValue(json, "regime");
+   currentConfidence = ExtractDoubleValue(json, "confidence");
+   currentVolMultiplier = ExtractDoubleValue(json, "volatility_multiplier");
+   currentEntropy = ExtractDoubleValue(json, "entropy");
+   return (currentSignal != "");
+Here, we construct the communication bridge between MetaTrader 5 and our Python server through a carefully formatted JSON payload. The build function opens with a curly brace and the prices array key, then iterates through each value in our rolling price window. We convert each price to a string with the symbol's proper digit precision and append commas between elements while avoiding a trailing comma after the final value. The array closes, and we attach the calculated RSI value before sealing the object with a closing brace. This cleanly structured payload matches exactly what the Flask endpoint expects to receive. The send request function converts our JSON string into a character array suitable for HTTP transmission and sets the appropriate content type header.
+Once the response arrives, we parse it using a set of lightweight extraction utilities that avoid the overhead of a full JSON library. The main parse function delegates to specialized helpers that locate keys within the response text and extract their associated values. For string values like the trading signal and volatility regime, we search for the key name followed by a colon, skip any whitespace, and capture everything between the opening and closing quotation marks. Numeric extraction follows a similar pattern but reads characters until hitting a delimiter such as a comma or closing brace.
+         CloseOppositePositions(desiredOrder);
+         Sleep(500);
+         ExecuteAdaptiveTrade(desiredOrder, "TickEntropy REVERSE " + currentSignal);
+
+         lastTradeTime = TimeCurrent();
+         openPositionTicket = TradeManager.ResultOrder();
+      Print("Opening NEW position: ", currentSignal);
+      ExecuteAdaptiveTrade(desiredOrder, "TickEntropy " + currentSignal);
+      lastTradeTime = TimeCurrent();
+      openPositionTicket = TradeManager.ResultOrder();
+     {
+      if(currentRegime == "EXTREME_VOLATILITY")
+         adaptiveLot = LotSize * 0.3;
+      else
+         if(currentRegime == "HIGH_VOLATILITY")
+            adaptiveLot = LotSize * 0.6;
+         else
+            if(currentRegime == "LOW_VOLATILITY")
+               adaptiveLot = LotSize * 1.3;
+                  SymbolInfoTick(_Symbol, currentTick);
+                  Sleep(100);
+                  continue;
+                 }
+   //--- Track last regime for this position
+   static string lastRegimeForPosition = "";
+   static double lastVolMultiplier = 1.0;
+
+   //--- Check if regime has changed significantly
+   if(lastRegimeForPosition != currentRegime || MathAbs(lastVolMultiplier - currentVolMultiplier) > 0.2)
+      //--- Regime changed - adjust SL/TP
+      if(AdaptiveRiskEnabled)
+        {
+         AdjustPositionStops();
+         lastRegimeForPosition = currentRegime;
+         lastVolMultiplier = currentVolMultiplier;
+        }
+         Print("Regime changed to ", currentRegime, " - Adjusted SL/TP");
+         PrintFormat("   SL: %d → %d points | TP: %d → %d points",
+                     (int)(MathAbs(currentSL - PositionInfo.PriceOpen()) / point),
+The third and most consequential checkpoint handles reversal scenarios where our signal conflicts with an existing position. When reversal permission is granted and the confidence score exceeds our elevated threshold of sixty percent, we systematically close all opposing trades and pause briefly to allow the broker to process the closure. We then immediately open a new position in the fresh direction with an appropriate comment label. If confidence falls short of the reversal requirement, we simply maintain our current stance and continue adjusting stops according to the prevailing regime.
+The trade execution and ongoing management functions translate our risk-aware logic into concrete broker actions. When opening a trade, we first retrieve the symbol's volume constraints and calculate an adaptive lot size by multiplying our base amount against regime-specific factors. Extreme volatility reduces exposure to thirty percent of normal, while low volatility allows us to scale up to thirty percent larger. Stop and take profit distances are similarly multiplied by the server-supplied volatility factor before being normalized to the symbol's digit precision. We then validate that our proposed stops sit outside the broker's freeze level before dispatching the order with up to three retry attempts to handle requotes or brief price disconnections. The management routine runs continuously for open positions, detecting when the volatility regime has shifted meaningfully from its previous state. Upon such a change, we recalculate appropriate stop distances and modify the position, with the crucial safeguard that we never widen a stop against a winning trade nor place stops dangerously close to the current market price.
+   string display = "=== TICK ENTROPY TRADER ===\n";
+   display += "Tick #: " + IntegerToString(tickCount) + "\n";
+   display += "Signal: " + currentSignal;
+   display += "\n";
+   display += "Regime: " + currentRegime + "\n";
+   display += "Entropy: " + DoubleToString(currentEntropy, 4) + "\n";
+   display += "Confidence: " + DoubleToString(currentConfidence, 3) + "\n";
+   display += "Positions: " + IntegerToString(positionCount) + "/" + IntegerToString(MaxPositions) + "\n";
+
+The UpdateDisplay function provides us with real-time visual feedback directly on the chart, eliminating the need to constantly monitor the expert's journal. We begin by refreshing our position count to ensure accuracy, then construct a multi-line string that presents all critical system metrics in an organized panel. The display shows the cumulative tick count since EA startup, the current trading signal with any repetition counter appended, and the detected volatility regime. We also expose the underlying entropy reading, model confidence score, and our current position utilization relative to the maximum allowed. When an active trade exists, we append a dedicated section revealing the position type and floating profit. If a cooldown period is in effect following a recent execution, we calculate and display the remaining seconds until the next trade becomes permissible.
+### Live Inference
+Below, the Flask server has successfully initialized and is running on localhost on port 5000, and is getting signals from Jupyter Lab to MetaTrader5.
+![](https://c.mql5.com/2/207/Real_Time_Server.png)
+### Conclusion
+Throughout this project, we have constructed a complete adaptive trading system that bridges the gap between quantitative market analysis and automated execution. Beginning with the mathematical foundation of Shannon entropy applied to tick-level price data, we built a feature engineering pipeline that extracts meaningful signals from market disorder. A neural network trained on these entropy-derived features learns to predict directional probability, while a volatility regime detector continuously classifies market conditions into four distinct states. The Flask server serves as the intelligence layer, processing incoming price windows and returning not just buy or sell signals but confidence scores and adaptive risk multipliers. On the MetaTrader side, we developed a robust Expert Advisor that manages the entire lifecycle of a trade from tick collection through position management to final exit.
+What you will walk away with after engaging with this material is a production-ready framework for volatility-aware algorithmic trading that you can immediately deploy and extend. You now understand how to calculate market entropy in real time rather than waiting for candles to close, giving you an edge in detecting regime shifts as they happen. You have learned to build adaptive risk management that scales position size and stop distances based on current market conditions rather than using fixed parameters that fail when volatility spikes. The complete communication pipeline between MQL5 and Python demonstrates how to leverage the strengths of both platforms, combining MetaTrader's robust execution with Python's machine learning ecosystem. Perhaps most importantly, you now possess a modular architecture that can be enhanced with additional features, alternative models, or different symbols without starting from scratch.
+Below is the brief description of what is contained inside 'Arc Files zip':
+| --- | --- |
+| GettingHistData.py | Connects to MetaTrader 5, downloads historical XAUUSD hourly price data. |
+| Features.py | Implements Shannon entropy calculation, volatility metrics extraction, trend strength measurement, and the volatility regime detector class that classifies market conditions into four distinct volatility states. |
+| Model.py | Defines a PyTorch neural network with batch normalization and dropout layers that maps eight entropy-derived features to a directional probability prediction for the future price movement. |
+| Train.py | Loads historical CSV data, engineers features using a rolling window approach, trains the neural network with validation monitoring, and saves both the trained model and feature scaler for deployment. |
+| Server.py | Runs a Flask web server that receives tick-level price data from the EA, computes entropy features, runs model inference, detects the current volatility regime, and returns an adaptive signal with a confidence score. |
+| Entropy.ipynb | A Jupyter notebook for simple execution workflow. |
+| Real-Time Entropy.mq5 | Is the MetaTrader 5 Expert Advisor that collects tick data, and communicates with the Flask Server. |
+This project is supported in [Algo Forge](https://forge.mql5.io/johnhlomohang/Article-22220-Real-Time-Entropy-Trading-System.git "https://forge.mql5.io/johnhlomohang/Article-22220-Real-Time-Entropy-Trading-System.git").
+**Attached files** |
+This article extends the MQL5 RQA library to Cross-Recurrence Quantification Analysis (CRQA) for comparing two time series. We implement dual‑series embedding, cross‑recurrence matrix construction, adapted metrics (CRR, CDET, CLAM, CENTR, and others), and rolling‑window analysis, with optional GPU acceleration via OpenCL. A ready-to-use indicator compares two symbols in real time, supporting timestamp alignment and normalization for practical inter-market analysis.
+![MQL5 Wizard Techniques you should know (Part 89): Using Bitwise Vectorization with Perceptron Classifiers](https://c.mql5.com/2/213/22499-mql5-wizard-techniques-part-logo.png)
+
+This article presents a custom MQL5 signal class, CSignalBitwisePerceptron, for ultra-lightweight entry logic. It packs 64 bars into a single uint64 via bitwise vectorization and evaluates them with a perceptron that sums weights only for active bits. A two-gate flow (algorithmic hash map plus neural threshold) minimizes array iteration and heavy math. Readers get a practical template to cut latency and refine entry validation.
+![Building an Object-Oriented ONNX Inference Engine in MQL5](https://c.mql5.com/2/213/22527-building-an-object-oriented-logo__2.png)
+This article shows how to run Python-trained models natively in MetaTrader 5 via the terminal's ONNX functions. We build an MQL5 class that encapsulates session creation, fixes input/output tensor shapes, applies min-max feature normalization to mirror training, and executes OnnxRun once per bar to protect the CPU, the result is a reliable, maintainable inference path for live charts and the Strategy Tester without sockets or DLLs.
+![Building AI-Powered Trading Systems in MQL5 (Part 9): Creating an AI Signal Dispatcher](https://c.mql5.com/2/212/22495-building-ai-powered-trading-logo.png)
+[Need a reliable hosting solution for your robots?
+Contact your broker and find out about available Sponsored MetaTrader VPS offerings
+Learn more
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Throughout this project, we have constructed a complete adaptive trading system that bridges the gap between quantitative market analysis and automated execution. Beginning with the mathematical foundation of Shannon entropy applied to tick-level price data, we built a feature engineering pipeline that extracts meaningful signals from market disorder. A neural network trained on these entropy-derived features learns to predict directional probability, while a volatility regime detector continuously classifies market conditions into four distinct states. The Flask server serves as the intelligence layer, processing incoming price windows and returning not just buy or sell signals but confidence scores and adaptive risk multipliers. On the MetaTrader side, we developed a robust Expert Advisor that manages the entire lifecycle of a trade from tick collection through position management to final exit.
+
+What you will walk away with after engaging with this material is a production-ready framework for volatility-aware algorithmic trading that you can immediately deploy and extend. You now understand how to calculate market entropy in real time rather than waiting for candles to close, giving you an edge in detecting regime shifts as they happen. You have learned to build adaptive risk management that scales position size and stop distances based on current market conditions rather than using fixed parameters that fail when volatility spikes. The complete communication pipeline between MQL5 and Python demonstrates how to leverage the strengths of both platforms, combining MetaTrader's robust execution with Python's machine learning ecosystem. Perhaps most importantly, you now possess a modular architecture that can be enhanced with additional features, alternative models, or different symbols without starting from scratch.
+
+Below is the brief description of what is contained inside 'Arc Files zip':
+
+| File Name | File Description |
+| --- | --- |
+| GettingHistData.py | Connects to MetaTrader 5, downloads historical XAUUSD hourly price data. |
+| Features.py | Implements Shannon entropy calculation, volatility metrics extraction, trend strength measurement, and the volatility regime detector class that classifies market conditions into four distinct volatility states. |
+| Model.py | Defines a PyTorch neural network with batch normalization and dropout layers that maps eight entropy-derived features to a directional probability prediction for the future price movement. |
+| Train.py | Loads historical CSV data, engineers features using a rolling window approach, trains the neural network with validation monitoring, and saves both the trained model and feature scaler for deployment. |
+| Server.py | Runs a Flask web server that receives tick-level price data from the EA, computes entropy features, runs model inference, detects the current volatility regime, and returns an adaptive signal with a confidence score. |
+| Entropy.ipynb | A Jupyter notebook for simple execution workflow. |
+| Real-Time Entropy.mq5 | Is the MetaTrader 5 Expert Advisor that collects tick data, and communicates with the Flask Server. |
+
+This project is supported in [Algo Forge](https://forge.mql5.io/johnhlomohang/Article-22220-Real-Time-Entropy-Trading-System.git "https://forge.mql5.io/johnhlomohang/Article-22220-Real-Time-Entropy-Trading-System.git").
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22220.zip "Download all attachments in the single ZIP archive")
+
+[Arc\_Files.zip](https://www.mql5.com/en/articles/download/22220/Arc_Files.zip "Download Arc_Files.zip")
+(15.87 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Cross Recurrence Quantification Analysis (CRQA) in MQL5: Building a Complete Analysis Library](https://c.mql5.com/2/213/22500-cross-recurrence-quantification-logo.png)
+[Cross Recurrence Quantification Analysis (CRQA) in MQL5: Building a Complete Analysis Library](https://www.mql5.com/en/articles/22500)
+
+This article extends the MQL5 RQA library to Cross-Recurrence Quantification Analysis (CRQA) for comparing two time series. We implement dual‑series embedding, cross‑recurrence matrix construction, adapted metrics (CRR, CDET, CLAM, CENTR, and others), and rolling‑window analysis, with optional GPU acceleration via OpenCL. A ready-to-use indicator compares two symbols in real time, supporting timestamp alignment and normalization for practical inter-market analysis.
+
+![MQL5 Wizard Techniques you should know (Part 89): Using Bitwise Vectorization with Perceptron Classifiers](https://c.mql5.com/2/213/22499-mql5-wizard-techniques-part-logo.png)
+[MQL5 Wizard Techniques you should know (Part 89): Using Bitwise Vectorization with Perceptron Classifiers](https://www.mql5.com/en/articles/22499)
+
+This article presents a custom MQL5 signal class, CSignalBitwisePerceptron, for ultra-lightweight entry logic. It packs 64 bars into a single uint64 via bitwise vectorization and evaluates them with a perceptron that sums weights only for active bits. A two-gate flow (algorithmic hash map plus neural threshold) minimizes array iteration and heavy math. Readers get a practical template to cut latency and refine entry validation.
+
+![Building an Object-Oriented ONNX Inference Engine in MQL5](https://c.mql5.com/2/213/22527-building-an-object-oriented-logo__2.png)
+[Building an Object-Oriented ONNX Inference Engine in MQL5](https://www.mql5.com/en/articles/22527)
+
+This article shows how to run Python-trained models natively in MetaTrader 5 via the terminal's ONNX functions. We build an MQL5 class that encapsulates session creation, fixes input/output tensor shapes, applies min-max feature normalization to mirror training, and executes OnnxRun once per bar to protect the CPU, the result is a reliable, maintainable inference path for live charts and the Strategy Tester without sockets or DLLs.
+
+![Building AI-Powered Trading Systems in MQL5 (Part 9): Creating an AI Signal Dispatcher](https://c.mql5.com/2/212/22495-building-ai-powered-trading-logo.png)
+[Building AI-Powered Trading Systems in MQL5 (Part 9): Creating an AI Signal Dispatcher](https://www.mql5.com/en/articles/22495)
+
+We turn the MQL5 AI trading assistant into a dispatch-driven system that routes seven trading actions through a single central dispatcher. A line-based key-value protocol constrains AI output, while each action maps to market or pending orders and instrument-aware stop levels. A canvas-based UI with a custom prompt editor and pixel-accurate text fitting makes signals consistent, auditable, and ready to render on the chart
+
+[Need a reliable hosting solution for your robots?
+Contact your broker and find out about available Sponsored MetaTrader VPS offerings
+Learn more
+
+![](https://www.mql5.com/ff/sh/0pw0dk81s56qy774z2/01.png)](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=vljwvezfjkfbvviocwskggexlvgykvob&s=70cf8e354b9a125332533ffb65d7365abe8dde5b5c1ede9caac479a9e9df4f25&uid=&ref=https://www.mql5.com/en/articles/22220&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6402378259546901232)

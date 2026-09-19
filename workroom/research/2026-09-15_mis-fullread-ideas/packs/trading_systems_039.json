@@ -1,0 +1,88 @@
+{
+  "pack_id": "trading_systems_039",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_039",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "implementing practical modules from other languages in mql5",
+    "institutional-grade multi-currency portfolio engine in mql5",
+    "integrating computer vision into trading in mql5",
+    "integrating mql5 with data processing packages"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 18640,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 01): Building the SQLite3 Library, Inspired by Python",
+      "section": "Trading systems",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): Building the SQLite3 Library, Inspired by Python",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18640.md"
+    },
+    {
+      "id": 19035,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 04): time, date, and datetime modules from Python",
+      "section": "Trading systems",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): time, date, and datetime modules from Python",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19035.md"
+    },
+    {
+      "id": 20695,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 06): Python-Like File IO operations in MQL5",
+      "section": "Trading systems",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): Python-Like File IO operations in MQL5",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20695.md"
+    },
+    {
+      "id": 23629,
+      "title": "Institutional-Grade Multi-Currency Portfolio Engine in MQL5 (Part 1): Architecture of a Multi-Currency EA Framework",
+      "section": "Trading systems",
+      "series_title": "Institutional-Grade Multi-Currency Portfolio Engine in MQL5 (): Architecture of a Multi-Currency EA Framework",
+      "series_key": "institutional-grade multi-currency portfolio engine in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23629.md"
+    },
+    {
+      "id": 17981,
+      "title": "Integrating Computer Vision into Trading in MQL5 (Part 1): Creating Basic Functions",
+      "section": "Trading systems",
+      "series_title": "Integrating Computer Vision into Trading in MQL5 (): Creating Basic Functions",
+      "series_key": "integrating computer vision into trading in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17981.md"
+    },
+    {
+      "id": 18103,
+      "title": "Integrating Computer Vision into Trading in MQL5 (Part 2): Extending the Architecture to 2D RGB Image Analysis",
+      "section": "Trading systems",
+      "series_title": "Integrating Computer Vision into Trading in MQL5 (): Extending the Architecture to 2D RGB Image Analysis",
+      "series_key": "integrating computer vision into trading in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18103.md"
+    },
+    {
+      "id": 15155,
+      "title": "Integrating MQL5 with data processing packages (Part 1): Advanced Data analysis and Statistical Processing",
+      "section": "Trading systems",
+      "series_title": "Integrating MQL5 with data processing packages (): Advanced Data analysis and Statistical Processing",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15155.md"
+    },
+    {
+      "id": 15578,
+      "title": "Integrating MQL5 with data processing packages (Part 2): Machine Learning and Predictive Analytics",
+      "section": "Trading systems",
+      "series_title": "Integrating MQL5 with data processing packages (): Machine Learning and Predictive Analytics",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15578.md"
+    }
+  ]
+}

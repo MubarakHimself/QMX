@@ -1,0 +1,85 @@
+{
+  "pack_id": "tester_014_p01",
+  "section": "Tester",
+  "parent_shard": "tester_014",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "developing a multi-currency expert advisor"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 16134,
+      "title": "Developing a multi-currency Expert Advisor (Part 20): Putting in order the conveyor of automatic project optimization stages (I)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Putting in order the conveyor of automatic project optimization stages (I)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16134.md"
+    },
+    {
+      "id": 16373,
+      "title": "Developing a multi-currency Expert Advisor (Part 21): Preparing for an important experiment and optimizing the code",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Preparing for an important experiment and optimizing the code",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16373.md"
+    },
+    {
+      "id": 16452,
+      "title": "Developing a multi-currency Expert Advisor (Part 22): Starting the transition to hot swapping of settings",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Starting the transition to hot swapping of settings",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16452.md"
+    },
+    {
+      "id": 16913,
+      "title": "Developing a multi-currency Expert Advisor (Part 23): Putting in order the conveyor of automatic project optimization stages (II)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Putting in order the conveyor of automatic project optimization stages (II)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16913.md"
+    },
+    {
+      "id": 17277,
+      "title": "Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (I)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Adding a new strategy (I)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17277.md"
+    },
+    {
+      "id": 17328,
+      "title": "Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (II)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Adding a new strategy (II)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17328.md"
+    },
+    {
+      "id": 17606,
+      "title": "Developing a Multi-Currency Expert Advisor (Part 26): Informer for Trading Instruments",
+      "section": "Tester",
+      "series_title": "Developing a Multi-Currency Expert Advisor (): Informer for Trading Instruments",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17606.md"
+    },
+    {
+      "id": 17607,
+      "title": "Developing a Multi-Currency Expert Advisor (Part 29): Improving the Conveyor",
+      "section": "Tester",
+      "series_title": "Developing a Multi-Currency Expert Advisor (): Improving the Conveyor",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17607.md"
+    }
+  ]
+}

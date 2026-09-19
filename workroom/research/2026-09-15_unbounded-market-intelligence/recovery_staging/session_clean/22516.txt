@@ -1,0 +1,433 @@
+---
+id: 22516
+source_url: https://www.mql5.com/en/articles/22516
+title: "Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning"
+author: ""
+author_url: 
+published: 2026-05-13T07:54Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: "Feature Engineering for ML (): Session-Aware Time Features for Forex Machine Learning"
+series_part: 3
+source: mql5
+language: en
+---
+
+# Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 13 May 2026 at 03:54
+
+3 227
+[
+0](https://www.mql5.com/en/forum/509700 "Comments")
+
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+
+### Table of Contents
+
+1. [Introduction](https://www.mql5.com/en/articles/22516/#introduction)
+2. [The Problem with Raw Timestamps](https://www.mql5.com/en/articles/22516/#the_problem_with_raw_timestamps)
+3. [Cyclical Encoding: Why Integers Fail](https://www.mql5.com/en/articles/22516/#cyclical_encoding_why_integers_fail)
+4. [Fourier Harmonics: Capturing Complex Patterns](https://www.mql5.com/en/articles/22516/#fourier_harmonics_capturing_complex_patterns)
+5. [The Forex Market Clock: Four Sessions and Their Structure](https://www.mql5.com/en/articles/22516/#the_forex_market_clock_four_sessions_and_their)
+6. [Session Overlaps and Volatility Clustering](https://www.mql5.com/en/articles/22516/#session_overlaps_and_volatility_clustering)
+7. [Forex Calendar Effects](https://www.mql5.com/en/articles/22516/#forex_calendar_effects)
+8. [encode\_cyclical\_features: Implementation](https://www.mql5.com/en/articles/22516/#encode_cyclical_features_implementation)
+9. [trading\_session\_encoded\_features: Implementation](https://www.mql5.com/en/articles/22516/#trading_session_encoded_features_implementation)
+10. [Orchestration: get\_time\_features](https://www.mql5.com/en/articles/22516/#orchestration_get_time_features)
+11. [Pipeline Integration](https://www.mql5.com/en/articles/22516/#pipeline_integration)
+12. [Conclusion](https://www.mql5.com/en/articles/22516/#conclusion)
+13. [References](https://www.mql5.com/en/articles/22516/#references)
+
+### Introduction
+
+Every bar in a financial time series carries a timestamp. Most ML pipelines discard it. The timestamp is converted to a target label, a lookahead window is defined, features are constructed from price and volume history, and the datetime index is never seen again. This is a significant information loss. Time itself encodes a rich structure — the rotation of the market day, the boundaries of trading sessions, the approach of month-end fixings, the cadence of the weekly open — none of which is visible in a price or return series.
+
+The challenge is representation. Raw integer timestamps are meaningless to a regression or classification model: the number 1735689600 (a Unix epoch) conveys no cyclical structure. A naive integer hour column implies that hour 23 is farther from hour 0 than it is from hour 18, which is geometrically wrong. A binary session flag captures presence but discards position within the session. A single harmonic captures the dominant daily cycle but misses the asymmetry between the slow Asian session and the volatile London–New York overlap.
+
+This article develops a principled approach to time-feature engineering for financial ML. It covers the theory of cyclical (Fourier) encoding, the structure of the four major forex trading sessions, session-specific volatility features, and the calendar effects that influence institutional order flow near period boundaries. The implementation is the *get\_time\_features* function from the *afml* library, which orchestrates all of these components into a single, ML-ready feature DataFrame. [Part 1](https://www.mql5.com/en/articles/22014) of this series covered fractional differentiation for price features; [Part 2](https://www.mql5.com/en/articles/22015) deployed that engine in MQL5. This article addresses the orthogonal question: how to encode the temporal context in which a price observation occurs.
+
+### The Problem with Raw Timestamps
+
+Consider what a supervised learning algorithm sees when it ingests a datetime column encoded as integers. A regression tree splitting on *hour = 12* treats the distance between hour 12 and hour 13 as identical to the distance between hour 0 and hour 23. A linear model assigns a coefficient to the integer hour and extrapolates: if a feature at hour 10 produces a certain effect, the model implies that hour 20 produces exactly double that effect. Neither representation reflects how financial markets actually work.
+
+The root issue is that time is cyclical. The hour-of-day cycle has period 24: hour 23:59 and hour 00:00 are one minute apart, not 23 hours and 59 minutes apart. The day-of-week cycle has period 7: Sunday and Saturday are adjacent, not distant. Integer encoding maps these cycles onto a linear axis, destroying their topology. The model cannot discover the adjacency of period boundaries without first undoing the damage introduced during preprocessing.
+
+Three additional complications arise in financial applications specifically:
+
+1. Heterogeneous session volatility. A model trained on the entire trading week implicitly assumes that observations are drawn from a stationary distribution. They are not. The annualized volatility of a major forex pair in the Tokyo session can be twice (or more) the volatility in the London session. Without session flags, the model cannot learn session-conditional behavior.
+2. Irregular calendar effects. Month-end and quarter-end dates concentrate institutional rebalancing flows. A Friday close before a long weekend concentrates stop-run activity. These are discrete calendar events, not patterns visible in prices or returns alone.
+3. Timeframe dependency. A minute bar and a daily bar drawn from the same instrument at the same timestamp carry very different temporal information. An hourly bar from 13:00 UTC is rich in intraday session context; a daily bar from the same date needs month and quarter context instead. A one-size-fits-all feature set wastes degrees of freedom on irrelevant cycles and discards relevant ones.
+
+The goal is an encoding that is: (a) geometrically correct — cyclically adjacent observations produce similar feature vectors; (b) information-rich — multiple granularities of temporal structure are represented; and (c) frequency-aware — features irrelevant to the bar's timeframe are excluded.
+
+### Cyclical Encoding: Why Integers Fail
+
+The standard resolution to the cyclical encoding problem is to project each periodic variable onto the unit circle using a pair of trigonometric functions. For a variable *x* with cycle length *T*:
+
+*x\_sin = sin(2π · x / T),    x\_cos = cos(2π · x / T)*
+
+The pair *(x\_sin , x\_cos)* encodes the position of *x* as a point on the unit circle. Two observations close together in the cycle are close together in the Euclidean distance between their *(sin, cos)* pairs, regardless of whether they are close in raw integer value. For hour-of-day with *T = 24*: hour 23 maps to *(sin(2π · 23/24), cos(2π · 23/24))* and hour 0 maps to *(sin(0), cos(0)) = (0, 1)*. The Euclidean distance between these two points on the circle is approximately 0.26, correctly reflecting that midnight and 11 PM are adjacent.
+
+Figure 1. 2-panel illustration of the cyclical encoding problem
+
+- Panel (a): Integer encoding assigns distance 23 between hour 23 and hour 0. A model learning from this encoding cannot discover their adjacency without explicit feature engineering to undo the error.
+- Panel (b): The sin/cos projection places every hour on the unit circle. Hours 23, 0, and 1 cluster near *cos = 1* on the right-hand side of the circle, correctly representing their temporal proximity. No model assumption is violated.
+
+The same logic applies to every periodic datetime variable: day-of-week (*T = 7*), day-of-year (*T = 366*, accommodating leap years), month (*T = 12*), and week-of-year (*T = 52*). The *encode\_cyclical\_features* function applies this transformation to hour, day-of-week, and day-of-year simultaneously, optionally extending each to multiple harmonics.
+
+One practical consideration: a single sin/cos pair encodes position on the circle but cannot distinguish the *speed* of movement through the cycle. Two timestamps separated by one hour near the daily midpoint and two timestamps separated by one hour near midnight produce different sin/cos coordinates, but both differences correspond to the same arc length. This is the desired behavior. What a single harmonic cannot represent is a waveform that rises and falls asymmetrically over the cycle — for that, higher harmonics are required.
+
+### Fourier Harmonics: Capturing Complex Patterns
+
+The unit-circle projection is the first term (k = 1) of a Fourier series. Any periodic signal with period *T* can be approximated arbitrarily well by a sum of sinusoids at integer multiples of the fundamental frequency:
+
+For financial time series, higher harmonics matter because the activity patterns they encode are not simple sinusoids. The intraday volatility profile of a forex pair has a distinct bimodal shape: a moderate elevation during the Asian session, a valley in the Pacific gap, a sharp spike at the London open, a plateau through the London–New York overlap, and a gradual decline into the Asian close. A single sin/cos pair can only encode one peak and one trough per cycle. Representing the bimodal London–New York structure requires at least a second harmonic (*k = 2*). The third harmonic (*k = 3*) captures three-peak patterns such as the Tokyo–London–New York session rhythm.
+
+Figure 2. 3-panel illustration of Fourier harmonics for hour-of-day
+
+- Panel (a): The first harmonic (*k = 1*) produces a single sinusoid with one peak and one trough per 24-hour cycle. This is sufficient to distinguish morning from evening but cannot represent intraday peaks at distinct session openings.
+- Panel (b): Adding the second harmonic (*k = 2*) introduces an additional oscillation, allowing the function to represent two distinct peaks within a day — for instance, both the Asian session activity and the European open.
+- Panel (c): The third harmonic adds a third oscillation, providing the resolution needed to represent the three-session structure of the global forex market within a single 24-hour cycle.
+
+In practice, the *n\_terms* parameter controls how many harmonics are generated. The default of 3 is conservative — three harmonics per temporal feature produces six columns (*sin\_h1, cos\_h1, sin\_h2, cos\_h2, sin\_h3, cos\_h3*), and a full feature set for hour, day-of-week, and day-of-year thus adds 18 columns. Higher *n\_terms* provides more resolution but at the cost of increased dimensionality and potential overfitting on small training sets. The frequency-based optimization discussed in [Section 10](https://www.mql5.com/en/articles/22516/#orchestration_get_time_features) mitigates this by suppressing intraday harmonics for daily and weekly bars where session-level detail is irrelevant.
+
+### The Forex Market Clock: Four Sessions and Their Structure
+
+The global forex market operates 24 hours a day during the business week, but this continuity is misleading: liquidity, volatility, and institutional participation are highly non-uniform across the trading day. The market is organized around four major sessions, each associated with a geographic financial centre and a distinct set of institutional participants.
+
+")
+
+Figure 3. 2-panel illustration of forex sessions and intraday volatility
+
+- Panel (a): The four sessions plotted on the UTC clock. Sydney (blue) crosses midnight, running from 21:00 to 06:00 UTC. Tokyo (green) runs 00:00–09:00. London (orange) runs 07:00–16:00. New York (purple) runs 13:00–22:00. Overlap windows at 07:00–09:00 (Tokyo/London) and 13:00–16:00 (London/New York) are shaded yellow.
+- Panel (b): Stylized intraday volatility by hour. Overlap hours (yellow bars) consistently produce the highest volatility. The London–New York overlap at 13:00–16:00 UTC is the most active period in the global forex market. The Friday NY close at 21:00 UTC marks the beginning of a low-liquidity weekend period.
+
+The session boundaries in the implementation are fixed UTC hours rather than local business hours, which vary with daylight saving time transitions. This choice is deliberate: UTC hours are stationary across years and instruments, whereas local business hour encoding would require calendar-aware DST adjustments that introduce discontinuities. Session boundaries shift by one hour relative to local time during DST. For ML features, this approximation is acceptable because the goal is to capture each session's statistical tendency, not its exact institutional definition.
+
+The Sydney session is the only one that crosses midnight UTC, requiring special handling in the flag calculation. A bar at 22:00 UTC is inside the Sydney session (start = 21:00) but at 05:00 UTC it is also inside the Sydney session (the session ends at 06:00 exclusive, so the last full hour is 05:00–05:59 UTC). The cross-midnight logic uses an OR condition rather than AND:
+
+```
+# Cross-midnight session (Sydney): 21:00 to 05:59 UTC
+is_session = (hours >= start_hour) | (hours < end_hour)
+
+# Standard session (e.g. London): 07:00 to 15:59 UTC
+is_session = (hours >= start_hour) & (hours < end_hour)
+```
+
+The flag columns are stored as *int8* rather than *bool* or *int64* to minimise memory overhead. A DataFrame of session flags for one year of hourly bars (approximately 8760 rows) occupies around 70 KB at *int8* versus 560 KB at *int64* — a meaningful difference when the feature matrix is replicated across multiple instruments in a portfolio backtest.
+
+### Session Overlaps and Volatility Clustering
+
+The most important temporal feature for intraday trading models is not any individual session flag but the *session\_overlap* indicator: a binary flag that is 1 whenever two or more sessions are simultaneously active. Overlaps concentrate liquidity from two geographic participant pools, compressing bid-ask spreads, accelerating price discovery, and generating the highest tick-by-tick volatility of the trading day.
+
+There are two significant overlaps in the forex market. The Tokyo–London overlap (07:00–09:00 UTC) marks the transition from Asian to European participation. The London–New York overlap (13:00–16:00 UTC) is the most liquid and volatile window in the global market, accounting for a disproportionate fraction of daily pip range for majors. A model that does not distinguish overlap from non-overlap hours is implicitly pooling observations with very different distributional properties.
+
+The *session\_overlap* feature is computed from the sum of all session flags:
+
+```
+out["session_overlap"] = np.where(out.sum(axis=1) > 1, 1, 0)
+```
+
+The volatility extension adds a session-conditional rolling standard deviation of log returns for each session. For each session flag column, the function masks the return series to only the bars within that session and computes a 20-bar rolling standard deviation. The result is forward-filled to all bars and shifted by one bar to avoid lookahead:
+
+```
+returns = np.log(df["close"]).diff()
+for session in session_feat:
+    session_mask = session_feat[session] == 1
+    if session_mask.sum() > 0:
+        session_vol = returns[session_mask].rolling(20, min_periods=1).std()
+        session_feat[f"{session}_vol"] = session_vol.reindex(
+            df.index, method="ffill"
+        ).shift(1)
+```
+
+The one-bar shift is critical. Without it, the rolling standard deviation at bar *t* includes the return at bar *t*, which is the quantity the model is trying to predict. This is a subtle lookahead bias that does not manifest as an obvious error but silently inflates backtested predictive performance. The *shift(1)* ensures that the session volatility feature at bar *t* reflects the realised volatility of the session as known at bar *t − 1*.
+
+The forward-fill step is equally important. Session volatility is undefined outside the session (because there are no returns to compute it from). Without forward-filling, these positions would be NaN, propagating into the model as missing data. Forward-filling carries the most recently computed session volatility forward until the next bar within the session, giving the model a clean estimate of what session volatility looked like the last time that session was active.
+
+### Forex Calendar Effects
+
+Beyond the daily session structure, the forex market exhibits recurring patterns tied to the calendar month and quarter. These are driven by predictable institutional flows rather than stochastic price dynamics, and they recur with sufficient regularity to justify discrete features.
+
+The implementation includes four calendar effect flags, all derived from the day-of-week, day-of-month, and month fields of the DatetimeIndex:
+
+```
+day_of_week  = datetime_index.dayofweek.values   # 0=Monday, 6=Sunday
+day_of_month = datetime_index.day.values
+month        = datetime_index.month.values
+
+out["friday_ny_close"] = ((day_of_week == 4) & (hours >= 21)).astype(int)
+out["sunday_open"]     = ((day_of_week == 6) & (hours <= 2)).astype(int)
+out["month_end"]       = (day_of_month >= 28).astype(int)
+out["quarter_end"]     = ((month % 3 == 0) & (day_of_month >= 28)).astype(int)
+```
+
+Each flag captures a distinct institutional phenomenon:
+
+1. friday\_ny\_close: The last two hours of the New York session on Friday represent the final liquidity window before the weekend. Institutional market makers reduce positions, hedge funds roll or close weekly trades, and retail participants may face margin calls on open positions. The result is a systematic pattern of increased directional activity followed by low-volume price gaps at the Sunday open.
+2. sunday\_open: The first two hours of Sydney trading on Sunday are the global market's reentry after the weekend gap. Price can gap significantly if major macro news was released Saturday, and the initial bars frequently exhibit mean-reverting behavior as the market fills weekend gaps before resuming the prior week's directional tendency.
+3. month\_end: Days 28–31 of the calendar month concentrate institutional rebalancing flows. Fixed-income portfolio managers rebalance duration, equity funds match their benchmark weights, and FX desks execute associated currency hedges. The result is systematic directional pressure in specific currency pairs that reverses sharply at month-turn.
+4. quarter\_end: The last three days of March, June, September, and December layer quarter-end rebalancing on top of month-end effects. Larger institutional flows, pension fund currency overlay adjustments, and window-dressing by asset managers amplify the month-end pattern at quarter boundaries.
+
+These flags are generated but are dropped by the frequency gate for intraday timeframes. For intraday bars, the session flags and Fourier-encoded hour features are far more informative than calendar month flags at the M1 or H1 level, and including them adds noise rather than signal.
+
+### encode\_cyclical\_features: Implementation
+
+The *encode\_cyclical\_features* function takes a *DatetimeIndex* and produces a DataFrame of Fourier-encoded temporal features. It accepts two parameters beyond the index: *n\_terms* controls the number of harmonics (default 3), and *extra\_fourier\_features* is an optional list of feature names for which multiple harmonics should be generated. When *extra\_fourier\_features* is not None, only the listed features receive additional harmonics — others are encoded with a single pair only.
+
+```
+def encode_cyclical_features(
+    datetime_index: pd.DatetimeIndex,
+    n_terms: int = 3,
+    extra_fourier_features: list = None,
+) -> pd.DataFrame:
+    out = pd.DataFrame(index=datetime_index)
+
+    features = {
+        "hour":      (datetime_index.hour,      24),
+        "dayofweek": (datetime_index.dayofweek,  7),
+        "dayofyear": (datetime_index.dayofyear,  366),
+    }
+
+    for name, (series, cycle_length) in features.items():
+        radians = 2 * np.pi * series / cycle_length
+        out[f"{name}_sin"] = np.sin(radians)
+        out[f"{name}_cos"] = np.cos(radians)
+
+        if n_terms >= 1 and (
+            extra_fourier_features is None or name in extra_fourier_features
+        ):
+            out.rename(columns={
+                f"{name}_sin": f"{name}_sin_h1",
+                f"{name}_cos": f"{name}_cos_h1",
+            }, inplace=True)
+            for k in range(2, n_terms + 1):
+                radians_k = 2 * np.pi * k * series / cycle_length
+                out[f"{name}_sin_h{k}"] = np.sin(radians_k)
+                out[f"{name}_cos_h{k}"] = np.cos(radians_k)
+
+    return out
+```
+
+Three design decisions in this function deserve comment:
+
+1. Vectorized NumPy operations on the index arrays. The function extracts *datetime\_index.hour*, *datetime\_index.dayofweek*, and *datetime\_index.dayofyear* as integer arrays and applies *np.sin* and *np.cos* directly. This avoids row-wise iteration and scales to millions of bars without performance degradation.
+2. Column renaming for harmonics. When multi-harmonic output is requested, the first pair is renamed from *hour\_sin* to *hour\_sin\_h1* for consistency with the higher harmonics. This ensures that column names carry the harmonic index explicitly, which is useful for debugging and for downstream feature selection methods that operate on column names.
+3. Selective harmonic expansion via extra\_fourier\_features. Not every cyclical feature benefits equally from higher harmonics. For daily bars, the day-of-year cycle may warrant three harmonics to capture quarterly seasonality, while the day-of-week cycle with only seven positions is already well-represented by a single pair. The *extra\_fourier\_features* parameter allows the caller to expand only the features where additional harmonics add signal.
+
+The cycle length for *dayofyear* is set to 366 rather than 365 to accommodate leap years. On non-leap years, day 366 never occurs, so the maximum observed value is 365. The slight compression of the encoding (day 365 maps to angle 2π × 365/366 instead of 2π) is negligible compared to the alternative of computing a year-length lookup table that must be updated annually.
+
+### trading\_session\_encoded\_features: Implementation
+
+The session feature function produces two layers of output: binary session flags and session-conditional volatility estimates. The full implementation is split into two logical blocks — flag generation and volatility extension — separated in the codebase because the volatility block requires the *close* price series from the parent DataFrame, which is not available inside the session function itself.
+
+```
+def trading_session_encoded_features(
+    datetime_index: pd.DatetimeIndex,
+) -> pd.DataFrame:
+    # Treat tz-naive index as UTC; convert tz-aware index to UTC
+    if datetime_index.tz is not None:
+        dt_utc = datetime_index.tz_convert("UTC")
+    else:
+        dt_utc = datetime_index.tz_localize("UTC")
+
+    hours = dt_utc.hour.values
+    out   = pd.DataFrame(index=datetime_index)
+
+    sessions = {
+        "Sydney":   {"start": 21, "end":  6, "cross_midnight": True},
+        "Tokyo":    {"start":  0, "end":  9, "cross_midnight": False},
+        "London":   {"start":  7, "end": 16, "cross_midnight": False},
+        "New_York": {"start": 13, "end": 22, "cross_midnight": False},
+    }
+
+    for session_name, params in sessions.items():
+        s, e, xm = params["start"], params["end"], params["cross_midnight"]
+        is_session = (hours >= s) | (hours < e) if xm else (hours >= s) & (hours < e)
+        col = session_name.replace("New_York", "ny").lower() + "_session"
+        out[col] = is_session.astype("int8")
+
+    out["session_overlap"] = np.where(out.sum(axis=1) > 1, 1, 0)
+
+    # Calendar effects appended here (passed through frequency gate in caller)
+    day_of_week  = datetime_index.dayofweek.values
+    day_of_month = datetime_index.day.values
+    month        = datetime_index.month.values
+
+    out["friday_ny_close"] = ((day_of_week == 4) & (hours >= 21)).astype(int)
+    out["sunday_open"]     = ((day_of_week == 6) & (hours <= 2)).astype(int)
+    out["month_end"]       = (day_of_month >= 28).astype(int)
+    out["quarter_end"]     = ((month % 3 == 0) & (day_of_month >= 28)).astype(int)
+
+    return out
+```
+
+The timezone handling at the top of the function resolves a common real-world issue: MetaTrader 5 exports data with broker-local timestamps that may be UTC+2 or UTC+3, while Python's pandas may interpret these as timezone-naive. Calling tz\_localize("UTC") on a tz-naive index assigns the UTC timezone without shifting timestamps (appropriate when data is already in UTC). Calling tz\_convert("UTC") on a tz-aware index converts timestamps to UTC. This conditional supports both cases without requiring prior normalization.
+
+### Orchestration: get\_time\_features
+
+The two feature-generation functions are orchestrated by *get\_time\_features*, which handles bar-type branching, frequency-based feature selection, and the final concatenation into a single DataFrame aligned to the input index.
+
+Figure 4. Architecture of the get\_time\_features() orchestration pipeline
+
+- Three inputs (DataFrame with DatetimeIndex and close column, timeframe string, and options) enter the top of the pipeline.
+- A branch condition checks whether *bar\_type == "time"*. For non-time bars (volume bars, dollar bars, tick bars), bar-duration and bar-duration-acceleration features are prepended to the feature list.
+- The two feature functions run in parallel and their outputs are collected into a list.
+- A frequency gate prunes intraday features for higher timeframes and hour harmonics for minute bars.
+- Calendar effects are appended for daily and above; dropped for intraday.
+- All components are concatenated on the inner join of their indices, preserving only bars present in all feature DataFrames.
+
+The key orchestration code is:
+
+```
+def get_time_features(
+    df: pd.DataFrame,
+    timeframe: str,
+    n_terms: int = 3,
+    bar_type: str = "time",
+    forex: bool = True,
+) -> pd.DataFrame:
+
+    features = []
+
+    # Bar duration features for non-time bars
+    if bar_type != "time":
+        durations = df.index.to_series(name="bar_duration").diff().dt.total_seconds()
+        duration_accel = durations.diff().rename("bar_duration_accel")
+        features += [durations, duration_accel]
+
+    # Frequency-based feature selection
+    timeframe = timeframe.upper()
+    if timeframe.startswith(("H", "D", "W", "MN")):
+        extra_features = []
+    elif timeframe.startswith("M"):
+        extra_features = ["hour"]
+    else:
+        extra_features = []
+
+    cyclical_feat = encode_cyclical_features(
+        df.index, n_terms=n_terms, extra_fourier_features=extra_features
+    )
+    if forex:
+        session_feat = trading_session_encoded_features(df.index)
+        returns = np.log(df["close"]).diff()
+        for session in session_feat:
+            session_mask = session_feat[session] == 1
+            if session_mask.sum() > 0:
+                session_vol = returns[session_mask].rolling(20, min_periods=1).std()
+                session_feat[f"{session}_vol"] = session_vol.reindex(
+                    df.index, method="ffill"
+                ).shift(1)
+    else:
+        session_feat = pd.DataFrame()
+
+    features += [cyclical_feat, session_feat]
+    features = pd.concat(features, axis=1, join="inner")
+
+    if not timeframe.startswith(("D", "W", "MN")):
+        features.drop(
+            columns=["quarter_end", "month_end", "sunday_open", "friday_ny_close"],
+            inplace=True
+        )
+    return features
+```
+
+#### Frequency Gate Logic
+
+The *extra\_features* variable controls which temporal features receive multi-harmonic expansion. For hourly and above timeframes (*H, D, W, MN*), it is set to an empty list — meaning no feature receives additional harmonics beyond the first pair. For minute bars, only *hour* receives additional harmonics, since minute-level intraday patterns are dense enough to benefit from the third harmonic's resolution. Day-of-week and day-of-year are encoded with a single pair at minute resolution; at this granularity, weekly or annual cyclical structure is better represented through the session flags and calendar effects than through additional Fourier terms.
+
+The final *drop* call removes the four calendar effect flags for all timeframes below daily. This is a hard gate: month-end and quarter-end effects are defined at the daily granularity and are not meaningful for individual M5 or H1 bars. Including them at intraday resolution would add four constant-zero columns during most of the year, wasting model capacity.
+
+#### Bar Duration Features
+
+For non-time-based bars (volume bars, dollar bars, tick bars), the temporal distance between bars is itself informative. A dollar bar that forms in 45 seconds carries very different information about market urgency than one that takes 4 hours. The *bar\_duration* feature measures this in seconds. *bar\_duration\_accel* is the first difference of bar duration — it captures acceleration: whether bars are forming faster or slower than the previous bar. Both features are computed without lookahead by using *diff()*, which produces NaN on the first bar. The NaN propagates into the output but is handled by the downstream pipeline's standard NaN-filling step.
+
+### Pipeline Integration
+
+The output of *get\_time\_features* is a DataFrame with the same DatetimeIndex as the input, ready to be concatenated with price-derived features before model training. A typical integration in the *afml* pipeline looks like this:
+
+```
+import pandas as pd
+from afml.features.time_features import get_time_features
+from afml.features.fracdiff     import fracdiff_optimal
+
+# 1. Load OHLCV data (H1 EURUSD, UTC index)
+df = pd.read_parquet("eurusd_h1.parquet")
+
+# 2. Fractionally differentiated close (from Article 01)
+ffd_close, _ = fracdiff_optimal(df[["close"]])
+
+# 3. Time features
+time_feat = get_time_features(df, timeframe="H1", forex=True)
+
+# 4. Concatenate into final feature matrix
+X = pd.concat([ffd_close, time_feat], axis=1, join="inner")
+X = X.dropna()  # remove warm-up rows
+```
+
+Several practical considerations govern how the time features interact with the broader pipeline:
+
+1. Index alignment. The inner join in *pd.concat* ensures that only bars present in all feature DataFrames are retained. If *fracdiff\_optimal* drops the first *l\** bars due to the fixed-width window lookback, and *get\_time\_features* drops the first bar due to *diff()* NaNs, the inner join silently aligns both DataFrames to their shared index. This is the desired behavior — no bar is included in the feature matrix unless all features are available for it.
+2. Stationarity of time features. Fourier-encoded time features are already stationary by construction — they oscillate between −1 and 1 without drift. Session flags are binary with a stable long-run mean. Calendar effect flags have a slowly evolving proportion due to calendar irregularities (leap years, weekday distribution shifts) but are stationary to any reasonable ML assumption. None of these features require fractional differentiation or other stationarity pre-processing.
+3. Feature scaling. Standard scaling maps sin/cos features from [−1, 1] to approximately zero-mean, unit-variance. This does not distort cyclical relationships because linear scaling preserves relative positions. Session flags (binary) become approximately Bernoulli-normalized after standard scaling. Calendar effect flags have very low base rates (quarter\_end fires on approximately 3% of daily bars) and may benefit from a different treatment — Boolean passthrough or a robust scaler — in models sensitive to class imbalance.
+4. Walk-forward validation. Time features are derived entirely from the DatetimeIndex and do not use any future observations. They are safe to include in a walk-forward validation framework without any additional care. Session volatility features use a one-bar lag, which similarly prevents lookahead. The only caveat is that the rolling standard deviation has a 20-bar warm-up period; bars with insufficient history receive the *min\_periods=1* estimate, which is noisy. Best practice is to add a warm-up buffer of at least 20 bars at the start of each fold's training window.
+
+### Conclusion
+
+Time is a rich feature source that most financial ML pipelines treat as a throwaway index column. The approach developed here extracts three orthogonal layers of temporal information: cyclical Fourier encodings that correctly represent the topology of periodic time variables, session flags and volatility estimates that condition the model on the institutional structure of the trading day, and calendar effect markers that capture the recurring institutional flows at period boundaries.
+
+Four engineering decisions underpin the production quality of the implementation. First, sin/cos encoding via the unit-circle projection eliminates the distance distortions introduced by integer hours and integer days, ensuring that models based on Euclidean or gradient-based assumptions can learn temporal patterns without pre-processing the geometry. Second, multi-harmonic Fourier expansion allows the feature set to represent the bimodal and trimodal volatility patterns of the global forex market, which a single sin/cos pair cannot capture. Third, the session volatility features use a lagged rolling standard deviation masked to within-session returns, providing the model with a clean estimate of each session's recent realised volatility without lookahead bias. Fourth, the frequency gate ensures that the feature set is matched to the information content relevant at each timeframe, eliminating columns that add noise rather than signal.
+
+Together with the fractionally differentiated price features from [Part 1](https://www.mql5.com/en/articles/22014) and [Part 2](https://www.mql5.com/en/articles/22015) of this series, the time features complete the temporal context layer of the feature matrix. The next article in the series addresses the labeling problem: how to construct forward-looking labels for financial ML that respect the triple-barrier method and avoid the lookahead biases that invalidate most naive backtesting frameworks. In the following article, we will implement the methods discussed above in MQL5.
+
+### References
+
+1. López de Prado, M. (2018). *Advances in Financial Machine Learning*. Wiley. Chapter 4: Labeling, Chapter 5: Fractionally Differentiated Features.
+2. Brockwell, P. J. and R. A. Davis (2002). *Introduction to Time Series and Forecasting*. 2nd ed. Springer. Chapter 4: Spectral Analysis.
+3. Dacorogna, M. et al. (2001). *An Introduction to High-Frequency Finance*. Academic Press. Chapter 3: Statistical Properties of Foreign Exchange Data.
+4. Hyndman, R. J. and G. Athanasopoulos (2021). *Forecasting: Principles and Practice*. 3rd ed. OTexts. Chapter 12: Advanced Forecasting Methods.
+5. Rasekhschaffe, K. C. and R. C. Jones (2019). "Machine Learning for Stock Selection." *Financial Analysts Journal*, 75(3), 70–88.
+
+**Attached Files**
+
+| File | Description |
+| --- | --- |
+| trading\_session.py | Full time-feature module: *encode\_cyclical\_features*, *trading\_session\_encoded\_features*, *get\_time\_features* |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22516.zip "Download all attachments in the single ZIP archive")
+
+[trading\_session.py](https://www.mql5.com/en/articles/download/22516/trading_session.py "Download trading_session.py")
+(7.24 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Gaussian Processes in Machine Learning: Regression Model in MQL5](https://www.mql5.com/en/articles/18427)
+
+We will review the basics of Gaussian processes (GP) as a probabilistic machine learning model and demonstrate its application to regression problems using synthetic data.
+
+[Creating an EMA Crossover Forward Simulation Indicator in MQL5](https://www.mql5.com/en/articles/22323)
+
+A custom forward simulation engine detects fast/slow EMA crossovers and immediately projects synthetic candles ahead of the signal bar. It generates bodies and wicks using controlled logic, draws them with chart objects, and refreshes on every new signal or anchor change. You get a clear forward-looking view to test timing, visualize scenarios, and manage invalidation on the chart.
+
+[From Matrices to Models: How to Build an ML Pipeline in MQL5 and Export It to ONNX](https://www.mql5.com/en/articles/22474)
+
+The article describes the arrangement of a coordinated ML pipeline in MetaTrader 5 with separation of roles: Python trains and exports the model to ONNX, MQL5 reproduces normalization and PCA via matrix/vector and performs inference. This approach makes the model's inputs stable and verifiable, and the MetaTrader 5 strategy tester provides metrics for analyzing the system behavior.
+
+[Encoding Candlestick Patterns (Part 1): An Alphabetical System for Signal Detection](https://www.mql5.com/en/articles/22469)
+
+We present a rule‑based alphabet for candlestick price action that maps measurable shape and direction to letter codes (A/a, H/h, E/e, G/g, D). The article shows an MQL5 implementation: classifying candles, building two‑bar sequences via permutations, and scanning charts with an indicator and alerts. Readers gain a practical template for objective pattern detection and systematic testing.
+
+[
+
+VPS for 24/7 trading
+Contact your broker and find out how to get a free hosting subscription
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=nhetzvgituppcfrhndpblbihmzziogdh&s=d00c975c8bda3d8c1b29f042ad33ac81952ccea2f130a8f1ffa9015bab8ade87&uid=&ref=https://www.mql5.com/en/articles/22516&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6455329725928311176)

@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_056",
+  "section": "Examples",
+  "parent_shard": "examples_056",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18289,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part XII): Integration of a Forex Values Calculator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18289.md"
+    },
+    {
+      "id": 18299,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18299.md"
+    },
+    {
+      "id": 18465,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18465.md"
+    },
+    {
+      "id": 18518,
+      "title": "Getting Started with MQL5 Algo Forge",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18518.md"
+    },
+    {
+      "id": 18528,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (III) \u2014 Indicator Insights",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18528.md"
+    },
+    {
+      "id": 18658,
+      "title": "The View and Controller components for tables in the MQL5 MVC paradigm: Containers",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18658.md"
+    },
+    {
+      "id": 18685,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (IV) \u2014 Locally hosted AI model market insights",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18685.md"
+    },
+    {
+      "id": 18750,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (V)\u2014Event Reminder System",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18750.md"
+    },
+    {
+      "id": 18760,
+      "title": "Graph Theory: Dijkstra's Algorithm Applied in Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18760.md"
+    },
+    {
+      "id": 18777,
+      "title": "Singular Spectrum Analysis in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18777.md"
+    },
+    {
+      "id": 18817,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (VII) \u2014 Post Impact Strategy for News Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18817.md"
+    },
+    {
+      "id": 18882,
+      "title": "From Novice to Expert: Reporting EA \u2014 Setting up the work flow",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18882.md"
+    }
+  ]
+}

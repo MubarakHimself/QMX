@@ -1,0 +1,116 @@
+{
+  "shard_id": "statistics_and_analysis_000",
+  "section": "Statistics and analysis",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1087,
+      "title": "Regression Analysis of the Influence of Macroeconomic Data on Currency Prices Fluctuation",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1087.md"
+    },
+    {
+      "id": 1240,
+      "title": "Trader's Statistical Cookbook: Hypotheses",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1240.md"
+    },
+    {
+      "id": 1800,
+      "title": "Statistical Verification of the Labouchere Money Management System",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1800.md"
+    },
+    {
+      "id": 2742,
+      "title": "Statistical Distributions in MQL5 - taking the best of R and making it faster",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2742.md"
+    },
+    {
+      "id": 3046,
+      "title": "Analyzing Balance/Equity graphs by symbols and EAs' ORDER_MAGIC",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3046.md"
+    },
+    {
+      "id": 3118,
+      "title": "Sorting methods and their visualization using MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3118.md"
+    },
+    {
+      "id": 3650,
+      "title": "Risk Evaluation in the Sequence of Deals with One Asset",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3650.md"
+    },
+    {
+      "id": 3973,
+      "title": "Risk Evaluation in the Sequence of Deals with One Asset. Continued",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3973.md"
+    },
+    {
+      "id": 4191,
+      "title": "Social Trading. Can a profitable signal be made even better?",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4191.md"
+    },
+    {
+      "id": 5348,
+      "title": "Developing the symbol selection and navigation utility in MQL5 and MQL4",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5348.md"
+    },
+    {
+      "id": 5373,
+      "title": "Applying the probability theory to trading gaps",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5373.md"
+    },
+    {
+      "id": 5417,
+      "title": "Selection and navigation utility in MQL5 and MQL4: Adding \"homework\" tabs and saving graphical objects",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5417.md"
+    }
+  ]
+}

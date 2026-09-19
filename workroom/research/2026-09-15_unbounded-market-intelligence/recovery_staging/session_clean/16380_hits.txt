@@ -1,0 +1,76 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 3): Adding Currency, Importance, and Time Filters"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Adding Currency, Importance, and Time Filters"
+20: # Trading with the MQL5 Economic Calendar (Part 3): Adding Currency, Importance, and Time Filters
+25: | 29 November 2024 at 05:30
+36: ### Introduction
+38: In this article, we build upon our [previous work](https://www.mql5.com/en/articles/16301) on the [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) Economic Calendar, where we developed a News dashboard panel for displaying economic events in real time. Now, we will enhance this da
+41: 2. [Understanding Filter Types in Economic Calendars](https://www.mql5.com/en/articles/16380#understanding_filter_types_in_economic_calendars)
+47: ### Understanding Filter Types in Economic Calendars
+49: To refine our dashboard’s functionality, we must understand the purpose and benefits of each filter type: currency, importance, and time. The currency filter allows us to view economic events that specifically affect the currencies we are trading, making it easier to pinpoint relevant events that could impact our open positions. This filter helps streamline the dashboard by reducing information ov
+53: The importance filter categorizes events based on their anticipated impact, typically defined as low, medium, or high importance. High-impact events, such as central bank announcements or unemployment figures, can lead to market volatility. By filtering based on importance, we can quickly assess which events might have the most significant impact on our trading decisions, enhancing responsiveness.
+57: Finally, the time filter allows us to specify the timeframe for relevant economic events, which is particularly useful for those trading within specific sessions or preparing for upcoming news. With this filter, we can see events happening within a defined period—such as the next hour, day, or week—providing a timeline that aligns with our trading strategies and time preferences. Together, these f
+59: ### Implementing the Filters in MQL5
+63: ```
+67: bool enableTimeFilter = true; // Set to 'true' to enable time filter, 'false' to disable
+68: ```
+74: ```
+77: ```
+81: ```
+97: ```
+103: ```
+119: ```
+125: ```
+127: ENUM_CALENDAR_EVENT_IMPORTANCE allowed_importance_levels[] = {CALENDAR_IMPORTANCE_LOW, CALENDAR_IMPORTANCE_MODERATE, CALENDAR_IMPORTANCE_HIGH};
+128: ```
+130: Here, we have added all the importance levels, meaning that we technically allow all the news based on priority, but you can choose the ones that are of best fit for your trading decisions. Next, we need to define the time filter ranges.
+132: ```
+137: ```
+139: We define a time range for filtering news events based on the daily period. We use the function [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) with constant [PERIOD\_D1](https://www.mql5.com/en/docs/constants/chartconstants/enum_timeframes) to determine the number of seconds in a day, which we then assign to the "timeRange" [datetime](https://www.mql5.com/en/docs/basis/types/in
+141: ```
+142: //--- Apply time filter and set timeMatch flag (if the filter is enabled)
+154:    //--- Skip if the event doesn't match the time filter
+159: ```
+161: Here, we apply the time filter by checking if the event’s time falls within the specified time range, and we use the "timeMatch" flag to track whether the event meets the criteria. If the "enableTimeFilter" is true, we first retrieve the event's time from the "values[i].time" variable. We then check if the event's time is either in the past (between the current server time and "timeBefore") or in 
+165: ```
+168: ```
+172: ```
+178: ```
+196: ```
+197: updateLabel(TIME_LABEL,"Server Time: "+TimeToString(TimeCurrent(),
+200: ```
+202: Here, we use the "updateLabel" function to update the label that displays the current server time and the total number of filtered news events. We update the label identified by "TIME\_LABEL" with a new string that combines the current server time and the count of news events. To get the current server time, we use the [TimeCurrent](https://www.mql5.com/en/docs/dateandtime/timecurrent) function an
+204: We then display the total number of filtered news events, stored in "news\_filter\_count," alongside the total number of available news events, represented by "allValues." By updating this label, we provide real-time information on both the server time and the status of the news filter, helping us stay informed of the current market news that is of importance to us.
+208: ```
+229: ```
+233: If the label update is successful, we call the [ChartRedraw](https://www.mql5.com/en/docs/chart_operations/ChartRedraw) function to refresh the chart and display the updated label, and finally, we return "true" to indicate the operation was successful. This is the function that allows us to dynamically update the content of labels on the chart, providing a flexible method for displaying informatio
+239: ```
+244: ENUM_CALENDAR_EVENT_IMPORTANCE allowed_importance_levels[] = {CALENDAR_IMPORTANCE_LOW, CALENDAR_IMPORTANCE_MODERATE, CALENDAR_IMPORTANCE_HIGH};
+246: //--- Loop through each calendar value up to the maximum defined total
+249:    MqlCalendarEvent event; //--- Declare event structure
+250:    CalendarEventById(values[i].event_id,event); //--- Retrieve event details by ID
+252:    MqlCalendarCountry country; //--- Declare country structure
+253:    CalendarCountryById(event.country_id,country); //--- Retrieve country details by event's country ID
+255:    MqlCalendarValue value; //--- Declare calendar value structure
+256:    CalendarValueById(values[i].id,value); //--- Retrieve actual, forecast, and previous values
+291:    //--- Apply time filter and set timeMatch flag (if the filter is enabled)
+303:       //--- Skip if the event doesn't match the time filter
+322:    for (int k=0; k<ArraySize(array_calendar); k++){
+331:       string news_data[ArraySize(array_calendar)];
+338:       if (event.importance == CALENDAR_IMPORTANCE_LOW){importance_color=clrYellow;}
+339:       else if (event.importance == CALENDAR_IMPORTANCE_MODERATE){importance_color=clrOrange;}
+340:       else if (event.importance == CALENDAR_IMPORTANCE_HIGH){importance_color=clrRed;}
+355:          createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY-(22-12),news_data[k],importance_color,22,"Calibri");
+358:          createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY,news_data[k],clrBlack,12,"Calibri");
+370: updateLabel(TIME_LABEL,"Server Time: "+TimeToString(TimeCurrent(),
+373: ```
+377: ```
+402:    //--- Delete all objects related to the calendar array
+417: ```
+421: Following this, we delete labels that display information such as the dashboard header ("HEADER\_LABEL"), server time ("TIME\_LABEL"), and impact level ("IMPACT\_LABEL"). Each of these labels is removed to ensure that any textual information displayed on the chart is cleared. Next, we delete all the objects in "ARRAY\_CALENDAR" and "ARRAY\_NEWS", which store information about the calendar and news
+427: ```
+436: ```
+440: ### Conclusion
+442: In conclusion, we have successfully enhanced our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) dashboard by integrating essential filtering capabilities, which we use to view only the most relevant news events based on currency, importance, and time. These filters provide a more streamlined and focused interface, allowing us to concentrate on economic events that align w
+444: By refining the dashboard with these filters, we make it a more powerful and efficient tool for informed decision-making. In the next part, we will expand on this foundation by adding live updates to the calendar dashboard logic, enabling it to constantly refresh with the latest economic news directly within our MQL5 dashboard.
+450: [MQL5\_NEWS\_CALENDAR\_PART\_3.mq5](https://www.mql5.com/en/articles/download/16380/mql5_news_calendar_part_3.mq5 "Download MQL5_NEWS_CALENDAR_PART_3.mq5")
+470: Moving from a simple trading script to a fully functioning Expert Advisor (EA) can significantly enhance your trading experience. Imagine having a system that automatically monitors your charts, performs essential calculations in the background, and provides regular updates every two hours. This EA would be equipped to analyze key metrics that are crucial for making informed trading decisions, ens

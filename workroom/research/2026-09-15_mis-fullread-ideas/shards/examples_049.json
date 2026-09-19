@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_049",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15912,
+      "title": "From Basic to Intermediate: Struct (VII)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15912.md"
+    },
+    {
+      "id": 15922,
+      "title": "From Basic to Intermediate: Inheritance",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15922.md"
+    },
+    {
+      "id": 15932,
+      "title": "From Basic to Intermediate: Indicator (V)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15932.md"
+    },
+    {
+      "id": 15949,
+      "title": "Gain An Edge Over Any Market (Part V): FRED EURUSD Alternative Data",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15949.md"
+    },
+    {
+      "id": 15956,
+      "title": "Example of new Indicator and Conditional LSTM",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15956.md"
+    },
+    {
+      "id": 15971,
+      "title": "Self Optimizing Expert Advisor With MQL5 And Python (Part VI): Taking Advantage of Deep Double Descent",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15971.md"
+    },
+    {
+      "id": 15972,
+      "title": "Reimagining Classic Strategies (Part IX): Multiple Time Frame Analysis (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15972.md"
+    },
+    {
+      "id": 15975,
+      "title": "From Basic to Intermediate: Objects (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15975.md"
+    },
+    {
+      "id": 15987,
+      "title": "From Basic to Intermediate: Objects (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15987.md"
+    },
+    {
+      "id": 15995,
+      "title": "From Basic to Intermediate: Function Pointers",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15995.md"
+    },
+    {
+      "id": 16000,
+      "title": "From Basic to Intermediate: Handling Mouse Events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16000.md"
+    },
+    {
+      "id": 16012,
+      "title": "Integration of Broker APIs with Expert Advisors using MQL5 and Python",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16012.md"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "shard_id": "trading_034",
+  "section": "Trading",
+  "n": 11,
+  "series_in_shard": [
+    "developing a trading expert advisor from scratch",
+    "digital signal processing for traders",
+    "encoding candlestick patterns"
+  ],
+  "articles": [
+    {
+      "id": 10302,
+      "title": "Developing a trading Expert Advisor from scratch (Part 7): Adding Volume at Price (I)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Adding Volume at Price (I)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10302.md"
+    },
+    {
+      "id": 10383,
+      "title": "Developing a trading Expert Advisor from scratch (Part 11): Cross order system",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Cross order system",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10383.md"
+    },
+    {
+      "id": 10462,
+      "title": "Developing a trading Expert Advisor from scratch (Part 18): New order system (I)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (I)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10462.md"
+    },
+    {
+      "id": 10474,
+      "title": "Developing a trading Expert Advisor from scratch (Part 19): New order system (II)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (II)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10474.md"
+    },
+    {
+      "id": 10516,
+      "title": "Developing a trading Expert Advisor from scratch (Part 22): New order system (V)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (V)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10516.md"
+    },
+    {
+      "id": 10563,
+      "title": "Developing a trading Expert Advisor from scratch (Part 23): New order system (VI)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (VI)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10563.md"
+    },
+    {
+      "id": 10593,
+      "title": "Developing a trading Expert Advisor from scratch (Part 24): Providing system robustness (I)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Providing system robustness (I)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10593.md"
+    },
+    {
+      "id": 10678,
+      "title": "Developing a trading Expert Advisor from scratch (Part 31): Towards the future (IV)",
+      "section": "Trading",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Towards the future (IV)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10678.md"
+    },
+    {
+      "id": 23444,
+      "title": "Digital Signal Processing for Traders (Part 2): The Dominant Cycle, MAMA, and a Regime-Switching Expert Advisor",
+      "section": "Trading",
+      "series_title": "Digital Signal Processing for Traders (): The Dominant Cycle, MAMA, and a Regime-Switching Expert Advisor",
+      "series_key": "digital signal processing for traders",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23444.md"
+    },
+    {
+      "id": 22469,
+      "title": "Encoding Candlestick Patterns (Part 1): An Alphabetical System for Signal Detection",
+      "section": "Trading",
+      "series_title": "Encoding Candlestick Patterns (): An Alphabetical System for Signal Detection",
+      "series_key": "encoding candlestick patterns",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22469.md"
+    },
+    {
+      "id": 22709,
+      "title": "Encoding Candlestick Patterns (Part 2): Modeling Price Action as an Ordered Sequence",
+      "section": "Trading",
+      "series_title": "Encoding Candlestick Patterns (): Modeling Price Action as an Ordered Sequence",
+      "series_key": "encoding candlestick patterns",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22709.md"
+    }
+  ]
+}

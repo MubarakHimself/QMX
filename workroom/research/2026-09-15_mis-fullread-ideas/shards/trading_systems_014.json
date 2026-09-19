@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_014",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16850,
+      "title": "Neural Networks in Trading: A Multimodal, Tool-Augmented Agent for Financial Markets (FinAgent)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16850.md"
+    },
+    {
+      "id": 16867,
+      "title": "Neural Networks in Trading: A Multimodal, Tool-Augmented Agent for Financial Markets (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16867.md"
+    },
+    {
+      "id": 16879,
+      "title": "Quantum computing and trading: A fresh approach to price forecasts",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16879.md"
+    },
+    {
+      "id": 16894,
+      "title": "Neuro-symbolic systems in algorithmic trading: Combining symbolic rules and neural networks",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16894.md"
+    },
+    {
+      "id": 16914,
+      "title": "Price movement discretization methods in Python",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16914.md"
+    },
+    {
+      "id": 16916,
+      "title": "Neural Networks in Trading: A Multi-Agent System with Conceptual Reinforcement (FinCon)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16916.md"
+    },
+    {
+      "id": 16937,
+      "title": "Neural Networks in Trading: A Multi-Agent System with Conceptual Reinforcement (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16937.md"
+    },
+    {
+      "id": 16940,
+      "title": "Trend Prediction with LSTM for Trend-Following Strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16940.md"
+    },
+    {
+      "id": 16975,
+      "title": "Neural Networks in Trading: Memory Augmented Context-Aware Learning (MacroHFT) for Cryptocurrency Markets",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16975.md"
+    },
+    {
+      "id": 16993,
+      "title": "Neural Networks in Trading: Memory Augmented Context-Aware Learning for Cryptocurrency Markets (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16993.md"
+    },
+    {
+      "id": 16999,
+      "title": "Dialectic Search (DA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16999.md"
+    },
+    {
+      "id": 17063,
+      "title": "Royal Flush Optimization (RFO)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17063.md"
+    }
+  ]
+}

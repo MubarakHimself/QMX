@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_008",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 8231,
+      "title": "A scientific approach to the development of trading algorithms",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8231.md"
+    },
+    {
+      "id": 8274,
+      "title": "Basic math behind Forex trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8274.md"
+    },
+    {
+      "id": 8589,
+      "title": "Analyzing charts using DeMark Sequential and Murray-Gann levels",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8589.md"
+    },
+    {
+      "id": 8616,
+      "title": "Developing a self-adapting algorithm (Part I): Finding a basic pattern",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8616.md"
+    },
+    {
+      "id": 8743,
+      "title": "Gradient boosting in transductive and active machine learning",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8743.md"
+    },
+    {
+      "id": 8767,
+      "title": "Developing a self-adapting algorithm (Part II): Improving efficiency",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8767.md"
+    },
+    {
+      "id": 8807,
+      "title": "Self-adapting algorithm (Part III): Abandoning optimization",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8807.md"
+    },
+    {
+      "id": 8826,
+      "title": "Machine learning in Grid and Martingale trading systems. Would you bet on it?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8826.md"
+    },
+    {
+      "id": 8859,
+      "title": "Self-adapting algorithm (Part IV): Additional functionality and tests",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8859.md"
+    },
+    {
+      "id": 8863,
+      "title": "Finding seasonal patterns in the forex market using the CatBoost algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8863.md"
+    },
+    {
+      "id": 9138,
+      "title": "Metamodels in machine learning and trading: Original timing of trading orders",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9138.md"
+    },
+    {
+      "id": 9171,
+      "title": "Mathematics in trading: Sharpe and Sortino ratios",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9171.md"
+    }
+  ]
+}

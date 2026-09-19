@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_010",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_010",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15469,
+      "title": "Neural Networks in Trading: Practical Results of the TEMPO Method",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15469.md"
+    },
+    {
+      "id": 15498,
+      "title": "Neural Networks in Trading: Injection of Global Information into Independent Channels (InjectTST)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15498.md"
+    },
+    {
+      "id": 15541,
+      "title": "Application of Nash's Game Theory with HMM Filtering in Trading",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15541.md"
+    },
+    {
+      "id": 15546,
+      "title": "Neural Networks in Trading: State Space Models",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15546.md"
+    },
+    {
+      "id": 15595,
+      "title": "Neural Networks in Trading: A Complex Trajectory Prediction Method (Traj-LLM)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15595.md"
+    },
+    {
+      "id": 15648,
+      "title": "Neural Networks in Trading: Unified Trajectory Generation Model (UniTraj)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15648.md"
+    },
+    {
+      "id": 15665,
+      "title": "Example of Causality Network Analysis (CNA) and Vector Auto-Regression Model for Market Event Prediction",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15665.md"
+    },
+    {
+      "id": 15688,
+      "title": "Neural Networks in Trading: Hierarchical Vector Transformer (HiVT)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15688.md"
+    },
+    {
+      "id": 15698,
+      "title": "Implementing a Rapid-Fire Trading Strategy Algorithm with Parabolic SAR and Simple Moving Average (SMA) in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15698.md"
+    },
+    {
+      "id": 15713,
+      "title": "Neural Networks in Trading: Hierarchical Vector Transformer (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15713.md"
+    },
+    {
+      "id": 15747,
+      "title": "Neural Networks in Trading: Point Cloud Analysis (PointNet)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15747.md"
+    },
+    {
+      "id": 15789,
+      "title": "Neural Networks in Trading: Hierarchical Feature Learning for Point Clouds",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15789.md"
+    }
+  ]
+}

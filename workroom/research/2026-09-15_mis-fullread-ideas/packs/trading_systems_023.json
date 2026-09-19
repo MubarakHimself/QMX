@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_023",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_023",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 21314,
+      "title": "Reinforcement Learning Meets MetaTrader 5: A Complete Pipeline for Training, Validating and Honestly Evaluating a Gold Trading Bot",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21314.md"
+    },
+    {
+      "id": 21351,
+      "title": "Neuro-Structural Trading Engine \u2014 NSTE (Part II): Jardine's Gate Six-Gate Quantum Filter",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21351.md"
+    },
+    {
+      "id": 21372,
+      "title": "Neuro-Structural Trading Engine \u2014 NSTE (Part I): How to Build a Prop-Firm-Safe Multi-Account System",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21372.md"
+    },
+    {
+      "id": 21507,
+      "title": "Statistical Arbitrage Through Cointegrated Stocks (Final): Data Analysis with Specialized Database",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21507.md"
+    },
+    {
+      "id": 21842,
+      "title": "From Simple Close Buttons to a Rule-Based Risk Dashboard in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21842.md"
+    },
+    {
+      "id": 21955,
+      "title": "Building a Correlation-Aware Multi-EA Portfolio Scorer in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21955.md"
+    },
+    {
+      "id": 22175,
+      "title": "Carry Trade Logic in MQL5: Building an EA That Factors Swap Rates Into Position Sizing and Holding Decisions",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22175.md"
+    },
+    {
+      "id": 22264,
+      "title": "Building an Object-Oriented FVG Scanner in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22264.md"
+    },
+    {
+      "id": 22290,
+      "title": "Three MACD Filters on US_TECH100: Five Years of Broker Data",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22290.md"
+    },
+    {
+      "id": 22438,
+      "title": "Beyond GARCH (Part I): Mandelbrot's MMAR versus Engle's GARCH",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22438.md"
+    },
+    {
+      "id": 22474,
+      "title": "From Matrices to Models: How to Build an ML Pipeline in MQL5 and Export It to ONNX",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22474.md"
+    },
+    {
+      "id": 22476,
+      "title": "Beyond GARCH (Part III): Building the MMAR and the Verdict",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22476.md"
+    }
+  ]
+}

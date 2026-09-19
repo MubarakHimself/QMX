@@ -1,0 +1,801 @@
+---
+id: 20041
+source_url: https://www.mql5.com/en/articles/20041
+title: "The MQL5 Standard Library Explorer (Part 3): Expert Standard Deviation Channel"
+author: ""
+author_url: 
+published: 2025-11-03T12:20Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "The MQL5 Standard Library Explorer (): Expert Standard Deviation Channel"
+series_part: 3
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# The MQL5 Standard Library Explorer (Part 3): Expert Standard Deviation Channel
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 3 November 2025 at 07:20
+
+[IMG]
+3 222
+[[IMG]
+1](https://www.mql5.com/en/forum/499244 "Comments")
+
+[IMG]
+
+[Clemence Benjamin](https://www.mql5.com/en/users/billionaire2024)
+
+### Contents
+
+- [Introduction](https://www.mql5.com/en/articles/20041#introduction)
+- [Understand Standard Deviation and its Application in trading.](https://www.mql5.com/en/articles/20041#understanding_standard_deviation_and_its)
+- [Strategy Overview](https://www.mql5.com/en/articles/20041#strategy_overview)
+- [Implementation](https://www.mql5.com/en/articles/20041#implementation)
+- [Testing](https://www.mql5.com/en/articles/20041#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20041#conclusion)
+- [Attachments](https://www.mql5.com/en/articles/20041#attachments)
+
+### Introduction
+
+The explorer’s goal is to look deeper into things, to experiment, and through that process, to discover new ideas. In the [previous](https://www.mql5.com/en/articles/19834) discussion, I aimed to simplify this journey by laying the foundation and outlining a routine for integrating classes into Expert Advisors. The main objective was to study class interfaces to understand their purpose—and in doing so, recognize how developer comments can make the learning process much easier.
+
+I concluded by summarizing the essential steps for working with [Standard Library](https://www.mql5.com/en/docs/standardlibrary) classes. One key advantage that stands out is the comprehensive documentation available for MQL5. Much like other programming languages, MQL5’s documentation forms a complete knowledge base. In fact, the entire MQL5 website—including its articles, forums, books, and codebase—collectively serves as a rich source of reference material. Each section is designed to help developers and traders solve practical challenges in algorithmic trading.
+
+Today’s challenge is to build an Expert Advisor that trades using volatility-based channels. In doing so, we’ll explore the CChartObjectStdDevChannel class, which will help us not only create a functional EA but also gain deeper insight into the Standard Library. There’s always something new to learn, even from existing code—because every experiment opens the door to new ideas.
+
+Think of today’s task as a puzzle: the final picture is our Expert Advisor, and our job is to fit the pieces together using concepts and notes from the previous discussion.
+
+Before we dive into coding, I’ll briefly demonstrate how to use the MQL5 documentation to understand a library file—a powerful first step before exploring its implementation. Developers creating new modules should always pay close attention to programmer comments and contribute clear documentation to help others navigate the development landscape more easily. For example check the code snippet below, the highlighted comment.
+
+```
+//+------------------------------------------------------------------+
+//|                                         ChartObjectsChannels.mqh |
+//|                             Copyright 2000-2025, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+//| All channels.                                                    |
+//+------------------------------------------------------------------+
+#include "ChartObjectsLines.mqh"
+//+------------------------------------------------------------------+
+//| Class CChartObjectChannel.                                       |
+//| Purpose: Class of the "Equidistant channel" object of chart.     |
+//|          Derives from class CChartObjectTrend.                   |
+//+------------------------------------------------------------------+
+class CChartObjectChannel : public CChartObjectTrend
+  {
+public:
+                     CChartObjectChannel(void);
+                    ~CChartObjectChannel(void);
+   //--- method of creating the object
+   bool              Create(long chart_id,const string name,const int window,
+                            const datetime time1,const double price1,
+                            const datetime time2,const double price2,
+                            const datetime time3,const double price3);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_CHANNEL); }
+  };
+```
+
+By the end of this discussion, you will have learned how to:
+
+1. Apply the CTrade class as the core engine for order and position management.
+2. Use the ChartObjectsChannels class library as the foundation for strategy logic and signal generation.
+3. Practically integrate these classes into a fully functional Expert Advisor.
+4. Develop and structure a complete trading strategy.
+5. Implement effective risk management techniques.
+6. Utilize the Strategy Tester to evaluate and optimize your Expert Advisor’s performance.
+
+Understanding the purpose of a class by studying the documentation or the MQL5 Reference
+
+In [Part 2](https://www.mql5.com/en/articles/19834), we focused on the routine I shared for integrating classes into an Expert Advisor. In this section, however, we’ll take a different approach — one that helps you quickly understand library classes using the MQL5 documentation.
+
+Below is an illustration of a powerful built-in tool: the MQL5 Reference, accessible directly from MetaEditor. Since we’ll be using the ChartObjectsChannels library, I have demonstrated how to access and explore it efficiently.
+
+In the library source code, locate the class you want to examine—in this case, CChartObjectChannel. Right-click the class name and select “Go to Help”. This will open the MQL5 Reference window, where you can read detailed information about the class.
+
+As I mentioned earlier, the documentation provides a concise overview, which is often sufficient to understand the class’s purpose. However, its full potential is best unlocked through hands-on experimentation.
+
+Fig 1, below demonstrates how to use the MQL5 Reference in MetaEditor, while Figure 2 shows an alternative approach using the online MQL5 Documentation for the same purpose.
+
+[IMG]
+
+Fig. 1. Using MQL5 Reference
+
+[IMG]
+
+Fig. 2. Using MQL5 Documentation
+
+### Strategy Overview
+
+Before developing algorithms, most traders begin by analyzing market prices visually using chart objects. This approach feels intuitive because tools like horizontal lines for support and resistance, trendlines, and channels are easy to place directly on the chart. However, the real challenge arises when trying to translate these visual analysis concepts into code—especially for those who are not yet comfortable with the MQL5 development environment.
+
+In this discussion, we will bridge that gap by exploring how to transform these manual analytical tools into custom algorithmic solutions using the MQL5 Standard Library. The beauty of MQL5’s framework lies in its object-oriented structure and the comprehensive documentation that accompanies its standard classes. This allows developers to easily understand and extend chart-based tools without reinventing the wheel.
+
+As demonstrated in the earlier sections, there are several ways to explore and understand the functionality of library classes. One particularly efficient method is using the MetaEditor’s built-in reference system, which provides detailed documentation for each class, including its members and methods. This is especially useful when studying complex components like those in the ChartObjectsChannels.mqh file.
+
+Upon reviewing this file, we discover that it hosts multiple channel-related classes, including:
+
+- CChartObjectChannel
+- CChartObjectRegression
+- CChartObjectStdDevChannel
+- CChartObjectPitchfork
+
+For our development today, we will focus on the CChartObjectStdDevChannel class. This class represents a Standard Deviation Channel, a popular analytical tool that measures price deviation from a linear trend. It offers both a visual structure for manual chart analysis and a programmable interface for algorithmic strategies.
+
+Our objective is to integrate this channel object into an Expert Advisor (EA), allowing it to generate entry and exit signals based on price action relative to the channel boundaries. Through this process, we will build a functional EA, and also gain more in-depth insights into how MQL5’s standard library simplifies the development of professional-grade trading tools.
+
+In essence, the Standard Deviation Channel can be manually added to a chart, but our goal is to automate its creation, updating, and interpretation—transforming a familiar manual tool into a powerful component of systematic trading logic.
+
+[IMG]
+
+Fig. 3. Adding the StdDev Channel to the chart
+
+### Understanding Standard Deviation and its application in trading.
+
+In trading and quantitative analysis, [Standard Deviation](https://en.wikipedia.org/wiki/Standard_deviation "https://en.wikipedia.org/wiki/Standard_deviation") is a key statistical concept used to measure market volatility—that is, how far prices tend to deviate from their average value. Understanding this concept helps traders determine whether the market is calm or highly active, which in turn influences decisions on risk, position sizing, and signal validation.
+
+1. The Concept of Standard Deviation
+
+Standard Deviation (denoted by σ) measures the dispersion of data around its mean. In price analysis, it quantifies how much individual prices deviate from the average price over a given period.
+
+Mathematically, it is defined as:
+
+[IMG]
+
+Where:
+
+- N—the number of price data points (e.g., candles or bars),
+- x\_i—each price value (typically closing price),
+- x bar—the average (mean) price over the same period.
+- A large σ implies higher volatility—prices are widely spread from the mean.
+- A small σ suggests stability—prices cluster closely around the mean.
+
+2. Applying Standard Deviation in Trading
+
+In practice, traders use Standard Deviation to visualize volatility and identify trading opportunities. One of the most common implementations is through volatility channels, such as the Standard Deviation Channel (StdDev Channel).
+
+(a) Standard Deviation Channel
+
+This channel consists of a central baseline (often a trendline or linear regression) and two outer lines that are plotted at a defined number of standard deviations above and below it.
+
+The equations are:
+
+- Upper Channel = Base Line+k×σ
+- Lower Channel = Base Line−k×σ
+
+Where
+
+k is the deviation multiplier (commonly 1, 2, or 3).
+
+For example,
+
+k=2 covers roughly 95% of price fluctuations under normal market conditions (assuming a normal distribution). These channel boundaries help traders visualize volatility envelopes, which can be used for detecting breakouts, pullbacks, or exhaustion zones.
+
+### Implementation
+
+The ChartObjectsChannels.mqh library defines several channel-based classes derived from CChartObjectTrend, including the Standard Deviation Channel, Regression Channel, and Equidistant Channel. Each of these classes provides a way to represent and manipulate price channels on the chart. Our focus will be on the CChartObjectStdDevChannel, which combines the concept of a regression line with the statistical power of standard deviation to measure price dispersion.
+
+To effectively integrate CChartObjectStdDevChannel into an Expert Advisor, we will follow a practical development sequence that combines both programming and analytical understanding.
+
+Objectives
+
+- Use the Standard Library class CChartObjectStdDevChannel to programmatically create and control a standard deviation channel.
+- Automate signal generation when price interacts with or breaks out of the channel.
+- Integrate order management logic using the CTrade class.
+- Combine both chart visualization and trading logic to form a complete Expert Advisor.
+
+Conceptual Foundation
+
+All channel objects in MQL5 share a similar structure, inheriting from CChartObjectTrend. This provides basic line-handling capabilities such as setting anchors, colors, and visibility. The CChartObjectChannel class extends that foundation by adding a parallel line structure, creating an equidistant price corridor.
+
+The CChartObjectStdDevChannel then builds on this by introducing statistical deviation bands calculated around a linear regression line. These upper and lower boundaries help identify zones of potential overextension or mean reversion—a concept commonly used in volatility-based strategies.
+
+The first step is to examine our code and identify the methods required for integration. Once located, we can outline a clear procedure for implementing the CChartObjectStdDevChannel in our Expert Advisor. To make the process easier to follow, I’ve summarized the key integration steps in a table after the code snippet below.
+
+Please note that this is only a partial extract from the header file, included here to focus exclusively on the CChartObjectStdDevChannel class.
+
+```
+//+------------------------------------------------------------------+
+//| Class CChartObjectStdDevChannel.                                 |
+//| Purpose: Class of the "Standrad deviation channel"               |
+//|          object of chart.                                        |
+//|          Derives from class CChartObjectTrend.                   |
+//+------------------------------------------------------------------+
+class CChartObjectStdDevChannel : public CChartObjectTrend
+  {
+public:
+                     CChartObjectStdDevChannel(void);
+                    ~CChartObjectStdDevChannel(void);
+   //--- methods of access to properties of the object
+   double            Deviations(void) const;
+   bool              Deviations(const double deviation) const;
+   //--- method of creating the object
+   bool              Create(long chart_id,const string name,const int window,
+                            const datetime time1,const datetime time2,const double deviation);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_STDDEVCHANNEL); }
+   //--- methods for working with files
+   virtual bool      Save(const int file_handle);
+   virtual bool      Load(const int file_handle);
+  };
+//+------------------------------------------------------------------+
+//| Constructor                                                      |
+//+------------------------------------------------------------------+
+CChartObjectStdDevChannel::CChartObjectStdDevChannel(void)
+  {
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CChartObjectStdDevChannel::~CChartObjectStdDevChannel(void)
+  {
+  }
+//+------------------------------------------------------------------+
+//| Create object "Standard deviation channel"                       |
+//+------------------------------------------------------------------+
+bool CChartObjectStdDevChannel::Create(long chart_id,const string name,const int window,
+                                       const datetime time1,const datetime time2,const double deviation)
+  {
+   if(!ObjectCreate(chart_id,name,OBJ_STDDEVCHANNEL,window,time1,0.0,time2,0.0))
+      return(false);
+   if(!Attach(chart_id,name,window,2))
+      return(false);
+   if(!Deviations(deviation))
+      return(false);
+//--- successful
+   return(true);
+  }
+//+------------------------------------------------------------------+
+//| Get value of the "Deviations" property                           |
+//+------------------------------------------------------------------+
+double CChartObjectStdDevChannel::Deviations(void) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(EMPTY_VALUE);
+//--- result
+   return(ObjectGetDouble(m_chart_id,m_name,OBJPROP_DEVIATION));
+  }
+//+------------------------------------------------------------------+
+//| Set value for the "Deviations" property                          |
+//+------------------------------------------------------------------+
+bool CChartObjectStdDevChannel::Deviations(const double deviation) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ObjectSetDouble(m_chart_id,m_name,OBJPROP_DEVIATION,deviation));
+  }
+//+------------------------------------------------------------------+
+//| Writing parameters of object to file                             |
+//+------------------------------------------------------------------+
+bool CChartObjectStdDevChannel::Save(const int file_handle)
+  {
+//--- check
+   if(file_handle==INVALID_HANDLE || m_chart_id==-1)
+      return(false);
+//--- write
+   if(!CChartObjectTrend::Save(file_handle))
+      return(false);
+//--- write value of the "Deviations" property
+   if(FileWriteDouble(file_handle,ObjectGetDouble(m_chart_id,m_name,OBJPROP_DEVIATION))!=sizeof(double))
+      return(false);
+//--- successful
+   return(true);
+  }
+//+------------------------------------------------------------------+
+//| Reading parameters of object from file                           |
+//+------------------------------------------------------------------+
+bool CChartObjectStdDevChannel::Load(const int file_handle)
+  {
+//--- check
+   if(file_handle==INVALID_HANDLE || m_chart_id==-1)
+      return(false);
+//--- read
+   if(!CChartObjectTrend::Load(file_handle))
+      return(false);
+//--- read value of the "Deviations" property
+   if(!ObjectSetDouble(m_chart_id,m_name,OBJPROP_DEVIATION,FileReadDouble(file_handle)))
+      return(false);
+//--- successful
+   return(true);
+  }
+```
+
+Integration routine:
+
+| Step | Action | Purpose |
+| --- | --- | --- |
+| 1 | Include ChartObjectsChannels.mqh | Gain access to all standard channel classes, including CChartObjectStdDevChannel. |
+| 2 | Declare CChartObjectStdDevChannel | Prepare the Standard Deviation Channel object for creation and manipulation. |
+| 3 | Call Create() | Plot the channel on the chart using selected price and time coordinates. |
+| 4 | Set Deviations() property | Define the number of standard deviations to scale the channel width. |
+| 5 | Customize appearance | Adjust colors, styles, and labels for visual clarity and better trading insight. |
+| 6 | Add signal logic | Use price interaction with upper and lower bands to trigger automated trade signals. |
+| 7 | Update periodically | Recalculate and refresh the channel with each new bar to maintain precision. |
+
+**ExpertStdDevChannel**
+
+1. File header and compile-time properties
+
+This section declares the EA’s identity and compiles-time constraints. The #property lines give the file metadata (copyright, link, version) while #property strict instructs the compiler to apply stricter type and semantic checks—a defensive choice that surfaces type mismatches and other issues at build time and makes behavior more predictable during development and testing.
+
+```
+//ExpertStdDevChannel.mq5
+#property copyright "Copyright 2025, Clemence Benjamin"
+#property link      "https://www.mql5.com/go?link=https://www.mql5.com/en/users/billionaire2024/seller"
+#property version   "1.00"
+#property strict
+```
+
+2. Library imports and rationale
+
+Here we import two standard-library modules that the EA depends on: ChartObjectsChannels.mqh supplies the channel classes (including CChartObjectStdDevChannel) so the EA can reuse platform drawing and object semantics, and Trade.mqh provides the CTrade wrapper that simplifies order placement and results handling. Importing these modules avoids reimplementing low-level functionality and increases code clarity and maintainability.
+
+```
+#include <ChartObjects\ChartObjectsChannels.mqh>
+#include <Trade\Trade.mqh>  // For CTrade
+```
+
+3. User-facing inputs (configuration surface)
+
+This block exposes the EA’s parameters to the user and the Strategy Tester. Each input creates a tunable knob—deviation multiplier, regression window size, lot size, magic number, SL buffer, enabled trade directions, and visualization and mode flags. These values define the EA’s behavior and must be chosen with awareness of data requirements (for example PeriodBars must be large enough for regression) and broker constraints (e.g., SLBuffer).
+
+```
+//--- Inputs
+input double   Deviation    = 2.0;        // StdDev multiplier
+input int      PeriodBars   = 50;         // Bars for channel calculation
+input double   LotSize      = 0.1;        // Trade size
+input int      Magic        = 12345;      // EA identifier
+input double   SLBuffer     = 20.0;       // Points buffer for SL (increased for min distance)
+input bool     EnableSells  = true;       // Enable sell trades (set to false for buys only)
+input bool     EnableBuys   = true;       // Enable buy trades
+input bool     DrawGraphical= true;       // Draw channel object for visualization (disable for faster backtest)
+input bool     UseMeanReversion = true;   // True: Mean reversion (bounce buys/sells); False: Breakout (break buys/sells)
+```
+
+4. Global objects and internal state
+
+These declarations set the runtime state and object lifecycles used across the EA. CTrade trade is the trade engine instance you will call to execute orders; CChartObjectStdDevChannel \*channel is an optional pointer for chart visualization that must be allocated and freed (new / delete) safely; g\_upper, g\_lower, and g\_median hold the EA’s manual numeric model for the channel, and g\_levels\_valid flags whether computed levels are trustworthy. Separating the numeric model from visual objects guarantees reproducible logic in backtests.
+
+```
+//--- Global objects
+CTrade         trade;
+CChartObjectStdDevChannel *channel;       // Optional for drawing
+double         g_upper, g_lower, g_median; // Manually computed levels
+bool           g_levels_valid = false;    // Flag for valid computation
+```
+
+5. Initialization: resource setup and first calculation (OnInit)
+
+OnInit() performs resource allocation and initial validation. It marks CTrade with the EA magic number, optionally allocates (new) and attempts to create the graphical StdDev channel, and gracefully falls back if visualization fails (deletes pointer and continues). Finally, it executes UpdateChannel() to compute initial numeric levels; if insufficient data exist the EA logs the condition and will not trade until valid levels are available. This establishes both visual and programmatic readiness before the EA enters the runtime loop.
+
+```
+int OnInit()
+{
+   trade.SetExpertMagicNumber(Magic);
+   
+   if (DrawGraphical)
+   {
+      channel = new CChartObjectStdDevChannel();
+      if (!channel.Create(0, "StdDevChannel", 0,
+                          iTime(_Symbol, PERIOD_CURRENT, PeriodBars),
+                          iTime(_Symbol, PERIOD_CURRENT, 0),
+                          Deviation))
+      {
+         Print("Failed to create graphical StdDev channel (continuing without viz)");
+         delete channel;
+         channel = NULL;
+      }
+      else
+      {
+         channel.Deviations(Deviation);
+         Print("Graphical channel created for visualization");
+      }
+   }
+   
+   // Initial calculation
+   if (UpdateChannel())
+      g_levels_valid = true;
+   else
+      Print("Initial channel calculation failed - need more bars");
+   
+   Print("Channel EA initialized successfully. Mode: ", (UseMeanReversion ? "Mean Reversion" : "Breakout"));
+   return INIT_SUCCEEDED;
+}
+```
+
+6. Runtime loop and orchestration (OnTick)—overview
+
+OnTick() is the EA’s heartbeat where state updates, validations and trade decisions occur. The routine first triggers deterministic recalculation on a new completed bar, falls back to on-tick recalculation only if required, reads live quotes and broker parameters, confirms numeric validity, and then executes signal detection and trade placement when all guards pass. This structure prioritizes completed-bar computations for determinism and reserves tick-based recalculation only as a recovery measure.
+
+```
+void OnTick()
+{
+   static int skip_count = 0;
+   
+   // Update on new bar
+   if (IsNewBar())
+   {
+      if (!UpdateChannel())
+      {
+         Print("Channel update failed - skipping until valid");
+         g_levels_valid = false;
+         return;
+      }
+      g_levels_valid = true;
+   }
+   
+   if (!g_levels_valid)
+   {
+      // Fallback: Recalc on tick if needed (rare)
+      CalculateStdDevChannel();
+      if (g_upper == 0.0 || g_lower == 0.0 || g_upper <= g_lower)
+      {
+         if (++skip_count % 100 == 0)  // Log every 100 ticks to avoid spam
+            Print("Invalid manual channel values (", skip_count, " ticks skipped)");
+         return;
+      }
+      // Reset counter on successful recalc
+      skip_count = 0;
+      g_levels_valid = true;
+   }
+   ...
+}
+```
+
+7. Market data reads, validation and broker constraints
+
+Each tick the EA pulls current market data (bid, ask), symbol meta (point, digits) and validates that computed levels form a proper channel (g\_upper > g\_lower). It retrieves the broker’s SYMBOL\_TRADE\_STOPS\_LEVEL and converts it to a price distance minDist to guarantee SL/TP placements meet broker rules. These checks prevent rejected orders and logically invalid operations.
+
+```
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   
+   // Validate levels
+   if (g_upper <= g_lower)
+   {
+      Print("Invalid channel levels: Upper=", g_upper, " Lower=", g_lower, " - skipping tick");
+      return;
+   }
+   
+   // Get minimum stop distance
+   long minStopLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   double minDist = minStopLevel * point;
+```
+
+8. Entry gating and single-position policy
+
+Before opening new orders the EA ensures it owns no open positions for this symbol with the given Magic. This single-position-per-symbol-per-EA policy simplifies state management and risk control. If zero positions are found, the EA evaluates buy and sell logic conditioned by EnableBuys, EnableSells and the chosen trading mode (mean-reversion vs breakout). This gate prevents overlapping positions and uncontrolled leverage.
+
+```
+   // No open positions (check for this symbol and magic)
+   if (PositionsTotalByMagic() == 0)
+   {
+      // buy and sell logic follows...
+   }
+```
+
+9. Buy signal generation and order parameter construction
+
+Buy logic branches by UseMeanReversion: in mean-reversion mode the EA looks for a bounce off the lower band (prior low ≤ lower and current bid > lower); in breakout mode it looks for ask > upper. On a buy signal it builds entry, sl, and tp (normalized to digits), enforces minDist by adjusting SL if needed, verifies that TP is sufficiently distant, and then calls trade.Buy(...). Success and failure paths are logged with ResultRetcode() and descriptive messages for troubleshooting. This construction ensures orders meet precision and broker constraints.
+
+```
+      if (EnableBuys)
+      {
+         bool buySignal = false;
+         if (UseMeanReversion)
+         {
+            // Mean reversion buy: Bounce off lower (current > lower, prior low <= lower)
+            double prevLow = iLow(_Symbol, PERIOD_CURRENT, 1);
+            buySignal = (bid > g_lower && prevLow <= g_lower);
+         }
+         else
+         {
+            // Breakout buy: Break above upper
+            buySignal = (ask > g_upper);
+         }
+         
+         if (buySignal)
+         {
+            double entry = ask;
+            double sl = NormalizeDouble(g_lower - (SLBuffer * point), digits);
+            double tp = NormalizeDouble(g_upper, digits);
+            
+            // Adjust SL to meet min distance
+            if (entry - sl < minDist)
+               sl = NormalizeDouble(entry - minDist, digits);
+            
+            // Check TP min distance
+            if (tp - entry < minDist)
+            {
+               Print("TP too close for buy (dist=", (tp - entry)/point, " < ", minDist/point, ") - skipping");
+            }
+            else if (trade.Buy(LotSize, _Symbol, entry, sl, tp, "Channel Buy"))
+            {
+               Print("Buy order placed: Entry=", entry, " SL=", sl, " TP=", tp, " (TP > SL)");
+            }
+            else
+            {
+               Print("Buy order failed: ", trade.ResultRetcode(), " - ", trade.ResultRetcodeDescription());
+            }
+         }
+      }
+```
+
+10. Sell signal generation and mirrored safeguards
+
+Sell logic mirrors buy logic with inverted conditions: mean reversion checks prior high ≥ upper then current ask < upper to confirm a bounce; breakout checks bid < lower. Entry is bid, SL is placed above the upper band, TP at the lower band. The EA verifies TP < SL, enforces minDist for SL and TP, normalizes values, and calls trade.Sell(...). Results and errors are logged with explicit details to facilitate immediate debugging.
+
+```
+      if (EnableSells)
+      {
+         bool sellSignal = false;
+         if (UseMeanReversion)
+         {
+            // Mean reversion sell: Bounce off upper (current < upper, prior high >= upper)
+            double prevHigh = iHigh(_Symbol, PERIOD_CURRENT, 1);
+            sellSignal = (ask < g_upper && prevHigh >= g_upper);
+         }
+         else
+         {
+            // Breakout sell: Break below lower
+            sellSignal = (bid < g_lower);
+         }
+         
+         if (sellSignal)
+         {
+            double entry = bid;
+            double sl = NormalizeDouble(g_upper + (SLBuffer * point), digits);
+            double tp = NormalizeDouble(g_lower, digits);
+            
+            // For sells: Ensure TP < SL (lower < upper + buffer, always true)
+            if (tp >= sl)
+            {
+               Print("Invalid TP/SL for sell (TP=", tp, " >= SL=", sl, ") - logic error");
+               return;
+            }
+            
+            // Adjust SL to meet min distance
+            if (sl - entry < minDist)
+               sl = NormalizeDouble(entry + minDist, digits);
+            
+            // Check TP min distance (entry - tp >= minDist)
+            double profitDist = entry - tp;
+            if (profitDist < minDist)
+            {
+               Print("TP too close for sell (profit dist=", profitDist/point, " < ", minDist/point, ") - skipping");
+            }
+            else if (trade.Sell(LotSize, _Symbol, entry, sl, tp, "Channel Sell"))
+            {
+               Print("Sell order placed: Entry=", entry, " SL=", sl, " TP=", tp, " (TP < SL)");
+            }
+            else
+            {
+               Print("Sell order failed: ", trade.ResultRetcode(), " - ", trade.ResultRetcodeDescription());
+               Print("Sell details: Entry=", entry, " SL=", sl, " TP=", tp, " MinDist=", minDist/point);
+            }
+         }
+      }
+```
+
+11. Numeric core — linear regression, residuals and σ (CalculateStdDevChannel)
+
+This function is the EA’s authoritative numeric model. It copies completed bars, maps indices consistently so i=1..n are completed bars with x spanning oldest (0) to newest (n−1), computes regression sums, calculates slope a and intercept b by least-squares, evaluates the regression at the newest completed bar to obtain the median centerline, computes squared residuals, and derives the residual standard deviation using the n−2 denominator appropriate for regression. The offset equals Deviation \* σ, and bounds g\_upper/g\_lower are the median ± offset. Robust guards handle insufficient data and degenerate denominators.
+
+```
+void CalculateStdDevChannel()
+{
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, PeriodBars + 1, rates);  // +1 for safety
+   if (copied < PeriodBars)
+   {
+      Print("Insufficient bars for calculation: ", copied, " < ", PeriodBars);
+      g_upper = g_lower = g_median = 0.0;
+      return;
+   }
+   
+   // Use completed bars: shift 1 (last complete) to PeriodBars (oldest)
+   int n = PeriodBars;
+   double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0, sum_x2 = 0.0;
+   
+   for (int i = 1; i <= n; i++)  // i=1: last complete bar (x=n-1), i=n: oldest (x=0)
+   {
+      double x = n - i;  // x=0 (oldest) to x=n-1 (newest completed)
+      double y = rates[i].close;
+      sum_x += x;
+      sum_y += y;
+      sum_xy += x * y;
+      sum_x2 += x * x;
+   }
+   
+   // Linear regression slope (a) and intercept (b)
+   double denom = (n * sum_x2 - sum_x * sum_x);
+   if (denom == 0.0)
+   {
+      Print("Division by zero in regression - flat data?");
+      g_upper = g_lower = g_median = 0.0;
+      return;
+   }
+   double a = (n * sum_xy - sum_x * sum_y) / denom;
+   double b = (sum_y - a * sum_x) / n;
+   
+   // Median (regression) at newest completed bar (x = n-1)
+   g_median = a * (n - 1) + b;
+   
+   // Residuals sum of squares
+   double sum_e2 = 0.0;
+   for (int i = 1; i <= n; i++)
+   {
+      double x = n - i;
+      double y_reg = a * x + b;
+      double e = rates[i].close - y_reg;
+      sum_e2 += e * e;
+   }
+   
+   // StdDev of residuals (population, df = n-2 for regression fit)
+   double stddev = (n > 2) ? MathSqrt(sum_e2 / (n - 2)) : 0.0;
+   double offset = Deviation * stddev;
+   
+   g_upper = g_median + offset;
+   g_lower = g_median - offset;
+   
+   Print("Manual Channel Calc: Median=", g_median, " Upper=", g_upper, " Lower=", g_lower, " StdDev=", stddev, " Offset=", offset);
+}
+```
+
+12. Synchronization with chart object (UpdateChannel)
+
+UpdateChannel() enforces the EA’s numeric model as the single source of truth by always calling the manual calculation first and validating results. If graphical mode is enabled and the channel pointer exists, it deletes any old chart object and recreates it with fresh anchors and the Deviation parameter to keep the platform-rendered visualization aligned with the EA’s computed levels. Recreating the object is pragmatic and reduces state-management complexity at the cost of visual flicker.
+
+```
+bool UpdateChannel()
+{
+   CalculateStdDevChannel();  // Always manual
+   
+   if (g_upper == 0.0 || g_lower == 0.0 || g_upper <= g_lower)
+      return false;
+   
+   // Optional graphical update
+   if (DrawGraphical && channel != NULL)
+   {
+      datetime time1 = iTime(_Symbol, PERIOD_CURRENT, PeriodBars);
+      datetime time2 = iTime(_Symbol, PERIOD_CURRENT, 0);
+      ObjectDelete(0, "StdDevChannel");
+      if (!channel.Create(0, "StdDevChannel", 0, time1, time2, Deviation))
+      {
+         Print("Failed to update graphical channel");
+      }
+      else
+      {
+         channel.Deviations(Deviation);
+         Print("Graphical channel updated");
+      }
+   }
+   
+   return true;
+}
+```
+
+13. Utility routines and deterministic triggers
+
+The helper PositionsTotalByMagic() iterates open positions to count those owned by this EA (symbol + magic), forming the canonical ownership check that prevents duplicate entries. IsNewBar() uses last-bar-time tracking to return true only when a new completed bar appears — this deterministic trigger aligns recalculations with completed market information and avoids acting on transient forming-bar values. These utilities are compact but essential for predictable EA behavior.
+
+```
+int PositionsTotalByMagic()
+{
+   int count = 0;
+   for (int i = 0; i < PositionsTotal(); i++)
+   {
+      if (PositionGetSymbol(i) == _Symbol && PositionGetInteger(POSITION_MAGIC) == Magic)
+         count++;
+   }
+   return count;
+}
+
+bool IsNewBar()
+{
+   static datetime lastBarTime = 0;
+   datetime currentBarTime = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (currentBarTime != lastBarTime)
+   {
+      lastBarTime = currentBarTime;
+      return true;
+   }
+   return false;
+}
+```
+
+14. Cleanup and graceful shutdown (OnDeinit)
+
+On deinitialization the EA removes the graphical object if created and releases heap memory by deleting the channel pointer. This keeps charts tidy and prevents memory leaks across repeated attach/detach cycles. Logging the deinit event helps confirm proper shutdown during live operation or testing. It is good practice to also set channel = NULL after deletion to avoid accidental dereferences.
+
+```
+void OnDeinit(const int reason)
+{
+   if (DrawGraphical && channel != NULL)
+   {
+      ObjectDelete(0, "StdDevChannel");
+      delete channel;
+   }
+   Print("Channel EA deinitialized");
+}
+```
+
+All of these components together form ExpertStdDevChannel. The full source code is available below the article. The next step is testing— validate the EA in the Strategy Tester and in controlled live/demo environments before using real capital.
+
+### Testing
+
+Testing is essential to verify that our idea has been implemented correctly. For this test I located the compiled EA in the Navigator of MetaTrader 5 and launched the Strategy Tester in Visual mode. The EA ran successfully: orders executed as expected and the Standard-Deviation channel rendered correctly on the chart.
+
+[IMG]
+
+Fig. 4. Testing the ExpertStdDevChannel in Strategy Tester Visualization
+
+### 
+
+### Conclusion
+
+We have successfully assembled pieces of the MQL5 Standard Library into a working Expert Advisor, ExpertStdDevChannel. This exercise deepened our practical understanding of standard deviation and its application in trading, and demonstrated how library components can be combined to produce a functional volatility-based trading module. The Standard Library’s breadth gives us many more opportunities to extend and refine this work by combining additional building blocks.
+
+This example is an educational prototype, not a guarantee of profitability. Its primary purpose is to show how to connect library pieces into a coherent EA; there is ample room to evolve the idea into a production-grade system. You are encouraged to experiment with the attached source, tune parameters, and share findings in the comments.
+
+Suggested next steps include revising the entry/exit rules, adding robust signal filters (multi-timeframe confirmation, volume or volatility filters), improving position sizing and risk controls, and running systematic optimizations in the Strategy Tester. These improvements will help turn this foundation into a more efficient, resilient trading solution. Until the next publication—stay tuned.
+
+### Attachments
+
+| File Name | Version | Description |
+| --- | --- | --- |
+| [ExpertStdDevChannel.mq5](https://www.mql5.com/en/articles/download/20041/207503/ExpertStdDevChannel.mq5 ".mq5") | 1.00 | Expert Advisor that computes a Standard-Deviation Channel using a linear-regression centerline and residual standard deviation (σ) over a configurable window.    Key features: Mean-Reversion and Breakout modes; manual numeric calculation of median/upper/lower bands (authoritative for signals); optional graphical rendering via CChartObjectStdDevChannel ; trade execution via CTrade with SL/TP placement, SLBuffer and broker min-distance checks, and single-position gating by magic number.    Inputs include *Deviation*, *PeriodBars*, *LotSize*, *Magic*, *SLBuffer*, *EnableBuys*/*EnableSells*, *DrawGraphical* and *UseMeanReversion*. Designed for reproducible backtesting (disable graphical mode for speed) and includes defensive guards for data sufficiency, normalization, and order validation. |
+
+[Back to Contents](https://www.mql5.com/en/articles/20041#introduction)
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20041.zip "Download all attachments in the single ZIP archive")
+
+[ExpertStdDevChannel.mq5](https://www.mql5.com/en/articles/download/20041/ExpertStdDevChannel.mq5 "Download ExpertStdDevChannel.mq5")
+(12.2 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Market Simulation (Part 05): Creating the C\_Orders Class (II)](https://www.mql5.com/en/articles/12598)
+
+In this article, I will explain how Chart Trade, together with the Expert Advisor, will process a request to close all of the users' open positions. This may sound simple, but there are a few complications that you need to know how to manage.
+
+[IMG]
+[Price Action Analysis Toolkit Development (Part 48): Multi-Timeframe Harmony Index with Weighted Bias Dashboard](https://www.mql5.com/en/articles/20097)
+
+This article introduces the “Multi-Timeframe Harmony Index”—an advanced Expert Advisor for MetaTrader 5 that calculates a weighted bias from multiple timeframes, smooths the readings using EMA, and displays the results in a clean chart panel dashboard. It includes customizable alerts and automatic buy/sell signal plotting when strong bias thresholds are crossed. Suitable for traders who use multi-timeframe analysis to align entries with overall market structure.
+
+[IMG]
+[Reimagining Classic Strategies (Part 17): Modelling Technical Indicators](https://www.mql5.com/en/articles/20090)
+
+In this discussion, we focus on how we can break the glass ceiling imposed by classical machine learning techniques in finance. It appears that the greatest limitation to the value we can extract from statistical models does not lie in the models themselves — neither in the data nor in the complexity of the algorithms — but rather in the methodology we use to apply them. In other words, the true bottleneck may be how we employ the model, not the model’s intrinsic capability.
+
+[IMG]
+[Neural Networks in Trading: A Multi-Agent System with Conceptual Reinforcement (Final Part)](https://www.mql5.com/en/articles/16937)
+
+We continue to implement the approaches proposed by the authors of the FinCon framework. FinCon is a multi-agent system based on Large Language Models (LLMs). Today, we will implement the necessary modules and conduct comprehensive testing of the model on real historical data.
+
+[[IMG]
+[IMG]
+
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&uid=&ref=https://www.mql5.com/en/articles/20041&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6415771161576746733)

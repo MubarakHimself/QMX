@@ -1,0 +1,60 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs"
+20: # Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs
+25: | 14 May 2025 at 04:43
+36: ### Introduction
+38: In this article, we propel the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) series forward by optimizing our trading system for lightning-fast, visually intuitive backtesting, seamlessly integrating data visualization for both live and offline modes to enhance news-driven strategy development. Building on [Part 7’s foundation of resource-based event analysis for Strateg
+47: ### A Visual Chronograph for Seamless News-Driven Trading Across Live and Offline Realms
+57: ### Implementation in MQL5
+61: ```
+63: #include <Trade\Trade.mqh>
+67: #resource "\\Files\\Database\\EconomicCalendar.csv" as string EconomicCalendarData
+68: ```
+72: We then use the "[#resource](https://www.mql5.com/en/docs/basis/preprosessor/include)" directive to define "\Files\Database\EconomicCalendar.csv" as a string resource named "EconomicCalendarData". This [Comma Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values "https://en.wikipedia.org/wiki/Comma-separated_values") (CSV), loaded via the "LoadEventsFromResource" function, will su
+74: ```
+98: input bool updateServerTime = true; // Enable/Disable Server Time Update in Panel
+140: ```
+144: We toggle event filtering with "enableCurrencyFilter", "enableImportanceFilter", "enableTimeFilter", and "filters\_changed", resetting filters when "filters\_changed" is true to process only relevant events and use "debugLogging" under "sinput group 'General Calendar Settings'" to log just trades and updates.
+152: ```
+172: ```
+178: ```
+187:    createLabel(HEADER_LABEL,50+3+5,50+5,"MQL5 Economic Calendar",clrWhite,15);
+191:    for (int i = 0; i < ArraySize(array_calendar); i++) {
+192:       createButton(ARRAY_CALENDAR+IntegerToString(i),startX,132,buttons[i],25,
+193:                    array_calendar[i],clrWhite,13,clrGreen,clrNONE,"Calibri Bold");
+205:    int allValues = CalendarValueHistory(values,startTime,endTime,NULL,NULL);
+218:    createLabel(TIME_LABEL,70,85,"Server Time: "+TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS)+
+297: ```
+299: We use the "createRecLabel" function to build dashboard panels "MAIN\_REC", "SUB\_REC1", and "SUB\_REC2" with distinct colors and sizes, and the "createLabel" function to add a "HEADER\_LABEL" displaying "MQL5 Economic Calendar" as we did earlier on. We create calendar buttons dynamically from "array\_calendar" using the "createButton" and [ArraySize](https://www.mql5.com/en/docs/array/arraysize) 
+301: We prepare live mode by fetching events with the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function into "values", using "startTime" and "endTime" calculated via [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) and [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds), and for tester mode, we use the [MQLInfoInteger](
+303: We add UI elements like "TIME\_LABEL", "IMPACT\_LABEL", and "FILTER\_LABEL" with "createLabel", and filter buttons "FILTER\_CURR\_BTN", "FILTER\_IMP\_BTN", "FILTER\_TIME\_BTN", and "CANCEL\_BTN" with "createButton" and [ObjectSetInteger](https://www.mql5.com/en/docs/objects/ObjectSetInteger), setting states like "filter\_curr\_state" based on "enableCurrencyFilter". We create impact and currency b
+309: ```
+332: ```
+338: ```
+397: ```
+399: Here, we load historical news events from a CSV resource to enable offline backtesting with optimized event handling and targeted logging. We use the "LoadEventsFromResource" function to read "EconomicCalendarData" into "fileData", logging its size with the [Print](https://www.mql5.com/en/docs/common/print) and [StringLen](https://www.mql5.com/en/docs/strings/StringLen) functions. We split "fileDa
+405: ```
+409: void update_dashboard_values(string &curr_filter_array[], ENUM_CALENDAR_EVENT_IMPORTANCE &imp_filter_array[]) {
+438:             if (debugLogging) Print("Event ", filteredEvents[i].event, " skipped due to time filter."); // Modified: Conditional logging
+459:             ENUM_CALENDAR_EVENT_IMPORTANCE event_imp = (imp_str == "None") ? CALENDAR_IMPORTANCE_NONE :
+460:                                                       (imp_str == "Low") ? CALENDAR_IMPORTANCE_LOW :
+461:                                                       (imp_str == "Medium") ? CALENDAR_IMPORTANCE_MODERATE :
+483:          string news_data[ArraySize(array_calendar)];
+497:          for (int k = 0; k < ArraySize(array_calendar); k++) {
+499:                createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY-(22-12),news_data[k],importance_color,22,"Calibri");
+501:                createLabel(ARRAY_NEWS+IntegerToString(i)+" "+array_calendar[k],startX,startY,news_data[k],clrBlack,12,"Calibri");
+516: ```
+522: For up to 11 matching events, we increment "totalEvents\_Displayable", use the "createRecLabel" function to draw "DATA\_HOLDERS" rows and use the "createLabel" function to populate "news\_data" from "filteredEvents" fields like "eventDate" and "event", styled with "importance\_color" and "array\_calendar", resizing "current\_eventNames\_data" with [ArrayResize](https://www.mql5.com/en/docs/array/a
+524: ```
+539:    int offsetSeconds = tradeOffsetHours * 3600 + tradeOffsetMinutes * 60 + tradeOffsetSeconds;
+621:             ENUM_CALENDAR_EVENT_IMPORTANCE event_imp = (imp_str == "None") ? CALENDAR_IMPORTANCE_NONE :
+622:                                                       (imp_str == "Low") ? CALENDAR_IMPORTANCE_LOW :
+623:                                                       (imp_str == "Medium") ? CALENDAR_IMPORTANCE_MODERATE :
+677: ```
+679: To evaluate and trigger news-driven trades in tester mode with optimized event filtering and targeted logging for efficient backtesting, we use the "CheckForNewsTrade" function to start, logging its execution only when "debugLogging" is true with the [Print](https://www.mql5.com/en/docs/common/print) function, [TimeToString](https://www.mql5.com/en/docs/convert/timetostring), and "TimeTradeServer"
+693: ### Testing and Validation
+695: We test the program by first loading it in a live environment, downloading the desired news events data, and running it in the [MetaTrader 5 Strategy Tester](https://www.metatrader5.com/en/automated-trading/strategy-tester "https://www.metatrader5.com/en/automated-trading/strategy-tester") with "StartDate" set to '2025.03.01', "EndDate" to '2025.03.21', and "debugLogging" disabled, using a [Comma 
+699: ### Conclusion
+701: In conclusion, we’ve elevated the [MQL5 Economic Calendar](https://www.mql5.com/en/economic-calendar) series by optimizing backtesting with smart event filtering and streamlined logging, enabling rapid and clear strategy validation while preserving seamless live trading capabilities. This advancement bridges efficient offline testing with real-time event analysis, offering us a robust tool for ref
+707: [MQL5\_NEWS\_CALENDAR\_PART\_8.mq5](https://www.mql5.com/en/articles/download/17999/mql5_news_calendar_part_8.mq5 "Download MQL5_NEWS_CALENDAR_PART_8.mq5")
+734: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlh

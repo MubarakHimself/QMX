@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-fixed-variant":"#003ea8","surface-container-lowest":"#ffffff","surface-container-high":"#e5e8f3","surface":"#f9f9ff","secondary":"#006c4a","secondary-fixed":"#85f8c4","outline":"#737686","primary":"#004ac6","surface-container-low":"#f1f3ff","on-secondary-fixed-variant":"#005137","on-error":"#ffffff","inverse-surface":"#2c3039","on-primary-fixed":"#00174b","on-surface-variant":"#434655","surface-container":"#ebedf9","tertiary-container":"#a65900","surface-dim":"#d7dae5","primary-fixed-dim":"#b4c5ff","on-tertiary-container":"#ffede1","on-primary":"#ffffff","on-secondary":"#ffffff","on-tertiary":"#ffffff","on-tertiary-fixed":"#2f1500","on-secondary-fixed":"#002114","inverse-on-surface":"#eef0fc","on-secondary-container":"#00714e","inverse-primary":"#b4c5ff","tertiary-fixed-dim":"#ffb77d","outline-variant":"#c3c6d7","surface-variant":"#dfe2ed","on-tertiary-fixed-variant":"#6e3900","surface-tint":"#0053db","on-primary-container":"#eeefff","tertiary-fixed":"#ffdcc3","secondary-container":"#82f5c1","primary-fixed":"#dbe1ff","error":"#ba1a1a","on-surface":"#181c24","secondary-fixed-dim":"#68dba9","primary-container":"#2563eb","surface-bright":"#f9f9ff","on-error-container":"#93000a","on-background":"#181c24","surface-container-highest":"#dfe2ed","error-container":"#ffdad6","tertiary":"#824500","background":"#f9f9ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.5rem","space-xs":"0.25rem","space-xl":"1rem","space-2xs":"0.125rem","margin":"0px","gutter":"1px","space-sm":"0.375rem","space-lg":"0.75rem"},"fontFamily":{"body-md":["Inter"],"label-dense":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"data-mono-sm":["JetBrains Mono"],"data-mono-lg":["JetBrains Mono"],"headline-sm":["Inter"],"label-mono-tag":["JetBrains Mono"],"data-mono-md":["JetBrains Mono"],"body-lg":["Inter"],"body-sm":["Inter"]},"fontSize":{"body-md":["12px",{"lineHeight":"16px","letterSpacing":"0em","fontWeight":"400"}],"label-dense":["10px",{"lineHeight":"12px","letterSpacing":"0.04em","fontWeight":"600"}],"headline-md":["16px",{"lineHeight":"20px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["20px",{"lineHeight":"24px","letterSpacing":"-0.02em","fontWeight":"600"}],"data-mono-sm":["10px",{"lineHeight":"12px","letterSpacing":"0em","fontWeight":"400"}],"data-mono-lg":["13px",{"lineHeight":"16px","letterSpacing":"-0.02em","fontWeight":"500"}],"headline-sm":["13px",{"lineHeight":"16px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-mono-tag":["9px",{"lineHeight":"10px","letterSpacing":"0.06em","fontWeight":"600"}],"data-mono-md":["11px",{"lineHeight":"14px","letterSpacing":"-0.01em","fontWeight":"500"}],"body-lg":["13px",{"lineHeight":"18px","letterSpacing":"-0.005em","fontWeight":"400"}],"body-sm":["11px",{"lineHeight":"14px","letterSpacing":"0em","fontWeight":"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface select-none"><aside class="fixed left-0 top-0 bottom-0 w-12 bg-inverse-surface z-50 flex flex-col items-center justify-between py-space-sm"><div class="w-full flex flex-col items-center gap-space-sm"><div class="w-8 h-8 flex items-center justify-center bg-primary text-on-primary rounded font-headline-sm text-headline-sm tracking-tighter">QMX</div><div class="w-8 h-px bg-on-surface-variant/30 my-space-2xs"></div><button class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" title="App Launcher"><span class="material-symbols-outlined text-[18px]">grid_view</span></button><nav class="w-full flex flex-col items-center gap-space-xs mt-space-xs" data-active-classes="bg-primary text-on-primary rounded"><a aria-current="page" class="relative w-8 h-8 flex items-center justify-center transition-colors bg-primary text-on-primary rounded" data-path="hermes-agent" href="#" title="Hermes Agent / Liquidity Workspace"><span class="material-symbols-outlined text-[18px]">smart_toy</span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="research-notebook" href="#" title="Cross-Market Research"><span class="material-symbols-outlined text-[18px]">terminal</span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="market-monitor" href="#" title="Market Monitor"><span class="material-symbols-outlined text-[18px]">candlestick_chart</span></a><a class="relative w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="active-runs" href="#" title="Execution Runs &amp; Backtests"><span class="material-symbols-outlined text-[18px]">layers</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-secondary ring-1 ring-inverse-surface"></span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="strategy-library" href="#" title="Model &amp; Strategy Library"><span class="material-symbols-outlined text-[18px]">dataset</span></a></nav></div><div class="w-full flex flex-col items-center gap-space-xs"><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="terminal-settings" href="#" title="Settings &amp; Workspace Tuning"><span class="material-symbols-outlined text-[18px]">settings</span></a></div></aside><div class="pl-12 min-h-screen flex flex-col justify-between bg-surface"><header class="fixed top-0 left-12 right-0 h-10 bg-inverse-surface z-40 flex items-center justify-between px-space-md"><div class="flex items-center h-full gap-space-2xs overflow-x-auto"><nav class="flex items-center h-full gap-space-2xs" data-active-classes="bg-surface-container-lowest text-on-surface border-t-2 border-primary font-headline-sm"><a aria-current="page" class="flex items-center h-8 px-space-sm transition-colors whitespace-nowrap rounded-t bg-surface-container-lowest text-on-surface border-t-2 border-primary font-headline-sm" data-path="hermes-agent" href="#">Hermes / Liquidity study</a><a class="flex items-center h-8 px-space-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface-variant/20 transition-colors font-headline-sm text-headline-sm whitespace-nowrap rounded-t" data-path="research-notebook" href="#">Research / Cross-market</a><a class="flex items-center h-8 px-space-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface-variant/20 transition-colors font-headline-sm text-headline-sm whitespace-nowrap rounded-t" data-path="market-monitor" href="#">Markets</a></nav><button class="h-6 px-space-xs flex items-center gap-space-2xs text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded font-label-dense text-label-dense ml-space-2xs" title="Add Environment View"><span class="material-symbols-outlined text-[14px]">add</span><span>Env</span></button></div><div class="flex items-center gap-space-md font-data-mono-sm text-data-mono-sm"><div class="flex items-center gap-space-2xs px-space-xs py-space-2xs rounded bg-surface-container/20 text-inverse-on-surface"><span class="material-symbols-outlined text-[14px]">splitscreen</span><span class="font-label-dense text-label-dense">2x2 Tile</span></div><div class="flex items-center gap-space-2xs px-space-xs py-space-2xs bg-tertiary-container text-on-tertiary-container rounded font-label-mono-tag text-label-mono-tag uppercase font-bold"><span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span><span>Group A</span></div><div class="text-inverse-on-surface font-data-mono-sm text-data-mono-sm tracking-tight">14:22:08 UTC</div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-10 pb-7 bg-surface min-h-[calc(100vh-28px)]"><div class="flex flex-col w-full">
+<!-- Local Workspace Header / Toolbar (36px fixed) -->
+<header class="h-9 w-full bg-surface-container-lowest flex items-center justify-between px-space-md shadow-sm z-10 select-none">
+<!-- Left: Session Title & Linked Project Badges -->
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="flex items-center gap-space-2xs">
+<span class="w-4 h-4 rounded bg-primary text-on-primary flex items-center justify-center font-label-mono-tag text-label-mono-tag font-bold">HX</span>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Hermes Agent: Liquidity &amp; Slippage Study</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-mono-tag text-label-mono-tag tracking-wider uppercase font-semibold">SES-8821</span>
+<div class="h-3 w-px bg-surface-variant"></div>
+<!-- Link Group Channel Indicator -->
+<div class="flex items-center gap-space-2xs px-1.5 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-dense text-label-dense">
+<span class="w-3.5 h-3.5 rounded bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-mono-tag text-label-mono-tag font-bold">A</span>
+<span class="text-on-surface-variant">Cross-Asset Momentum v4</span>
+</div>
+<div class="flex items-center gap-space-2xs text-secondary font-label-dense text-label-dense">
+<span class="material-symbols-outlined text-[13px]">alt_route</span>
+<span class="font-data-mono-sm text-data-mono-sm">main (clean)</span>
+</div>
+</div>
+<!-- Right: Workspace Actions & Presets -->
+<div class="flex items-center gap-space-xs">
+<div class="flex items-center gap-space-2xs px-space-xs py-1 rounded bg-surface-container-low text-on-surface-variant font-label-dense text-label-dense cursor-pointer hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[14px]">view_quilt</span>
+<span>Saved: Agent Default</span>
+</div>
+<div class="h-3.5 w-px bg-surface-variant"></div>
+<button class="h-6 px-space-xs flex items-center gap-space-2xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-dense text-label-dense transition-colors" title="Add Tool or Dataset">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Tool</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" title="Toggle Split View">
+<span class="material-symbols-outlined text-[14px]">splitscreen</span>
+</button>
+<button class="h-6 px-space-xs flex items-center gap-space-2xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-dense text-label-dense transition-colors" title="Run History">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span>Runs (3)</span>
+</button>
+</div>
+</header>
+<!-- Interior Layout Split (Sidebar + Conversation Workspace) -->
+<div class="flex w-full h-[calc(100vh-64px)] overflow-hidden">
+<!-- Left Local Sidebar: Sessions & Scope (260px) -->
+<aside class="w-[260px] flex-shrink-0 bg-surface-container-low flex flex-col justify-between overflow-y-auto">
+<div class="flex flex-col">
+<!-- Section: SESSIONS & SCOPE -->
+<div class="px-space-md pt-space-sm pb-space-xs flex items-center justify-between">
+<span class="font-label-mono-tag text-label-mono-tag tracking-wider uppercase text-on-surface-variant font-semibold">Sessions &amp; Scope</span>
+<button class="w-4 h-4 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[13px]">add</span>
+</button>
+</div>
+<div class="flex flex-col px-space-xs gap-space-2xs">
+<!-- Active Session -->
+<div class="relative flex flex-col p-space-xs rounded bg-surface-container-lowest shadow-sm cursor-pointer group">
+<div class="absolute left-0 top-1 bottom-1 w-1 bg-primary rounded-r"></div>
+<div class="flex items-center justify-between pl-1">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">SES-8821: Cost sensitivity</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary">4m ago</span>
+</div>
+<span class="pl-1 font-body-sm text-body-sm text-on-surface-variant truncate">Momentum signal decay across fees</span>
+</div>
+<!-- Inactive Sessions -->
+<div class="flex flex-col p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors group">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface truncate">SES-8819: Volume curve recalib</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">1d</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline truncate">Tick level depth L3 matching</span>
+</div>
+<div class="flex flex-col p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors group">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface truncate">SES-8804: Binance BTC taker fee</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">Sep 08</span>
+</div>
+<span class="font-body-sm text-body-sm text-outline truncate">Tier 5 VIP schedule adjustments</span>
+</div>
+</div>
+<div class="my-space-sm mx-space-md h-px bg-surface-variant/70"></div>
+<!-- Section: ATTACHED FILES & SNAPSHOTS -->
+<div class="px-space-md pb-space-xs flex items-center justify-between">
+<span class="font-label-mono-tag text-label-mono-tag tracking-wider uppercase text-on-surface-variant font-semibold">Attached Artifacts</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">3 items</span>
+</div>
+<div class="flex flex-col px-space-xs gap-space-2xs">
+<!-- File 1: Python -->
+<div class="flex items-center justify-between p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-[15px] text-primary">terminal</span>
+<div class="flex flex-col min-w-0">
+<span class="font-data-mono-md text-data-mono-md text-on-surface truncate">momentum.py</span>
+<span class="font-label-mono-tag text-label-mono-tag text-outline">v12 • 2h ago</span>
+</div>
+</div>
+<span class="font-label-mono-tag text-label-mono-tag px-1 bg-surface-container text-on-surface-variant rounded">PY</span>
+</div>
+<!-- File 2: Config -->
+<div class="flex items-center justify-between p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-[15px] text-tertiary">tune</span>
+<div class="flex flex-col min-w-0">
+<span class="font-data-mono-md text-data-mono-md text-on-surface truncate">fees_baseline.yaml</span>
+<span class="font-label-mono-tag text-label-mono-tag text-outline">Slippage + Bps Tiers</span>
+</div>
+</div>
+<span class="font-label-mono-tag text-label-mono-tag px-1 bg-surface-container text-on-surface-variant rounded">CFG</span>
+</div>
+<!-- File 3: Parquet DB -->
+<div class="flex items-center justify-between p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-[15px] text-secondary">database</span>
+<div class="flex flex-col min-w-0">
+<span class="font-data-mono-md text-data-mono-md text-on-surface truncate">daily_bars_2019_2024</span>
+<span class="font-label-mono-tag text-label-mono-tag text-outline">1.84M rows • Parquet</span>
+</div>
+</div>
+<span class="font-label-mono-tag text-label-mono-tag px-1 bg-surface-container text-on-surface-variant rounded">DATA</span>
+</div>
+</div>
+<div class="my-space-sm mx-space-md h-px bg-surface-variant/70"></div>
+<!-- Section: SCHEDULED TASKS & RUNS -->
+<div class="px-space-md pb-space-xs flex items-center justify-between">
+<span class="font-label-mono-tag text-label-mono-tag tracking-wider uppercase text-on-surface-variant font-semibold">Scheduled &amp; Active Runs</span>
+</div>
+<div class="flex flex-col px-space-xs gap-space-2xs">
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-lowest/60">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px] text-primary animate-spin">autorenew</span>
+<div class="flex flex-col">
+<span class="font-data-mono-md text-data-mono-md text-on-surface">R-024: cost_sweep</span>
+<span class="font-label-mono-tag text-label-mono-tag text-primary">In execution (36 batches)</span>
+</div>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface-variant">38%</span>
+</div>
+<div class="flex items-center justify-between p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px] text-secondary">check_circle</span>
+<div class="flex flex-col">
+<span class="font-data-mono-md text-data-mono-md text-on-surface">R-023: baseline_mom</span>
+<span class="font-label-mono-tag text-label-mono-tag text-outline">Finished 14m ago</span>
+</div>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-secondary">+1.82 SR</span>
+</div>
+<div class="flex items-center justify-between p-space-xs rounded hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px] text-outline">schedule</span>
+<div class="flex flex-col">
+<span class="font-data-mono-md text-data-mono-md text-on-surface">Nightly regime re-fit</span>
+<span class="font-label-mono-tag text-label-mono-tag text-outline">Cron @ 02:00 UTC</span>
+</div>
+</div>
+<span class="font-label-mono-tag text-label-mono-tag px-1 bg-surface-container text-outline rounded">CRON</span>
+</div>
+</div>
+</div>
+<!-- Footnote / System Info -->
+<div class="p-space-md bg-surface-container/40 flex items-center justify-between text-outline">
+<span class="font-label-mono-tag text-label-mono-tag uppercase tracking-wider">Hermes Core 4.1-rc</span>
+<span class="font-data-mono-sm text-data-mono-sm">PID: 9021</span>
+</div>
+</aside>
+<!-- Center/Main Conversation & Analysis Area -->
+<main class="flex-1 flex flex-col justify-between bg-surface-container-lowest overflow-hidden">
+<!-- Pinned Breadcrumb / Context Strip -->
+<div class="h-8 flex-shrink-0 bg-surface-container-low px-space-md flex items-center justify-between select-none shadow-sm">
+<div class="flex items-center gap-space-md overflow-x-auto min-w-0">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-dense text-label-dense">
+<span class="material-symbols-outlined text-[14px] text-primary">link</span>
+<span class="uppercase tracking-wider font-label-mono-tag text-label-mono-tag text-outline">Scope Bindings:</span>
+</div>
+<div class="flex items-center gap-space-xs font-data-mono-sm text-data-mono-sm text-on-surface">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-primary">code</span>
+<span>momentum.py <strong class="font-semibold text-primary">v12</strong></span>
+</span>
+<span class="text-outline-variant">/</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-secondary">dataset</span>
+<span>daily-bars (1.84M rows)</span>
+</span>
+<span class="text-outline-variant">/</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-tertiary">tune</span>
+<span>fees_baseline.yaml</span>
+</span>
+<span class="text-outline-variant">/</span>
+<span class="px-1.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-semibold">
+              Universe: BTC, EUR/USD, SPY
+            </span>
+</div>
+</div>
+<button class="h-6 px-space-xs flex items-center gap-space-2xs text-primary hover:text-on-primary-fixed-variant font-headline-sm text-headline-sm transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">filter_list</span>
+<span>Inspect Scope (3)</span>
+</button>
+</div>
+<!-- Chat History (Scrollable Area) -->
+<div class="flex-1 overflow-y-auto p-space-xl space-y-space-lg">
+<!-- 1. Human Message Block -->
+<div class="flex items-start gap-space-md max-w-4xl">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center flex-shrink-0 text-on-surface font-label-dense text-label-dense font-bold shadow-sm">
+            HM
+          </div>
+<div class="flex flex-col gap-space-xs flex-1">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Senior Quant Strategist</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">14:18:12 UTC</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-mono-tag text-label-mono-tag uppercase">Trader Manual</span>
+</div>
+<!-- Card Body -->
+<div class="p-space-md rounded-lg bg-surface-container-low shadow-sm text-on-surface font-body-lg text-body-lg leading-relaxed">
+              Investigate whether this momentum signal survives realistic costs across <span class="font-data-mono-md text-data-mono-md font-semibold text-primary">BTC</span>, <span class="font-data-mono-md text-data-mono-md font-semibold text-primary">EUR/USD</span> and <span class="font-data-mono-md text-data-mono-md font-semibold text-primary">SPY</span>. Compare the regimes and show me where it fails.
+            </div>
+</div>
+</div>
+<!-- 2. Hermes Quant Agent Response Block -->
+<div class="flex items-start gap-space-md max-w-4xl">
+<div class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center flex-shrink-0 font-label-mono-tag text-label-mono-tag font-bold shadow-sm">
+            HX
+          </div>
+<div class="flex flex-col gap-space-sm flex-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Hermes Quant Engine</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">14:19:04 UTC</span>
+<span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-container font-label-mono-tag text-label-mono-tag font-semibold uppercase">Analysis Synthesized</span>
+</div>
+<div class="flex items-center gap-space-xs text-outline">
+<button class="w-5 h-5 flex items-center justify-center hover:text-on-surface"><span class="material-symbols-outlined text-[14px]">content_copy</span></button>
+<button class="w-5 h-5 flex items-center justify-center hover:text-on-surface"><span class="material-symbols-outlined text-[14px]">bookmark</span></button>
+</div>
+</div>
+<!-- Card Body -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-md flex flex-col gap-space-md">
+<!-- Agent Summary paragraph -->
+<p class="font-body-lg text-body-lg text-on-surface leading-normal">
+                I have prepared the parameter sweep to test momentum signal decay across realistic institutional fee tiers and market impact models. Baseline backtest <span class="font-data-mono-sm text-data-mono-sm px-1 py-0.5 rounded bg-surface-container font-semibold">momentum.py (v12)</span> assumes zero-slippage with a 1.5 bps fixed fee, which severely overstates Sharpe during high-turnover volatile regimes.
+              </p>
+<!-- Inline Visual Artifact: Signal Decay Preview (SVG Micro Chart) -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface font-label-dense text-label-dense">
+<span class="uppercase tracking-wider text-outline font-label-mono-tag text-label-mono-tag">Indicative Sharpe Ratio vs. Friction Level</span>
+<div class="flex items-center gap-space-md font-data-mono-sm text-data-mono-sm">
+<span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-primary inline-block"></span> SPY</span>
+<span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-secondary inline-block"></span> EUR/USD</span>
+<span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-tertiary inline-block"></span> BTC</span>
+</div>
+</div>
+<div class="w-full h-16 relative">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 600 64">
+<!-- Grid hairlines -->
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="2,2" x1="0" x2="600" y1="16" y2="16"></line>
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="2,2" x1="0" x2="600" y1="36" y2="36"></line>
+<line class="text-surface-variant" stroke="currentColor" stroke-dasharray="2,2" x1="0" x2="600" y1="56" y2="56"></line>
+<!-- SPY Curve (Stable) -->
+<path class="text-primary" d="M 0,18 C 150,22 300,28 600,42" fill="none" stroke="currentColor" stroke-width="2"></path>
+<!-- EUR/USD Curve (Moderate Decay) -->
+<path class="text-secondary" d="M 0,22 C 150,26 300,38 600,54" fill="none" stroke="currentColor" stroke-width="2"></path>
+<!-- BTC Curve (Steep Collapse at High Slippage) -->
+<path class="text-tertiary" d="M 0,12 C 120,24 250,52 600,62" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+<div class="flex justify-between font-data-mono-sm text-data-mono-sm text-outline">
+<span>0.0 bps (Pure Alpha)</span>
+<span>2.5 bps (Taker Base)</span>
+<span>5.0 bps (High Volatility)</span>
+<span>8.5 bps (Shock Regime)</span>
+</div>
+</div>
+<!-- Structured Execution Plan -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Structured Execution Plan</span>
+<div class="grid grid-cols-2 gap-space-sm font-body-md text-body-md">
+<!-- Step 1 -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-0.5">
+<div class="flex items-center gap-space-2xs font-headline-sm text-headline-sm text-on-surface">
+<span class="w-4 h-4 rounded-full bg-primary-fixed text-on-primary-fixed font-data-mono-sm text-data-mono-sm flex items-center justify-center font-bold">1</span>
+<span>Cost Model Scaling</span>
+</div>
+<p class="text-on-surface-variant font-body-sm text-body-sm pl-5">
+                      Ingest <code class="font-data-mono-sm text-data-mono-sm bg-surface-container-high px-1 rounded">fees_baseline.yaml</code> and scale slippage curves from 1.0 bps to 8.5 bps across volume tiers.
+                    </p>
+</div>
+<!-- Step 2 -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-0.5">
+<div class="flex items-center gap-space-2xs font-headline-sm text-headline-sm text-on-surface">
+<span class="w-4 h-4 rounded-full bg-primary-fixed text-on-primary-fixed font-data-mono-sm text-data-mono-sm flex items-center justify-center font-bold">2</span>
+<span>Multi-Asset Universe</span>
+</div>
+<p class="text-on-surface-variant font-body-sm text-body-sm pl-5">
+                      Evaluate BTC-USDT (Perp), EUR/USD (Spot FX), and SPY (ETF) over the full 2019–2024 daily dataset.
+                    </p>
+</div>
+<!-- Step 3 -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-0.5">
+<div class="flex items-center gap-space-2xs font-headline-sm text-headline-sm text-on-surface">
+<span class="w-4 h-4 rounded-full bg-primary-fixed text-on-primary-fixed font-data-mono-sm text-data-mono-sm flex items-center justify-center font-bold">3</span>
+<span>Regime Segmentation</span>
+</div>
+<p class="text-on-surface-variant font-body-sm text-body-sm pl-5">
+                      Decompose performance into Trending, Low-Vol Mean Reversion, and Liquidity Flash Crash zones.
+                    </p>
+</div>
+<!-- Step 4 -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-0.5">
+<div class="flex items-center gap-space-2xs font-headline-sm text-headline-sm text-on-surface">
+<span class="w-4 h-4 rounded-full bg-primary-fixed text-on-primary-fixed font-data-mono-sm text-data-mono-sm flex items-center justify-center font-bold">4</span>
+<span>Run Batch R-024</span>
+</div>
+<p class="text-on-surface-variant font-body-sm text-body-sm pl-5">
+                      Distribute 36 sub-batches to cluster <code class="font-data-mono-sm text-data-mono-sm bg-surface-container-high px-1 rounded">quant-node-04</code> with unified factor attribution.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Action Box / Workbench CTA -->
+<div class="p-space-md bg-primary-fixed/30 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[24px] text-primary">view_stream</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Tiled Analytical Workspace Ready</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Linked code inspector, interactive cost matrix, and cross-asset alpha chart synchronized.</span>
+</div>
+</div>
+<button class="h-7 px-space-md bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm rounded flex items-center gap-space-xs transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+<span>Open Workbench (Side-by-side)</span>
+</button>
+</div>
+<!-- Pinned Scope Tags Footer inside Message -->
+<div class="flex items-center gap-space-xs pt-space-xs">
+<span class="font-label-mono-tag text-label-mono-tag uppercase text-outline">Active Inputs:</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-data-mono-sm text-data-mono-sm text-on-surface-variant">momentum.py:v12</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-data-mono-sm text-data-mono-sm text-on-surface-variant">daily_bars_2019_2024.parquet</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-data-mono-sm text-data-mono-sm text-on-surface-variant">fees_baseline.yaml</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Input / Composer (Docked at Bottom) -->
+<div class="flex-shrink-0 bg-surface-container-lowest p-space-md shadow-md flex flex-col gap-space-xs">
+<!-- Context bar above textarea -->
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-dense text-label-dense">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Attached Context: <strong>momentum.py (v12)</strong>, <strong>daily_bars_2019_2024</strong>, <strong>fees_baseline.yaml</strong></span>
+<span class="text-outline">|</span>
+<span class="text-primary font-semibold">3 assets active</span>
+</div>
+<div class="flex items-center gap-space-sm font-data-mono-sm text-data-mono-sm text-outline">
+<span>Context token load: 4,120 / 32,000</span>
+</div>
+</div>
+<!-- Composer Main Input Box -->
+<div class="rounded-lg bg-surface-container-lowest p-space-xs flex flex-col gap-space-xs focus-within:ring-2 focus-within:ring-primary">
+<textarea class="w-full bg-transparent resize-none outline-none font-body-lg text-body-lg text-on-surface placeholder:text-outline px-space-xs pt-space-xs" placeholder="Ask Hermes to adjust cost curves, add instruments, or launch background execution..." rows="2"></textarea>
+<!-- Action bar inside input bottom -->
+<div class="flex items-center justify-between pt-space-2xs">
+<div class="flex items-center gap-space-xs">
+<button class="h-6 px-space-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-dense text-label-dense flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">attach_file</span>
+<span>Attach File</span>
+</button>
+<button class="h-6 px-space-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-dense text-label-dense flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">dataset</span>
+<span>Data Snapshot</span>
+</button>
+<button class="h-6 px-space-xs rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-dense text-label-dense flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+<span>Model Parameters</span>
+</button>
+<div class="h-3.5 w-px bg-surface-variant"></div>
+<div class="flex items-center gap-1 px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-mono-tag text-label-mono-tag uppercase">
+<span class="material-symbols-outlined text-[12px] text-primary">bolt</span>
+<span>Mode: Interactive Run</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-outline hidden md:inline">Shift + Enter for new line</span>
+<button class="h-7 px-space-md rounded bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm flex items-center gap-space-xs transition-colors shadow-sm">
+<span>Send to Hermes</span>
+<span class="material-symbols-outlined text-[15px]">arrow_upward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div></main><footer class="fixed bottom-0 left-12 right-0 h-7 bg-inverse-surface z-40 flex items-center justify-between px-space-md font-data-mono-sm text-data-mono-sm text-inverse-on-surface"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>Engine: quant-node-04</span></div><span class="text-outline-variant">|</span><div class="text-inverse-on-surface">1.4ms</div></div><div class="flex items-center gap-space-md text-inverse-on-surface"><span class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary">sync</span>Runs: 1 active (R-024: momentum_cost_sweep)</span><span class="text-outline-variant">|</span><span>Mem: 4.2 / 32 GB</span></div><div class="flex items-center gap-space-md"><span class="font-label-mono-tag text-label-mono-tag px-space-xs py-space-2xs rounded bg-surface-container/20 text-inverse-on-surface uppercase">Illustrative Data</span><span class="text-inverse-on-surface">QMX v3.4.2 Desktop</span></div></footer></div></body></html>

@@ -1,0 +1,125 @@
+{
+  "pack_id": "examples_077",
+  "section": "Examples",
+  "parent_shard": "examples_077",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "header in the connexus",
+    "how to create a simple multi-currency expert advisor using mql5",
+    "how to detect and normalize chart objects in mql5",
+    "http and connexus",
+    "implementing a breakeven mechanism in mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15897,
+      "title": "HTTP and Connexus (Part 2): Understanding HTTP Architecture and Library Design",
+      "section": "Examples",
+      "series_title": "HTTP and Connexus (): Understanding HTTP Architecture and Library Design",
+      "series_key": "http and connexus",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15897.md"
+    },
+    {
+      "id": 16043,
+      "title": "Header in the Connexus (Part 3): Mastering the Use of HTTP Headers for Requests",
+      "section": "Examples",
+      "series_title": "Header in the Connexus (): Mastering the Use of HTTP Headers for Requests",
+      "series_key": "header in the connexus",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16043.md"
+    },
+    {
+      "id": 22540,
+      "title": "How to Detect and Normalize Chart Objects in MQL5 (Part 1): Building a Chart Object Detection Engine",
+      "section": "Examples",
+      "series_title": "How to Detect and Normalize Chart Objects in MQL5 (): Building a Chart Object Detection Engine",
+      "series_key": "how to detect and normalize chart objects in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22540.md"
+    },
+    {
+      "id": 22563,
+      "title": "How to Detect and Normalize Chart Objects in MQL5 (Part 2): Collecting and Structuring Data from Complex Analytical Objects",
+      "section": "Examples",
+      "series_title": "How to Detect and Normalize Chart Objects in MQL5 (): Collecting and Structuring Data from Complex Analytical Objects",
+      "series_key": "how to detect and normalize chart objects in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22563.md"
+    },
+    {
+      "id": 22662,
+      "title": "How to Detect and Normalize Chart Objects in MQL5 (Part 3): Alerting and Automated Trading from Manually Drawn Objects",
+      "section": "Examples",
+      "series_title": "How to Detect and Normalize Chart Objects in MQL5 (): Alerting and Automated Trading from Manually Drawn Objects",
+      "series_key": "how to detect and normalize chart objects in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22662.md"
+    },
+    {
+      "id": 23105,
+      "title": "How to Detect and Normalize Chart Objects in MQL5 (Part 4): Fully Automated Analytical Objects System",
+      "section": "Examples",
+      "series_title": "How to Detect and Normalize Chart Objects in MQL5 (): Fully Automated Analytical Objects System",
+      "series_key": "how to detect and normalize chart objects in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23105.md"
+    },
+    {
+      "id": 23191,
+      "title": "How to Detect and Normalize Chart Objects in MQL5 (Part 5): Fibonacci in Focus",
+      "section": "Examples",
+      "series_title": "How to Detect and Normalize Chart Objects in MQL5 (): Fibonacci in Focus",
+      "series_key": "how to detect and normalize chart objects in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23191.md"
+    },
+    {
+      "id": 13008,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 1): Indicator Signals based on ADX in combination with Parabolic SAR",
+      "section": "Examples",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Indicator Signals based on ADX in combination with Parabolic SAR",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13008.md"
+    },
+    {
+      "id": 13470,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 2): Indicator Signals: Multi Timeframe Parabolic SAR Indicator",
+      "section": "Examples",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Indicator Signals: Multi Timeframe Parabolic SAR Indicator",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13470.md"
+    },
+    {
+      "id": 14051,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 6): Two RSI indicators cross each other's lines",
+      "section": "Examples",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Two RSI indicators cross each other's lines",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14051.md"
+    },
+    {
+      "id": 14329,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 7): ZigZag with Awesome Oscillator Indicators Signal",
+      "section": "Examples",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): ZigZag with Awesome Oscillator Indicators Signal",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14329.md"
+    },
+    {
+      "id": 18111,
+      "title": "Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven",
+      "section": "Examples",
+      "series_title": "Implementing a Breakeven Mechanism in MQL5 (): ATR- and RRR-Based Breakeven",
+      "series_key": "implementing a breakeven mechanism in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18111.md"
+    }
+  ]
+}

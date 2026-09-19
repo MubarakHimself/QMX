@@ -1,0 +1,100 @@
+{
+  "shard_id": "integration_006",
+  "section": "Integration",
+  "n": 10,
+  "series_in_shard": [
+    "calculating mathematical expressions"
+  ],
+  "articles": [
+    {
+      "id": 21429,
+      "title": "Package-based approach with KnitPkg for MQL5 development",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21429.md"
+    },
+    {
+      "id": 21775,
+      "title": "File-Based Versioning of EA Parameters in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21775.md"
+    },
+    {
+      "id": 21858,
+      "title": "Can DOOM Run in MetaTrader 5: DLLs, Rendering, and MQL5 Input?",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21858.md"
+    },
+    {
+      "id": 22020,
+      "title": "Python + MetaTrader 5: Fast Research Framework for Data, Features, and Prototypes",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22020.md"
+    },
+    {
+      "id": 22242,
+      "title": "From CPU to GPU in MQL5: A Practical OpenCL Framework for Accelerating Research, Optimizations, and Patterns",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22242.md"
+    },
+    {
+      "id": 22527,
+      "title": "Building an Object-Oriented ONNX Inference Engine in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22527.md"
+    },
+    {
+      "id": 22714,
+      "title": "Building Volatility Models in MQL5 (Part III): Implementing the SLSQP Algorithm for Model Estimation",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22714.md"
+    },
+    {
+      "id": 23276,
+      "title": "How to Connect AI Agents to MQL5 Algo Forge via MCP",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23276.md"
+    },
+    {
+      "id": 8027,
+      "title": "Calculating mathematical expressions (Part 1). Recursive descent parsers",
+      "section": "Integration",
+      "series_title": "Calculating mathematical expressions (). Recursive descent parsers",
+      "series_key": "calculating mathematical expressions",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8027.md"
+    },
+    {
+      "id": 8028,
+      "title": "Calculating mathematical expressions (Part 2). Pratt and shunting yard parsers",
+      "section": "Integration",
+      "series_title": "Calculating mathematical expressions (). Pratt and shunting yard parsers",
+      "series_key": "calculating mathematical expressions",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8028.md"
+    }
+  ]
+}

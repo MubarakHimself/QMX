@@ -1,0 +1,137 @@
+4: title: "Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy"
+11: series_title: "Automating Trading Strategies in MQL5 (): Building an Expert Advisor for the Asian Breakout Strategy"
+20: # Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy
+25: | 25 February 2025 at 05:08
+36: ### Introduction
+38: In the previous article (Part 8), we explored a reversal trading strategy by building an Expert Advisor in [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) based on the [Butterfly harmonic pattern](https://fxtrendo.com/blog/1145/what-is-the-butterfly-pattern "https://fxtrendo.com/
+47: By the end, you’ll have a fully functional Expert Advisor that automates the Asian Breakout Strategy, ready to be tested and refined for trading. Let’s dive in!
+49: ### Strategy Blueprint
+51: To create the program, we will design an approach that leverages the key price range formed during the [Asian trading session](https://www.dolphintrader.com/asian-range-breakout-forex-strategy/ "https://www.dolphintrader.com/asian-range-breakout-forex-strategy/"). The first step will be to define the session box by capturing the highest high and the lowest low within a specific time window—typical
+55: Risk management is a critical component of our strategy. We will integrate stop-loss orders just outside the box boundaries to protect against false breakouts or reversals, while take-profit levels will be determined based on a predefined risk-to-reward ratio. Additionally, we will implement a time-based exit strategy that automatically closes any open trades if they remain active past a designate
+59: ### Implementation in MQL5
+63: ```
+68: #property copyright "Forex Algo-Trader, Allan"
+69: #property link      "https://t.me/Forex_Algo_Trader"
+70: #property version   "1.00"
+71: #property description "This EA trades based on ASIAN BREAKOUT Strategy"
+72: #property strict
+74: #include <Trade\Trade.mqh>                              //--- Include trade library
+91: //--- Session timing settings (GMT) with minutes
+92: input int            SessionStartHour     = 23;          //--- Session start hour
+93: input int            SessionStartMinute   = 00;           //--- Session start minute
+94: input int            SessionEndHour       = 03;           //--- Session end hour
+95: input int            SessionEndMinute     = 00;           //--- Session end minute
+96: input int            TradeExitHour        = 13;          //--- Trade exit hour
+99: //--- Global variables for storing session box data
+100: datetime lastBoxSessionEnd = 0;                        //--- Stores the session end time of the last computed box
+101: bool     boxCalculated     = false;                    //--- Flag: true if session box has been calculated
+102: bool     ordersPlaced      = false;                    //--- Flag: true if orders have been placed for the session
+103: double   BoxHigh           = 0.0;                        //--- Highest price during the session
+104: double   BoxLow            = 0.0;                        //--- Lowest price during the session
+105: //--- Variables to store the exact times when the session's high and low occurred
+108: ```
+112: Additionally, we allow users to specify session timing in hours and minutes (using inputs like "SessionStartHour", "SessionStartMinute", "SessionEndHour", "SessionEndMinute", "TradeExitHour", and "TradeExitMinute") and declare global variables to store the session box data ("BoxHigh", "BoxLow") and the exact times these extremes occurred ("BoxHighTime", "BoxLowTime"), along with flags ("boxCalcula
+114: ```
+129: ```
+133: ```
+143: ```
+147: ```
+152:    //--- Get the current server time (assumed GMT)
+153:    datetime currentTime = TimeCurrent();              //--- Retrieve current time
+157:    //--- Check if the current time is at or past the session end (using hour and minute)
+158:    if(dt.hour > SessionEndHour || (dt.hour == SessionEndHour && dt.min >= SessionEndMinute)){
+159:       //--- Build the session end time using today's date and user-defined session end time
+160:       MqlDateTime sesEnd;                             //--- Declare a structure for session end time
+164:       sesEnd.hour = SessionEndHour;                   //--- Set session end hour
+165:       sesEnd.min  = SessionEndMinute;                 //--- Set session end minute
+167:       datetime sessionEnd = StructToTime(sesEnd);       //--- Convert structure to datetime
+170:       datetime sessionStart;                          //--- Declare variable for session start time
+171:       //--- If session start is later than or equal to session end, assume overnight session
+172:       if(SessionStartHour > SessionEndHour || (SessionStartHour == SessionEndHour && SessionStartMinute >= SessionEndMinute)){
+173:          datetime prevDay = sessionEnd - 86400;       //--- Subtract 24 hours to get previous day
+176:          dtPrev.hour = SessionStartHour;              //--- Set session start hour for previous day
+177:          dtPrev.min  = SessionStartMinute;            //--- Set session start minute for previous day
+179:          sessionStart = StructToTime(dtPrev);         //--- Convert structure back to datetime
+182:          //--- Otherwise, use today's date for session start
+184:          temp.year = sesEnd.year;                    //--- Set year from session end structure
+185:          temp.mon  = sesEnd.mon;                     //--- Set month from session end structure
+186:          temp.day  = sesEnd.day;                     //--- Set day from session end structure
+187:          temp.hour = SessionStartHour;               //--- Set session start hour
+188:          temp.min  = SessionStartMinute;             //--- Set session start minute
+190:          sessionStart = StructToTime(temp);          //--- Convert structure to datetime
+193:       //--- Recalculate the session box only if this session hasn't been processed before
+195:          ComputeBox(sessionStart, sessionEnd);       //--- Compute session box using start and end times
+196:          lastBoxSessionEnd = sessionEnd;              //--- Update last processed session end time
+198:          ordersPlaced    = false;                     //--- Reset flag for order placement for the new session
+202: ```
+204: In the Expert tick function OnTick, we first call [TimeCurrent](https://www.mql5.com/en/docs/dateandtime/timecurrent) to retrieve the current server time and then convert it into a [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure using the [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) function so we can access its components. We compare
+206: Based on whether the session start before or after the session end, we determine the proper "sessionStart" time (using today's date or adjusting for an overnight session), and if this "sessionEnd" is different from "lastBoxSessionEnd", we call the "ComputeBox" function to recalculate the session box while updating "lastBoxSessionEnd" and resetting our "boxCalculated" and "ordersPlaced" flags. We u
+208: ```
+211: //| Purpose: Calculate the session's highest high and lowest low, and|
+213: //|          specified session start and end times.                  |
+215: void ComputeBox(datetime sessionStart, datetime sessionEnd){
+232:    //--- Reset the times for the session extremes
+236:    //--- Loop through each bar within the session period to find the extremes
+238:       if(rates[i].time >= sessionStart && rates[i].time <= sessionEnd){
+250:       Print("No valid bars found within the session time range."); //--- Print error if no valid bars found
+255:    Print("Session box computed: High = ", BoxHigh, " at ", TimeToString(BoxHighTime),
+256:          ", Low = ", BoxLow, " at ", TimeToString(BoxLowTime)); //--- Output computed session box data
+258:    //--- Draw all session objects (rectangle, horizontal lines, and price labels)
+259:    DrawSessionObjects(sessionStart, sessionEnd);    //--- Call function to draw objects using computed values
+261: ```
+263: Here, we define a [void](https://www.mql5.com/en/docs/basis/types/void) "ComputeBox" function to calculate the session extremes. We begin by obtaining the total number of bars on the specified timeframe using the [Bars](https://www.mql5.com/en/docs/series/bars) function and then copy the bar data into a [MqlRates](https://www.mql5.com/en/docs/constants/structures/mqlrates) array using the [CopyRat
+265: If after processing the data "highVal" remains "-DBL\_MAX" or "lowVal" remains [DBL\_MAX](https://www.mql5.com/en/docs/constants/namedconstants/typeconstants), we print an error message indicating that no valid bars were found; otherwise, we assign "BoxHigh" and "BoxLow" with the computed values and use the [TimeToString](https://www.mql5.com/en/docs/convert/timetostring) function to print the rec
+267: ```
+269: //| Function: DrawSessionObjects                                         |
+270: //| Purpose: Draw a filled rectangle spanning from the session's high    |
+272: //|          horizontal lines at the high and low (from sessionStart to  |
+273: //|          sessionEnd) with price labels at the right. Dynamic styling |
+277: void DrawSessionObjects(datetime sessionStart, datetime sessionEnd){
+282:    //--- Create a unique session identifier using the session end time
+283:    string sessionID = "Sess_" + IntegerToString(lastBoxSessionEnd);
+286:    string rectName = "SessionRect_" + sessionID;       //--- Unique name for the rectangle
+293:    //--- Draw the top horizontal line spanning from sessionStart to sessionEnd at the session high
+294:    string topLineName = "SessionTopLine_" + sessionID; //--- Unique name for the top line
+295:    if(!ObjectCreate(0, topLineName, OBJ_TREND, 0, sessionStart, BoxHigh, sessionEnd, BoxHigh))
+301:    //--- Draw the bottom horizontal line spanning from sessionStart to sessionEnd at the session low
+302:    string bottomLineName = "SessionBottomLine_" + sessionID; //--- Unique name for the bottom line
+303:    if(!ObjectCreate(0, bottomLineName, OBJ_TREND, 0, sessionStart, BoxLow, sessionEnd, BoxLow))
+310:    string topLabelName = "SessionTopLabel_" + sessionID; //--- Unique name for the top label
+311:    if(!ObjectCreate(0, topLabelName, OBJ_TEXT, 0, sessionEnd, BoxHigh))
+313:    ObjectSetString(0, topLabelName, OBJPROP_TEXT," "+DoubleToString(BoxHigh, _Digits)); //--- Set label text to session high price
+319:    string bottomLabelName = "SessionBottomLabel_" + sessionID; //--- Unique name for the bottom label
+320:    if(!ObjectCreate(0, bottomLabelName, OBJ_TEXT, 0, sessionEnd, BoxLow))
+322:    ObjectSetString(0, bottomLabelName, OBJPROP_TEXT," "+DoubleToString(BoxLow, _Digits)); //--- Set label text to session low price
+327: ```
+329: In the "DrawSessionObjects" function, we start by retrieving the current chart scale using the [ChartGetInteger](https://www.mql5.com/en/docs/chart_operations/chartgetinteger) function with [CHART\_SCALE](https://www.mql5.com/en/docs/constants/chartconstants/enum_chart_property#enum_chart_property_integer) (which returns a value from 0 to 5) and then compute dynamic styling parameters: a dynamic f
+331: Following this, we draw two horizontal trend lines—one at the session high and one at the session low—spanning from "sessionStart" to "sessionEnd"; we set the top line's color to "[clrBlue](https://www.mql5.com/en/docs/constants/objectconstants/webcolors)" and the bottom line's color to "clrRed", and both lines use the dynamic line width and are not extended infinitely ("OBJPROP\_RAY\_RIGHT" is se
+337: ```
+338: //--- Build the trade exit time using user-defined hour and minute for today
+341: exitTimeStruct.hour = TradeExitHour;               //--- Set trade exit hour
+346: //--- If the session box is calculated, orders are not placed yet, and current time is before trade exit time, place orders
+364:       double entryPrice = BoxHigh + offsetPrice; //--- Set entry price just above the session high
+365:       double stopLoss   = BoxLow - offsetPrice;    //--- Set stop loss below the session low
+368:       if(obj_Trade.BuyStop(LotSize, entryPrice, _Symbol, stopLoss, takeProfit, ORDER_TIME_GTC, 0, "Asian Breakout EA")){
+378:       double entryPrice = BoxLow - offsetPrice;  //--- Set entry price just below the session low
+379:       double stopLoss   = BoxHigh + offsetPrice;   //--- Set stop loss above the session high
+382:       if(obj_Trade.SellStop(LotSize, entryPrice, _Symbol, stopLoss, takeProfit, ORDER_TIME_GTC, 0, "Asian Breakout EA")){
+391: ```
+393: Here, we build the trade exit time by declaring a [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure named "exitTimeStruct". We then use the [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) function to decompose the current time into its parts and assign the user-defined "TradeExitHour" and "TradeExitMinute" (with seconds set to 0) to "exitT
+403: ```
+408:    boxCalculated = false;                         //--- Reset session box calculated flag
+411: ```
+413: Here, we check whether the current time has reached or surpassed the trade exit time. If it has, we call the "CloseOpenPositions" function to close all open positions associated with the EA, and then we call the "CancelPendingOrders" function to cancel any pending orders. After these functions execute, we reset the "boxCalculated" and "ordersPlaced" flags to false, preparing the program for a new 
+415: ```
+455: ```
+457: Here, in the function "CloseOpenPositions", we first retrieve the total number of open positions using the [PositionsTotal](https://www.mql5.com/en/docs/trading/positionstotal) function and then loop through each position in reverse order. For each position, we obtain its ticket number using [PositionGetTicket](https://www.mql5.com/en/docs/trading/positiongetticket) and select the position with [P
+463: From the visualization, we can see that we identify the Asian session, plot it on the chart, place pending orders concerning the moving average direction, and cancel the orders or activated positions if they still exist once we surpass the trading time defined by the user, hence achieving our objective. The thing that remains is backtesting the program, and that is handled in the next section.
+465: ### Backtesting and Optimization
+475: ```
+510: ```
+522: ### Conclusion
+524: In conclusion, we have successfully developed an MQL5 Expert Advisor that automates the Asian Breakout Strategy with precision. By leveraging session-based range detection, trend filtering via a [moving average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma"), and dynamic risk management, we 
+534: [Asian\_Breakout\_EA.mq5](https://www.mql5.com/en/articles/download/17239/asian_breakout_ea.mq5 "Download Asian_Breakout_EA.mq5")
+542: [Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers](https://www.mql5.com/en/articles/17271)
+544: In this article, we implement automated trade entry using the MQL5 Economic Calendar by applying user-defined filters and time offsets to identify qualifying news events. We compare forecast and previous values to determine whether to open a BUY or SELL trade. Dynamic countdown timers display the remaining time until news release and reset automatically after a trade.
+554: Points of support and resistance are critical levels that signal potential trend reversals and continuations. Although identifying these levels can be challenging, once you pinpoint them, you’re well-prepared to navigate the market. For further assistance, check out the Quarters Drawer tool featured in this article, it will help you identify both primary and minor support and resistance levels.
+561: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%

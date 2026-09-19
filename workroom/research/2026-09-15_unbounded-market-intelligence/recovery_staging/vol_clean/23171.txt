@@ -1,0 +1,2151 @@
+---
+id: 23171
+source_url: https://www.mql5.com/en/articles/23171
+title: "Building Volatility Models in MQL5 (Part IV): Implementing Long Memory Volatility Processes, FIGARCH, and HARCH"
+author: ""
+author_url: 
+published: 2026-07-03T08:34Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Building Volatility Models in MQL5 (Part IV): Implementing Long Memory Volatility Processes, FIGARCH, and HARCH
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 3 July 2026 at 04:34
+
+[IMG]
+1 253
+[[IMG]
+0](https://www.mql5.com/en/forum/512154 "Comments")
+
+[IMG]
+
+[Francis Dube](https://www.mql5.com/en/users/ufranco)
+
+### Contents.
+
+1. [Introduction: The Deficiencies of GARCH](https://www.mql5.com/en/articles/23171#introduction_the_deficiencies_of_garch)
+2. [Long Memory in Volatility](https://www.mql5.com/en/articles/23171#long_memory_in_volatility)
+3. [FIGARCH vs. HARCH: Which Should You Choose?](https://www.mql5.com/en/articles/23171#figarch_vs_harch_which_should_you_choose)
+4. [Fractionally Integrated GARCH](https://www.mql5.com/en/articles/23171#figarch)
+5. [Heterogeneous Autoregressive Conditional Heteroskedasticity](https://www.mql5.com/en/articles/23171#harch)
+6. [Conclusion](https://www.mql5.com/en/articles/23171#conclusion)
+
+### Introduction: The Deficiencies of GARCH
+
+Traders and algorithmic developers who rely on the GARCH(1,1) family frequently face an operational dilemma: the model either forgets large regime shocks too quickly or, when tuned for persistence, behaves like an IGARCH that never lets shocks decay. In real markets, volatility often decays much more slowly—clusters can persist for weeks or months—and a single exponential kernel is often a poor approximation. The practical question is therefore concrete: how do you prove that your volatility proxy (|r| or r²) exhibits long memory, and if it does, which MQL5 implementation should you use—FIGARCH with hyperbolic decay or HARCH with explicit multi-horizon aggregation—so that it is both statistically appropriate and operationally viable?
+
+[IMG]
+
+This article answers that question by: providing formal tests (Hurst R/S and GPH) with sample-size safeguards, offering a visual spectral diagnostic, delivering working MQL5 implementations and demo scripts so you can test, select, fit, and deploy long-memory volatility models in your trading stack.
+
+### Long Memory in Volatility
+
+The theoretical justification for using FIGARCH or HARCH hinges on proving that volatility exhibits long-term persistence. To quantify this we can estimate the Hurst exponent (H) via rescaled range analysis. If the Hurst exponent is between 0.5 and 1.0, long-memory persistence exists. The accuracy of the Hurst Exponent depends on how the time series is partitioned. An optimal approach considers the minimum and maximum length of a partition instead of picking an arbitrary number. The minimum partition size should never fall below 10 to 20 data points. Smaller windows yield statistically invalid estimates. The maximum length is typically capped at N/2 or N/4, where N is the total sample size. This ensures enough distinct chunks exist for a reliable average.
+
+To refine the regression, a logarithmic spacing strategy is applied. This ensures that short-term and long-term window scales receive equal weight on a geometric basis. Absolute returns or squared returns are applied to the test instead of price, as these serve as proxies for volatility. A higher Hurst exponent strengthens the case for FIGARCH or HARCH. The Hurst exponent test is implemented as the hurst\_exponent\_rs() function in tests.mqh. It takes two parameters: a vector of the series to examine and an integer representing the number of segments for partitioning.
+
+```
+//+-------------------------------------------------------------------+
+//| Calculates the Hurst Exponent using Rescaled Range (R/S) Analysis.|
+//+-------------------------------------------------------------------+
+double hurst_exponent_rs(vector& time_series, int partitions = 20)
+  {
+//--- Get total elements in the source array
+   int N = (int)time_series.Size();
+
+//--- Enforce sample size threshold to guarantee statistical validity
+   if(N < 200)
+     {
+      Print(__FUNCTION__, ": Time series too short for robust R/S analysis.\nMinimum length is 200");
+      return EMPTY_VALUE;
+     }
+
+   int max_chunks = 0;
+
+//--- Clamp the minimum partition scale dimension to 10 to ensure a valid regression sample size
+   if(partitions < 10)
+      partitions = 10;
+
+   max_chunks = partitions;
+
+//--- Generate a vector of target window sizes spaced logarithmically from 50 up to N/2
+   vector log_space = np::logspace(log10(50), log10(floor(N / 2)), ulong(max_chunks));
+//--- Deduplicate window sizes to ensure distinct scale steps
+   vector chunk_sizes = np::unique(log_space);
+
+//--- Declare processing vectors for holding calculations at various scoping levels
+   vector rs_values, rslist, valid_sizes, chunk, y, z;
+   double R, S;
+   ulong num_chunks, rsl, rs;
+
+   rs = 0;
+//--- Explicitly allocate space for tracking metrics across the unique window configurations
+   rs_values.Resize(0, chunk_sizes.Size());
+   valid_sizes.Resize(0, chunk_sizes.Size());
+   ulong size = 0;
+
+//--- Main Loop: Iterate through each scale size group
+   for(ulong j = 0; j < chunk_sizes.Size(); ++j)
+     {
+      size = (ulong)chunk_sizes[j];
+      num_chunks = ulong(N) / ulong(size); //--- Total complete intervals of length 'size'
+      rslist.Resize(0, num_chunks);        //--- Reset sub-period collection buffer
+      rsl = 0;
+
+      //--- Sub-Loop: Extract segments and compute R/S components for each chunk
+      for(ulong i = 0; i < num_chunks; ++i)
+        {
+         //--- Slice time series array from [i * size] to [(i + 1) * size]
+         chunk = np::sliceVector(time_series, long(i * size), long((i + 1) * size));
+         if(!chunk.Size())
+           {
+            Print(__FUNCTION__, ": vector size ", time_series.Size(), " params: ", long(i * size), ",", long((i + 1) * size));
+            return EMPTY_VALUE;
+           }
+
+         //--- Mean-center the localized segment data
+         y = chunk - chunk.Mean();
+         //--- Compute integrated time series through cumulative summation
+         z = y.CumSum();
+         //--- Range calculation: Max peak value minus Min trough value
+         R = z.Max() - z.Min();
+         //--- Unbiased sample standard dev estimation (N-1 normalization)
+         S = chunk.Std(1);
+
+         //--- Prevent NaN or Infinity states by checking that standard deviation is non-zero
+         if(S > 0.0)
+           {
+            //--- Dynamically scale down/up the array allocation bounds as required
+            if(rslist.Size() < rsl + 1)
+               rslist.Resize(rsl + 1, num_chunks - (rsl + 1));
+            rslist[rsl++] = R / S; //--- Store calculated rescaled range
+           }
+        }
+
+      //--- If the processed scale size yielded valid R/S pairs, aggregate them
+      if(rslist.Size())
+        {
+         if(rs_values.Size() < rs + 1)
+           {
+            rs_values.Resize(rs + 1, chunk_sizes.Size() - (rs + 1));
+            valid_sizes.Resize(rs + 1, chunk_sizes.Size() - (rs + 1));
+           }
+         //--- Save the average R/S scalar across this chunk size grouping
+         rs_values[rs] = rslist.Mean();
+         valid_sizes[rs++] = double(size);
+        }
+     }
+
+//--- Convert the valid scales and their respective averaged R/S values to natural logarithms
+   valid_sizes = log(valid_sizes);
+   rs_values = log(rs_values);
+
+//--- Fit a straight line (order=1) to the log-log transform points.
+//--- poly[0] holds the calculated gradient (slope), which is the Hurst Exponent (H).
+   vector poly = np::polyfit(valid_sizes, rs_values, 1);
+
+   return poly[0];
+  }
+//+------------------------------------------------------------------+
+```
+
+An alternate or complementary method is the Geweke and Porter-Hudak (GPH) test. The GPH test is a semi-parametric approach to estimate the fractional integration parameter (d). If d>0, the process has long memory. If d is between 0 and 0.5, the process is stationary, and its memory decays far slower than standard GARCH. The GPH test computes a regression on the lowest frequencies of a periodogram. A periodogram is a tool used in signal processing and time-series analysis to find underlying frequencies within a dataset. It splits a time-series dataset into its component frequencies to show which are the strongest. The number of frequencies included in the regression depends on a bandwidth parameter, alpha.
+
+[IMG]
+
+Where N is the length of the sample time series. The alpha parameter controls the balance between bias and variance when estimating d. Academic literature suggests that an alpha value of 0.5 is a common, optimal choice for medium-sized datasets. When running the test on massive datasets (for example, N>100,000), it may be beneficial to test the series at a range of alpha values between 0.4 and 0.6.
+
+The header tests.mqh defines the gph\_test() function. It takes a vector and the bandwidth parameter, alpha. The function returns a vector with two elements. The first element is the fractional integration estimate. The second element is a probability value (p-value). The p-value depicts the probability that the observed fractional integration estimate is due to chance. A lower value is better.
+
+```
+//+------------------------------------------------------------------+
+//| Geweke and Porter-Hudak (GPH) Test for fractional integration    |
+//+------------------------------------------------------------------+
+vector gph_test(vector& time_series, double alpha=0.5)
+  {
+//--- Step 1: Pre-validation ---
+//--- Ensure there are enough data points to compute a meaningful discrete Fourier transform.
+   if(time_series.Size() < 30)
+     {
+      Print(__FUNCTION__, ": Sample size is too small to compute a meaningful periodogram.");
+      return vector::Zeros(0);
+     }
+
+//--- Mean-center the time series to eliminate any DC bias (zero-frequency component)
+   vector x = time_series - time_series.Mean();
+
+//--- Prepare data structures for the Native MQL5 Fourier Transform library
+   CRowDouble real = x;
+   CRowComplex dft;
+
+//--- --- Step 2: Spectral Density Estimation ---
+//--- Execute a Real-to-Complex 1D Fast Fourier Transform (FFT)
+   CFastFourierTransform::FFTR1D(real, real.Size(), dft);
+   vectorc vec = dft.ToVector();
+
+//--- Compute the periodogram: I(λ) = |I_f(λ)|^2 / (2 * π * N)
+//--- This measures the variance contribution of each fundamental frequency.
+   vector periodogram = pow(c_abs(vec), 2.) / (2. * M_PI * double(x.Size()));
+
+//--- Step 3: Bandwidth Selection ---
+//--- Determine the number of low-frequency ordinates (g) to include in the log-periodogram regression.
+//--- Commonly set to g = N^α, where α is usually 0.5.
+   int g = int(floor(pow(x.Size(), alpha)));
+   if(g < 2)
+      g = 2; //--- Enforce a mathematical minimum of 2 frequencies to perform linear regression
+
+//--- Compute the Fourier frequencies: λ_j = (2 * π * j) / N
+   vector frequencies = 2. * M_PI * np::arange(1.0, double(g + 1), 1.) / double(x.Size());
+
+//--- Slice out the periodogram values corresponding to the selected low-frequency spectrum (skipping DC offset at index 0)
+   vector raw = np::sliceVector(periodogram, 1, long(g + 1));
+
+//--- Apply a tiny floor to prevent log(0) domain errors during the regression transformation
+   for(ulong i = 0; i < raw.Size(); ++i)
+      if(!raw[i])
+         raw[i] = 1.e-13;
+
+//--- --- Step 4: Log-Periodogram Linear Regression ---
+//--- Dependent variable (Y): Log of the periodogram ordinates
+   vector y = log(raw);
+
+//--- Independent variable (X): -2 * log(2 * sin(λ_j / 2)), derived from the spectral density of an ARFIMA process
+   vector x_reg = -2. * log(2. * sin(frequencies / 2.));
+
+//--- Fit a ordinary least squares (OLS) linear model. The slope is our estimate of the fractional integration parameter 'd'.
+   LinRegressResult rr = linregress(x_reg, y);
+
+//--- --- Step 5: Statistical Inference ---
+//--- Compute the denominator (sum of squared deviations of X) to calculate the standard error of the slope
+   double denom = (pow(x_reg - x_reg.Mean(), 2.)).Sum();
+   if(!denom)
+      return vector::Zeros(0);
+
+//--- The GPH test has a known asymptotic theoretical error variance of π^2 / 6
+   double theoretical_std_err = sqrt((pow(M_PI, 2.) / 6.0) / denom);
+
+//--- Compute the standard Z-score test statistic
+   double z_stat = rr.slope / theoretical_std_err;
+
+//--- Compute the two-tailed p-value using the standard cumulative normal distribution function
+   double p_val_theoretical = 2. * (1. - CNormalDistr::NormalCDF(fabs(z_stat)));
+
+//--- Package the output results: index 0 is the memory parameter (d), index 1 is the theoretical significance
+   vector out(2);
+   out[0] = rr.slope;
+   out[1] = p_val_theoretical;
+
+   return out;
+  }
+```
+
+The script TestsForLongMemoryInVolatility.ex5 demonstrates these tests on an arbitrary sample of price data. The program allows users to select either squared returns or absolute returns as the volatility proxy.
+
+```
+#include<figarch_harch\Arch\univariate\tests.mqh>
+
+//--- Input parameters for script customization
+input string           Symbol_ = "AUDUSD";               //--- Financial asset to test
+input ENUM_TIMEFRAMES  TimeFrame = PERIOD_D1;            //--- Chart timeframe interval
+input datetime         StartDate = D'2025.01.01';        //--- Start date for historical data retrieval
+input ulong            HistoryLen = 1000;                //--- Size of historical data footprint
+input ulong            Partitions = 20;                  //--- Target scale segments to feed R/S calculation
+input double           PvalueSignificance = 0.05;        //--- Alpha critical limit for statistical hypothesis checks
+input double           Bandwidth = 0.5;                  //--- Frequency exponent boundary scaling factor for GPH
+input ENUM_VOL_PROXY   VolatilityProxy = VOL_ABSOLUTE_RETURNS; //--- Choice of proxy to represent unobserved volatility
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   vector prices;
+//--- --- Step 1: Historical Data Fetch ---
+//--- Copy raw historical closing rates directly into a vector array
+   if(!prices.CopyRates(Symbol_, TimeFrame, COPY_RATES_CLOSE, StartDate, HistoryLen))
+     {
+      Print(" failed to get close prices for ", Symbol_, ". Error ", GetLastError());
+      return;
+     }
+
+//--- --- Step 2: Extract Log Returns and Volatility Proxy ---
+//--- Map raw price series into natural log space
+   prices = log(prices);
+
+//--- Compute the first-difference array: r_t = ln(P_t) - ln(P_{t-1})
+   vector returns = np::diff(prices);
+
+//--- Extract chosen unobserved variance proxy: absolute returns |r_t| or squared returns (r_t)^2
+   vector volatility_proxy = VolatilityProxy == VOL_ABSOLUTE_RETURNS ? fabs(returns) : pow(returns, 2.);
+
+//--- ==================================================================
+//--- --- 1. Testing for Persistence via Hurst Exponent ($R/S$ Analysis) ---
+//--- ==================================================================
+   Print("--- 1. Testing for Persistence via Hurst Exponent ---");
+   Print("Number of Partitions: ", Partitions ? Partitions : 10);
+
+//--- Calculate the scaling Hurst exponent across the data segments
+   double h = hurst_exponent_rs(volatility_proxy, (int)Partitions);
+   if(h == EMPTY_VALUE)
+     {
+      Print("Failed Hurst exponent calculation");
+      return;
+     }
+
+   PrintFormat("Hurst Exponent: %.4f", h);
+
+//--- Interpret the Hurst exponent scaling score bounds:
+//--- H > 0.5: Long memory / persistent trend dynamics
+//--- H < 0.5: Mean reverting / anti-persistent dynamics
+//--- H == 0.5: Uncorrelated random noise / white noise process
+   if(h > 0.55)
+      Print("Result: Volatility exhibits long-memory persistence.");
+   else
+      if(h < 0.45)
+         Print("Result: Volatility is anti-persistent.");
+      else
+         Print("Result: Volatility behaves like a random walk.");
+
+//--- ==================================================================
+//--- --- 2. Testing Fractional Integration via GPH ($d$-parameter) ---
+//--- ==================================================================
+   Print("\n--- 2. Testing Fractional Integration via GPH ---");
+   Print("Bandwidth: ", Bandwidth);
+   Print("Pvalue significance level: ", 100.0 * (1. - PvalueSignificance));
+
+//--- Execute Geweke and Porter-Hudak log-periodogram OLS spectral density check
+//--- Returns: gph_results[0] = estimated parameter (d), gph_results[1] = asymptotic p-value
+   vector gph_results = gph_test(volatility_proxy, Bandwidth);
+   PrintFormat("Fractional Parameter d: %.4f (p-value: %.4e)", gph_results[0], gph_results[1]);
+
+//--- Check statistical integration conditions:
+//--- Under H0, d = 0 (no fractional integration).
+//--- If p-value < significance and 0 < d < 0.5, we confirm a stationary long-memory process.
+   if((gph_results[1] < PvalueSignificance) && 0 < gph_results[0] && gph_results[0] < 0.5)
+      Print("Result: Reject H0. Significant fractional integration detected (Use FIGARCH/HARCH).");
+   else
+      Print("Result: Fail to reject H0. No strong long memory detected via GPH.");
+  }
+```
+
+Below is a sample of the script's output. It prints to the terminal the results of each test.
+
+```
+--- 1. Testing for Persistence via Hurst Exponent ---
+Number of Partitions: 50
+Hurst Exponent: 0.8572
+Result: Volatility exhibits long-memory persistence.
+--- 2. Testing Fractional Integration via GPH ---
+Bandwidth: 0.6
+Pvalue significance level: 95.0
+Fractional Parameter d: 0.3234 (p-value: 3.4000e-04)
+Result: Reject H0. Significant fractional integration detected (Use FIGARCH/HARCH).
+```
+
+When volatility exhibits long memory, the challenge lies in capturing it mathematically. Standard GARCH models force a rigid choice. Shocks either vanish almost instantly via exponential decay, or they alter the system forever. We must move beyond these boundaries to realistically model the slow-decaying clusters observed in financial markets. Financial literature offers two distinct paradigms to solve this problem.
+
+- Fractional Integration (FIGARCH). This approach solves the decay problem through pure mathematics. It introduces a fractional integration parameter to replace exponential decay with a hyperbolic decay function. This bridges the gap between GARCH and IGARCH. As a result, the model remembers historical shocks over vast horizons without implying permanent structural shifts.
+
+- Market Heterogeneity (HARCH). This approach solves the problem through economic intuition. Rather than applying a single decay function, HARCH recognizes that markets are composed of diverse participants. These participants operate on different time horizons. Long memory emerges as a byproduct of their interactions.
+
+By implementing both models in MQL5, we can view the market from two perspectives. One is rooted in statistical time-series analysis. The other is rooted in the behavioral reality of market structure. However, before diving into the code, we must establish a practical framework for determining which model best aligns with a given dataset.
+
+### FIGARCH vs. HARCH: Which Should You Choose?
+
+Selecting between FIGARCH and HARCH in MQL5 involves balancing statistical precision with operational efficiency. FIGARCH's mathematical approach to modeling long memory makes it ideal for macro-driven, highly liquid assets. However, this statistical rigor comes with a significant computational cost. Conversely, HARCH offers a computationally pragmatic alternative. HARCH is ideal for intraday trading (M5, M15, H1) or scalping strategies. The table below lists the advantages of each model type relative to the other.
+
+| Advantages of HARCH over FIGARCH. | Advantages of FIGARCH over HARCH. |
+| --- | --- |
+| Computational efficiency in MQL5: FIGARCH mathematically requires an infinite summation loop to process its binomial expansion (1-L)^d. In practice, you must truncate this loop (typically at 1,000+ past lags) to prevent your MetaTrader Expert Advisor from lagging or freezing during live ticks. HARCH, conversely, only requires calculating simple rolling averages across a few specific timeframes, which is computationally lightweight and faster. | Parsimony: FIGARCH requires estimating a few parameters (omega, alpha, beta, d). HARCH requires choosing the number of intervals and the exact length of each aggregation window. If these windows are selected arbitrarily, there is the risk of severe overfitting. |
+| Structural realism: HARCH natively understands that a weekend gap or a central bank announcement alters the market structure differently than a quiet Asian trading session. FIGARCH treats every elapsed time unit with identical mathematical weighting rules. | Timeframe independence: FIGARCH parameters remain clean regardless of your data spacing. HARCH is highly sensitive to the specific time windows chosen.  Choosing a 4-hour window versus a 6-hour window can radically alter volatility forecasts. |
+
+If you are unsure whether FIGARCH or HARCH is more appropriate, analyze the periodogram of absolute or squared returns. Long-memory models behave distinctively when mapped to a log-log periodogram, which plots spectral density against frequency. The script FigarchVsHarchSelectionTests.ex5 demonstrates this analysis.
+
+```
+#include<figarch_harch\Arch\univariate\tests.mqh>
+
+//--- Input parameters for script customization
+input string            Symbol_ = "AUDUSD";               //--- Financial asset to test
+input ENUM_TIMEFRAMES   TimeFrame = PERIOD_D1;            //--- Chart timeframe interval
+input datetime          StartDate = D'2025.01.01';        //--- Start date for structural history
+input ulong             HistoryLen = 1000;                //--- Total historical observations (larger size helps spectral testing)
+input double            Bandwidth = 0.5;                  //--- Alpha parameter scaling the GPH test low-frequency ordinates
+input ENUM_VOL_PROXY    VolatilityProxy = VOL_ABSOLUTE_RETURNS; //--- Choice of metric to capture historical volatility
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   vector prices;
+//--- --- Step 1: Historical Data Retrieval ---
+//--- Request raw closing prices into a memory-efficient vector array
+   if(!prices.CopyRates(Symbol_, TimeFrame, COPY_RATES_CLOSE, StartDate, HistoryLen))
+     {
+      Print(" failed to get close prices for ", Symbol_, ". Error ", GetLastError());
+      return;
+     }
+
+//--- --- Step 2: Calculate Log-Returns ---
+//--- Log-transform raw prices and extract the first-difference array
+   vector returns = np::diff(log(prices));
+
+//--- --- Step 3: Extract the Volatility Proxy ---
+//--- Volatility itself is unobservable, so we extract a proxy tracking it over time.
+//--- Evaluates whether to measure asset variance via absolute returns |r_t| or squared returns (r_t)^2.
+   vector volatility_proxy = VolatilityProxy == VOL_ABSOLUTE_RETURNS ? fabs(returns) : pow(returns, 2.);
+
+//--- --- Step 4: Spectral Linear Regression & Visualization ---
+//--- Pass our chosen proxy into the logging/plotting routine to estimate fractional integration decay.
+//--- This handles the Fast Fourier Transform, extracts the periodogram bins, fits a slope trend line,
+//--- and automatically renders a graphical analytical window directly inside MetaTrader.
+   plot_frequency_domain_fit(volatility_proxy, Bandwidth, "Log-Periodogram");
+  }
+```
+
+The script plots the log-periodogram of absolute or squared returns. Theory dictates that the relationship between spectral power and frequency near zero follows a power law. Using logarithms transforms this relationship into a linear slope. This is emphasized by a trendline drawn over the extent of low frequencies included in the GPH test. Therefore, to detect the source of long memory, we analyze the behavior of the spectral density at the ultra-low frequencies on the far left of the x-axis. When fractional integration drives long memory, the log-periodogram displays a smooth, continuous, and steeply negative linear slope as it approaches zero frequency. This stable, unbroken incline confirms a hyperbolic decay process. The slope of this linear trend translates directly to the fractional integration parameter, d. The plot\_frequency\_domain\_fit() function is defined in tests.mqh with the following code.
+
+```
+//+------------------------------------------------------------------+
+//| Computes and plots the log-periodogram vs log-frequency          |
+//+------------------------------------------------------------------+
+void plot_frequency_domain_fit(vector& time_series, double alpha=0.5, string plotname = NULL)
+  {
+//--- --- Step 1: Verification & Pre-processing ---
+//--- Ensure a sufficient data footprint exists to prevent empty Fourier bins
+   if(time_series.Size() < 30)
+     {
+      Print(__FUNCTION__, ": Time series too short for meaningful spectal analysis");
+      return;
+     }
+
+//--- De-trend the source data by zero-centering it around its mean
+   vector x = time_series - time_series.Mean();
+   CRowDouble real = x;
+   CRowComplex dft;
+
+//--- --- Step 2: Extract Spectral Energy (FFT) ---
+//--- Convert the time-domain series into its raw complex frequency components
+   CFastFourierTransform::FFTR1D(real, real.Size(), dft);
+   vectorc vec = dft.ToVector();
+
+//--- Normalize the complex magnitudes into standard continuous power spectral densities
+   vector periodogram = pow(c_abs(vec), 2.) / (2. * M_PI * double(x.Size()));
+
+//--- --- Step 3: Nyquist Limit Mapping ---
+//--- Real signal symmetry means we only need the lower positive spectrum half (up to Nyquist frequency)
+   ulong half_n = x.Size() / 2;
+   vector frequencies = 2. * M_PI * np::arange(1.0, double(half_n + 1), 1.0) / double(x.Size());
+   vector power_spectrum = np::sliceVector(periodogram, 1, long(half_n + 1));
+
+//--- Enforce strict positive boundaries using a clip function to safely prevent log(0) domain errors
+   if(!frequencies.Clip(1.e-13, frequencies.Max()) ||
+      !power_spectrum.Clip(1.e-13, power_spectrum.Max()))
+     {
+      Print(__FUNCTION__, ": Clip() vector method error ", GetLastError());
+      return;
+     }
+
+//--- Map values into a uniform log-log space to reveal linear fractional relationships
+   vector log_freq = log(frequencies);
+   vector log_power = log(power_spectrum);
+
+//--- --- Step 4: Long-Memory Region Isolation ---
+//--- Isolate the low-frequency boundary coordinates where long-term persistence dynamics occur
+   int g = int(pow(x.Size(), alpha));
+   g = fmax(2, fmin(g, int(log_freq.Size()))); //--- Constrain bounds between 2 and maximum vector boundaries
+
+   vector log_freq_low = np::sliceVector(log_freq, 0, long(g));
+   vector log_power_low = np::sliceVector(log_power, 0, long(g));
+
+//--- --- Step 5: Linear Fit Estimation ---
+//--- Perform OLS linear regression across the target long-memory region to resolve the scaling trend line
+   vector pf = np::polyfit(log_freq_low, log_power_low, 1);
+   vector trend_line_low = pf[0] * log_freq_low + pf[1];
+   Print("Fraction Decay Fit, slope/d :", pf[0]);
+
+//--- --- Step 6: Render Graphic Matrix ---
+//--- Define descriptive display keys for the multi-series plot legend
+   string plots[] =
+     {
+      "Log-Periodogram (Full Spectrum)",
+      "Long Memory Zone (Low Freq)",
+      "Fractional Decay Fit (Slope/d:" + DoubleToString(pf[0], 2) + ")"
+     };
+
+//--- Bundle data into a structured vector array to feed the graphical plot engine
+   vector yplots[3];
+   yplots[0] = log_power;       //--- Original complete power spectral structure
+   yplots[1] = log_power_low;   //--- Truncated long-memory region highlight dots
+   yplots[2] = trend_line_low;  //--- Calculated regression trend line over the low-frequency subset
+
+//--- Pass structures to the visual canvas overlay utility
+   np::plotxys(log_freq, yplots, plots, "Frequency Domain Periodogram Analysis: " + plotname, "Log frequency", "Log Power(Spectral Density)", false, 0, 0, 20, 20, 750, 500, true, 2, 1, 30);
+   return;
+  }
+```
+
+Below is a log-periodogram plot depicting typical fractional integration, which warrants a FIGARCH model.
+
+[IMG]
+
+The key feature is the low-frequency zone (highlighted in green), from log(λ)=−3 down to −7. As the frequency decreases (moving toward the far left, which represents longer time horizons), the spectral power increases linearly and continuously. The red dashed linear fit line shows a clear negative slope of −0.70. In spectral analysis, the slope in this ultra-low frequency band corresponds directly to the fractional integration parameter through the relation, Slope ≈ −2d. With a slope of −0.70, we solve for d ≈ 0.35. Because d sits comfortably in the 0<d<0.5 range, the series is confirmed to be stationary but features a long memory that decays at a slow, hyperbolic rate.
+
+Unlike a market characterized by distinct, clashing trading horizons. This spectrum decays smoothly along the linear regression line. The absence of standalone, isolated power peaks or troughs indicates that the long-term dependency is homogeneous and continuous across all deep horizons. FIGARCH is the ideal choice in this instance because the smooth trend matches its fractional-expansion filter. Forcing a HARCH model with fixed, discrete aggregation windows onto this series would clumsily approximate what is a smooth, continuous fractional decay.
+
+In contrast, when multi-horizon participants generate long memory, the log-periodogram deviates from a smooth line. It exhibits distinct, localized steps or shifts in power at specific frequency bands. These structural irregularities correspond to the discrete trading horizons of different market actors. Instead of a uniform decay, the plot reveals a jagged distribution of spectral energy. This indicates that the asset's long memory is an aggregate byproduct of clashing investment cycles.
+
+[IMG]
+
+Running the script on a data sample reveals these distinct, jagged oscillations and prominent structural peaks within the low-frequency domain on the far left rather than a smooth descent. While a straight regression line attempts to capture a singular fractional trend, the underlying data deviates into localized waves and sharp drops. This stratified distribution of spectral energy provides clear evidence of a heterogeneous market structure. The volatility's long memory is driven by multi-horizon participants operating at discrete time intervals, not a continuous fractional decay process.
+
+Consequently, the HARCH model is the most appropriate framework for this specific dataset. A FIGARCH model would incorrectly force a smooth mathematical curve over these distinct spectral shifts. Conversely, HARCH accommodates these localized energy clusters by aggregating volatility across independent lookback windows.
+
+When there is no evidence of persistence, the log-periodogram depicts an upward-sloping tendency. As shown in the graphic below.
+
+[IMG]
+
+Moving from right to left toward the ultra-low frequencies, the log power drops sharply. Instead of variance building up over long horizons, the long-term cycles in this dataset carry almost zero energy. Because the power collapses at zero frequency, this series is not a long-memory process. This means the data is highly mean-reverting. Any short-term shock is immediately countered by an opposing correction, completely wiping out long-term structural persistence.
+
+Translating these theoretical market dynamics into an operational trading system requires models capable of capturing both short-term mean reversion and long-term volatility clustering. In the following sections, we transition from theory to application by exploring the MQL5 implementation details of the FIGARCH and HARCH frameworks.
+
+### Fractionally Integrated GARCH
+
+To bridge the gap between fast-decaying GARCH and permanent-shock IGARCH, Richard Baillie, Tim Bollerslev, and Hans Ole Mikkelsen introduced the Fractionally Integrated GARCH (FIGARCH) model. To appreciate its structure, we have to look at how it bridges the gap between standard GARCH (short memory) and Integrated GARCH (infinite memory). A standard GARCH(p,q) model expresses current conditional variance (σ\_t)^2​ as a function of past residual shocks (ϵ\_t)^2 and past variances.
+
+[IMG]
+
+Where L is the lag operator.
+
+[IMG]
+
+[IMG]
+
+By defining the volatility surprise or innovation as follows.
+
+[IMG]
+
+We can rewrite the standard GARCH process as an ARMA process for squared returns.
+
+[IMG]
+
+If we group the lag polynomials by defining ϕ(L)=[1−α(L)−β(L)], it looks like this.
+
+[IMG]
+
+In an Integrated GARCH (IGARCH) model, the autoregressive polynomial ϕ(L) contains a unit root. This means the sum of α and β coefficients equals exactly 1, forcing a strict difference operator (1−L) into the equation.
+
+[IMG]
+
+Because of that (1−L) term, any shock to the system is permanent. The memory never decays. The real world does not usually jump from rapid exponential decay (GARCH) straight to permanent shocks (IGARCH). To model a slow, hyperbolic decay, Baillie, Bollerslev, and Mikkelsen replaced the strict integer difference (1−L) with a fractional differencing operator (1−L)^d, where d is a fraction between 0 and 1. This gives us the baseline FIGARCH(p,d,q) formula.
+
+[IMG]
+
+To implement the model and compute the next-step variance, eliminate the innovation term (v\_t) and solve explicitly for (σ\_t)^2​. First, we substitute v\_t​=(ϵ\_t)^2 ​− (σ\_t)^2​ back into the formula.
+
+[IMG]
+
+Distribute to the right side.
+
+[IMG]
+
+Isolate the conditional variance term by moving it to the left and move the fractional term to the right.
+
+[IMG]
+
+Now, we divide the entire equation by [1−β(L)] to isolate σ^2.
+
+[IMG]
+
+*(Note: β(1) is simply the sum of the β coefficients, replacing the lag operator with 1 for the constant term).* The computational complexity lies in the expansion of that fractional term, (1−L)^d. When d is a fraction, (1−L)^d cannot be calculated using a finite number of lags. Instead, it must be expanded via the binomial theorem.
+
+[IMG]
+
+This expansion yields an infinite sequence of coefficients that decay at a slow, hyperbolic rate. If we represent the entire massive bracket from the isolated equation as an infinite polynomial sequence, the formula simplifies to the following.
+
+[IMG]
+
+Because the current variance is now determined by an infinite linear combination of all past squared shocks, it has structurally become an ARCH model with an infinite number of parameters. To implement this practically, programmers apply a truncation lag (for example, 1000 days), cutting off the infinite sum at a point where the lingering hyperbolic weights finally become small enough to safely ignore.
+
+To support this truncated infinite-sum architecture, our MQL5 library must be expanded**.** We begin the implementation by updating the core files to recognize the new model and its configuration needs. In the header file base.mqh, the VOL\_FIGARCH option is appended to the ENUM\_VOLATILITY\_MODEL enumeration.
+
+```
+//+------------------------------------------------------------------+
+//| Configured conditional volatility structure models               |
+//+------------------------------------------------------------------+
+enum ENUM_VOLATILITY_MODEL
+  {
+   VOL_CONST = 0, // Homoskedastic variance baseline profiles
+   VOL_ARCH,      // Autoregressive Conditional Heteroskedasticity (Linear lag squares mapping)
+   VOL_AVARCH,    // Absolute Value ARCH framework configurations
+   VOL_AVGARCH,   // Absolute Value GARCH process modeling variations
+   VOL_TARCH,     // Threshold ARCH / ZARCH threshold tracking handling asymmetric volatility shocks
+   VOL_GARCH,     // Generalized ARCH processes combining structural innovations and past variance memory
+   VOL_GJR_GARCH, // Glosten-Jagannathan-Runkle GARCH tracking sign-dependent asymmetric leverage adjustments
+   VOL_FIGARCH    // Fractionally Integrated GARCH mapping long-memory long-term decay processes
+  };
+```
+
+Simultaneously, the ArchParameters structure is updated with a new figarch\_truncation property to track the user-defined lag threshold.
+
+```
+//+------------------------------------------------------------------+
+//| Comprehensive specification payload structure for ARCH models   |
+//+------------------------------------------------------------------+
+struct ArchParameters
+  {
+   // --- Data & Core Configuration
+   vector            observations;       // Vector tracking endog target returns data series
+   matrix            exog_data;          // Matrix tracking exogenous external regressor blocks
+   vector            mean_lags;          // Vector defining selected conditional mean lag lengths
+
+   ENUM_MEAN_MODEL   mean_model_type;    // Specified mean structural method profile reference
+   ENUM_VOLATILITY_MODEL vol_model_type; // Specified volatility variance framework engine reference
+   ENUM_DISTRIBUTION_MODEL dist_type;    // Specified baseline conditional probability density model
+
+   ulong             holdout_size;       // Out-of-sample data truncation window count bounds
+   bool              is_rescale_enabled; // Scale switch flag to normalize inputs to unit variances
+   double            scaling_factor;     // Internal scale factor used for numerical optimization convergence
+
+   // --- Mean Model Parameters
+   bool              include_constant;   // Conditional mean calculation model constant flag
+   bool              use_har_rotation;   // Flag enabling volatility horizon mapping blocks rotations
+
+   // --- Volatility Process Parameters (GARCH/ARCH)
+   int               vol_rng_seed;       // Random initialization seeding value used for variance simulations
+   ulong             garch_p;            // Shock innovations lag loop parameter allocation bounds (ARCH)
+   ulong             garch_o;            // Asymmetric conditional volatility component bounds (Leverage)
+   ulong             garch_q;            // Historical tracking persistence variance memory depth (GARCH)
+   double            vol_power;          // Exponent index scaling term used in variance conversions
+   ulong             figarch_truncation; // Expansion step cutoff limit boundary tracking fractional integration weights
+```
+
+Moving to volatility.mqh, we define the CFiGarchProcess class as a derivative of the base CVolatilityProcess class. The CVolatilityProcess class serves as the foundation for all conditional volatility models. It defines a standardized interface that allows the core optimization engine of the library to interact with different variance dynamics in a uniform way.
+
+```
+//+------------------------------------------------------------------+
+//|FIGARCH process                                                   |
+//+------------------------------------------------------------------+
+class CFiGarchProcess: public CVolatilityProcess
+  {
+protected:
+   ulong             m_p,m_q;
+   double            m_power;
+   ulong             m_truncation;
+   //--- Generate model name as string
+   string            _genetrateName(void)
+     {
+      if(m_power == 2.)
+        {
+         if(m_q == 0)
+            return "FIARCH";
+         else
+            return "FIGARCH";
+        }
+      else
+         if(m_power == 1.)
+           {
+            if(m_q == 0)
+               return "FIAVARCH";
+            else
+               return "FIAVGARCH";
+           }
+         else
+            if(m_q == 0)
+               return StringFormat("Power FIARCH (power: {%.1f})",m_power);
+            else
+               return StringFormat("Power FIGARCH (power: {%.1f})",m_power);
+     }
+   //--- Verify the requested forecasting method as valid for the specification
+   virtual bool      _check_forecasting_method(ENUM_FORECAST_METHOD method, ulong horizon);
+   //--- Analytic multi-step volatility forecasts from the model
+   virtual VarianceForecast _analyticforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon);
+   //--- Simulation-based volatility forecasts from the model
+   virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng);
+   //--- Initialize class members
+   virtual bool      _initialize(ENUM_VOLATILITY_MODEL volmodel = WRONG_VALUE,bool updateable = true, bool closedform = false,ulong nparams = 0, string name = NULL,int seed = 0,ulong p = 0, ulong o = 0, ulong q = 0, double power = 0.0,long start=0, long stop=-1,ulong bootstrap_obs=100);
+public:
+                     CFiGarchProcess(void)
+     {
+      m_initialized = _initialize(VOL_FIGARCH,true,false,4,"FIGARCH",0,1,1000,1,2.0);
+     }
+                     CFiGarchProcess(ulong p, ulong q, double power, ulong truncation, int seed, long start, long stop, ulong boot)
+     {
+      m_initialized = _initialize(VOL_FIGARCH,true,false,0,"FIGARCH",seed,p,truncation,q,power,start,stop,boot);
+     }
+   //--- Returns starting values for the ARCH model
+   virtual vector    startingValues(vector& resids);
+   //--- Construct values for backcasting to start the recursion
+   virtual vector    backCast(vector& resids);
+   //--- Transformation to apply to user-provided backcast values
+   virtual vector    backCastTransform(vector& backcast);
+   //--- Construct loose bounds for conditional variances
+   virtual matrix    varianceBounds(vector& resids, double power = 2.);
+   //--- Returns bounds for parameters
+   virtual matrix    bounds(vector& resids);
+   //--- Compute the variance for the ARCH model
+   virtual vector    computeVariance(vector& parameters, vector& resids, vector& _sigma2, vector& _backcast, matrix& varbounds);
+   //--- Construct parameter constraints arrays for parameter estimation
+   virtual Constraints constraints(void);
+   //--- Simulate data from the model
+   virtual matrix       simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL);
+   //--- Names of model parameters
+   virtual string       parameterNames(void);
+  };
+```
+
+Every volatility process must define how many parameters it requires and what those parameters are called. The base class forces subclasses to implement specific properties to handle this tracking. These properties are initialized in the \_initialize() method that is called by the constructor. The CFigarchProcess class, like all volatility processes in the library, includes a default constructor that initializes member variables with default values, as well as a parameterized constructor that allows users to customize class properties.
+
+```
+//--- Initialize class members
+virtual bool      _initialize(ENUM_VOLATILITY_MODEL volmodel = WRONG_VALUE, bool updateable = true, bool closedform = false, ulong nparams = 0, string name = NULL, int seed = 0, ulong p = 0, ulong o = 0, ulong q = 0, double power = 0.0, long start = 0, long stop = -1, ulong bootstrap_obs = 100) override
+  {
+//--- Synchronize configuration parameters to localized private class properties
+   m_updateable = updateable;
+   m_closedform = closedform;
+   bootstraps(bootstrap_obs);
+   m_start = start;
+   m_stop = stop;
+   m_name = name;
+   m_seed = seed;
+   m_model = volmodel;
+   m_p = p;
+   m_q = q;
+   m_truncation = o; //--- Maps the truncation lag dimension
+   m_power = power;  //--- Declares structural model exponent (e.g. 2.0 for FIGARCH)
+   m_num_params = 2 + m_p + m_q; //--- Core total parameter footprint (omega + phi + beta + d)
+
+//--- Initialize the distribution object wrapper
+   return m_normal.initialize(vector::Zeros(0), seed);
+  }
+```
+
+The startingValues() method determines the optimal starting parameter values to pass to the optimizer by evaluating a grid of reasonable candidates against the historical data. It begins by initializing static parameter ratios (vector ds), for fractional differencing (d), innovations (phi), and variance lags (beta), dynamically shrinking these ratios to zero if the model lacks corresponding lag orders (m\_p or m\_q). After calculating a variance scale target from the power-transformed historical residuals, the method uses nested loops to compute coordinates for combinations of parameters, calculating a valid intercept (omega) for each combination based on long-memory weight constraints.
+
+Finally, it drops unused parameter columns according to the active lag specifications, calculates a Gaussian log-likelihood value across the residual dataset for every distinct grid row, and extracts the highest-performing row using ArgMax() to serve as the initial guess.
+
+```
+//--- Returns starting values for the ARCH model using a grid-search heuristic initialization
+virtual vector    startingValues(vector& resids) override
+  {
+//--- Establish parameter boundary array configurations for the grid search optimization initialization
+   vector ds = {0.2, 0.5, 0.7};
+   vector phi_ratio, beta_ratio;
+
+   if(m_p)
+     {
+      phi_ratio.Resize(3);
+      phi_ratio[0] = 0.2;
+      phi_ratio[1] = 0.5;
+      phi_ratio[2] = 0.8;
+     }
+   else
+     {
+      phi_ratio.Resize(1);
+      phi_ratio[0] = 0;
+     }
+
+   if(m_q)
+     {
+      beta_ratio.Resize(3);
+      beta_ratio[0] = 0.1;
+      beta_ratio[1] = 0.5;
+      beta_ratio[2] = 0.9;
+     }
+   else
+     {
+      beta_ratio.Resize(1);
+      beta_ratio[0] = 0;
+     }
+
+//--- Establish baseline variance expectations derived directly from residuals footprint
+   double target = pow(fabs(resids), m_power).Mean();
+   double scale  = pow(resids, 2.).Mean() / (pow(target, 2.0 / m_power));
+   target *= pow(scale, m_power / 2.);
+
+//--- Map space to permute all parameter combinations
+   matrix all_starting;
+   all_starting.Resize(ds.Size() * phi_ratio.Size() * beta_ratio.Size(), 4);
+   double beta, omega, d, phi, br, pr;
+   vector temp = vector::Zeros(3);
+   vector lam;
+   ulong row = 0;
+
+//--- --- Grid Execution Matrix Search Loop ---
+   for(ulong i = 0; i < ds.Size(); ++i)
+     {
+      d = ds[i];
+      for(ulong j = 0; j < phi_ratio.Size(); ++j)
+        {
+         pr = phi_ratio[j];
+         phi = (1. - d) / 2. * pr; //--- Force stationary constraints
+         for(ulong k = 0; k < beta_ratio.Size(); ++k)
+           {
+            br = beta_ratio[k];
+            beta = (d + phi) * br;
+
+            temp[0] = phi;
+            temp[1] = d;
+            temp[2] = beta;
+            lam = figarch_weights(temp, 1, 1, int(m_truncation));
+
+            //--- Calculate corresponding consistent omega constant for the localized parameter combination
+            omega = (1. - beta) * target * (1. - lam.Sum());
+
+            all_starting[row, 0] = omega;
+            all_starting[row, 1] = phi;
+            all_starting[row, 2] = d;
+            all_starting[row++, 3] = beta;
+           }
+        }
+     }
+
+//--- Extract unique configurations to minimize processing waste
+   matrix sv = np::unique(all_starting, 1);
+
+//--- Strip unused parameter tracking columns if lag settings are set to zero (p=0 or q=0)
+   if(!m_q)
+      sv = np::sliceMatrixCols(sv, 0, long(sv.Cols() - 1));
+   if(!m_p)
+     {
+      long cols[];
+      ArrayResize(cols, int(sv.Cols() - 1));
+      cols[0] = 0;
+      for(long i = 1; i < long(cols.Size()); cols[i] = i + 1, ++i);
+      sv = np::selectMatrixCols(sv, cols);
+     }
+
+   matrix vb = varianceBounds(resids);
+   vector bc = backCast(resids);
+   vector llfs = vector::Zeros(sv.Rows());
+
+//--- Score every starting candidate against the target log-likelihood function
+   for(ulong i = 0; i < sv.Rows(); ++i)
+     {
+      vector row = sv.Row(i);
+      llfs[i] = _gaussianloglikelihood(row, resids, bc, vb);
+     }
+
+//--- Return the parameter configuration vector that optimized/maximized the log-likelihood (ArgMax)
+   return sv.Row(llfs.ArgMax());
+  }
+```
+
+The backCast() routine computes a baseline historical value used to prime the conditional variance recursion before the main dataset starts. It limits its analysis to an initial window of the residuals, taking either the first 75 observations or the full length of the dataset, whichever is smaller. It then constructs a vector of exponentially decaying weights based on a factor of 0.94, normalizing them so that their total sum equals 1.0. Finally, the method isolates this early slice of residuals, applies the model's custom power transformation to their absolute values, multiplies them element-wise by the decaying weights, and returns the total sum as a single-element vector representing the initial backcast value.
+
+```
+//--- Construct values for backcasting to start the recursion
+virtual vector    backCast(vector& resids) override
+  {
+//--- Limit calculation depth up to a safe window threshold (e.g. 75 observations)
+   ulong tau = MathMin(75, resids.Size());
+   vector w = vector::Zeros(tau);
+
+//--- Generate an exponentially decaying weights structure (RiskMetrics style, lambda = 0.94)
+   for(ulong i = 0; i < w.Size(); w[i] = pow(0.94, double(i)), ++i);
+   w = w / w.Sum(); //--- Normalize weight values to sum to 1.0
+
+//--- Extract the start of the series, apply transformation power, and scale by decay weights
+   vector sres = np::sliceVector(resids, 0, long(tau));
+   sres = pow(fabs(sres), m_power) * w;
+
+   vector bc(1);
+   bc[0] = sres.Sum(); //--- Aggregate into scalar backcast representation
+   return bc;
+  }
+```
+
+Next we look at the backCastTransform() method in detail. This method adjusts a user-provided backcast value to ensure it matches the specific mathematical space required by the model's volatility tracking metrics. It first routes the incoming vector through the base class's backCastTransform method to apply standard transformations defined for all volatility processes. It then isolates this baseline value, takes its square root to find the implied standard deviation equivalent, and raises that result to the exponent defined by the model's custom m\_power parameter. This final step dynamically rescales the initial conditions so that the recursion engine can process them uniformly, regardless of whether the model variant is configured to track standard variance, absolute deviations, or an alternative power metric.
+
+```
+//--- Transformation to apply to user-provided backcast values
+virtual vector    backCastTransform(vector& backcast) override
+  {
+//--- Defer to core base class method transformations first
+   backcast = CVolatilityProcess::backCastTransform(backcast);
+//--- Apply specific fractional variance power adjustments to the processed vector values
+   vector _backcast = pow(sqrt(backcast), m_power);
+   return _backcast;
+  }
+```
+
+Numerical boundaries for each parameter used to constrain the optimization routine within mathematically stable regions are determined by the bounds() method. It begins by calculating a tiny offset value based on the square root of machine epsilon and computes the mean of the absolute, power-transformed residuals to gauge the data's general scale. It then constructs a zero-initialized boundary matrix with rows corresponding to each model parameter—namely the intercept (ω), the innovation coefficients (ϕ), the fractional integration parameter (d), and the variance lag coefficients (β)—where the first column represents the lower bound (fixed at 0.0) and the second column holds the upper bound.
+
+The intercept upper limit is scaled to ten times the residual average, the ϕ parameters are capped at 0.5, and the remaining long-memory parameters (d and β) are limited to just under 1.0 via the epsilon offset before the entire matrix is transposed and returned to match the optimizer's expected shape.
+
+```
+//--- Returns boundary matrix structures for parameters optimization constraints
+virtual matrix    bounds(vector& resids) override
+  {
+   double eps_half = sqrt(2.220446049250313e-16); //--- System machine precision constant limit
+   double v = (pow(fabs(resids), m_power)).Mean();
+   matrix bnds = matrix::Zeros(m_p + m_q + 2, 2);
+
+   bnds[0, 1] = 10. * v; //--- Enforce an upper bound ceiling on baseline intercept omega constant
+   for(ulong i = 1; i < m_p + 1; bnds[i, 1] = 0.5, ++i); //--- Limit short term memory parameters
+   for(ulong i = m_p + 1; i < bnds.Rows(); bnds[i, 1] = 1. - eps_half, ++i); //--- Bound persistence variables below 1.0
+
+   return bnds.Transpose();
+  }
+```
+
+The varianceBounds() method calculates the upper and lower bounds for the conditional variances based on the specific power transformation used in the model.
+
+```
+//--- Construct loose bounds for conditional variances
+virtual matrix    varianceBounds(vector& resids, double power = 2.) override
+  {
+//--- Pass computation parameters over to internal system tracker
+   return CVolatilityProcess::varianceBounds(resids, m_power);
+  }
+```
+
+Final or intermediate model parameters and observed residuals are combined in the computeVariance() method to calculate the full conditional variance path across the sample space. First, the method applies the model's specific power transformation to the absolute values of the raw residuals, converting them into the metric space expected by the long-memory volatility process. It then executes the core FIGARCH recursive equation by passing these transformed residuals, parameters, and the initial backcast value to the figarch\_recursion function, which populates the \_sigma2 vector step-by-step.
+
+Finally, because the recursion operates in terms of the user-defined m\_power, the method raises the calculated values to the inverse power (2/power) to rescale the output back into standard conditional variance units before returning the result.
+
+```
+//--- Compute the variance for the ARCH model
+virtual vector    computeVariance(vector& parameters, vector& resids, vector& _sigma2, vector& _backcast, matrix& varbounds)
+  {
+//--- Transform base residuals into process space based on model's power coefficient
+   vector fresids = pow(fabs(resids), m_power);
+   int nobs = (int)resids.Size();
+
+//--- Execute the fractional integration recursion engine to write conditional variance calculations directly into _sigma2
+   figarch_recursion(parameters, fresids, _sigma2, int(m_p), int(m_q), nobs, m_truncation, _backcast[0], varbounds);
+
+//--- Apply inverse power mapping to re-align output to standard variance units
+   double inv_power = 2. / m_power;
+   _sigma2 = pow(_sigma2, inv_power);
+   return _sigma2;
+  }
+```
+
+Linear inequality constraints are computed by the constraints() method. Where three separate pre-computed matrix configurations (a, aa, and aaa) and their corresponding boundary vector limits (b, bb, and bbb) are defined. It defaults to the full four-parameter matrix representation but uses conditional checks to substitute the alternative structures if the model lacks variance lags or innovation lags. This pre-defined routing maps out the system of inequalities and packages them into a dedicated Constraints struct designed to house the full set of constraints.
+
+```
+//--- Construct parameter constraints arrays for parameter estimation (Boundary bounding vectors)
+virtual Constraints constraints(void) override
+  {
+//--- Initialize hard-coded inequality constraint matrices (A) for OLS/ML parameter bounding
+   matrix a =
+     {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, -2, -1, 0},
+        {0, 0, 1, 0},
+        {0, 0, -1, 0},
+        {0, 0, 0, 1},
+        {0, 1, 1, -1},
+     };
+   matrix aa =
+     {
+        {1, 0, 0},
+        {0, 1, 0},
+        {0, -1, 0},
+        {0, 0, 1},
+        {0, 1, -1},
+     };
+   matrix aaa =
+     {
+        {1, 0, 0},
+        {0, 1, 0},
+        {0, -2, -1},
+        {0, 0, 1},
+        {0, 0, -1}
+     };
+
+//--- Associated boundary mapping verification vectors (B) where: A * parameters >= B
+   vector b = {0, 0, -1, 0, -1, 0, 0};
+   vector bb = {0, 0, -1, 0, 0};
+   vector bbb = {0, 0, -1, 0, -1};
+
+   Constraints constr;
+   constr._one = a;
+   constr._two = b;
+
+//--- Adjust structural linear constraint layout mapping depending on specified lag dimension flags (p=0 or q=0)
+   if(!m_q)
+     {
+      constr._one = aaa;
+      constr._two = bbb;
+     }
+   if(!m_p)
+     {
+      constr._one = aa;
+      constr._two = bb;
+     }
+   return constr;
+  }
+```
+
+The simulate() method generates synthetic data and conditional variance trajectories from a FIGARCH process using a specified parameter vector and a random shock generator represented by the BootstrapRng instance. It begins by computing the model's fractional integration weights, reversing them for chronological alignment, and calculating a steady-state unconditional value to prime the historical buffers when no user-provided initial value is given. It populates the early history windows across a joint horizon that merges historical truncation lags, requested observations, and an initial "burn-in" buffer designed to erase start-up bias.
+
+The routine then rolls forward through a sequential time loop where the current time step's transformed volatility is generated via a dot product of the reversed lag weights and recent absolute shocks, scaled back into variance units, and combined with random standard normal innovations to create the new data point. Finally, the method discards the transient burn-in and truncation phases, packaging only the clean, post-stabilization paths of observed returns and conditional variances into a final, two-column output matrix.
+
+```
+//--- Simulate data paths from the model structure
+virtual matrix      simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL) override
+  {
+   vector params = np::sliceVector(parameters, 1);
+
+//--- Extract long memory hyperbolic expansion decay parameter array
+   vector lam = figarch_weights(params, m_p, m_q, m_truncation);
+   vector lam_rev = lam;
+   if(!np::reverseVector(lam_rev))
+      return matrix::Zeros(0, 0);
+
+//--- Pre-allocate standardized random error distribution array including the requested burn-in footprint
+   vector errs = rng.rng(ulong(m_truncation + _nobs + burn));
+
+//--- Calculate stationary unconditional expectation values if no initial value parameter was provided
+   if(initial_value == NULL)
+     {
+      double persistence = lam.Sum();
+      double beta = (m_q) ? parameters[parameters.Size() - 1] : 0.0;
+      initial_value = parameters[0];
+      if(beta < 1.)
+         initial_value /= 1. - beta;
+      if(persistence < 1.)
+         initial_value /= 1. - persistence;
+      if(persistence >= 1. || beta >= 1.)
+         Print(__FUNCTION__": WARNING: Initial value warning (non-stationary bounds detected)");
+     }
+
+   if(initial_value == NULL)
+     {
+      Print(__FUNCTION__, ": Initial value is NULL");
+      return matrix::Zeros(0, 0);
+     }
+
+//--- Allocate unified arrays tracking simulated states over time
+   vector sigma2 = vector::Zeros(ulong(m_truncation + _nobs + burn));
+   vector data = sigma2;
+   vector fsigma = data;
+   vector fdata = fsigma;
+
+//--- Initialize index blocks spanning pre-sample truncation window constraints
+   if(!np::vectorFill(fsigma, initial_value, 0, long(m_truncation)) ||
+      !np::vectorFill(sigma2, pow(initial_value, 2. / m_power), 0, long(m_truncation)))
+     {
+      Print(__FUNCTION__, ": vector fill error");
+      return matrix::Zeros(0, 0);
+     }
+
+   data = sqrt(sigma2) * errs;
+   fdata = pow(fabs(data), m_power);
+
+   double omega = parameters[0];
+   double beta = (m_q) ? parameters[parameters.Size() - 1] : 0;
+   double omega_tilde = 0;
+   if(beta < 1.)
+      omega_tilde = omega / (1. - beta);
+   else
+     {
+      Print(__FUNCTION__, ": Beta >= 1.0, using omega as intercept since long-run variance is ill-defined.");
+      omega_tilde = omega;
+     }
+
+//--- --- Simulation Time March Loop ---
+//--- Recursively project long-memory volatility evolution paths forward chronologically
+   for(long t = long(m_truncation); t < long(m_truncation + _nobs + burn); ++t)
+     {
+      //--- Convolve the reversed weights against the sliding window vector slice of previous absolute values
+      fsigma[t] = omega_tilde + lam_rev.Dot(np::sliceVector(fdata, long(t - m_truncation), t));
+      sigma2[t] = pow(fsigma[t], 2.0 / m_power); //--- Convert out of process shape parameters
+      data[t] = errs[t] * sqrt(sigma2[t]);        //--- Generate synthetic asset return realization
+      fdata[t] = pow(fabs(data[t]), m_power);     //--- Cache internal tracking absolute shape value
+     }
+
+//--- Slice out and discard the initial initialization burn-in sequence block
+   data = np::sliceVector(data, long(m_truncation + burn));
+   sigma2 = np::sliceVector(sigma2, long(m_truncation + burn));
+
+//--- Package the output data streams into a 2-column matrix structure [Returns, Variance]
+   matrix out = matrix::Zeros(data.Size(), 2);
+   if(!out.Col(data, 0) || !out.Col(sigma2, 1))
+     {
+      Print(__FUNCTION__, ": Column insertion error out ", GetLastError());
+      return matrix::Zeros(0, 0);
+     }
+   return out;
+  }
+```
+
+Forecasts generated by a FIGARCH model are handled by either the \_analyticforecast() or \_simulationforecast() methods. Before a forecast is made, the \_check\_forecasting\_method() is used to validate whether a chosen forecasting approach is compatible with the model's configuration for a given horizon. It automatically permits any forecasting method if the horizon is exactly one step ahead, as the next period's variance depends entirely on known, historical data. However, for a multi-step horizon (greater than one), it explicitly blocks the analytic (closed-form) forecasting method if the model's power parameter is not equal to 2.0, because multi-step analytic propagation becomes mathematically intractable when the variance dynamics are non-linear.
+
+```
+//--- Verify the requested forecasting method as valid for the specification
+virtual bool      _check_forecasting_method(ENUM_FORECAST_METHOD method, ulong horizon) override
+  {
+//--- A 1-step horizon is always mathematically valid across all execution pipelines
+   if(horizon == 1)
+      return true;
+
+//--- Closed-form analytic projections over multiple horizons are invalid if the model's
+//--- target shape parameter (power) deviates from standard squared variance representation (power = 2.0)
+   if(method == FORECAST_ANALYTIC && m_power != 2.)
+     {
+      Print(__FUNCTION__, ": Analytic forecasts not available for horizon > 1 when power != 2");
+      return false;
+     }
+   return true;
+  }
+```
+
+The \_analyticforecast() method computes multi-step closed-form analytic variance forecasts across a specified time horizon. It starts by calculating a baseline one-step-ahead forecast, immediately returning it if the requested horizon is exactly one. For longer horizons, the method extracts the model coefficients, calculates the long-memory fractional integration weights using figarch\_weights, and reverses them to align chronologically with the data. It then loops through each time step in the estimation window, initializing a temporary rolling buffer with squared historical residuals (or a backcast value for gaps where historical data falls short of the truncation limit).
+
+Finally, it projects the variance forward step-by-step up to the maximum horizon by repeatedly taking the dot product of the reversed fractional weights and the rolling window of lagged values, storing the computed multi-step path into a forecast matrix.
+
+```
+//--- Analytic multi-step volatility forecasts from the model
+virtual VarianceForecast _analyticforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon)
+  {
+   vector sg;
+   matrix fc;
+//--- Establish the initial one-step look-ahead matrix boundaries to seed the multi-step recursion
+   if(!_onestepforecast(parameters, resids, backcast, varbounds, _start, horizon, sg, fc))
+      return VarianceForecast();
+
+//--- Short-circuit execution if only dealing with a single look-ahead window
+   if(horizon == 1)
+      return VarianceForecast(fc, EMPTY_MATRIX_ARRAY, EMPTY_MATRIX_ARRAY);
+
+//--- Extract model-specific parameters (skipping omega at parameters[0])
+   vector params = np::sliceVector(parameters, 1);
+
+//--- Pre-calculate the expansion weights up to the allocated truncation lag
+   vector lam = figarch_weights(params, m_p, m_q, m_truncation);
+   vector lam_rev = lam;
+
+//--- Reverse the weights vector to align chronological steps for a vector dot product (convolution)
+   if(!np::reverseVector(lam))
+      return VarianceForecast();
+
+   long t = long(resids.Size());
+   double omega = parameters[0];
+   double beta = (m_q) ? parameters[parameters.Size() - 1] : 0.0;
+   double omega_tilde = omega / (1. - beta); //--- Long-run intercept scaling
+
+//--- Allocate a unified workspace vector to hold past realized shocks and future forecast values sequentially
+   vector temp_forecasts = vector::Zeros(m_truncation + horizon);
+   vector resids2 = pow(resids, 2.0); //--- Pre-square raw structural innovations
+
+//--- Loop across the time-series sliding calculation window starting at '_start'
+   for(long i = _start; i < t; ++i)
+     {
+      long fcast_loc = i - _start;
+      long available = long(i + 1 - fmax(0, i - m_truncation + 1));
+
+      //--- Load historical squared innovations into the sliding workspace vector
+      for(long j = long(m_truncation - available), k = (long)fmax(0, i - m_truncation + 1); j < long(m_truncation) && k < (i + 1); ++k, ++j)
+         temp_forecasts[j] = resids2[k];
+
+      //--- Hand off backcast estimates if historical data depth does not span the truncation requirements
+      if(available < long(m_truncation))
+         if(!np::fillVector(temp_forecasts, backcast[0], 0, long(m_truncation) - available))
+            return VarianceForecast();
+
+      //--- --- Multi-Step Analytic Loop ---
+      //--- Step sequentially into the future horizon, resolving expectations via a convolution of reversed weights
+      for(ulong h = 0; h < horizon; ++h)
+        {
+         vector lagged_forecasts = np::sliceVector(temp_forecasts, long(h), long(m_truncation + h));
+         temp_forecasts[m_truncation + h] = omega_tilde + lam_rev.Dot(lagged_forecasts);
+        }
+
+      //--- Transfer the computed future horizons into the destination forecast result matrix row
+      if(!fc.Row(np::sliceVector(temp_forecasts, long(m_truncation)), fcast_loc))
+         return VarianceForecast();
+     }
+   return VarianceForecast(fc, EMPTY_MATRIX_ARRAY, EMPTY_MATRIX_ARRAY);
+  }
+```
+
+Alternatively, the \_simulationforecast() method employs Monte Carlo simulations to handle complex volatility structures over time. It initializes historical data buffers with known squared residuals and backcast values and extracts the reversed long-memory FIGARCH weights. For each time point in the forecast window, the routine generates a matrix of random standard normal innovations across all simulation paths and time steps.
+
+Step-by-step through the forecast horizon, it computes the transformed variance by multiplying the matrix of path-dependent lagged history with the fractional integration weights. This result is scaled to standard variance units, multiplied by the random shocks to produce simulated future residuals, and averaged across all paths at each step to determine the final point forecast while saving the full simulated trajectories and shocks.
+
+```
+//--- Simulation-based volatility forecasts from the model
+virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng)
+  {
+   vector sig;
+   matrix fc;
+//--- Baseline one-step layout verification
+   if(!_onestepforecast(parameters, resids, backcast, varbounds, _start, horizon, sig, fc))
+      return VarianceForecast();
+
+   ulong t = resids.Size();
+   matrix paths[], shocks[];
+   ArrayResize(paths, int(t - _start));
+   ArrayResize(shocks, int(t - _start));
+
+   vector params = np::sliceVector(parameters, 1);
+   vector lam = figarch_weights(params, m_p, m_q, m_truncation);
+   vector lam_rev = lam;
+   if(!np::reverseVector(lam_rev))
+      return VarianceForecast();
+
+   double omega = parameters[0];
+   double beta = (m_q) ? parameters[parameters.Size() - 1] : 0.0;
+   double omega_tilde = omega / (1. - beta);
+
+//--- Allocate parallel simulation matrices [simulations rows x (truncation + horizon) columns]
+   matrix fpath = matrix::Zeros(simulations, m_truncation + horizon);
+   vector fresids = pow(fabs(resids), 2.);
+
+//--- Loop chronologically across the forecasting evaluation footprint
+   for(long i = _start; i < long(t); ++i)
+     {
+      //--- Extract structured random standard normal variables from the random number generator
+      matrix std_shocks = rng.rng(simulations, horizon);
+      long available = i + 1 - fmax(0, i - long(m_truncation) + 1);
+      vector frd = np::sliceVector(fresids, fmax(0, i + 1 - m_truncation), i + 1);
+
+      //--- Inject identical historical realized shocks across all path simulations
+      for(long ii = long(m_truncation - available); ii < long(m_truncation); ++ii)
+         fpath.Col(frd, ii);
+
+      //--- Pad empty history with backcast values where data boundary overflows
+      if(available < long(m_truncation))
+         for(long ii = 0; ii < long(m_truncation - available); ++ii)
+            fpath.Col(backcast, ii);
+
+      //--- --- Horizon Path Integration Simulation ---
+      for(ulong h = 0; h < horizon; ++h)
+        {
+         //--- Matrix column slice retrieves conditional tracking variables across all simulation paths simultaneously
+         matrix lagged_forecasts = np::sliceMatrixCols(fpath, long(h), long(m_truncation + h));
+         vector temp = omega_tilde + lagged_forecasts.MatMul(lam_rev);
+
+         //--- Invert the structural transformation power variable back into basic variance space
+         vector sigma2 = pow(temp, 2. / m_power);
+         long path_loc = i - _start;
+
+         //--- Generate dynamic synthesized shocks and variance values for this horizon index
+         shocks[path_loc].Col(std_shocks.Col(h) * sqrt(sigma2), h);
+         paths[path_loc].Col(sigma2, h);
+
+         //--- Expected forecast point equals the mathematical mean across all simulated iterations
+         fc[path_loc, h] = sigma2.Mean();
+
+         //--- Feed back the generated structural shock into the path matrix for the next recursive horizon step
+         fpath.Col(pow(fabs(shocks[path_loc].Col(h)), m_power), m_truncation + h);
+        }
+     }
+   return VarianceForecast(fc, paths, shocks);
+  }
+```
+
+The final modification is in mean.mqh, where we alter the private \_initialize() method in the HARX class to handle the new model specification parameters.
+
+```
+//--- Set and initialize the polymorphic volatility process object wrapper
+switch(vol_dist_params.vol_model_type)
+  {
+//--- Homoscedastic baseline: constant variance over time (no clustering effects)
+case VOL_CONST:
+   m_vp = new CConstantVariance(m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Autoregressive Conditional Heteroscedasticity: models short-term clusters via past squared shocks (p lags)
+case VOL_ARCH:
+   m_vp = new CArchProcess(m_model_spec.garch_p, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Generalized ARCH: factors in both historical shocks (p) and historical variance memory (q)
+case VOL_GARCH:
+   m_vp = new CGarchProcess(m_model_spec.garch_p, m_model_spec.garch_q, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Absolute Value ARCH: models standard deviation (absolute returns) instead of raw variance to soften outlier impacts
+case VOL_AVARCH:
+   m_vp = new CAvarchProcess(m_model_spec.garch_p, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Absolute Value GARCH: combines absolute return shocks with linear standard deviation historical loops
+case VOL_AVGARCH:
+   m_vp = new CAvgarchProcess(m_model_spec.garch_p, m_model_spec.garch_q, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Threshold ARCH (Zakoian): captures leverage asymmetries by splitting negative vs positive innovations using 'o' indicator lags
+case VOL_TARCH:
+   m_vp = new CTarchProcess(m_model_spec.garch_p, m_model_spec.garch_o, m_model_spec.garch_q, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Glosten-Jagannathan-Runkle GARCH: incorporates asymmetric volatility spikes explicitly for squared negative asset returns
+case VOL_GJR_GARCH:
+   m_vp = new CGjrGarchProcess(m_model_spec.garch_p, m_model_spec.garch_o, m_model_spec.garch_q, m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Fractionally Integrated GARCH: captures long-memory hyperbolic decay over high truncation intervals using fractionally integrated lags
+case VOL_FIGARCH:
+   m_vp = new CFiGarchProcess(m_model_spec.garch_p, m_model_spec.garch_q, m_model_spec.vol_power, m_model_spec.figarch_truncation, m_model_spec.vol_rng_seed, m_model_spec.sample_start_idx, m_model_spec.sample_end_idx, m_model_spec.min_bootstrap_sims);
+   break;
+
+//--- Fallback protection state: defaults to homoscedastic variance calculation
+default:
+   m_vp = new CConstantVariance(m_model_spec.vol_rng_seed, m_model_spec.min_bootstrap_sims);
+   break;
+  }
+```
+
+The configuration of a FIGARCH volatility process is demonstrated in the script FiGARCH\_Demo.ex5. The code snippet below highlights how to configure FIGARCH-related parameters.
+
+```
+#define __SLSQP__
+#include<figarch_harch\Arch\univariate\mean.mqh>
+
+//--- Input parameters for script customization
+input string           Symbol_ = "AUDUSD";            //--- Financial asset to analyze
+input ENUM_TIMEFRAMES  TimeFrame = PERIOD_D1;         //--- Data horizon interval (Daily chart default)
+input datetime         StartDate = D'2025.01.01';     //--- Historical capture anchor start date
+input ulong            HistoryLen = 504;              //--- Total historical data bars to request
+input double           ScaleFactor = 100.;            //--- Rescaling factor to optimize optimizer convergence
+input bool             MeanConstant = true;           //--- Flag to include an intercept in the conditional mean
+input ulong            _P_ = 1;                       //--- Short-term ARCH lag order
+input ulong            _Q_ = 1;                       //--- Long-term variance persistence GARCH lag order
+input double           _Vol_Power_ = 2.0;             //--- Power transformation parameter for the innovations
+input ulong            Truncation = 1000;             //--- Truncation depth for the infinite sum expansion weight array
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   vector prices;
+//--- --- Step 1: Historical Data Fetch ---
+//--- Pull close prices directly into an array using native vector operations
+   if(!prices.CopyRates(Symbol_, TimeFrame, COPY_RATES_CLOSE, StartDate, HistoryLen))
+     {
+      Print(" failed to get close prices for ", Symbol_, ". Error ", GetLastError());
+      return;
+     }
+
+//--- --- Step 2: Returns Generation ---
+//--- Apply a natural log transform to prices to calculate standard log-returns
+   prices = log(prices);
+
+//--- Compute the first-difference array: r_t = ln(P_t) - ln(P_{t-1})
+   vector returns = np::diff(prices);
+
+//--- --- Step 3: Model Configuration Setup ---
+//--- Initialize structural settings mapping onto the target FIGARCH container
+   ArchParameters figarch_spec;
+
+//--- Scale returns (e.g., multiply by 100 to convert to percentage returns).
+//--- This enlarges small numbers, helping prevent mathematical underflow inside the optimizer.
+   figarch_spec.observations = ScaleFactor * returns;
+   figarch_spec.include_constant = MeanConstant;
+   figarch_spec.vol_model_type = VOL_FIGARCH;
+   figarch_spec.figarch_truncation = Truncation;
+   figarch_spec.garch_p = _P_;
+   figarch_spec.garch_q = _Q_;
+   figarch_spec.vol_power = _Vol_Power_;
+
+//--- --- Step 4: Model Instantiation ---
+//--- Instantiate the mean model wrapper object (Constant Mean model specification)
+   ConstantMean figarch_model;
+
+//--- Bind settings configuration array to the active runtime model pipeline
+   if(!figarch_model.initialize(figarch_spec))
+      return;
+
+//--- --- Step 5: Optimization & Estimation Execution ---
+//--- Trigger the Maximum Likelihood Estimation (MLE) or SLSQP routine to estimate parameters
+   vector empty;
+   ArchModelResult figarch_params = figarch_model.fit();
+
+//--- --- Step 6: Post-Convergence Guard ---
+//--- Verify that the estimation returned a valid non-empty parameter vector array
+   if(!figarch_params.params.Size())
+     {
+      Print("Convergence failed ", GetLastError());
+      return;
+     }
+
+//--- --- Step 7: Parse and Output Results ---
+//--- Print the optimal parameter vector array to the terminal logs
+   Print("FIGARCH model parameters ", figarch_params.params);
+
+//--- Extract calculated asymptotic parameter p-values to evaluate statistical significance
+   vector pv = figarch_params.pvalues();
+   Print("FIGARCH model pvalues: ");
+   for(ulong i = 0; i < pv.Size(); ++i)
+     {
+      //--- Map out individual values index-by-index to easily associate parameters to significance scores
+      Print(" pvalue for param at ", i, " :- ", pv[i]);
+     }
+  }
+```
+
+Users must be careful when setting the figarch\_truncation parameter. It must not be more than the length of the sample observations, and it cannot be set to zero. Otherwise, the initialize() method will fail. By default, it is set to 1000. A successful fitting process yields four FIGARCH parameters in the ArchModelResult's params vector property.
+
+- The first volatility parameter is ω (Omega), representing the baseline variance.
+- The second volatility parameter is the fractional integration parameter (d).
+- Next we have ϕ (Phi), which dampens or amplifies the immediate short-term response to an abrupt market anomaly before the long-memory decay function takes over.
+- The last volatility parameter is β (Beta). The lagged variance coefficient. Like beta in a standard GARCH model, it influences smoothing behavior. It dictates how much the current variance is bound to the previous variance estimate.
+
+These parameters appear in the order listed above, following the parameters of the mean model. In the script demonstration, the mean model is defined by a single parameter constant.
+
+```
+FIGARCH model parameters [-0.0255499859497827,0.0678486143425001,0.4421923966649389,0.1156152066701203,0.5058075945010996]
+FIGARCH model pvalues: 
+pvalue for param at 0 :- 0.3160938229161918
+pvalue for param at 1 :- 0.04872262159333707
+pvalue for param at 2 :- 0.006222703454970224
+pvalue for param at 3 :- 0.022889668047700096
+pvalue for param at 4 :- 0.00018360906129921695
+```
+
+Having established the implementation of the FIGARCH framework, we now expand our volatility toolkit by exploring the HARCH model.
+
+### Heterogeneous Autoregressive Conditional Heteroskedasticity
+
+Introduced by Michel Dacorogna, Ramazan Gençay, Ulrich Müller, Richard Olsen, and Olivier Pictet, the HARCH model approaches long memory differently. Instead of treating time as a uniform continuum, HARCH posits that the market comprises different types of traders operating on different time horizons (for example, market makers, intraday scalpers, daily swing traders, and institutional long-term investors). The HARCH conditional variance is modeled as a linear combination of squared returns aggregated over different intervals.
+
+[IMG]
+
+Where c\_0​ is the constant baseline variance, n is the number of distinct trading horizons, and c\_j​ are positive coefficients representing the weight of each horizon's impact. The aggregated return is typically a simple moving average of raw returns over a specific interval length​. For instance, a standard setup might use four distinct horizons.
+
+- Daily: Yesterday's shock.
+- Weekly: Average shock over the last 5 days.
+- Biweekly: Average shock over the last 10 days.
+- Monthly: Average shock over the last 20 days.
+
+This specification captures long memory because the monthly component tracks a 20-day window. A massive market shock will continue to impact the current conditional variance estimate for an entire month, decaying in distinct steps rather than fading instantly. This creates an asymmetric information cascade: long-term volatility affects short-term trading behavior, but short-term daily noise rarely alters long-term investment strategies.
+
+The implementation of HARCH in MQL5 follows a similar format to FIGARCH. The enumeration ENUM\_VOLATILITY\_MODEL is updated with the VOL\_HARCH option.
+
+```
+//+------------------------------------------------------------------+
+//| Configured conditional volatility structure models               |
+//+------------------------------------------------------------------+
+enum ENUM_VOLATILITY_MODEL
+  {
+   VOL_CONST = 0, // Homoskedastic variance baseline profiles
+   VOL_ARCH,      // Autoregressive Conditional Heteroskedasticity (Linear lag squares mapping)
+   VOL_AVARCH,    // Absolute Value ARCH framework configurations
+   VOL_AVGARCH,   // Absolute Value GARCH process modeling variations
+   VOL_TARCH,     // Threshold ARCH / ZARCH threshold tracking handling asymmetric volatility shocks
+   VOL_GARCH,     // Generalized ARCH processes combining structural innovations and past variance memory
+   VOL_GJR_GARCH, // Glosten-Jagannathan-Runkle GARCH tracking sign-dependent asymmetric leverage adjustment
+   VOL_FIGARCH,    // Fractionally Integrated GARCH mapping long-memory long-term decay processes
+   VOL_HARCH      // Heterogeneous ARCH handling multi-scale localized aggregate time horizons
+  };
+```
+
+Then the ArchParameters structure is augmented to handle distinct horizons configured via the new property harch\_lags.
+
+```
+//+------------------------------------------------------------------+
+//| Comprehensive specification payload structure for ARCH models    |
+//+------------------------------------------------------------------+
+struct ArchParameters
+  {
+   // --- Data & Core Configuration
+   vector            observations;       // Vector tracking endog target returns data series
+   matrix            exog_data;          // Matrix tracking exogenous external regressor blocks
+   vector            mean_lags;          // Vector defining selected conditional mean lag lengths
+
+   ENUM_MEAN_MODEL   mean_model_type;    // Specified mean structural method profile reference
+   ENUM_VOLATILITY_MODEL vol_model_type; // Specified volatility variance framework engine reference
+   ENUM_DISTRIBUTION_MODEL dist_type;    // Specified baseline conditional probability density model
+
+   ulong             holdout_size;       // Out-of-sample data truncation window count bounds
+   bool              is_rescale_enabled; // Scale switch flag to normalize inputs to unit variances
+   double            scaling_factor;     // Internal scale factor used for numerical optimization convergence
+
+   // --- Mean Model Parameters
+   bool              include_constant;   // Conditional mean calculation model constant flag
+   bool              use_har_rotation;   // Flag enabling volatility horizon mapping blocks rotations
+
+   // --- Volatility Process Parameters (GARCH/ARCH)
+   int               vol_rng_seed;       // Random initialization seeding value used for variance simulations
+   ulong             garch_p;            // Shock innovations lag loop parameter allocation bounds (ARCH)
+   ulong             garch_o;            // Asymmetric conditional volatility component bounds (Leverage)
+   ulong             garch_q;            // Historical tracking persistence variance memory depth (GARCH)
+   double            vol_power;          // Exponent index scaling term used in variance conversions
+   ulong             figarch_truncation; // Expansion step cutoff limit boundary tracking fractional integration weights
+   vector            harch_lags;         // Structural lookback specification arrays targeted by HARCH processes
+```
+
+This property is a vector that expects elements representing specific interval lengths for an arbitrary number of horizons. By default, this property has a single element with a value of one.
+
+The CHarchProcess class encapsulating the HARCH volatility process is defined in volatility.mqh, before making the necessary modifications in mean.mqh.
+
+```
+//+------------------------------------------------------------------+
+//| HARCH process                                                    |
+//+------------------------------------------------------------------+
+class CHarchProcess: public CVolatilityProcess
+  {
+protected:
+   //--- Custom structure of containers
+   struct CFC
+     {
+      double         Const;
+      vector         Arch;
+      matrix         Resids2;
+
+                     CFC(void)
+        {
+         Const = 0;
+         Arch = vector::Zeros(0);
+         Resids2 = matrix::Zeros(0,0);
+        }
+                     CFC(double c, vector& a, matrix& r)
+        {
+         Const = c;
+         Arch = a;
+         Resids2 = r;
+        }
+                     CFC(CFC& other)
+        {
+         Const = other.Const;
+         Arch = other.Arch;
+         Resids2 = other.Resids2;
+        }
+      void           operator=(CFC& other)
+        {
+         Const = other.Const;
+         Arch = other.Arch;
+         Resids2 = other.Resids2;
+        }
+     };
+
+   ulong             m_num_lags;
+   vector            m_lags;
+   //--- Model transformation
+   vector            _harch_to_arch(vector& parameters);
+   //--- Verify the requested forecasting method as valid for the specification
+   virtual bool      _check_forecasting_method(ENUM_FORECAST_METHOD method, ulong horizon);
+   //--- Intermediate forecast components
+   CFC               _common_forecast_components(vector& parameters, vector& resids, vector& backcast, ulong horizon);
+   //--- Analytic multi-step volatility forecasts from the model
+   virtual VarianceForecast _analyticforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon);
+   //--- Simulation-based volatility forecasts from the model
+   virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng);
+   //--- Initialize class members
+   virtual bool      _initialize(ENUM_VOLATILITY_MODEL volmodel = WRONG_VALUE,bool updateable = true, bool closedform = false,ulong nparams = 0, string name = NULL,int seed = 0,ulong p = 0, ulong o = 0, ulong q = 0, double power = 0.0,long start=0, long stop=-1,ulong bootstrap_obs=100);
+public:
+                     CHarchProcess(void);
+                     CHarchProcess(vector& lags);
+   //--- Returns bounds for parameters
+   virtual matrix    bounds(vector& resids);
+   //--- Construct parameter constraints arrays for parameter estimation
+   virtual Constraints constraints(void);
+   //--- Compute the variance for the ARCH model
+   virtual vector    computeVariance(vector& parameters, vector& resids, vector& sigma2, vector& backcast, matrix& varbounds);
+   //--- Simulate data from the model
+   virtual matrix       simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL);
+   //--- Returns starting values for the ARCH model
+   virtual vector    startingValues(vector& resids);
+   //--- Names of model parameters
+   virtual string       parameterNames(void);
+  };
+//+------------------------------------------------------------------+
+```
+
+As established in the previous section, the \_initialize() method assigns base configurations to member variables. In this context, the primary parameters are the multi-horizon lags. Which can be explicitly set by invoking the parametric constructor. The \_initialize() method validates that the maximum aggregation window defined within the lag spectrum resolves to at least 1 and establishes the exact size of the parameter optimization space.
+
+```
+//--- Initialize class members
+virtual bool      _initialize(ENUM_VOLATILITY_MODEL volmodel = WRONG_VALUE, bool updateable = true, bool closedform = false, ulong nparams = 0, string name = NULL, int seed = 0, ulong p = 0, ulong o = 0, ulong q = 0, double power = 0.0, long start = 0, long stop = -1, ulong bootstrap_obs = 100) override
+  {
+//--- Bind interface arguments down to private global properties
+   m_updateable = updateable;
+   m_closedform = closedform;
+   bootstraps(bootstrap_obs);
+   m_start = start;
+   m_stop = stop;
+   m_name = name;
+   m_seed = seed;
+   m_model = volmodel;
+
+//--- Instantiate a base uniform linear lag array configuration if no dynamic mapping exists
+   if(!m_lags.Size())
+     {
+      m_lags = vector::Ones(1);
+      for(ulong i = 0; i < m_lags.Size(); m_lags[i] = 1. + double(i), ++i);
+     }
+
+//--- Boundary safety verification check: lookback steps must resolve to valid non-zero intervals
+   if(int(m_lags.Max()) < 1)
+     {
+      Print(__FUNCTION__, ": Invalid input. All lags should resolve to > 0 integers ");
+      return false;
+     }
+
+   m_num_lags = m_lags.Size();
+   m_num_params = m_num_lags + 1; //--- Total estimated parameters (omega intercept + interval weights)
+
+//--- Initialize the tracking normal distribution object instance wrapper
+   return m_normal.initialize(vector::Zeros(0), seed);
+  }
+```
+
+The bounds() method specifies that every parameter have a strict minimum bound of 0.0. This ensures that the intercept (ω) and all heterogeneous component weights remain strictly non-negative, preventing the model from predicting negative variance. The baseline intercept (ω) is capped at 10 times the mean of the squared historical residuals. Allowing the parameter room to scale to the data without drifting into extreme, unstable regions. Each heterogeneous lag component weight is given an upper bound of 1.0. Restricting components from causing explosive variance behavior. The final matrix is transposed before being returned, organizing it into a structure where row 0 contains all the lower bounds and row 1 contains all the upper bounds.
+
+```
+//--- Returns parameter boundaries for optimization
+   virtual matrix    bounds(vector& resids) override
+     {
+      // Create a matrix to store bounds (rows = number of parameters, 2 columns for min/max)
+      matrix out = matrix::Zeros(m_lags.Size()+1,2);
+      
+      // Calculate squared residuals to estimate variance magnitude
+      vector squared = pow(resids, 2.);
+      
+      // Set the upper bound for the constant term (intercept) as 10x the mean squared residual
+      out[0,1] = 10. * squared.Mean();
+      
+      // Set the upper bound for all autoregressive (ARCH) coefficients to 1.0 
+      // (Common constraint for stationarity in ARCH models)
+      for(ulong i = 1; i<out.Rows(); ++i)
+         out[i,1] = 1.0;
+         
+      // Transpose to match expected [2 x N] output format for the optimizer
+      return out.Transpose();
+     }
+```
+
+Unlike the FIGARCH implementation, which used hardcoded structures, the constraints() routine programmatically scales the constraints based on the number of active heterogeneous components. The method sets up a main diagonal of 1.0 across the first N+1 rows of the matrix: *a*. Paired with the first N+1 zero elements in vector b, this enforces that the intercept and every component weight remain strictly non-negative.
+
+To prevent the model from generating explosive, infinite variance, the total sum of all heterogeneous component weights must be less than 1. The method implements this by appending an extra row to the bottom of the matrix and vector. Multiplying the entire inequality by −1 flips the sign, enforcing the required stability threshold. The finalized constraint pair is packaged into the Constraints structure (out.\_one and out.\_two) and returned to regulate the optimizer.
+
+```
+//--- Construct parameter constraints arrays for parameter estimation
+//--- This implements linear inequality constraints of the form: (A * parameters) >= b
+virtual Constraints constraints(void) override
+  {
+   // Initialize matrix A for the linear constraints
+   // Size is [number of constraints, number of parameters]
+   matrix a = matrix::Zeros(m_num_lags + 2, m_num_lags + 1);
+   
+   // Create identity matrix portion to enforce positivity constraints on all parameters (w > 0, alpha_i > 0)
+   for(ulong i = 0; i < m_num_lags + 1; a[i, i] = 1., ++i);
+   
+   // Add constraint to ensure the sum of ARCH coefficients is less than 1 (sum(alpha_i) < 1)
+   // This is a common requirement for the stationarity of the variance process
+   for(ulong j = 1; j < a.Cols(); ++j)
+      a[m_num_lags + 1, j] = -1.;
+      
+   // Initialize vector b for the constraint constants
+   vector b = vector::Zeros(m_num_lags + 2);
+   
+   // Set the value for the stationarity constraint (sum <= 1 translates to -sum >= -1)
+   b[m_num_lags + 1] = -1.;
+   
+   // Package into the Constraints structure
+   Constraints out;
+   out._one = a;
+   out._two = b;
+   return out;
+  }
+```
+
+The computeVariance() method differs from FIGARCH's implementation by not requiring any transformation, thereby returning immediately without further scaling.
+
+```
+//--- Compute the variance for the ARCH model using recursive updates
+virtual vector    computeVariance(vector& parameters, vector& resids, vector& sigma2, vector& backcast, matrix& varbounds) override
+  {
+   // Cache the lag structure (e.g., [1, 2, 5] for ARCH(5))
+   vector lags = m_lags;
+   
+   // Determine the total number of observations to process
+   int nobs = int(resids.Size());
+   
+   // Perform the recursive ARCH calculation:
+   // The variance at time t is computed as: sigma^2_t = omega + sum(alpha_i * resids^2_{t-i})
+   // This helper function handles the loop over observations and lags, 
+   // utilizing 'backcast' values for the initial periods where lagged data is missing.
+   harch_recursion(parameters, resids, sigma2, lags, nobs, backcast[0], varbounds);
+   
+   // Return the completed variance series
+   return sigma2;
+  }
+```
+
+The simulate() method produces data sampled from the model by evaluating heterogeneous component lags explicitly within nested execution loops. It draws random standard normal errors for the full simulation length. It includes a fallback constraint check to handle one-dimensional vector versus two-dimensional column-matrix outputs from the random number generator. If no initial value is explicitly provided, the routine calculates the long-run unconditional variance of the HARCH process. If the parameters risk an explosive state, it falls back to using the intercept (ω) as the seed to avoid division-by-zero or negative variances. The first maxlag entries are pre-filled with the steady-state initial value. Elements of sigma2 are assigned the raw variance baseline. And those in data are seeded with its square root to establish stable initial return shocks.
+
+The simulation rolls forward chronologically to the end of the time series. To clear out start-up bias caused by the rigid initialization phase, the method slices out and discards the first burn elements of both vectors. The returns and conditional variances are seamlessly packed side-by-side into a final two-column matrix and returned.
+
+```
+//--- Simulate data from the ARCH model
+virtual matrix        simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL) override
+  {
+   // Generate random innovations (shocks) for the duration of the sample plus burn-in
+   vector errs = rng.rng(_nobs + burn);
+   if(!errs.Size())
+     {
+      matrix container = rng.rng(_nobs + burn, 1);
+      errs = container.Col(0);
+     }
+     
+   // Calculate unconditional variance (long-run average) for initialization if not provided
+   // Formula: sigma^2 = omega / (1 - sum(alpha_i))
+   if(!initial_value)
+     {
+      vector vp = np::sliceVector(parameters, 1);
+      double psum = vp.Sum();
+      if(1.0 - psum > 0)
+         initial_value = parameters[0] / (1.0 - psum);
+      else
+        {
+         Print(__FUNCTION__, ": Initial value WARNING - Model may be non-stationary or invalid");
+         initial_value = parameters[0];
+        }
+     }
+     
+   vector sigma2 = vector::Zeros(_nobs + burn);
+   vector data = sigma2;
+   long maxlag = long(m_lags.Max());
+   
+   // Pre-fill the start of the series with the initial variance/data values
+   for(long i = 0; i < maxlag; ++i)
+     {
+      sigma2[i] = initial_value;
+      data[i] = sqrt(initial_value);
+     }
+     
+   // Recursive generation of volatility and data series
+   double param = 0;
+   for(long t = maxlag; t < long(_nobs + burn); ++t)
+     {
+      // Start with the constant term (omega)
+      sigma2[t] = parameters[0];
+      
+      // Accumulate the weighted sum of squared past residuals (ARCH components)
+      for(ulong i = 0; i < m_lags.Size(); ++i)
+        {
+         param = parameters[1 + i] / double(m_lags[i]);
+         for(ulong j = 0; j < ulong(m_lags[i]); ++j)
+            sigma2[t] += param * pow(data[t - 1 - j], 2.);
+        }
+      // Generate observation based on current volatility and random shock
+      data[t] = errs[t] * sqrt(sigma2[t]);
+     }
+     
+   // Discard the burn-in period to minimize dependency on arbitrary initial values
+   data = np::sliceVector(data, long(burn));
+   sigma2 = np::sliceVector(sigma2, long(burn));
+
+   // Return a matrix containing the simulated data and corresponding variance
+   matrix out(data.Size(), 2);
+   out.Col(data, 0);
+   out.Col(sigma2, 1);
+
+   return out;
+  }
+```
+
+Initial parameter values as calculated by the startingValues() method are arrived at by establishing a target baseline persistence (α) of 0.9 for the total combined ARCH impact. Meaning it assumes that 90% of future volatility will be driven by historical shocks, leaving the remaining 10% (1−α) to be captured by the intercept. It initializes the entire vector by multiplying the remaining 10% buffer against the sample variance of the raw residuals. Because the first element represents the intercept (ω), this sets a realistic, data-scaled initial guess for the long-run variance baseline. Thereafter, the method loops through the remaining positions in the vector, which correspond to the heterogeneous lag components. It takes the targeted 90% ARCH persistence allocation and distributes it uniformly across the number of components.
+
+```
+///--- Returns starting values for the ARCH model optimization
+//--- Provides a reasonable initial guess to help the solver converge
+virtual vector    startingValues(vector& resids) override
+  {
+   // Set initial weight for the constant term (omega)
+   double alpha = 0.9;
+   
+   // Initialize vector with (1 - alpha) * sample variance as the starting omega
+   // and set the initial coefficients for the ARCH components
+   vector sv = (1. - alpha) * resids.Var() * vector::Ones(m_num_lags + 1);
+   
+   // Distribute the remaining alpha weight evenly across all ARCH lag coefficients
+   // This ensures the starting parameters imply a stationary process (sum of coefficients < 1)
+   for(ulong i = 1; i < sv.Size(); sv[i] = alpha / double(m_num_lags), ++i);
+   
+   return sv;
+  }
+```
+
+As seen in the previous section, forecasts can be generated analytically or through simulation. Both rely on two helper methods: \_harch\_to\_arch() and \_common\_forecast\_components(). The \_harch\_to\_arch() method converts parameters from a Heterogeneous ARCH (HARCH) model variant into their equivalent linear ARCH model representation by redistributing aggregated volatility impacts across individual time lags. It initializes a destination parameter vector with a size dictated by the maximum lag length found in the model's configuration (m\_lags), carrying over the original baseline intercept unchanged to the first element.
+
+The routine then loops through each HARCH component parameter, extracting both its estimated weight and its associated multi-period lag window. Using an inner nested loop, it maps the HARCH coefficient back to individual periods by uniformly distributing its value before returning the fully consolidated ARCH coefficient profile.
+
+```
+//--- Model transformation
+//--- Converts Heterogeneous ARCH (HARCH) parameters to standard ARCH representation
+//--- HARCH models often group lags (e.g., weekly, monthly), this flattens them into individual coefficients
+vector          _harch_to_arch(vector& parameters)
+  {
+   // Initialize output vector with size of the longest lag + 1 (for constant omega)
+   vector arch_params = vector::Zeros(1 + int(m_lags.Max()));
+   
+   // Copy the constant term (omega) directly
+   arch_params[0] = parameters[0];
+   
+   double lag = 0;
+   double param = 0;
+   
+   // Distribute each grouped HARCH coefficient across the individual lag indices
+   for(ulong i = 1; i < arch_params.Size(); ++i)
+     {
+      // Extract the coefficient and the corresponding lag grouping size
+      param = parameters[i];
+      lag = m_lags[i - 1];
+      
+      // Calculate the uniform weight for each lag within the group and add to the specific index
+      for(ulong j = 1; j < ulong(lag + 1.); arch_params[j] += param / lag, ++j);
+     }
+     
+   return arch_params;
+  }
+```
+
+The \_common\_forecast\_components() method prepares the structural data matrices and parameters required to project out-of-sample volatility forecasts for a HARCH model. It first converts the HARCH parameter coefficients into their standard linear ARCH equivalents via the \_harch\_to\_arch helper function, storing the isolated model intercept and ARCH lag weights inside a dedicated components structure (CFC). It then allocates a large historical tracking matrix (Resids2) padded with the user-provided backcast value to handle positions lacking historical data.
+
+Finally, it calculates the squared observed residuals of the time series and strategically maps them across the tracking matrix using staggered diagonal offsets, ensuring that every forecasting origin step has a properly aligned chronological window of past squared innovations to anchor the forward-looking forecast equations.
+
+```
+//--- Intermediate forecast components
+//--- Prepares the historical data and parameter structures required for both analytic and simulation-based forecasting
+CFC _common_forecast_components(vector& parameters, vector& resids, vector& backcast, ulong horizon)
+  {
+   CFC out;
+   // Convert grouped HARCH parameters into a flat ARCH representation for easier matrix operations
+   vector ap = _harch_to_arch(parameters);
+   long t = long(resids.Size());
+   long m = long(m_lags.Max());
+   
+   // Initialize the matrix to hold squared residuals, expanded to accommodate the forecast horizon
+   out.Resids2 = matrix::Zeros(t, m + horizon);
+   
+   // Fill the forecast horizon portion of the matrix with initial backcast values
+   for(long i = m; i < (long)out.Resids2.Rows(); ++i)
+      for(long j = m; j < long(out.Resids2.Cols()); ++j)
+         out.Resids2[i, j] = backcast[0];
+         
+   // Map historical squared residuals into the matrix aligned with the lag structure
+   vector sqresids = pow(resids, 2.);
+   for(long i = 0; i < m; ++i)
+      for(long j = m - i - 1, k = 0; j < long(out.Resids2.Rows()) && k < long(t - (m - i - 1)); ++k, ++j)
+         out.Resids2[j, i] = sqresids[k];
+   
+   // Separate the constant (omega) and the ARCH coefficient vector for the forecast calculations
+   out.Const = ap[0];
+   out.Arch = np::sliceVector(ap, 1);
+   
+   return out;
+  }
+```
+
+Unlike the FIGARCH model, which restricts forecasting methods under certain conditions, there are no limitations on the choice of forecasting method here. Therefore, the \_check\_forecasting\_method() routine always returns true.
+
+```
+//--- Verify the requested forecasting method as valid for the specification
+//--- Returns true as this model supports all forecasting methods (Analytic and Simulation)
+virtual bool      _check_forecasting_method(ENUM_FORECAST_METHOD method, ulong horizon) override
+  {
+   // In more complex models, this would check if a specific method (like analytic) 
+   // is mathematically supported for the given horizon, or if simulation is required.
+   // For this implementation, all methods are compatible.
+   return true;
+  }
+```
+
+The underlying routine for analytical forecasting starts by gathering the baseline tracking matrix and converted linear ARCH parameters from the \_common\_forecast\_components utility function, slicing the tracking matrix rows to match the specified calculation start index. It then reverses the ARCH parameter coefficients to establish a proper backwards-looking chronological alignment with the historical data.
+
+By executing a sequential loop through each step of the forecasting horizon, the method extracts a moving window of recent squared residuals (or previously computed expected variances), performs a matrix multiplication with the reversed weights, adds the model intercept, and stores the resulting expected variance directly back into the tracking matrix as the input for subsequent horizon steps. Finally, it isolates and slices out the newly populated out-of-sample forecast matrix columns, packaging them into a VarianceForecast object.
+
+```
+//--- Analytic multi-step volatility forecasts from the model
+//--- Calculates the conditional variance forecast using the law of iterated expectations
+virtual VarianceForecast _analyticforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon) override
+  {
+   // Retrieve the model constant and ARCH parameter vectors
+   CFC cfc = _common_forecast_components(parameters, resids, backcast, horizon);
+   long m = long(m_lags.Max());
+   
+   // Trim historical residuals to start from the requested time point
+   cfc.Resids2 = np::sliceMatrixRows(cfc.Resids2, _start);
+   
+   // Reverse the ARCH coefficients to facilitate dot-product calculation with lagged squared residuals
+   vector arch_rev = cfc.Arch;
+   if(!np::reverseVector(arch_rev))
+      return VarianceForecast();
+      
+   // Recursively project the variance into the future
+   // For h > 0, E[resids^2_{t+h}] is replaced by the forecast of the variance
+   for(long i = 0; i < long(horizon); ++i)
+     {
+      // Extract the relevant window of past squared residuals (or previous forecasts)
+      matrix cc = np::sliceMatrixCols(cfc.Resids2, i, m + i);
+      
+      // Calculate variance: sigma^2_{t+i} = omega + sum(alpha * E[resids^2_{t+i-lag}])
+      if(!cfc.Resids2.Col(cfc.Const + cc.MatMul(arch_rev), m + i))
+        {
+         Print(__FUNCTION__, ": Failed Columns assignment cfc.Resids2 ", GetLastError());
+         return VarianceForecast();
+        }
+     }
+     
+   // Isolate the forecasted portion of the matrix (excluding the historical input)
+   matrix out = np::sliceMatrixCols(cfc.Resids2, m);
+   matrix empty[];
+   
+   // Return the analytic forecast (no simulation paths or shocks used here)
+   return VarianceForecast(out, empty, empty);
+  }
+```
+
+The member function responsible for simulation forecasts initially obtains the pre-aligned structural component matrix and reversed linear ARCH weights, then provisions internal tracking containers (paths and shocks) for every historical starting point within the execution window. For each forecast origin point, the algorithm draws a matrix of independent random innovations across a given quantity of simulations and steps through the horizon period-by-period. Within this inner forecasting loop, it multiplies the simulation-dependent history by the reversed ARCH weights to isolate the projected variance, scales the random innovations by the square root of that variance to construct synthetic future price shocks, and feeds the squared value of those shocks directly back into the trailing data matrix to seed the next horizon step.
+
+Ultimately, the method compresses the dense multi-path data by calculating the column-wise mean across all simulated trajectories at each step, returning a streamlined matrix of expected point forecasts alongside the complete raw simulated paths and shocks.
+
+```
+//--- Simulation-based volatility forecasts from the model
+//--- Performs Monte Carlo simulations to project future variance paths
+virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng) override
+  {
+   // Retrieve model-specific components (constants and ARCH parameters)
+   CFC cfc = _common_forecast_components(parameters, resids, backcast, horizon);
+   long t = long(resids.Size());
+   long m = long(m_lags.Max());
+   
+   matrix paths[], shocks[];
+   matrix temp_resids2 = matrix::Zeros(simulations, m + horizon);
+   
+   // Allocate memory for simulation paths and associated shocks
+   ArrayResize(paths, int(t - _start));
+   ArrayResize(shocks, int(t - _start));
+   for(uint i = 0; i < paths.Size(); paths[i] = shocks[i] = matrix::Zeros(simulations, horizon), ++i);
+   
+   // Reverse ARCH coefficients for matrix multiplication alignment (dot product with lagged residuals)
+   vector arch_rev = np::sliceVector(cfc.Arch, BEGIN_REVERSE, END_REVERSE, -1);
+   
+   // Iterate over each time point to generate future paths
+   for(long i = _start; i < t; ++i)
+     {
+      matrix stdshocks = rng.rng(simulations, horizon);
+      matrix rd2 = np::sliceMatrixRows(cfc.Resids2, i, i + 1);
+      temp_resids2 = rd2;
+      long path_loc = i - _start;
+      
+      // Project variance for each step of the horizon
+      for(long j = 0; j < long(horizon); ++j)
+        {
+         rd2 = np::sliceMatrixCols(temp_resids2, j, m + j);
+         
+         // Calculate next period variance: sigma^2 = omega + sum(alpha * eps^2)
+         if(!paths[path_loc].Col(cfc.Const + rd2.MatMul(arch_rev), j))
+           {
+            Print(__FUNCTION__, ": Column assignment error paths", GetLastError());
+            return VarianceForecast();
+           }
+           
+         // Calculate simulated shocks based on the projected volatility
+         if(!shocks[path_loc].Col(stdshocks.Col(j) * sqrt(paths[path_loc].Col(j)), j))
+           {
+            Print(__FUNCTION__, ": Column assignment error shocks", GetLastError());
+            return VarianceForecast();
+           }
+           
+         // Update temporary residual buffer for the next simulation step
+         if(!temp_resids2.Col(pow(shocks[path_loc].Col(j), 2.), m + j))
+           {
+            Print(__FUNCTION__, ": Column assignment error temp_resids2", GetLastError());
+            return VarianceForecast();
+           }
+        }
+     }
+     
+   // Aggregate simulation paths into an average forecast matrix
+   matrix out(paths.Size(), paths[0].Cols());
+   for(uint i = 0; i < paths.Size(); ++i)
+      if(!out.Row(paths[i].Mean(1), i))
+        {
+         Print(__FUNCTION__, ": Row assignment error out", GetLastError());
+         return VarianceForecast();
+        }
+        
+   return VarianceForecast(out, paths, shocks);
+  }
+```
+
+The script HARCH\_Demo.ex5 shows how to configure a model defined by a HARCH volatility process. The code snippet below illustrates the specification of HARCH-related parameters.
+
+```
+#define __SLSQP__
+#include<figarch_harch\Arch\univariate\mean.mqh>
+
+//--- Input parameters for script customization
+input string           Symbol_ = "AUDUSD";            //--- Financial asset to process
+input ENUM_TIMEFRAMES  TimeFrame = PERIOD_D1;         //--- Data horizon interval
+input datetime         StartDate = D'2025.01.01';     //--- Historical capture anchor start date
+input ulong            HistoryLen = 504;              //--- Total historical data bars to request
+input double           ScaleFactor = 100.;            //--- Rescaling multiplier to prevent optimizer underflow
+input bool             MeanConstant = true;           //--- Flag to include an intercept in the conditional mean
+input string           HarchLags = "3,6";             //--- Comma-separated list defining heterogeneous lookback windows
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   vector prices;
+//--- --- Step 1: Historical Data Fetch ---
+//--- Pull raw close prices into a high-performance vector array
+   if(!prices.CopyRates(Symbol_, TimeFrame, COPY_RATES_CLOSE, StartDate, HistoryLen))
+     {
+      Print(" failed to get close prices for ", Symbol_, ". Error ", GetLastError());
+      return;
+     }
+
+//--- --- Step 2: Transform Prices to Returns ---
+//--- Map closing prices to logarithmic space
+   prices = log(prices);
+
+//--- Compute log returns: r_t = ln(P_t) - ln(P_{t-1})
+   vector returns = np::diff(prices);
+
+//--- --- Step 3: Base Model Configuration Setup ---
+//--- Initialize core specification fields mapping onto the HARCH container
+   ArchParameters harch_spec;
+
+//--- Apply the scaling factor (multiplying by 100 scales returns to percentage form)
+   harch_spec.observations = ScaleFactor * returns;
+   harch_spec.include_constant = MeanConstant;
+   harch_spec.vol_model_type = VOL_HARCH;
+
+//--- --- Step 4: Dynamically Parse String Lags ---
+//--- Tokenize the input string "HarchLags" into individual text segments using commas as delimiters
+   string lag_info[];
+   int nlags = StringSplit(HarchLags, StringGetCharacter(",", 0), lag_info);
+
+   if(nlags > 0)
+     {
+      //--- Pre-allocate the specification's internal target lags vector block
+      harch_spec.harch_lags = vector::Zeros(nlags);
+
+      //--- Loop through parsed tokens, validate them, and convert them to continuous metrics
+      for(uint i = 0; i < uint(nlags); ++i)
+        {
+         if(StringLen(lag_info[i]) > 0)
+            harch_spec.harch_lags[i] = StringToDouble(lag_info[i]);
+         else
+           {
+            //--- Abort execution safely if an invalid or empty string token structure is detected
+            Print("Invalid lag value ", lag_info[i], ". Should be >= 1.");
+            return;
+           }
+        }
+     }
+
+//--- --- Step 5: Model Initialization ---
+//--- Instantiate the continuous tracking constant mean container wrapper
+   ConstantMean harch_model;
+
+//--- Pass structural parameters down into the optimization initialization routine
+   if(!harch_model.initialize(harch_spec))
+      return;
+
+//--- --- Step 6: Parameter Optimization (Fitting) ---
+//--- Trigger the non-linear execution optimizer loop (SLSQP engine solver)
+   vector empty;
+   ArchModelResult harch_params = harch_model.fit();
+
+//--- --- Step 7: Optimization Convergence Guard ---
+//--- Verify that the resulting parameters array size matches the model criteria configurations
+   if(!harch_params.params.Size())
+     {
+      Print("Convergence failed ", GetLastError());
+      return;
+     }
+
+//--- --- Step 8: Results Output Extraction ---
+//--- Print optimal target parameter solutions to the MetaTrader Terminal panel
+   Print("HARCH model parameters ", harch_params.params);
+
+//--- Extract statistical asymptotic standard deviation errors mapped out to individual p-values
+   vector pv = harch_params.pvalues();
+   Print("HARCH model pvalues: ");
+   for(ulong i = 0; i < pv.Size(); ++i)
+     {
+      //--- Log individual calculated p-values step-by-step to evaluate structural significance
+      Print(" pvalue for param at ", i, " :- ", pv[i]);
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+A successful fit results in parameters that map directly to the specified horizons. The first volatility process parameter is the baseline variance. Then, the coefficients (c\_j​) for each configured horizon are listed in order. Output from the script is displayed below.
+
+```
+HARCH model parameters [-0.0246053603937225,0.3290220407542077,0.05471622381862901,7.075421387748211e-16]
+HARCH model pvalues: 
+pvalue for param at 0 :- 0.3439919771544495
+pvalue for param at 1 :- 8.959410990883043e-11
+pvalue for param at 2 :- 0.6356834250774976
+pvalue for param at 3 :- 0.999999999999997
+```
+
+### Conclusion
+
+This work closes the loop between diagnosis, model selection, and implementation for long-memory volatility. Practically, you now have a repeatable workflow:
+
+- test your volatility proxy with the Hurst *exponent* rs() (R/S analysis) and gph *test() (log-periodogram/GPH) to obtain H, d, and p-values (with enforced minimum sample checks);*
+- *inspect the low-frequency log-periodogram via plot* frequency *domain* fit() to distinguish smooth fractional decay from discrete multi-horizon structure;
+- choose FIGARCH when the spectrum shows a continuous fractional slope or HARCH when the spectrum exhibits localized horizon peaks;
+- fit and use the chosen model with the provided MQL5 library and demo scripts.
+
+Delivered artifacts include the two new volatility process classes (FIGARCH, HARCH), test utilities, and example scripts for estimation and forecasting. Note practical caveats: FIGARCH requires a truncation depth and is computationally heavier (and analytical multi-step forecasts are limited when power != 2), while HARCH is lightweight but sensitive to chosen horizon windows. With these tools, you can produce measurable diagnostics, estimate robust long-memory models, and integrate conditional variance forecasts into strategy construction, risk management, or regime-detection pipelines.
+
+| File | Description |
+| --- | --- |
+| MQL5/Include/figarch\_harch/Arch. | This folder holds all header files for the volatility library and testing utilities referenced in the article. |
+| MQL5/Scripts/figarch\_harch/FiGARCH\_Demo.mq5. | Script demonstrating FIGARCH model configuration and fitting. |
+| MQL5/Scripts/figarch\_harch/HARCH\_Demo.mq5. | Script demonstrating HARCH model configuration and fitting. |
+| MQL5/Scripts/figarch\_harch/TestsForLongMemoryInVolatility.mq5. | Script to test for persistence in real-world data. |
+| MQL5/Scripts/figarch\_harch/FigarchVsHarchSelectionTests.mq5. | Script plotting log-periodograms for model selection. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23171.zip "Download all attachments in the single ZIP archive")
+
+[Building\_Volatility\_Models\_In\_MQL5\_Part\_IV.zip](https://www.mql5.com/en/articles/download/23171/Building_Volatility_Models_In_MQL5_Part_IV.zip "Download Building_Volatility_Models_In_MQL5_Part_IV.zip")
+(222.7 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Beyond Maximum Drawdown: Building a Drawdown DNA Analyzer in MQL5](https://www.mql5.com/en/articles/23175)
+
+Maximum drawdown is one number that hides what really matters: how often an equity curve declines, how long it stays below a previous peak, and how quickly it recovers. This article builds a native MQL5 tool that reconstructs the underwater curve, breaks it into individual drawdown episodes (depth, duration, recovery time), computes the Ulcer Index, Pain Index, and Recovery Factor, and combines them into a single resilience grade with practical recommendations. No external libraries, no Python, no AI.
+
+[IMG]
+[Building an Internal and External Market Structure Indicator](https://www.mql5.com/en/articles/22968)
+
+The article presents a structured approach to external and internal market structure in MQL5, from swing identification to CHoCH/BoS validation within an established trend. It explains refining true highs/lows, enforcing “first internal signal” logic, and rendering lines, labels, and markers on the chart. The outcome is a consistent indicator that converts price structure into defined entries, stop losses, and 1.5R targets.
+
+[IMG]
+[Neural Networks in Trading: Time Series Forecasting Using Adaptive Modal Decomposition (ACEFormer)](https://www.mql5.com/en/articles/18004)
+
+We invite you to explore the ACEFormer architecture — a modern solution that combines the effectiveness of probabilistic attention with adaptive time series decomposition. This article will be useful for those seeking a balance between computational performance and forecast accuracy in financial markets.
+
+[IMG]
+[Dream Optimization Algorithm (DOA)](https://www.mql5.com/en/articles/19177)
+
+A population-based optimization algorithm inspired by a controversial and little-studied phenomenon - the mechanism of human dreams. Agent groups with different "memory", cosine-wave modulation of motion, and an unusual 99/1 phase distribution — learn how these features affect the optimization efficiency of your trading strategies.
+
+[[IMG]](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fvps%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Duse.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=rktadgjlwhobyedohbrepzshvpcqrlpo&s=a93cef75a53eb5da24c98e0068b3c2b96015191a0af0d1857f5b4dd22e55e7bf&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=rzujngjwpqnnqcycvqsnaenvzrqamoyk&ssn=1788777334169257669&ssn_dr=0&ssn_sr=0&fv_date=1788777334&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23171&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Building%20Volatility%20Models%20in%20MQL5%20(Part%20IV)%3A%20Implementing%20Long%20Memory%20Volatility%20Processes%2C%20FIGARCH%2C%20and%20HARCH%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887773346176194&fz_uniq=6412109663302190454&sv=2552)

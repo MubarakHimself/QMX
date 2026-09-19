@@ -1,0 +1,69 @@
+{
+  "pack_id": "tester_013",
+  "section": "Tester",
+  "parent_shard": "tester_013",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "continuous walk-forward optimization",
+    "data science and machine learning",
+    "dealing with time"
+  ],
+  "n": 6,
+  "articles": [
+    {
+      "id": 7290,
+      "title": "Continuous Walk-Forward Optimization (Part 1): Working with Optimization Reports",
+      "section": "Tester",
+      "series_title": "Continuous Walk-Forward Optimization (): Working with Optimization Reports",
+      "series_key": "continuous walk-forward optimization",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7290.md"
+    },
+    {
+      "id": 7583,
+      "title": "Continuous Walk-Forward Optimization (Part 5): Auto Optimizer project overview and creation of a GUI",
+      "section": "Tester",
+      "series_title": "Continuous Walk-Forward Optimization (): Auto Optimizer project overview and creation of a GUI",
+      "series_key": "continuous walk-forward optimization",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7583.md"
+    },
+    {
+      "id": 7718,
+      "title": "Continuous Walk-Forward Optimization (Part 6): Auto optimizer's logical part and structure",
+      "section": "Tester",
+      "series_title": "Continuous Walk-Forward Optimization (): Auto optimizer's logical part and structure",
+      "series_key": "continuous walk-forward optimization",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7718.md"
+    },
+    {
+      "id": 7891,
+      "title": "Continuous walk-forward optimization (Part 8): Program improvements and fixes",
+      "section": "Tester",
+      "series_title": "Continuous walk-forward optimization (): Program improvements and fixes",
+      "series_key": "continuous walk-forward optimization",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7891.md"
+    },
+    {
+      "id": 14435,
+      "title": "Data Science and Machine Learning (Part 21): Unlocking Neural Networks, Optimization algorithms demystified",
+      "section": "Tester",
+      "series_title": "Data Science and Machine Learning (): Unlocking Neural Networks, Optimization algorithms demystified",
+      "series_key": "data science and machine learning",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14435.md"
+    },
+    {
+      "id": 9926,
+      "title": "Dealing with Time (Part 1): The Basics",
+      "section": "Tester",
+      "series_title": "Dealing with Time (): The Basics",
+      "series_key": "dealing with time",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9926.md"
+    }
+  ]
+}

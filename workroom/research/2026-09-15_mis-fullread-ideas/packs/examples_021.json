@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_021",
+  "section": "Examples",
+  "parent_shard": "examples_021",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 3030,
+      "title": "Graphical interfaces X: New features for the Rendered table (build 9)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3030.md"
+    },
+    {
+      "id": 3042,
+      "title": "Graphical Interfaces X: Updates for the Rendered table and code optimization (build 10)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3042.md"
+    },
+    {
+      "id": 3047,
+      "title": "MQL5 Cookbook - Creating a ring buffer for fast calculation of indicators in a sliding window",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3047.md"
+    },
+    {
+      "id": 3104,
+      "title": "Graphical Interfaces X: Sorting, rebuilding the table and controls in the cells (build 11)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3104.md"
+    },
+    {
+      "id": 3131,
+      "title": "Wolfe Waves",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3131.md"
+    },
+    {
+      "id": 3166,
+      "title": "How to conduct a qualitative analysis of trading signals and select the best of them",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3166.md"
+    },
+    {
+      "id": 3173,
+      "title": "Graphical Interfaces X: Word wrapping algorithm in the Multiline Text box (build 12)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3173.md"
+    },
+    {
+      "id": 3186,
+      "title": "An example of an indicator drawing Support and Resistance lines",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3186.md"
+    },
+    {
+      "id": 3197,
+      "title": "Graphical Interfaces X: Text selection in the Multiline Text box (build 13)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3197.md"
+    },
+    {
+      "id": 3229,
+      "title": "The Flag Pattern",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3229.md"
+    },
+    {
+      "id": 3237,
+      "title": "Angles in Trading. Further Study Required",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3237.md"
+    },
+    {
+      "id": 3261,
+      "title": "Cross-Platform Expert Advisor: Signals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3261.md"
+    }
+  ]
+}

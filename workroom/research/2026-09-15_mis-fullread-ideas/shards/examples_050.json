@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_050",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16021,
+      "title": "From Basic to Intermediate: Objects (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16021.md"
+    },
+    {
+      "id": 16026,
+      "title": "From Basic to Intermediate: Objects (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16026.md"
+    },
+    {
+      "id": 16030,
+      "title": "Self Optimizing Expert Advisor With MQL5 And Python (Part V): Deep Markov Models",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16030.md"
+    },
+    {
+      "id": 16035,
+      "title": "From Basic to Intermediate: Object Events (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16035.md"
+    },
+    {
+      "id": 16045,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part III): Extending Built-in Classes for Theme Management (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16045.md"
+    },
+    {
+      "id": 16050,
+      "title": "From Basic to Intermediate: Object Events (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16050.md"
+    },
+    {
+      "id": 16056,
+      "title": "Ordinal Encoding for Nominal Variables",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16056.md"
+    },
+    {
+      "id": 16075,
+      "title": "From Basic to Intermediate: Object Events (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16075.md"
+    },
+    {
+      "id": 16079,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IV): Login Security Layer",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16079.md"
+    },
+    {
+      "id": 16094,
+      "title": "From Basic to Intermediate: Object Events (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16094.md"
+    },
+    {
+      "id": 16142,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part V): Two-Factor Authentication (2FA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16142.md"
+    },
+    {
+      "id": 16167,
+      "title": "From Basic to Intermediate: Working with Files in the MetaTrader 5 Sandbox",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16167.md"
+    }
+  ]
+}

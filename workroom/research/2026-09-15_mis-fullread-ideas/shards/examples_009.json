@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_009",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1472,
+      "title": "Practical Application of Cluster Indicators in FOREX",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1472.md"
+    },
+    {
+      "id": 1474,
+      "title": "Strings: Table of ASCII Symbols and Its Use",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1474.md"
+    },
+    {
+      "id": 1475,
+      "title": "MQL4 Language for Newbies. Introduction",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1475.md"
+    },
+    {
+      "id": 1477,
+      "title": "Can the Forex Market Be Forecasted? How to Create One's Own Trading Strategy?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1477.md"
+    },
+    {
+      "id": 1478,
+      "title": "Practical Use of the Virtual Private Server (VPS) for Autotrading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1478.md"
+    },
+    {
+      "id": 1479,
+      "title": "The Basic of Coding A Hedge Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1479.md"
+    },
+    {
+      "id": 1480,
+      "title": "Sending Trade Signal Via RSS Feed",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1480.md"
+    },
+    {
+      "id": 1483,
+      "title": "MQL4 Language for Newbies. Difficult Questions in Simple Phrases.",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1483.md"
+    },
+    {
+      "id": 1488,
+      "title": "MT4TerminalSync - System for the Synchronization of MetaTrader 4 Terminals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1488.md"
+    },
+    {
+      "id": 1489,
+      "title": "Interaction between MetaTrader 4 and Matlab via CSV Files",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1489.md"
+    },
+    {
+      "id": 1494,
+      "title": "Features of Experts Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1494.md"
+    },
+    {
+      "id": 1496,
+      "title": "MQL4 Language for Newbies. Technical Indicators and Built-In Functions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1496.md"
+    }
+  ]
+}

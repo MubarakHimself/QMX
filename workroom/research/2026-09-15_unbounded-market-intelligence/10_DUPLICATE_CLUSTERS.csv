@@ -1,0 +1,5 @@
+cluster_id,method,size,article_ids,representative_title,note
+C-SHA-NONE,exact-sha256,0,,,"3057 ok articles, 3057 unique content hashes; no exact-duplicate markdown"
+C-TITLE-1,normalized-title,2,"1100,1400",How We Developed the MetaTrader Signals Service and Social Trading,only title-duplicate cluster in fetched ok set; treat as one claim not two independent sources
+C-SIDEBAR,scraper-related-links,n/a,,related-article footers,grep of body text can match titles in sidebars (e.g. Lyapunov series linked from unrelated pages); not independent evidence
+C-SERIES,series-title-part,1261,see coverage.md series-tagged,Part N series,1261 catalog rows tagged Part N; parts are related not duplicates

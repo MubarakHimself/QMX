@@ -1,0 +1,85 @@
+{
+  "pack_id": "trading_systems_043_p05",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_043",
+  "part_index": 5,
+  "part_count": 6,
+  "series_in_pack": [
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 22842,
+      "title": "MQL5 Wizard Techniques you should know (Part 93): Using Suffix Automation and an Auto Encoder in a Custom Money Management Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Suffix Automation and an Auto Encoder in a Custom Money Management Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 93,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22842.md"
+    },
+    {
+      "id": 22901,
+      "title": "MQL5 Wizard Techniques you should know (Part 94): Using Reservoir Sampling and Linear Regression in a Custom Trailing Stop Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Reservoir Sampling and Linear Regression in a Custom Trailing Stop Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 94,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22901.md"
+    },
+    {
+      "id": 22937,
+      "title": "MQL5 Wizard Techniques you should know (Part 95): Using Disjoint Set Union and Deep Belief Network in a Custom Signal Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Disjoint Set Union and Deep Belief Network in a Custom Signal Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 95,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22937.md"
+    },
+    {
+      "id": 23013,
+      "title": "MQL5 Wizard Techniques you should know (Part 96): Using Wavelet Thresholding and LSTM Network in a Custom Money Management Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Wavelet Thresholding and LSTM Network in a Custom Money Management Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 96,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23013.md"
+    },
+    {
+      "id": 23055,
+      "title": "MQL5 Wizard Techniques you should know (Part 97): Using Convex Hull and a miniature GRU Network in a Custom Trailing Stop Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Convex Hull and a miniature GRU Network in a Custom Trailing Stop Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 97,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23055.md"
+    },
+    {
+      "id": 23112,
+      "title": "MQL5 Wizard Techniques you should know (Part 98): Using an Unscented Kalman Filter and a Capsule Network in a Custom Signal Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using an Unscented Kalman Filter and a Capsule Network in a Custom Signal Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 98,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23112.md"
+    },
+    {
+      "id": 23144,
+      "title": "MQL5 Wizard Techniques you should know (Part 99): Using a KD-Tree and an Echo State Network in a Custom Money Management Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using a KD-Tree and an Echo State Network in a Custom Money Management Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 99,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23144.md"
+    },
+    {
+      "id": 23202,
+      "title": "MQL5 Wizard Techniques you should know (Part 100): Sliding Window Median and Bidirectional LSTM for a Custom Trailing Stop",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Sliding Window Median and Bidirectional LSTM for a Custom Trailing Stop",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 100,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23202.md"
+    }
+  ]
+}

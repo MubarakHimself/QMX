@@ -1,0 +1,71 @@
+{
+  "pack_id": "examples_069",
+  "section": "Examples",
+  "parent_shard": "examples_069",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "data label for time series mining",
+    "database is easy",
+    "dealing with time",
+    "developing a multi-currency advisor",
+    "developing a multi-currency expert advisor"
+  ],
+  "n": 6,
+  "articles": [
+    {
+      "id": 13218,
+      "title": "Data label for time series mining (Part 4)\uff1aInterpretability Decomposition Using Label Data",
+      "section": "Examples",
+      "series_title": "Data label for time series mining ()\uff1aInterpretability Decomposition Using Label Data",
+      "series_key": "data label for time series mining",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13218.md"
+    },
+    {
+      "id": 13919,
+      "title": "Data label for time series mining (Part 6)\uff1aApply and Test in EA Using ONNX",
+      "section": "Examples",
+      "series_title": "Data label for time series mining ()\uff1aApply and Test in EA Using ONNX",
+      "series_key": "data label for time series mining",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13919.md"
+    },
+    {
+      "id": 20654,
+      "title": "Database Is Easy (Part 1): A Lightweight ORM Framework for MQL5 Using SQLite",
+      "section": "Examples",
+      "series_title": "Database Is Easy (): A Lightweight ORM Framework for MQL5 Using SQLite",
+      "series_key": "database is easy",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20654.md"
+    },
+    {
+      "id": 9929,
+      "title": "Dealing with Time (Part 2): The Functions",
+      "section": "Examples",
+      "series_title": "Dealing with Time (): The Functions",
+      "series_key": "dealing with time",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9929.md"
+    },
+    {
+      "id": 17883,
+      "title": "Developing a Multi-Currency Advisor (Part 27): Component for Displaying Multi-Line Text",
+      "section": "Examples",
+      "series_title": "Developing a Multi-Currency Advisor (): Component for Displaying Multi-Line Text",
+      "series_key": "developing a multi-currency advisor",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17883.md"
+    },
+    {
+      "id": 17608,
+      "title": "Developing a Multi-Currency Expert Advisor (Part 28): Adding a Position Closing Manager",
+      "section": "Examples",
+      "series_title": "Developing a Multi-Currency Expert Advisor (): Adding a Position Closing Manager",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17608.md"
+    }
+  ]
+}

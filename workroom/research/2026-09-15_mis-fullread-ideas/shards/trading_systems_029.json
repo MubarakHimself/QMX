@@ -1,0 +1,111 @@
+{
+  "shard_id": "trading_systems_029",
+  "section": "Trading systems",
+  "n": 11,
+  "series_in_shard": [
+    "building a position lifecycle manager in mql5",
+    "building a professional trading system with heikin ashi",
+    "building ai-powered trading systems in mql5"
+  ],
+  "articles": [
+    {
+      "id": 19562,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 1): Implementing JSON Handling for AI APIs",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Implementing JSON Handling for AI APIs",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19562.md"
+    },
+    {
+      "id": 19567,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 2): Developing a ChatGPT-Integrated Program with User Interface",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Developing a ChatGPT-Integrated Program with User Interface",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19567.md"
+    },
+    {
+      "id": 19741,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 3): Upgrading to a Scrollable Single Chat-Oriented UI",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Upgrading to a Scrollable Single Chat-Oriented UI",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19741.md"
+    },
+    {
+      "id": 19782,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 4): Overcoming Multiline Input, Ensuring Chat Persistence, and Generating Signals",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Overcoming Multiline Input, Ensuring Chat Persistence, and Generating Signals",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19782.md"
+    },
+    {
+      "id": 20249,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 5): Adding a Collapsible Sidebar with Chat Popups",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Adding a Collapsible Sidebar with Chat Popups",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20249.md"
+    },
+    {
+      "id": 20254,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 6): Introducing Chat Deletion and Search Functionality",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Introducing Chat Deletion and Search Functionality",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20254.md"
+    },
+    {
+      "id": 20588,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 7): Further Modularization and Automated Trading",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Further Modularization and Automated Trading",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20588.md"
+    },
+    {
+      "id": 20722,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 8): UI Polish with Animations, Timing Metrics, and Response Management Tools",
+      "section": "Trading systems",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): UI Polish with Animations, Timing Metrics, and Response Management Tools",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20722.md"
+    },
+    {
+      "id": 23752,
+      "title": "Building a Position Lifecycle Manager in MQL5 (Part 1): The Foundation of Reusable Position Management",
+      "section": "Trading systems",
+      "series_title": "Building a Position Lifecycle Manager in MQL5 (): The Foundation of Reusable Position Management",
+      "series_key": "building a position lifecycle manager in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23752.md"
+    },
+    {
+      "id": 19260,
+      "title": "Building a Professional Trading System with Heikin Ashi (Part 1): Developing a custom indicator",
+      "section": "Trading systems",
+      "series_title": "Building a Professional Trading System with Heikin Ashi (): Developing a custom indicator",
+      "series_key": "building a professional trading system with heikin ashi",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19260.md"
+    },
+    {
+      "id": 18810,
+      "title": "Building a Professional Trading System with Heikin Ashi (Part 2): Developing an EA",
+      "section": "Trading systems",
+      "series_title": "Building a Professional Trading System with Heikin Ashi (): Developing an EA",
+      "series_key": "building a professional trading system with heikin ashi",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18810.md"
+    }
+  ]
+}

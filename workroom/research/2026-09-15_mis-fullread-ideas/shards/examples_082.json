@@ -1,0 +1,100 @@
+{
+  "shard_id": "examples_082",
+  "section": "Examples",
+  "n": 10,
+  "series_in_shard": [
+    "mastering log records"
+  ],
+  "articles": [
+    {
+      "id": 16447,
+      "title": "Mastering Log Records (Part 1): Fundamental Concepts and First Steps in MQL5",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Fundamental Concepts and First Steps in MQL5",
+      "series_key": "mastering log records",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16447.md"
+    },
+    {
+      "id": 16833,
+      "title": "Mastering Log Records (Part 2): Formatting Logs",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Formatting Logs",
+      "series_key": "mastering log records",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16833.md"
+    },
+    {
+      "id": 16866,
+      "title": "Mastering Log Records (Part 3): Exploring Handlers to Save Logs",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Exploring Handlers to Save Logs",
+      "series_key": "mastering log records",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16866.md"
+    },
+    {
+      "id": 16986,
+      "title": "Mastering Log Records (Part 4): Saving logs to files",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Saving logs to files",
+      "series_key": "mastering log records",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16986.md"
+    },
+    {
+      "id": 17137,
+      "title": "Mastering Log Records (Part 5): Optimizing the Handler with Cache and Rotation",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Optimizing the Handler with Cache and Rotation",
+      "series_key": "mastering log records",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17137.md"
+    },
+    {
+      "id": 17709,
+      "title": "Mastering Log Records (Part 6): Saving logs to database",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Saving logs to database",
+      "series_key": "mastering log records",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17709.md"
+    },
+    {
+      "id": 18291,
+      "title": "Mastering Log Records (Part 7): How to Show Logs on Chart",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): How to Show Logs on Chart",
+      "series_key": "mastering log records",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18291.md"
+    },
+    {
+      "id": 18467,
+      "title": "Mastering Log Records (Part 8): Error Records That Translate Themselves",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Error Records That Translate Themselves",
+      "series_key": "mastering log records",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18467.md"
+    },
+    {
+      "id": 18602,
+      "title": "Mastering Log Records (Part 9): Implementing the builder pattern and adding default configurations",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Implementing the builder pattern and adding default configurations",
+      "series_key": "mastering log records",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18602.md"
+    },
+    {
+      "id": 19014,
+      "title": "Mastering Log Records (Part 10): Avoiding Log Replay by Implementing a Suppression",
+      "section": "Examples",
+      "series_title": "Mastering Log Records (): Avoiding Log Replay by Implementing a Suppression",
+      "series_key": "mastering log records",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19014.md"
+    }
+  ]
+}

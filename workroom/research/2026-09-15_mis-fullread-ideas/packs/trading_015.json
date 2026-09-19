@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_015",
+  "section": "Trading",
+  "parent_shard": "trading_015",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 13737,
+      "title": "Trader-friendly stop loss and take profit",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13737.md"
+    },
+    {
+      "id": 13850,
+      "title": "Market Reactions and Trading Strategies in Response to Dividend Announcements: Evaluating the Efficient Market Hypothesis in Stock Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13850.md"
+    },
+    {
+      "id": 13897,
+      "title": "Creating a market making algorithm in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13897.md"
+    },
+    {
+      "id": 13941,
+      "title": "Algorithmic Trading With MetaTrader 5 And R For Beginners",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13941.md"
+    },
+    {
+      "id": 14006,
+      "title": "Building and testing Aroon Trading Systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14006.md"
+    },
+    {
+      "id": 14169,
+      "title": "Building and testing Keltner Channel trading systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14169.md"
+    },
+    {
+      "id": 14186,
+      "title": "Advanced Variables and Data Types in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14186.md"
+    },
+    {
+      "id": 14261,
+      "title": "Learn how to trade the Fair Value Gap (FVG)/Imbalances step-by-step: A Smart Money concept approach",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14261.md"
+    },
+    {
+      "id": 14494,
+      "title": "Practicing the development of trading strategies",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14494.md"
+    },
+    {
+      "id": 14634,
+      "title": "Risk manager for algorithmic trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14634.md"
+    },
+    {
+      "id": 14775,
+      "title": "How to build and optimize a volatility-based trading system (Chaikin Volatility - CHV)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14775.md"
+    },
+    {
+      "id": 14873,
+      "title": "Triangular arbitrage with predictions",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14873.md"
+    }
+  ]
+}

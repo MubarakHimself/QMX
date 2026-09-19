@@ -1,0 +1,434 @@
+---
+id: 14993
+source_url: https://www.mql5.com/en/articles/14993
+title: "MQL5 Wizard Techniques you should know (Part 21): Testing with Economic Calendar Data"
+author: ""
+author_url: 
+published: 2024-05-30T16:46Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: "MQL5 Wizard Techniques you should know (): Testing with Economic Calendar Data"
+series_part: 21
+source: mql5
+language: en
+---
+
+# MQL5 Wizard Techniques you should know (Part 21): Testing with Economic Calendar Data
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 30 May 2024 at 12:46
+
+2 970
+[
+4](https://www.mql5.com/en/forum/467897 "Comments")
+
+[Stephen Njuki](https://www.mql5.com/en/users/ssn)
+
+### 
+
+### **Introduction**
+
+We continue the series on wizard assembled Expert Advisors by looking at how [economic calendar](https://www.mql5.com/en/economic-calendar) news could be integrated in an Expert Advisor during testing to either confirm an idea or build a more robust trade system, thanks in no small part to this [article](https://www.mql5.com/en/articles/14324). That article is part of a series since it is the first, and therefore I encourage readers to read & follow up on it however, our take here is strictly on how wizard assembled Expert Advisors could benefit from these MQL5 IDE tools. For new readers, there are introductory articles [here](https://www.mql5.com/en/articles/171) and [here](https://www.mql5.com/en/articles/275) on how to develop and assemble Expert Advisors by the MQL5 Wizard.
+
+Economic Data can be the source of a trading edge or advantage in a trading system since it leans more towards the ‘fundamentals’ of securities as opposed to the ‘technicals’ that are more prevalent in the form of traditional indicators, custom-indicators, and other price action tools. These ‘fundamentals’ can take on the form of inflation rates, central bank interest rates, unemployment rates, productivity data, and a slew of other news data points that typically have a high impact on security prices as evidenced with their volatility whenever there is a release. The most famous of these probably could be the non-farm-payroll that are released on almost every first Friday of the month. In addition, there most certainly are other key news data points that do not get their requisite spotlight and are thus overlooked by most traders which is why testing strategies based on these Economic News Data points could help uncover some of these and therefore deliver an edge(s) to the prospecting trader.
+
+[SQLite](https://www.sqlite.org/ "https://www.sqlite.org/") databases can be created within the MetaEditor IDE and since they are data repositories, on paper, we should be able to use these as a data source to an Expert Advisor such that they act as indicator buffers. More than this though they can store the economic data locally, that can easily allow for offline testing and also use in the event that the news data source gets corrupted for unknown reasons, which is an ongoing risk as some (or inevitably most) data points get old. So, for this article we explore how SQLite databases can be used to archive Economic Calendar news such that wizard assembled Expert Advisors can use this to generate trade signals.
+
+### Current Limitations and Workarounds
+
+There is a catch, though. Besides the inability to read economic calendar data in strategy tester, from my testing on reading databases within strategy tester it appears there is a similar constraint. At the time of this writing it could be a coding error on my part but trying to read database data with this listing:
+
+```
+//+------------------------------------------------------------------+
+//| Read Data
+//+------------------------------------------------------------------+
+double CSignalEconData::Read(string DB, datetime Time, string Event)
+{  double _data = 0.0;
+//--- create or open the database in the common terminal folder
+   ResetLastError();
+   int _db_handle = DatabaseOpen(DB, DATABASE_OPEN_READWRITE | DATABASE_OPEN_CREATE);
+   if(_db_handle == INVALID_HANDLE)
+   {  Print("DB: ", DB, " open failed with err: ", GetLastError());
+      return(_data);
+   }
+   string _sql =
+      "  SELECT ACTUAL " +
+      "  FROM "   +
+      "  ( "   +
+      "  SELECT ACTUAL "   +
+      "  FROM PRICES "  +
+      "  WHERE DATE <= '" + TimeToString(Time) + "' "  +
+      "  AND EVENT = '" + Event + "'  "  +
+      "  ORDER BY DATE DESC   "  +
+      "  LIMIT 1  "  +
+      "  )  ";
+   int _request = DatabasePrepare(_db_handle, _sql);
+   if(_request == INVALID_HANDLE)
+   {  Print("request failed with err: ", GetLastError());
+      DatabaseClose(_db_handle);
+      return(_data);
+   }
+   while(DatabaseRead(_request))
+   {  //--- read the values of each field from the obtained entry
+      ResetLastError();
+      if(!DatabaseColumnDouble(_request, 0, _data))
+      {  Print(" DatabaseRead() failed with err: ", GetLastError());
+         DatabaseFinalize(_request);
+         DatabaseClose(_db_handle);
+      }
+   }
+   return(_data);
+}
+```
+
+Yields the error 5601, with the message that the table I am trying to access does not exist! However, running the exact SQL script from either the MetaEditor database IDE or in a script that is attached to a chart gives me no such troubles, as the expected result is returned. So, it could be an oversight on my part where there is some extra code I need to include to make this run, in strategy tester OR the accessing of databases in strategy tester is not allowed. Service Desk’s Chatbot cannot help!
+
+So, what could we do in this situation? Clearly there are benefits in archiving economic data in a database, locally, as mentioned above, so it would be a shame to not take this further by testing and developing Expert Advisors based off of it. The workaround I propose is having the economic data exported to a CSV file and reading this during strategy tester.
+
+Despite relying on and using CSV files as a workaround in this case, they do face a number of challenges and limitations if one thinks they could supplant databases. One might argue that rather than exporting data to a database and then to a CSV file, why not simply export it directly to the CSV file? Well, here’s why.
+
+CSV files are way more inefficient at storing data than databases. This is shown through a number of factors, chief among which is data integrity and validation. Databases enforce integrity and constraint checks via primary keys and foreign keys, while CSV files clearly lack this ability. Secondly, building on that, performance and scalability are a forte for databases thanks to indexing where large data sets can be searched very efficiently while CSV files will always rely on linear search which can be very slow when faced with big data.
+
+Thirdly, concurrent access is in-built into most databases and this can allow real-time access for multiple users, on the other hand CSV files cannot handle this. Furthermore, databases do provide secured access with features including, user authentication, role-based access control, and encryption. CSV files by default do not provide security, and this makes in tough in protecting sensitive data.
+
+In addition, databases provide automated tools for backup and recovery which CSV does not; databases support complex queries that use joins and manipulation with SQL for a thorough analysis while CSV files would require 3rdparty scripts to arrive at the same capability. Databases provide [ACID](https://en.wikipedia.org/wiki/ACID "https://en.wikipedia.org/wiki/ACID") compliance of its transactions, which CSV files do not.
+
+To continue, databases also support [normalization](https://en.wikipedia.org/wiki/Unnormalized_form "https://en.wikipedia.org/wiki/Unnormalized_form") which reduces [data redundancy](https://en.wikipedia.org/wiki/Data_redundancy#In_database_systems "https://en.wikipedia.org/wiki/Data_redundancy#In_database_systems") and therefore allows for a more compact, efficient storage with less duplicity in storage while CSV’s inherent flat structure is bound to breed a lot of redundancy. Databases also support versioning (which is important since a lot of data can get updated over time) a feature that is key for audits and CSV file’s do not provide. CSV’s are prone to corrupt data on data-updates and face challenges in managing complex data structures. There are many other crucial advantages of databases over CSV files, however we will keep our list to just these in highlighting the benefits. Each of these mentioned benefits can play a crucial role in curating economic data for analysis and study, especially over extended periods of time, something which will be unwieldy with CSV files.
+
+Before we export data to CSV file for strategy tester access though, we should build the database and load the economic data to it, so this is what we cover next.
+
+### Building the SQLite Database
+
+To build our SQLite database, we’ll use a script. The listing to this is shared below:
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+//| Sourced from: https://www.mql5.com/en/articles/7463#database_functions
+//| and here: https://www.mql5.com/en/docs/database/databasebind
+//+------------------------------------------------------------------+
+void OnStart()
+{
+//--- create or open a database
+   string _db_file = __currency + "_econ_cal.sqlite";
+   int _db_handle = DatabaseOpen(_db_file, DATABASE_OPEN_READWRITE | DATABASE_OPEN_CREATE);
+   if(_db_handle == INVALID_HANDLE)
+   {  Print("DB: ", _db_file, " open failed with code ", GetLastError());
+      return;
+   }
+   else
+      Print("Database: ", _db_file, " opened successfully");
+	...
+
+        ...
+
+}
+```
+
+This code is mostly sourced from [here,](https://www.mql5.com/en/articles/7463#database_functions)with a few modifications. Creating a database is via a handle, like declaring a file read or write handle. We are creating a database for each currency pair which I admit is wasteful and very unwieldy and a better approach would have been to have all these economic data points across currencies in a single database, however I never got around to being that diligent I apologize. The reader could make amends.Once our handle is created, we would need to check that this handle is valid before proceeding. If it is valid, this indicates we have a blank database and can therefore proceed to create the table to house our data. We are naming our table prices because in this article we will focus only on the [calendar event sector](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_sector) of the type ‘sector prices’. This is an umbrella sector that is bound to include not just inflation rate data but also consumer and producer price indices and is focused on since we are looking to develop a custom signal class that bases its long or short conditions on the relative inflation rates of the currency pair being traded. Many alternative approaches could be taken in developing these long and short condition signals, this route chosen here is probably one of the simplest. In creating the table, just like with most database objects we’d start by checking if it does exist, and if it does, it would be deleted (dropped) so we can create the table we are going to populate and use. The listing that does this is shared below:
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+{
+        ...
+
+//--- if the PRICES table exists, delete it
+   if(DatabaseTableExists(_db_handle, "PRICES"))
+   {  //--- delete the table
+      if(!DatabaseExecute(_db_handle, "DROP TABLE PRICES"))
+      {  Print("Failed to drop table PRICES with code ", GetLastError());
+         DatabaseClose(_db_handle);
+         return;
+      }
+   }
+//--- create the PRICES table
+   if(!DatabaseExecute(_db_handle, "CREATE TABLE PRICES("
+                       "DATE           TEXT            ,"
+                       "FORECAST       REAL            ,"
+                       "ACTUAL         REAL            ,"
+                       "EVENT          TEXT);"))
+   {  Print("DB: ", _db_file, " create table failed with code ", GetLastError());
+      DatabaseClose(_db_handle);
+      return;
+   }
+//--- display the list of all fields in the PRICES table
+   if(DatabasePrint(_db_handle, "PRAGMA TABLE_INFO(PRICES)", 0) < 0)
+   {  PrintFormat("DatabasePrint(\"PRAGMA TABLE_INFO(PRICES)\") failed, error code=%d at line %d", GetLastError(), __LINE__);
+      DatabaseClose(_db_handle);
+      return;
+   }
+
+        ...
+}
+```
+
+Our created table will simply feature 4 columns namely the ‘DATE’ column which will be of text type that logs when the economic news was released, the ‘FORECAST’ column for the forecasted economic data point that will be of real type, the ‘ACTUAL’ column which will also be of [real type](https://www.sqlite.org/datatype3.html#storage_classes_and_datatypes "https://www.sqlite.org/datatype3.html#storage_classes_and_datatypes") and will include the actual economic data point for that date, and finally the ‘EVENT’ column that will be of text type and will help properly label this data point since on any date for a given currency we can have multiple data points within the event sector prices category. So, the type of label used for each data point will correspond to the data’s event code. This is because in retrieving the economic calendar data, we use the ‘CalendarValueHistoryByEvent’ function to return calendar news values that are paired to specific events. Each of these events has a string descriptive code, and it is these codes that we assign to our data when storing in the database. The listing for the ‘Get’ function that retrieves this economic calendar data is given below:
+
+```
+//+------------------------------------------------------------------+
+//| Get Currency Events
+//+------------------------------------------------------------------+
+bool Get(string Currency, datetime Start, datetime Stop, ENUM_CALENDAR_EVENT_SECTOR Sector, string &Data[][4])
+{  ResetLastError();
+   MqlCalendarEvent _event[];
+   int _events = CalendarEventByCurrency(Currency, _event);
+   printf(__FUNCSIG__ + " for Currency: " + Currency + " events are: " + IntegerToString(_events));
+//
+   MqlCalendarValue _value[];
+   int _rows = 1;
+   ArrayResize(Data, __COLS * _rows);
+   for(int e = 0; e < _events; e++)
+   {  int _values = CalendarValueHistoryByEvent(_event[e].id, _value, Start, Stop);
+      //
+      if(_event[e].sector != Sector)
+      {  continue;
+      }
+      printf(__FUNCSIG__ + " Calendar Event code: " + _event[e].event_code + ", belongs to sector: " + EnumToString(_event[e].sector));
+      //
+      _rows += _values;
+      ArrayResize(Data, __COLS * _rows);
+      for(int v = 0; v < _values; v++)
+      {  //
+         printf(__FUNCSIG__ + " Calendar Event code: " + _event[e].event_code + ", for value: " + TimeToString(_value[v].period) + " on: " + TimeToString(_value[v].time) + ", has... ");
+         //
+         Data[_rows - _values + v - 1][0] = TimeToString(_value[v].time);
+         //
+         if(_value[v].HasForecastValue())
+         {  Data[_rows - _values + v - 1][1] = DoubleToString(_value[v].GetForecastValue());
+         }
+         if(_value[v].HasActualValue())
+         {  Data[_rows - _values + v - 1][2] = DoubleToString(_value[v].GetActualValue());
+         }
+         //
+         Data[_rows - _values + v - 1][3] = _event[e].event_code;
+      }
+   }
+   return(true);
+}
+```
+
+We use a multidimensional string array named ‘\_data’ to retrieve the economic calendar data and its second dimension matches with the number of columns in the ‘PRICES’ table that we’ll use to store the data which means its rows are equal in number to the data rows we’ll insert into the ‘PRICES’ table. In order to expedite the loading of data from our array to the table, we firstly use the ‘DatabaseTransactionBegin()’ and ‘DatabaseTransactionCommit()’ functions to respectively initiate and terminate the data write operations. This is explained [here](https://www.mql5.com/en/articles/7463#transactions_speedup), in the article already referenced above, as a more efficient route as opposed to working without them. Secondly, we use the [data bind](https://www.mql5.com/en/docs/database/databasebind) function to actually write our array data to the database. Since our data columns match the destination data table, this process is also relatively straight forward and very efficient despite being a bit lengthy as shown in the listing below:
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+//| Sourced from: https://www.mql5.com/en/articles/7463#database_functions
+//| and here: https://www.mql5.com/en/docs/database/databasebind
+//+------------------------------------------------------------------+
+void OnStart()
+{
+
+        ...
+
+//--- create a parametrized _sql_request to add _points to the PRICES table
+   string _sql = "INSERT INTO PRICES (DATE,FORECAST,ACTUAL,EVENT)"
+                " VALUES (?1,?2,?3,?4);"; // _sql_request parameters
+   int _sql_request = DatabasePrepare(_db_handle, _sql);
+   if(_sql_request == INVALID_HANDLE)
+   {  PrintFormat("DatabasePrepare() failed with code=%d", GetLastError());
+      Print("SQL _sql_request: ", _sql);
+      DatabaseClose(_db_handle);
+      return;
+   }
+//--- go through all the _points and add them to the PRICES table
+   string _data[][__COLS];
+   Get(__currency, __start_date, __stop_date, __event_sector, _data);
+   int _points = int(_data.Size() / __COLS);
+   bool _request_err = false;
+   DatabaseTransactionBegin(_db_handle);
+   for(int i = 0; i < _points; i++)
+   {  //--- set the values of the parameters before adding a data point
+      ResetLastError();
+      string _date = _data[i][0];
+      if(!DatabaseBind(_sql_request, 0, _date))
+      {  PrintFormat("DatabaseBind() failed at line %d with code=%d", __LINE__, GetLastError());
+         _request_err = true;
+         break;
+      }
+      //--- if the previous DatabaseBind() call was successful, set the next parameter
+      if(!DatabaseBind(_sql_request, 1, _data[i][1]))
+      {  PrintFormat("DatabaseBind() failed at line %d with code=%d", __LINE__, GetLastError());
+         _request_err = true;
+         break;
+      }
+      if(!DatabaseBind(_sql_request, 2, _data[i][2]))
+      {  PrintFormat("DatabaseBind() failed at line %d with code=%d", __LINE__, GetLastError());
+         _request_err = true;
+         break;
+      }
+      if(!DatabaseBind(_sql_request, 3, _data[i][3]))
+      {  PrintFormat("DatabaseBind() failed at line %d with code=%d", __LINE__, GetLastError());
+         _request_err = true;
+         break;
+      }
+      //--- execute a _sql_request for inserting the entry and check for an error
+      if(!DatabaseRead(_sql_request) && (GetLastError() != ERR_DATABASE_NO_MORE_DATA))
+      {  PrintFormat("DatabaseRead() failed with code=%d", GetLastError());
+         DatabaseFinalize(_sql_request);
+         _request_err = true;
+         break;
+      }
+      else
+         PrintFormat("%d: added data for %s", i + 1, _date);
+      //--- reset the _sql_request before the next parameter update
+      if(!DatabaseReset(_sql_request))
+      {  PrintFormat("DatabaseReset() failed with code=%d", GetLastError());
+         DatabaseFinalize(_sql_request);
+         _request_err = true;
+         break;
+      }
+   } //--- done going through all the data points
+//--- transactions status
+   if(_request_err)
+   {  PrintFormat("Table PRICES: failed to add %s data", _points);
+      DatabaseTransactionRollback(_db_handle);
+      DatabaseClose(_db_handle);
+      return;
+   }
+   else
+   {  DatabaseTransactionCommit(_db_handle);
+      PrintFormat("Table PRICES: added %d data", _points);
+   }
+
+        ...
+
+}
+```
+
+With the data inserted in ‘PRICE’ table, we now have to create a CSV file from our database, since access when using strategy tester appears to be inhibited. To recap, our ‘Read()’ function that contains SQL used to read the database can run just fine within MetaEditor as shown in the image below:
+
+Also, if we attach the script ‘sql\_read’ (full source is below) to any chart with similar inputs of time and query the USD database we do get the same result, implying there is no issue with the database under MetaEditor IDE or the MT5 terminal environment. Please see the log print image below:
+
+The script attachment and run does potentially mean an attached Expert Advisor to a chart could be able to read database values without any problem. However, for our purposes right now we cannot read database values when running strategy tester and this means we need to rely on CSV files.
+
+### Exporting Economic Calendar Data
+
+To export data to a CSV we simply use one of the in-built functions ‘DatabaseExport()’ as shown in the code below:
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+{
+
+...
+
+//--- save the PRICES table to a CSV file
+   string _csv_file = "PRICES.csv";
+   if(DatabaseExport(_db_handle, "SELECT * FROM PRICES", _csv_file,
+                     DATABASE_EXPORT_HEADER | DATABASE_EXPORT_INDEX | DATABASE_EXPORT_QUOTED_STRINGS, ";"))
+      Print("Database: table PRICES saved in ", _csv_file);
+   else
+      Print("Database: DatabaseExport(\"SELECT * FROM PRICES\") failed with code", GetLastError());
+//--- close the database file and inform of that
+   DatabaseClose(_db_handle);
+   PrintFormat("Database: %s created and closed", _db_file);
+}
+```
+
+This approach is the least code intensive route since if we were to, for instance, first select the data into an object (e.g. array) and then loop through all the array values and save them to a comma separated string which we then export, it would achieve the same result but am almost certain that coding hustle aside what we’ve adopted here has much shorter execution time than the for-loop approach. This could be because SQLite is a C-Language library, and MQL5 is also based a lot on C.
+
+Our database table design, for ‘PRICES’, lacks an explicit primary key and these keys with large data sets are important in creating indices that make databases a quick and powerful tool. What can be done as a modification to this table could be either to add an auto increment column that serves as a primary key or pairing the ‘EVENT’ and ‘DATE’ columns to both be primary keys since from a design standpoint the combined values in both columns will be unique across all data rows. The ambiguity of codes adopted to label events as stored in the ‘EVENT’ column does call for some extra diligence to ensure that the data point you are interested in is what you actually retrieve.
+
+For instance, for this article we are focusing on the pair GBPUSD which means the two currencies we’d be interested in are GBP ad USD. (Note we have evaded the EUR given multiple data points not just from the euro area but also its member countries!) If we look at the event codes for inflation data for these less ambiguous currencies, for GBP we have ‘cpi-yy’ and for USD we have ‘core-pce-price-index-yy’. Keep in mind there are other year-on-year consumer inflation codes for USD that we’ll not be considering, therefore careful consideration should be made in making a selection. And also, this labelling is not standard per se, meaning some years or even less down the road it could get revised such that any automated systems will also need to get their code updated. This could point to the idea of one having his own custom labelling with a data validation screener from the calendar data helping ensure the right data gets coded correctly but as mentioned some human inspection would be required, from time to time, since the coding could be changed at a moment’s notice.
+
+### MQL5 Signal Class
+
+We are using CSV files for this as mentioned and while this should be a straight forward process, [ANSI and UTF8](https://stackoverflow.com/questions/700187/unicode-utf-ascii-ansi-format-differences "https://stackoverflow.com/questions/700187/unicode-utf-ascii-ansi-format-differences") formatting could present some challenges when reading this data if one is not aware of their differences. We have adopted a standard CSV reader function from [here](https://www.mql5.com/en/articles/2720) to read the exported CSV data, and it gets loaded in the function that initializes indicators for each currency. The margin currency (GBP) and the profit currency (USD). In doing this, there are bound to be limitations on reading large CSV files since they strain RAM. A potential work around this could be partitioning the CSV file by time such that at initialization only one of the files gets loaded and when its latest data point is too old for the current time in strategy tester then that file is ‘released’ and a newer CSV file gets loaded.
+
+These workarounds are all addressing problems that would not exist if database access in strategy tester was possible. So, our signal class, since it is not reading from a database, will simply take as inputs the names of the CSV files for both the margin currency and the profit currency. With our signal class the only series buffer we will use will be the ‘m\_time’ class and strictly speaking we do not even need the buffer as the current time is sufficient however, it is used here to get the time at index zero. The retrieval of calendar data values based from the loaded CSV file is done by the ‘Read’ function, whose code is below:
+
+```
+//+------------------------------------------------------------------+
+//| Read Data
+//+------------------------------------------------------------------+
+double CSignalEconData::Read(datetime Time, SLine &Data[])
+{  double _data = 0.0;
+   int _rows = ArraySize(Data);
+   _data = StringToDouble(Data[0].field[1]);
+   for(int i = 0; i < _rows; i++)
+   {  if(Time >= StringToTime(Data[i].field[0]))
+      {  _data = StringToDouble(Data[i].field[1]);
+      }
+      else if(Time < StringToTime(Data[i].field[0]))
+      {  break;
+      }
+   }
+   return(_data);
+}
+```
+
+It is iterative since it uses a for-loop if, however, we had been able to access this same data from an indexed database, the same operation would be executed much quicker. On small data sets such the one used for this article this performance difference could be overlooked, but as data set size increases with more history data being looked at then the case for reading the SQLite within strategy tester gets stronger.
+
+The read function is called for both the margin currency and profit currency, and it returns the latest inflation rates. Our signal is simply generated based on the relative size of these rates. If the margin currency has a higher inflation rate than the profit currency, then we would short the pair. If, on the other hand, the inflation rate of the margin currency is less, then we would go long. This logic is shown below as part of the ‘LongCondition()’ function:
+
+```
+//+------------------------------------------------------------------+
+//| "Voting" that price will grow.                                   |
+//+------------------------------------------------------------------+
+int CSignalEconData::LongCondition(void)
+{  int result = 0;
+   m_time.Refresh(-1);
+   double _m = Read(m_time.GetData(0), m_margin_data);
+   double _p = Read(m_time.GetData(0), m_profit_data);
+   if(_m < _p)
+   {  result = int(100.0 * ((_p - _m) / _p));
+   }
+   return(result);
+}
+```
+
+If we run the Expert Advisor with no optimization at all, using the very first default settings after assembling it with the wizard and compiling, we get the following results:
+
+Inflation is clearly a determinant in the trend of currency pairs. The inflation data we have used is released monthly, so our testing time frame is also monthly. But this should not necessarily be the case as on even smaller time frames the same position can be maintained while looking for sharper or better entry points. The tested pair is GBPUSD.
+
+### Conclusion
+
+To sum-up, SQLite databases introduce a lot of benefits and advantages in how they allow one to store and curate customized sets of data. Economic Calendar Data that is released on key news events is one such set of data that could be archived for further analysis in helping understand what are the key drivers of market action. A very simple strategy such as the one looked at in this article, that focuses on inflation, could make all the difference to a system that also uses technical indicators. As always, this is not investment advice and the reader is encouraged to perform his own due diligence before undertaking any of the ideas shared in this article or series.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/14993.zip "Download all attachments in the single ZIP archive")
+
+[ed\_r1.mq5](https://www.mql5.com/en/articles/download/14993/ed_r1.mq5 "Download ed_r1.mq5")
+(7.01 KB)
+
+[db\_calendar\_r1.mq5](https://www.mql5.com/en/articles/download/14993/db_calendar_r1.mq5 "Download db_calendar_r1.mq5")
+(8.06 KB)
+
+[SignalWZ\_21\_r1.mqh](https://www.mql5.com/en/articles/download/14993/signalwz_21_r1.mqh "Download SignalWZ_21_r1.mqh")
+(10.79 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Developing a multi-currency Expert Advisor (Part 2): Transition to virtual positions of trading strategies](https://www.mql5.com/en/articles/14107)
+
+Let's continue developing a multi-currency EA with several strategies working in parallel. Let's try to move all the work associated with opening market positions from the strategy level to the level of the EA managing the strategies. The strategies themselves will trade only virtually, without opening market positions.
+
+[Master MQL5 from beginner to pro (Part II): Basic data types and use of variable](https://www.mql5.com/en/articles/13749)
+
+This is a continuation of the series for beginners. In this article, we'll look at how to create constants and variables, write dates, colors, and other useful data. We will learn how to create enumerations like days of the week or line styles (solid, dotted, etc.). Variables and expressions are the basis of programming. They are definitely present in 99% of programs, so understanding them is critical. Therefore, if you are new to programming, this article can be very useful for you. Required programming knowledge level: very basic, within the limits of my previous article (see the link at the beginning).
+
+[Reimagining Classic Strategies: Crude Oil](https://www.mql5.com/en/articles/14855)
+
+In this article, we revisit a classic crude oil trading strategy with the aim of enhancing it by leveraging supervised machine learning algorithms. We will construct a least-squares model to predict future Brent crude oil prices based on the spread between Brent and WTI crude oil prices. Our goal is to identify a leading indicator of future changes in Brent prices.
+
+[Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?](https://www.mql5.com/en/articles/14926)
+
+These advanced gradient-boosted decision tree techniques offer superior performance and flexibility, making them ideal for financial modeling and algorithmic trading. Learn how to leverage these tools to optimize your trading strategies, improve predictive accuracy, and gain a competitive edge in the financial markets.
+
+[
+
+Powerful analytics for traders of any level
+All the necessary trading reports for beginners and professionals](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=muccpajyfystoakuukdobwigjejzmpqn&s=52daad60fa795e635264e6f94898f05493bca3b5124d4cca8eb7e82333c2ef12&uid=&ref=https://www.mql5.com/en/articles/14993&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6378745816181001215)

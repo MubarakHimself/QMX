@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_028",
+  "section": "Examples",
+  "parent_shard": "examples_028",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 7124,
+      "title": "Library for easy and quick development of MetaTrader programs (part XVII): Interactivity of library objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7124.md"
+    },
+    {
+      "id": 7149,
+      "title": "Library for easy and quick development of MetaTrader programs (part XVIII): Interactivity of account and any other library objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7149.md"
+    },
+    {
+      "id": 7166,
+      "title": "MQL5 Cookbook: Trading strategy stress testing using custom symbols",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7166.md"
+    },
+    {
+      "id": 7176,
+      "title": "Library for easy and quick development of MetaTrader programs (part XIX): Class of library messages",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7176.md"
+    },
+    {
+      "id": 7195,
+      "title": "Library for easy and quick development of MetaTrader programs (part XX): Creating and storing program resources",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7195.md"
+    },
+    {
+      "id": 7229,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXI): Trading classes - Base cross-platform trading object",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7229.md"
+    },
+    {
+      "id": 7258,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXII): Trading classes - Base trading class, verification of limitations",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7258.md"
+    },
+    {
+      "id": 7286,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXIII): Base trading class - verification of valid parameters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7286.md"
+    },
+    {
+      "id": 7326,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXIV): Base trading class - auto correction of invalid parameters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7326.md"
+    },
+    {
+      "id": 7365,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXV): Handling errors returned by the trade server",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7365.md"
+    },
+    {
+      "id": 7370,
+      "title": "Practical application of neural networks in trading. It's time to practice",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7370.md"
+    },
+    {
+      "id": 7394,
+      "title": "Library for easy and quick development of MetaTrader programs (part XXVI): Working with pending trading requests - first implementation (opening positions)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7394.md"
+    }
+  ]
+}

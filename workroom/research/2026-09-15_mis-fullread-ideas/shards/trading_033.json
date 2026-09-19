@@ -1,0 +1,64 @@
+{
+  "shard_id": "trading_033",
+  "section": "Trading",
+  "n": 6,
+  "series_in_shard": [
+    "developing a multi-currency expert advisor"
+  ],
+  "articles": [
+    {
+      "id": 14026,
+      "title": "Developing a multi-currency Expert Advisor (Part 1): Collaboration of several trading strategies",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Collaboration of several trading strategies",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14026.md"
+    },
+    {
+      "id": 14107,
+      "title": "Developing a multi-currency Expert Advisor (Part 2): Transition to virtual positions of trading strategies",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Transition to virtual positions of trading strategies",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14107.md"
+    },
+    {
+      "id": 14148,
+      "title": "Developing a multi-currency Expert Advisor (Part 3): Architecture revision",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Architecture revision",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14148.md"
+    },
+    {
+      "id": 14739,
+      "title": "Developing a multi-currency Expert Advisor (Part 10): Creating objects from a string",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Creating objects from a string",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14739.md"
+    },
+    {
+      "id": 14764,
+      "title": "Developing a multi-currency Expert Advisor (Part 12): Developing prop trading level risk manager",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Developing prop trading level risk manager",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14764.md"
+    },
+    {
+      "id": 15085,
+      "title": "Developing a multi-currency Expert Advisor (Part 14): Adaptive volume change in risk manager",
+      "section": "Trading",
+      "series_title": "Developing a multi-currency Expert Advisor (): Adaptive volume change in risk manager",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15085.md"
+    }
+  ]
+}

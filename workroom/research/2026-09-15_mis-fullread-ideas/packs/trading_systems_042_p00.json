@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_042_p00",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_042",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "mql5 trading tools"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18986,
+      "title": "MQL5 Trading Tools (Part 7): Informational Dashboard for Multi-Symbol Position and Account Monitoring",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Informational Dashboard for Multi-Symbol Position and Account Monitoring",
+      "series_key": "mql5 trading tools",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18986.md"
+    },
+    {
+      "id": 20229,
+      "title": "MQL5 Trading Tools (Part 10): Building a Strategy Tracker System with Visual Levels and Success Metrics",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Building a Strategy Tracker System with Visual Levels and Success Metrics",
+      "series_key": "mql5 trading tools",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20229.md"
+    },
+    {
+      "id": 21038,
+      "title": "MQL5 Trading Tools (Part 13): Creating a Canvas-Based Price Dashboard with Graph and Stats Panels",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Creating a Canvas-Based Price Dashboard with Graph and Stats Panels",
+      "series_key": "mql5 trading tools",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21038.md"
+    },
+    {
+      "id": 21072,
+      "title": "MQL5 Trading Tools (Part 14): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar",
+      "series_key": "mql5 trading tools",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21072.md"
+    },
+    {
+      "id": 21252,
+      "title": "MQL5 Trading Tools (Part 16): Improved Super-Sampling Anti-Aliasing (SSAA) and High-Resolution Rendering",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Improved Super-Sampling Anti-Aliasing (SSAA) and High-Resolution Rendering",
+      "series_key": "mql5 trading tools",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21252.md"
+    },
+    {
+      "id": 21303,
+      "title": "MQL5 Trading Tools (Part 20): Canvas Graphing with Statistical Correlation and Regression Analysis",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Canvas Graphing with Statistical Correlation and Regression Analysis",
+      "series_key": "mql5 trading tools",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21303.md"
+    },
+    {
+      "id": 21306,
+      "title": "MQL5 Trading Tools (Part 21): Adding Cyberpunk Theme to Regression Graphs",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Adding Cyberpunk Theme to Regression Graphs",
+      "series_key": "mql5 trading tools",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21306.md"
+    },
+    {
+      "id": 21318,
+      "title": "MQL5 Trading Tools (Part 23): Camera-Controlled, DirectX-Enabled 3D Graphs for Distribution Insights",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Camera-Controlled, DirectX-Enabled 3D Graphs for Distribution Insights",
+      "series_key": "mql5 trading tools",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21318.md"
+    },
+    {
+      "id": 21335,
+      "title": "MQL5 Trading Tools (Part 24): Depth-Perception Upgrades with 3D Curves, Pan Mode, and ViewCube Navigation",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Depth-Perception Upgrades with 3D Curves, Pan Mode, and ViewCube Navigation",
+      "series_key": "mql5 trading tools",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21335.md"
+    },
+    {
+      "id": 21337,
+      "title": "MQL5 Trading Tools (Part 25): Expanding to Multiple Distributions with Interactive Switching",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Expanding to Multiple Distributions with Interactive Switching",
+      "series_key": "mql5 trading tools",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21337.md"
+    },
+    {
+      "id": 21339,
+      "title": "MQL5 Trading Tools (Part 26): Integrating Frequency Binning, Entropy, and Chi-Square in Visual Analyzer",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Integrating Frequency Binning, Entropy, and Chi-Square in Visual Analyzer",
+      "series_key": "mql5 trading tools",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21339.md"
+    },
+    {
+      "id": 22105,
+      "title": "MQL5 Trading Tools (Part 27): Rendering Parametric Butterfly Curve on Canvas",
+      "section": "Trading systems",
+      "series_title": "MQL5 Trading Tools (): Rendering Parametric Butterfly Curve on Canvas",
+      "series_key": "mql5 trading tools",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22105.md"
+    }
+  ]
+}

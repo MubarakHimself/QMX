@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_014",
+  "section": "Trading",
+  "parent_shard": "trading_014",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12814,
+      "title": "How to Become a Successful Signal Provider on MQL5.com",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12814.md"
+    },
+    {
+      "id": 12830,
+      "title": "Simple Mean Reversion Trading Strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12830.md"
+    },
+    {
+      "id": 12903,
+      "title": "Creating Graphical Panels Became Easy in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12903.md"
+    },
+    {
+      "id": 12923,
+      "title": "Improve Your Trading Charts With Interactive GUI's in MQL5 (Part III): Simple Movable Trading GUI",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12923.md"
+    },
+    {
+      "id": 12970,
+      "title": "Understanding functions in MQL5 with applications",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12970.md"
+    },
+    {
+      "id": 12984,
+      "title": "Discrete Hartley transform",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12984.md"
+    },
+    {
+      "id": 12996,
+      "title": "Benefiting from Forex market seasonality",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12996.md"
+    },
+    {
+      "id": 13021,
+      "title": "Everything you need to learn about the MQL5 program structure",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13021.md"
+    },
+    {
+      "id": 13229,
+      "title": "Understanding order placement in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13229.md"
+    },
+    {
+      "id": 13338,
+      "title": "Pair trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13338.md"
+    },
+    {
+      "id": 13466,
+      "title": "Learn how to deal with date and time in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13466.md"
+    },
+    {
+      "id": 13622,
+      "title": "Design Patterns in software development and MQL5 (Part I): Creational Patterns",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13622.md"
+    }
+  ]
+}

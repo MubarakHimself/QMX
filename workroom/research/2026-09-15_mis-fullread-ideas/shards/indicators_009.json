@@ -1,0 +1,83 @@
+{
+  "shard_id": "indicators_009",
+  "section": "Indicators",
+  "n": 8,
+  "series_in_shard": [
+    "market microstructure in mql5",
+    "multicurrency monitoring of trading signals"
+  ],
+  "articles": [
+    {
+      "id": 22553,
+      "title": "Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Measuring long memory in MQL5 with Hurst estimators",
+      "series_key": "market microstructure in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22553.md"
+    },
+    {
+      "id": 22598,
+      "title": "Market Microstructure in MQL5 (Part 3): Estimating ARFIMA d with GPH",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Estimating ARFIMA d with GPH",
+      "series_key": "market microstructure in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22598.md"
+    },
+    {
+      "id": 22638,
+      "title": "Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Volatility That Remembers",
+      "series_key": "market microstructure in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22638.md"
+    },
+    {
+      "id": 22938,
+      "title": "Market Microstructure in MQL5 (Part 5): Microstructure Noise",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Microstructure Noise",
+      "series_key": "market microstructure in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22938.md"
+    },
+    {
+      "id": 22939,
+      "title": "Market Microstructure in MQL5 (Part 6): Order Flow",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Order Flow",
+      "series_key": "market microstructure in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22939.md"
+    },
+    {
+      "id": 22940,
+      "title": "Market Microstructure in MQL5 (Part 7): Regime Classification",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Regime Classification",
+      "series_key": "market microstructure in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22940.md"
+    },
+    {
+      "id": 23372,
+      "title": "Market Microstructure in MQL5 (Part 8): Micro-Trend Strength",
+      "section": "Indicators",
+      "series_title": "Market Microstructure in MQL5 (): Micro-Trend Strength",
+      "series_key": "market microstructure in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23372.md"
+    },
+    {
+      "id": 7417,
+      "title": "Multicurrency monitoring of trading signals (Part 1): Developing the application structure",
+      "section": "Indicators",
+      "series_title": "Multicurrency monitoring of trading signals (): Developing the application structure",
+      "series_key": "multicurrency monitoring of trading signals",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7417.md"
+    }
+  ]
+}

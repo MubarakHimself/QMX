@@ -1,0 +1,1762 @@
+---
+id: 9874
+source_url: https://www.mql5.com/en/articles/9874
+title: "MQL5 Cookbook – Economic Calendar"
+author: ""
+author_url: 
+published: 2022-01-12T15:52Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# MQL5 Cookbook – Economic Calendar
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 12 January 2022 at 10:52
+
+22 551
+[
+26](https://www.mql5.com/en/forum/386245 "Comments")
+
+[Denis Kirichenko](https://www.mql5.com/en/users/denkir)
+
+### Introduction
+
+MetaTrader 5 terminal and MQL5 programming language are constantly evolving, expanding their market analysis features, tools for developing more complex trading robots, etc. One of the new terminal tools is the [Economic Calendar](https://www.mql5.com/en/economic-calendar) that can be handled both manually and with the help of robots.
+
+The built-in calendar is flexible enough. You can configure it on the Calendar terminal tab, install it on your website or download the mobile version. Being an algorithmic trader, I am mostly interested in the tool's programming features.
+
+In this article, I will try to highlight them.
+
+### 
+
+### 1. **Economic Сalendar — what's in the d**ocumentation**?**
+
+First, let's take a quick look at the documented features. In general, it is pretty simple. As is often the case with the MQL5 resource, the info is presented consistently and illustrated using small examples.
+
+***1.1 Economic calendar functions***
+
+The documentation describes 10 calendar [functions](https://www.mql5.com/en/docs/calendar):
+
+1. CalendarCountryById();
+2. CalendarEventById();
+3. CalendarValueById();
+4. CalendarCountries();
+5. CalendarEventByCountry();
+6. CalendarEventByCurrency();
+7. CalendarValueHistoryByEvent();
+8. CalendarValueHistory();
+9. CalendarValueLastByEvent();
+10. CalendarValueLast().
+
+These functions generally return either calendar properties (country, event, value), or historical event values.
+
+***1.2 Economic calendar structures***
+
+The developer suggests using three [structures](https://www.mql5.com/en/docs/constants/structures/mqlcalendar): MqlCalendarCountry, MqlCalendarEvent and MqlCalendarValue.
+
+1.2.1  [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry)
+
+The structure provides detailed info about a country and events we are interested in.
+
+Currently, I have verified the website [calendar](https://www.mql5.com/en/economic-calendar) with several brokers:  there is data on 21 countries, the European Union and the whole world (global events).
+
+```
+[id]           [name] [code] [currency] [currency_symbol]       [url_name] [reserved]
+[ 0]  999 "European Union" "EU"   "EUR"      "€"               "european-union"        ...
+[ 1]  124 "Canada"         "CA"   "CAD"      "$"               "canada"                ...
+[ 2]   36 "Australia"      "AU"   "AUD"      "$"               "australia"             ...
+[ 3]  554 "New Zealand"    "NZ"   "NZD"      "$"               "new-zealand"           ...
+[ 4]  392 "Japan"          "JP"   "JPY"      "¥"               "japan"                 ...
+[ 5]  156 "China"          "CN"   "CNY"      "¥"               "china"                 ...
+[ 6]  276 "Germany"        "DE"   "EUR"      "€"               "germany"               ...
+[ 7]  250 "France"         "FR"   "EUR"      "€"               "france"                ...
+[ 8]  380 "Italy"          "IT"   "EUR"      "€"               "italy"                 ...
+[ 9]   76 "Brazil"         "BR"   "BRL"      "R$"              "brazil"                ...
+[10]  344 "Hong Kong"      "HK"   "HKD"      "HK$"             "hong-kong"             ...
+[11]  702 "Singapore"      "SG"   "SGD"      "R$"              "singapore"             ...
+[12]  484 "Mexico"         "MX"   "MXN"      "Mex$"            "mexico"                ...
+[13]  710 "South Africa"   "ZA"   "ZAR"      "R"               "south-africa"          ...
+[14]  356 "India"          "IN"   "INR"      "₹"               "india"                 ...
+[15]  578 "Norway"         "NO"   "NOK"      "Kr"              "norway"                ...
+[16]    0 "Worldwide"      "WW"   "ALL"      ""                "worldwide"             ...
+[17]  840 "United States"  "US"   "USD"      "$"               "united-states"         ...
+[18]  826 "United Kingdom" "GB"   "GBP"      "£"               "united-kingdom"        ...
+[19]  756 "Switzerland"    "CH"   "CHF"      "₣"               "switzerland"           ...
+[20]  410 "South Korea"    "KR"   "KRW"      "₩"               "south-korea"           ...
+[21]  724 "Spain"          "ES"   "EUR"      "€"               "spain"                 ...
+[22]  752 "Sweden"         "SE"   "SEK"      "Kr"              "sweden"                ...
+```
+
+It is a bit strange that Russia is not on this list. Hopefully, it will appear soon.
+
+1.2.2  [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent)
+
+The structure provides detailed info about an event. The structure has quite a lot of properties. Potentially, this is a good tool for a comprehensive fundamental analysis. Later, I will consider how to sort events depending on a certain criterion.
+
+1.2.3  [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue)
+
+The structure provides detailed info about an event value. There are previous, actual and forecast values.
+
+When working with the structure, keep in mind the following subtle aspects.
+
+actual\_value, forecast\_value, prev\_value and revised\_prev\_value field values are stored magnified a million times. If a field value is not set, the field stores LONG\_MIN (-9223372036854775808). However, if the field value is set, it should be divided by 1,000,000 (million).
+
+The MqlCalendarValue structure has its own methods simplifying the work with the values of the specified fields.
+
+The methods can be arranged into two groups.
+
+The first group checks if a given value is specified:
+
+```
+HasActualValue(void) — returns true if the actual value is set; otherwise returns false
+HasForecastValue(void) — returns true if the forecast value is set; otherwise returns false
+HasPreviousValue(void) — returns true if the previous value is set; otherwise returns false
+HasRevisedValue(void) — returns true if the revised value is set; otherwise returns false
+```
+
+The second group directly receives a certain value:
+
+```
+GetActualValue(void) — returns the actual value of an event (double) or nan if the relevant value is not set
+GetForecastValue(void) — returns the forecast value of an event (double) or nan if the relevant value is not set
+GetPreviousValue(void) — returns the previous value of an event (double) or nan if the relevant value is not set
+GetRevisedValue(void) — returns the revised value of an event (double) or nan if the relevant value is not set
+```
+
+Let's see how the MqlCalendarValue structure receives and checks field values. We will focus on the last Bank of Japan (BoJ) Interest Rate Decision. Display the necessary data in the journal using the **Test\_empty\_value.mq5** script featuring three approaches to obtaining the value.
+
+```
+//+------------------------------------------------------------------+
+//| LongDouble                                                       |
+//+------------------------------------------------------------------+
+union LongDouble
+  {
+   long   long_value;
+   double double_value;
+  };
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//--- Bank of Japan (BoJ) Interest Rate Decision on 22 Sep 2021 02:47 GMT
+   ulong event_id = 392060022; // "boj-interest-rate-decision"
+   MqlCalendarValue values[];
+   datetime date_from, date_to;
+   date_from = D'22.09.2021';
+   date_to = date_from + PeriodSeconds(PERIOD_D1);
+   if(::CalendarValueHistoryByEvent(event_id, values, date_from, date_to))
+     {
+      LongDouble forecast_val;
+      //--- 1) "forecast_value" field
+      forecast_val.long_value = values[0].forecast_value;
+      ::PrintFormat("\"forecast_value\" field: %I64d", forecast_val.long_value);
+      //--- 2) MqlCalendarValue::GetForecastValue()
+      forecast_val.double_value = values[0].GetForecastValue();
+      ::PrintFormat("MqlCalendarValue::GetForecastValue(): %g", forecast_val.double_value);
+      //--- 3) MqlCalendarValue::HasForecastValue()
+      if(!values[0].HasForecastValue())
+         ::PrintFormat("MqlCalendarValue::HasForecastValue(): %s", (string)false);
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+The first approach simply obtains the forecast value. Since there were no forecast, we get LONG\_MIN (-9223372036854775808). The second approach already applies the MqlCalendarValue::GetForecastValue() structure method. It returns 'nan'. The third approach is the most cautious since it checks whether the forecast value is present at all.
+
+After launching the script, the following entries appear in the journal:
+
+```
+GR      0       21:23:36.076    Test_empty_value (USDCAD,H1)    "forecast_value" field: -9223372036854775808
+LH      0       21:23:36.080    Test_empty_value (USDCAD,H1)    MqlCalendarValue::GetForecastValue(): nan
+HM      0       21:23:36.080    Test_empty_value (USDCAD,H1)    MqlCalendarValue::HasForecastValue(): false
+```
+
+1.2.4 Structural relations
+
+The structures are interconnected by the following relationships (Fig. 1).
+
+*Fig. 1. Calendar structure relations*
+
+The MqlCalendarCountry structure is linked with MqlCalendarEvent via a country ID. "One-to-many" relationship form (1..\*).
+
+The MqlCalendarEvent structure is linked with MqlCalendarValue via an event ID. "One-to-many" relationship form (1..\*).
+
+**1.3 Errors**
+
+The developer allocates the [runtime errors](https://www.mql5.com/en/docs/constants/errorswarnings/errorcodes) group when working with the economic calendar. These are the following requests:
+
+| **Economic Calendar** |  |  |
+| --- | --- | --- |
+| ERR\_CALENDAR\_MORE\_DATA | 5400 | Array size is insufficient for receiving descriptions of all values |
+| ERR\_CALENDAR\_TIMEOUT | 5401 | Request time limit exceeded |
+| ERR\_CALENDAR\_NO\_DATA | 5402 | Country is not found |
+
+### 
+
+### 2.**Auxiliary structures and the CiCalendarInfo class**
+
+My sympathies are mostly on the OOP side. Therefore, I will present an example of a class that provides access to the calendar properties.
+
+Keep in mind that the calendar is a pretty eclectic thing. I am not a database specialist, but as far as I understand, the calendar is generally a relational database with multiple tables.
+
+Apart from obtaining the properties, the offered implementation of the **CiCalendarInfo** class is also aimed at creating the time series of a selected event.
+
+Let's take a look at the auxiliary structures first.
+
+***2.1 Time series structure***
+
+Since we are going to retrieve data for TS (time series), we should create its programmatic essence. The SiTimeSeries structure is responsible for it.
+
+```
+//+------------------------------------------------------------------+
+//| Time series structure                                            |
+//+------------------------------------------------------------------+
+struct SiTimeSeries
+  {
+   private:
+      bool              init;        // is initialized?
+      uint              size;
+      datetime          timevals[];  // time values
+      double            datavals[];  // data values
+      string            name;        // ts name
+   public:
+      //--- constructor
+      void              SiTimeSeries(void);
+      //--- destructor
+      void             ~SiTimeSeries(void);
+      //--- copy consructor
+      void              SiTimeSeries(const SiTimeSeries &src_ts);
+      //--- assignment operator
+      void              operator=(const SiTimeSeries &src_ts);
+      //--- equality operator
+      bool              operator==(const SiTimeSeries &src_ts);
+      //--- indexing operator
+      SiTsObservation   operator[](const uint idx) const;
+      //--- initialization
+      bool              Init(datetime &ts_times[], const double &ts_values[],
+                             const string ts_name);
+      //--- get series properties
+      bool              GetSeries(datetime &dst_times[], double &dst_values[], string &dst_name);
+      bool              GetSeries(SiTsObservation &dst_observations[], string &dst_name);
+      //--- service
+      bool              IsInit(void) const
+        {
+         return init;
+        };
+      uint              Size(void) const
+        {
+         return size;
+        };
+      void              Print(const int digs = 2, const uint step = 0);
+  };
+//+------------------------------------------------------------------+
+```
+
+The main elements of the structure are the timevals[] and datavals[] arrays. The first one includes the time series, while the second one contains  the series of values.
+
+The structure is implemented so that its elements are located in the private section. This means the time series cannot be modified after it has been created.
+
+Let's handle the time series structure in the following example. The **Test\_TS.mq5** script receives data on US non-farm payrolls from January 1, 2016 to November 1, 2021 and displays them on a scientific chart. Let's make it so that the chart has two curves - actual and forecast values. We will use the event reporting period as a timeline.
+
+After launching the script, we first get displaying timeseries values to the journal and second, drawing the diagram on the chart (Fig. 2).
+
+")
+
+*Fig. 2. US Non-Farm Payrolls (2016-2021)*
+
+The script has the following strings the time series values are filled in:
+
+```
+//--- prepare time and data values for the timeseries
+for(int v_idx = 0; v_idx < nfp_values_size; v_idx++)
+   {
+    MqlCalendarValue curr_nfp_val = nfp_values[v_idx];
+    datetime curr_nfp_time = curr_nfp_val.period;
+    timevals[v_idx] = curr_nfp_time;
+    double curr_nfp_dataval = curr_nfp_val.GetActualValue();
+    datavals1[v_idx] = curr_nfp_dataval;
+    curr_nfp_dataval = curr_nfp_val.GetForecastValue();
+    datavals2[v_idx] = curr_nfp_dataval;
+   }
+```
+
+Use the MqlCalendarValue::GetActualValue() and MqlCalendarValue::GetForecastValue() functions to immediately receive the necessary values.
+
+***2.2 Time series observation structure***
+
+Any time series consists of observations. The following simple SiTsObservation structure has been created for observation.
+
+```
+//+------------------------------------------------------------------+
+//| Time series observation structure                                |
+//+------------------------------------------------------------------+
+struct SiTsObservation
+  {
+   datetime          time; // timestamp
+   double            val;  // value
+   //--- constructor
+   void              SiTsObservation(void): time(0), val(EMPTY_VALUE) {}
+  };
+//+------------------------------------------------------------------+
+```
+
+The indexing operator has been declared in the SiTimeSeries time series structure. It returns the necessary series observation. In the above example (drawing values on non-farms), the series consists of 70 values. In this case, the first and last observations can be obtained the following way:
+
+```
+SiTsObservation first_observation, last_observation;
+first_observation = nfp_ts1[0];
+last_observation = nfp_ts1[nfp_values_size - 1];
+string time_str = ::TimeToString(first_observation.time, TIME_DATE);
+string data_str = ::DoubleToString(first_observation.val, 0);
+::PrintFormat("\nFirst observation: %s, %s", time_str, data_str);
+time_str = ::TimeToString(last_observation.time, TIME_DATE);
+data_str = ::DoubleToString(last_observation.val, 0);
+::PrintFormat("Last observation: %s, %s", time_str, data_str);
+```
+
+After executing the specified code strings in the journal, we get the following entries:
+
+```
+KJ      0       21:27:16.386    Test_ts (USDCAD,H1)     First observation: 2015.12.01, 292
+HO      0       21:27:17.225    Test_ts (USDCAD,H1)     Last observation: 2021.09.01, 194
+```
+
+***2.3 CiCalendarInfo class***
+
+I will preserve the continuity by assuming that the class is created for a simplified access to the calendar properties and obtaining the event values (similar to [CAccountInfo](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/caccountinfo), [CSymbolInfo](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/csymbolinfo) and other trading classes).
+
+The class declaration is provided below.
+
+```
+//+------------------------------------------------------------------+
+//| Class CiCalendarInfo.                                            |
+//| Appointment: Class for access to calendar info.                  |
+//|              Derives from class CObject.                         |
+//+------------------------------------------------------------------+
+class CiCalendarInfo : public CObject
+  {
+      //--- === Data members === ---
+   protected:
+      string            m_currency;
+      ulong             m_country_id;
+      MqlCalendarCountry m_country_description;
+      ulong             m_event_id;
+      MqlCalendarEvent  m_event_description;
+      static MqlCalendarCountry m_countries[];
+      bool              m_is_init;
+      //--- === Methods === ---
+   public:
+      //--- constructor/destructor
+      void           CiCalendarInfo(void);
+      void          ~CiCalendarInfo(void) {};
+      //--- initialization
+      bool           Init
+      (
+         const string currency = NULL,         // country currency code name
+         const ulong country_id = WRONG_VALUE, // country ID
+         const ulong event_id = WRONG_VALUE,   // event ID
+         const bool to_log = true              // to log?
+      );
+      void           Deinit(void);
+      //--- Сalendar structures descriptions
+      bool           CountryDescription(MqlCalendarCountry &country, const bool to_log = false);
+      bool           EventDescription(MqlCalendarEvent &event, const bool to_log = false);
+      bool           ValueDescription(ulong value_id, MqlCalendarValue &value,
+                                      const bool to_log = false);
+      bool           EventsByCountryDescription(MqlCalendarEvent &events[], const bool to_log = false);
+      bool           EventsByCurrencyDescription(MqlCalendarEvent &events[], const bool to_log = false);
+      bool           EventsBySector(const ENUM_CALENDAR_EVENT_SECTOR event_sector,
+                                    MqlCalendarEvent &events[], const bool to_log = false);
+      //--- Сalendar enum descriptions
+      string         EventTypeDescription(const ENUM_CALENDAR_EVENT_TYPE event_type);
+      string         EventSectorDescription(const ENUM_CALENDAR_EVENT_SECTOR event_sector);
+      string         EventFrequencyDescription(const ENUM_CALENDAR_EVENT_FREQUENCY event_frequency);
+      string         EventTimeModeDescription(const ENUM_CALENDAR_EVENT_TIMEMODE event_time_mode);
+      string         EventUnitDescription(const ENUM_CALENDAR_EVENT_UNIT event_unit);
+      string         EventImportanceDescription(const ENUM_CALENDAR_EVENT_IMPORTANCE event_importance);
+      string         EventMultiplierDescription(const ENUM_CALENDAR_EVENT_MULTIPLIER event_multiplier);
+      string         ValueImpactDescription(const ENUM_CALENDAR_EVENT_IMPACT event_impact);
+      //--- history
+      bool           ValueHistorySelectByEvent
+      (
+         MqlCalendarValue &values[], // array for value descriptions
+         datetime datetime_from,     // left border of a time range
+         datetime datetime_to = 0    // right border of a time range
+      )                 const;
+      bool           ValueHistorySelectByEvent
+      (
+         SiTimeSeries &dst_ts,       // timeseries for value descriptions
+         datetime datetime_from,     // left border of a time range
+         datetime datetime_to = 0    // right border of a time range
+      )                 const;
+      bool           ValueHistorySelect
+      (
+         MqlCalendarValue &values[], // array for value descriptions
+         datetime datetime_from,     // left border of a time range
+         datetime datetime_to = 0    // right border of a time range
+      )                 const;
+      bool           ValueHistorySelect
+      (
+         SiTimeSeries &dst_ts[],     // array of timeseries for value descriptions
+         datetime datetime_from,     // left border of a time range
+         datetime datetime_to = 0    // right border of a time range
+      );
+      //--- the calendar database status
+      int            ValueLastSelectByEvent
+      (
+         ulong&               change_id,     // Calendar change ID
+         MqlCalendarValue&    values[]       // array for value descriptions
+      )                 const;
+      int            ValueLastSelect
+      (
+         ulong&               change_id,     // Calendar change ID
+         MqlCalendarValue&    values[]       // array for value descriptions
+      )                 const;
+      //--- countries and continents
+      bool           GetCountries(CArrayString &countries_arr);
+      bool           GetCountries(MqlCalendarCountry &countries[]);
+      bool           GetUniqueContinents(string &continents[]);
+      bool           GetCountriesByContinent(const ENUM_CONTINENT src_continent,
+                                             CArrayString &countries_arr);
+      string         GetCountryNameById(const ulong country_id);
+      //--- events
+      bool           GetEventsByName(CArrayString &events_arr, const string name = NULL);
+      bool           GetEventsByName(MqlCalendarEvent &events[], const string name = NULL);
+      bool           FilterEvents(MqlCalendarEvent &filtered_events[],
+                                  MqlCalendarEvent &src_events[], const ulong filter);
+      //--- print
+      void           PrintCountryDescription(const MqlCalendarCountry &country);
+      void           PrintEventDescription(const MqlCalendarEvent &event);
+      void           PrintValueDescription(const MqlCalendarValue &value);
+      //---
+   private:
+      bool           ValidateProperties(void);
+      bool           CountryById(const ulong country_id);
+      bool           EventId(void);
+  };
+MqlCalendarCountry CiCalendarInfo::m_countries[];
+```
+
+The class consists of the following member data:
+
+1. m\_currency **—** country currency code;
+2. m\_country\_id **—** country ID according to ISO 3166-1;
+3. m\_country\_description **—** country description;
+4. m\_event\_id **—** event ID;
+5. m\_event\_description **—** event description;
+6. m\_countries **—** array of descriptions for countries available in the Calendar;
+7. m\_is\_init **—** initialization flag.
+
+m\_currency, m\_country\_id and m\_event\_id **member data** is a set of criteria for creating data requests from the calendar database.
+
+m\_country\_description and m\_event\_description member data provides quick access to descriptions if a country and an event are known.
+
+m\_countries member data is static. The country data is constant, so there is no need to request it each time when initializing a new CiCalendarInfo object.
+
+Now I will describe some of the methods.
+
+2.3.1 Initialization method
+
+The method allows us to start handling the class object. The method is essential for receiving the calendar data. The method takes a set of criteria as parameters (currency code, country ID, event ID) and one parameter enabling displaying initialization data in the journal. The criteria allow making accessing the calendar more specific.
+
+```
+//+------------------------------------------------------------------+
+//| Initialization                                                   |
+//+------------------------------------------------------------------+
+bool CiCalendarInfo::Init(const string currency = NULL,         // country currency code name
+                          const ulong country_id = WRONG_VALUE, // country ID
+                          const ulong event_id = WRONG_VALUE,   // event ID
+                          const bool to_log = true              // to log?
+                         )
+  {
+//--- check reinitialization
+   if(m_is_init)
+     {
+      ::PrintFormat(__FUNCTION__ + ": CiCalendarInfo object already initialized!");
+      return false;
+     }
+//--- check countries
+   int countries_cnt = ::ArraySize(m_countries);
+   if(countries_cnt < 1)
+     {
+      ::ResetLastError();
+      countries_cnt = ::CalendarCountries(m_countries);
+      if(countries_cnt < 1)
+        {
+         ::PrintFormat(__FUNCTION__ + ": CalendarCountries() returned 0! Error %d",
+                       ::GetLastError());
+         return false;
+        }
+     }
+   for(int c_idx = 0; c_idx < countries_cnt; c_idx++)
+     {
+      MqlCalendarCountry curr_country = m_countries[c_idx];
+      //--- check currency
+      if(!::StringCompare(curr_country.currency, currency))
+        {
+         m_currency = currency;
+        }
+      //--- check country
+      if(country_id != WRONG_VALUE)
+         if(curr_country.id == country_id)
+           {
+            m_country_id = country_id;
+           }
+     }
+//--- check event
+   if(event_id != WRONG_VALUE)
+     {
+      m_event_id = event_id;
+     }
+//--- validate properties
+   if(!this.ValidateProperties())
+      return false;
+//---
+   if(to_log)
+     {
+      ::Print("\n---== New Calendar Info object ==---");
+      if(m_currency != NULL)
+         ::PrintFormat("   Currency: %s", m_currency);
+      if(m_country_id != WRONG_VALUE)
+         ::PrintFormat("   Country id: %I64u", m_country_id);
+      if(m_event_id != WRONG_VALUE)
+         ::PrintFormat("   Event id: %I64u", m_event_id);
+     }
+   m_is_init = true;
+   return true;
+  }
+//+------------------------------------------------------------------+
+```
+
+Let's illustrate the method operation using a simple script **Test\_initialization.mq5**.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//--- TRUE
+//--- 1) all currencies, all countries, all events
+   CiCalendarInfo calendar_info1;
+   bool is_init = calendar_info1.Init();
+//--- 2) EUR, all countries, all events
+   CiCalendarInfo calendar_info2;
+   is_init = calendar_info2.Init("EUR");
+//--- 3) EUR, Germany, all events
+   CiCalendarInfo calendar_info3;
+   is_init = calendar_info3.Init("EUR", 276);
+//--- 4) EUR, Germany, HICP m/m
+   CiCalendarInfo calendar_info4;
+   is_init = calendar_info4.Init("EUR", 276, 276010022);
+//--- FALSE
+//--- 5) EUR, Germany, nonfarm-payrolls
+   CiCalendarInfo calendar_info5;
+   is_init = calendar_info5.Init("EUR", 276, 840030016);
+//--- 6) EUR, US, nonfarm-payrolls
+   CiCalendarInfo calendar_info6;
+   is_init = calendar_info6.Init("EUR", 840, 840030016);
+//--- 7) EUR, all countries, nonfarm-payrolls
+   CiCalendarInfo calendar_info7;
+   is_init = calendar_info7.Init("EUR", WRONG_VALUE, 840030016);
+  }
+//+------------------------------------------------------------------+
+```
+
+After launching the script, we see the following entries in the journal:
+
+```
+DO      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+GE      0       21:30:19.703    Test_initialization (USDCAD,H1) 
+LL      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+FI      0       21:30:19.703    Test_initialization (USDCAD,H1)    Currency: EUR
+GO      0       21:30:19.703    Test_initialization (USDCAD,H1) 
+LJ      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+FS      0       21:30:19.703    Test_initialization (USDCAD,H1)    Currency: EUR
+KO      0       21:30:19.703    Test_initialization (USDCAD,H1)    Country id: 276
+CH      0       21:30:19.703    Test_initialization (USDCAD,H1) 
+PI      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+JF      0       21:30:19.703    Test_initialization (USDCAD,H1)    Currency: EUR
+OL      0       21:30:19.703    Test_initialization (USDCAD,H1)    Country id: 276
+HD      0       21:30:19.703    Test_initialization (USDCAD,H1)    Event id: 276010022
+HR      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Country ids must be the same!
+OP      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Currencies must be the same!
+GP      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Currencies must be the same!
+```
+
+The initialization method checks the specified parameters in terms of its belonging to a single country or currency. Therefore, the following combinations return "false": EUR – Germany - nonfarm-payrolls, EUR – US - nonfarm-payrolls and EUR – all countries - nonfarm-payrolls.
+
+At the very beginning of the initialization method, there is a protection against reinitialization. The calendar object can still be reinitialized but first we should call the deinitialization method. For example, we first define that the calendar object gathers data on EUR events. Then the object should be re-oriented to USD. **Test\_reinitialization.mq5** script illustrates both incorrect and correct solutions to this task.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+   {
+//--- ERROR
+   CiCalendarInfo calendar_info1;
+   bool is_init = calendar_info1.Init("EUR");
+   is_init = calendar_info1.Init("USD");
+//--- OK
+   CiCalendarInfo calendar_info2;
+   is_init = calendar_info2.Init("EUR");
+   calendar_info2.Deinit();
+   is_init = calendar_info2.Init("USD");
+   }
+//+------------------------------------------------------------------+
+```
+
+In the incorrect case, we will see the following entry:
+
+```
+MP      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       
+FQ      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+HO      0       21:34:19.397    Test_reinitialization (USDCAD,H1)          Currency: EUR
+KI      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       CiCalendarInfo::Init: CiCalendarInfo object already initialized!
+EI      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       
+NO      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+PF      0       21:34:19.397    Test_reinitialization (USDCAD,H1)          Currency: EUR
+QL      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       
+RD      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+DS      0       21:34:19.397    Test_reinitialization (USDCAD,H1)          Currency: USD
+```
+
+2.3.2 The methods of receiving the calendar structure descriptions
+
+To some degree, these methods are wrappers that allow calling standard calendar functions. The CiCalendarInfo::CountryDescription() and CiCalendarInfo::EventDescription() methods return country and event descriptions if they were confirmed during the calendar object initialization.
+
+Besides, the methods allow displaying the requested property description in the journal.
+
+Let's illustrate the work of the methods receiving descriptions using the simple script **Test\_structures\_descriptions****.mq5**.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//--- 1) events by country
+   CiCalendarInfo calendar_info;
+   ulong country_id = 276; // Germany
+   if(calendar_info.Init(NULL, country_id))
+     {
+      MqlCalendarEvent events[];
+      if(calendar_info.EventsByCountryDescription(events))
+        {
+         Print("\n---== Events selected by country ==---");
+         PrintFormat("   Country id: %I64u", country_id);
+         PrintFormat("   Events number: %d", ::ArraySize(events));
+        }
+     }
+   calendar_info.Deinit();
+//--- 2) events by currency
+   string country_currency = "EUR";
+   if(calendar_info.Init(country_currency))
+     {
+      MqlCalendarEvent events[];
+      if(calendar_info.EventsByCurrencyDescription(events))
+        {
+         Print("\n---== Events selected by currency ==---");
+         PrintFormat("   Currency: %s", country_currency);
+         PrintFormat("   Events number: %d", ::ArraySize(events));
+        }
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+In the journal, we can find the following strings:
+
+```
+MK      0       21:36:35.659    Test_structures_descriptions (USDCAD,H1)        
+DM      0       21:36:35.659    Test_structures_descriptions (USDCAD,H1)        ---== New Calendar Info object ==---
+MP      0       21:36:35.659    Test_structures_descriptions (USDCAD,H1)           Country id: 276
+FH      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)        
+ON      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)        ---== Events selected by country ==---
+RR      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)           Country id: 276
+GD      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)           Events number: 61
+FP      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)        
+OG      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)        ---== New Calendar Info object ==---
+KI      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)           Currency: EUR
+MN      0       21:36:35.794    Test_structures_descriptions (USDCAD,H1)        
+QE      0       21:36:35.794    Test_structures_descriptions (USDCAD,H1)        ---== Events selected by currency ==---
+FO      0       21:36:35.794    Test_structures_descriptions (USDCAD,H1)           Currency: EUR
+FJ      0       21:36:35.794    Test_structures_descriptions (USDCAD,H1)           Events number: 276
+```
+
+This means 61 events were found for Germany and 276 events for Euro countries.
+
+2.3.3 The methods of receiving the calendar enumeration descriptions
+
+The calendar structures contain eight enumerations:
+
+1. ENUM\_CALENDAR\_EVENT\_TYPE;
+2. ENUM\_CALENDAR\_EVENT\_SECTOR;
+3. ENUM\_CALENDAR\_EVENT\_FREQUENCY;
+4. ENUM\_CALENDAR\_EVENT\_TIMEMODE;
+5. ENUM\_CALENDAR\_EVENT\_UNIT;
+6. ENUM\_CALENDAR\_EVENT\_IMPORTANCE;
+7. ENUM\_CALENDAR\_EVENT\_MULTIPLIER;
+8. ENUM\_CALENDAR\_EVENT\_IMPACT.
+
+The first seven enumerations refer to the MqlCalendarEvent structure, while the last one - to the MqlCalendarValue structure.
+
+The CiCalendarInfo class defines eight methods describing the enumeration value selected from the proposed list. Let's test the methods using the **Test\_enums\_descriptions.mq5** script. The script randomly selects 10 UK events and display data on each criterion in the journal.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+   {
+   CiCalendarInfo calendar_info;
+   ulong country_id = 826; // UK
+   if(calendar_info.Init(NULL, country_id))
+      {
+      MqlCalendarEvent events[];
+      if(calendar_info.EventsByCountryDescription(events))
+         {
+         ::MathSrand(77);
+         int events_num =::ArraySize(events);
+         int n = 10;
+         MqlCalendarEvent events_selected[];
+         ::ArrayResize(events_selected, n);
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            int rand_val =::MathRand();
+            int rand_idx = rand_val % events_num;
+            events_selected[ev_idx] = events[rand_idx];
+            }
+         //--- 0) name
+         ::Print("\n---== Name ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1, curr_event.name);
+            }
+         //--- 1) type
+         ::Print("\n---== Type ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventTypeDescription(curr_event.type));
+            }
+         //--- 2) sector
+         ::Print("\n---== Sector ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventSectorDescription(curr_event.sector));
+            }
+         //--- 3) frequency
+         ::Print("\n---== Frequency ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventFrequencyDescription(curr_event.frequency));
+            }
+         //--- 3) time mode
+         ::Print("\n---== Time mode ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventTimeModeDescription(curr_event.time_mode));
+            }
+         //--- 4) unit
+         ::Print("\n---== Unit ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventUnitDescription(curr_event.unit));
+            }
+         //--- 5) importance
+         ::Print("\n---== Importance ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventImportanceDescription(curr_event.importance));
+            }
+         //--- 6) multiplier
+         ::Print("\n---== Multiplier ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                          calendar_info.EventMultiplierDescription(curr_event.multiplier));
+            }
+         //--- 7) impact
+         MqlCalendarValue values_by_event[];
+         datetime start_dt, stop_dt;
+         start_dt = D'01.01.2021';
+         stop_dt = D'01.11.2021';
+         ::Print("\n---== Impact ==---");
+         for(int ev_idx = 0; ev_idx < n; ev_idx++)
+            {
+            MqlCalendarEvent curr_event = events_selected[ev_idx];
+            CiCalendarInfo event_info;
+            MqlCalendarValue ev_values[];
+            if(event_info.Init(NULL, WRONG_VALUE, curr_event.id))
+               if(event_info.ValueHistorySelectByEvent(ev_values, start_dt, stop_dt))
+                  {
+                  int ev_values_size =::ArraySize(ev_values);
+                  ::PrintFormat("   [%d] - %s", ev_idx + 1,
+                                calendar_info.ValueImpactDescription(ev_values[--ev_values_size].impact_type));
+                  }
+            }
+         }
+      }
+   }
+//+------------------------------------------------------------------+
+```
+
+To reproduce the obtained result, set the initial state of the pseudo-random integer value generator to a certain number (::MathSrand(77)). The script has selected the following events:
+
+1. BoE Housing Equity Withdrawal q/q;
+2. BoE Deputy Governor Markets and Banking Ramsden Speech;
+3. Claimant Count Change;
+4. Core CPI y/y;
+5. Average Weekly Earnings, Total Pay y/y;
+6. Easter Monday;
+7. BoE Mortgage Lending m/m;
+8. BoE MPC Member Vlieghe Speech;
+9. Core RPI y/y;
+10. Claimant Count Change.
+
+The following descriptions appear in the journal:
+
+```
+FP      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Type ==---
+CG      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Indicator
+EN      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - Event
+EI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Indicator
+LP      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Indicator
+OK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Indicator
+OD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - Holiday
+EL      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Indicator
+GG      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - Event
+ON      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Indicator
+CJ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Indicator
+DO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+PE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Sector ==---
+JR      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Money
+KJ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - Money
+NQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Labor market
+QS      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Prices
+HD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Labor market
+JP      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - Holidays
+OI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Housing
+EQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - Money
+LD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Prices
+JR      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Labor market
+RS      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+NF      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Frequency ==---
+ML      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Quarterly
+QH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - None
+MN      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Monthly
+PI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Monthly
+OP      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Monthly
+CE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - None
+CR      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Monthly
+CS      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - None
+GE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Monthly
+OO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Monthly
+PI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+NQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Time mode ==---
+FE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Exact time
+MS      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - Exact time
+PH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Exact time
+CQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Exact time
+RO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Exact time
+PF      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - Takes all day
+NR      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Exact time
+MK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - Exact time
+DQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Exact time
+RM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Exact time
+FK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+HP      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Unit ==---
+CI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - National currency
+OO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - None
+MG      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - People
+CO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Percentage
+NE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Percentage
+OK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - None
+KQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - National currency
+CH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - None
+LQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Percentage
+CE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - People
+LL      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+PD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Importance ==---
+FS      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Low
+PD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - Moderate
+DK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - High
+EM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Low
+QJ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Moderate
+GQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - None
+PG      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Low
+RO      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - Moderate
+LI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Low
+FM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - High
+ND      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+CM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Multiplier ==---
+HE      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Billions
+MK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - None
+IM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Thousands
+MI      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - None
+HQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - None
+OH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - None
+DN      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - Billions
+IF      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - None
+LN      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - None
+OH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Thousands
+DM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     
+FF      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)     ---== Impact ==---
+OK      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [1] - Positive
+OR      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [2] - None
+EJ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [3] - Positive
+RQ      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [4] - Negative
+CG      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [5] - Negative
+KN      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [6] - None
+JF      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [7] - None
+EM      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [8] - None
+GD      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [9] - Positive
+QH      0       21:14:19.340    Test_enums_descriptions (USDCAD,H1)        [10] - Positive
+```
+
+For example, the first event "BoE Housing Equity Withdrawal q/q" is described as follows:
+
+1. "Type" - Indicator;
+2. "Sector" - Money;
+3. "Frequency" - Quarterly;
+4. "Time mode" - Exact time;
+5. "Unit" - National currency;
+6. "Importance" - Low;
+7. "Multiplier" - Billions;
+8. "Impact" - Positive.
+
+The last event "Claimant Count Change" is described as follows:
+
+1. "Type" - Indicator;
+2. "Sector" - Labor;
+3. "Frequency" - Quarterly;
+4. "Time mode" - Exact time;
+5. "Unit" - National currency;
+6. "Importance" - Low;
+7. "Multiplier" - Billions;
+8. "Impact" - Positive.
+
+2.3.4 Methods of accessing history
+
+The methods also use the built-in calendar functions and get data on event values. For example, the [::CalendarValueHistoryByEvent()](https://www.mql5.com/en/docs/calendar/calendarvaluehistorybyevent) function is accessed by two overloaded methods CiCalendarInfo::ValueHistorySelectByEvent(). The first one returns the array of values for all events within the specified time range by an event ID in the form of the MqlCalendarValue structure, while the second one is an array of values transformed into a time series.
+
+Let's have a look at the CiCalendarInfo::ValueHistorySelectByEvent() method operation in the **Test\_value\_history\_by\_event.mq5** script.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//--- NFP
+   CiCalendarInfo nfp_info;
+   ulong nfp_id = 840030016;
+   if(nfp_info.Init(NULL, WRONG_VALUE, nfp_id))
+     {
+      SiTimeSeries nfp_ts;
+      if(nfp_info.ValueHistorySelectByEvent(nfp_ts, 0, ::TimeTradeServer()))
+         nfp_ts.Print(0);
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+Select the entire history for [United States Nonfarm Payrolls](https://www.mql5.com/en/economic-calendar/united-states/nonfarm-payrolls).
+
+The following entries appear in the journal:
+
+```
+PL      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) ---== New Calendar Info object ==---
+NI      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1)    Event id: 840030016
+OM      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) 
+HG      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) ---== Times series - Nonfarm Payrolls==---
+CJ      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) [1]: time - 2007.03.09 16:30, value - 97
+RE      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) [2]: time - 2007.04.06 15:30, value - 177
+MS      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) [3]: time - 2007.05.04 15:30, value - 80
+FL      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) [4]: time - 2007.06.01 15:30, value - 190
+LH      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) [5]: time - 2007.07.06 15:30, value - 69
+...
+JE      0       21:45:03.583    Test_value_history_by_event (USDCAD,H1) [172]: time - 2021.06.04 15:30, value - 559
+JP      0       21:45:03.583    Test_value_history_by_event (USDCAD,H1) [173]: time - 2021.07.02 15:30, value - 850
+IO      0       21:45:03.583    Test_value_history_by_event (USDCAD,H1) [174]: time - 2021.08.06 15:30, value - 943
+NJ      0       21:45:03.583    Test_value_history_by_event (USDCAD,H1) [175]: time - 2021.09.03 15:30, value - 235
+HI      0       21:45:03.583    Test_value_history_by_event (USDCAD,H1) [176]: time - 2021.10.08 15:30, value - 194
+```
+
+\*Here I have specified the first and last five event values to avoid cluttering up the article.
+
+2.3.5 Methods for checking the Calendar database status
+
+The methods also use the appropriate built-in calendar functions. An error is reported only when the number of obtained event values is equal to zero, while the error itself exceeds zero.
+
+Example of the CiCalendarInfo::ValueLastSelectByEvent() method is considered in the third section "Non-commercial net positions indicator" where we need to detect the appearance of a new value.
+
+2.3.6 Methods of obtaining country and continent data
+
+The methods return certain country data. I will briefly describe each of them.
+
+The CiCalendarInfo::GetCountries(CArrayString &countries\_arr) method returns the list of countries obtained during initialization as a dynamic array of string type variables.
+
+The CiCalendarInfo::GetCountries(MqlCalendarCountry &countries[]) method returns the list of countries obtained during initialization as an array of MqlCalendarCountry type variables.
+
+The CiCalendarInfo::GetUniqueContinents(string & continents[]) method returns the list of continents the countries are located on. The latter were also obtained during initialization.
+
+The  CiCalendarInfo:: GetCountriesByContinent(const ENUM\_CONTINENT src\_continent, CArrayString &countries\_arr) method returns the list of countries by a specified continent.
+
+The CiCalendarInfo::GetCountryNameById(const ulong country\_id) method returns a unique country name by its ID.
+
+The ENUM\_CONTINENT enumeration allows working with continents. It describes the following continents:
+
+1. World;
+2. Asia;
+3. Africa;
+4. Europe;
+5. North America;
+6. South America;
+7. Australia/Oceania;
+8. Antarctica.
+
+It may seem funny that I included Antarctica in the enumeration. But I wanted to have an exhaustive list of continents so let it stay there. The 'World' constant is arranged as a separate continent.
+
+Besides, I created the SCountryByContinent structure to work with continents. The initialization method features constant arrays of country [codes](https://en.wikipedia.org/wiki/ISO_3166-2 "https://en.wikipedia.org/wiki/ISO_3166-2"), names and corresponding continents. The current version features 197 countries including the EU and the whole world.
+
+Let's create the **Test\_get\_countries.mq5** script checking the operation of the methods for obtaining country and continent data.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   CiCalendarInfo country_calendar_info;
+   if(country_calendar_info.Init())
+     {
+      //--- 1) get countries (CArrayString)
+      CArrayString countries_arr;
+      if(country_calendar_info.GetCountries(countries_arr))
+        {
+         int countries_num = countries_arr.Total();
+         if(countries_num > 0)
+           {
+            ::Print("\n---== CArrayString list ==---");
+            ::PrintFormat("   Countries list consists of %d countries.", countries_num);
+            ::PrintFormat("   First country: %s", countries_arr.At(0));
+            ::PrintFormat("   Last country: %s", countries_arr.At(countries_num - 1));
+           }
+        }
+      //--- 2) get countries (MqlCalendarCountry)
+      MqlCalendarCountry countries[];
+      if(country_calendar_info.GetCountries(countries))
+        {
+         int countries_num = ::ArraySize(countries);
+         if(countries_num > 0)
+           {
+            ::Print("\n---== MqlCalendarCountry array ==---");
+            ::PrintFormat("   Countries array consists of %d countries.", countries_num);
+            ::PrintFormat("   First country: %s", countries[0].name);
+            ::PrintFormat("   Last country: %s", countries[countries_num - 1].name);
+           }
+        }
+      //--- 3) get unique continents
+      string continent_names[];
+      int continents_num = 0;
+      if(country_calendar_info.GetUniqueContinents(continent_names))
+        {
+         continents_num = ::ArraySize(continent_names);
+         if(continents_num > 0)
+           {
+            ::Print("\n---== Unique continent names ==---");
+            for(int c_idx = 0; c_idx < continents_num; c_idx++)
+              {
+               string curr_continent_name = continent_names[c_idx];
+               ::PrintFormat("   [%d] - %s", c_idx + 1, curr_continent_name);
+              }
+           }
+        }
+      //--- 4) get countries by continent
+      if(continents_num)
+        {
+         ENUM_CONTINENT continents[];
+         ::ArrayResize(continents, continents_num);
+         ::Print("\n---== Countries by continent ==---");
+         for(int c_idx = 0; c_idx < continents_num; c_idx++)
+           {
+            ENUM_CONTINENT curr_continent =
+               SCountryByContinent::ContinentByDescription(continent_names[c_idx]);
+            if(countries_arr.Shutdown())
+               if(country_calendar_info.GetCountriesByContinent(curr_continent, countries_arr))
+                 {
+                  int countries_by_continent = countries_arr.Total();
+                  ::PrintFormat("   Continent \"%s\" includes %d country(-ies):",
+                                continent_names[c_idx], countries_by_continent);
+                  for(int c_jdx = 0; c_jdx < countries_by_continent; c_jdx++)
+                    {
+                     ::PrintFormat("   [%d] - %s", c_jdx + 1,
+                                   countries_arr.At(c_jdx));
+                    }
+                 }
+           }
+        }
+      //--- 5) get country description
+      string country_code = "RU";
+      SCountryByContinent country_continent_data;
+      if(country_continent_data.Init(country_code))
+        {
+         ::Print("\n---== Country ==---");
+         ::PrintFormat("   Name: %s", country_continent_data.Country());
+         ::PrintFormat("   Code: %s", country_continent_data.Code());
+         ENUM_CONTINENT curr_continent = country_continent_data.Continent();
+         ::PrintFormat("   Continent enum: %s", ::EnumToString(curr_continent));
+         ::PrintFormat("   Continent description: %s",
+                       country_continent_data.ContinentDescription());
+        }
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+The following info appears in the journal as a result of the script work:
+
+```
+EH      0       23:05:16.492    Test_get_countries (USDCAD,H1)  ---== New Calendar Info object ==---
+HR      0       23:05:16.492    Test_get_countries (USDCAD,H1)  
+QH      0       23:05:16.492    Test_get_countries (USDCAD,H1)  ---== CArrayString list ==---
+NR      0       23:05:16.492    Test_get_countries (USDCAD,H1)     Countries list consists of 23 countries.
+NP      0       23:05:16.492    Test_get_countries (USDCAD,H1)     First country: European Union
+LF      0       23:05:16.492    Test_get_countries (USDCAD,H1)     Last country: Norway
+LQ      0       23:05:16.492    Test_get_countries (USDCAD,H1)  
+GG      0       23:05:16.492    Test_get_countries (USDCAD,H1)  ---== MqlCalendarCountry array ==---
+IL      0       23:05:16.492    Test_get_countries (USDCAD,H1)     Countries array consists of 23 countries.
+JP      0       23:05:16.492    Test_get_countries (USDCAD,H1)     First country: European Union
+HG      0       23:05:16.492    Test_get_countries (USDCAD,H1)     Last country: Norway
+OR      0       23:05:16.493    Test_get_countries (USDCAD,H1)  
+FJ      0       23:05:16.493    Test_get_countries (USDCAD,H1)  ---== Unique continent names ==---
+KS      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [1] - Africa
+NK      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [2] - Asia
+HR      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [3] - Australia/Oceania
+HM      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [4] - Europe
+RE      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [5] - North America
+CO      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [6] - South America
+GH      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [7] - World
+GP      0       23:05:18.606    Test_get_countries (USDCAD,H1)  
+LE      0       23:05:18.606    Test_get_countries (USDCAD,H1)  ---== Countries by continent ==---
+HO      0       23:05:18.608    Test_get_countries (USDCAD,H1)     Continent "Africa" includes 1 country(-ies):
+RR      0       23:05:18.608    Test_get_countries (USDCAD,H1)     [1] - South Africa
+NH      0       23:05:18.610    Test_get_countries (USDCAD,H1)     Continent "Asia" includes 6 country(-ies):
+CM      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [1] - China
+RK      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [2] - Hong Kong
+CL      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [3] - India
+LJ      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [4] - South Korea
+LJ      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [5] - Japan
+IR      0       23:05:18.610    Test_get_countries (USDCAD,H1)     [6] - Singapore
+OK      0       23:05:18.614    Test_get_countries (USDCAD,H1)     Continent "Australia/Oceania" includes 2 country(-ies):
+RM      0       23:05:18.614    Test_get_countries (USDCAD,H1)     [1] - Australia
+NJ      0       23:05:18.614    Test_get_countries (USDCAD,H1)     [2] - New Zealand
+MM      0       23:05:18.616    Test_get_countries (USDCAD,H1)     Continent "Europe" includes 9 country(-ies):
+LO      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [1] - European Union
+DF      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [2] - Germany
+OQ      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [3] - France
+CE      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [4] - United Kingdom
+OM      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [5] - Switzerland
+RS      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [6] - Spain
+FE      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [7] - Sweden
+JS      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [8] - Italy
+DD      0       23:05:18.616    Test_get_countries (USDCAD,H1)     [9] - Norway
+LR      0       23:05:18.618    Test_get_countries (USDCAD,H1)     Continent "North America" includes 3 country(-ies):
+LK      0       23:05:18.618    Test_get_countries (USDCAD,H1)     [1] - Canada
+HS      0       23:05:18.618    Test_get_countries (USDCAD,H1)     [2] - United States
+CK      0       23:05:18.618    Test_get_countries (USDCAD,H1)     [3] - Mexico
+GL      0       23:05:18.619    Test_get_countries (USDCAD,H1)     Continent "South America" includes 1 country(-ies):
+EQ      0       23:05:18.619    Test_get_countries (USDCAD,H1)     [1] - Brazil
+DH      0       23:05:18.622    Test_get_countries (USDCAD,H1)     Continent "World" includes 1 country(-ies):
+JK      0       23:05:18.622    Test_get_countries (USDCAD,H1)     [1] - Worldwide
+QM      0       23:05:18.622    Test_get_countries (USDCAD,H1)  
+KH      0       23:05:18.622    Test_get_countries (USDCAD,H1)  ---== Country ==---
+PQ      0       23:05:18.622    Test_get_countries (USDCAD,H1)     Name: Russian Federation
+KG      0       23:05:18.622    Test_get_countries (USDCAD,H1)     Code: RU
+MR      0       23:05:18.622    Test_get_countries (USDCAD,H1)     Continent enum: CONTINENT_EUROPE
+MI      0       23:05:18.622    Test_get_countries (USDCAD,H1)     Continent description: Europe
+```
+
+Thus, the current calendar version describes events related to the economies of 23 countries located on 7 continents (provided that the 'World' constant is taken into account).
+
+2.3.7  Methods of obtaining event data
+
+The methods allow selecting events according to a certain criterion.
+
+The CiCalendarInfo::GetEventsByName(CArrayString &events\_arr, const string name = NULL) method performs a selection as a dynamic array of string type variables. An event name serves as a selection criterion.
+
+The CiCalendarInfo::GetEventsByName(MqlCalendarEvent & events[], const string name = NULL) method is similar to the previous one. The only difference is that it forms a selection in the form of the array of MqlCalendarCountry type variables.
+
+The CiCalendarInfo::FilterEvents(MqlCalendarEvent &filtered\_events[], MqlCalendarEvent &src\_events[], const ulong filter) method also forms a selection as the array of MqlCalendarCountry type variables. There is already a multiple criterion here implemented in a set of flags. There are 49 such criteria in total. They cover all enumeration values: ENUM\_CALENDAR\_EVENT\_TYPE, ENUM\_CALENDAR\_EVENT\_SECTOR, ENUM\_CALENDAR\_EVENT\_FREQUENCY, ENUM\_CALENDAR\_EVENT\_TIMEMODE, ENUM\_CALENDAR\_EVENT\_UNIT, ENUM\_CALENDAR\_EVENT\_IMPORTANCE, ENUM\_CALENDAR\_EVENT\_MULTIPLIER.
+
+Creating a new overarching mega-enumeration seems impossible since 'enum' type is a 4-byte data type (32 bits), whereas this case requires 49 bits. On the other hand, there is a 'long' type providing 64 bits.
+
+The following code is used to solve the issue:
+
+```
+//--- defines for events filtering
+//--- 1) type (3)
+#define FILTER_BY_TYPE_EVENT           0x1              // 1 by type "event"
+#define FILTER_BY_TYPE_INDICATOR       0x2              // 2 by type "indicator"
+#define FILTER_BY_TYPE_HOLIDAY         0x4              // 3 by type "holiday"
+//--- 2) sector (13)
+#define FILTER_BY_SECTOR_NONE          0x8              // 4 by sector "none"
+#define FILTER_BY_SECTOR_MARKET        0x10             // 5 by sector "market"
+#define FILTER_BY_SECTOR_GDP           0x20             // 6 by sector "GDP"
+#define FILTER_BY_SECTOR_JOBS          0x40             // 7 by sector "jobs"
+#define FILTER_BY_SECTOR_PRICES        0x80             // 8 by sector "prices"
+#define FILTER_BY_SECTOR_MONEY         0x100            // 9 by sector "money"
+#define FILTER_BY_SECTOR_TRADE         0x200            // 10 by sector "trade"
+#define FILTER_BY_SECTOR_GOVERNMENT    0x400            // 11 by sector "government"
+#define FILTER_BY_SECTOR_BUSINESS      0x800            // 12 by sector "business"
+#define FILTER_BY_SECTOR_CONSUMER      0x1000           // 13 by sector "consumer"
+#define FILTER_BY_SECTOR_HOUSING       0x2000           // 14 by sector "housing"
+#define FILTER_BY_SECTOR_TAXES         0x4000           // 15 by sector "taxes"
+#define FILTER_BY_SECTOR_HOLIDAYS      0x8000           // 16 by sector "holidays"
+//--- 3) frequency (6)
+#define FILTER_BY_FREQUENCY_NONE       0x10000          // 17 by frequency "none"
+#define FILTER_BY_FREQUENCY_WEEK       0x20000          // 18 by frequency "week"
+#define FILTER_BY_FREQUENCY_MONTH      0x40000          // 19 by frequency "month"
+#define FILTER_BY_FREQUENCY_QUARTER    0x80000          // 20 by frequency "quarter"
+#define FILTER_BY_FREQUENCY_YEAR       0x100000         // 21 by frequency "year"
+#define FILTER_BY_FREQUENCY_DAY        0x200000         // 22 by frequency "day"
+//--- 4) importance (4)
+#define FILTER_BY_IMPORTANCE_NONE      0x400000         // 23 by importance "none"
+#define FILTER_BY_IMPORTANCE_LOW       0x800000         // 24 by importance "low"
+#define FILTER_BY_IMPORTANCE_MODERATE  0x1000000        // 25 by importance "medium"
+#define FILTER_BY_IMPORTANCE_HIGH      0x2000000        // 26 by importance "high"
+//--- 5) unit (14)
+#define FILTER_BY_UNIT_NONE            0x4000000        // 27 by unit "none"
+#define FILTER_BY_UNIT_PERCENT         0x8000000        // 28 by unit "percentage"
+#define FILTER_BY_UNIT_CURRENCY        0x10000000       // 29 by unit "currency"
+#define FILTER_BY_UNIT_HOUR            0x20000000       // 30 by unit "hours"
+#define FILTER_BY_UNIT_JOB             0x40000000       // 31 by unit "jobs"
+#define FILTER_BY_UNIT_RIG             0x80000000       // 32 by unit "drilling rigs"
+#define FILTER_BY_UNIT_USD             0x100000000      // 33 by unit "USD"
+#define FILTER_BY_UNIT_PEOPLE          0x200000000      // 34 by unit "people"
+#define FILTER_BY_UNIT_MORTGAGE        0x400000000      // 35 by unit "mortgage loans"
+#define FILTER_BY_UNIT_VOTE            0x800000000      // 36 by unit "votes"
+#define FILTER_BY_UNIT_BARREL          0x1000000000     // 37 by unit "barrels"
+#define FILTER_BY_UNIT_CUBICFEET       0x2000000000     // 38 by unit "cubic feet"
+#define FILTER_BY_UNIT_POSITION        0x4000000000     // 39 by unit "net positions"
+#define FILTER_BY_UNIT_BUILDING        0x8000000000     // 40 by unit "buildings"
+//--- 6) multiplier (5)
+#define FILTER_BY_MULTIPLIER_NONE      0x10000000000    // 41 by multiplier "none"
+#define FILTER_BY_MULTIPLIER_THOUSANDS 0x20000000000    // 42 by multiplier "thousands"
+#define FILTER_BY_MULTIPLIER_MILLIONS  0x40000000000    // 43 by multiplier "millions"
+#define FILTER_BY_MULTIPLIER_BILLIONS  0x80000000000    // 44 by multiplier "billions"
+#define FILTER_BY_MULTIPLIER_TRILLIONS 0x100000000000   // 45 by multiplier "trillions"
+//--- 7) time mode (4)
+#define FILTER_BY_TIMEMODE_DATETIME    0x200000000000   // 46 by time mode "na"
+#define FILTER_BY_TIMEMODE_DATE        0x400000000000   // 47 by time mode "positive"
+#define FILTER_BY_TIMEMODE_NOTIME      0x800000000000   // 48 by time mode "negative"
+#define FILTER_BY_TIMEMODE_TENTATIVE   0x1000000000000  // 49 by time mode "na"
+//--- type
+#define IS_TYPE_EVENT(filter) ((filter&FILTER_BY_TYPE_EVENT)!=0)
+#define IS_TYPE_INDICATOR(filter) ((filter&FILTER_BY_TYPE_INDICATOR)!=0)
+#define IS_TYPE_HOLIDAY(filter) ((filter&FILTER_BY_TYPE_HOLIDAY)!=0)
+//--- sector
+#define IS_SECTOR_NONE(filter) ((filter&FILTER_BY_SECTOR_NONE)!=0)
+#define IS_SECTOR_MARKET(filter) ((filter&FILTER_BY_SECTOR_MARKET)!=0)
+#define IS_SECTOR_GDP(filter) ((filter&FILTER_BY_SECTOR_GDP)!=0)
+#define IS_SECTOR_JOBS(filter) ((filter&FILTER_BY_SECTOR_JOBS)!=0)
+#define IS_SECTOR_PRICES(filter) ((filter&FILTER_BY_SECTOR_PRICES)!=0)
+#define IS_SECTOR_MONEY(filter) ((filter&FILTER_BY_SECTOR_MONEY)!=0)
+#define IS_SECTOR_TRADE(filter) ((filter&FILTER_BY_SECTOR_TRADE)!=0)
+#define IS_SECTOR_CONSUMER(filter) ((filter&FILTER_BY_SECTOR_CONSUMER)!=0)
+#define IS_SECTOR_HOUSING(filter) ((filter&FILTER_BY_SECTOR_HOUSING)!=0)
+#define IS_SECTOR_TAXES(filter) ((filter&FILTER_BY_SECTOR_TAXES)!=0)
+#define IS_SECTOR_HOLIDAYS(filter) ((filter&FILTER_BY_SECTOR_HOLIDAYS)!=0)
+//--- frequency
+#define IS_FREQUENCY_NONE(filter) ((filter&FILTER_BY_FREQUENCY_NONE)!=0)
+#define IS_FREQUENCY_WEEK(filter) ((filter&FILTER_BY_FREQUENCY_WEEK)!=0)
+#define IS_FREQUENCY_MONTH(filter) ((filter&FILTER_BY_FREQUENCY_MONTH)!=0)
+#define IS_FREQUENCY_QUARTER(filter) ((filter&FILTER_BY_FREQUENCY_QUARTER)!=0)
+#define IS_FREQUENCY_YEAR(filter) ((filter&FILTER_BY_FREQUENCY_YEAR)!=0)
+#define IS_FREQUENCY_DAY(filter) ((filter&FILTER_BY_FREQUENCY_DAY)!=0)
+//--- importance
+#define IS_IMPORTANCE_NONE(filter) ((filter&FILTER_BY_IMPORTANCE_NONE)!=0)
+#define IS_IMPORTANCE_LOW(filter) ((filter&FILTER_BY_IMPORTANCE_LOW)!=0)
+#define IS_IMPORTANCE_MODERATE(filter) ((filter&FILTER_BY_IMPORTANCE_MODERATE)!=0)
+#define IS_IMPORTANCE_HIGH(filter) ((filter&FILTER_BY_IMPORTANCE_HIGH)!=0)
+//--- unit
+#define IS_UNIT_NONE(filter) ((filter&FILTER_BY_UNIT_NONE)!=0)
+#define IS_UNIT_PERCENT(filter) ((filter&FILTER_BY_UNIT_PERCENT)!=0)
+#define IS_UNIT_CURRENCY(filter) ((filter&FILTER_BY_UNIT_CURRENCY)!=0)
+#define IS_UNIT_HOUR(filter) ((filter&FILTER_BY_UNIT_HOUR)!=0)
+#define IS_UNIT_JOB(filter) ((filter&FILTER_BY_UNIT_JOB)!=0)
+#define IS_UNIT_RIG(filter) ((filter&FILTER_BY_UNIT_RIG)!=0)
+#define IS_UNIT_USD(filter) ((filter&FILTER_BY_UNIT_USD)!=0)
+#define IS_UNIT_PEOPLE(filter) ((filter&FILTER_BY_UNIT_PEOPLE)!=0)
+#define IS_UNIT_MORTGAGE(filter) ((filter&FILTER_BY_UNIT_MORTGAGE)!=0)
+#define IS_UNIT_VOTE(filter) ((filter&FILTER_BY_UNIT_VOTE)!=0)
+#define IS_UNIT_BARREL(filter) ((filter&FILTER_BY_UNIT_BARREL)!=0)
+#define IS_UNIT_CUBICFEET(filter) ((filter&FILTER_BY_UNIT_CUBICFEET)!=0)
+#define IS_UNIT_POSITION(filter) ((filter&FILTER_BY_UNIT_POSITION)!=0)
+#define IS_UNIT_BUILDING(filter) ((filter&FILTER_BY_UNIT_BUILDING)!=0)
+//--- multiplier
+#define IS_MULTIPLIER_NONE(filter) ((filter&FILTER_BY_MULTIPLIER_NONE)!=0)
+#define IS_MULTIPLIER_THOUSANDS(filter) ((filter&FILTER_BY_MULTIPLIER_THOUSANDS)!=0)
+#define IS_MULTIPLIER_MILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_MILLIONS)!=0)
+#define IS_MULTIPLIER_BILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_BILLIONS)!=0)
+#define IS_MULTIPLIER_TRILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_TRILLIONS)!=0)
+//--- time mode
+#define IS_TIMEMODE_DATETIME(filter) ((filter&FILTER_BY_TIMEMODE_DATETIME)!=0)
+#define IS_TIMEMODE_DATE(filter) ((filter&FILTER_BY_TIMEMODE_DATE)!=0)
+#define IS_TIMEMODE_NOTIME(filter) ((filter&FILTER_BY_TIMEMODE_NOTIME)!=0)
+#define IS_TIMEMODE_TENTATIVE(filter) ((filter&FILTER_BY_TIMEMODE_TENTATIVE)!=0)
+```
+
+Let's have a look at the test example - **Test\_filter\_events****.mq5** script. First, the calendar object is created for the specified EUR currency.
+
+Next, in the block 1, select all events related to EUR having "Unemployment" in their names. There are 33 events of this type. Event names are sent to the dynamic array of string type variables.
+
+In the block 2, do the same, while filling in the MqlCalendarEvent type array.
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   CiCalendarInfo event_calendar_info;
+   if(event_calendar_info.Init("EUR"))
+     {
+      //--- 1) get events by name (CArrayString)
+      CArrayString events_arr;
+      string ev_name = "Unemployment";
+      if(event_calendar_info.GetEventsByName(events_arr, ev_name))
+        {
+         int events_num = events_arr.Total();
+         if(events_num > 0)
+           {
+            ::Print("\n---== CArrayString list ==---");
+            ::PrintFormat("   Events list consists of %d events.", events_num);
+            ::PrintFormat("   First event: %s", events_arr.At(0));
+            ::PrintFormat("   Last event: %s", events_arr.At(events_num - 1));
+           }
+        }
+      //--- 2) get events by name (MqlCalendarEvent)
+      MqlCalendarEvent events[];
+      if(event_calendar_info.GetEventsByName(events, ev_name))
+        {
+         int events_num = ::ArraySize(events);
+         if(events_num > 0)
+           {
+            ::Print("\n---== MqlCalendarEvent array ==---");
+            ::PrintFormat("   Events array consists of %d events.", events_num);
+            ::PrintFormat("   First event: %s", events[0].name);
+            ::PrintFormat("   Last event: %s", events[events_num - 1].name);
+           }
+        }
+      //--- 3) filter events
+      MqlCalendarEvent filtered_events[];
+      int indices[2];
+      indices[0] = 0;
+      string events_str[2];
+      events_str[0] = "First";
+      events_str[1] = "Last";
+      ulong filter = 0;
+      filter |= FILTER_BY_IMPORTANCE_HIGH;
+      if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+        {
+         int f_events_num = ::ArraySize(filtered_events);
+         ::Print("\n---== Filtered events array ==---");
+         ::Print("   Filtered by: importance high");
+         ::PrintFormat("   Events array consists of %d events.", ::ArraySize(filtered_events));
+         if(f_events_num > 0)
+           {
+            indices[1] = f_events_num - 1;
+            for(int ind = 0; ind <::ArraySize(indices); ind++)
+              {
+               MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+               ::PrintFormat("   \n%s event:", events_str[ind]);
+               event_calendar_info.PrintEventDescription(curr_event);
+              }
+           }
+         ::ArrayFree(filtered_events);
+         filter ^= FILTER_BY_IMPORTANCE_HIGH;
+        }
+      filter |= FILTER_BY_IMPORTANCE_MODERATE;
+      if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+        {
+         int f_events_num = ::ArraySize(filtered_events);
+         ::Print("\n---== Filtered events array ==---");
+         ::Print("   Filtered by: importance medium");
+         ::PrintFormat("   Events array consists of %d events.", ::ArraySize(filtered_events));
+         if(f_events_num > 0)
+           {
+            indices[1] = f_events_num - 1;
+            for(int ind = 0; ind <::ArraySize(indices); ind++)
+              {
+               MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+               ::PrintFormat("   \n%s event:", events_str[ind]);
+               event_calendar_info.PrintEventDescription(curr_event);
+              }
+           }
+         ::ArrayFree(filtered_events);
+         filter ^= FILTER_BY_IMPORTANCE_MODERATE;
+        }
+      filter |= FILTER_BY_IMPORTANCE_LOW;
+      if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+        {
+         int f_events_num = ::ArraySize(filtered_events);
+         ::Print("\n---== Filtered events array ==---");
+         ::Print("   Filtered by: importance low");
+         ::PrintFormat("   Events array consists of %d events.", ::ArraySize(filtered_events));
+         if(f_events_num > 0)
+           {
+            indices[1] = f_events_num - 1;
+            for(int ind = 0; ind <::ArraySize(indices); ind++)
+              {
+               MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+               ::PrintFormat("   \n%s event:", events_str[ind]);
+               event_calendar_info.PrintEventDescription(curr_event);
+              }
+           }
+         ::ArrayFree(filtered_events);
+         filter ^= FILTER_BY_IMPORTANCE_LOW;
+        }
+      filter |= FILTER_BY_IMPORTANCE_NONE;
+      if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+        {
+         int f_events_num = ::ArraySize(filtered_events);
+         ::Print("\n---== Filtered events array ==---");
+         ::Print("   Filtered by: importance none");
+         ::PrintFormat("   Events array consists of %d events.", ::ArraySize(filtered_events));
+         if(f_events_num > 0)
+           {
+            indices[1] = f_events_num - 1;
+            for(int ind = 0; ind <::ArraySize(indices); ind++)
+              {
+               MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+               ::PrintFormat("   \n%s event:", events_str[ind]);
+               event_calendar_info.PrintEventDescription(curr_event);
+              }
+           }
+        }
+     }
+  }
+//+------------------------------------------------------------------+
+```
+
+In the block 3, sort out the events by their importance. First, let's see how many of the thirty-three events selected earlier by name are important. It turns out, none of them are. 27 events are of medium importance, 6 events are of low importance . Besides, there are 0 events with unspecified importance level.
+
+The journal looks as follows:
+
+```
+JL      0       13:18:48.419    Test_filter_events (USDCAD,H1)  
+FM      0       13:18:48.421    Test_filter_events (USDCAD,H1)  ---== New Calendar Info object ==---
+JP      0       13:18:48.421    Test_filter_events (USDCAD,H1)     Currency: EUR
+CE      0       13:18:48.630    Test_filter_events (USDCAD,H1)  
+EL      0       13:18:48.631    Test_filter_events (USDCAD,H1)  ---== CArrayString list ==---
+IF      0       13:18:48.631    Test_filter_events (USDCAD,H1)     Events list consists of 33 events.
+MQ      0       13:18:48.631    Test_filter_events (USDCAD,H1)     First event: Unemployment Rate
+RK      0       13:18:48.631    Test_filter_events (USDCAD,H1)     Last event: NAV Unemployment Change
+HF      0       13:18:48.635    Test_filter_events (USDCAD,H1)  
+OR      0       13:18:48.635    Test_filter_events (USDCAD,H1)  ---== MqlCalendarEvent array ==---
+JH      0       13:18:48.635    Test_filter_events (USDCAD,H1)     Events array consists of 33 events.
+ER      0       13:18:48.635    Test_filter_events (USDCAD,H1)     First event: Unemployment Rate
+JM      0       13:18:48.635    Test_filter_events (USDCAD,H1)     Last event: NAV Unemployment Change
+DH      0       13:18:48.635    Test_filter_events (USDCAD,H1)  
+CR      0       13:18:48.635    Test_filter_events (USDCAD,H1)  ---== Filtered events array ==---
+HH      0       13:18:48.635    Test_filter_events (USDCAD,H1)     Filtered by: importance high
+DO      0       13:18:48.635    Test_filter_events (USDCAD,H1)     Events array consists of 0 events.
+CN      0       13:18:48.636    Test_filter_events (USDCAD,H1)  
+PI      0       13:18:48.636    Test_filter_events (USDCAD,H1)  ---== Filtered events array ==---
+NO      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Filtered by: importance medium
+PE      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Events array consists of 27 events.
+KG      0       13:18:48.636    Test_filter_events (USDCAD,H1)     
+KI      0       13:18:48.636    Test_filter_events (USDCAD,H1)  First event:
+IS      0       13:18:48.636    Test_filter_events (USDCAD,H1)  
+EJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)  ---== Event description ==---
+JF      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Id: 999030020
+DP      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Type: Indicator
+KJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Sector: Labor market
+JM      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Frequency: Monthly
+QJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Time mode: Exact time
+CN      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Country id: 999
+KK      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Unit: Percentage
+JP      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Importance: Moderate
+JH      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Multiplier: None
+JF      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Digits: 1
+PL      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Source URL: https://ec.europa.eu/eurostat
+NH      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Event code: unemployment-rate
+MQ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Name: Unemployment Rate
+GI      0       13:18:48.636    Test_filter_events (USDCAD,H1)     
+OO      0       13:18:48.636    Test_filter_events (USDCAD,H1)  Last event:
+OJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)  
+OP      0       13:18:48.636    Test_filter_events (USDCAD,H1)  ---== Event description ==---
+QH      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Id: 578040001
+NO      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Type: Indicator
+ID      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Sector: Labor market
+DF      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Frequency: Monthly
+KS      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Time mode: Exact time
+LI      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Country id: 578
+QR      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Unit: Percentage
+LJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Importance: Moderate
+DQ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Multiplier: None
+LH      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Digits: 1
+IS      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Source URL: https://www.nav.no/en/Home
+EQ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Event code: nav-unemployment-rate-nsa
+PJ      0       13:18:48.636    Test_filter_events (USDCAD,H1)     Name: NAV Unemployment Rate n.s.a.
+ED      0       13:18:48.636    Test_filter_events (USDCAD,H1)  
+FF      0       13:18:48.636    Test_filter_events (USDCAD,H1)  ---== Filtered events array ==---
+PK      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Filtered by: importance low
+JS      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Events array consists of 6 events.
+FH      0       13:18:48.637    Test_filter_events (USDCAD,H1)     
+FS      0       13:18:48.637    Test_filter_events (USDCAD,H1)  First event:
+LI      0       13:18:48.637    Test_filter_events (USDCAD,H1)  
+LO      0       13:18:48.637    Test_filter_events (USDCAD,H1)  ---== Event description ==---
+EK      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Id: 276060003
+IM      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Type: Indicator
+FE      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Sector: Labor market
+OP      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Frequency: Monthly
+HQ      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Time mode: Exact time
+HH      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Country id: 276
+KM      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Unit: People
+DJ      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Importance: Low
+RM      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Multiplier: Millions
+KJ      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Digits: 3
+LS      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Source URL: https://www.arbeitsagentur.de/en/welcome
+MN      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Event code: unemployment-nsa
+ND      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Name: Unemployment n.s.a.
+LP      0       13:18:48.637    Test_filter_events (USDCAD,H1)     
+LE      0       13:18:48.637    Test_filter_events (USDCAD,H1)  Last event:
+DP      0       13:18:48.637    Test_filter_events (USDCAD,H1)  
+DG      0       13:18:48.637    Test_filter_events (USDCAD,H1)  ---== Event description ==---
+CS      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Id: 578040002
+QE      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Type: Indicator
+NM      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Sector: Labor market
+GH      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Frequency: Monthly
+PI      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Time mode: Exact time
+GS      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Country id: 578
+CE      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Unit: People
+LS      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Importance: Low
+HJ      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Multiplier: Thousands
+QR      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Digits: 3
+NI      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Source URL: https://www.nav.no/en/Home
+MQ      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Event code: nav-unemployment-change
+ES      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Name: NAV Unemployment Change
+PI      0       13:18:48.637    Test_filter_events (USDCAD,H1)  
+CS      0       13:18:48.637    Test_filter_events (USDCAD,H1)  ---== Filtered events array ==---
+DK      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Filtered by: importance none
+DH      0       13:18:48.637    Test_filter_events (USDCAD,H1)     Events array consists of 0 events.
+```
+
+As I have already said, there are 49 criteria for selecting events. They can be combined or used separately.
+
+### 3. Non-commercial net positions indicator
+
+The economic calendar features many different events. I have chosen one of the most notable events - the weekly report of the Commodity Futures Trading Commission showing the difference between the total volume of long and short positions. 
+
+Let's create an indicator displaying data on a selected commodity asset in a separate window of the chart.
+
+There are 11 such assets. Create the following enumeration:
+
+```
+//+------------------------------------------------------------------+
+//| CFTC Non-Commercial Net Positions                                |
+//+------------------------------------------------------------------+
+enum ENUM_NON_COM_NET_POSITIONS
+  {
+   NON_COM_NET_POSITIONS_COPPER = 0,      // Copper
+   NON_COM_NET_POSITIONS_SILVER = 1,      // Silver
+   NON_COM_NET_POSITIONS_GOLD = 2,        // Gold
+   NON_COM_NET_POSITIONS_CRUDE_OIL = 3,   // Crude oil
+   NON_COM_NET_POSITIONS_SP_500 = 4,      // S&P 500
+   NON_COM_NET_POSITIONS_AlUMINIUM = 5,   // Aluminium
+   NON_COM_NET_POSITIONS_CORN = 6,        // Corn
+   NON_COM_NET_POSITIONS_NGAS = 7,        // Natural gas
+   NON_COM_NET_POSITIONS_SOYBEANS = 8,    // Soybeans
+   NON_COM_NET_POSITIONS_WHEAT = 9,       // Wheat
+   NON_COM_NET_POSITIONS_NASDAQ_100 = 10, // Nasdaq 100
+  };
+```
+
+The indicator is to display previous values and detect new ones. For the first task, I decided to use the following code block in the OnCalculate() handler:
+
+```
+//--- first call
+if(prev_calculated == 0)
+  {
+//--- initialize buffer
+   ::ArrayInitialize(gBuffer, EMPTY_VALUE);
+//--- 1) collect all events by country
+   ulong country_id = 840; // US
+   if(gPtrEventsInfo.Init(NULL, country_id))
+     {
+      MqlCalendarEvent events[];
+      if(gPtrEventsInfo.EventsByCountryDescription(events, false))
+        {
+         string event_code_substr = GetEventCodeSubstring();
+         if(event_code_substr != NULL)
+            for(int ev_idx = 0; ev_idx <::ArraySize(events); ev_idx++)
+              {
+               MqlCalendarEvent curr_event = events[ev_idx];
+               if(::StringFind(curr_event.event_code, event_code_substr) > -1)
+                 {
+                  //--- 2) collect all values by event id
+                  if(gPtrValuesInfo.Init(NULL, WRONG_VALUE, curr_event.id))
+                    {
+                     SiTimeSeries net_positions_ts;
+                     if(gPtrValuesInfo.ValueHistorySelectByEvent(net_positions_ts, 0))
+                       {
+                        string net_positions_name;
+                        SiTsObservation ts_observations[];
+                        if(net_positions_ts.GetSeries(ts_observations, net_positions_name))
+                          {
+                           //--- consider only past observations
+                           int new_size = 0;
+                           for(int obs_idx =::ArraySize(ts_observations) - 1; obs_idx >= 0; obs_idx--)
+                             {
+                              if(ts_observations[obs_idx].val != EMPTY_VALUE)
+                                 break;
+                              new_size = obs_idx;
+                             }
+                           if(new_size > 0)
+                              ::ArrayResize(ts_observations, new_size);
+                           //--- find the starting date
+                           datetime start_dtime, ts_start_dtime;
+                           start_dtime = time[0];
+                           ts_start_dtime = ts_observations[0].time;
+                           if(ts_start_dtime > start_dtime)
+                              start_dtime = ts_start_dtime;
+                           ::IndicatorSetString(INDICATOR_SHORTNAME, net_positions_name);
+                           ::IndicatorSetInteger(INDICATOR_DIGITS, 1);
+                           //---
+                           int start_bar_idx =::iBarShift(_Symbol, _Period, ts_start_dtime);
+                           if(start_bar_idx > -1)
+                             {
+                              start_bar_idx = rates_total - start_bar_idx;
+                              uint observations_cnt = 0;
+                              SiTsObservation curr_observation = ts_observations[observations_cnt];
+                              uint ts_size = ::ArraySize(ts_observations);
+                              for(int bar = start_bar_idx; bar < rates_total; bar++)
+                                {
+                                 if((observations_cnt + 1) < ts_size)
+                                   {
+                                    SiTsObservation next_observation =
+                                       ts_observations[observations_cnt + 1];
+                                    if(time[bar] >= next_observation.time)
+                                      {
+                                       curr_observation = next_observation;
+                                       gLastValueDate = curr_observation.time;
+                                       gLastValue = curr_observation.val;
+                                       observations_cnt++;
+                                      }
+                                   }
+                                 gBuffer[bar] = curr_observation.val;
+                                }
+                              //--- just to get a change id
+                              MqlCalendarValue values[];
+                              gPtrValuesInfo.ValueLastSelectByEvent(gChangeId, values);
+                             }
+                          }
+                       }
+                    }
+                  break;
+                 }
+              }
+        }
+     }
+  }
+```
+
+Initialize the first calendar object in the block. I will indicate only a country ID  **—** USA. Next, select all country events and detect the necessary asset by an event code set in the input variable. After that, initialize the second calendar object and request history. Next, fill in the indicator buffer.
+
+The second block is to detect a new value in the OnCalculate() handler:
+
+```
+MqlCalendarValue values[];
+if(gPtrValuesInfo.ValueLastSelectByEvent(gChangeId, values) > 0)
+   if(values[0].time > gLastValueDate)
+     {
+      gLastValueDate = values[0].time;
+      gLastValue = values[0].GetActualValue();
+      //--- to log
+      if(InpTpLog)
+        {
+         ::Print("\n---== New event value ==---");
+         ::PrintFormat("   Time: %s", ::TimeToString(gLastValueDate));
+         datetime server_time =::TimeTradeServer();
+         ::PrintFormat("   Release time: %s", ::TimeToString(server_time));
+         ::PrintFormat("   Actual value: %0.1f", gLastValue);
+        }
+     }
+//--- if a new bar
+if(rates_total > prev_calculated)
+   for(int bar = prev_calculated; bar < rates_total; bar++)
+      gBuffer[bar] = gLastValue;
+```
+
+The result should be similar to the following image (Fig. 3).
+
+Fig. 3. CFTC S&P 500 Non-Commercial Net Positions
+
+In the indicator code, we can see that the calendar objects are created dynamically due to reinitialization of global variables in indicators. 
+
+  
+
+### Conclusion
+
+In this article, I have created the calendar object class **—** the class for a simplified access to the calendar properties and receiving event values. The calendar database is quite extensive and allows analyzing important economic events without resorting to third-party resources. 
+
+The archive contains the source code used in the article. On my PC, all files and folders are located in %MQL5\Shared Projects\Testing\Calendar. If you locate the sources differently, pay attention to the correct inclusion of the CalendarInfo.mqh header file using the #include directive.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/9874>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/9874.zip "Download all attachments in the single ZIP archive")
+
+[Code.zip](https://www.mql5.com/en/articles/download/9874/code.zip "Download Code.zip")
+(31.04 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Manual charting and trading toolkit (Part III). Optimization and new tools](https://www.mql5.com/en/articles/9914)
+
+In this article, we will further develop the idea of drawing graphical objects on charts using keyboard shortcuts. New tools have been added to the library, including a straight line plotted through arbitrary vertices, and a set of rectangles that enable the evaluation of the reversal time and level. Also, the article shows the possibility to optimize code for improved performance. The implementation example has been rewritten, allowing the use of Shortcuts alongside other trading programs. Required code knowledge level: slightly higher than a beginner.
+
+[An attempt at developing an EA constructor](https://www.mql5.com/en/articles/9717)
+
+In this article, I offer my set of trading functions in the form of a ready-made EA. This method allows getting multiple trading strategies by simply adding indicators and changing inputs.
+
+[WebSockets for MetaTrader 5 — Using the Windows API](https://www.mql5.com/en/articles/10275)
+
+In this article, we will use the WinHttp.dll to create a WebSocket client for MetaTrader 5 programs. The client will ultimately be implemented as a class and also tested against the Deriv.com WebSocket API.
+
+[Graphics in DoEasy library (Part 88): Graphical object collection — two-dimensional dynamic array for storing dynamically changing object properties](https://www.mql5.com/en/articles/10091)
+
+In this article, I will create a dynamic multidimensional array class with the ability to change the amount of data in any dimension. Based on the created class, I will create a two-dimensional dynamic array to store some dynamically changed properties of graphical objects.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=kwytixmhbkjqnqsbeidzwauzudobbxqc&s=854bd7dc2245707f8a34c15af1d749f2f3945d4b61c7e96c79f07e6b2d2f6776&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=tyjumsbovgsamsqvtciswdnswlmdbytj&ssn=1788801502767622577&ssn_dr=0&ssn_sr=0&fv_date=1788801502&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F9874&back_ref=https%3A%2F%2Fwww.google.com%2F&title=MQL5%20Cookbook%20%E2%80%93%20Economic%20Calendar%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880150285671132&fz_uniq=6448564310623544286&sv=2552)

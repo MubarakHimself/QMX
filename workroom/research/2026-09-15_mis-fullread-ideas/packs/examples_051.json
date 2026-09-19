@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_051",
+  "section": "Examples",
+  "parent_shard": "examples_051",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16211,
+      "title": "From Basic to Intermediate: FileSave and FileLoad",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16211.md"
+    },
+    {
+      "id": 16230,
+      "title": "Feature Engineering With Python And MQL5 (Part I): Forecasting Moving Averages For Long-Range AI Models",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16230.md"
+    },
+    {
+      "id": 16233,
+      "title": "SQLite capabilities in MQL5: Example of a dashboard with trading statistics by symbols and magic numbers",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16233.md"
+    },
+    {
+      "id": 16240,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part VI): Multiple Functions Interface (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16240.md"
+    },
+    {
+      "id": 16246,
+      "title": "From Basic to Intermediate: Random Access to Files (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16246.md"
+    },
+    {
+      "id": 16268,
+      "title": "Developing Advanced ICT Trading Systems: Implementing Signals in the Order Blocks Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16268.md"
+    },
+    {
+      "id": 16271,
+      "title": "From Basic to Intermediate: Random Access (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16271.md"
+    },
+    {
+      "id": 16273,
+      "title": "Multiple Symbol Analysis With Python And MQL5 (Part II): Principal Components Analysis For Portfolio Optimization",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16273.md"
+    },
+    {
+      "id": 16276,
+      "title": "Atomic Orbital Search (AOS) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16276.md"
+    },
+    {
+      "id": 16308,
+      "title": "Moving Average in MQL5 from scratch: Plain and simple",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16308.md"
+    },
+    {
+      "id": 16322,
+      "title": "From Basic to Intermediate: Navigating the Sandbox",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16322.md"
+    },
+    {
+      "id": 16328,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part VI):Trade Management Panel (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16328.md"
+    }
+  ]
+}

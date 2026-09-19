@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QMX Terminal — Hermes / SES-8821: Cost sensitivity &amp; regimes</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef4ff',
+              100: '#d9e6ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af'
+            },
+            amberBrand: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            },
+            surface: '#f8f9fa',
+            panel: '#ffffff',
+            subtle: '#f1f3f5',
+            divider: '#e2e5e9',
+            rail: '#181b20',
+            railHover: '#23272f',
+            railActive: '#2d333f'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+    }
+    /* Thin elegant scrollbar for panels */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f3f5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c8cdd4;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #aab2bc;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden bg-[#f1f3f5] text-[#1e293b] flex antialiased select-none">
+<!-- ========================================================================= -->
+<!-- 1. EXTREME LEFT GLOBAL RAIL (48px) -->
+<!-- ========================================================================= -->
+<aside class="w-12 shrink-0 bg-[#14171c] text-[#94a3b8] flex flex-col items-center justify-between py-2.5 z-50 border-r border-[#262a32]">
+<!-- Top icon group -->
+<div class="flex flex-col items-center gap-3 w-full">
+<!-- QMX Brand mark -->
+<div class="w-8 h-8 rounded bg-[#2563eb] text-white flex items-center justify-center font-bold text-xs tracking-tighter shadow-sm" title="QMX Terminal">
+        QMX
+      </div>
+<div class="w-6 h-px bg-[#262a32] my-0.5"></div>
+<!-- App launcher -->
+<button class="w-8 h-8 rounded flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#23272f] transition-colors" title="App Launcher">
+<span class="material-symbols-outlined text-[19px]">apps</span>
+</button>
+<!-- Hermes Agent Workspace (Active) -->
+<button class="relative w-8 h-8 rounded bg-[#2563eb] text-white flex items-center justify-center shadow-sm" title="Hermes Copilot / Strategy Workspace">
+<span class="material-symbols-outlined text-[19px]">smart_toy</span>
+</button>
+<!-- Library / Strategies -->
+<button class="w-8 h-8 rounded flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#23272f] transition-colors" title="Strategy Library">
+<span class="material-symbols-outlined text-[19px]">source</span>
+</button>
+<!-- Execution Runs (with badge '1') -->
+<button class="relative w-8 h-8 rounded flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#23272f] transition-colors" title="Active Runs (1)">
+<span class="material-symbols-outlined text-[19px]">play_circle</span>
+<span class="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] px-1 bg-[#2563eb] text-white font-mono text-[10px] font-semibold rounded-full flex items-center justify-center border border-[#14171c]">1</span>
+</button>
+<!-- Market Monitor -->
+<button class="w-8 h-8 rounded flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#23272f] transition-colors" title="Market Monitor">
+<span class="material-symbols-outlined text-[19px]">candlestick_chart</span>
+</button>
+</div>
+<!-- Bottom Settings -->
+<div class="flex flex-col items-center gap-2 w-full">
+<button class="w-8 h-8 rounded flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-[#23272f] transition-colors" title="Terminal Settings">
+<span class="material-symbols-outlined text-[19px]">settings</span>
+</button>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CONTAINER (calc(100vw - 48px)) -->
+<!-- ========================================================================= -->
+<div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden bg-[#f1f3f5]">
+<!-- ----------------------------------------------------------------------- -->
+<!-- TOP HEADER: Browser-like Environment Tabs (38px)                        -->
+<!-- ----------------------------------------------------------------------- -->
+<header class="h-[38px] bg-[#1a1e24] border-b border-[#2d333e] flex items-center justify-between px-3 shrink-0 select-none z-40">
+<!-- Tabs -->
+<div class="flex items-center h-full gap-1 overflow-x-auto">
+<!-- Active Tab -->
+<div class="h-[30px] px-3.5 bg-[#ffffff] text-[#0f172a] rounded-t font-medium text-xs flex items-center gap-2 border-t-2 border-[#2563eb] shadow-sm cursor-default">
+<span class="material-symbols-outlined text-[#2563eb] text-[15px]">workspaces</span>
+<span class="tracking-tight">Hermes / Liquidity study</span>
+<button class="text-[#94a3b8] hover:text-[#0f172a] ml-1 flex items-center" title="Close tab">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<!-- Inactive Tab 1 -->
+<div class="h-[30px] px-3.5 bg-transparent hover:bg-[#242932] text-[#94a3b8] hover:text-white rounded-t font-normal text-xs flex items-center gap-2 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[14px]">terminal</span>
+<span class="tracking-tight">Research / Cross-market</span>
+</div>
+<!-- Inactive Tab 2 -->
+<div class="h-[30px] px-3.5 bg-transparent hover:bg-[#242932] text-[#94a3b8] hover:text-white rounded-t font-normal text-xs flex items-center gap-2 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[14px]">insights</span>
+<span class="tracking-tight">Markets</span>
+</div>
+<!-- Add Env Button -->
+<button class="h-[26px] px-2 ml-1 text-[#94a3b8] hover:text-white hover:bg-[#242932] rounded text-xs font-medium flex items-center gap-1 transition-colors" title="New Environment">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Env</span>
+</button>
+</div>
+<!-- Right Header Profile -->
+<div class="flex items-center gap-3">
+<span class="text-[#64748b] text-xs font-mono">14:22:08 UTC</span>
+<div class="w-6 h-6 rounded-full bg-[#2563eb] text-white font-semibold text-[11px] flex items-center justify-center border border-[#3b82f6]/40 cursor-pointer" title="User Profile">
+          A
+        </div>
+</div>
+</header>
+<!-- ----------------------------------------------------------------------- -->
+<!-- SUB-TOOLBAR: Session title, Saved Layout, Actions (36px)               -->
+<!-- ----------------------------------------------------------------------- -->
+<div class="h-9 bg-[#ffffff] border-b border-[#e2e5e9] flex items-center justify-between px-3.5 shrink-0 z-30 shadow-sm">
+<!-- Left: Session context -->
+<div class="flex items-center gap-2.5">
+<div class="flex items-center gap-1.5 text-[#0f172a] font-semibold text-xs tracking-tight">
+<span class="material-symbols-outlined text-[#2563eb] text-[17px]">terminal</span>
+<span>Hermes / SES-8821: Cost sensitivity &amp; regimes</span>
+</div>
+<span class="text-[#cbd5e1]">|</span>
+<span class="px-2 py-0.5 rounded bg-[#f1f5f9] text-[#475569] font-mono text-[11px] font-medium border border-[#e2e8f0]">
+          Active Run R-024
+        </span>
+</div>
+<!-- Center-Right: Controls & Layout actions -->
+<div class="flex items-center gap-2.5 text-xs">
+<!-- Saved Layout Selector -->
+<div class="flex items-center gap-1.5 bg-[#f8f9fa] hover:bg-[#f1f3f5] border border-[#e2e5e9] px-2.5 py-1 rounded text-[#334155] cursor-pointer transition-colors">
+<span class="text-[#64748b]">Saved Layout:</span>
+<span class="font-medium text-[#0f172a]">Compare &amp; inspect</span>
+<span class="material-symbols-outlined text-[#64748b] text-[15px]">expand_more</span>
+</div>
+<span class="text-[#e2e5e9]">|</span>
+<!-- Add tool button -->
+<button class="h-7 px-2.5 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#1e293b] border border-[#e2e5e9] rounded font-medium text-xs flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[15px] text-[#475569]">add</span>
+<span>Tool</span>
+</button>
+<!-- Continue in background button -->
+<button class="h-7 px-2.5 bg-[#f8f9fa] hover:bg-[#e9ecef] text-[#2563eb] border border-[#dbeafe] rounded font-medium text-xs flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[15px]">open_in_new</span>
+<span>Continue in background</span>
+</button>
+</div>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+<!-- MAIN WORKSPACE BODY: Left Pane 32% + Right Area 68%                     -->
+<!-- ----------------------------------------------------------------------- -->
+<div class="flex-1 flex min-h-0 w-full overflow-hidden p-1.5 gap-1.5 bg-[#f1f3f5]">
+<!-- ===================================================================== -->
+<!-- LEFT CONVERSATION PANE (~32% width, flex col, full height)           -->
+<!-- ===================================================================== -->
+<section class="w-[32%] shrink-0 h-full flex flex-col bg-[#ffffff] border border-[#e2e5e9] rounded shadow-sm overflow-hidden">
+<!-- Pane Header (34px) -->
+<div class="h-[34px] px-3 bg-[#f8f9fa] border-b border-[#e2e5e9] flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-2 h-2 rounded-full bg-[#10b981]" title="Hermes Copilot Active"></span>
+<span class="font-semibold text-xs text-[#0f172a] tracking-tight">Hermes Copilot</span>
+<span class="text-[#94a3b8] text-[11px] font-mono">SES-8821</span>
+</div>
+<div class="flex items-center gap-1 text-[#64748b]">
+<button class="w-6 h-6 rounded flex items-center justify-center hover:bg-[#e9ecef] transition-colors" title="Conversation History">
+<span class="material-symbols-outlined text-[15px]">history</span>
+</button>
+</div>
+</div>
+<!-- Top Attached Files Context Strip (26px) -->
+<div class="h-[26px] px-3 bg-[#f1f5f9]/70 border-b border-[#e2e8f0] flex items-center gap-1.5 text-[11px] text-[#475569] font-mono shrink-0 overflow-hidden truncate">
+<span class="material-symbols-outlined text-[#64748b] text-[13px] shrink-0">attach_file</span>
+<span class="truncate">Attached: <strong class="text-[#1e293b]">momentum.py (v12)</strong> · daily_bars_2019_2024.parquet · fees_baseline.yaml</span>
+</div>
+<!-- Chat Stream (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3.5 bg-[#ffffff]">
+<!-- User Prompt Card -->
+<div class="flex flex-col gap-1 self-end max-w-[94%]">
+<div class="flex items-center gap-1.5 justify-end text-[11px] text-[#64748b] font-mono">
+<span class="font-semibold text-[#334155]">Analyst</span>
+<span>14:18</span>
+</div>
+<div class="bg-[#f1f5f9] text-[#0f172a] p-3 rounded-lg rounded-tr-none text-sm leading-relaxed border border-[#e2e8f0] shadow-2xs">
+              Investigate whether this momentum signal survives realistic costs across <strong class="text-[#2563eb]">BTC</strong>, <strong class="text-[#d97706]">EUR/USD</strong>, and <strong class="text-[#475569]">SPY</strong>. Run slippage sweep from 0 to 6 bps.
+            </div>
+</div>
+<!-- Agent Response & Plan -->
+<div class="flex flex-col gap-1.5 self-start w-full">
+<div class="flex items-center gap-1.5 text-[11px] text-[#64748b] font-mono">
+<span class="font-semibold text-[#2563eb]">Hermes Agent</span>
+<span>• Sweep plan initiated</span>
+</div>
+<div class="bg-[#f8f9fa] border border-[#e2e5e9] text-[#1e293b] p-3 rounded-lg rounded-tl-none flex flex-col gap-2.5 shadow-2xs">
+<p class="text-sm leading-relaxed text-[#334155]">
+                Initiated multi-asset parameter grid across <strong>36 cases</strong> (4 slippage brackets × 3 turnover variants × 3 instruments).
+              </p>
+<!-- LIVE RUN PROGRESS CARD -->
+<div class="bg-[#ffffff] border border-[#e2e5e9] p-2.5 rounded flex flex-col gap-2 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[#2563eb] text-[16px] animate-spin">sync</span>
+<span class="font-semibold text-xs text-[#0f172a]">Cost sensitivity run R-024:</span>
+</div>
+<span class="font-mono text-xs font-bold text-[#2563eb]">18 / 36 completed (50%)</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-[#e2e8f0] rounded-full overflow-hidden">
+<div class="bg-[#2563eb] h-full rounded-full transition-all duration-300" style="width: 50%;"></div>
+</div>
+<!-- Instrument Breakdown Grid -->
+<div class="grid grid-cols-3 gap-1.5 pt-0.5">
+<!-- BTC -->
+<div class="bg-[#f8f9fa] border border-[#e2e5e9] p-1.5 rounded flex flex-col">
+<div class="flex items-center justify-between text-[11px]">
+<span class="font-semibold text-[#0f172a]">BTC</span>
+<span class="material-symbols-outlined text-[#10b981] text-[13px]">check_circle</span>
+</div>
+<span class="font-mono text-[11px] text-[#10b981] font-medium">12/12 done</span>
+</div>
+<!-- EUR/USD (Active) -->
+<div class="bg-[#fffbeb] border border-[#fde68a] p-1.5 rounded flex flex-col">
+<div class="flex items-center justify-between text-[11px]">
+<span class="font-bold text-[#d97706]">EUR/USD</span>
+<span class="w-2 h-2 rounded-full bg-[#d97706] animate-pulse"></span>
+</div>
+<span class="font-mono text-[11px] text-[#d97706] font-semibold">6/12 active</span>
+</div>
+<!-- SPY -->
+<div class="bg-[#f8f9fa] border border-[#e2e5e9] p-1.5 rounded flex flex-col">
+<div class="flex items-center justify-between text-[11px]">
+<span class="font-medium text-[#64748b]">SPY</span>
+<span class="material-symbols-outlined text-[#94a3b8] text-[13px]">schedule</span>
+</div>
+<span class="font-mono text-[11px] text-[#64748b]">0/12 queued</span>
+</div>
+</div>
+</div>
+<!-- Agent Diagnostic Observation Note -->
+<div class="bg-[#fffbeb] border border-[#fde68a] p-2.5 rounded text-xs text-[#92400e] flex items-start gap-2">
+<span class="material-symbols-outlined text-[#d97706] text-[17px] shrink-0 mt-0.5">info</span>
+<p class="leading-snug">
+<strong>Preliminary result:</strong> EUR/USD weakens under higher costs. Review remaining cases.
+                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- PINNED BOTTOM MULTILINE COMPOSER -->
+<div class="p-2.5 bg-[#f8f9fa] border-t border-[#e2e5e9] shrink-0 flex flex-col gap-2">
+<div class="relative flex flex-col bg-[#ffffff] border border-[#cbd5e1] rounded-md focus-within:border-[#2563eb] focus-within:ring-1 focus-within:ring-[#2563eb] shadow-2xs">
+<textarea class="w-full px-2.5 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] resize-none border-0 focus:outline-none focus:ring-0 bg-transparent" placeholder="Ask Hermes to adjust cost curves, add instruments, or refine parameters..." rows="2"></textarea>
+<div class="flex items-center justify-between px-2 pb-1.5 pt-0">
+<div class="flex items-center gap-1 text-[#64748b]">
+<button class="p-1 hover:text-[#0f172a] rounded transition-colors" title="Attach code/data">
+<span class="material-symbols-outlined text-[17px]">attach_file</span>
+</button>
+<button class="p-1 hover:text-[#0f172a] rounded transition-colors" title="Insert parameter variable">
+<span class="material-symbols-outlined text-[17px]">data_object</span>
+</button>
+</div>
+<button class="h-7 px-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded font-medium text-xs flex items-center gap-1 shadow-sm transition-colors" title="Send message">
+<span>Send</span>
+<span class="material-symbols-outlined text-[14px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- RIGHT TOOL AREA (~68% width, flex col, full height)                   -->
+<!-- ===================================================================== -->
+<div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden gap-1.5">
+<!-- ------------------------------------------------------------------- -->
+<!-- UPPER SECTION: Code Editor (60%) + Performance Chart (40%) [55% H] -->
+<!-- ------------------------------------------------------------------- -->
+<div class="h-[55%] flex min-w-0 w-full gap-1.5 overflow-hidden">
+<!-- PANEL 1: PYTHON EDITOR (~60% width) -->
+<div class="w-[60%] h-full flex flex-col bg-[#ffffff] border border-[#e2e5e9] rounded shadow-sm overflow-hidden min-w-0">
+<!-- Header (34px) - NO LINK GROUP (Editor is not instrument-linked) -->
+<div class="h-[34px] px-3 bg-[#f8f9fa] border-b border-[#e2e5e9] flex items-center justify-between shrink-0">
+<div class="flex items-center gap-1.5 overflow-x-auto min-w-0">
+<!-- File Tab (Active) -->
+<div class="h-6 px-2.5 bg-[#ffffff] border border-[#e2e5e9] border-b-white rounded-t text-xs font-medium text-[#0f172a] flex items-center gap-1.5 shadow-2xs">
+<span class="material-symbols-outlined text-[#2563eb] text-[14px]">code</span>
+<span class="font-mono text-xs">momentum.py (v12)</span>
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]" title="Modified"></span>
+</div>
+<!-- Other files -->
+<div class="h-6 px-2 text-xs font-mono text-[#64748b] hover:text-[#0f172a] flex items-center cursor-pointer">
+                  cost_model.py
+                </div>
+<div class="h-6 px-2 text-xs font-mono text-[#64748b] hover:text-[#0f172a] flex items-center cursor-pointer">
+                  fees_baseline.yaml
+                </div>
+</div>
+<div class="flex items-center gap-1 text-[#64748b]">
+<button class="h-6 px-2 bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#0f172a] rounded font-mono text-[11px] flex items-center gap-1 transition-colors" title="Run selection">
+<span class="material-symbols-outlined text-[13px] text-[#10b981]">play_arrow</span>
+<span>Run Sel</span>
+</button>
+<button class="w-6 h-6 rounded flex items-center justify-center hover:bg-[#e9ecef] transition-colors" title="Maximize">
+<span class="material-symbols-outlined text-[15px]">open_in_full</span>
+</button>
+</div>
+</div>
+<!-- Editor Code Area (Monospace, 12-13px) -->
+<div class="flex-1 bg-[#ffffff] overflow-auto p-2 font-mono text-[12px] leading-relaxed text-[#1e293b] select-text">
+<table class="w-full border-collapse">
+<tbody>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">140</td>
+<td class="whitespace-pre"><span class="text-[#2563eb] font-semibold">def</span> <span class="text-[#0f172a] font-bold">compute_regime_decay</span>(self, returns, turnover, slippage_bps):</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">141</td>
+<td class="whitespace-pre text-[#64748b] italic">    """Calculates net decay across fee tiers &amp; volatility regimes."""</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">142</td>
+<td class="whitespace-pre">    spread_friction = turnover * (slippage_bps / <span class="text-[#0891b2]">10000.0</span>)</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">143</td>
+<td class="whitespace-pre">    net_returns = returns - spread_friction</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">144</td>
+<td class="whitespace-pre">    sharpe = (net_returns.mean() / net_returns.std()) * np.sqrt(<span class="text-[#0891b2]">252</span>)</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">145</td>
+<td class="whitespace-pre"> <span class="text-[#2563eb] font-semibold">return</span> {</td>
+</tr>
+<tr class="bg-[#fffbeb]/60">
+<td class="pr-3 text-right text-[#d97706] font-semibold select-none align-top w-8 text-[11px]">146</td>
+<td class="whitespace-pre"> <span class="text-[#047857]">'net_sharpe'</span>: round(sharpe, <span class="text-[#0891b2]">2</span>),</td>
+</tr>
+<tr class="bg-[#fffbeb]/60">
+<td class="pr-3 text-right text-[#d97706] font-semibold select-none align-top w-8 text-[11px]">147</td>
+<td class="whitespace-pre"> <span class="text-[#047857]">'drag_annual'</span>: round(spread_friction.sum() * <span class="text-[#0891b2]">252</span>, <span class="text-[#0891b2]">3</span>),</td>
+</tr>
+<tr class="bg-[#fffbeb]/60">
+<td class="pr-3 text-right text-[#d97706] font-semibold select-none align-top w-8 text-[11px]">148</td>
+<td class="whitespace-pre"> <span class="text-[#047857]">'breakeven_bps'</span>: self._find_breakeven(returns, turnover)</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">149</td>
+<td class="whitespace-pre">    }</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">150</td>
+<td class="whitespace-pre"></td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">151</td>
+<td class="whitespace-pre"><span class="text-[#2563eb] font-semibold">def</span> <span class="text-[#0f172a] font-bold">_find_breakeven</span>(self, returns, turnover):</td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">152</td>
+<td class="whitespace-pre"> <span class="text-[#64748b] italic"># Binary search for zero-Sharpe boundary</span></td>
+</tr>
+<tr>
+<td class="pr-3 text-right text-[#94a3b8] select-none align-top w-8 text-[11px]">153</td>
+<td class="whitespace-pre"> <span class="text-[#2563eb] font-semibold">return</span> optimize.brentq(<span class="text-[#2563eb]">lambda</span> b: self.compute_regime_decay(returns, turnover, b)[<span class="text-[#047857]">'net_sharpe'</span>], <span class="text-[#0891b2]">0.0</span>, <span class="text-[#0891b2]">15.0</span>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Editor Status Footer -->
+<div class="h-6 px-3 bg-[#f8f9fa] border-t border-[#e2e5e9] flex items-center justify-between text-[11px] font-mono text-[#64748b] shrink-0">
+<div>Python 3.11.8 · quant-node-04</div>
+<div>Ln 146, Col 12 · 4 spaces</div>
+</div>
+</div>
+<!-- PANEL 2: PERFORMANCE CHART (~40% width) -->
+<div class="w-[40%] h-full flex flex-col bg-[#ffffff] border border-[#e2e5e9] rounded shadow-sm overflow-hidden min-w-0">
+<!-- Header WITH LINK GROUP A -->
+<div class="h-[34px] px-3 bg-[#f8f9fa] border-b border-[#e2e5e9] flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2 min-w-0">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#fef3c7] text-[#92400e] text-[11px] font-mono font-bold border border-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                  Link Group A
+                </span>
+<span class="font-semibold text-xs text-[#0f172a] truncate">Chart: Net Sharpe vs Slippage (bps)</span>
+</div>
+<div class="flex items-center gap-1 text-[#64748b]">
+<button class="w-6 h-6 rounded flex items-center justify-center hover:bg-[#e9ecef] transition-colors" title="Maximize">
+<span class="material-symbols-outlined text-[15px]">open_in_full</span>
+</button>
+</div>
+</div>
+<!-- Legend & Selection Badge -->
+<div class="px-3 py-2 bg-[#f8f9fa]/80 border-b border-[#e2e5e9] flex items-center justify-between text-xs shrink-0 flex-wrap gap-1">
+<div class="flex items-center gap-3">
+<!-- BTC -->
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-1 bg-[#10b981] rounded-sm"></span>
+<span class="text-[#334155] font-medium text-[11px]">BTC</span>
+</div>
+<!-- SPY -->
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-0.5 border-b-2 border-dashed border-[#2563eb]"></span>
+<span class="text-[#334155] font-medium text-[11px]">SPY</span>
+</div>
+<!-- EUR/USD -->
+<div class="flex items-center gap-1.5 font-bold text-[#b45309]">
+<span class="w-3 h-1 bg-[#d97706] rounded-sm"></span>
+<span class="text-[11px]">EUR/USD</span>
+</div>
+</div>
+<!-- Linked selection badge -->
+<span class="px-2 py-0.5 rounded bg-[#fffbeb] text-[#92400e] font-mono text-[11px] font-medium border border-[#fde68a]">
+                Linked selection: EUR/USD
+              </span>
+</div>
+<!-- SVG Chart Area -->
+<div class="flex-1 p-2 relative bg-[#ffffff] flex items-center justify-center overflow-hidden">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 460 210">
+<defs>
+<!-- Shading under EUR/USD negative curve -->
+<lineargradient id="eurNegativeDecay" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#d97706" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal grid lines -->
+<line stroke="#e2e8f0" stroke-dasharray="2,2" x1="45" x2="440" y1="30" y2="30"></line>
+<text fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="end" x="40" y="34">2.0</text>
+<line stroke="#e2e8f0" stroke-dasharray="2,2" x1="45" x2="440" y1="75" y2="75"></line>
+<text fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="end" x="40" y="79">1.0</text>
+<!-- Zero Line (Stronger) -->
+<line stroke="#64748b" stroke-width="1.2" x1="45" x2="440" y1="130" y2="130"></line>
+<text fill="#334155" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" text-anchor="end" x="40" y="134">0.0</text>
+<line stroke="#e2e8f0" stroke-dasharray="2,2" x1="45" x2="440" y1="175" y2="175"></line>
+<text fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="end" x="40" y="179">-0.5</text>
+<!-- Vertical tick guides (0.0 to 6.0 bps) -->
+<line stroke="#f1f5f9" x1="50" x2="50" y1="20" y2="185"></line>
+<text fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle" x="50" y="198">0.0</text>
+<line stroke="#f1f5f9" x1="145" x2="145" y1="20" y2="185"></line>
+<text fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle" x="145" y="198">1.5</text>
+<!-- 3.1 bps Breakeven vertical line indicator -->
+<line stroke="#d97706" stroke-dasharray="3,3" stroke-width="1" x1="245" x2="245" y1="20" y2="185"></line>
+<text fill="#d97706" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" text-anchor="middle" x="245" y="198">3.1 bps</text>
+<line stroke="#f1f5f9" x1="340" x2="340" y1="20" y2="185"></line>
+<text fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle" x="340" y="198">4.5</text>
+<line stroke="#f1f5f9" x1="435" x2="435" y1="20" y2="185"></line>
+<text fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle" x="435" y="198">6.0</text>
+<!-- 1. BTC Curve: Green solid (1.84 -> 1.48) -->
+<path d="M 50 38 C 145 44, 245 52, 435 58" fill="none" stroke="#10b981" stroke-linecap="round" stroke-width="2.2"></path>
+<circle cx="50" cy="38" fill="#10b981" r="3"></circle>
+<circle cx="245" cy="52" fill="#10b981" r="3"></circle>
+<circle cx="435" cy="58" fill="#10b981" r="3"></circle>
+<!-- 2. SPY Curve: Blue dashed (1.36 -> 1.05) -->
+<path d="M 50 60 C 145 68, 245 78, 435 84" fill="none" stroke="#2563eb" stroke-dasharray="4,3" stroke-linecap="round" stroke-width="2"></path>
+<circle cx="50" cy="60" fill="#2563eb" r="3"></circle>
+<circle cx="245" cy="78" fill="#2563eb" r="3"></circle>
+<circle cx="435" cy="84" fill="#2563eb" r="3"></circle>
+<!-- 3. EUR/USD Curve: Amber solid with steep collapse (1.41 -> -0.18 at 3.5 bps) -->
+<path d="M 50 56 C 120 68, 180 94, 245 130 C 290 156, 350 172, 435 180" fill="none" stroke="#d97706" stroke-linecap="round" stroke-width="3"></path>
+<!-- Shading below zero for EUR/USD -->
+<polygon fill="url(#eurNegativeDecay)" points="245,130 435,180 435,185 245,185"></polygon>
+<!-- Points on EUR/USD -->
+<circle cx="50" cy="56" fill="#d97706" r="3.5"></circle>
+<circle cx="145" cy="74" fill="#d97706" r="3.5"></circle>
+<!-- Breakeven intersection point at 3.1 bps (y=130) -->
+<circle cx="245" cy="130" fill="#dc2626" r="5" stroke="#ffffff" stroke-width="1.5"></circle>
+<circle cx="340" cy="164" fill="#d97706" r="3.5"></circle>
+</svg>
+<!-- ANNOTATED CALLOUT -->
+<div class="absolute left-[54%] top-[24%] bg-[#1e293b] text-white px-2.5 py-1.5 rounded shadow-lg text-[11px] pointer-events-none border border-[#334155] z-10">
+<div class="flex items-center gap-1.5 font-bold text-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#ef4444]"></span>
+                  EUR/USD Breakeven (3.1 bps)
+                </div>
+<div class="text-[#cbd5e1] mt-0.5 text-[10px]">Decays from 1.41 to -0.18</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ------------------------------------------------------------------- -->
+<!-- LOWER SECTION: Results Comparison Table (100% W, 45% H)             -->
+<!-- ------------------------------------------------------------------- -->
+<div class="h-[45%] flex flex-col bg-[#ffffff] border border-[#e2e5e9] rounded shadow-sm overflow-hidden min-w-0">
+<!-- Header WITH LINK GROUP A -->
+<div class="h-[34px] px-3 bg-[#f8f9fa] border-b border-[#e2e5e9] flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2.5 min-w-0">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#fef3c7] text-[#92400e] text-[11px] font-mono font-bold border border-[#fde68a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                Link Group A
+              </span>
+<span class="font-semibold text-xs text-[#0f172a] truncate">Results Matrix: Cost Sensitivity (Run R-024: 18/36 completed)</span>
+<span class="text-[#cbd5e1]">|</span>
+<span class="font-mono text-[11px] text-[#b45309] font-medium">Linked selection: EUR/USD</span>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<button class="h-6 px-2.5 bg-[#ffffff] hover:bg-[#f1f3f5] border border-[#cbd5e1] rounded font-medium text-[11px] text-[#334155] flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[13px] text-[#64748b]">download</span>
+<span>Export CSV</span>
+</button>
+</div>
+</div>
+<!-- Table Container (Independently Scrollable) -->
+<div class="flex-1 overflow-auto bg-[#ffffff]">
+<table class="w-full border-collapse text-left font-mono text-[12px]">
+<thead class="sticky top-0 bg-[#f8f9fa] border-b border-[#e2e5e9] z-10">
+<tr class="h-7 text-[#64748b] text-[11px] font-medium uppercase tracking-wider">
+<th class="px-3 font-semibold w-24">Variant</th>
+<th class="px-3 font-semibold w-28">Asset</th>
+<th class="px-3 font-semibold w-28">Horizon</th>
+<th class="px-3 font-semibold text-right w-24">Ann. Return</th>
+<th class="px-3 font-semibold text-right w-28">Max Drawdown</th>
+<th class="px-3 font-semibold text-right w-24">Turnover/Day</th>
+<th class="px-3 font-semibold text-right w-32">Cost Tier</th>
+<th class="px-3 font-semibold text-right w-24">Net Sharpe</th>
+<th class="px-3 font-semibold text-center w-28">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#eef2f6]">
+<!-- Row 1: BTC Low -->
+<tr class="h-7 hover:bg-[#f8f9fa] text-[#1e293b]">
+<td class="px-3 text-[#64748b] font-medium">VAR-01</td>
+<td class="px-3 font-semibold text-[#0f172a] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                    BTC-USDT
+                  </td>
+<td class="px-3 text-[#64748b]">2019-2024</td>
+<td class="px-3 text-right font-medium text-[#10b981]">+28.4%</td>
+<td class="px-3 text-right text-[#ef4444] font-medium">-18.2%</td>
+<td class="px-3 text-right text-[#334155]">1.4x</td>
+<td class="px-3 text-right text-[#64748b]">1.5 bps (low)</td>
+<td class="px-3 text-right font-bold text-[#10b981]">1.84</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#ecfdf5] text-[#047857] text-[10px] font-semibold">COMPLETED</span>
+</td>
+</tr>
+<!-- Row 2: BTC Mid -->
+<tr class="h-7 hover:bg-[#f8f9fa] text-[#1e293b]">
+<td class="px-3 text-[#64748b] font-medium">VAR-02</td>
+<td class="px-3 font-semibold text-[#0f172a] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                    BTC-USDT
+                  </td>
+<td class="px-3 text-[#64748b]">2019-2024</td>
+<td class="px-3 text-right font-medium text-[#10b981]">+21.6%</td>
+<td class="px-3 text-right text-[#ef4444] font-medium">-22.1%</td>
+<td class="px-3 text-right text-[#334155]">1.4x</td>
+<td class="px-3 text-right text-[#64748b]">3.5 bps (mid)</td>
+<td class="px-3 text-right font-bold text-[#10b981]">1.48</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#ecfdf5] text-[#047857] text-[10px] font-semibold">COMPLETED</span>
+</td>
+</tr>
+<!-- Row 3: EUR/USD Selected Base -->
+<tr class="h-7 bg-[#fffbeb] text-[#0f172a] border-l-2 border-[#d97706]">
+<td class="px-3 font-bold text-[#b45309]">VAR-07</td>
+<td class="px-3 font-bold text-[#b45309] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                    EUR/USD
+                  </td>
+<td class="px-3 text-[#64748b]">2019-2024</td>
+<td class="px-3 text-right font-medium text-[#10b981]">+7.2%</td>
+<td class="px-3 text-right text-[#ef4444] font-medium">-14.6%</td>
+<td class="px-3 text-right text-[#334155]">3.2x</td>
+<td class="px-3 text-right text-[#475569]">1.5 bps (base)</td>
+<td class="px-3 text-right font-bold text-[#10b981]">1.41</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#ecfdf5] text-[#047857] text-[10px] font-semibold">COMPLETED</span>
+</td>
+</tr>
+<!-- Row 4: EUR/USD Selected Stress -->
+<tr class="h-7 bg-[#fffbeb] text-[#0f172a] border-l-2 border-[#d97706]">
+<td class="px-3 font-bold text-[#b45309]">VAR-08</td>
+<td class="px-3 font-bold text-[#b45309] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                    EUR/USD
+                  </td>
+<td class="px-3 text-[#64748b]">2019-2024</td>
+<td class="px-3 text-right font-medium text-[#ef4444]">-1.8%</td>
+<td class="px-3 text-right text-[#ef4444] font-medium">-24.9%</td>
+<td class="px-3 text-right text-[#334155]">3.2x</td>
+<td class="px-3 text-right text-[#b45309] font-medium">3.0 bps (stress)</td>
+<td class="px-3 text-right font-bold text-[#dc2626] bg-[#fef2f2] rounded">-0.18</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#ecfdf5] text-[#047857] text-[10px] font-semibold">COMPLETED</span>
+</td>
+</tr>
+<!-- Row 5: EUR/USD In Progress -->
+<tr class="h-7 bg-[#fffbeb]/50 text-[#0f172a] border-l-2 border-[#d97706]">
+<td class="px-3 font-bold text-[#b45309]">VAR-09</td>
+<td class="px-3 font-bold text-[#b45309] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                    EUR/USD
+                  </td>
+<td class="px-3 text-[#64748b]">2019-2024</td>
+<td class="px-3 text-right font-medium text-[#ef4444]">-6.4%</td>
+<td class="px-3 text-right text-[#ef4444] font-medium">-31.2%</td>
+<td class="px-3 text-right text-[#334155]">3.2x</td>
+<td class="px-3 text-right text-[#b45309]">4.5 bps (high)</td>
+<td class="px-3 text-right font-bold text-[#dc2626]">-0.82</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#eff6ff] text-[#2563eb] text-[10px] font-semibold flex items-center justify-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2563eb] animate-ping"></span>
+                      IN PROGRESS
+                    </span>
+</td>
+</tr>
+<!-- Row 6: SPY Queued Base -->
+<tr class="h-7 hover:bg-[#f8f9fa] text-[#64748b]">
+<td class="px-3 font-medium">VAR-13</td>
+<td class="px-3 font-medium text-[#334155] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>
+                    SPY
+                  </td>
+<td class="px-3">2019-2024</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right text-[#334155]">0.9x</td>
+<td class="px-3 text-right">0.5 bps (base)</td>
+<td class="px-3 text-right font-medium">—</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[#64748b] text-[10px] font-semibold">QUEUED</span>
+</td>
+</tr>
+<!-- Row 7: SPY Queued Stress -->
+<tr class="h-7 hover:bg-[#f8f9fa] text-[#64748b]">
+<td class="px-3 font-medium">VAR-14</td>
+<td class="px-3 font-medium text-[#334155] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>
+                    SPY
+                  </td>
+<td class="px-3">2019-2024</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right text-[#334155]">0.9x</td>
+<td class="px-3 text-right">2.0 bps (stress)</td>
+<td class="px-3 text-right font-medium">—</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[#64748b] text-[10px] font-semibold">QUEUED</span>
+</td>
+</tr>
+<!-- Row 8: SPY Queued High -->
+<tr class="h-7 hover:bg-[#f8f9fa] text-[#64748b]">
+<td class="px-3 font-medium">VAR-15</td>
+<td class="px-3 font-medium text-[#334155] flex items-center gap-1.5 pt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>
+                    SPY
+                  </td>
+<td class="px-3">2019-2024</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right">—</td>
+<td class="px-3 text-right text-[#334155]">0.9x</td>
+<td class="px-3 text-right">3.5 bps (high)</td>
+<td class="px-3 text-right font-medium">—</td>
+<td class="px-3 text-center">
+<span class="px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[#64748b] text-[10px] font-semibold">QUEUED</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+<!-- CLEAN MINIMAL BOTTOM STATUS BAR (24px)                                  -->
+<!-- ----------------------------------------------------------------------- -->
+<footer class="h-6 bg-[#181b20] border-t border-[#262a32] px-3 flex items-center justify-between text-[11px] font-mono text-[#94a3b8] shrink-0 select-none z-40">
+<div class="flex items-center gap-2">
+<span class="text-[#cbd5e1]">Illustrative data</span>
+<span class="text-[#475569]">|</span>
+<span class="flex items-center gap-1.5 text-[#e2e8f0]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+          1 run active
+        </span>
+</div>
+<div class="flex items-center gap-2">
+<span>Engine: quant-node-04</span>
+</div>
+</footer>
+</div>
+</body></html>

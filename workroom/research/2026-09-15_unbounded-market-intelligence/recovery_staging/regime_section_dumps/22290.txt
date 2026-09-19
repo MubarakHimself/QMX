@@ -1,0 +1,348 @@
+# Three MACD Filters on US\_TECH100: Five Years of Broker Data
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 8 May 2026 at 07:30
+2 802
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/509454 "Comments")
+[Marcelo Alejandro Borasi](https://www.mql5.com/en/users/marceloborasi)
+### Introduction
+I have been looking at charts for more than twenty years, and I have been programming in MQL5 for about ten. It took me almost a decade of programming to feel that I understood what I was doing, rather than just copying patterns from other people's code. Two years ago something clicked, and since then I have been building my own tools instead of buying them.
+One thing that bothered me for years is how often vendors sell "improved MACD" indicators by stacking filters on top of the classic crossover logic. They stack regime filters, higher-timeframe alignment, and session windows. The pitch is always the same: these filters transform a noisy MACD into a reliable system. I have bought several of these over the years and studied their results. My suspicion was that most of the improvement was either cherry-picked or the filters were doing less than the pitch suggested.
+So I used real broker H1 data for US\_TECH100, ran the raw MACD crossover strategy, and then added each filter one at a time to measure the impact on the results. There are no opinions and no narratives, just closed trades, win rates, and expectancy over five years.
+The result surprised me. The filter everyone talks about the least is the one that moved the needle the most. Two of the three "standard" filters barely changed anything when used alone. Below is the full breakdown, with the MQL5 code so you can reproduce it on your own data.
+The article targets two audiences: traders new to systematic analysis, and developers who want the full MQL5 implementation and results. Both should leave with the same conclusion: on this particular instrument and timeframe, conventional wisdom about MACD filters is not supported by the data.
+### 
+### The Setup
+The data comes from AvaTrade and was exported to CSV using a forensic export script that reads directly from the broker's H1 feed. Period: April 2021 to April 2026. Total bars: 29,646. Symbol: US\_TECH100 (a Nasdaq-100 CFD).
+The choice of broker-native data matters more than most people realize. If you backtest on third-party data (Dukascopy, Tickdata, historical CSV packs) and then trade live on another broker, the gap between backtest and live performance is often blamed on slippage or spreads. In reality, much of the gap comes from feed differences: bar construction, weekend gaps, and intraday noise patterns. To avoid this, all tests in this article use data exported directly from the broker where any live deployment would run.
+The baseline strategy is minimal on purpose:
+- Buy when MACD histogram crosses from negative to positive
+- Sell when MACD histogram crosses from positive to negative
+- Stop loss at 2.5 times the 14-period ATR
+- Take profit at 3.0 times the 14-period ATR
+- Maximum holding period: 48 bars (if neither SL nor TP is hit, close at market)
+MACD settings are the classic 12-26-9. Nothing exotic. The point of the exercise is to measure the marginal impact of each filter on this baseline, not to optimize the baseline itself.
+I normalize risk per trade to 1R so I can compare results across 2,000+ trades without position-sizing distortions. A TP hit yields +1.2R (3.0 ATR vs 2.5 ATR SL); an SL hit yields -1.0R. This way the comparison across configurations is about which filter set produces the best risk-adjusted flow of trades, independent of account size or leverage.
+### 
+### The Four Configurations Tested
+I tested four configurations in sequence:
+1. Raw MACD: every crossover is a signal, no filter
+2. Regime filter: only trade when market is in TREND or NORMAL regime (not RANGE or VOLATILE), classified via ADX and rolling ATR percentiles
+3. Regime + HTF alignment: regime filter plus the requirement that price is aligned with the long-term trend (above EMA200 for buys, below for sells)
+4. Regime + HTF + Session filter: the previous filters plus the requirement that the signal fires during the main US trading hours (14:00 to 20:00 broker time, which covers the NYSE regular session)
+Each configuration adds to the previous one. So configuration 4 has all three filters active simultaneously. This incremental structure is important: it lets us isolate the marginal impact of each filter, rather than testing them as a single bundle.
+A common mistake in vendor-backed studies is to compare "raw vs everything" and claim the delta as evidence that the filter set works. That does not tell you which filter in the set is doing the work. It could be that one filter carries all the edge and the others are cosmetic. Or it could be that the filters cancel each other out and only one of them matters. By layering them one at a time, we can see exactly what each filter contributes.
+### 
+### Results: The Full Comparison
+Here is the complete table for five years of data on the same instrument and entry logic; only the filters change:
+| Configuration | Trades | Win Rate | Expectancy | Profit Factor | Max Drawdown |
+| --- | --- | --- | --- | --- | --- |
+| Raw MACD | 2,213 | 46.5% | +0.017R | 1.03 | -28.8R |
+| + Regime | 1,634 | 46.1% | +0.013R | 1.02 | -33.4R |
+| + Regime + HTF | 794 | 45.8% | +0.007R | 1.01 | -29.6R |
+| + Regime + HTF + Session | 195 | 50.3% | +0.100R | 1.20 | -9.7R |
+Let me translate what this means for a trader reading the table.
+The raw MACD on US\_TECH100 is not as bad as some people paint it. With 2.5/3.0 ATR stops, over five years it produces a barely positive expectancy of +0.017R per trade and a profit factor just above break-even. You would not get rich with it, but it is not pure noise either. That is an honest starting point that many vendor pitches conveniently omit.
+Adding the regime filter alone did almost nothing. It removed 579 trades (26% of the flow), but the surviving trades have similar win rates and expectancies. The maximum drawdown even got slightly worse, which is an uncomfortable result, but it is what the data shows. This contradicts what many vendors claim about regime filters.
+Adding HTF alignment on top of the regime filter made things slightly worse again. Another 840 trades are removed, and the expectancy drops to +0.007R, effectively break-even. The 'trade with the trend' rule did not add edge here, at least on H1 using EMA200 as the trend definition.
+The session filter is what changed everything. Restricting trading to the main US session removed another 599 trades, leaving only 195 over five years (about 40 per year). But those 195 trades have a +0.100R expectancy, a profit factor of 1.20, and a maximum drawdown three times smaller than the raw version.
+Figure 1. Cumulative R multiples for the four configurations over five years of US\_TECH100 H1 data
+The equity curves illustrate this visually. Notice how the raw MACD (gray) and the two intermediate configurations (light and medium blue) produce similar shapes: choppy, with deep drawdowns, marginally positive over the full period. The session-filtered curve (dark blue) behaves differently: smoother, shallower drawdowns, fewer trades, but each trade contributes more.
+Figure 2. Trade count, win rate, and expectancy per trade across the four configurations
+### 
+### The Regime Breakdown Nobody Talks About
+When I broke down the raw MACD performance by regime, I found something that contradicts the standard narrative even more. Here is what the raw MACD did in each regime, without any filters:
+| Regime | Trades | Win Rate | Expectancy |
+| --- | --- | --- | --- |
+| TREND | 1,199 | 45.6% | +0.005R |
+| NORMAL | 435 | 47.4% | +0.036R |
+| RANGE | 78 | 42.3% | -0.069R |
+
+----- METHOD/CLAIM SWEEP -----
+
+
+![Three MACD Filters on US_TECH100: Five Years of Broker Data](https://c.mql5.com/2/211/Broker_Data_600x314.jpg)
+# Three MACD Filters on US\_TECH100: Five Years of Broker Data
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Introduction
+I have been looking at charts for more than twenty years, and I have been programming in MQL5 for about ten. It took me almost a decade of programming to feel that I understood what I was doing, rather than just copying patterns from other people's code. Two years ago something clicked, and since then I have been building my own tools instead of buying them.
+The result surprised me. The filter everyone talks about the least is the one that moved the needle the most. Two of the three "standard" filters barely changed anything when used alone. Below is the full breakdown, with the MQL5 code so you can reproduce it on your own data.
+The article targets two audiences: traders new to systematic analysis, and developers who want the full MQL5 implementation and results. Both should leave with the same conclusion: on this particular instrument and timeframe, conventional wisdom about MACD filters is not supported by the data.
+### The Setup
+The data comes from AvaTrade and was exported to CSV using a forensic export script that reads directly from the broker's H1 feed. Period: April 2021 to April 2026. Total bars: 29,646. Symbol: US\_TECH100 (a Nasdaq-100 CFD).
+The choice of broker-native data matters more than most people realize. If you backtest on third-party data (Dukascopy, Tickdata, historical CSV packs) and then trade live on another broker, the gap between backtest and live performance is often blamed on slippage or spreads. In reality, much of the gap comes from feed differences: bar construction, weekend gaps, and intraday noise patterns. To avoid this, all tests in this article use data exported directly from the broker where any live deployment would run.
+- Sell when MACD histogram crosses from positive to negative
+- Stop loss at 2.5 times the 14-period ATR
+- Take profit at 3.0 times the 14-period ATR
+- Maximum holding period: 48 bars (if neither SL nor TP is hit, close at market)
+I normalize risk per trade to 1R so I can compare results across 2,000+ trades without position-sizing distortions. A TP hit yields +1.2R (3.0 ATR vs 2.5 ATR SL); an SL hit yields -1.0R. This way the comparison across configurations is about which filter set produces the best risk-adjusted flow of trades, independent of account size or leverage.
+### 
+### The Four Configurations Tested
+I tested four configurations in sequence:
+1. Raw MACD: every crossover is a signal, no filter
+2. Regime filter: only trade when market is in TREND or NORMAL regime (not RANGE or VOLATILE), classified via ADX and rolling ATR percentiles
+3. Regime + HTF alignment: regime filter plus the requirement that price is aligned with the long-term trend (above EMA200 for buys, below for sells)
+4. Regime + HTF + Session filter: the previous filters plus the requirement that the signal fires during the main US trading hours (14:00 to 20:00 broker time, which covers the NYSE regular session)
+
+Each configuration adds to the previous one. So configuration 4 has all three filters active simultaneously. This incremental structure is important: it lets us isolate the marginal impact of each filter, rather than testing them as a single bundle.
+### Results: The Full Comparison
+Here is the complete table for five years of data on the same instrument and entry logic; only the filters change:
+| Raw MACD | 2,213 | 46.5% | +0.017R | 1.03 | -28.8R |
+| + Regime | 1,634 | 46.1% | +0.013R | 1.02 | -33.4R |
+| + Regime + HTF | 794 | 45.8% | +0.007R | 1.01 | -29.6R |
+| + Regime + HTF + Session | 195 | 50.3% | +0.100R | 1.20 | -9.7R |
+Let me translate what this means for a trader reading the table.
+The raw MACD on US\_TECH100 is not as bad as some people paint it. With 2.5/3.0 ATR stops, over five years it produces a barely positive expectancy of +0.017R per trade and a profit factor just above break-even. You would not get rich with it, but it is not pure noise either. That is an honest starting point that many vendor pitches conveniently omit.
+Adding the regime filter alone did almost nothing. It removed 579 trades (26% of the flow), but the surviving trades have similar win rates and expectancies. The maximum drawdown even got slightly worse, which is an uncomfortable result, but it is what the data shows. This contradicts what many vendors claim about regime filters.
+Adding HTF alignment on top of the regime filter made things slightly worse again. Another 840 trades are removed, and the expectancy drops to +0.007R, effectively break-even. The 'trade with the trend' rule did not add edge here, at least on H1 using EMA200 as the trend definition.
+The session filter is what changed everything. Restricting trading to the main US session removed another 599 trades, leaving only 195 over five years (about 40 per year). But those 195 trades have a +0.100R expectancy, a profit factor of 1.20, and a maximum drawdown three times smaller than the raw version.
+![Equity curves comparison for the four configurations](https://c.mql5.com/2/207/fig1_equity_curves__3.png "Equity curves comparison for the four configurations")
+![Filter impact comparison on trade count, win rate, and expectancy](https://c.mql5.com/2/207/fig2_filter_comparison__3.png "Filter impact comparison on trade count, win rate, and expectancy")
+Figure 2. Trade count, win rate, and expectancy per trade across the four configurations
+### 
+### The Regime Breakdown Nobody Talks About
+When I broke down the raw MACD performance by regime, I found something that contradicts the standard narrative even more. Here is what the raw MACD did in each regime, without any filters:
+| Regime | Trades | Win Rate | Expectancy |
+| --- | --- | --- | --- |
+| TREND | 1,199 | 45.6% | +0.005R |
+| RANGE | 78 | 42.3% | -0.069R |
+| VOLATILE | 501 | 48.5% | +0.042R |
+
+The standard wisdom is: MACD works in TREND, fails in RANGE, and is unreliable in VOLATILE conditions. The data says something different.
+But VOLATILE was the highest-performing regime for the raw MACD, not the worst. Higher win rate, higher expectancy than any other category. And TREND, the regime where MACD is supposed to shine, produced the lowest positive expectancy of the four.
+I do not have a clean theoretical explanation for this. My working hypothesis is that VOLATILE conditions on TECH100 often correspond to strong directional moves (earnings reactions, Fed days, tech sector shocks) where the MACD crossover captures the directional impulse effectively. Meanwhile, "TREND" by ADX definition can include slow, grinding moves where crossovers happen late and mean-revert frequently.
+What this means practically: the regime filter I built filters out VOLATILE, which turns out to be the second most profitable regime. That is why the regime filter alone does not help. It is throwing away good trades along with the bad ones.
+### The Session Filter: Why It Worked
+The session filter is conceptually the simplest of the three: only trade between 14:00 and 20:00 broker time, which covers the main US session. Nothing about market structure, nothing about ADX thresholds. Just a time window.
+And yet it was the only filter that produced a meaningful improvement. From a profit factor of 1.01 (regime + HTF) to 1.20 (all three combined). From a drawdown of -29.6R to -9.7R. From an expectancy of +0.007R to +0.100R, a six-fold improvement.
+My interpretation is that outside the main US hours, liquidity on TECH100 is thinner, spreads are wider, and a disproportionate share of "crossover signals" occur during low-conviction overnight drift. Those signals tend to mean-revert before hitting the 3.0 ATR target, so the raw strategy accumulates small losses. Cut those hours, and the quality of the remaining signals is noticeably higher.
+This matches what institutional desks already know: execution quality and signal reliability are a function of liquidity. Retail traders tend to underweight this because they focus on the indicator math and ignore the microstructure. The data on TECH100 suggests that session timing is more important than any combination of statistical filters on the indicator itself.
+### Implementing the Regime Classifier in MQL5
+For readers who want to reproduce this, here is a compact regime classifier in MQL5. This is a simplified version of what I use, enough to replicate the classifications shown above.
+//|                                                                  |
+//| Simple 4-state market regime classifier based on ADX and         |
+//| adaptive ATR percentiles. See the companion article for          |
+//| methodology and empirical results.                               |
+//+------------------------------------------------------------------+
+#property copyright "Marcelo Borasi"
+#property version   "1.00"
+//| Market regime enumeration                                        |
+enum ENUM_REGIME
+  {
+   REGIME_TREND,
+   REGIME_NORMAL,
+   REGIME_RANGE,
+   REGIME_VOLATILE
+  };
+
+//| Class for classifying market regime                              |
+class CRegimeClassifier
+private:
+   int               m_adx_handle;
+   int               m_atr_handle;
+   int               m_lookback;     // rolling window for ATR percentile
+   double            m_adx_trend_th; // ADX above this = TREND candidate
+   double            m_adx_range_th; // ADX below this = RANGE candidate
+public:
+                     CRegimeClassifier(void) : m_adx_handle(INVALID_HANDLE),
+                     m_atr_handle(INVALID_HANDLE),
+                     m_lookback(500),
+                     m_adx_trend_th(25.0),
+                     m_adx_range_th(20.0) {}
+   //+------------------------------------------------------------------+
+   bool              Init(string symbol, ENUM_TIMEFRAMES tf,
+                          int adx_period = 14, int atr_period = 14,
+                          int lookback = 500,
+                          double trend_th = 25.0, double range_th = 20.0)
+     {
+      m_adx_handle = iADX(symbol, tf, adx_period);
+      m_atr_handle = iATR(symbol, tf, atr_period);
+      if(m_adx_handle == INVALID_HANDLE || m_atr_handle == INVALID_HANDLE)
+         return(false);
+      m_lookback = lookback;
+      m_adx_trend_th = trend_th;
+      m_adx_range_th = range_th;
+      return(true);
+     }
+   //| Classify current regime at the given bar shift                   |
+   ENUM_REGIME       Classify(int shift = 0)
+      double adx[];
+      if(CopyBuffer(m_adx_handle, 0, shift, 1, adx) <= 0)
+         return(REGIME_NORMAL);
+
+      double atr[];
+      if(CopyBuffer(m_atr_handle, 0, shift, m_lookback, atr) <= 0)
+      double close_now = iClose(_Symbol, _Period, shift);
+      if(close_now <= 0)
+      double atr_pct_now = 100.0 * atr[m_lookback - 1] / close_now;
+      double atr_pcts[];
+      ArrayResize(atr_pcts, m_lookback);
+      for(int i = 0; i < m_lookback; i++)
+        {
+         double c = iClose(_Symbol, _Period, shift + m_lookback - 1 - i);
+         atr_pcts[i] = (c > 0) ? 100.0 * atr[i] / c : 0.0;
+        }
+      ArraySort(atr_pcts);
+      double p20 = atr_pcts[(int)(m_lookback * 0.20)];
+      double p80 = atr_pcts[(int)(m_lookback * 0.80)];
+      double adx_now = adx[0];
+      if(atr_pct_now > p80)
+         return(REGIME_VOLATILE);
+      if(adx_now > m_adx_trend_th)
+         return(REGIME_TREND);
+      if(adx_now < m_adx_range_th && atr_pct_now < p20)
+         return(REGIME_RANGE);
+      return(REGIME_NORMAL);
+     }
+
+     {
+      if(m_adx_handle != INVALID_HANDLE)
+         IndicatorRelease(m_adx_handle);
+      if(m_atr_handle != INVALID_HANDLE)
+         IndicatorRelease(m_atr_handle);
+  };
+This class uses two indicator handles (ADX and ATR) and a rolling window of 500 bars to compute adaptive percentiles of volatility. The classification logic is intentionally transparent. You can read each condition and understand what it means. Tune the thresholds to match your instrument.
+To use it in an EA or indicator:
+```
+#include <MBorasi/RegimeClassifier.mqh>
+CRegimeClassifier regime;
+//+------------------------------------------------------------------+
+  {
+   if(!regime.Init(_Symbol, _Period))
+      return(INIT_FAILED);
+   return(INIT_SUCCEEDED);
+   regime.Release();
+  }
+   ENUM_REGIME current = regime.Classify(0);
+   if(current == REGIME_RANGE)
+      return;   // skip this signal
+// ... rest of strategy logic
+
+Nothing magical here. The value is in the data-driven calibration, not the code. The 25/20 ADX thresholds and the 20th/80th ATR percentile cutoffs are what I arrived at after testing on the TECH100 data. On a different instrument, you would calibrate these differently.
+A practical tip for anyone implementing this: the rolling ATR percentile calculation is more expensive than it looks. On every new bar, we re-sort the last 500 ATR-percent values, which is O(n log n). On liquid symbols, where OnTick can fire many times per bar, this overhead can become meaningful. The simplest optimization is to compute the classification once per bar (in OnTimer or on the first tick of a new bar) and cache the result.
+### 
+### How to Use the Companion Script
+This article is accompanied by two MQL5 files attached below. Together they allow any reader to reproduce the analysis on their own broker's data in a few minutes.
+File 1: RegimeClassifier.mqh is the include file containing the CRegimeClassifier class shown in the code section above. It has no dependencies outside of MetaTrader 5 standard functions.
+File 2: MACD\_Filter\_Backtest.mq5 is a script that loads the historical bars from the chart it runs on, applies the four progressive filter configurations described in this article, and prints the resulting metrics to the Experts log. It also writes a CSV file with the complete trade list for further analysis.
+Installation:
+1. Place RegimeClassifier.mqh in MQL5/Include/MBorasi/. Create the MBorasi subfolder if it does not exist.
+2. Place MACD\_Filter\_Backtest.mq5 in MQL5/Scripts/.
+3. In MetaEditor, open the script and compile it. It should compile without warnings.
+4. In MetaTrader 5, open an H1 chart of the symbol you want to test (US\_TECH100 recommended to reproduce the article's numbers).
+5. Drag the script from the Navigator onto the chart.
+6. A dialog appears with the input parameters. Click OK to accept defaults, or adjust them first.
+Output: The script runs in a few seconds and prints the full results to the Experts log at the bottom of MetaTrader 5. Results are also exported to MQL5/Files/MACD\_Backtest\_[Symbol]\_[Period]\_BACKTEST.csv  for further analysis in Excel or Python.
+Why a script and not an Expert Advisor: The analysis runs once over all available historical bars and produces a static report. A script is the appropriate MQL5 object type for this kind of offline, one-shot analysis. An Expert Advisor would add continuous tick processing overhead that serves no purpose here. A custom indicator would display values on the chart but cannot export CSV or drive the multi-configuration comparison cleanly.
+### How I Ran the Backtest
+The backtest methodology matters because it determines whether the numbers you see are real or curve-fitted artifacts. My protocol:
+Data source. Broker-native OHLC exported directly from AvaTrade's H1 feed. Not Dukascopy, not CSV packs from third-party vendors. This matters because when you deploy a strategy live, you will be trading the same broker's data feed. Backtesting on a different feed often produces numbers that do not hold up live.
+Bar count. 29,646 H1 bars over 5 years. Enough to cover multiple market regimes: the 2022 bear market, the 2023 grind higher, the 2024 AI rally, the 2025 volatility expansion, and the early 2026 activity.
+
+Baseline assumptions. The baseline assumes no slippage and no commissions. I kept this pure to isolate the filter effect. Real trading would reduce all four configurations by roughly the same amount, which does not change the relative comparisons. A rough estimate for TECH100: 2 to 3 points of spread per round trip, which at 2.5 ATR stop translates to approximately 0.05R of frictional cost per trade. Over 2,213 trades that is 110R of cumulative friction, enough to flip the raw MACD from barely profitable to marginally losing. This reinforces the point that the raw strategy is not a viable system in practice.
+This is not the most sophisticated backtest in the world. It does not include Monte Carlo of trade sequences, walk-forward optimization of the regime thresholds, or parameter sensitivity analysis across a grid. But it is honest, reproducible, and based on real broker data. The MQL5 code and the CSV files to reproduce it fit in under 300 lines total.
+### 
+### What These Filters Do Not Solve
+A few things worth stating explicitly, because I do not want anyone reading this to think I am selling a system.
+Even the fully filtered configuration (all three filters) produces only a +0.100R expectancy per trade and a 50.3% win rate. This means that:
+- You need to take many trades for the edge to materialize. 40 per year on a single instrument is not going to pay the rent.
+- Commissions and spreads on live trading can easily eat 30-50% of the expectancy shown in the backtest. At +0.050R expectancy after friction, a bad month can erase a whole year of gains.
+- The results are specific to TECH100 H1 with these exact SL/TP settings. Change any of those, and the ranking of filters may flip.
+Filters do not create alpha; they reduce noise around whatever signal you already have. If the underlying signal is weak, filtering it will not rescue it. In this case, the MACD crossover on TECH100 H1 has a small positive edge, and the session filter turns it from "barely exists" into "visible but modest."
+The lesson I took from this exercise, after all the years of looking at charts and writing code: the microstructure context (when you trade, not just what you trade) often matters more than the indicator refinements we obsess over. Twenty years ago I would have spent six months optimizing MACD periods. Now I run the data and see that the session window moves the expectancy six times more than the indicator tuning.
+### Next Steps for Readers
+If you want to extend this analysis on your own data, here is what I would suggest in order of value.
+First, run the same backtest on your broker's feed for US\_TECH100 H1. Compare your numbers to mine. If they differ significantly, your broker's data feed or spread behavior is the variable, not the strategy. This single exercise will teach you more about your broker than a year of passive trading.
+Second, change the session window. Try 14:30 to 20:00 (NYSE regular cash session) versus 13:00 to 22:00 (broad US including pre-market and after-hours). The expectancy will move. This sensitivity analysis is more valuable than any parameter tuning on the MACD itself.
+The regime classifier code above and the backtest methodology are enough to run all of this yourself. If you do, I would be genuinely interested to hear your results on other instruments. The community of rigorous empirical testers in MQL5 is small, and it could use more members.
+### A Note on What I Built
+I spent the better part of two years refining the full version of this logic into a compiled indicator for personal use and, eventually, for sale. It adds a few more filters that I deliberately did not include in this article (the adaptive threshold calibration, the anti-whipsaw cooldown, and a more careful session handling across different broker time zones). The result is published on the MQL5 Market as Helix MACD for traders who prefer a ready-made implementation over building and calibrating it themselves.
+I mention it here for completeness, not as the point of the article. The point of the article is the data and the code above. Anyone can reproduce the results and verify them.
+## Conclusion
+
+The three-filter combination on a MACD crossover strategy produces meaningful improvement over the raw version, but not in the way most vendor pitches suggest. Regime filtering alone did nothing measurable. HTF alignment alone did nothing measurable. The session filter did most of the work.
+The practical takeaway from five years of data on TECH100 H1 is this: if you are going to trade MACD crossovers on US indices, the single most important parameter is not the MACD settings or the regime logic. It is what hours of the day you let the system fire. Everything else is marginal.
+| --- | --- | --- |
+| 1 | RegimeClassifier.mqh | Include file containing the CRegimeClassifier class. Provides 4-state market regime detection (TREND, NORMAL, RANGE, VOLATILE) using ADX and adaptive ATR percentile thresholds. Should be placed in MQL5/Include/MBorasi/ before compiling the script |
+| 2 | MACD\_Filter\_Backtest.mq5 | Standalone script that reproduces the full backtest from the article. Iterates over all available historical bars on the chart, applies the four progressive filter configurations (raw MACD, +Regime, +Regime+HTF, +Regime+HTF+Session), and reports complete metrics to the Experts log. Also exports a detailed CSV file to MQL5/Files/ for further analysis |
+**Attached files** |
+[MACD\_Filter\_Backtest.mq5](https://www.mql5.com/en/articles/download/22290/MACD_Filter_Backtest.mq5 "Download MACD_Filter_Backtest.mq5")
+(20 KB)
+[RegimeClassifier.mqh](https://www.mql5.com/en/articles/download/22290/RegimeClassifier.mqh "Download RegimeClassifier.mqh")
+(4.58 KB)
+The article replaces clock-based sampling with López de Prado's alternative bar types and provides two aligned implementations: a unified Python module for batch tick histories and an object‑oriented MQL5 library for live EAs. It covers Parquet/Dask infrastructure, data cleaning, and a single API. Practical issues are solved explicitly: zero‑tick time‑bar filtering, imbalance threshold initialization, EWM state persistence, and parity between Python and MQL5 outputs.
+![MQL5 Trading Tools (Part 30): Class-Based Tool Palette Sidebar](https://c.mql5.com/2/211/22193-mql5-trading-tools-part-30-logo__2.png)
+
+----- CONCLUSION -----
+
+## Conclusion
+
+The three-filter combination on a MACD crossover strategy produces meaningful improvement over the raw version, but not in the way most vendor pitches suggest. Regime filtering alone did nothing measurable. HTF alignment alone did nothing measurable. The session filter did most of the work.
+
+The practical takeaway from five years of data on TECH100 H1 is this: if you are going to trade MACD crossovers on US indices, the single most important parameter is not the MACD settings or the regime logic. It is what hours of the day you let the system fire. Everything else is marginal.
+
+This goes against the complexity-sells-more bias of the indicator market. But the data is what the data is.
+
+If I had read this article twenty years ago, I would have saved myself a lot of time optimizing indicator parameters that turned out not to matter. The newer developer reading this now has an advantage that I did not have: access to cheap data, fast laptops, and a development environment (MQL5) that lets you test hypotheses in hours instead of weeks. Use it to verify claims rather than accept them.
+
+All code referenced in this article is attached below. The following table describes the source code files that accompany the article.
+
+| # | Name | Description |
+| --- | --- | --- |
+| 1 | RegimeClassifier.mqh | Include file containing the CRegimeClassifier class. Provides 4-state market regime detection (TREND, NORMAL, RANGE, VOLATILE) using ADX and adaptive ATR percentile thresholds. Should be placed in MQL5/Include/MBorasi/ before compiling the script |
+| 2 | MACD\_Filter\_Backtest.mq5 | Standalone script that reproduces the full backtest from the article. Iterates over all available historical bars on the chart, applies the four progressive filter configurations (raw MACD, +Regime, +Regime+HTF, +Regime+HTF+Session), and reports complete metrics to the Experts log. Also exports a detailed CSV file to MQL5/Files/ for further analysis |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22290.zip "Download all attachments in the single ZIP archive")
+
+[MACD\_Filter\_Backtest.mq5](https://www.mql5.com/en/articles/download/22290/MACD_Filter_Backtest.mq5 "Download MACD_Filter_Backtest.mq5")
+(20 KB)
+
+[RegimeClassifier.mqh](https://www.mql5.com/en/articles/download/22290/RegimeClassifier.mqh "Download RegimeClassifier.mqh")
+(4.58 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Marcelo Alejandro Borasi](https://c.mql5.com/avatar/2021/5/6096FC0F-EC9D_big.jpg "Marcelo Alejandro Borasi")
+
+[Marcelo Alejandro Borasi](https://www.mql5.com/en/users/marceloborasi "Marcelo Alejandro Borasi")
+
+- [Argentina](https://jyxos.com/)
+- [Argentina](https://maps.google.com/?z=4&q=Argentina "Lives")
+- [565](https://www.mql5.com/en/users/marceloborasi/achievements "Rating")
+
+- [https://jyxos.com](https://jyxos.com/)
+
+MQL5 developer focused on trading infrastructure and mt5 automation. built monitoring tools after losing trades to silent crashes and vps reboots. jyxos.com
+
+![Market Microstructure in MQL5 (Part 1): Robust Foundation](https://c.mql5.com/2/211/22263-market-microstructure-in-mql5-logo.png)
+[Market Microstructure in MQL5 (Part 1): Robust Foundation](https://www.mql5.com/en/articles/22263)
+
+This article builds the foundation layer of a twelve-part MQL5 market microstructure toolkit. It implements guarded math helpers (SafeDivide, SafeLog, SafeSqrt, SafeExp, SafeTanh), robust data validation (ValidateSymbolV2, SafeCopyClose), trimmed statistical estimators (robust mean var), a linear regression slope, shared structs, and an FFT. You compile a single include file that hardens indicators and expert advisors against silent numerical failures and standardizes data flow for later parts.
+
+![Beyond the Clock (Part 1): Building Activity and Imbalance Bars in Python and MQL5](https://c.mql5.com/2/211/22063-beyond-the-clock-part-1-building-logo__3.png)
+[Beyond the Clock (Part 1): Building Activity and Imbalance Bars in Python and MQL5](https://www.mql5.com/en/articles/22063)
+
+The article replaces clock-based sampling with López de Prado's alternative bar types and provides two aligned implementations: a unified Python module for batch tick histories and an object‑oriented MQL5 library for live EAs. It covers Parquet/Dask infrastructure, data cleaning, and a single API. Practical issues are solved explicitly: zero‑tick time‑bar filtering, imbalance threshold initialization, EWM state persistence, and parity between Python and MQL5 outputs.
+
+![MQL5 Trading Tools (Part 30): Class-Based Tool Palette Sidebar](https://c.mql5.com/2/211/22193-mql5-trading-tools-part-30-logo__2.png)
+[MQL5 Trading Tools (Part 30): Class-Based Tool Palette Sidebar](https://www.mql5.com/en/articles/22193)
+
+We refactor the Tools Palette from a flat, function-based panel into a modular, class-driven sidebar in MQL5. The design introduces supersampled canvas rendering for anti-aliased shapes, theme control, a category registry, snap alignment, and selective corner rounding. The result is a reusable, scalable sidebar foundation that you can extend with tool selection, dragging, and fly-out menus in future steps.
+
+![From Novice to Expert: Creating an MTF CRT Overlay Indicator in MQL5](https://c.mql5.com/2/211/22190-from-novice-to-expert-creating-logo.png)
+[From Novice to Expert: Creating an MTF CRT Overlay Indicator in MQL5](https://www.mql5.com/en/articles/22190)
+
+Higher-timeframe CRT ranges are informative, yet traders often execute on lower timeframes without that context. We implement an MQL5 indicator that reads higher-timeframe OHLC, projects the full candle range, body, and wicks onto the active lower-timeframe chart, and marks entries, stops, and targets. This improves situational awareness and removes the need to switch windows.
+
+[![](https://www.mql5.com/ff/sh/jup0jccfs9655z9z2/01.png)
+
+Learn to create your own robots
+Read our book "MQL5 Programming for Traders"
+Begin](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/book%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.algobook%26utm_content=visit.page%26utm_campaign=algobook.promo.04.2024&a=rsxjstxkzbrlgjjrxaglpezpvrjflnvw&s=7224440013c3dbc50ba9cc078cd015fabca36df446b8e75028d6b30234663872&uid=&ref=https://www.mql5.com/en/articles/22290&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6423134307480111696)

@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_019",
+  "section": "Trading",
+  "parent_shard": "trading_019",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17917,
+      "title": "Hidden Markov Models in Machine Learning-Based Trading Systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17917.md"
+    },
+    {
+      "id": 18057,
+      "title": "Camel Algorithm (CA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18057.md"
+    },
+    {
+      "id": 18154,
+      "title": "Deterministic Oscillatory Search (DOS)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18154.md"
+    },
+    {
+      "id": 18227,
+      "title": "Covariance Matrix Adaptation Evolution Strategy (CMA-ES)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18227.md"
+    },
+    {
+      "id": 18354,
+      "title": "Biogeography-Based Optimization (BBO)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18354.md"
+    },
+    {
+      "id": 18460,
+      "title": "Eagle Strategy (ES)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18460.md"
+    },
+    {
+      "id": 18495,
+      "title": "Dolphin Echolocation Algorithm (DEA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18495.md"
+    },
+    {
+      "id": 18566,
+      "title": "Detecting and Classifying Fractal Patterns Using Machine Learning",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18566.md"
+    },
+    {
+      "id": 18612,
+      "title": "Installing MetaTrader 5 and Other MetaQuotes Apps on HarmonyOS NEXT",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18612.md"
+    },
+    {
+      "id": 18669,
+      "title": "Mastering Fair Value Gaps: Formation, Logic, and Automated Trading with Breakers and Market Structure Shifts",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18669.md"
+    },
+    {
+      "id": 18754,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (VI) \u2014 Pending Order Strategy for News Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18754.md"
+    },
+    {
+      "id": 18755,
+      "title": "Extremal Optimization (EO)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18755.md"
+    }
+  ]
+}

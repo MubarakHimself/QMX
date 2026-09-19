@@ -4,10 +4,10 @@ title: The QMX agentic system — QMA SDK, daemon and wire
 type: adr
 status: ratified
 depends_on: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK, COMP-QMF-DATA]
-decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0304, DEC-0305, DEC-0306, DEC-0313, DEC-0316, DEC-0319, DEC-0321, DEC-0322, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0332, DEC-0333, DEC-0334, DEC-0335, DEC-0336, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0341, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0348, DEC-0349, DEC-0350, DEC-0360, DEC-0361, DEC-0362, DEC-0363, DEC-0364, DEC-0365, DEC-0366, DEC-0367, DEC-0368, DEC-0369, DEC-0370, DEC-0371, DEC-0372, DEC-0373, DEC-0374, DEC-0375, DEC-0376, DEC-0377, DEC-0378, DEC-0379, DEC-0285, DEC-0388, DEC-0399, DEC-0403]
-sources: [DEC-0329, DEC-0335, DEC-0341, DEC-0347, DEC-0350, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/qma/riders/job-spec-2026-08-29.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0304, DEC-0305, DEC-0306, DEC-0313, DEC-0316, DEC-0319, DEC-0321, DEC-0322, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0332, DEC-0333, DEC-0334, DEC-0335, DEC-0336, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0341, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0348, DEC-0349, DEC-0350, DEC-0360, DEC-0361, DEC-0362, DEC-0363, DEC-0364, DEC-0365, DEC-0366, DEC-0367, DEC-0368, DEC-0369, DEC-0370, DEC-0371, DEC-0372, DEC-0373, DEC-0374, DEC-0375, DEC-0376, DEC-0377, DEC-0378, DEC-0379, DEC-0285, DEC-0388, DEC-0399, DEC-0403, DEC-0415, DEC-0421, DEC-0429, DEC-0435, DEC-0439, DEC-0440, DEC-0445, DEC-0446, DEC-0449, DEC-0450]
+sources: [DEC-0329, DEC-0335, DEC-0341, DEC-0347, DEC-0350, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/qma/riders/job-spec-2026-08-29.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0024-workflows-construction-kit.md]
 generated: '2026-08-29'
-verified: '2026-09-16'
+verified: '2026-09-19'
 stale_after: 1y
 ---
 
@@ -98,3 +98,13 @@ This ADR's 2026-08-29 Decision stands as written. The 2026-09-16 QML research ex
 - **QMA AD-19 law holds (DEC-0399).** The empty-corpus sentence is a factual refresh only (DEC-0403); the read-only KnowledgeSource port stands.
 - **QMA cites; QML owns meaning (DEC-0399).** QMA does not author hypotheses and does not assemble CT-33/CT-34.
 - **Daemon must not write `research_root` (DEC-0388).** The daemon must not bind a second CT-44 `source_id` in v1.
+
+## Follow-up — 2026-09-19 Workflows construction kit (ADR-0024)
+
+This ADR's 2026-08-29 Decision stands as written. The 2026-09-19 Workflows construction-kit spine ([ADR-0024](ADR-0024-workflows-construction-kit.md), DEC-0445) reuses and extends the three QMA packages in place — no sixth COMP, no new CT number (DEC-0446).
+
+- **Daemon store list (DEC-0429, DEC-0440).** v1 daemon additions are the complete closed list: journal-projected `product_session` (DEC-0421); persist the already-named `task_graph_state` projection including edges and the Workflows AD-26 outbox (DEC-0420, DEC-0439; not QMA AD-26 variables, DEC-0325); mini-app instance rows in the existing plugin-install projection; GrantRecord rows beside `product_session`; and journal-projected `CheckpointManifest` (DEC-0440). No other new sqlite store class.
+- **JobHandle vocabulary reused (DEC-0439).** Workflows job contracts reuse QMA AD-17 exactly (`queued` \| `running` \| `done` \| `failed` \| `cancelled` \| `aborted` \| `unknown`). Sitting payloads must not drift to `succeeded` / `awaiting_approval` on a handle; `awaiting_approval` remains a Mission/Task gate.
+- **ContributionHit wire DTO (DEC-0415, DEC-0449).** Product discovery concatenates `KnowledgeHit`, `ArtifactHit`, and `ContributionHit` on the additive CT-40 family owned by `COMP-QMA-WIRE`. `ContributionHit` identity is the live `published_contributions()` tuple — never fp1, never a registry kind. At `integration@270e992` the wire is still two-class only (DEC-0450).
+- **`ProductSessionProfile` ≠ `Profile` (DEC-0421).** `product_session` ids are `psess:`; QMA `Session` ids remain `sess:`. `ProductSessionProfile` is the closed enum `{authoring, app-use}`, immutable at create, and is not `qma.core.ontology.Profile`.
+- **Portfolio Manager label (DEC-0435).** Trading-floor Role display becomes **Portfolio Manager**. Keep `desk_slug=pm` and `pm-coordination` until a GAP-0083 migration sitting. Preserve BMAD Product Manager.

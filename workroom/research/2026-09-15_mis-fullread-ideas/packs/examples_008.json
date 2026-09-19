@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_008",
+  "section": "Examples",
+  "parent_shard": "examples_008",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1450,
+      "title": "Effective Averaging Algorithms with Minimal Lag: Use in Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1450.md"
+    },
+    {
+      "id": 1451,
+      "title": "Tricolor Indicators and Some Opportunities for Maximal Simplification of Writing Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1451.md"
+    },
+    {
+      "id": 1453,
+      "title": "Forex Trading ABC",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1453.md"
+    },
+    {
+      "id": 1454,
+      "title": "Using Skype to Send Messages from an Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1454.md"
+    },
+    {
+      "id": 1456,
+      "title": "Transferring an Indicator Code into an Expert Advisor Code. Indicator Structure",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1456.md"
+    },
+    {
+      "id": 1457,
+      "title": "Transferring an Indicator Code into an Expert Advisor Code. General Structural Schemes of an Expert Advisor and Indicator Functions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1457.md"
+    },
+    {
+      "id": 1460,
+      "title": "An Expert Advisor Made to Order. Manual for a Trader",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1460.md"
+    },
+    {
+      "id": 1461,
+      "title": "Simultaneous Displaying of the Signals of Several Indicators from the Four Timeframes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1461.md"
+    },
+    {
+      "id": 1463,
+      "title": "Transferring an Indicator Code into an Expert Advisor Code. Conclusion",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1463.md"
+    },
+    {
+      "id": 1464,
+      "title": "Theoretical Basis of Building Cluster Indicators for FOREX",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1464.md"
+    },
+    {
+      "id": 1466,
+      "title": "Pivot Points Helping to Define Market Trends",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1466.md"
+    },
+    {
+      "id": 1469,
+      "title": "Indicator Alternative Ichimoku \u2013 Setup, Examples of Usage",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1469.md"
+    }
+  ]
+}

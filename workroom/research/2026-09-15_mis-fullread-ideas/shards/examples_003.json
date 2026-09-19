@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_003",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 999,
+      "title": "Tips for an Effective Product Presentation on the Market",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\999.md"
+    },
+    {
+      "id": 1052,
+      "title": "Optimization. A Few Simple Ideas",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1052.md"
+    },
+    {
+      "id": 1111,
+      "title": "MQL5 Cookbook: Processing of the TradeTransaction Event",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1111.md"
+    },
+    {
+      "id": 1163,
+      "title": "MQL5 Cookbook: Handling Custom Chart Events",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1163.md"
+    },
+    {
+      "id": 1171,
+      "title": "Why Virtual Hosting On The MetaTrader 4 And MetaTrader 5 Is Better Than Usual VPS",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1171.md"
+    },
+    {
+      "id": 1179,
+      "title": "MQL5 Cookbook: Handling BookEvent",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1179.md"
+    },
+    {
+      "id": 1210,
+      "title": "MQL5 Programming Basics: Global Variables of the Terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1210.md"
+    },
+    {
+      "id": 1246,
+      "title": "Programming EA's Modes Using Object-Oriented Approach",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1246.md"
+    },
+    {
+      "id": 1334,
+      "title": "MQL5 Cookbook: Implementing an Associative Array or a Dictionary for Quick Data Access",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1334.md"
+    },
+    {
+      "id": 1341,
+      "title": "Studying the CCanvas Class. How to Draw Transparent Objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1341.md"
+    },
+    {
+      "id": 1350,
+      "title": "On Methods of Technical Analysis and Market Forecasting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1350.md"
+    },
+    {
+      "id": 1351,
+      "title": "Fractal Analysis of Joint Currency Movements",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1351.md"
+    }
+  ]
+}

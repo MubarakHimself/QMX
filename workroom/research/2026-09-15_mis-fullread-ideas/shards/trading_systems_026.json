@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_026",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 23388,
+      "title": "A Symbol Metadata and Trading Hours Cache in MQL5: Eliminating Redundant SymbolInfo Calls in Multi-Symbol EAs",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23388.md"
+    },
+    {
+      "id": 23403,
+      "title": "Building a JSON Trade Report Exporter in Pure MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23403.md"
+    },
+    {
+      "id": 23410,
+      "title": "Mapping Dealer Gamma Exposure (GEX) in MetaTrader 5: Walls, the Zero-Gamma Flip, and a Chart Overlay",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23410.md"
+    },
+    {
+      "id": 23415,
+      "title": "Exporting MetaTrader 5 Open Positions to a Live-Refreshing HTML Dashboard",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23415.md"
+    },
+    {
+      "id": 23449,
+      "title": "Mapping the Shape of Price: The Mapper Lens and Cover in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23449.md"
+    },
+    {
+      "id": 23459,
+      "title": "Real-Time Trade Event Logger to SQLite via MQL5 DLL Bridge",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23459.md"
+    },
+    {
+      "id": 23492,
+      "title": "Hierarchical Risk Parity: A Robust Portfolio Allocator and Expert Advisor",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23492.md"
+    },
+    {
+      "id": 23527,
+      "title": "Streaming MetaTrader 5 Trade Events to a Local HTTP Server Using WinINet in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23527.md"
+    },
+    {
+      "id": 23532,
+      "title": "Designing a Unified Order Execution Gateway Class in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23532.md"
+    },
+    {
+      "id": 23539,
+      "title": "Building a Modular Fair Value Gap (FVG) Detection Engine in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23539.md"
+    },
+    {
+      "id": 23548,
+      "title": "Path Signatures for Lead-Lag Detection",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23548.md"
+    },
+    {
+      "id": 23571,
+      "title": "The Avellaneda-Stoikov Model: Inventory-Aware Quoting for Two-Sided Strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23571.md"
+    }
+  ]
+}

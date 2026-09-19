@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_043",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15376,
+      "title": "From Basic to Intermediate: BREAK and CONTINUE Statements",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15376.md"
+    },
+    {
+      "id": 15383,
+      "title": "From Basic to Intermediate: The Include Directive",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15383.md"
+    },
+    {
+      "id": 15388,
+      "title": "Reimagining Classic Strategies (Part III): Forecasting Higher Highs And Lower Lows",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15388.md"
+    },
+    {
+      "id": 15391,
+      "title": "From Basic to Intermediate: SWITCH Statement",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15391.md"
+    },
+    {
+      "id": 15393,
+      "title": "Causal analysis of time series using transfer entropy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15393.md"
+    },
+    {
+      "id": 15406,
+      "title": "From Basic to Intermediate: FOR Statement",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15406.md"
+    },
+    {
+      "id": 15413,
+      "title": "Build Self Optimizing Expert Advisors With MQL5 And Python (Part II): Tuning Deep Neural Networks",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15413.md"
+    },
+    {
+      "id": 15417,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part I): Building a Messaging Interface",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15417.md"
+    },
+    {
+      "id": 15418,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part II): Enhancing Responsiveness and Quick Messaging",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15418.md"
+    },
+    {
+      "id": 15419,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part III): Enhancing the GUI with Visual Styling (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15419.md"
+    },
+    {
+      "id": 15440,
+      "title": "From Basic to Intermediate: Operator Precedence",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15440.md"
+    },
+    {
+      "id": 15441,
+      "title": "From Basic to Intermediate: Arrays and Strings (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15441.md"
+    }
+  ]
+}

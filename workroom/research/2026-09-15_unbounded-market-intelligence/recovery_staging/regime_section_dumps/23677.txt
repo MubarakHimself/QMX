@@ -1,0 +1,635 @@
+# Building Volatility Models in MQL5 (Part V): Implementing EGARCH as an Alternate Asymmetric Volatility Process
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 17 August 2026 at 05:41
+738
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/514702 "Comments")
+[Francis Dube](https://www.mql5.com/en/users/ufranco)
+### Contents
+1. [Introduction](https://www.mql5.com/en/articles/23677#introduction "Introduction")
+2. [GARCH's Positivity Constraints: The Problem](https://www.mql5.com/en/articles/23677#garch_s_positivity_constraints_the_problem "GARCH_Positivity_Constraints")
+3. [Exponential GARCH: The Solution](https://www.mql5.com/en/articles/23677#exponential_garch_the_solution "Exponential_GARCH")
+4. [EGARCH MQL5 Implementation](https://www.mql5.com/en/articles/23677#egarch_mql5_implementation "MQL5_Implementation")
+5. [Tests for Estimating Leverage Effects](https://www.mql5.com/en/articles/23677#tests_for_estimating_leverage_effects "Tests_for_Estimating_Leverage_Effects")
+6. [EGARCH Indicators](https://www.mql5.com/en/articles/23677#egarch_indicators "EGARCH_Indicators")
+7. [Conclusion](https://www.mql5.com/en/articles/23677#conclusion "Conclusion")
+### Introduction
+Consider this scenario: you fit a conditional volatility model after running diagnostics (ACF and PACF) and selecting a reasonable hyperparameter set. The optimization converges, but one volatility parameter has a p-value of 0.99999 (effectively 1), indicating it is statistically insignificant. Upon inspecting the parameter itself, you find it is nearly zero, suggesting something is wrong. Should you try a different model configuration, or is the issue elsewhere?
+Standard GARCH-like models face a limitation due to the requirement that predicted conditional variance must remain positive. This necessity forces non-negative boundaries on the model's parameters, which can restrict their ability to capture complex dynamics. In 1991, economist Daniel Nelson introduced the Exponential GARCH (EGARCH) model to address this issue while also enabling the modeling of leverage effects. This article implements EGARCH in MQL5. It first illustrates the positivity-constraint limitation of standard GARCH on real data, then details EGARCH and its MQL5 implementation. It also presents tests for leverage effects and concludes with several EGARCH-based indicators.
+### GARCH's Positivity Constraints: The Problem
+In a standard GARCH model—specifically the foundational GARCH(1,1)—the conditional variance is calculated as a linear combination of past squared residuals and past variances. Because this equation relies on raw variance, the model requires strictly positive values; negative variance is mathematically impossible. To prevent the conditional variance from dropping below zero, econometricians must impose strict constraints during estimation: omega > 0, alpha >= 0, and beta >= 0.  
+If a maximum likelihood estimation algorithm attempts to fit the data by pushing a parameter into negative territory, the model breaks. The constraints prevent this, forcing the optimization algorithm to settle on parameter values that adhere to the boundaries rather than accurately reflecting the dataset. The script GARCH\_ParameterPositivityLimitation.mq5 demonstrates how such a scenario can manifest. It configures a standard GARCH model, fits it to a specific sample of returns, and displays the resulting parameters and p-values in the (MetaTrader 5) terminal's journal tab.
+```
+//--- --- Step 5: Model Initialization ---
+//--- Instantiate the continuous tracking constant mean container wrapper
+   ZeroMean garch_model;
+//--- Pass structural parameters down into the optimization initialization routine
+   if(!garch_model.initialize(garch_spec))
+      return;
+//--- --- Step 6: Parameter Optimization (Fitting) ---
+//--- Trigger the non-linear execution optimizer loop (SLSQP engine solver)
+   ArchModelResult garch_params = garch_model.fit();
+//--- --- Step 7: Optimization Convergence Guard ---
+//--- Verify that the resulting parameters array size matches the model criteria configurations
+   if(!garch_params.params.Size())
+      Print("Convergence failed ", GetLastError());
+      return;
+//--- --- Step 8: Results Output Extraction ---
+//--- Print optimal target parameter solutions to the MetaTrader Terminal panel
+   Print("GARCH model parameters");
+//--- Extract statistical asymptotic standard deviation errors mapped out to individual p-values
+   vector pv = garch_params.pvalues();
+   Print("Check GARCH model pvalues.\nA corresponding pvalue of 1 or 0.99 is an indication of a"
+         "\n parameter being limited  by a boundary constraint."
+         "\n Meaning the model parameters are not a reflection of the observed data:");
+//--- Get the volatility parameter names
+//--- Notice that the full model is anchored by a ZeroMean mean model
+   string pnames = garch_model.volatility().parameterNames();
+   string vol_parameter_labels[];
+//--- Organize parameter names into array for display
+   int labels = StringSplit(pnames,StringGetCharacter(",",0),vol_parameter_labels);
+//--- Check number of labels is equal to number of model parameters
+   if(labels != int(pv.Size()))
+      return;
+//--- Display pvalues
+   PrintFormat("%10s %10s %10s","Name","Value","Pvalue");
+   for(ulong i = 0; i < pv.Size(); ++i)
+      //--- Log individual calculated p-values step-by-step to evaluate structural significance
+      PrintFormat("%10s %10.8f %10.8f",vol_parameter_labels[i], garch_params.params[i], pv[i]);
+```
+
+----- METHOD/CLAIM SWEEP -----
+
+
+![Building Volatility Models in MQL5 (Part V): Implementing EGARCH as an Alternate Asymmetric Volatility Process](https://c.mql5.com/2/239/23677-building-volatility-models-in-mql5-part-v-implementing-egarch_600x314.jpg)
+# Building Volatility Models in MQL5 (Part V): Implementing EGARCH as an Alternate Asymmetric Volatility Process
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Contents
+1. [Introduction](https://www.mql5.com/en/articles/23677#introduction "Introduction")
+2. [GARCH's Positivity Constraints: The Problem](https://www.mql5.com/en/articles/23677#garch_s_positivity_constraints_the_problem "GARCH_Positivity_Constraints")
+3. [Exponential GARCH: The Solution](https://www.mql5.com/en/articles/23677#exponential_garch_the_solution "Exponential_GARCH")
+4. [EGARCH MQL5 Implementation](https://www.mql5.com/en/articles/23677#egarch_mql5_implementation "MQL5_Implementation")
+5. [Tests for Estimating Leverage Effects](https://www.mql5.com/en/articles/23677#tests_for_estimating_leverage_effects "Tests_for_Estimating_Leverage_Effects")
+6. [EGARCH Indicators](https://www.mql5.com/en/articles/23677#egarch_indicators "EGARCH_Indicators")
+7. [Conclusion](https://www.mql5.com/en/articles/23677#conclusion "Conclusion")
+### Introduction
+Consider this scenario: you fit a conditional volatility model after running diagnostics (ACF and PACF) and selecting a reasonable hyperparameter set. The optimization converges, but one volatility parameter has a p-value of 0.99999 (effectively 1), indicating it is statistically insignificant. Upon inspecting the parameter itself, you find it is nearly zero, suggesting something is wrong. Should you try a different model configuration, or is the issue elsewhere?
+Standard GARCH-like models face a limitation due to the requirement that predicted conditional variance must remain positive. This necessity forces non-negative boundaries on the model's parameters, which can restrict their ability to capture complex dynamics. In 1991, economist Daniel Nelson introduced the Exponential GARCH (EGARCH) model to address this issue while also enabling the modeling of leverage effects. This article implements EGARCH in MQL5. It first illustrates the positivity-constraint limitation of standard GARCH on real data, then details EGARCH and its MQL5 implementation. It also presents tests for leverage effects and concludes with several EGARCH-based indicators.
+### GARCH's Positivity Constraints: The Problem
+In a standard GARCH model—specifically the foundational GARCH(1,1)—the conditional variance is calculated as a linear combination of past squared residuals and past variances. Because this equation relies on raw variance, the model requires strictly positive values; negative variance is mathematically impossible. To prevent the conditional variance from dropping below zero, econometricians must impose strict constraints during estimation: omega > 0, alpha >= 0, and beta >= 0.  
+  
+If a maximum likelihood estimation algorithm attempts to fit the data by pushing a parameter into negative territory, the model breaks. The constraints prevent this, forcing the optimization algorithm to settle on parameter values that adhere to the boundaries rather than accurately reflecting the dataset. The script GARCH\_ParameterPositivityLimitation.mq5 demonstrates how such a scenario can manifest. It configures a standard GARCH model, fits it to a specific sample of returns, and displays the resulting parameters and p-values in the (MetaTrader 5) terminal's journal tab.
+
+```
+//--- Instantiate the continuous tracking constant mean container wrapper
+   ZeroMean garch_model;
+//--- Pass structural parameters down into the optimization initialization routine
+   if(!garch_model.initialize(garch_spec))
+      return;
+//--- --- Step 6: Parameter Optimization (Fitting) ---
+//--- Trigger the non-linear execution optimizer loop (SLSQP engine solver)
+   ArchModelResult garch_params = garch_model.fit();
+//--- --- Step 7: Optimization Convergence Guard ---
+//--- Verify that the resulting parameters array size matches the model criteria configurations
+   if(!garch_params.params.Size())
+     {
+      Print("Convergence failed ", GetLastError());
+     }
+//--- --- Step 8: Results Output Extraction ---
+//--- Print optimal target parameter solutions to the MetaTrader Terminal panel
+   Print("GARCH model parameters");
+//--- Extract statistical asymptotic standard deviation errors mapped out to individual p-values
+   vector pv = garch_params.pvalues();
+   Print("Check GARCH model pvalues.\nA corresponding pvalue of 1 or 0.99 is an indication of a"
+         "\n parameter being limited  by a boundary constraint."
+         "\n Meaning the model parameters are not a reflection of the observed data:");
+//--- Get the volatility parameter names
+//--- Notice that the full model is anchored by a ZeroMean mean model
+   string pnames = garch_model.volatility().parameterNames();
+   string vol_parameter_labels[];
+//--- Organize parameter names into array for display
+```
+GARCH model parameters
+Check GARCH model pvalues.
+A corresponding pvalue of 1 or 0.99 is an indication of a
+parameter being limited  by a boundary constraint.
+
+### Exponential GARCH: The Solution
+Exponential GARCH (EGARCH) is a time-series econometric model developed to address the limitations of Robert Engle's original Autoregressive Conditional Heteroskedasticity (ARCH) framework and Tim Bollerslev's Generalized Extension (GARCH). Introduced in the academic paper "Conditional Heteroskedasticity in Asset Returns: A New Approach," Daniel Nelson designed EGARCH primarily to capture the leverage effect. By modeling the natural logarithm of conditional variance rather than the raw variance itself, Nelson ensured that predicted volatility remained positive without imposing non-negativity constraints on the model's parameters during estimation. The leverage effect, representing asymmetry in volatility, has been covered extensively in a previous [article](https://www.mql5.com/en/articles/22258#why_and_when_is_asymmetry_relevant "https://www.mql5.com/en/articles/22258#why_and_when_is_asymmetry_relevant").
+![EGARCH Equation](https://c.mql5.com/2/235/egarchformula.png "EGARCH Equation")
+Omega represents the constant baseline or intercept of the model. Because the model predicts the log of variance, omega dictates the longer-term, scale-adjusted anchor of the process. If all recent shocks are stripped away, omega determines the starting level of the asset's log-volatility. A positive value implies that the baseline log-variance is positive, pushing the long-term, unconditioned variance above 1.0. Negative values of omega are common and perfectly normal in EGARCH; a negative parameter simply means the baseline variance is less than 1.0.  
+### EGARCH MQL5 Implementation
+Following a familiar format, the EGARCH implementation begins in the `base.mqh` file within the Univariate folder of the existing library. Here, we add `VOL\_EGARCH` to the `ENUM\_VOLATILITY\_MODEL` enumeration. Unlike previous iterations, no changes are required for the `ArchParameters` structure, as EGARCH parameters can be mapped to the existing members: `garch\_p`, `garch\_o`, and `garch\_q`.
+//+------------------------------------------------------------------+
+enum ENUM_VOLATILITY_MODEL
+  {
+   VOL_CONST = 0, // Homoskedastic variance baseline profiles
+   VOL_AVARCH,    // Absolute Value ARCH framework configurations
+   VOL_AVGARCH,   // Absolute Value GARCH process modeling variations
+   VOL_TARCH,     // Threshold ARCH / ZARCH threshold tracking handling asymmetric volatility shocks
+   VOL_GARCH,     // Generalized ARCH processes combining structural innovations and past variance memory
+   VOL_GJR_GARCH, // Glosten-Jagannathan-Runkle GARCH tracking sign-dependent asymmetric leverage adjustments
+   VOL_HARCH,     // Heterogeneous ARCH handling multi-scale localized aggregate time horizons
+   VOL_FIGARCH,   // Fractionally Integrated GARCH mapping long-memory long-term decay processes
+   VOL_EGARCH     // Exponential Generalized ARCH processes 
+  };
+```
+//| EGARCH process                                                   |
+//| Models volatility as a sum of lags over different frequencies    |
+class CEgarchProcess: public CVolatilityProcess
+protected:
+   //---
+   matrix            _product(vector& one, vector& two, vector& three);
+   //--- Verify if the requested forecasting method is mathematically valid
+   //--- Analytic methods require specific power=2.0 structures for multi-step persistence
+   //--- Analytic multi-step volatility forecasts from the model
+   virtual VarianceForecast _analyticforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon);
+   //--- Simulation-based volatility forecasts from the model
+   virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng);
+   //--- Initialize class members
+   virtual bool      _initialize(ENUM_VOLATILITY_MODEL volmodel = WRONG_VALUE, bool updateable = true, bool closedform = false, ulong nparams = 0, string name = NULL, int seed = 0, ulong p = 0, ulong o = 0, ulong q = 0, double power = 0.0, long start = 0, long stop = -1, ulong bootstrap_obs = 100);
+   //--- Construct loose bounds for conditional variances
+   virtual matrix    varianceBounds(vector& resids, double power = 2.);
+   //--- Returns boundary matrix structures for parameters optimization constraints
+   virtual matrix    bounds(vector& resids);
+   //--- Compute the variance for the ARCH model
+   virtual vector    computeVariance(vector& parameters, vector& resids, vector& _sigma2, vector& _backcast, matrix& varbounds);
+   //--- Construct parameter constraints arrays for parameter estimation (Boundary bounding vectors)
+   virtual Constraints constraints(void);
+   //--- Simulate data paths from the model structure
+   virtual matrix      simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL);
+   //--- Names of model parameters
+   virtual string       parameterNames(void);
+
+In EGARCH estimation, the recursive conditional variance equation requires starting values to seed the iteration. While standard GARCH models backcast using raw squared residuals, EGARCH operates in log space. Consequently, the `backCast()` and `backCastTransform()` methods apply a natural logarithm transformation to the base backcast values, aligning the initial pre-sample states with the logarithmic scale of the EGARCH equation.
+```
+  {
+   return log(CVolatilityProcess::backCast(resids));
+  }
+//--- Defer to core base class method transformations first
+   backcast = CVolatilityProcess::backCastTransform(backcast);
+   return log(backcast);
+Maximum likelihood estimation for GARCH-type models is highly sensitive to initial parameters. The `startingValues()` method employs a grid-search heuristic to identify stable initial parameters for the optimizer. It constructs a matrix of combinations for ARCH, asymmetry, and GARCH parameters, scales them against the long-run log-variance (the target variance), and evaluates the Gaussian Log-Likelihood for each combination using the `\_gaussianloglikelihood()` method. The parameter set yielding the highest likelihood is selected as the optimization starting point.
+   vector betas = {0.5, 0.7, 0.9, 0.98};
+   matrix agbs = _product(alphas,gammas,betas);
+   double target = log(pow(resids,2).Mean());
+   ArrayResize(svs, int(agbs.Rows()));
+   matrix vb = varianceBounds(resids);
+   vector llfs = vector::Zeros(agbs.Rows());
+   vector bc = backCast(resids);
+Volatility persistence in EGARCH is governed by the sum of the GARCH beta coefficients. For the process to remain stationary, this persistence must be strictly less than 1. The `bounds()` method establishes search spaces, allowing short-term shock coefficients to vary dynamically between negative and positive infinity (reflecting EGARCH's parameter flexibility) while bounding the constant term based on historical variance.
+//--- Returns boundary matrix structures for parameters optimization constraints
+virtual matrix    bounds(vector& resids) override
+   double log_const = log(10000.0);
+   double v = (pow(fabs(resids), m_power)).Mean();
+   matrix bnds = matrix::Zeros(1 + m_p + m_o + m_q, 2);
+
+   bnds[0, 0] = log(v) - log_const;
+The `constraints()` method constructs a constraint matrix, ensuring that the sum of the GARCH parameters remains less than 1 to guarantee stationarity.
+```
+  {
+   matrix a = matrix::Zeros(1,m_p+m_o+m_q+1);
+   vector b = vector::Zeros(1);
+   b[0] = -1.0;
+//--- Compute the variance for the ARCH model
+virtual vector    computeVariance(vector& parameters, vector& resids, vector& _sigma2, vector& _backcast, matrix& varbounds)
+//--- Transform base residuals into process space based on model's power coefficient
+//vector lnsigma2, std_resids, abs_std_resids;
+   int nobs = (int)resids.Size();
+   egarch_recursion(parameters,resids,_sigma2,m_p,m_o,m_q,ulong(nobs),_backcast[0],varbounds,m_vectors[0],m_vectors[1],m_vectors[2]);
+   return _sigma2;
+  }
+//+------------------------------------------------------------------+
+//| EGARCH recursion: Models log(sigma^2) to ensure positivity       |
+//| Handles asymmetries using std_resids and abs_std_resids.         |
+vector egarch_recursion(vector& parameters, vector& resids, vector& sigma2, ulong p, ulong o, ulong q, ulong nobs, double backcast, matrix& var_bounds, vector& lnsigma2, vector& std_resids, vector& abs_std_resids)
+   for(ulong t = 0; t < nobs; ++t)
+      ulong loc = 0;
+      lnsigma2[t] = parameters[loc];
+      loc += 1;
+      
+         if((long(t) - 1 - long(j)) >= 0)
+            lnsigma2[t] += parameters[loc] * (abs_std_resids[t - 1 - j] - SQRT2_OV_PI);
+         loc += 1;
+        }
+            lnsigma2[t] += parameters[loc] * std_resids[t - 1 - j];
+         if((long(t) - 1 - long(j)) < 0)
+            lnsigma2[t] += parameters[loc] * backcast;
+         else
+            lnsigma2[t] += parameters[loc] * lnsigma2[t - 1 - j];
+      // Numerical clamping for log-variance
+      if(lnsigma2[t] > LNSIGMA_MAX)
+         lnsigma2[t] = LNSIGMA_MAX;
+      sigma2[t] = exp(lnsigma2[t]);
+      // Boundary enforcement in variance space
+      if(sigma2[t] < var_bounds[t, 0])
+        {
+         sigma2[t] = var_bounds[t, 0];
+         lnsigma2[t] = log(sigma2[t]);
+      else if(sigma2[t] > var_bounds[t, 1])
+         sigma2[t] = var_bounds[t, 1] + log(sigma2[t]) - log(var_bounds[t, 1]);
+        
+      // Update standardized residuals for next step
+      std_resids[t] = resids[t] / sqrt(sigma2[t]);
+      abs_std_resids[t] = MathAbs(std_resids[t]);
+     }
+   return sigma2;
+  }
+```
+//--- Simulation-based volatility forecasts from the model
+virtual VarianceForecast _simulationforecast(vector& parameters, vector &resids, vector &backcast, matrix &varbounds, long _start, ulong horizon, ulong simulations, BootstrapRng &rng)
+  {
+   vector sig;
+   matrix fc;
+//--- Baseline one-step layout verification
+   if(!_onestepforecast(parameters, resids, backcast, varbounds, _start, horizon, sig, fc))
+
+   vector Insigma2 = log(sig);
+   vector e = resids/sqrt(sig);
+   matrix Insigma2_mat = matrix::Zeros(t,m);
+   if(backcast.Size()==m)
+     {
+      for(ulong i = 0; i<Insigma2_mat.Rows(); ++i)
+         Insigma2_mat.Row(backcast,i);
+   else
+      if(backcast.Size() == 1)
+         Insigma2_mat.Fill(backcast[0]);
+   matrix e_mat = matrix::Zeros(t,m);
+   matrix abs_e_mat = matrix::Zeros(t,m);
+   abs_e_mat.Fill(sqrt(2./M_PI));
+        {
+         Insigma2_mat[j,i] = Insigma2[k];
+         e_mat[j,i] = e[k];
+         abs_e_mat[j,i] = fabs(e[k]);
+     }
+   matrix paths[], shocks[];
+   ArrayResize(paths, int(t - _start));
+      paths[i] = matrix::Zeros(simulations,horizon);
+      shocks[i] = paths[i];
+
+   matrix _lnsigma2 = matrix::Zeros(simulations,m+horizon);
+   matrix _e = _lnsigma2;
+   matrix _abs_e = _e;
+   matrix std_shocks;
+   ulong loc;
+   for(ulong i = ulong(_start); i<t; ++i)
+           {
+            _lnsigma2[k,j] = Insigma2_mat[i,j];
+            _e[k,j] = e_mat[i,j];
+            _abs_e[k,j] = abs_e_mat[i,j];
+         loc  = 0;
+         for(ulong jj = 0; jj< _lnsigma2.Rows(); ++jj)
+            _lnsigma2[jj,m + j] = parameters[loc];
+         loc += 1;
+         for(ulong k = 0; k < m_p; ++k)
+            for(ulong jj = 0; jj< _lnsigma2.Rows(); ++j)
+               _lnsigma2[jj,m + j] += parameters[loc] * (_abs_e[jj, m + j - 1 - k] - sqrt2pi);
+            loc += 1;
+           }
+               _lnsigma2[jj,m + j] += parameters[loc] * _e[jj, m + j - 1 - k];
+               _lnsigma2[jj,m + j] += parameters[loc] * _lnsigma2[jj, m + j - 1 - k];
+      loc = i - ulong(_start);
+      paths[loc] = exp(np::sliceMatrixCols(_lnsigma2,long(m)));
+      shocks[loc] = sqrt(paths[loc]) * std_shocks;
+     }
+
+   fc = matrix::Zeros(paths.Size(),paths[0].Cols());
+   for(ulong i = 0; i < fc.Rows(); ++i)
+      if(!fc.Row(paths[i].Mean(0),i))
+The `simulate()` method generates synthetic return and volatility paths from specified EGARCH parameters. It establishes a burn-in window (`burn = 500` steps) to eliminate transient start-up bias, simulates the recursive EGARCH process step-by-step using randomized error terms, and returns a two-column matrix containing the simulated returns and their corresponding variances.
+```
+//--- Simulate data paths from the model structure
+virtual matrix      simulate(vector& parameters, ulong _nobs, BootstrapRng &rng, ulong burn = 500, double initial_value = NULL) override
+  {
+   vector params;// = np::sliceVector(parameters, 1);
+//--- Allocate unified arrays tracking simulated states over time
+   vector sigma2 = vector::Zeros(ulong(_nobs + burn));
+   vector data = sigma2;
+   vector lnsigma2 = data;
+   vector abserrors = fabs(errs);
+   double norm_const = sqrt(2./M_PI);
+//--- Initialize index blocks spanning pre-sample truncation window constraints
+   if(!np::vectorFill(lnsigma2, initial_value, 0, long(max_lag)) ||
+      !np::vectorFill(sigma2, exp(initial_value), 0, long(max_lag)))
+     {
+      Print(__FUNCTION__, ": vector fill error");
+      return matrix::Zeros(0, 0);
+     }
+
+   data = sqrt(sigma2) * errs;
+   double omega = parameters[0];
+      loc = 0;
+      lnsigma2[t] = parameters[loc];
+      loc+=1;
+      for(ulong j = 0; j<m_p; ++j)
+        {
+         lnsigma2[t] += parameters[loc] * (abserrors[t - 1 - j] - norm_const);
+         loc+=1;
+        }
+         lnsigma2[t] += parameters[loc] * (errs[t - 1 - j]);
+         lnsigma2[t] += parameters[loc] * (lnsigma2[t - 1 - j]);
+//--- Slice out and discard the initial initialization burn-in sequence block
+   data = errs*sqrt(sigma2);
+   data = np::sliceVector(data, long(burn));
+   sigma2 = exp(lnsigma2);
+   sigma2 = np::sliceVector(sigma2, long(burn));
+//--- Package the output data streams into a 2-column matrix structure [Returns, Variance]
+   matrix out = matrix::Zeros(data.Size(), 2);
+   if(!out.Col(data, 0) || !out.Col(sigma2, 1))
+     {
+      Print(__FUNCTION__, ": Column insertion error out ", GetLastError());
+      return matrix::Zeros(0, 0);
+     }
+   return out;
+```
+switch(vol_dist_params.vol_model_type)
+  {
+case VOL_CONST:
+   break;
+case VOL_GARCH:
+   m_vp = new CGarchProcess(m_model_spec.garch_p,m_model_spec.garch_q,m_model_spec.vol_rng_seed,m_model_spec.min_bootstrap_sims);
+case VOL_AVARCH:
+case VOL_AVGARCH:
+   m_vp = new CAvgarchProcess(m_model_spec.garch_p,m_model_spec.garch_q,m_model_spec.vol_rng_seed,m_model_spec.min_bootstrap_sims);
+case VOL_TARCH:
+case VOL_GJR_GARCH:
+   m_vp = new CGjrGarchProcess(m_model_spec.garch_p,m_model_spec.garch_o,m_model_spec.garch_q,m_model_spec.vol_rng_seed,m_model_spec.min_bootstrap_sims);
+case VOL_HARCH:
+case VOL_FIGARCH:
+   m_vp = new CFiGarchProcess(m_model_spec.garch_p,m_model_spec.garch_q,m_model_spec.vol_power,m_model_spec.figarch_truncation,m_model_spec.vol_rng_seed,m_model_spec.sample_start_idx,m_model_spec.sample_end_idx,m_model_spec.min_bootstrap_sims);
+case VOL_EGARCH:
+   m_vp = new CEgarchProcess(m_model_spec.garch_p,m_model_spec.garch_o,m_model_spec.garch_q,2.0,m_model_spec.vol_rng_seed,m_model_spec.sample_start_idx,m_model_spec.sample_end_idx,m_model_spec.min_bootstrap_sims);
+default:
+//--- Initialize core specification fields mapping onto the EGARCH container
+   ArchParameters egarch_spec;
+//--- Apply the scaling factor (multiplying by 100 scales returns to percentage form)
+   egarch_spec.observations = ScaleFactor * returns;
+   egarch_spec.vol_model_type = VOL_EGARCH;
+   egarch_spec.garch_p = _P_;
+   egarch_spec.garch_o = _O_;
+   egarch_spec.garch_q = _Q_;
+//--- --- Step 5: Model Initialization ---
+//--- Instantiate the continuous tracking constant mean container wrapper
+   ZeroMean egarch_model;
+//--- Pass structural parameters down into the optimization initialization routine
+   if(!egarch_model.initialize(egarch_spec))
+      return;
+//--- --- Step 6: Parameter Optimization (Fitting) ---
+//--- Trigger the non-linear execution optimizer loop (SLSQP engine solver)
+   ArchModelResult egarch_params = egarch_model.fit();
+//--- --- Step 7: Optimization Convergence Guard ---
+//--- Verify that the resulting parameters array size matches the model criteria configurations
+   if(!egarch_params.params.Size())
+     {
+      Print("Convergence failed ", GetLastError());
+//--- Prepare output of model parameters
+   string pnames = egarch_model.volatility().parameterNames();
+   string vol_parameter_labels[];
+//--- Organize parameter names into array for display
+//--- Check number of labels is equal to number of model parameters
+   if(labels != int(egarch_params.params.Size()))
+//--- --- Step 8: Results Output Extraction ---
+//--- Print optimal target parameter solutions to the MT5 journal
+   Print("EGARCH model parameters");
+   PrintFormat("%10s %10s %10s","Name","Value","Pvalue");
+//--- Extract statistical asymptotic standard deviation errors mapped out to individual p-values
+   vector pv = egarch_params.pvalues();
+   for(ulong i = 0; i < pv.Size(); ++i)
+```
+EGARCH model parameters
+Name      Value     Pvalue
+omega    -0.2047     0.0071
+omega     -0.2537     0.0062
+
+### Tests for Estimating Leverage Effects
+The first test is the Leverage Correlation Test. It measures the correlation between the return at time t and a future squared return at t+lag (volatility proxy). Statistical significance is assessed via a p-value computed from the Beta CDF; leverage is indicated only when the correlation is negative and significant.
+//+------------------------------------------------------------------+
+LeverageCorrelationResult LeverageCorrelationTest(const vector &returns, int lag = 1, ENUM_STAT_CONFIDENCE confidence_level = CONFIDENCE_95)
+  {
+   LeverageCorrelationResult res;
+  
+The next model-free test for asymmetry is the Volatility Runs / Proportion Test for Asymmetry. This non-parametric diagnostic determines whether a down period increases the likelihood of immediately entering a high-volatility regime compared to an up period. Because it relies on data proportions rather than strict parametric modeling, it avoids making restrictive assumptions about the underlying distribution of asset returns. The test operates by first calculating the median of all absolute returns across the dataset, using this threshold to classify each period's volatility state as either "high" (above median) or "low" (below median). It then constructs a 2x2 contingency table comparing the sign of the previous return (positive vs. negative) against the volatility state of the subsequent return. Using Pearson's Chi-Square test with Yates's continuity correction for one degree of freedom, it tests whether the probability of experiencing high volatility after a down day, P(High Vol|Down), is significantly greater than after an up day, P(High Vol|Up).
+//| Volatility Runs / Proportion Test Asymmetry Test                 |
+VolatilityRunsResult VolatilityRunsAsymmetryTest(const vector &returns_or_resids, ENUM_STAT_CONFIDENCE confidence_level = CONFIDENCE_95)
+   VolatilityRunsResult res;
+   res.confidence_level = confidence_level;
+   ulong n = returns_or_resids.Size();
+// Shortcut formula for 2x2 Chi-Square with Yates' Continuity Correction
+   double numerator = MathAbs(a * d - b * c) - (total / 2.0);
+   if(numerator < 0)
+   int err_code = 0;
+// MathCumulativeDistributionChiSquare returns_or_resids P(X <= x). We want upper tail P(X >= x)
+   double cdf = MathCumulativeDistributionChiSquare(res.chi2_stat, 1.0, err_code);
+// Check for errors
+      Print(__FUNCTION__, ": Chisquare CDF calculation error.");
+      return VolatilityRunsResult();
+     }
+//---
+
+The function `VolatilityRunsAsymmetryTest()` implements this procedure. It accepts a vector of financial returns as input, as well as a statistical confidence level, and outputs a `VolatilityRunsResult` structure.  
+Finally, there is the Engle-Ng Sign Bias Test, which evaluates whether negative shocks cause greater future volatility than positive shocks by analyzing both the direction and magnitude of returns. It operates by running an Ordinary Least Squares (OLS) regression where the current squared return (a proxy for current volatility) is the dependent variable. The regressors consist of a constant, a dummy variable indicating whether the lagged return was negative, and two interaction terms that multiply lagged returns by direction indicators to isolate negative and positive size effects.  
+  
+To account for volatility clustering and prevent false signals, the test computes standard errors using White's heteroskedasticity-robust covariance matrix (HC1). It then evaluates three distinct forms of asymmetry: Sign Bias (whether direction alone impacts volatility), Negative Size Bias (whether larger negative returns disproportionately increase volatility), and Positive Size Bias (whether larger positive returns have a unique impact). Finally, a joint Wald/F-test checks if all asymmetric terms are collectively significant, providing a comprehensive diagnostic of leverage dynamics.
+```
+//+------------------------------------------------------------------+
+EngleNgResult EngleNgSignBiasTest(const vector &returns, ENUM_STAT_CONFIDENCE confidence_level = CONFIDENCE_95)
+  {
+   EngleNgResult res;
+   res.confidence_level = confidence_level;
+   ulong total_n = returns.Size();
+// Form design matrix X
+   matrix X;
+   X.Init(n, k);
+   for(ulong i = 0; i < n; i++)
+// OLS: beta = (X^T * X)^-1 * X^T * y
+   matrix XT = X.Transpose();
+   matrix XTX = XT.MatMul(X);
+   matrix XTX_inv = XTX.Inv();
+   vector XTy = XT.MatMul(y);
+   vector beta = XTX_inv.MatMul(XTy);
+
+// White (HC1) Heteroskedasticity-Robust Covariance Matrix
+// meat = X.T * diag(resid^2) * X
+   matrix diag_resid_sq;
+   diag_resid_sq.Init(n, n);
+   diag_resid_sq.Fill(0);
+   matrix meat = XT.MatMul(diag_resid_sq).MatMul(X);
+   double scale = (double)n / dof;
+   matrix cov_beta = XTX_inv.MatMul(meat).MatMul(XTX_inv) * scale;
+// Standard Errors, t-stats and p-values
+// Joint F-test (Wald test) that a1 = a2 = a3 = 0
+// R matrix (3 x 4)
+   matrix R;
+   R.Init(3, 4);
+   R.Fill(0.0);
+   vector r_beta = R.MatMul(beta);
+   matrix RT = R.Transpose();
+   matrix R_cov_RT = R.MatMul(cov_beta).MatMul(RT);
+   matrix R_cov_RT_inv = R_cov_RT.Inv();
+   double wald = r_beta.Dot(R_cov_RT_inv.MatMul(r_beta));
+      Print(__FUNCTION__,": CDF calculation error.");
+      return EngleNgResult();
+     }
+   res.joint_F_pvalue = 1.0 - f_cdf;
+   res.a2_vs_a3_p_value = 2.0 * (1.0 - t_diff_cdf);
+//+------------------------------------------------------------------+
+struct EngleNgResult
+  {
+   // Array order: [0]=const, [1]=sign_bias (a1), [2]=neg_size_bias (a2), [3]=pos_size_bias (a3)
+
+To interpret the output, first check for significant *asymmetry: values below the chosen threshold (0.01, 0.05, or 0.10) indicate overall asymmetry. Then inspect p*-values: a1 tests sign bias, while a2 and a3 test size effects for negative and positive shocks. When using raw returns, prefer the a2 *vs*. a3 *p*-value (or significant *asymmetry* purged *of* ARCH) to reduce spurious ARCH-driven significance. The script `TestsForAsymmetry.mq5` demonstrates the application of these functions.
+```
+//---
+   Print("**** Volatility Runs Test ****");
+   VolatilityRunsResult vrr = VolatilityRunsAsymmetryTest(returns,Statistical_Significance);
+   PrintFormat("Probability of high volatility following a negative return %.8f",vrr.p_high_vol_prev_down);
+   PrintFormat("Probability of high volatility following a positive return %.8f",vrr.p_high_vol_prev_up);
+   PrintFormat("Pvalue %.8f",vrr.p_value);
+   Print("Volatility Runs test's assertion of asymmetric volatility is ", vrr.significant_asymmetry);
+   ArchParameters arch_params;
+   ArchModelResult model_result = ar_model.fit();
+   if(!model_result.params.Size())
+      return;
+   returns = model_result.std_resid();
+   EngleNgResult enr = EngleNgSignBiasTest(returns,Statistical_Significance);
+   Print("**** Engle's NG sign bias test results ****");
+   string effects[4] = {"const", "sign-bias", "neg_size_bias", "pos_size_bias"};
+It allows a user to specify a data sample by defining a start date, history length, and timeframe, from which a returns series is derived. The series is then subjected to all the previously described tests, and the results are displayed in the MetaTrader 5 terminal. Below is an example of the output applied to the sample of Dow Jones equity data.
+Leverage correlation test's assertion of asymmetric volatility is true
+**** Volatility Runs Test ****
+Probability of high volatility following a negative return 0.52928416
+Probability of high volatility following a positive return 0.47397770
+T_stat 5.85597990
+Pvalue 0.01552421
+Volatility Runs test's assertion of asymmetric volatility is true
+**** Engle's NG sign bias test results ****
+Effect          Coeffs          T_Stats         Pvalues
+
+Here are results for the Gold symbol.
+```
+Leverage correlation test's assertion of asymmetric volatility is false
+Probability of high volatility following a negative return 0.50873362
+Probability of high volatility following a positive return 0.49168207
+T_stat 0.51072966
+Pvalue 0.47482316
+Volatility Runs test's assertion of asymmetric volatility is false
+### EGARCH Indicators
+To conclude our exploration of EGARCH models, we showcase three indicators: EGARCH Volatility, EGARCH Innovation Z-Score, and the Asymmetric Volatility Regime Oscillator. The latter two specifically exploit EGARCH's primary advantages: its ability to capture the leverage effects and its use of log-volatility.  
+  
+The EGARCH Volatility indicator estimates and plots conditional volatility and variance by fitting an EGARCH model over a rolling window of historical returns. By generating standardized residuals alongside the estimated parameters, the indicator provides a visualization of how the model evolves. Users can collect this data to serve as the foundation for volatility-based regime-switching models.
+      
+      // Fit EGARCH model via maximum likelihood optimization
+      ArchModelResult result = full_model.fit();
+      output_size = result.conditional_volatility.Size();
+      if(!output_size)
+        {
+      // Extract standardized residuals and terminal fitted values
+      stdresid = result.std_resid();
+      // Convert fitted log-volatility back to original scale (exp) and compute variance/volatility
+      ConditionalVarianceBuffer[shift]   = exp(pow(result.conditional_volatility[output_size - 1], 2));
+      ConditionalVolatilityBuffer[shift] = exp(result.conditional_volatility[output_size - 1]);
+      StandardizedResidualsBuffer[shift] = stdresid[output_size - 1];
+
+      // Slice out EGARCH specific parameters (Omega, Alpha, Gamma, Beta) from full parameter vector
+      vol_params = np::sliceVector(result.params, allmodelparams - (volmodelparams + distmodelparams), allmodelparams - distmodelparams);
+      // Store estimated parameters into indicator buffers
+![EGARCH Volatility Indicator](https://c.mql5.com/2/235/EgarchVolatility.png "EGARCH Volatility Indicator")
+The conditional variance is plotted in blue, and the conditional volatility is depicted in green. The red-dashed plot is the standardized residuals. The indicator also exposes the volatility parameter values of the model via the last four indicator buffers.  
+The EGARCH Innovation Z-Score measures directional market strain by normalizing raw standardized residuals relative to their theoretical conditional distribution bounds. Unlike traditional price-based oscillators, which suffer from lag and ignore changing risk regimes, the EIZ dynamically standardizes the current price shock against the symbol's current volatility floor. A reading below -2 indicates a downside innovation significantly more severe than the market anticipated, signaling a potential bottom.
+```
+// Fit EGARCH model via maximum likelihood optimization
+ArchModelResult result = full_model.fit();
+if(!result.conditional_volatility.Size())
+  {
+   Print("Model fit error ");
+// Extract full vector of standardized residuals (innovations divided by fitted volatility)
+stdresid = result.std_resid();
+// Slice out the dynamic evaluation window (last WindowLen entries) from standardized residuals
+![EGARCH Innovation Z-Score Indicator](https://c.mql5.com/2/235/EIZ.png "EGARCH Innovation Z-Score Indicator")
+The Asymmetric Volatility Regime Oscillator (AVRO) tracks directional trend strength by monitoring the speed at which variance transitions between a calm state and a panic state. It achieves this by calculating the rolling difference between short-term and long-term averages of the EGARCH leverage component. Since gamma is typically negative for leverage-heavy assets, a consistently falling or deeply negative AVRO maps accelerating downside price velocity coupled with a structural expansion in market panic, validating short trends. Conversely, when the AVRO turns positive and begins to climb, it suggests that positive returns are suppressing market variance faster than historical norms, indicating an emerging uptrend.
+// Extract full vector of standardized residuals
+// Populate fast and slow evaluation windows from the tail of standardized residuals
+### Conclusion
+
+This text has illuminated the nature of the constraints imposed on GARCH parameter values during the estimation process. Through a reproducible example, we demonstrated how GARCH parameters can sometimes be inhibited from taking values that accurately reflect the true nature of the data, thereby reinforcing the ingenuity of the Exponential GARCH (EGARCH) framework. With the addition of the `CEgarchProcess` class, MQL5 developers can now leverage the flexibility offered by EGARCH conditional volatility models.  
+| --- | --- |
+| MQL5/Include/egarch/np.mqh. | Header file of various vector and matrix utility functions. |
+| MQL5/Include/egarch/Arch. | Folder of header files for the conditional volatility modeling library. |
+| MQL5/Files/egarch/SPY2017.csv. | This file contains S&P 500 OHLC data used in the scripts. |
+| MQL5/Scripts/egarch/GARCH\_ParameterPositivityLimitation.mq5. | This script generates the News Impact Curves graphic mentioned in the article. |
+| MQL5/Scripts/egarch/EGARCH\_Demo.mq5. | This script demonstrates fitting an EGARCH model to a dataset. |
+| MQL5/Scripts/egarch/TestsForAsymmetry.mq5. | The script demonstrates the difference in asymmetric volatility inherent in forex and equity data sets. |
+| MQL5/Indicators/egarch/AsymmetricVolatilityRegimeOscillator.mq5. | This is the Asymmetric Volatility Regime Oscillator source code. |
+| MQL5/Indicators/egarch/EGARCH\_InnovationZscore.mq5. | This is the EGARCH Innovation Z-Score source code. |
+| MQL5/Indicators/egarch/EGARCH\_volatility.mq5. | This is the EGARCH Volatility indicator's source code. |
+The archive organizes source files into a folder structure that mirrors a local MetaTrader 5 MQL5 directory. Copy the contents of the archive's MQL5 subfolders (Include, Files, Scripts, Indicators) into their corresponding local MQL5 subfolders, preserving the `egarch` directory structure. Once copied, each file will appear within an `egarch` directory in MetaEditor.
+**Attached files** |
+[Building\_Volatility\_Models\_In\_MQL5\_Part\_V.zip](https://www.mql5.com/en/articles/download/23677/Building_Volatility_Models_In_MQL5_Part_V.zip "Download Building_Volatility_Models_In_MQL5_Part_V.zip")
+(247.1 KB)
+We implement CTrailingEngine, an interface-driven MQL5 engine that evaluates each registered position on every tick and applies one of five trailing methods: fixed-pip, ATR multiplier, Parabolic SAR, percentage-of-profit, or swing high/low. All methods share the ITrailMethod contract, so new trails plug in without engine edits. Strict improvement and a one-point guard block backward moves and no-change SLTP modifications.
+![Elite Crystal Evolution Algorithm (CEO-inspired): Practical Implementation](https://c.mql5.com/2/181/20240-algoritm-evolucii-elitnih-kristallov-logo.png)
+How AI helps create robots for MetaTrader 5
+Learn from our book "Neural Networks in Algo Trading with MQL5"
+Read](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/23677&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6385854850344288846)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+This text has illuminated the nature of the constraints imposed on GARCH parameter values during the estimation process. Through a reproducible example, we demonstrated how GARCH parameters can sometimes be inhibited from taking values that accurately reflect the true nature of the data, thereby reinforcing the ingenuity of the Exponential GARCH (EGARCH) framework. With the addition of the `CEgarchProcess` class, MQL5 developers can now leverage the flexibility offered by EGARCH conditional volatility models.  
+  
+The implementation of convenient utilities to quickly test for the existence of leverage effects helps practitioners avoid significant guesswork when configuring their models. Furthermore, indicators such as the EGARCH Innovation Z-Score and the Asymmetric Volatility Regime Oscillator introduce a fresh approach to market analysis. The source code for all programs referenced in this text is attached below and is also available on [MQL5 Algo Forge](https://forge.mql5.io/ufranco/Article-23677-EGARCH-MQL5-Volatility-Modeling "Article Code Repository").
+
+|  |  |
+| --- | --- |
+| MQL5/Include/egarch/np.mqh. | Header file of various vector and matrix utility functions. |
+| MQL5/Include/egarch/Arch. | Folder of header files for the conditional volatility modeling library. |
+| MQL5/Files/egarch/SPY2017.csv. | This file contains S&P 500 OHLC data used in the scripts. |
+| MQL5/Scripts/egarch/GARCH\_ParameterPositivityLimitation.mq5. | This script generates the News Impact Curves graphic mentioned in the article. |
+| MQL5/Scripts/egarch/EGARCH\_Demo.mq5. | This script demonstrates fitting an EGARCH model to a dataset. |
+| MQL5/Scripts/egarch/TestsForAsymmetry.mq5. | The script demonstrates the difference in asymmetric volatility inherent in forex and equity data sets. |
+| MQL5/Indicators/egarch/AsymmetricVolatilityRegimeOscillator.mq5. | This is the Asymmetric Volatility Regime Oscillator source code. |
+| MQL5/Indicators/egarch/EGARCH\_InnovationZscore.mq5. | This is the EGARCH Innovation Z-Score source code. |
+| MQL5/Indicators/egarch/EGARCH\_volatility.mq5. | This is the EGARCH Volatility indicator's source code. |
+
+The archive organizes source files into a folder structure that mirrors a local MetaTrader 5 MQL5 directory. Copy the contents of the archive's MQL5 subfolders (Include, Files, Scripts, Indicators) into their corresponding local MQL5 subfolders, preserving the `egarch` directory structure. Once copied, each file will appear within an `egarch` directory in MetaEditor.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23677.zip "Download all attachments in the single ZIP archive")
+
+[Building\_Volatility\_Models\_In\_MQL5\_Part\_V.zip](https://www.mql5.com/en/articles/download/23677/Building_Volatility_Models_In_MQL5_Part_V.zip "Download Building_Volatility_Models_In_MQL5_Part_V.zip")
+(247.1 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![A Trailing Stop Engine in MQL5 Supporting Five Trail Methods Simultaneously](https://c.mql5.com/2/239/23618-a-trailing-stop-engine-in-mql5-logo.png)
+[A Trailing Stop Engine in MQL5 Supporting Five Trail Methods Simultaneously](https://www.mql5.com/en/articles/23618)
+
+We implement CTrailingEngine, an interface-driven MQL5 engine that evaluates each registered position on every tick and applies one of five trailing methods: fixed-pip, ATR multiplier, Parabolic SAR, percentage-of-profit, or swing high/low. All methods share the ITrailMethod contract, so new trails plug in without engine edits. Strict improvement and a one-point guard block backward moves and no-change SLTP modifications.
+
+![Elite Crystal Evolution Algorithm (CEO-inspired): Practical Implementation](https://c.mql5.com/2/181/20240-algoritm-evolucii-elitnih-kristallov-logo.png)
+[Elite Crystal Evolution Algorithm (CEO-inspired): Practical Implementation](https://www.mql5.com/en/articles/20240)
+
+Experimental evaluation on standard benchmark functions reveals the advantages and limitations of directly adapting combinatorial algorithms. The article provides a detailed description of the ECEA algorithm's mechanisms and test results.
+
+![Neural Networks in Trading: Adaptive Periodic Segmentation (LightGTS)](https://c.mql5.com/2/151/18596-neyroseti-v-treydinge-adaptivnaya-logo.png)
+[Neural Networks in Trading: Adaptive Periodic Segmentation (LightGTS)](https://www.mql5.com/en/articles/18596)
+
+We invite you to learn about the innovative technique of adaptive patching — a method for flexibly segmenting time series while taking their internal periodicity into account. We will also look at an efficient encoding technique that preserves important semantic characteristics when working with data at different scales. These methods open up new possibilities for the accurate processing of complex, multiscale data characteristic of financial markets and significantly improve the stability and reliability of forecasts.
+
+![Feature Engineering for ML (Part 12): Fractal Features in MQL5](https://c.mql5.com/2/240/23657-feature-engineering-for-ml-logo.png)
+[Feature Engineering for ML (Part 12): Fractal Features in MQL5](https://www.mql5.com/en/articles/23657)
+
+A direct MQL5 port of the fractal detector writes each pattern at its center bar, so a buffer read by an expert advisor holds a value that only existed n bars later. We implement CFractalFeatures.mqh with ProcessBar for bar-by-bar use and Compute for full-series recalculation, covering detection, strength scored against a fixed or volatility-scaled floor, an event-based support/resistance ring, and trend-filtered breakout signals. Output is eighteen buffers published at the confirmation bar, verified against the Python reference to within 1e-13.
+
+[![](https://www.mql5.com/ff/sh/592yc11u3j4rs5z9z2/01.png)
+
+How AI helps create robots for MetaTrader 5
+Learn from our book "Neural Networks in Algo Trading with MQL5"
+Read](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/23677&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6385854850344288846)

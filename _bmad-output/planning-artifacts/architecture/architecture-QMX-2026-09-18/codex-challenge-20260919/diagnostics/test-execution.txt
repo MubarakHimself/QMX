@@ -1,0 +1,30 @@
+All commands were non-destructive and run against:
+C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split
+revision 270e992995c2378ca63cf6343254ef8140a8c97e
+
+Command:
+uv run --frozen --project qmn python -m pytest -q -p no:cacheprovider --tb=short qmn/tests/test_qmn_conformance.py
+
+Output:
+.....s                                                                   [100%]
+5 passed, 1 skipped in 2.72s
+Exit: 0
+
+Command:
+uv run --frozen --project qml python -m pytest -q -p no:cacheprovider --tb=line
+
+Output:
+....                                                                     [100%]
+4 passed in 1.61s
+Exit: 0
+
+Command:
+uv run --frozen --project qml python -m pytest -q -p no:cacheprovider --tb=line qml/tests/test_mill_graduation.py qml/tests/test_research_host_store.py qml/tests/test_research_stage0.py qml/tests/test_legal_entries.py qml/tests/test_research_projection.py qml/tests/test_research_collapse.py qml/tests/test_research_vocab.py qml/tests/test_research_ref.py
+
+Output:
+...............................................                          [100%]
+47 passed in 3.19s
+Exit: 0
+
+QMA:
+No new runtime execution was claimed. The candidate RECON-RETURN records its selected QMA tests blocked because qmx-agents/.venv had no Python executable. Stage B used source inspection for QMA claims.

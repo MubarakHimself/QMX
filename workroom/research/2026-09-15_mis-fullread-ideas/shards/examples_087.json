@@ -1,0 +1,82 @@
+{
+  "shard_id": "examples_087",
+  "section": "Examples",
+  "n": 8,
+  "series_in_shard": [
+    "overcoming the limitation of machine learning"
+  ],
+  "articles": [
+    {
+      "id": 17906,
+      "title": "Overcoming The Limitation of Machine Learning (Part 1): Lack of Interoperable Metrics",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Lack of Interoperable Metrics",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17906.md"
+    },
+    {
+      "id": 18133,
+      "title": "Overcoming The Limitation of Machine Learning (Part 2): Lack of Reproducibility",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Lack of Reproducibility",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18133.md"
+    },
+    {
+      "id": 19371,
+      "title": "Overcoming The Limitation of Machine Learning (Part 3): A Fresh Perspective on Irreducible Error",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): A Fresh Perspective on Irreducible Error",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19371.md"
+    },
+    {
+      "id": 19383,
+      "title": "Overcoming The Limitation of Machine Learning (Part 4): Overcoming Irreducible Error Using Multiple Forecast Horizons",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Overcoming Irreducible Error Using Multiple Forecast Horizons",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19383.md"
+    },
+    {
+      "id": 19775,
+      "title": "Overcoming The Limitation of Machine Learning (Part 5): A Quick Recap of Time Series Cross Validation",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): A Quick Recap of Time Series Cross Validation",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19775.md"
+    },
+    {
+      "id": 20010,
+      "title": "Overcoming The Limitation of Machine Learning (Part 6): Effective Memory Cross Validation",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Effective Memory Cross Validation",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20010.md"
+    },
+    {
+      "id": 20256,
+      "title": "Overcoming The Limitation of Machine Learning (Part 7): Automatic Strategy Selection",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Automatic Strategy Selection",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20256.md"
+    },
+    {
+      "id": 20514,
+      "title": "Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance",
+      "section": "Examples",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Correlation-Based Feature Learning in Self-Supervised Finance",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20514.md"
+    }
+  ]
+}

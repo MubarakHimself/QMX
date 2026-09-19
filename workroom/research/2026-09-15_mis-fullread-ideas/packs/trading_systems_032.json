@@ -1,0 +1,76 @@
+{
+  "pack_id": "trading_systems_032",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_032",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "creating custom indicators in mql5"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 20632,
+      "title": "Creating Custom Indicators in MQL5 (Part 2): Building a Gauge-Style RSI Display with Canvas and Needle Mechanics",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Building a Gauge-Style RSI Display with Canvas and Needle Mechanics",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20632.md"
+    },
+    {
+      "id": 20815,
+      "title": "Creating Custom Indicators in MQL5 (Part 5): WaveTrend Crossover Evolution Using Canvas for Fog Gradients, Signal Bubbles, and Risk Management",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): WaveTrend Crossover Evolution Using Canvas for Fog Gradients, Signal Bubbles, and Risk Management",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20815.md"
+    },
+    {
+      "id": 21083,
+      "title": "Creating Custom Indicators in MQL5 (Part 6): Evolving RSI Calculations with Smoothing, Hue Shifts, and Multi-Timeframe Support",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Evolving RSI Calculations with Smoothing, Hue Shifts, and Multi-Timeframe Support",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21083.md"
+    },
+    {
+      "id": 21388,
+      "title": "Creating Custom Indicators in MQL5 (Part 7): Hybrid Time Price Opportunity (TPO) Market Profiles for Session Analysis",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Hybrid Time Price Opportunity (TPO) Market Profiles for Session Analysis",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21388.md"
+    },
+    {
+      "id": 21390,
+      "title": "Creating Custom Indicators in MQL5 (Part 8): Adding Volume Integration for Deeper Market Profile Analysis",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Adding Volume Integration for Deeper Market Profile Analysis",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21390.md"
+    },
+    {
+      "id": 21829,
+      "title": "Creating Custom Indicators in MQL5 (Part 10): Enhancing the Footprint Chart with Per-Bar Volume Sentiment Information Box",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Enhancing the Footprint Chart with Per-Bar Volume Sentiment Information Box",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21829.md"
+    },
+    {
+      "id": 21984,
+      "title": "Creating Custom Indicators in MQL5 (Part 11): Enhancing the Footprint Chart with Market Structure and Order Flow Layers",
+      "section": "Trading systems",
+      "series_title": "Creating Custom Indicators in MQL5 (): Enhancing the Footprint Chart with Market Structure and Order Flow Layers",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21984.md"
+    }
+  ]
+}

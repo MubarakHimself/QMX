@@ -1,0 +1,83 @@
+{
+  "shard_id": "trading_028",
+  "section": "Trading",
+  "n": 8,
+  "series_in_shard": [
+    "building a trading system",
+    "creating custom indicators in mql5"
+  ],
+  "articles": [
+    {
+      "id": 18587,
+      "title": "Building a Trading System (Part 1): A Quantitative Approach",
+      "section": "Trading",
+      "series_title": "Building a Trading System (): A Quantitative Approach",
+      "series_key": "building a trading system",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18587.md"
+    },
+    {
+      "id": 19141,
+      "title": "Building a Trading System (Part 3): Determining Minimum Risk Levels for Realistic Profit Targets",
+      "section": "Trading",
+      "series_title": "Building a Trading System (): Determining Minimum Risk Levels for Realistic Profit Targets",
+      "series_key": "building a trading system",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19141.md"
+    },
+    {
+      "id": 19211,
+      "title": "Building a Trading System (Part 4): How Random Exits Influence Trading Expectancy",
+      "section": "Trading",
+      "series_title": "Building a Trading System (): How Random Exits Influence Trading Expectancy",
+      "series_key": "building a trading system",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19211.md"
+    },
+    {
+      "id": 19693,
+      "title": "Building a Trading System (Part 5): Managing Gains Through Structured Trade Exits",
+      "section": "Trading",
+      "series_title": "Building a Trading System (): Managing Gains Through Structured Trade Exits",
+      "series_key": "building a trading system",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19693.md"
+    },
+    {
+      "id": 20610,
+      "title": "Creating Custom Indicators in MQL5 (Part 1): Building a Pivot-Based Trend Indicator with Canvas Gradient",
+      "section": "Trading",
+      "series_title": "Creating Custom Indicators in MQL5 (): Building a Pivot-Based Trend Indicator with Canvas Gradient",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20610.md"
+    },
+    {
+      "id": 20719,
+      "title": "Creating Custom Indicators in MQL5 (Part 3): Multi-Gauge Enhancements with Sector and Round Styles",
+      "section": "Trading",
+      "series_title": "Creating Custom Indicators in MQL5 (): Multi-Gauge Enhancements with Sector and Round Styles",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20719.md"
+    },
+    {
+      "id": 20811,
+      "title": "Creating Custom Indicators in MQL5 (Part 4): Smart WaveTrend Crossover with Dual Oscillators",
+      "section": "Trading",
+      "series_title": "Creating Custom Indicators in MQL5 (): Smart WaveTrend Crossover with Dual Oscillators",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20811.md"
+    },
+    {
+      "id": 21825,
+      "title": "Creating Custom Indicators in MQL5 (Part 9): Order Flow Footprint Chart with Price Level Volume Tracking",
+      "section": "Trading",
+      "series_title": "Creating Custom Indicators in MQL5 (): Order Flow Footprint Chart with Price Level Volume Tracking",
+      "series_key": "creating custom indicators in mql5",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21825.md"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+20: # From Novice to Expert: Animated News Headline Using MQL5 (VII) — Post Impact Strategy for News Trading
+25: | 25 July 2025 at 04:47
+36: ### Contents:
+38: - [Introduction](https://www.mql5.com/en/articles/18817#introduction)
+39: - [Exploring the Strategy Concept](https://www.mql5.com/en/articles/18817#exploring_the_strategy_concept)
+40: - [Final Implementation — Integration of the After Impact Strategy into the News Headline EA](https://www.mql5.com/en/articles/18817#final_implementation_integration_of_the_post)
+41: - [Testing](https://www.mql5.com/en/articles/18817#testing)
+42: - [Conclusion](https://www.mql5.com/en/articles/18817#conclusion)
+43: - [Key Lessons](https://www.mql5.com/en/articles/18817#key_lessons)
+44: - [Attachments](https://www.mql5.com/en/articles/18817#attachments)
+46: ### 
+48: ### Introduction
+58: ### 
+60: ### Exploring the Strategy Concept
+62: For our testing and research, we plan to use historical chart data to analyze market behavior following high-impact news events, particularly the Non-Farm Payroll (NFP) releases. Since NFP announcements are consistently scheduled (typically the first Friday of each month), they are easy to identify and align with known calendar dates. This makes them ideal for studying how price action responds in
+64: By referencing NFP dates on the economic calendar and observing the minute time frame chart data around those events, we can gain valuable insights into how different instruments behave after the news impact. This approach enables us to design and fine-tune our after-impact trading tool, which will complement the existing pending-order strategy by providing entry opportunities once the initial vol
+80: This breakdown will walk through each part of the EA, helping both beginner and intermediate MQL5 developers understand how to highlight past NFP events programmatically past NFP events on historical charts using rectangles, time logic, and timezone-aware calculations—a powerful way to visually study and refine after-news trading strategies.
+86: ```
+89: ```
+95: ```
+99: ```
+103: One of the key pieces of logic is determining the date of the first Friday in each month. This is essential because NFP is released on the first Friday of every month. The EA uses calendar calculations to find this date dynamically, based on the current year and month, which allows the EA to be reused in future years without modification.
+105: ```
+122: ```
+128: ```
+139: ```
+143: This function determines the broker's local offset from GMT (UTC) based on the server time. Since NFP events are announced in U.S. Eastern Time (which can be UTC-4 or UTC-5 depending on daylight saving), this offset is required to convert the event timestamp correctly to match the broker’s timezone and chart time.
+145: ```
+147: //| Get UTC offset for a specific time                               |
+156: ```
+160: When the EA is initialized (OnInit), it sets a 1-second timer, which acts as a heartbeat for continuously checking whether we’re on a relevant NFP date. Upon deinitialization (OnDeinit), it stops the timer and deletes the rectangle object if it was drawn. This ensures that testing sessions start cleanly and do not leave residual graphics on the chart.
+162: ```
+180: ```
+184: The OnTimer function is the main execution block, called every second by the timer. It avoids redundant processing by checking for changes in the current chart time. If the day is a valid first Friday, it calculates the NFP release timestamp for the current year and month, applies any necessary timezone offset, and then checks whether the current time falls within the user-defined rectangle window
+186: ```
+211:         // Calculate exact NFP release time in UTC
+213:         datetime nfpUTC = GetNFPTimestamp(dtNow.year, dtNow.mon, releaseDay);
+215:         // Convert to broker time (Zimbabwe CAT = UTC+2)
+233:                 Print("NFP UTC Time: ", TimeToString(nfpUTC, TIME_MINUTES|TIME_SECONDS));
+234:                 Print("Broker Time: ", TimeToString(now, TIME_MINUTES|TIME_SECONDS));
+235:                 Print("NFP Broker Time: ", TimeToString(nfpBroker, TIME_MINUTES|TIME_SECONDS));
+251: ```
+255: This function builds the exact UTC timestamp of the NFP release. It incorporates U.S. daylight saving logic to determine whether the release time should be considered as 12:30 UTC (summer) or 13:30 UTC (winter). This precise timestamp is essential to synchronize the chart window with real-world event timing.
+257: ```
+259: //| Create precise UTC timestamp for NFP event                       |
+268:     // Determine correct UTC hour based on US daylight saving
+269:     // US Eastern Time: EST = UTC-5 (winter), EDT = UTC-4 (summer)
+272:     dt.hour = isDst ? 12 : 13;  // 12:30 UTC (summer) or 13:30 UTC (winter)
+277: ```
+281: To account for changes in U.S. daylight saving time (DST), this function calculates whether a given date falls within the DST window. According to U.S. law, DST begins on the second Sunday in March and ends on the first Sunday in November. By computing the boundaries for each year and checking the date against them, the EA dynamically adapts its timestamp calculation throughout the year.
+283: ```
+285: //| Check if US is in daylight saving time                           |
+297:     datetime dstStart = GetNthDayOfMonth(dt.year, 3, 0, 2) + (2 * 3600);  // Second Sunday in March at 2:00 AM
+299:     datetime dstEnd = GetNthDayOfMonth(dt.year, 11, 0, 1) + (2 * 3600);    // First Sunday in November at 2:00 AM
+301:     return (time >= dstStart && time < dstEnd);
+303: ```
+307: This utility function finds the nth occurrence of a specific weekday in a given month. For example, it can return the second Sunday in March or the first Sunday in November, which is used to determine DST changeover points. This function makes the EA robust and forward-compatible, allowing it to adapt automatically across years without requiring updates.
+309: ```
+345: ```
+349: Once the correct time window for NFP is determined, the EA creates a rectangle spanning that time period. The rectangle covers the full visible price range and is styled with distinct visual properties, such as dashed borders and a light blue background fill. If a rectangle already exists from a previous run, it is first deleted to prevent overlap or duplication.
+351: ```
+372: ```
+388: ```
+402: 2025.07.17 19:30:02.995 2024.06.07 12:25:00   NFP UTC Time: 12:30:00
+403: 2025.07.17 19:30:02.995 2024.06.07 12:25:00   Broker Time: 12:25:00
+404: 2025.07.17 19:30:02.995 2024.06.07 12:25:00   NFP Broker Time: 12:30:00
+407: 2025.07.17 19:30:41.717 2024.07.05 12:25:00   NFP UTC Time: 12:30:00
+408: 2025.07.17 19:30:41.717 2024.07.05 12:25:00   Broker Time: 12:25:00
+409: 2025.07.17 19:30:41.717 2024.07.05 12:25:00   NFP Broker Time: 12:30:00
+412: 2025.07.17 19:30:55.551 2024.08.02 12:25:00   NFP UTC Time: 12:30:00
+413: 2025.07.17 19:30:55.551 2024.08.02 12:25:00   Broker Time: 12:25:00
+414: 2025.07.17 19:30:55.551 2024.08.02 12:25:00   NFP Broker Time: 12:30:00
+417: 2025.07.17 19:31:16.250 2024.09.06 12:25:00   NFP UTC Time: 12:30:00
+418: 2025.07.17 19:31:16.250 2024.09.06 12:25:00   Broker Time: 12:25:00
+419: 2025.07.17 19:31:16.250 2024.09.06 12:25:00   NFP Broker Time: 12:30:00
+422: 2025.07.17 19:31:30.699 2024.10.04 12:25:00   NFP UTC Time: 12:30:00
+423: 2025.07.17 19:31:30.699 2024.10.04 12:25:00   Broker Time: 12:25:00
+424: 2025.07.17 19:31:30.699 2024.10.04 12:25:00   NFP Broker Time: 12:30:00
+427: 2025.07.17 21:23:38.448 2024.11.01 12:25:00   NFP UTC Time: 12:30:00
+428: 2025.07.17 21:23:38.448 2024.11.01 12:25:00   Broker Time: 12:25:00
+429: 2025.07.17 21:23:38.448 2024.11.01 12:25:00   NFP Broker Time: 12:30:00
+432: 2025.07.17 21:23:47.940 2024.12.06 13:25:00   NFP UTC Time: 13:30:00
+433: 2025.07.17 21:23:47.940 2024.12.06 13:25:00   Broker Time: 13:25:00
+434: 2025.07.17 21:23:47.940 2024.12.06 13:25:00   NFP Broker Time: 13:30:00
+436: ```
+472: Good examples of this behavior are seen in the June, October, and December NFP events. In June and October, strong directional movement continued for several minutes after the spike, confirming the momentum and creating potential entry opportunities. In contrast, the July event showed initial volatility but lacked follow-through, leading to a choppy or failed continuation—an important distinction 
+496: ### Final Implementation — Integration of the Post Impact Strategy into the News Headline EA
+508: ```
+517: ```
+523: ```
+529: ```
+535: ```
+541: ```
+545: Within the main timer handler (OnTimer()), once the current server time enters the user‑defined window around a high‑impact event, we draw a semi‑transparent rectangle on the chart. We retrieve the chart’s visible high and low prices, then use MQL5’s object‑management functions to create and style an OBJ\_RECTANGLE. A Boolean flag ensures this drawing happens only once, making the event visually p
+547: ```
+560: ```
+566: ```
+601: ```
+605: ### 
+607: ### Testing
+609: The fully integrated News Headline EA could not be adequately validated in the Strategy Tester because the tester does not support real‑time calendar and news feeds. Replay mode with the combined EA produced no meaningful signals, so I migrated the post‑impact order logic into the dedicated NFP\_Event\_Replay EA. By using the replay framework—where Non‑Farm Payroll releases are simulated on histor
+619: ### 
+621: ### Conclusion
+631: ### Key Lessons
+633: | Lesson | Description |
+634: | --- | --- |
+635: | 1. Post‑Impact Trading | Trading a moment after High Importance news release is feasible and can improve win‑rate by waiting for initial volatility to subside. |
+636: | 2. Time-Based Event Detection | Using MQL5 date and time functions to programmatically locate specific calendar events like the first Friday of each month (NFP day) and align logic with real-world schedules. |
+637: | 3. Strategy Tester Visualization | Creating visual elements like rectangles and lines to mark historical windows during backtesting, enhancing manual strategy evaluation without relying on external tools. |
+638: | 4. Dynamic Object Drawing | Employing ObjectCreate() and ObjectSetInteger() to render chart objects dynamically based on computed times and values, enabling event tracking and visual feedback. |
+639: | 5. Real-Time vs Tester Mode | Using MQLInfoInteger([MQL\_TESTER)](https://www.mql5.com/en/docs/constants/environment_state/mql5_programm_info#enum_mql_info_integer) to differentiate between Strategy Tester and live execution, allowing customized logic paths for testing and production environments.
+640: | 6. Trade Management via CTrade | Integrating the CTrade class for secure and structured order placement, stop-loss, take-profit, and order cancellation in both pre-impact and post-impact strategies. |
+641: | 7. Post-Impact Confirmation Logic | Building delayed trade entries based on candlestick confirmations after high-impact spikes — a safer and rule-driven alternative to instant execution. |
+642: | 8. Input Parameter Customization | Using input variables to let users control which strategies are active, how many confirmation candles are required, and what event impact levels should trigger logic. |
+643: | 9. Calendar API Integration | Employing built-in MQL5 calendar functions (CalendarValueHistory, CalendarEventById, etc.) to work with upcoming economic events without external API dependencies. |
+644: | 10. Canvas-Based UI Rendering | Using the [CCanvas](https://www.mql5.com/en/docs/standardlibrary/canvasgraphics/ccanvas?utm_campaign=search&utm_medium=special&utm_source=mt5editor) class to create custom scrolling interfaces for economic news, technical indicators, and AI-driven insights, directly
+645: | 11. Hybrid Strategy Design | Combining pre-impact pending orders and post-impact reactive trades into a single EA system with runtime conditions, promoting flexibility and adaptability to various market conditions. |
+647: ### Attachments
+649: | Filename | Version | Description |
+650: | --- | --- | --- |
+651: | NFP\_Event\_Replay.mq5 | 1.0 | Strategy Tester visual tool that marks NFP event windows using rectangles based on historical first-Friday logic and US daylight saving time. Helps manually analyze price reaction during high-impact news events. |
+652: | News\_Headline\_EA.mq5 | 1.11 | Real-time economic calendar EA with event scrolling, Alpha Vantage news headlines, AI insights, and dual strategy execution logic for both pending orders and post-impact confirmation trades. Includes NFP replay compatibility during testing. |
+653: | NFP\_Event\_Replay.mq5 | 1.01 | Second version of the NFP replay EA, now containing the full post‑impact order execution logic. |

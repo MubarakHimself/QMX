@@ -1,0 +1,93 @@
+4: title: "Decoding Opening Range Breakout Intraday Trading Strategies"
+20: # Decoding Opening Range Breakout Intraday Trading Strategies
+25: | 16 April 2025 at 04:41
+36: ### Introduction
+38: Opening Range Breakout (ORB) strategies are built on the idea that the initial trading range established shortly after the market opens reflects significant price levels where buyers and sellers agree on value. By identifying breakouts above or below a certain range, traders can capitalize on the momentum that often follows as the market direction becomes clearer.
+40: In this article, we will explore three ORB strategies adapted from the [Concretum Group papers](https://concretumgroup.com/papers/ "https://www.concretumgroup.com/papers/"). First, we will cover the research background, including key concepts and the methodology used. Then, for each strategy, we will explain how they work, list their signal rules, and analyze their performance statistically. Final
+44: ### Research Background
+48: The Concretum Group is one of the few academic research teams developing intraday trading strategies. In the studies we are adapting, they focus on strategies that trade between market open and close (9:30 AM to 4:00 PM Eastern Time). Since our broker uses UTC+2/3, this translates to 18:30-24:00 server time—make sure to adjust for your own broker's time zone when testing.
+52: We will introduce two key metrics in this article: **alpha and beta**. In trading, alpha represents the excess return an investment generates compared to a benchmark like a market index. It shows whether the investment outperforms expectations and essentially reflects edge. Beta measures an investment's sensitivity to market movements. A beta of 1 means it mirrors the market’s fluctuations. A valu
+60: A key indicator that will be used later in this article is Volume Weighted Average Price(VWAP). It is calculated as :
+64: The intuition behind VWAP is to measure the average price a security trades at, weighted by volume, reflecting the "true" cost of trading over a period. Unlike a simple average, it gives more weight to prices with higher trading activity, making it a fairer benchmark.
+68: - Using it to as a trend filter.
+69: - Using it as a trailing stop.
+70: - Using it as a signal generator (e.g. enter upon price crossing VWAP).
+72: We usually begin calculating VWAP **from the first candle at market open**. In the equation above, Pi represents the ith candle's price, typically the close, and Vi is the ith candle's trading volume. Trading volume can vary between CFD brokers due to different liquidity providers, but the relative weighting should generally be consistent across brokers.
+76: ### Strategy One: Opening Candle Direction
+78: The first strategy we will look at is a classic opening breakout strategy introduced in the paper*[**Can Day Trading Really Be Profitable?**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4416622 "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4416622")* by the Concretum Group. The motivation behind the strategy signal rules is rooted in capturing short-term price momentum while balanci
+84: - Five minutes after market open, buy if the opening five-minute candle is bullish and its close is above the 350-period moving average.
+85: - Five minutes after market open, sell if the opening five-minute candle is bearish and its close is below the 350-period moving average.
+86: - Five minutes before market close, exit existing positions.
+87: - Stop loss set at 1% of price from the entry level.
+88: - 2% risk per trade.
+92: ```
+94: #include <Trade/Trade.mqh>
+167:     if (currentHour == startHour &&currentMinute==startMinute)return true;
+182:     if (currentHour == endHour && currentMinute == endMinute)return true;
+224: ```
+240: Without the moving average filter, the original strategy rules would generate one trade every trading day. The filter reduced the trades by half. Since the average holding period spans the entire trading session, the results somewhat reflect the macro trend, with long trades occurring more frequently and having a higher win rate. Overall, the strategy achieves a 1.23 profit factor and a Sharpe rat
+252: ```
+255: ```
+259: ### Strategy Two: VWAP Trend Following
+261: The second strategy we will look at is more of a market-open trend-following strategy introduced in the paper ***[Volume Weighted Average Price (VWAP) The Holy Grail for Day Trading Systems](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4631351 "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4631351").***The motivation behind the signal rules in is to leverage VWAP as a clear, volume-we
+267: - After the market opens, buy if no current position is opened and the last 15-minute close is above VWAP and 300-period moving average.
+268: - After the market opens, sell if no current position is opened and the last 15-minute close is below VWAP and 300-period moving average.
+269: - Stop loss set at 0.8% of price from the entry level.
+270: - 2% risk per trade.
+274: ```
+276: #include <Trade/Trade.mqh>
+330:                if((PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY&&lastClose<vwap)||(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL&&lastClose>vwap))trade.PositionClose(pos);
+334:          if(lastClose<vwap&&NotInPosition&&lastClose<ma[0])executeSell();
+335:          if(lastClose>vwap&&NotInPosition&&lastClose>ma[0]) executeBuy();
+358:     if (currentHour >= startHour &&currentMinute>=startMinute)return true;
+373:     if (currentHour >= endHour && currentMinute >= endMinute)return true;
+402: //| Get VWAP function                                                |
+424:    // Calculate VWAP or return 0 if no volume
+432:    string objName = "VWAP" + TimeToString(currentBarTime, TIME_MINUTES);
+433:    ObjectCreate(0, objName, OBJ_ARROW, 0, currentBarTime, vwap);
+442: //| Find the index of the candle corresponding to the session open   |
+447:    // Loop over bars until we find the session open
+454:       if(dt.hour == startHour && dt.min == startMinute-5)
+478: ```
+494: Compared to the first opening breakout strategy, this one trades more often, averaging over one trade per day. This increase stems from allowing reentry whenever the price crosses the VWAP again during market hours. The win rate is lower at 42%, below 50%, which is typical for a trend-following approach with a dynamic trailing stop. This setup favors higher reward-to-risk trades but increases the 
+506: ```
+509: ```
+513: ### Strategy Three: Concretum Bands Breakout
+523: - After the market opens, buy when the 1-minute bar crosses above the upper band.
+524: - After the market opens, sell when the 1-minute bar crosses below the lower band.
+525: - Exit all positions when market is closed.
+526: - Stop loss set at 1% of price from the entry position, along with VWAP as trailing stop.
+527: - 4% risk per trade.
+531: ```
+533: #include <Trade/Trade.mqh>
+589:                if((PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY&&lastClose<vwap)||(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL&&lastClose>vwap))trade.PositionClose(pos);
+619:     if (currentHour >= startHour &&currentMinute>=startMinute)return true;
+633:     if (currentHour >= endHour && currentMinute >= endMinute)return true;
+662: //| Get VWAP function                                                |
+684:    // Calculate VWAP or return 0 if no volume
+692:    string objName = "VWAP" + TimeToString(currentBarTime, TIME_MINUTES);
+693:    ObjectCreate(0, objName, OBJ_ARROW, 0, currentBarTime, vwap);
+702: //| Find the index of the candle corresponding to the session open   |
+707:    // Loop over bars until we find the session open
+727: int getBarShiftForTime(datetime day_start, int hour, int minute) {
+762:         int bar_at_HHMM = getBarShiftForTime(day_start, current_hour, current_min);
+811:         int bar_at_HHMM = getBarShiftForTime(day_start, current_hour, current_min);
+850: ```
+866: The strategy trades at a similar frequency to the first ORB strategy, averaging about one trade every two trading days. It doesn’t trade daily because price movements sometimes remain within a noise range, failing to break out of the bands. The win rate is below 50%, a result of using VWAP as a dynamic trailing stop. A profit factor of 1.3 and a Sharpe ratio of 5.9 indicate strong returns relative
+878: ```
+881: ```
+883: This strategy has a beta of -11%, indicating a slight negative correlation with the underlying asset. This is a favorable outcome for traders seeking an edge that moves opposite to market trends. Compared to the other two strategies, this one has more drawdown months, around 50%, **but delivers higher returns during profitable months**. This pattern suggests traders should brace for extended drawd
+885: ### Reflections
+893: - Trading the same strategy model and distributing it across different uncorrelated assets.
+894: - Trading different strategy models on a single asset.
+895: - Distribute capitals to different trading approaches such as options, arbitrage, and stock selections.
+897: It is crucial to understand that more diversification isn’t always better; **uncorrelated** diversification is what matters. For example, applying the same strategy across all crypto markets isn’t ideal, since most crypto assets are highly correlated on a broader scale. What's more, relying solely on backtest diversification can be misleading as well because correlation depends on the time period,
+921: ### Conclusion
+923: This article reviewed three intraday opening range breakout strategies from Concretum Group’s academic papers. We began by outlining the research background, explaining key concepts and methodologies used throughout. Then we explored the motivations behind the three strategies, identified areas for improvement, provided clear signal rules, MQL5 code, and backtest statistical analysis. Finally, we 
+929: | File Name | File Usage |
+930: | --- | --- |
+931: | ORB1.mq5. | The MQL5 EA script for the first strategy |
+932: | ORB2.mq5 | The MQL5 EA script for the second strategy |
+933: | ORB3.mq5 | The MQL5 EA script for the third strategy |
+939: [ORB.zip](https://www.mql5.com/en/articles/download/17745/orb.zip "Download ORB.zip")
+964: Portfolio Diversification and Optimization strategically spreads investments across multiple assets to minimize risk while selecting the ideal asset mix to maximize returns based on risk-adjusted performance metrics.

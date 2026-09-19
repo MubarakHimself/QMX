@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_043_p03",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_043",
+  "part_index": 3,
+  "part_count": 6,
+  "series_in_pack": [
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16781,
+      "title": "MQL5 Wizard Techniques you should know (Part 52): Accelerator Oscillator",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Accelerator Oscillator",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 52,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16781.md"
+    },
+    {
+      "id": 17334,
+      "title": "MQL5 Wizard Techniques you should know (Part 56): Bill Williams Fractals",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Bill Williams Fractals",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 56,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17334.md"
+    },
+    {
+      "id": 17479,
+      "title": "MQL5 Wizard Techniques you should know (Part 57): Supervised Learning with Moving Average and Stochastic Oscillator",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Supervised Learning with Moving Average and Stochastic Oscillator",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 57,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17479.md"
+    },
+    {
+      "id": 17684,
+      "title": "MQL5 Wizard Techniques you should know (Part 59): Reinforcement Learning (DDPG) with Moving Average and Stochastic Oscillator Patterns",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Reinforcement Learning (DDPG) with Moving Average and Stochastic Oscillator Patterns",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 59,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17684.md"
+    },
+    {
+      "id": 17818,
+      "title": "MQL5 Wizard Techniques you should know (Part 60): Inference Learning (Wasserstein-VAE) with Moving Average and Stochastic Oscillator Patterns",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Inference Learning (Wasserstein-VAE) with Moving Average and Stochastic Oscillator Patterns",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 60,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17818.md"
+    },
+    {
+      "id": 17910,
+      "title": "MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of ADX and CCI with Supervised Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 61,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17910.md"
+    },
+    {
+      "id": 17938,
+      "title": "MQL5 Wizard Techniques you should know (Part 62): Using Patterns of ADX and CCI with Reinforcement-Learning TRPO",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of ADX and CCI with Reinforcement-Learning TRPO",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 62,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17938.md"
+    },
+    {
+      "id": 17987,
+      "title": "MQL5 Wizard Techniques you should know (Part 63): Using Patterns of DeMarker and Envelope Channels",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of DeMarker and Envelope Channels",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 63,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17987.md"
+    },
+    {
+      "id": 18144,
+      "title": "MQL5 Wizard Techniques you should know (Part 65): Using Patterns of FrAMA and the Force Index",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of FrAMA and the Force Index",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 65,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18144.md"
+    },
+    {
+      "id": 18188,
+      "title": "MQL5 Wizard Techniques you should know (Part 66): Using Patterns of FrAMA and the Force Index with the Dot Product Kernel",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of FrAMA and the Force Index with the Dot Product Kernel",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 66,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18188.md"
+    },
+    {
+      "id": 18462,
+      "title": "MQL5 Wizard Techniques you should know (Part 71): Using Patterns of MACD and the OBV",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of MACD and the OBV",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 71,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18462.md"
+    },
+    {
+      "id": 18697,
+      "title": "MQL5 Wizard Techniques you should know (Part 72): Using Patterns of MACD and the OBV with Supervised Learning",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of MACD and the OBV with Supervised Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 72,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18697.md"
+    }
+  ]
+}

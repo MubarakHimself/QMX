@@ -1,0 +1,97 @@
+{
+  "pack_id": "trading_027",
+  "section": "Trading",
+  "parent_shard": "trading_027",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "bi-directional trading and hedging of positions in metatrader 5 using the hedgeterminal panel",
+    "building a candlestick trend constraint model",
+    "building a custom market regime detection system in mql5",
+    "building ai-powered trading systems in mql5"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 1297,
+      "title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal Panel, Part 1",
+      "section": "Trading",
+      "series_title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal Panel,",
+      "series_key": "bi-directional trading and hedging of positions in metatrader 5 using the hedgeterminal panel",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1297.md"
+    },
+    {
+      "id": 14347,
+      "title": "Building A Candlestick Trend Constraint Model (Part 1): For EAs And Technical Indicators",
+      "section": "Trading",
+      "series_title": "Building A Candlestick Trend Constraint Model (): For EAs And Technical Indicators",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14347.md"
+    },
+    {
+      "id": 14803,
+      "title": "Building A Candlestick Trend Constraint Model(Part 2): Merging Native Indicators",
+      "section": "Trading",
+      "series_title": "Building A Candlestick Trend Constraint Model(): Merging Native Indicators",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14803.md"
+    },
+    {
+      "id": 14853,
+      "title": "Building A Candlestick Trend Constraint Model(Part 3): Detecting changes in trends while using this system",
+      "section": "Trading",
+      "series_title": "Building A Candlestick Trend Constraint Model(): Detecting changes in trends while using this system",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14853.md"
+    },
+    {
+      "id": 14968,
+      "title": "Building A Candlestick Trend Constraint Model (Part 5): Notification System (Part II)",
+      "section": "Trading",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Notification System (Part II)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14968.md"
+    },
+    {
+      "id": 15154,
+      "title": "Building A Candlestick Trend Constraint Model (Part 7): Refining our model for EA development",
+      "section": "Trading",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Refining our model for EA development",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15154.md"
+    },
+    {
+      "id": 22495,
+      "title": "Building AI-Powered Trading Systems in MQL5 (Part 9): Creating an AI Signal Dispatcher",
+      "section": "Trading",
+      "series_title": "Building AI-Powered Trading Systems in MQL5 (): Creating an AI Signal Dispatcher",
+      "series_key": "building ai-powered trading systems in mql5",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22495.md"
+    },
+    {
+      "id": 17737,
+      "title": "Building a Custom Market Regime Detection System in MQL5 (Part 1): Indicator",
+      "section": "Trading",
+      "series_title": "Building a Custom Market Regime Detection System in MQL5 (): Indicator",
+      "series_key": "building a custom market regime detection system in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17737.md"
+    },
+    {
+      "id": 17781,
+      "title": "Building a Custom Market Regime Detection System in MQL5 (Part 2): Expert Advisor",
+      "section": "Trading",
+      "series_title": "Building a Custom Market Regime Detection System in MQL5 (): Expert Advisor",
+      "series_key": "building a custom market regime detection system in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17781.md"
+    }
+  ]
+}

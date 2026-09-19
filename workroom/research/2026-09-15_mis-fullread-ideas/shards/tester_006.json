@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_006",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 13130,
+      "title": "Testing different Moving Average types to see how insightful they are",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13130.md"
+    },
+    {
+      "id": 13167,
+      "title": "Market Simulation: Position View (III)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13167.md"
+    },
+    {
+      "id": 13168,
+      "title": "Market Simulation: Position View (IV)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13168.md"
+    },
+    {
+      "id": 13176,
+      "title": "Market Simulation: Position View (V)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13176.md"
+    },
+    {
+      "id": 13206,
+      "title": "Market Simulation: Position View (VII)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13206.md"
+    },
+    {
+      "id": 13257,
+      "title": "Market Simulation: Position View (VIII)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13257.md"
+    },
+    {
+      "id": 13426,
+      "title": "Estimate future performance with confidence intervals",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13426.md"
+    },
+    {
+      "id": 13662,
+      "title": "Population optimization algorithms: Charged System Search (CSS) algorithm",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13662.md"
+    },
+    {
+      "id": 13725,
+      "title": "Python, ONNX and MetaTrader 5: Creating a RandomForest model with RobustScaler and PolynomialFeatures data preprocessing",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13725.md"
+    },
+    {
+      "id": 13906,
+      "title": "Modified Grid-Hedge EA in MQL5 (Part II): Making a Simple Grid EA",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13906.md"
+    },
+    {
+      "id": 14113,
+      "title": "Deep Learning GRU model with Python to ONNX  with EA, and GRU vs LSTM models",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14113.md"
+    },
+    {
+      "id": 14162,
+      "title": "Population optimization algorithms: Artificial Multi-Social Search Objects (MSO)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14162.md"
+    }
+  ]
+}

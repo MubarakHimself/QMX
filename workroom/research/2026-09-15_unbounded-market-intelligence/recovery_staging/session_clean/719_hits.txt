@@ -1,0 +1,86 @@
+18: # Building an Automatic News Trader
+23: | 2 August 2013 at 09:38
+34: ### Introduction
+42: ### 1. Let's Program Our EA
+46: The idea behind this system is what we have discussed above. This sounds great, but how can we implement that proven fact in the programming world? Mainly we are relying on two MQL5 aspects. On the one hand, we are using Momentum indicator to measure the impact of the given set of news in a currency pair. On the other hand, we will work with MQL5 file functions to store our favorite news calendar 
+56: ```
+62: #property copyright     "Copyright © 2013, laplacianlab. Jordi Bassagañas"
+63: #property link          "https://www.mql5.com/en/articles"
+64: #property version       "1.00"
+65: #property tester_file   "news_watcher.csv"  
+67: #include <..\Experts\NewsWatcher\CNewsWatcher.mqh>
+97: ```
+101: ```
+106: #include <Trade\Trade.mqh>
+107: #include <Mine\Enums.mqh>
+108: #include <..\Experts\NewsWatcher\CBrain.mqh>
+109: #include <..\Experts\NewsWatcher\CEvolution.mqh>
+110: #include <..\Experts\NewsWatcher\CTechIndicators.mqh>
+133:    CPositionInfo        *GetPositionInfo(void);
+185: //| GetPositionInfo                                                  |
+187: CPositionInfo *CNewsWatcher::GetPositionInfo(void)
+204:       //--- Number of seconds before the news releases. GMT +- timeWindow is the real time from which the robot starts 
+205:       //--- listening to the market. For instance, if there is a news release programmed at 13:00 GMT you can set TimeWindow 
+212:       if(TimeGMT() >= currentNew.GetTimeRelease() + timeWindow)
+222:          bool timeHasCome = TimeGMT() >= currentNew.GetTimeRelease() - timeWindow && TimeGMT() <= currentNew.GetTimeRelease() + timeWindow;
+287: ```
+295: ```
+297: ```
+301: ```
+303: ```
+307: ```
+312: #include <..\Experts\NewsWatcher\CNewsContainer.mqh>
+424: ```
+432: ### Figure 2. [Robot on the Taff](https://www.flickr.com/photos/johngreenaway/3356358479/ "http://www.flickr.com/photos/johngreenaway/3356358479/"). Image distributed under a Creative Commons License on Flickr
+434: ### 
+446: ```
+451: #include <..\Experts\NewsWatcher\CMomentum.mqh>
+508: ```
+512: ```
+593: ```
+601: ```
+606: #include <Files\FileTxt.mqh>
+607: #include <Arrays\ArrayObj.mqh>
+608: #include <..\Experts\NewsWatcher\CNew.mqh>
+713:          string line = FileReadString(file_handle);         
+747: ```
+753: ```
+758: #include <Object.mqh>
+860: ```
+862: ### 2. Backtesting ExpertNewsWatcher.mq5
+868: - Enums.mqh
+869: - CBrain.mqh
+870: - CEvolution.mqh
+871: - CMomentum.mqh
+872: - CNew.mqh
+873: - CNewsContainer.mqh
+874: - CNewsWatcher.mqh
+875: - CTechIndicators.mqh
+876: - ExpertNewsWatcher.mq5
+877: - news\_watcher.txt
+883: - CBrain.mqh
+884: - CEvolution.mqh
+885: - CMomentum.mqh
+886: - CNew.mqh
+887: - CNewsContainer.mqh
+888: - CNewsWatcher.mqh
+889: - CTechIndicators.mqh
+890: - ExpertNewsWatcher.mq5
+900: - Period = 1 Minute
+901: - StopLoss = 400
+902: - TakeProfit = 600
+903: - LotSize = 0.01
+904: - CsvFile = news\_watcher.csv
+910: ```
+919: ```
+929: ```
+949: ```
+957: With that said, observe that the EA only puts three operations in the market when working with real data. This is because in real life some news will overlap, unlike the previous set of fictitious news spaced in time. Our robot is scheduled to first close the first operation that came from the series, ignoring an incoming piece of news when there is already an open position.
+959: ```
+964:       //--- Number of seconds before the news releases. GMT +- timeWindow is the real time from which the robot starts 
+965:       //--- listening to the market. For instance, if there is a news release programmed at 13:00 GMT you can set TimeWindow 
+972:       if(TimeGMT() >= currentNew.GetTimeRelease() + timeWindow)
+982:          bool timeHasCome = TimeGMT() >= currentNew.GetTimeRelease() - timeWindow && TimeGMT() <= currentNew.GetTimeRelease() + timeWindow;
+1000: ```
+1002: ### Conclusion
+1004: This has been the continuation of [Another MQL5 OOP class](https://www.mql5.com/en/articles/703) article, which showed you how to build a simple OO EA from scratch and gave you some tips on object-oriented programming. Following the same line, this text has given you the necessary tools to help you build your own news traders. We have covered the implementation of object-oriented containers and ob

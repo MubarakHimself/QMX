@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_047_p05",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_047",
+  "part_index": 5,
+  "part_count": 7,
+  "series_in_pack": [
+    "neural networks made easy"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 14569,
+      "title": "Neural networks made easy (Part 82): Ordinary Differential Equation models (NeuralODE)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Ordinary Differential Equation models (NeuralODE)",
+      "series_key": "neural networks made easy",
+      "series_part": 82,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14569.md"
+    },
+    {
+      "id": 14615,
+      "title": "Neural Networks Made Easy (Part 83): The \"Conformer\" Spatio-Temporal Continuous Attention Transformer Algorithm",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): The \"Conformer\" Spatio-Temporal Continuous Attention Transformer Algorithm",
+      "series_key": "neural networks made easy",
+      "series_part": 83,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14615.md"
+    },
+    {
+      "id": 14673,
+      "title": "Neural Networks Made Easy (Part 84): Reversible Normalization (RevIN)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Reversible Normalization (RevIN)",
+      "series_key": "neural networks made easy",
+      "series_part": 84,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14673.md"
+    },
+    {
+      "id": 14721,
+      "title": "Neural Networks Made Easy (Part 85): Multivariate Time Series Forecasting",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Multivariate Time Series Forecasting",
+      "series_key": "neural networks made easy",
+      "series_part": 85,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14721.md"
+    },
+    {
+      "id": 14766,
+      "title": "Neural Networks Made Easy (Part 86): U-Shaped Transformer",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): U-Shaped Transformer",
+      "series_key": "neural networks made easy",
+      "series_part": 86,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14766.md"
+    },
+    {
+      "id": 14798,
+      "title": "Neural Networks Made Easy (Part 87): Time Series Patching",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Time Series Patching",
+      "series_key": "neural networks made easy",
+      "series_part": 87,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14798.md"
+    },
+    {
+      "id": 14812,
+      "title": "Neural Networks Made Easy (Part 88): Time-Series Dense Encoder (TiDE)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Time-Series Dense Encoder (TiDE)",
+      "series_key": "neural networks made easy",
+      "series_part": 88,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14812.md"
+    },
+    {
+      "id": 14858,
+      "title": "Neural networks made easy (Part 89): Frequency Enhanced Decomposition Transformer (FEDformer)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Frequency Enhanced Decomposition Transformer (FEDformer)",
+      "series_key": "neural networks made easy",
+      "series_part": 89,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14858.md"
+    },
+    {
+      "id": 14913,
+      "title": "Neural Networks Made Easy (Part 90): Frequency Interpolation of Time Series (FITS)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Frequency Interpolation of Time Series (FITS)",
+      "series_key": "neural networks made easy",
+      "series_part": 90,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14913.md"
+    },
+    {
+      "id": 14996,
+      "title": "Neural Networks Made Easy (Part 92): Adaptive Forecasting in Frequency and Time Domains",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Adaptive Forecasting in Frequency and Time Domains",
+      "series_key": "neural networks made easy",
+      "series_part": 92,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14996.md"
+    },
+    {
+      "id": 15024,
+      "title": "Neural Networks Made Easy (Part 93): Adaptive Forecasting in Frequency and Time Domains (Final Part)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Adaptive Forecasting in Frequency and Time Domains (Final Part)",
+      "series_key": "neural networks made easy",
+      "series_part": 93,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15024.md"
+    },
+    {
+      "id": 15074,
+      "title": "Neural Networks Made Easy (Part 94): Optimizing the Input Sequence",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Optimizing the Input Sequence",
+      "series_key": "neural networks made easy",
+      "series_part": 94,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15074.md"
+    }
+  ]
+}

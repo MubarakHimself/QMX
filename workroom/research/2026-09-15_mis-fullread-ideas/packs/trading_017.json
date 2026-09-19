@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_017",
+  "section": "Trading",
+  "parent_shard": "trading_017",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15720,
+      "title": "Example of Stochastic Optimization and Optimal Control",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15720.md"
+    },
+    {
+      "id": 15964,
+      "title": "High frequency arbitrage trading system in Python using MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15964.md"
+    },
+    {
+      "id": 15965,
+      "title": "Finding custom currency pair patterns in Python using MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15965.md"
+    },
+    {
+      "id": 16062,
+      "title": "Volumetric neural network analysis as a key to future trends",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16062.md"
+    },
+    {
+      "id": 16135,
+      "title": "Creating an MQL5 Expert Advisor Based on the Daily Range Breakout Strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16135.md"
+    },
+    {
+      "id": 16296,
+      "title": "Training a multilayer perceptron using the Levenberg-Marquardt algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16296.md"
+    },
+    {
+      "id": 16300,
+      "title": "From Python to MQL5: A Journey into Quantum-Inspired Trading Systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16300.md"
+    },
+    {
+      "id": 16457,
+      "title": "Creating a mean-reversion strategy based on machine learning",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16457.md"
+    },
+    {
+      "id": 16469,
+      "title": "How to build and optimize a volume-based trading system (Chaikin Money Flow - CMF)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16469.md"
+    },
+    {
+      "id": 16500,
+      "title": "Portfolio Risk Model using Kelly Criterion and Monte Carlo Simulation",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16500.md"
+    },
+    {
+      "id": 16678,
+      "title": "Trend criteria in trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16678.md"
+    },
+    {
+      "id": 16719,
+      "title": "Trend strength and direction indicator on 3D bars",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16719.md"
+    }
+  ]
+}

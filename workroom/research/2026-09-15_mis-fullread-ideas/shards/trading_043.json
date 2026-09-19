@@ -1,0 +1,28 @@
+{
+  "shard_id": "trading_043",
+  "section": "Trading",
+  "n": 2,
+  "series_in_shard": [
+    "using the mql5 economic calendar for news filtering"
+  ],
+  "articles": [
+    {
+      "id": 21235,
+      "title": "Using the MQL5 Economic Calendar for News Filtering (Part 1): Implementing Pre- and Post-News Windows in MQL5",
+      "section": "Trading",
+      "series_title": "Using the MQL5 Economic Calendar for News Filtering (): Implementing Pre- and Post-News Windows in MQL5",
+      "series_key": "using the mql5 economic calendar for news filtering",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21235.md"
+    },
+    {
+      "id": 21446,
+      "title": "Using the MQL5 Economic Calendar for News Filtering (Part 2): Stop Management Positions During News Releases",
+      "section": "Trading",
+      "series_title": "Using the MQL5 Economic Calendar for News Filtering (): Stop Management Positions During News Releases",
+      "series_key": "using the mql5 economic calendar for news filtering",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21446.md"
+    }
+  ]
+}

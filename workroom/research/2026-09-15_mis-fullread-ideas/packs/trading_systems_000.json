@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_000",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 632,
+      "title": "MQL5 Market Turns One Year Old",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\632.md"
+    },
+    {
+      "id": 646,
+      "title": "The ZigZag Indicator: Fresh Approach and New Solutions",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\646.md"
+    },
+    {
+      "id": 665,
+      "title": "Jeremy Scott - Successful MQL5 Market Seller",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\665.md"
+    },
+    {
+      "id": 670,
+      "title": "MQL5 Market Results for Q1 2013",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\670.md"
+    },
+    {
+      "id": 698,
+      "title": "MQL5 Market Results for Q2 2013",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\698.md"
+    },
+    {
+      "id": 734,
+      "title": "Raise Your Linear Trading Systems to the Power",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\734.md"
+    },
+    {
+      "id": 769,
+      "title": "MetaTrader AppStore Results for Q3 2013",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\769.md"
+    },
+    {
+      "id": 925,
+      "title": "Building a Social Technology Startup, Part I: Tweet Your MetaTrader 5 Signals",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\925.md"
+    },
+    {
+      "id": 1009,
+      "title": "Do Traders Need Services From Developers?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1009.md"
+    },
+    {
+      "id": 1019,
+      "title": "How to earn money by fulfilling traders' orders in the Freelance service",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1019.md"
+    },
+    {
+      "id": 1022,
+      "title": "Freelance Jobs on MQL5.com - Developer's Favorite Place",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1022.md"
+    },
+    {
+      "id": 1038,
+      "title": "MQL5.com Freelance: Developers' Source of Income (Infographic)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1038.md"
+    }
+  ]
+}

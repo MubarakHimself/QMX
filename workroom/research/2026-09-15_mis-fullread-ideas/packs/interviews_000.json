@@ -1,0 +1,38 @@
+{
+  "pack_id": "interviews_000",
+  "section": "Interviews",
+  "parent_shard": "interviews_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 3,
+  "articles": [
+    {
+      "id": 623,
+      "title": "Interview with Sergey Pankratyev (ATC 2012)",
+      "section": "Interviews",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\623.md"
+    },
+    {
+      "id": 624,
+      "title": "Interview with Alexey Masterov (ATC 2012)",
+      "section": "Interviews",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\624.md"
+    },
+    {
+      "id": 22768,
+      "title": "How We Built the Most Powerful Machine Learning-Powered Trading Platform: The Evolution of MQL and MetaTrader Through Archives, Forums, and Releases",
+      "section": "Interviews",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22768.md"
+    }
+  ]
+}

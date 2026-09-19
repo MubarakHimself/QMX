@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_005",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 3039,
+      "title": "Learn how to design a trading system by Bollinger Bands",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3039.md"
+    },
+    {
+      "id": 3040,
+      "title": "Learn how to design different Moving Average systems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3040.md"
+    },
+    {
+      "id": 3061,
+      "title": "DiNapoli trading system",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3061.md"
+    },
+    {
+      "id": 3133,
+      "title": "Developing multi-module Expert Advisors",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3133.md"
+    },
+    {
+      "id": 3150,
+      "title": "Triangular arbitrage",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3150.md"
+    },
+    {
+      "id": 3215,
+      "title": "Automatic construction of support and resistance lines",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3215.md"
+    },
+    {
+      "id": 3266,
+      "title": "Patterns available when trading currency baskets. Part III",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3266.md"
+    },
+    {
+      "id": 3339,
+      "title": "Testing patterns that arise when trading currency pair baskets. Part I",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3339.md"
+    },
+    {
+      "id": 3473,
+      "title": "Deep Neural Networks (Part IV). Creating, training and testing a model of neural network",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3473.md"
+    },
+    {
+      "id": 3818,
+      "title": "Testing patterns that arise when trading currency pair baskets. Part II",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3818.md"
+    },
+    {
+      "id": 4102,
+      "title": "Night trading during the Asian session: How to stay profitable",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4102.md"
+    },
+    {
+      "id": 4197,
+      "title": "Testing patterns that arise when trading currency pair baskets. Part III",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4197.md"
+    }
+  ]
+}

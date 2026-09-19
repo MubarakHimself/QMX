@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_004",
+  "section": "Examples",
+  "parent_shard": "examples_004",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1354,
+      "title": "Trader's Kit: Drag Trade Library",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1354.md"
+    },
+    {
+      "id": 1355,
+      "title": "A Pause between Trades",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1355.md"
+    },
+    {
+      "id": 1356,
+      "title": "MetaTrader 4 on macOS",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1356.md"
+    },
+    {
+      "id": 1357,
+      "title": "An Insight Into Accumulation/Distribution And Where It Can Get You",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1357.md"
+    },
+    {
+      "id": 1358,
+      "title": "MetaTrader 4 on Linux",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1358.md"
+    },
+    {
+      "id": 1359,
+      "title": "MagicNumber: \"Magic\" Identifier of the Order",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1359.md"
+    },
+    {
+      "id": 1360,
+      "title": "The Random Sandbox",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1360.md"
+    },
+    {
+      "id": 1361,
+      "title": "MetaTrader 4 Expert Advisor exchanges information with the outside world",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1361.md"
+    },
+    {
+      "id": 1365,
+      "title": "LibMatrix: Library of Matrix Algebra (Part One)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1365.md"
+    },
+    {
+      "id": 1366,
+      "title": "Reading RSS News Feeds by Means of MQL4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1366.md"
+    },
+    {
+      "id": 1370,
+      "title": "Graphical Control of External Parameters of Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1370.md"
+    },
+    {
+      "id": 1371,
+      "title": "Alert and Comment for External Indicators. Multi-Currency Analysis Through External Scanning",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1371.md"
+    }
+  ]
+}

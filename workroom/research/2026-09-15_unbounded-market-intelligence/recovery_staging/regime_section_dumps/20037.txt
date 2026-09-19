@@ -1,0 +1,294 @@
+# From Novice to Expert: Time Filtered Trading
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 14 November 2025 at 06:14
+7 997
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/500066 "Comments")
+[Clemence Benjamin](https://www.mql5.com/en/users/billionaire2024)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20037#introduction)
+- [Implementation](https://www.mql5.com/en/articles/20037#implementation)
+- [Testing](https://www.mql5.com/en/articles/20037#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20037#conclusion)
+- [Key Takeaways](https://www.mql5.com/en/articles/20037#key_takeaways)
+- [Attachments](https://www.mql5.com/en/articles/20037#attachments)
+### Introduction
+By leveraging the capabilities of MQL5, we can precisely define the times we want to trade and receive alerts accordingly. In our previous discussion, we established the foundation for session visualization, where we uncovered the structure of each trading session—its body, upper wick, and lower wick. That project enabled us to visualize the broader market structure across higher-timeframe sessions, synchronized with lower-timeframe data to reveal the magnified internal price movements and patterns forming within.
+These concepts may not be exhaustive, but they serve as a valuable stepping stone for other ambitious researchers seeking to visualize and design more advanced market-analysis tools. Price, by its nature, is a time-series phenomenon—it evolves continuously, tick by tick. Our Expert Advisors and indicators are designed to monitor these fluctuations relentlessly, reacting to every pattern or condition they detect. However, without introducing time-based filters, they will execute actions indiscriminately whenever technical conditions are met—even during periods of thin liquidity, erratic spreads, or low-volume drift.
+This is when time reference becomes critical. By anchoring our algorithms to well-defined trading windows or sessions, we guide them to act only when the market is most active, structured, and meaningful. Time filtering therefore serves as a disciplinary framework, ensuring that execution happens when market behavior aligns not just with strategy logic, but with the rhythm of time itself.
+Known calendar events can serve as powerful reference points for time-filtered trading. Economic events such as Non-Farm Payrolls, CPI, FOMC decisions, or GDP releases evolve in time and can be used to define precise trading windows—periods in which our tools are either permitted or restricted from placing orders and generating signals.
+In the same way that session markers define market rhythm, economic calendar markers define event-driven volatility zones. For instance, an algorithm might automatically suspend trading 30 minutes before a high-impact event and resume only after volatility stabilizes. MQL5 provides direct access to such data through the [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure and [CalendarValueById()](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) function, allowing EAs to detect upcoming releases and align their operations accordingly.
+Beyond event-driven scheduling, the hour of the clock itself is another crucial control factor. A trader or researcher might define fixed time windows such as 10:00–12:00 hrs for signal generation or execution. This not only reduces noise but helps isolate statistically favorable periods within a trading day.
+Together, these mechanisms—calendar-based event filters and hour-based time windows—give our systems a dual awareness of time: one derived from scheduled economic behavior, and the other from intraday structural rhythm. Integrating both enables our Expert Advisors to act not only on price conditions but also on temporal context, which is often the deciding factor between precision and randomness in automated trading.
+Today’s focus is on time-filtered trading. We will explore how to use the time reference points established in our previous projects to filter trading frequency and control signal delivery. Through algorithms, we can define specific time windows in which trading activity is allowed—giving us greater control, precision, and adaptability in automated trading strategies. It encourages us to move beyond mere condition-based triggers and embrace temporal awareness—allowing our trading systems to respect both what the market is doing and when it is doing it.
+By leveraging the MQL5 framework, we can create systems that:
+- Trade only during selected sessions (e.g., London or New York).
+- Suspend trading before major news releases or low-liquidity hours.
+- Deliver alerts, signals, or entries only when the clock and conditions align.
+The Concept Behind Time Filtering
+Time filtering ensures that your strategy’s logic is executed only during specific time windows. Instead of letting an EA or indicator run continuously, you can wrap its execution in time checks that confirm whether the current market time falls within the desired trading period.
+This approach is useful for:
+- Avoiding off-peak or illiquid periods (e.g., post-New York close).
+- Capturing session-based volatility bursts (e.g., London–New York overlap).
+- Controlling signal frequency to reduce noise or over-trading.
+In today’s approach, our focus shifts entirely to implementation. We are not introducing any further upgrades to the Market Periods Synchronizer at this stage. Instead, we build upon the work established in our previous publication, which now serves as the foundation for the present study.
+Specifically, we will reference the SessionVisualizer header file—the module responsible for defining and marking our market session periods. The time markers created within it will serve as key reference points for this new concept of time-filtered trading. By utilizing these markers, we can now define and control trading windows that occur before or after a session’s start or close.
+In the next section, we will explore a detailed implementation of this idea, demonstrating how time-based controls can be integrated directly into our trading logic. Here are the implementation steps we will follow:
+1. Build a modular TimeFilter layer that works together with the SessionVisualizer to provide session-based, clock-based, and (optionally) event-based time windows.
+2. Create an example Expert Advisor that executes trades only when the active time filters allow trading.
+3. Create an example indicator that plots or triggers signals only within the permitted time-filtered windows.
+### Implementation
+Now we will begin by implementing the TimeFilter class, then integrate it into two example projects—an Expert Advisor and an indicator—and finally present our test results along with the complete source files.
+**TimeFilter**
+1. Module Header and Include Guard
+We start by treating this file as a reusable library, not a throwaway code fragment. Using #property strict enforces safer compilation rules, while the include guard prevents duplicate definitions when the file is used in multiple projects. We also include SessionVisualizer.mqh because our time filter is designed to cooperate with your existing session visualization logic. This is the kind of structural discipline that makes a codebase scalable.
+```
+// ============================================================================
+// TimeFilters.mqh — modular helpers for time-filtered trading
+// Author—Clemence Benjamin
+// ============================================================================
+#property strict
+#ifndef __TIMEFILTERS_MQH__
+#define __TIMEFILTERS_MQH__
+#include "SessionVisualizer.mqh"
+```
+2. Inputs and User-Controlled Settings
+Next, we expose a small control panel through input parameters. Instead of hard-coding behavior, we allow the trader (or tester) to decide whether to filter by sessions, fixed hours, or events. The clock start/end, pre/post-session padding, and (future) news filters are all tweakable without touching the source. The names are consistently prefixed with Inp and each input is documented—this is precisely how you make your modules readable in the MetaTrader 5 “Inputs” tab and self-explanatory inside the code.
+```
+// --------------------------- Inputs / Settings ------------------------------
+input bool   InpUseSessionFilter   = true;      // gate by session times
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# From Novice to Expert: Time Filtered Trading
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20037#introduction)
+- [Testing](https://www.mql5.com/en/articles/20037#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20037#conclusion)
+- [Key Takeaways](https://www.mql5.com/en/articles/20037#key_takeaways)
+- [Attachments](https://www.mql5.com/en/articles/20037#attachments)
+### Introduction
+By leveraging the capabilities of MQL5, we can precisely define the times we want to trade and receive alerts accordingly. In our previous discussion, we established the foundation for session visualization, where we uncovered the structure of each trading session—its body, upper wick, and lower wick. That project enabled us to visualize the broader market structure across higher-timeframe sessions, synchronized with lower-timeframe data to reveal the magnified internal price movements and patterns forming within.
+The Concept Behind Time Filtering
+Time filtering ensures that your strategy’s logic is executed only during specific time windows. Instead of letting an EA or indicator run continuously, you can wrap its execution in time checks that confirm whether the current market time falls within the desired trading period.
+This approach is useful for:
+### Implementation
+Now we will begin by implementing the TimeFilter class, then integrate it into two example projects—an Expert Advisor and an indicator—and finally present our test results along with the complete source files.
+**TimeFilter**
+1. Module Header and Include Guard
+// ============================================================================
+// TimeFilters.mqh — modular helpers for time-filtered trading
+// Author—Clemence Benjamin
+
+#property strict
+#ifndef __TIMEFILTERS_MQH__
+#define __TIMEFILTERS_MQH__
+#include "SessionVisualizer.mqh"
+```
+Next, we expose a small control panel through input parameters. Instead of hard-coding behavior, we allow the trader (or tester) to decide whether to filter by sessions, fixed hours, or events. The clock start/end, pre/post-session padding, and (future) news filters are all tweakable without touching the source. The names are consistently prefixed with Inp and each input is documented—this is precisely how you make your modules readable in the MetaTrader 5 “Inputs” tab and self-explanatory inside the code.
+// Event filter parameters (used when you enable InpUseEventFilter)
+input int    InpCalLookAheadMin    = 60;
+input int    InpCalBlockBeforeMin  = 30;
+3. Time Filter Context Wrapper
+Rather than scattering global variables across your EA, we encapsulate time-related state in CTimeFilterContext. This class can optionally store a pointer to CSessionVisualizer and the active gmt\_offset. That means any EA or indicator can pass around a single lightweight context object, and all time decisions stay consistent. SetGMTOffset forwards the offset into the visualizer when it exists—keeping your drawings and your filters synchronized without duplicated logic.
+// --------------------------- Context wrapper --------------------------------
+class CTimeFilterContext
+{
+public:
+   CTimeFilterContext() : viz(NULL), gmt_offset(0) {}
+   void AttachVisualizer(CSessionVisualizer &ref) { viz = &ref; }
+6. Event Filter Stub (Expandable Hook)
+Here, we define EventWindowAllowed as a safe stub: for now, it always returns true. The design decision is intentional. Many readers run brokers or testers without economic calendar support; a hard dependency would break portability. By providing this hook with the right signature, we make it trivial to later plug in real calendar-based logic (blocking around NFP, FOMC, CPI etc.) without changing any EA code that already relies on IsTradingAllowed.
+- If the clock filter is on, we must be inside the allowed hours.
+- If the session filter is on, we must be inside at least one configured session window (with padding).
+- If the event filter is on, we must pass the (future) event rule.
+
+The pattern ok = ok && ... keeps the logic readable: once a filter fails, we keep returning false without special branching. The  result is a clean Boolean gate that turns your raw strategy into a time-aware strategy with a single call.
+   if(InpUseClockFilter)
+      ok = ok && InClockWindow(InpClockStartHour, InpClockEndHour);
+   if(InpUseSessionFilter)
+   {
+      bool any = false;
+   if(InpUseEventFilter)
+      ok = ok && EventWindowAllowed(InpCalLookAheadMin,
+                                    InpCalBlockBeforeMin,
+#endif // __TIMEFILTERS_MQH__
+```
+// TimeFilteredEA.mq5 -                                             
+#property copyright  "Clemence Benjamin"
+#property description "Professional Time-Filtered EA with streamlined CTrade usage."
+#property version     "1.0"
+#include <Trade/Trade.mqh>
+#include <Trade/SymbolInfo.mqh>
+#include <SessionVisualizer.mqh>
+#include <TimeFilters.mqh>
+4. Core Objects and State
+
+We now declare the key objects used by the EA: CTrade for order execution, CSymbolInfo for spread/tick/volume data, CSessionVisualizer to draw session blocks, and CTimeFilterContext to coordinate time-related decisions. We also prepare MA handles and gLastSignalBar to ensure we don’t double-trigger signals on the same candle. This pattern is tidy: environment-level tools are global, while trade logic and filters stay modular.
+CSessionVisualizer  gSV("TF_SESS_");
+CTimeFilterContext  gCTX;
+// MA handles
+      ResetLastError();
+      bool result = m_trade.Buy(volume, _Symbol, price, stoploss, takeprofit, comment);
+      
+      if(!result)
+      {
+         uint   retcode = m_trade.ResultRetcode();
+      return result;
+   }
+};
+   
+   // Time filter setup
+   gCTX.AttachVisualizer(gSV);
+   gCTX.SetGMTOffset(InpGMTOffsetHours);
+11. Position Filtering by Magic and Symbol
+HasOpenPosition scans through open positions and checks both symbol and magic number. This ensures the EA only reacts to its own trades and doesn’t interfere with other systems. It is important to always isolate your strategy using magic numbers; never assume you “own” every position on the account.
+12. OnTick: Time Filter First, Then Logic
+
+The OnTick body is deliberately short and readable—this is the payoff of all the abstractions. First, we refresh session visuals (if enabled). Then we pass through the time filter gate: if IsTradingAllowed(gCTX) returns false, the EA simply annotates “Trading OFF” and exits. Only when time conditions are satisfied do we check that there is no open position and that an EMA signal is present. If both hold, we hand off execution to gTradeMgr.ExecuteBuy.
+We start by declaring a chart-window indicator with two plots: one for bullish signals and one for bearish signals. The properties tell MetaTrader 5 that we’re drawing arrows directly on price, not in a separate subwindow.
+```
+// Author: Clemence Benjamin
+// File: TimeFilteredSignal.mq5
+// Purpose: Time-filtered RSI signal + alerts indicator
+// Notes : Uses large Wingdings arrows for visual clarity
+//         Signals only appear when IsTradingAllowed(iCTX) == true
+#property strict
+#property indicator_chart_window
+// We use two plots: one for bullish arrows, one for bearish arrows
+#property indicator_plots   2
+#property indicator_buffers 2
+// --- Plot 1: Bullish RSI signal (up arrow) ---
+#property indicator_type1   DRAW_ARROW
+#property indicator_color1  clrLime
+#property indicator_width1  2
+#property indicator_label1  "TF_RSI_Bull"
+// --- Plot 2: Bearish RSI signal (down arrow) ---
+#property indicator_type2   DRAW_ARROW
+#property indicator_color2  clrRed
+#property indicator_width2  2
+#property indicator_label2  "TF_RSI_Bear"
+```
+
+#include <SessionVisualizer.mqh>
+#include <TimeFilters.mqh>
+// --------------------------- Inputs -----------------------------------------
+CSessionVisualizer  iSV("TFI_SESS_");
+CTimeFilterContext  iCTX;
+// Two buffers: one for bullish arrows, one for bearish arrows
+   Print("TimeFilteredSignal: ", msg);
+}
+   // Time filter context
+   iCTX.AttachVisualizer(iSV);
+   iCTX.SetGMTOffset(InpGMTOffsetHours_i);
+   {
+      Print("TimeFilteredSignal: Failed to create RSI handle. Error = ", GetLastError());
+      return(INIT_FAILED);
+   }
+- Candlestick patterns (pin bars, engulfing) only during London.
+- Volatility regimes (ATR filters).
+- Orderbook/proxy metrics, machine learning outputs, you name it.
+### Testing
+After successfully compiling the source files, we deployed both the TimeFilteredEA and the TimeFilteredSignal indicator in the Strategy Tester to validate the overall behavior of the framework. The test execution was noticeably slow—unsurprising given the layered time filters, session rendering, and signal logic running together—but it completed reliably and produced clear, interpretable results. Below are the captured screenshots illustrating how trades and RSI-based arrows were only triggered inside the permitted time windows, exactly as designed.
+
+![TimeFilteredSignal](https://c.mql5.com/2/180/metatester64_NDlqipLs7g.gif "TimeFilteredSignal")
+Fig. 2. Testing TimeFilteredSignal Indicator
+  
+### Conclusion
+It is absolutely possible to control when our trading systems are allowed to operate by implementing structured MQL5 time-filtering logic, such as the framework developed in this project. Instead of scattering conditions across random if statements, we used clean abstractions, shared context, and session-aware utilities to make the behavior both predictable and reusable. By anchoring our logic to clear reference points—market sessions, clock ranges, and (optionally) economic calendar windows—we can define precise trading and signaling windows with minimal effort.
+### Key Takeaways:
+| Key Takeaways | Description |
+| --- | --- |
+| 1. Centralize Time Filtering Logic | Implementing a dedicated TimeFilter layer (instead of scattered if-conditions) makes it easy to reuse the same session, clock, and event rules across multiple EAs and indicators, ensuring consistent behavior and simpler maintenance. |
+| 2. Use Context Objects Instead of Global Chaos | The CTimeFilterContext pattern shows how to bundle configuration (GMT offset, visualizer link) into a single object, reducing global dependencies and making your codebase more modular, testable, and scalable. |
+| 3. Separate Signal Logic from Execution Logic | By placing trade execution inside CTradeManager and signal detection in dedicated functions/indicators, we clearly separate “what triggers” from “how orders are sent,” improving clarity, debuggability, and reuse. |
+### Attachments:
+| Source File | Version | Description |
+| SessionVisualizer.mqh | 1.02 | Modular session-mapping and drawing library that renders key Forex trading sessions on the chart and exposes reusable time-window references for higher-level tools. |
+| TimeFilters.mqh | 1.00 | Core time-filtering framework providing clock, session, and (extensible) event-based checks through a unified IsTradingAllowed() interface and shared context object. |
+| TimeFilteredEA.mq5 | 1.0 | Example Expert Advisor that uses the TimeFilters and SessionVisualizer to execute EMA-based entries only inside permitted time windows, with structured trade management. |
+| TimeFilteredSignal.mq5 | 1.0 | Chart indicator that plots large Wingdings arrows and generates RSI-based alerts strictly within the defined time-filtered windows, serving as a visual and extensible signal layer. |
+**Attached files** |
+[TimeFilters.mqh](https://www.mql5.com/en/articles/download/20037/TimeFilters.mqh "Download TimeFilters.mqh")
+(12.16 KB)
+
+[TimeFilteredSignal.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredSignal.mq5 "Download TimeFilteredSignal.mq5")
+(6.3 KB)
+[TimeFilteredEA.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredEA.mq5 "Download TimeFilteredEA.mq5")
+(12.07 KB)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+It is absolutely possible to control when our trading systems are allowed to operate by implementing structured MQL5 time-filtering logic, such as the framework developed in this project. Instead of scattering conditions across random if statements, we used clean abstractions, shared context, and session-aware utilities to make the behavior both predictable and reusable. By anchoring our logic to clear reference points—market sessions, clock ranges, and (optionally) economic calendar windows—we can define precise trading and signaling windows with minimal effort.
+
+Once those time windows are in place, the real creativity begins on the signal side. Any strategy logic—RSI, moving averages, structure breaks, volatility filters, or orderflow concepts—can now be plugged into a disciplined schedule instead of firing 24/5. This approach directly reduces noise caused by continuous, context-blind monitoring and helps us focus on improving execution quality where it matters most. In the summary table below, I’ve highlighted the key lessons from this discussion, and the full source codes are attached beneath the article so you can study them, modify them, and extend this foundation with your own ideas.
+
+  
+
+### Key Takeaways:
+
+| Key Takeaways | Description |
+| --- | --- |
+| 1. Centralize Time Filtering Logic | Implementing a dedicated TimeFilter layer (instead of scattered if-conditions) makes it easy to reuse the same session, clock, and event rules across multiple EAs and indicators, ensuring consistent behavior and simpler maintenance. |
+| 2. Use Context Objects Instead of Global Chaos | The CTimeFilterContext pattern shows how to bundle configuration (GMT offset, visualizer link) into a single object, reducing global dependencies and making your codebase more modular, testable, and scalable. |
+| 3. Separate Signal Logic from Execution Logic | By placing trade execution inside CTradeManager and signal detection in dedicated functions/indicators, we clearly separate “what triggers” from “how orders are sent,” improving clarity, debuggability, and reuse. |
+| 4. Design for Visual Feedback and Diagnostics | The SessionVisualizer and Wingdings arrow signals provide immediate visual confirmation that time filters and signals behave as expected, which is essential for debugging complex logic and building trader confidence in the system. |
+| 5. Build Extensible Signal Frameworks | Using RSI as a plug-in module inside a time-filtered framework demonstrates a scalable design: any future method (price action, MA crosses, volatility filters, custom models) can be integrated behind the same IsTradingAllowed() gate with minimal code changes. |
+
+### Attachments:
+
+| Source File | Version | Description |
+| --- | --- | --- |
+| SessionVisualizer.mqh | 1.02 | Modular session-mapping and drawing library that renders key Forex trading sessions on the chart and exposes reusable time-window references for higher-level tools. |
+| TimeFilters.mqh | 1.00 | Core time-filtering framework providing clock, session, and (extensible) event-based checks through a unified IsTradingAllowed() interface and shared context object. |
+| TimeFilteredEA.mq5 | 1.0 | Example Expert Advisor that uses the TimeFilters and SessionVisualizer to execute EMA-based entries only inside permitted time windows, with structured trade management. |
+| TimeFilteredSignal.mq5 | 1.0 | Chart indicator that plots large Wingdings arrows and generates RSI-based alerts strictly within the defined time-filtered windows, serving as a visual and extensible signal layer. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20037.zip "Download all attachments in the single ZIP archive")
+
+[SessionVisualizer.mqh](https://www.mql5.com/en/articles/download/20037/SessionVisualizer.mqh "Download SessionVisualizer.mqh")
+(31.1 KB)
+
+[TimeFilters.mqh](https://www.mql5.com/en/articles/download/20037/TimeFilters.mqh "Download TimeFilters.mqh")
+(12.16 KB)
+
+[TimeFilteredSignal.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredSignal.mq5 "Download TimeFilteredSignal.mq5")
+(6.3 KB)
+
+[TimeFilteredEA.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredEA.mq5 "Download TimeFilteredEA.mq5")
+(12.07 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Blood inheritance optimization (BIO)](https://c.mql5.com/2/120/Blood_inheritance_optimization__LOGO.png)
+[Blood inheritance optimization (BIO)](https://www.mql5.com/en/articles/17246)
+
+I present to you my new population optimization algorithm - Blood Inheritance Optimization (BIO), inspired by the human blood group inheritance system. In this algorithm, each solution has its own "blood type" that determines the way it evolves. Just as in nature where a child's blood type is inherited according to specific rules, in BIO new solutions acquire their characteristics through a system of inheritance and mutations.
+
+![Building AI-Powered Trading Systems in MQL5 (Part 5): Adding a Collapsible Sidebar with Chat Popups](https://c.mql5.com/2/181/20249-building-ai-powered-trading-logo.png)
+[Building AI-Powered Trading Systems in MQL5 (Part 5): Adding a Collapsible Sidebar with Chat Popups](https://www.mql5.com/en/articles/20249)
+
+In Part 5 of our MQL5 AI trading system series, we enhance the ChatGPT-integrated Expert Advisor by introducing a collapsible sidebar, improving navigation with small and large history popups for seamless chat selection, while maintaining multiline input handling, persistent encrypted chat storage, and AI-driven trade signal generation from chart data.
+
+![Integrating MQL5 with Data Processing Packages (Part 6): Merging Market Feedback with Model Adaptation](https://c.mql5.com/2/181/20235-integrating-mql5-with-data-logo.png)
+[Integrating MQL5 with Data Processing Packages (Part 6): Merging Market Feedback with Model Adaptation](https://www.mql5.com/en/articles/20235)
+
+In this part, we focus on how to merge real-time market feedback—such as live trade outcomes, volatility changes, and liquidity shifts—with adaptive model learning to maintain a responsive and self-improving trading system.
+
+![Neural Networks in Trading: Memory Augmented Context-Aware Learning for Cryptocurrency Markets (Final Part)](https://c.mql5.com/2/113/Neural_Networks_in_Trading_MacroHFT____LOGO.png)
+[Neural Networks in Trading: Memory Augmented Context-Aware Learning for Cryptocurrency Markets (Final Part)](https://www.mql5.com/en/articles/16993)
+
+The MacroHFT framework for high-frequency cryptocurrency trading uses context-aware reinforcement learning and memory to adapt to dynamic market conditions. At the end of this article, we will test the implemented approaches on real historical data to assess their effectiveness.
+
+[![](https://www.mql5.com/ff/si/w766tj9vyj3g607n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=uiveayhsugbeyuczzzdmfjzirmvzdnfu&ssn=1788787952164829674&ssn_dr=0&ssn_sr=0&fv_date=1788787952&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20037&back_ref=https%3A%2F%2Fwww.google.com%2F&title=From%20Novice%20to%20Expert%3A%20Time%20Filtered%20Trading%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178878795279277595&fz_uniq=5124298483061894896&sv=2552)

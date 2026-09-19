@@ -1,0 +1,116 @@
+{
+  "shard_id": "statistics_and_analysis_002",
+  "section": "Statistics and analysis",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15288,
+      "title": "Portfolio Optimization in Python and MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15288.md"
+    },
+    {
+      "id": 16190,
+      "title": "Feature selection and dimensionality reduction using principal components",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16190.md"
+    },
+    {
+      "id": 16285,
+      "title": "Stepwise feature selection in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16285.md"
+    },
+    {
+      "id": 16416,
+      "title": "Mutual information as criteria for Stepwise Feature Selection",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16416.md"
+    },
+    {
+      "id": 16630,
+      "title": "Ensemble methods to enhance numerical predictions in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16630.md"
+    },
+    {
+      "id": 16838,
+      "title": "Ensemble methods to enhance classification tasks in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16838.md"
+    },
+    {
+      "id": 16960,
+      "title": "Creating volatility forecast indicator using Python",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16960.md"
+    },
+    {
+      "id": 17410,
+      "title": "Build a Remote Forex Risk Management System in Python",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17410.md"
+    },
+    {
+      "id": 17845,
+      "title": "One-Dimensional Singular Spectrum Analysis",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17845.md"
+    },
+    {
+      "id": 18099,
+      "title": "Hilbert-Schmidt Independence Criterion (HSIC)",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18099.md"
+    },
+    {
+      "id": 18427,
+      "title": "Gaussian Processes in Machine Learning: Regression Model in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18427.md"
+    },
+    {
+      "id": 19188,
+      "title": "Dynamic mode decomposition applied to univariate time series in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19188.md"
+    }
+  ]
+}

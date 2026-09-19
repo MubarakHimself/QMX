@@ -1,0 +1,90 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Preparing for Strategy Testing with Resource-Based News Event Analysis"
+20: # Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis
+25: | 17 April 2025 at 04:56
+36: ### Introduction
+38: In this article, we advance our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) series by preparing the trading system for strategy testing in non-live mode, leveraging embedded economic event data for reliable backtesting. Building on [Part 6’s automation of trade entries](https://www.mql5.com/en/articles/17271) with news analysis and countdown timers, we now focus on loa
+47: ### Importance of Static Data Integration
+51: Beyond overcoming platform limitations, static data integration will offer flexibility that live feeds cannot. The [Economic calendar](https://www.mql5.com/en/book/advanced/calendar), as we did see already in the prior versions, often includes critical details like event dates, times, currencies, and impact levels, but these aren’t always preserved in a format suited for algorithmic analysis over 
+59: We will use not the easiest but the most convenient format, which is CSV format. That way, we will have the data with us and will not be required we to wait for hours to backtest our strategy, saving us lots of time and energy. Let's go.
+61: ### Implementation in MQL5
+65: ```
+67: //|                                    MQL5 NEWS CALENDAR PART 7.mq5 |
+71: #property copyright "Copyright 2025, Allan Munene Mutiiria."
+72: #property link      "https://youtube.com/@ForexAlgo-Trader?"
+73: #property version   "1.00"
+74: #property strict
+80: //---- Input parameter to enable/disable time filtering
+82: //---- Input parameter for hours before event to consider
+86: //---- Input parameter for hours after event to consider
+117: ```
+119: Here, we set up the foundational input parameters and an enumeration to customize how our trading system processes economic events for strategy testing. We define "StartDate" and "EndDate" as [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variables, set to March 1, 2025, and March 21, 2025, respectively, to specify the range for downloading and analyzing event data. To contr
+121: For currency-specific analysis, we introduce "ApplyCurrencyFilter" (true by default) and "CurrencyFilter", a [string](https://www.mql5.com/en/docs/basis/types/stringconst) listing all eight major currencies—"USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF"—to focus on relevant markets. We also enable impact-based filtering with "ApplyImpactFilter" set to true, supported by the "ENUM\_IMPORTANCE" enumeratio
+125: With the inputs, the next thing that we need to do is declare a structure with 8 input fields mimicking the normal and default structure for the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) as below.
+131: ```
+150: ```
+152: First, we define the "EconomicEvent" structure ([struct](https://www.mql5.com/en/book/oop/structs_and_unions/structs_definition)) to encapsulate key event details, including "eventDate" and "eventTime" as strings for the event’s timing, "currency" to identify the affected market, "event" for the description, and "importance" to indicate its impact level, alongside "actual", "forecast", and "previo
+156: ```
+184: ```
+190: ```
+332: ```
+340: ```
+353: ```
+355: We call the function in the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler and also print the reason for the program termination in the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) event handler. Here is the outcome.
+359: From the image, we can see that we initialized, and decoded the filter inputs correctly and stored them. All we need to do now is source the data from live stream and store it. Here, the logic is first we need to run the program once in live mode, so it can download the data from the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) database, and then load and use that data 
+361: ```
+374:    //---- Fetch calendar data for date range
+375:    if (!CalendarValueHistory(values, StartDate, EndDate)) {
+376:       //---- Print error if calendar data fetch fails
+377:       Print("Error fetching calendar data: ", GetLastError());
+392:       if (!CalendarEventById(values[i].event_id, eventDetails)) continue;
+397:       if (!CalendarCountryById(eventDetails.country_id, countryDetails)) continue;
+402:       if (!CalendarValueById(values[i].id, value)) continue;
+417:       events[eventCount].importance = (eventDetails.importance == 0) ? "None" :    // CALENDAR_IMPORTANCE_NONE
+418:                                       (eventDetails.importance == 1) ? "Low" :     // CALENDAR_IMPORTANCE_LOW
+419:                                       (eventDetails.importance == 2) ? "Medium" :  // CALENDAR_IMPORTANCE_MODERATE
+420:                                       "High";                                      // CALENDAR_IMPORTANCE_HIGH
+432: ```
+434: Here, we handle the live mode data retrieval within the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) function of our program, ensuring economic event data is collected for later use in strategy testing. We start by checking if the system is not in tester mode using the [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) function with [MQL\_TESTER](https://www.mql5.c
+436: We then initialize an "EconomicEvent" array "events" and an "eventCount" integer to track events, looping through "values" with the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function. For each iteration, we fetch event details into a [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) structure "eventDetails" using the [CalendarEventBy
+438: ```
+477:       string content = FileReadString(verifyHandle, (int)FileSize(verifyHandle));
+484: ```
+492: To verify the output, we reopen the file in read mode using "FILE\_READ | FILE\_TXT", storing this handle in "verifyHandle"; if successful, we read the full content into "content" with the [FileReadString](https://www.mql5.com/en/docs/files/filereadstring) function based on the byte size from [FileSize](https://www.mql5.com/en/docs/files/filesize), print it for inspection (e.g., "File content afte
+494: ```
+496: string fileName = "Database\\EconomicCalendar.csv";
+506: ```
+508: To wrap up live mode data handling, we set "fileName" to "Database\EconomicCalendar.csv" and used the "FileExists" custom function to check its status. We then call the "WriteToCSV" function with "fileName" and "events" inputs to save the data, and print instructions with "Print"—"Live mode: Data written. To use in tester, add "fileName" as a resource and recompile."—for tester use. The custom fun
+510: ```
+525: ```
+527: In the "FileExists" function to check file presence for strategy testing, we open "fileName" with [FileOpen](https://www.mql5.com/en/docs/files/fileopen) function in "FILE\_READ | FILE\_CSV" mode, and if "handle" isn’t "INVALID\_HANDLE", we close it with [FileClose](https://www.mql5.com/en/docs/files/fileclose) and return true; else, we return false. This confirms the file status for data handling
+537: ```
+538: //---- Define resource file for economic calendar data
+539: #resource "\\Files\\Database\\EconomicCalendar.csv" as string EconomicCalendarData
+540: ```
+542: Here, we integrate the static data resource into our program to support strategy testing. Using the [#resource](https://www.mql5.com/en/docs/runtime/resources) directive, we embed the file located at "\Files\Database\EconomicCalendar.csv" and assign it to the "EconomicCalendarData" string variable. That way, the file is located in the executive so we don't have to worry even if it is deleted. We c
+544: ```
+654: ```
+656: We define the "LoadEventsFromResource" function to populate economic event data from the embedded resource for strategy testing. We assign the "EconomicCalendarData" resource to "fileData" and print its raw content with the "Print" function, including its size via the [StringLen](https://www.mql5.com/en/docs/strings/StringLen) function, for debugging. We split "fileData" into the "lines" array usi
+660: ```
+663:    if (StringLen(EconomicCalendarData) == 0) {
+665:       Print("Error: Resource EconomicCalendarData is empty. Please run in live mode, add the file as a resource, and recompile.");
+670:    Print("Running in Strategy Tester, using embedded resource: Database\\EconomicCalendar.csv");
+680: ```
+682: Here, if "EconomicCalendarData" is empty per [StringLen](https://www.mql5.com/en/docs/strings/StringLen), we print an error and return "INIT\_FAILED"; else, we print a tester mode message with the "Print" function and call "LoadEventsFromResource", returning "INIT\_FAILED" with an error if it fails. This will ensure that our event data loads correctly for backtesting. Here is the outcome.
+688: ```
+704: ```
+708: ```
+779:       //---- Print message if no time filter applied
+780:       Print("Bar time: ", TimeToString(barTime), ", No time filter applied, using StartDate to EndDate only.");
+869:    Print("After ", (ApplyTimeFilter ? "time filter" : "date range filter"),
+885: ```
+887: Here, we construct the "FilterAndPrintEvents" function to filter and display economic events relevant to a given bar. We start by calculating "totalEvents" with the ArraySize function on "allEvents" and print it; if zero, we exit with "return". We initialize "filteredEvents" as an "EconomicEvent" array and "filteredCount" at 0, then define "timeBefore" and "timeAfter" for time filtering. If "Apply
+889: We loop through "allEvents" with "totalEvents", converting each "eventDate" and "eventTime" to "eventDateTime" with [StringToTime](https://www.mql5.com/en/docs/convert/stringtotime), checking if it’s within "StartDate" and "EndDate" for "inDateRange", and skipping if not. For time filtering, we test "timeMatch" with "ApplyTimeFilter" and the range, printing details if it passes; for currency, we s
+893: ```
+905: ```
+907: Upon running the program, we have the following outcome.
+913: ### Testing
+931: ### Conclusion
+933: In conclusion, we’ve enhanced our MQL5 Economic Calendar series by preparing the system for strategy testing, using static data in a saved file to enable reliable backtesting. This bridges live event analysis to the Strategy Tester with flexible filters, overcoming data limitations for precise strategy validation. Next, we’ll explore optimizing trade execution from these results, and their integra
+939: [MQL5\_NEWS\_CALENDAR\_PART\_7.mq5](https://www.mql5.com/en/articles/download/17603/mql5_news_calendar_part_7.mq5 "Download MQL5_NEWS_CALENDAR_PART_7.mq5")

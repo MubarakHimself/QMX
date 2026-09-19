@@ -1,0 +1,223 @@
+# Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 29 May 2026 at 06:43
+2 115
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/510411 "Comments")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22274#introduction)
+2. [Why RSI Fails in a Trending Market](https://www.mql5.com/en/articles/22274#why_rsi_fails_in_a_trending_market)
+3. [The Meta-Labeling Framework](https://www.mql5.com/en/articles/22274#the_meta_labeling_framework)
+4. [Feature Engineering at the Signal Bar](https://www.mql5.com/en/articles/22274#feature_engineering_at_the_signal_bar)
+5. [Walk-Forward Validation Design](https://www.mql5.com/en/articles/22274#walk_forward_validation_design)
+6. [Results: Three Tracks](https://www.mql5.com/en/articles/22274#results_three_tracks)
+7. [The Drawdown Finding](https://www.mql5.com/en/articles/22274#the_drawdown_finding)
+8. [Conclusion](https://www.mql5.com/en/articles/22274#conclusion)
+9. [Attached Files](https://www.mql5.com/en/articles/22274#attached_files)
+### Introduction
+RSI fires a signal every time its reading crosses a threshold. It does not ask whether the market condition at that moment is one in which a mean-reversion bet is likely to succeed. In a ranging market that question matters less, because the premise is broadly satisfied throughout. In a trending market — where each new extreme is structurally motivated rather than transient — firing at every crossover produces systematic, compounding losses regardless of how well the indicator is parameterized.
+The meta-labeling framework from Chapter 3 of Marcos López de Prado's *Advances in Financial Machine Learning* addresses this directly. The primary model (here, the RSI strategy) continues to generate directional signals exactly as before. A secondary classifier receives each signal along with twenty-seven contextual measurements taken at the signal bar. It outputs the probability that the signal will succeed. Signals below a confidence threshold are skipped; position size on approved signals scales with classifier confidence. The primary model handles side prediction. The secondary model handles bet prediction.
+This article implements the pipeline on seven years of EURUSD H1 data from MetaTrader 5. Section 2 quantifies the failure mode; Sections 3–5 define the framework, features, and validation; Sections 6–7 report results. The companion MQL5 article in this series implements the two-EA execution architecture that translates these Python outputs into a live trading system.
+This article is Part 1 of the *Meta-Labeling the Classics* series. The pipeline depends on methods developed across the *MetaTrader 5 Machine Learning Blueprint* and *Feature Engineering for ML* series: triple-barrier labeling is covered in [Blueprint Part 2](https://www.mql5.com/en/articles/18864 "Labeling Financial Data for Machine Learning"); bet sizing in [Blueprint Part 10](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning"); and the time-feature encoding used here in [Feature Engineering Part 3](https://www.mql5.com/en/articles/22516 "Time Features: Encoding Sessions, Cycles and Calendar Effects").
+### Why RSI Fails in a Trending Market
+RSI is a mean-reversion tool built on the assumption that price movements are serially correcting. When that assumption holds — in ranging conditions, where extremes do revert — the indicator performs as intended. When it fails — in trending conditions, where each new extreme is structurally motivated — the indicator fires mechanically on situations its underlying premise cannot handle.
+The 2022 calendar year provides the clearest illustration in the dataset. The Federal Reserve's aggressive rate-hiking cycle drove EURUSD from approximately 1.13 in January 2022 to a low near 0.96 by September — a 1,700-pip directional move over nine months. RSI crossed its oversold threshold repeatedly on the pullbacks within that decline, generating buy signals on bars where price subsequently continued lower. The signals were not wrong on medium-term direction. They failed because "oversold implies reversal" does not hold in a structural downtrend.
+Panel (c) of Figure 1 makes the consequence concrete. The plain RSI strategy produced -625 pips across 576 trades over the three-year test period from January 2022 through December 2024, with a maximum drawdown of 1,392 pips reached in late 2022. The partial recovery in 2023–2024, visible in the equity curve, reflects the market returning to a more ranging regime — but by then the damage from the trending period had already accumulated.
+Figure 1. 3-panel illustration of RSI signal behavior on EURUSD H1 data (MT5, January 2018 — December 2024)
+- Panel (a): EURUSD H1 price with all RSI threshold-crossover signals (hollow markers) and the ML-approved subset (filled markers). The dashed vertical line marks the train/test boundary at January 2022. The sharp 2022 decline is the regime that drives the worst outcomes for a mean-reversion strategy.
+- Panel (b): RSI(14) with overbought and oversold zones shaded over the test period. The indicator fires frequently throughout 2022; signal density alone does not distinguish profitable signals from regime-driven failures.
+- Panel (c): Cumulative P&L for the plain RSI strategy over the test period. The equity curve reaches its worst point in late 2022 before partially recovering as the trending regime ends.
+### The Meta-Labeling Framework
+Meta-labeling, as presented in AFML Chapter 3, distinguishes between two decisions that standard strategies conflate into one. The primary model answers the question: *in which direction should the position be?* The secondary model answers a different question: *should this position be opened at all, and if so, at what size?* Separating these decisions allows each to be solved with the tool most suited to it.
+The RSI crossover rule is the primary model. Its directional output — long when RSI rises through the oversold threshold, short when it falls through the overbought threshold — is treated as given. The secondary model, a Random Forest classifier, receives each crossover event alongside twenty-seven measurements of market context computed at the signal bar. Its training target is a binary label derived from triple-barrier labeling: +1 if the resulting trade reached the profit-take barrier first, -1 if it hit the stop-loss barrier first or expired at the time limit with a negative return.
+At inference time, the secondary model outputs a probability estimate *p* that the trade belongs to the positive class. Three decisions follow from this single number:
+1. Filter. If *p* < 0.55, the signal is skipped. The threshold of 0.55 admits signals where the model has a nominal positive edge without requiring high-confidence predictions.
+2. Direction. Inherited from the RSI primary model. The secondary classifier does not modify side; it only modifies whether and how much.
+3. Bet size. Position size scales linearly from zero at *p* = 0.5 to full size at *p* = 1.0. In practice, the model's test-period outputs cluster between 0.55 and 0.70, producing modest but systematic variation across approved trades.
+Bet sizing follows the probability-based approach from [Blueprint Part 10](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning"), where the sizing function is derived from the bet size at the limit price in AFML Chapter 10:
+*bet\_size = clip((p - 0.5) / 0.5,  0,  1)*
+This maps *p* ∈ [0.5, 1.0] linearly onto [0, 1] and clips any negative values to zero, ensuring that signals below the 0.5 indifference point receive no allocation.
+### Feature Engineering at the Signal Bar
+A meta-classifier that merely memorizes which past RSI signals succeeded is not a useful secondary model. It must learn market conditions associated with RSI signal quality in a stable, generalizable way. The twenty-seven features used here divide into two groups: eleven price and volatility features computed from OHLCV data, and sixteen time features produced by get\_time\_features from [Feature Engineering Part 3](https://www.mql5.com/en/articles/22516 "Time Features: Encoding Sessions, Cycles and Calendar Effects"). Each is computed on the full bar history and extracted at the moment each signal fires.
+#### Price and Volatility Features
+| Feature | Computation | Relevance to RSI quality |
+| --- | --- | --- |
+| *rsi\_depth* | RSI level at the signal bar | A crossover at RSI 21 represents a deeper mean-reversion candidate than one at RSI 29; the level encodes how extreme the reading was before the threshold was crossed. |
+| *rsi\_mom* | RSI 3-bar difference | A fast bounce from 22 to 34 is structurally different from a slow grind from 29 to 31. The speed of the crossover encodes entry momentum that the level alone cannot. |
+| *adx* | ADX(14) | RSI mean-reversion signals fail most consistently when ADX is high. A strong trend reading is the clearest contextual disqualifier for a reversal attempt. |
+| *atr* | ATR(14) | Sets the volatility scale. Used to normalize price-distance features so they remain comparable across different market regimes. |
+| *vol\_ratio* | ATR(14) / ATR 50-bar mean | Signals during volatility spikes tend to be noise-driven. A ratio above 1.5 indicates an elevated-volatility environment where mean-reversion premises are less reliable. |
+| *mom5* | 5-bar close-to-close return | Short-term price momentum that confirms or contradicts the RSI signal direction. |
+| *trend\_vel* | EMA(50) 5-bar difference | The speed and direction of the underlying trend tells the model how much structural force a reversal signal is working against. |
+| *trend\_stretch* | (close - EMA50) / ATR | A price stretched far from its 50-bar average in ATR units is a genuine mean-reversion candidate; one close to its average is not. |
+| *dist\_high* | (20-bar high - close) / ATR | A signal fired near a recent structural high has less room to run in the long direction. |
+| *dist\_low* | (close - 20-bar low) / ATR | Equivalent for the short direction; proximity to a recent low tightens the expected distribution of returns. |
+| *above\_ema50* | 1 if close > EMA50, else 0 | Binary encoding of trend side. Included for diagnostic purposes; see discussion below. |
+#### Time Features
+The single raw-integer hour column in conventional feature sets is replaced here by sixteen features from get\_time\_features(df, timeframe="H1") . The function applies the H1 frequency gate: a single sin/cos pair per cyclical variable and calendar-effect columns dropped at intraday resolution.
+| Group | Columns | What they encode |
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+![Patrick Murimi Njoroge](https://c.mql5.com/avatar/2025/8/68acbcc2-2b8d.jpg "Patrick Murimi Njoroge")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22274#introduction)
+5. [Walk-Forward Validation Design](https://www.mql5.com/en/articles/22274#walk_forward_validation_design)
+6. [Results: Three Tracks](https://www.mql5.com/en/articles/22274#results_three_tracks)
+7. [The Drawdown Finding](https://www.mql5.com/en/articles/22274#the_drawdown_finding)
+8. [Conclusion](https://www.mql5.com/en/articles/22274#conclusion)
+9. [Attached Files](https://www.mql5.com/en/articles/22274#attached_files)
+### Introduction
+RSI fires a signal every time its reading crosses a threshold. It does not ask whether the market condition at that moment is one in which a mean-reversion bet is likely to succeed. In a ranging market that question matters less, because the premise is broadly satisfied throughout. In a trending market — where each new extreme is structurally motivated rather than transient — firing at every crossover produces systematic, compounding losses regardless of how well the indicator is parameterized.
+The meta-labeling framework from Chapter 3 of Marcos López de Prado's *Advances in Financial Machine Learning* addresses this directly. The primary model (here, the RSI strategy) continues to generate directional signals exactly as before. A secondary classifier receives each signal along with twenty-seven contextual measurements taken at the signal bar. It outputs the probability that the signal will succeed. Signals below a confidence threshold are skipped; position size on approved signals scales with classifier confidence. The primary model handles side prediction. The secondary model handles bet prediction.
+This article implements the pipeline on seven years of EURUSD H1 data from MetaTrader 5. Section 2 quantifies the failure mode; Sections 3–5 define the framework, features, and validation; Sections 6–7 report results. The companion MQL5 article in this series implements the two-EA execution architecture that translates these Python outputs into a live trading system.
+This article is Part 1 of the *Meta-Labeling the Classics* series. The pipeline depends on methods developed across the *MetaTrader 5 Machine Learning Blueprint* and *Feature Engineering for ML* series: triple-barrier labeling is covered in [Blueprint Part 2](https://www.mql5.com/en/articles/18864 "Labeling Financial Data for Machine Learning"); bet sizing in [Blueprint Part 10](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning"); and the time-feature encoding used here in [Feature Engineering Part 3](https://www.mql5.com/en/articles/22516 "Time Features: Encoding Sessions, Cycles and Calendar Effects").
+### Why RSI Fails in a Trending Market
+RSI is a mean-reversion tool built on the assumption that price movements are serially correcting. When that assumption holds — in ranging conditions, where extremes do revert — the indicator performs as intended. When it fails — in trending conditions, where each new extreme is structurally motivated — the indicator fires mechanically on situations its underlying premise cannot handle.
+
+The 2022 calendar year provides the clearest illustration in the dataset. The Federal Reserve's aggressive rate-hiking cycle drove EURUSD from approximately 1.13 in January 2022 to a low near 0.96 by September — a 1,700-pip directional move over nine months. RSI crossed its oversold threshold repeatedly on the pullbacks within that decline, generating buy signals on bars where price subsequently continued lower. The signals were not wrong on medium-term direction. They failed because "oversold implies reversal" does not hold in a structural downtrend.
+Panel (c) of Figure 1 makes the consequence concrete. The plain RSI strategy produced -625 pips across 576 trades over the three-year test period from January 2022 through December 2024, with a maximum drawdown of 1,392 pips reached in late 2022. The partial recovery in 2023–2024, visible in the equity curve, reflects the market returning to a more ranging regime — but by then the damage from the trending period had already accumulated.
+- Panel (a): EURUSD H1 price with all RSI threshold-crossover signals (hollow markers) and the ML-approved subset (filled markers). The dashed vertical line marks the train/test boundary at January 2022. The sharp 2022 decline is the regime that drives the worst outcomes for a mean-reversion strategy.
+- Panel (b): RSI(14) with overbought and oversold zones shaded over the test period. The indicator fires frequently throughout 2022; signal density alone does not distinguish profitable signals from regime-driven failures.
+- Panel (c): Cumulative P&L for the plain RSI strategy over the test period. The equity curve reaches its worst point in late 2022 before partially recovering as the trending regime ends.
+### The Meta-Labeling Framework
+Meta-labeling, as presented in AFML Chapter 3, distinguishes between two decisions that standard strategies conflate into one. The primary model answers the question: *in which direction should the position be?* The secondary model answers a different question: *should this position be opened at all, and if so, at what size?* Separating these decisions allows each to be solved with the tool most suited to it.
+The RSI crossover rule is the primary model. Its directional output — long when RSI rises through the oversold threshold, short when it falls through the overbought threshold — is treated as given. The secondary model, a Random Forest classifier, receives each crossover event alongside twenty-seven measurements of market context computed at the signal bar. Its training target is a binary label derived from triple-barrier labeling: +1 if the resulting trade reached the profit-take barrier first, -1 if it hit the stop-loss barrier first or expired at the time limit with a negative return.
+At inference time, the secondary model outputs a probability estimate *p* that the trade belongs to the positive class. Three decisions follow from this single number:
+1. Filter. If *p* < 0.55, the signal is skipped. The threshold of 0.55 admits signals where the model has a nominal positive edge without requiring high-confidence predictions.
+2. Direction. Inherited from the RSI primary model. The secondary classifier does not modify side; it only modifies whether and how much.
+3. Bet size. Position size scales linearly from zero at *p* = 0.5 to full size at *p* = 1.0. In practice, the model's test-period outputs cluster between 0.55 and 0.70, producing modest but systematic variation across approved trades.
+*bet\_size = clip((p - 0.5) / 0.5,  0,  1)*
+This maps *p* ∈ [0.5, 1.0] linearly onto [0, 1] and clips any negative values to zero, ensuring that signals below the 0.5 indifference point receive no allocation.
+### Feature Engineering at the Signal Bar
+A meta-classifier that merely memorizes which past RSI signals succeeded is not a useful secondary model. It must learn market conditions associated with RSI signal quality in a stable, generalizable way. The twenty-seven features used here divide into two groups: eleven price and volatility features computed from OHLCV data, and sixteen time features produced by get\_time\_features from [Feature Engineering Part 3](https://www.mql5.com/en/articles/22516 "Time Features: Encoding Sessions, Cycles and Calendar Effects"). Each is computed on the full bar history and extracted at the moment each signal fires.
+#### Price and Volatility Features
+  
+| --- | --- | --- |
+| *rsi\_depth* | RSI level at the signal bar | A crossover at RSI 21 represents a deeper mean-reversion candidate than one at RSI 29; the level encodes how extreme the reading was before the threshold was crossed. |
+| *rsi\_mom* | RSI 3-bar difference | A fast bounce from 22 to 34 is structurally different from a slow grind from 29 to 31. The speed of the crossover encodes entry momentum that the level alone cannot. |
+| *adx* | ADX(14) | RSI mean-reversion signals fail most consistently when ADX is high. A strong trend reading is the clearest contextual disqualifier for a reversal attempt. |
+| *atr* | ATR(14) | Sets the volatility scale. Used to normalize price-distance features so they remain comparable across different market regimes. |
+| *vol\_ratio* | ATR(14) / ATR 50-bar mean | Signals during volatility spikes tend to be noise-driven. A ratio above 1.5 indicates an elevated-volatility environment where mean-reversion premises are less reliable. |
+| *mom5* | 5-bar close-to-close return | Short-term price momentum that confirms or contradicts the RSI signal direction. |
+| *trend\_vel* | EMA(50) 5-bar difference | The speed and direction of the underlying trend tells the model how much structural force a reversal signal is working against. |
+| *trend\_stretch* | (close - EMA50) / ATR | A price stretched far from its 50-bar average in ATR units is a genuine mean-reversion candidate; one close to its average is not. |
+| *dist\_high* | (20-bar high - close) / ATR | A signal fired near a recent structural high has less room to run in the long direction. |
+| *dist\_low* | (close - 20-bar low) / ATR | Equivalent for the short direction; proximity to a recent low tightens the expected distribution of returns. |
+| *above\_ema50* | 1 if close > EMA50, else 0 | Binary encoding of trend side. Included for diagnostic purposes; see discussion below. |
+
+#### Time Features
+| Session flags | *sydney\_session, tokyo\_session, london\_session, ny\_session, session\_overlap* | Binary indicators for each of the four major forex sessions and their overlap. Fixed UTC boundaries: Sydney 21:00–06:00, Tokyo 00:00–09:00, London 07:00–16:00, NY 13:00–22:00. |
+| Session volatility | *sydney\_session\_vol, tokyo\_session\_vol, london\_session\_vol, ny\_session\_vol, session\_overlap\_vol* | 20-bar rolling standard deviation of log returns masked to each session, forward-filled and lagged by 1 bar. Encodes how active each session has been recently, not merely whether it is currently open. |
+The binary trend-side flag (*above\_ema50*) received 0.1% importance — the lowest-ranked feature in the set. The same directional information expressed as a continuous slope (*trend\_vel*) received 4.6%. The same pattern holds in the temporal dimension: the five binary session flags together carry 2.5% of total importance; the five session-volatility columns carry 25.6%. Magnitude representations dominate binary presence flags consistently.
+- Blue bars: Price and volatility features. Distance to the 20-bar high (6.9%) ranks first overall, ahead of RSI momentum (6.1%); how far price is from a recent structural extreme matters as much as how fast it crossed the RSI threshold.
+- Purple bars: Fourier cyclical features. Day-of-year cosine ranks third overall at 6.1%; annual seasonality carries more per-feature information than any individual intraday session flag.
+- Teal bars: Session volatility features. Four of the five rank in the top ten; collectively 25.6% of total importance, ten times the session flags.
+#### Implementation
+```
+    rsi   = _compute_rsi(df["close"])
+    atr   = _compute_atr(df["high"], df["low"], df["close"])
+    ema50 = df["close"].ewm(span=50, min_periods=50).mean()
+    price["rsi_mom"]       = rsi.diff(3)
+    price["adx"]           = _compute_adx(df["high"], df["low"], df["close"])
+    price["atr"]           = atr
+    price["vol_ratio"]     = atr / atr.rolling(50).mean()
+    price["mom5"]          = df["close"].pct_change(5)
+    price["trend_vel"]     = ema50.diff(5)
+    price["trend_stretch"] = (df["close"] - ema50) / atr
+    price["dist_high"]     = (df["high"].rolling(20).max() - df["close"]) / atr
+    price["dist_low"]      = (df["close"] - df["low"].rolling(20).min()) / atr
+    price["above_ema50"]   = (df["close"] > ema50).astype(int)
+
+### Walk-Forward Validation Design
+The validation protocol is intentionally strict. No information from the test period was used at any stage of model construction: not for feature selection, not for threshold tuning, and not for the RSI period of 14 (Wilder's original specification).
+The dataset is a MetaTrader 5 export of EURUSD H1 bars from January 2018 through December 2024, covering 43,103 bars with no zero-range artifacts. The spread column from the MT5 export is used for per-trade cost rather than a fixed assumption; the median spread across the full dataset is 0.90 pips. The split date is January 1, 2022:
+- Training period: January 2018 – December 2021 (4 years). 790 labeled signals after dropping rows with NaN feature values at the warmup boundary.
+The triple-barrier labels use symmetric profit-take and stop-loss multiples of 1.5 \* ATR(14) with a maximum holding period of 24 bars. The actual spread at each signal bar is deducted from every trade's P&L.
+# Walk-forward split — tz-naive index from MT5 export
+SPLIT_DATE   = pd.Timestamp("2022-01-01")
+train_labels = labels[labels.index <  SPLIT_DATE]
+test_labels  = labels[labels.index >= SPLIT_DATE]
+### Results: Three Tracks
+The backtest runs on 576 test-period signals across three parallel accounting tracks. Spread cost at each signal bar is taken from the MT5 export's spread column.
+| Track | Trades | Win rate | Avg win | Avg loss | Profit factor | Total P&L | Max DD |
+- Blue: Meta-labeled RSI — 121 of 576 signals approved at full size. Ended at -577 pips; max DD compressed to -593 pips.
+- Green: Meta-labeled with bet sizing — same 121 signals, position scaled by *clip((p - 0.5) / 0.5, 0, 1)*. Ended at -86 pips; max DD -96 pips.
+### The Drawdown Finding
+The result that most directly bears on practical trading is the 93% total drawdown reduction, and the asymmetry of how it is achieved across the two steps.
+Moving from plain RSI (576 trades) to meta-labeled (121 trades) reduced max DD from 1,392 to 593 pips — a 57% reduction. This is proportional to exposure reduction: fewer active trades limits how deep any single losing sequence can run. The relationship is mechanical and requires no classifier accuracy to hold.
+### Conclusion
+RSI is a signal generator, not a complete trading system. It encodes the directional premise — mean reversion from extreme readings — but nothing about whether the market environment at the moment of each signal makes that premise valid. The meta-labeling framework from AFML Chapter 3 separates these two decisions: RSI handles direction; a secondary classifier handles the bet.
+Two patterns from the feature importance are worth carrying forward. First, the session-volatility columns collectively carried 25.6% of total importance; the binary session flags carried 2.5%. Knowing that the Sydney session is active is nearly irrelevant; knowing how volatile it has recently been is the tenth of the information. The same contrast appears in the price features: the binary trend-side flag carried 0.1% importance; the continuous trend-velocity slope carried 4.6%. Representation matters as much as selection. Second, the two highest-ranked individual features — distance to 20-bar high and Sydney session volatility — are not the features most practitioners would reach for when building an RSI filter. ADX and RSI depth, the intuitive disqualifiers, ranked eighth and twelfth respectively. The data disagrees with the prior.
+
+The next article in this series applies the same framework to Wilder's ADX — an indicator that fires on trend initiation rather than exhaustion. The forecast specification, label construction, and feature set change; the pipeline architecture does not.
+### Attached Files
+|  | File | Description |
+We extend the RQA library for MetaTrader 5 with JRQA, which detects when two series simultaneously revisit their own past states. The article covers the joint recurrence matrix, twelve JRQA metrics (including TREND and COMPLEXITY), dual-epsilon configuration, and a rolling-window engine with OpenCL acceleration and automatic CPU fallback. A practical indicator plots JRR, JDET, JLAM, JENTR, and JTREND for any symbol pair with timestamp alignment and normalization.
+![Covariance Matrix Adaptation Evolution Strategy (CMA-ES)](https://c.mql5.com/2/151/18227-evolucionnaya-strategiya-adaptacii-logo.png)
+[Covariance Matrix Adaptation Evolution Strategy (CMA-ES)](https://www.mql5.com/en/articles/18227)
+The article explores one of the most interesting non-gradient optimization algorithms, which learns to understand the geometry of the objective function. We will focus on the classical implementation of CMA-ES with a slight modification - replacing the normal distribution with the power one. We will thoroughly examine the math behind the algorithm, as well as practical implementation, and check where CMA-ES is unbeatable and where it should be avoided.
+This article demonstrates how to build the persistence foundation of a self-healing Expert Advisor in MQL5 using SQLite. Readers will learn how to create a permanent trade-state storage layer capable of surviving terminal restarts, shutdowns, and unexpected interruptions. The article covers SQLite integration in MetaTrader 5, database lifecycle management, persistent trade-state structures, and runtime state recovery using practical MQL5 implementations.
+![Building a Dynamic STF Liquidity Sweep Indicator in MQL5](https://c.mql5.com/2/217/22140-building-a-dynamic-stf-liquidity-logo.png)
+The article delivers a dynamic MetaTrader 5 indicator that detects liquidity sweeps via swing‑point logic, wick‑ratio thresholds, and engulfing confirmation. It recognizes single‑wick and dual‑candle patterns without a fixed window, updates buy‑/sell‑side targets as price evolves, and invalidates broken levels to maintain a reliable liquidity map.
+[![](https://www.mql5.com/ff/si/x6w0dk14xy0tf97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F586%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dhow.test.expert%26utm_content%3Dbuy.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=repptjucjbnrxhoeoqbekpbncvsnhylz&s=3da978a0c510a6306b46ee79cdf8418a5c0da5e081f296e18b262b00031a2310&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=scmppatqoujfwahuqfsuesnwciddcsxe&ssn=1788778648220608324&ssn_dr=0&ssn_sr=0&fv_date=1788778648&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22274&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Meta-Labeling%20the%20Classics%20(Part%201)%3A%20Filtering%20and%20Sizing%20RSI%20Trades%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877864836250159&fz_uniq=5121969309412362903&sv=2552)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+RSI is a signal generator, not a complete trading system. It encodes the directional premise — mean reversion from extreme readings — but nothing about whether the market environment at the moment of each signal makes that premise valid. The meta-labeling framework from AFML Chapter 3 separates these two decisions: RSI handles direction; a secondary classifier handles the bet.
+
+On EURUSD H1 over a three-year test period that included the 2022 Fed tightening cycle — the most damaging condition for a mean-reversion strategy in the dataset — the three-track comparison produced the following: plain RSI lost 625 pips across 576 trades; meta-labeled RSI lost 577 pips across 121 trades; meta-labeled with bet sizing lost 86 pips across the same 121 trades. The strategy is not made profitable. The meta-classifier achieved 48% test accuracy, below chance, and the win rate on approved signals fell rather than rose. This is stated explicitly because the central finding does not depend on classifier accuracy. The 93% drawdown reduction comes from exposure control (fewer trades and smaller sizes), not from predictive skill.
+
+Two patterns from the feature importance are worth carrying forward. First, the session-volatility columns collectively carried 25.6% of total importance; the binary session flags carried 2.5%. Knowing that the Sydney session is active is nearly irrelevant; knowing how volatile it has recently been is the tenth of the information. The same contrast appears in the price features: the binary trend-side flag carried 0.1% importance; the continuous trend-velocity slope carried 4.6%. Representation matters as much as selection. Second, the two highest-ranked individual features — distance to 20-bar high and Sydney session volatility — are not the features most practitioners would reach for when building an RSI filter. ADX and RSI depth, the intuitive disqualifiers, ranked eighth and twelfth respectively. The data disagrees with the prior.
+
+The next article in this series applies the same framework to Wilder's ADX — an indicator that fires on trend initiation rather than exhaustion. The forecast specification, label construction, and feature set change; the pipeline architecture does not.
+
+### Attached Files
+
+|  | File | Description |
+| --- | --- | --- |
+| 1. | *rsi\_meta\_pipeline.py* | Full pipeline: parquet-only data loader (MT5 schema, tz-naive index), RSI signal generation, triple-barrier labeling, 27-feature engineering (11 price/vol + 16 time features via get\_time\_features ), Random Forest meta-model training, three-track backtest with per-bar spread cost, and result export. |
+| 2. | EURUSD\_H1\_time\_2018-01-01-2024-12-31.parq | Parquet data file of EURUSD H1 time bars from 2018-01-01 to 2024-12-31. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22274.zip "Download all attachments in the single ZIP archive")
+
+[Files.zip](https://www.mql5.com/en/articles/download/22274/Files.zip "Download Files.zip")
+(2121.42 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Joint Recurrence Quantification Analysis (JRQA) in MQL5: Detecting Simultaneous Recurrence in Two Series](https://c.mql5.com/2/217/22610-joint-recurrence-quantification-logo.png)
+[Joint Recurrence Quantification Analysis (JRQA) in MQL5: Detecting Simultaneous Recurrence in Two Series](https://www.mql5.com/en/articles/22610)
+
+We extend the RQA library for MetaTrader 5 with JRQA, which detects when two series simultaneously revisit their own past states. The article covers the joint recurrence matrix, twelve JRQA metrics (including TREND and COMPLEXITY), dual-epsilon configuration, and a rolling-window engine with OpenCL acceleration and automatic CPU fallback. A practical indicator plots JRR, JDET, JLAM, JENTR, and JTREND for any symbol pair with timestamp alignment and normalization.
+
+![Covariance Matrix Adaptation Evolution Strategy (CMA-ES)](https://c.mql5.com/2/151/18227-evolucionnaya-strategiya-adaptacii-logo.png)
+[Covariance Matrix Adaptation Evolution Strategy (CMA-ES)](https://www.mql5.com/en/articles/18227)
+
+The article explores one of the most interesting non-gradient optimization algorithms, which learns to understand the geometry of the objective function. We will focus on the classical implementation of CMA-ES with a slight modification - replacing the normal distribution with the power one. We will thoroughly examine the math behind the algorithm, as well as practical implementation, and check where CMA-ES is unbeatable and where it should be avoided.
+
+![Engineering a Self-Healing Expert Advisor in MQL5 (Part 1): Persistent Trade State Architecture](https://c.mql5.com/2/217/22532-engineering-a-self-healing-logo.png)
+[Engineering a Self-Healing Expert Advisor in MQL5 (Part 1): Persistent Trade State Architecture](https://www.mql5.com/en/articles/22532)
+
+This article demonstrates how to build the persistence foundation of a self-healing Expert Advisor in MQL5 using SQLite. Readers will learn how to create a permanent trade-state storage layer capable of surviving terminal restarts, shutdowns, and unexpected interruptions. The article covers SQLite integration in MetaTrader 5, database lifecycle management, persistent trade-state structures, and runtime state recovery using practical MQL5 implementations.
+
+![Building a Dynamic STF Liquidity Sweep Indicator in MQL5](https://c.mql5.com/2/217/22140-building-a-dynamic-stf-liquidity-logo.png)
+[Building a Dynamic STF Liquidity Sweep Indicator in MQL5](https://www.mql5.com/en/articles/22140)
+
+The article delivers a dynamic MetaTrader 5 indicator that detects liquidity sweeps via swing‑point logic, wick‑ratio thresholds, and engulfing confirmation. It recognizes single‑wick and dual‑candle patterns without a fixed window, updates buy‑/sell‑side targets as price evolves, and invalidates broken levels to maintain a reliable liquidity map.
+
+[![](https://www.mql5.com/ff/si/x6w0dk14xy0tf97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F586%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dhow.test.expert%26utm_content%3Dbuy.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=repptjucjbnrxhoeoqbekpbncvsnhylz&s=3da978a0c510a6306b46ee79cdf8418a5c0da5e081f296e18b262b00031a2310&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=scmppatqoujfwahuqfsuesnwciddcsxe&ssn=1788778648220608324&ssn_dr=0&ssn_sr=0&fv_date=1788778648&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22274&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Meta-Labeling%20the%20Classics%20(Part%201)%3A%20Filtering%20and%20Sizing%20RSI%20Trades%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877864836250159&fz_uniq=5121969309412362903&sv=2552)

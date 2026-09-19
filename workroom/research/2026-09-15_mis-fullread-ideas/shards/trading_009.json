@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_009",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 9198,
+      "title": "Swaps (Part I): Locking and Synthetic Positions",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9198.md"
+    },
+    {
+      "id": 9231,
+      "title": "Combination scalping: analyzing trades from the past to increase the performance of future trades",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9231.md"
+    },
+    {
+      "id": 9511,
+      "title": "Combinatorics and probability theory for trading (Part II): Universal fractal",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9511.md"
+    },
+    {
+      "id": 9570,
+      "title": "Combinatorics and probability theory for trading (Part III): The first mathematical model",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9570.md"
+    },
+    {
+      "id": 9804,
+      "title": "Bid/Ask spread analysis in MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9804.md"
+    },
+    {
+      "id": 9805,
+      "title": "Matrices and vectors in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9805.md"
+    },
+    {
+      "id": 9998,
+      "title": "Advanced EA constructor for MetaTrader - botbrains.app",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9998.md"
+    },
+    {
+      "id": 10063,
+      "title": "Combinatorics and probability for trading (Part IV): Bernoulli Logic",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10063.md"
+    },
+    {
+      "id": 10071,
+      "title": "Combinatorics and probability for trading (Part V): Curve analysis",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10071.md"
+    },
+    {
+      "id": 10085,
+      "title": "Developing a trading Expert Advisor from scratch",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10085.md"
+    },
+    {
+      "id": 10293,
+      "title": "Learn Why and How to Design Your Algorithmic Trading System",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10293.md"
+    },
+    {
+      "id": 10478,
+      "title": "Learn how to design a trading system by Envelopes",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10478.md"
+    }
+  ]
+}

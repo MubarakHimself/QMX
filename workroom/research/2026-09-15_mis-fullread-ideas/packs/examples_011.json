@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_011",
+  "section": "Examples",
+  "parent_shard": "examples_011",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1534,
+      "title": "A Non-Trading EA Testing Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1534.md"
+    },
+    {
+      "id": 1536,
+      "title": "The Statistic Analysis of Market Movements and Their Prognoses",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1536.md"
+    },
+    {
+      "id": 1538,
+      "title": "Changing the External Parameters of MQL4 Programs without Restarting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1538.md"
+    },
+    {
+      "id": 1540,
+      "title": "File Operations via WinAPI",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1540.md"
+    },
+    {
+      "id": 1543,
+      "title": "Grouped File Operations",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1543.md"
+    },
+    {
+      "id": 1544,
+      "title": "HTML Walkthrough Using MQL4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1544.md"
+    },
+    {
+      "id": 1545,
+      "title": "How to Write Fast Non-Redrawing ZigZags",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1545.md"
+    },
+    {
+      "id": 1546,
+      "title": "Idleness is the Stimulus to Progress, or How to Work with Graphics Interacively",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1546.md"
+    },
+    {
+      "id": 1547,
+      "title": "Method of Determining Errors in Code by Commenting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1547.md"
+    },
+    {
+      "id": 1548,
+      "title": "All about Automated Trading Championship: Registration",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1548.md"
+    },
+    {
+      "id": 1549,
+      "title": "All about Automated Trading Championship: Statistical Reports",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1549.md"
+    },
+    {
+      "id": 1550,
+      "title": "All about Automated Trading Championship: Interviews with the Participants'06",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1550.md"
+    }
+  ]
+}

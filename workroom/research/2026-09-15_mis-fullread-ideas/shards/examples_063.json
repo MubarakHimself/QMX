@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_063",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 22883,
+      "title": "Graph Theory: Network Flow of Commodities (Ford-Fulkerson Algorithm), Used as a Liquidity-Capacity Engine",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22883.md"
+    },
+    {
+      "id": 22927,
+      "title": "Creating an EMA Crossover Forward Simulation (Culmination): Interactive Synthetic Candles",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22927.md"
+    },
+    {
+      "id": 22942,
+      "title": "How to Research a Trading Idea: A Range Breakout Strategy Case Study",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22942.md"
+    },
+    {
+      "id": 22963,
+      "title": "Implementing Anchored VWAP Indicator in MQL5: A Step-by-Step Guide",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22963.md"
+    },
+    {
+      "id": 22969,
+      "title": "Creating an HTML Dashboard for Strategy Tester and Prop Firm Challenge Analysis in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22969.md"
+    },
+    {
+      "id": 23079,
+      "title": "Interactive Supply and Demand Zone Manager in MQL5 (Part II): Event-Driven Architecture and Persistent Lifecycle Logging",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23079.md"
+    },
+    {
+      "id": 23171,
+      "title": "Building Volatility Models in MQL5 (Part IV): Implementing Long Memory Volatility Processes, FIGARCH, and HARCH",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23171.md"
+    },
+    {
+      "id": 23193,
+      "title": "Overcoming Accessibility Problems in MQL5 Trading Tools (Part VI): Neural Command Integration",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23193.md"
+    },
+    {
+      "id": 23198,
+      "title": "Building a Viewport SnR Volume Profile Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23198.md"
+    },
+    {
+      "id": 23298,
+      "title": "From Novice to Expert: Systematic Profit Conservation Using Candle Range Theory",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23298.md"
+    },
+    {
+      "id": 23312,
+      "title": "How to Test and Customize Built-in MQL5 Programs:  Custom BullishBearish MeetingLines Stoch Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23312.md"
+    },
+    {
+      "id": 23346,
+      "title": "Interactive Supply and Demand Zone Manager in MQL5 (Part III): Zone Analysis, Stateful Interaction, and Pending Event Management",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23346.md"
+    }
+  ]
+}

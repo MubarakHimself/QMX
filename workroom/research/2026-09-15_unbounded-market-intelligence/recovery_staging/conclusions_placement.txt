@@ -1,0 +1,1841 @@
+##### 3395 | Examples | Cross-Platform Expert Advisor: Time Filters
+### Introduction
+1. Avoiding certain time periods (e.g. time periods of flat market movement or high volatility)
+2. Set an 'expiration' to a market order or position (exit from the market at expiration time)
+3. Closing trades at the end of the trading week.
+
+These are some of the most common features that traders use, although there are other variations.
+
+###
+
+### Conclusion
+In this article, we have discussed an implementation of various methods of filtering time in a cross-platform expert advisor. The article covered various time filters use as well as on how these time filters can be combined through a time filters container so that certain features can be enabled or disabled in an expert advisor depending on a certain time setting.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/3395.zip "Download all attachments in the single ZIP archive")
+
+[tester\_results.zip](https://www.mql5.com/en/articles/download/3395/tester_results.zip "Download tester_results.zip")
+(464.13 KB)
+
+[tf\_ha\_ma.zip](https://www.mql5.com/en/articles/download/3395/tf_ha_ma.zip "Download tf_ha_ma.zip")
+(1101.98 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Custom indicators and infographics in CCanvas](https://www.mql5.com/en/articles/3298)
+
+The article considers new types of indicators with more complex structural implementation. It also describes the development of pseudo-3D indicator types and dynamic infographics.
+
+[img]
+[Developing custom indicators using CCanvas class](https://www.mql5.com/en/articles/3236)
+
+The article deals with developing custom graphical indicators using graphical primitives of the CCanvas class.
+
+[img]
+[Creating Documentation Based on MQL5 Source Code](https://www.mql5.com/en/articles/3112)
+
+This article considers creation of documentation for MQL5 code starting with the automated markup of required tags. It also provides the description of how to use the Doxygen software, how to properly configure it and how to receive results in different formats, including html, HtmlHelp and PDF.
+
+[img]
+[Cross-Platform Expert Advisor: Money Management](https://www.mql5.com/en/articles/3280)
+
+This article discusses the implementation o
+
+
+----------------------------------------------------------------------
+
+
+##### 15541 | Trading systems | Application of Nash's Game Theory with HMM Filtering in Trading
+### Application of Nash's Game Theory with HMM Filtering in Trading
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 23 August 2024 at 07:09
+
+[img]
+4 144
+[[img]
+2](https://www.mql5.com/en/forum/471872 "Comments")
+
+[img]
+
+[Javier Santiago Gaston De Iriarte Cabrera](https://www.mql5.com/en/users/jsgaston)
+
+### Introduction
+###
+
+### Results
+With these setings
+
+[img]
+
+and these Inputs
+
+[img]
+
+Results for all the strategies were as follows:
+
+[img]
+
+[img]
+
+All strategies need Nash to work.
+
+###
+
+### Conclusion
+I hope you enjoyed reading this article or replaying the article and I hope this will be helpful for your own EA, this is a interesting subject and I hope it reached your expectancy and you like it as much as I liked producing it.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15541.zip "Download all attachments in the single ZIP archive")
+
+[Nash\_article\_v2.zip](https://www.mql5.com/en/articles/download/15541/nash_article_v2.zip "Download Nash_article_v2.zip")
+(28.15 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Neural Network in Practice: Secant Line](https://www.mql5.com/en/articles/13656)
+
+[img]
+[MQL5 Wizard Techniques you should know (Part 34): Price-Embedding with an Unconventional RBM](https://www.mql5.com/en/articles/15652)
+
+[img]
+[Automating Trading Strategies with Parabolic SAR Trend Strategy in MQL5: Crafting an Effective Expert Advisor](https://www.mql5.com/en/articles/15589)
+
+In this article, we will automate the trading strategies with Parabolic SAR Strategy in MQL5: Crafting an Effective Expert Advisor. The EA will make trades based on trends identified by the Parabolic SAR indicator.
+
+[img]
+[Creating an MQL5-Telegram Integrated Expert Advisor (Part 3): Sending Chart Screenshots with Captions from MQL5 to Telegram](https://www.mql5.com/en/articles/15616)
+
+In this article, we create an MQL5 Expert Advisor that encodes chart screenshots as image data and sends them to a Telegram chat via HTTP requests. By integrating photo encoding and transmission, we enhance the existing MQL5-Telegram system with visual trading insights directly within Telegram.
+
+[[img]
+[img]
+
+Explore your trading for free
+Updated statistics in MetaTrader 5 will help you to thoroughly evaluate results and reduce risks
+Learn more](https://www.mql5.com/ff/go?link=http
+
+
+----------------------------------------------------------------------
+
+
+##### 16487 | Integration | Utilizing CatBoost Machine Learning model as a Filter for Trend-Following Strategies
+### Introduction
+CatBoost is a powerful tree-based machine learning model that specializes in decision-making based on stationary features. Other tree-based models like XGBoost and Random Forest share similar traits in terms of their robustness, ability to handle complex patterns, and interpretability. These models have a wide range of uses, from feature analysis to risk management.
+
+### Conclusion
+In this article, we walked through the entire workflow of developing a CatBoost machine learning filter for a trend-following strategy. On the way, we highlighted different aspects to be aware of while researching machine learning strategies. In the end, we validated the strategy through statistical testing and discussed future aspirations extending from the current approach.
+
+  
+
+**Attached File Table**
+
+| File name | Usage |
+| --- | --- |
+| ML-Momentum Data.mq5 | The EA to fetch features data |
+| ML-Momentum.mq5 | Final execution EA |
+| CB2.ipynb | The workflow to train and test CatBoost model |
+| handleMql5DealReport.py | extract useful rows from deal report |
+| getBinFromMql5.py | get binary outcome from the extracted content |
+| clean\_mql5\_csv.py | Clean the features CSV extracted from Mt5 |
+| merge\_data2.py | merge features and outcome into one CSV |
+| OnnxConvert.ipynb | Convert .cbm model to .onnx format |
+| Classic Trend Following.mq5 | The backbone strategy expert advisor |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16487.zip "Download all attachments in the single ZIP archive")
+
+[ML-TF-Project.zip](https://www.mql5.com/en/articles/download/16487/ml-tf-project.zip "Download ML-TF-Project.zip")
+(186.72 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Trading Toolkit (Part 4): Developing a History Management EX5 Library](https://www.mql5.com/en/articles/16528)
+
+Learn how to retrieve, process, classify, sort, analyze, and manage closed positions, orders, and deal histories using MQL5 by creating an expansive History Management EX5 Library in a detailed step-by-step approach.
+
+[img]
+[Trading with the MQL5 Economic Calendar (Part 5): Enhancing the Dashboard with Responsive Controls and Filter Buttons](https://www.mql5.com/en/articles/
+
+
+----------------------------------------------------------------------
+
+
+##### 20037 | Trading systems | From Novice to Expert: Time Filtered Trading
+### Introduction
+This is when time reference becomes critical. By anchoring our algorithms to well-defined trading windows or sessions, we guide them to act only when the market is most active, structured, and meaningful. Time filtering therefore serves as a disciplinary framework, ensuring that execution happens when market behavior aligns not just with strategy logic, but with the rhythm of time itself.
+
+Known calendar events can serve as powerful reference points for time-filtered trading. Economic events such as Non-Farm Payrolls, CPI, FOMC decisions, or GDP releases evolve in time and can be used to define precise trading windows—periods in which our tools are either permitted or restricted from placing orders and generating signals.
+
+Beyond event-driven scheduling, the hour of the clock itself is another crucial control factor. A trader or researcher might define fixed time windows such as 10:00–12:00 hrs for signal generation or execution. This not only reduces noise but helps isolate statistically favorable periods within a trading day.
+
+[img]
+
+By leveraging the MQL5 framework, we can create systems that:
+
+- Trade only during selected sessions (e.g., London or New York).
+- Suspend trading before major news releases or low-liquidity hours.
+- Deliver alerts, signals, or entries only when the clock and conditions align.
+
+The Concept Behind Time Filtering
+
+Time filtering ensures that your strategy’s logic is executed only during specific time windows. Instead of letting an EA or indicator run continuously, you can wrap its execution in time checks that confirm whether the current market time falls within the desired trading period.
+
+This approach is useful for:
+
+- Avoiding off-peak or illiquid periods (e.g., post-New York close).
+- Capturing session-based volatility bursts (e.g., London–New York overlap).
+- Controlling signal frequency to reduce noise or over-trading.
+
+In today’s approach, our focus shifts entirely to implementation. We are not introducing any further upgrades to the Market Periods Synchronizer at this stage. Instead, we build upon the work established in our previous publication, which now serves as the foundation for the present study.
+
+Specifically, we wi
+
+### Conclusion
+
+
+
+----------------------------------------------------------------------
+
+
+##### 21142 | Examples | Applying L1 Trend Filtering in MetaTrader 5
+### Introduction
+We present not only the theory, but also a complete practical roadmap: methods for computing λmax and the L1 trend, three indicators (trend, slope, slope sign), seven L1-trend volatility indicators, integration into Expert Advisors, and a reproducible testing protocol (four filtering modes, balance/equity export, and visualization).
+
+### Conclusion
+L1 trend filtering has proven its practical usefulness as a tool for separating local noise from real trend changes.
+
+The method produces a piecewise-linear trend with automatic breakpoints and a convenient tuning scale via λmax, which eliminates the problem of manual parameter fitting.
+
+Practical recommendations:
+
+- Use relative regularization: λ = coef\_lambda\_max · λmax. For most tasks, use coef in the range 0.04–0.25; for finer detail  ≈0.02–0.04; for coarse approximation and regime detection ≈0.12–0.25.
+- In most cases, the L1 filter is most effective when applied to position closing (holding profitable trends and reducing premature exits). Applying it to entry often reduces the number of trades without proportional improvement in quality.
+- For the current trend analysis, use a simple rule: delta = x\_filtered[last] − x\_filtered[last−1].The sign of delta indicates the direction of the dominant L1 trend.
+
+Limitation: the effect depends on the instrument, timeframe, and market regime; validation on historical data with selected metrics is required.
+
+The proposed MQL5 modules and testing protocol allow quick hypothesis testing and selection of working parameters for a specific trading system.
+
+All codes from the article are also available in the [public project](https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public "https://www.metatrader5.com/en/metaeditor/help/mql5storage/projects#public") "MQL5\Shared Projects\[L1Trend](https://forge.mql5.io/quantum/L1Trend "https://forge.mql5.io/quantum/L1Trend")".
+
+  
+
+**Examples**
+
+| Type | File | Description |
+| --- | --- | --- |
+| Script | MQL5\Scripts\TestL1Trend.mq5 | Test script for calculating the L1 trend on model data (random walk) |
+| Script | MQL5\Scripts\TestL1TrendFloatDouble.mq5 | Test script for calculating the L1 trend on model data (random walk) for double and float vectors |
+| Script | MQL5\Scripts\TestL1TrendFilterSP500.mq5 | Test script for calculating the L1 trend on SP500 index quote data |
+| Data file | MQL5\Files\snp500.txt | Data file for the test script (log of SP500 index price series) |
+| Script | MQL5\Scripts\TestScalingBrownianMotion.mq5 | Script for calculating the po
+
+
+----------------------------------------------------------------------
+
+
+##### 21351 | Trading systems | Neuro-Structural Trading Engine — NSTE (Part II): Jardine's Gate Six-Gate Quantum Filter
+### Introduction
+In this article, we introduce *Jardine's Gate* — the six-gate quantum filter that sits between signal generation and trade execution. Every LSTM prediction must pass through all six gates before a trade is permitted. The result is extreme selectivity: out of 43,200 signals generated per month, only 127 pass all six gates. Those 127 trades achieved a 100% win rate in backtesting.
+
+The name comes from Jardine's Lookout in Hong Kong — a vantage point from which you can see all approaches to the harbor. From the Gate, you see the entire battlefield before committing forces. This metaphor captures the essence of the algorithm: observe from every angle before acting.
+
+###
+
+### Gate Architecture Overview
+The six gates are arranged in a sequential pipeline. A signal enters the first gate and must pass each subsequent gate to reach execution. If any single gate blocks the signal, it is rejected entirely. The order of gates is optimized so that the most computationally cheap and most frequently triggered gates come first, minimizing unnecessary processing.
+
+[CODE]
+
+The following diagram illustrates the complete pipeline architecture:
+
+[img]
+
+Jardine's Gate Sequential Pipeline
+
+The architecture is implemented as a single class called QuantumEdgeFilter that encapsulates all six gates, their thresholds, and the statistics tracking for each gate. This class is instantiated once per EA and persists for the lifetime of the trading session.
+
+**Why Sequential and Not Parallel?**
+
+**Gate 1: Entropy Gate (Compression Ratio)**
+
+The Entropy Gate uses the compression ratio regime detection system established in Part 1. It measures how much structure exists in the current price action by compressing raw price data with zlib and examining how much the data shrinks. Structured data (trending, mean-reverting) compresses well. Random data (choppy, directionless) compresses poorly.
+
+The entropy gate defines three zones with distinct behaviors:
+
+- *entropy >= 3.5 (Volatile threshold):* Market is HIGHLY structured. The gate ALWAYS passes. High compression ratios indicate strong, exploitable patterns in the price data. The LSTM predictions are most reliable under these conditions.
+- *entropy >= 2.8 (Clean threshold):* Market is moderately structured. The gate passes, but subsequent gates must confirm signal quality. This is the "maybe" zone where the market has some pattern but not enough to trade on structure alone.
+- *entropy < 2.8:* Market is random noise. The gate ALWAYS blocks. Low compression ratios mean there is no detectable pattern in the price data. Any prediction under these conditions is essentially a coin flip.
+
+The entropy gate alone eliminates approximately 40% of all signals. Those blocked signals would have produced roughly coin-flip outcomes, dragging down the system's overall performance and increasing drawdown.
+
+**Gate 2: Interference Gate (Expert Agreement)**
+
+The I
+
+### Results and Performance Considerations
+Jardine's Gate was backtested over January 2026 on BTCUSD 1-minute bars. The results demonstrate the power of orthogonal filtering:
+
+| Metric | Value |
+| --- | --- |
+| Total signals generated | 43,200 (1 per minute) |
+| Signals passing all 6 gates | 127 (0.29%) |
+| Win rate of passed signals | 100% (127/127) |
+| Average profit per passed signal | $2.47 |
+| Maximum drawdown | 0.3% |
+
+The distribution of blocks across gates reveals which dimensions of market quality matter most:
+
+[img]
+
+Gate Block Distribution
+
+| Gate | Signals Blocked | Percentage |
+| --- | --- | --- |
+| Gate 1 (Entropy) | 18,400 | 43% |
+| Gate 3 (Confidence) | 12,100 | 28% |
+| Gate 2 (Interference) | 7,300 | 17% |
+| Gate 6 (Kill Switch) | 2,800 | 6% |
+| Gate 4 (Probability) | 1,900 | 4% |
+| Gate 5 (Direction) | 573 | 1% |
+
+[img]
+
+Jardine's Gate Performance
+
+The extreme selectivity (0.29% pass rate) is by design. In prop firm trading, you do not need volume -- you need CERTAINTY. Each passed signal is a high-conviction, multi-validated opportunity. The system trades approximately 4-5 times per day, which is more than sufficient to reach prop firm profit targets while maintaining near-zero risk of drawdown violation.
+
+###
+
+### Conclusion
+Jardine's Gate transforms a mediocre LSTM signal into a precision instrument. The key architectural insight is that filtering across independent dimensions creates multiplicative selectivity — each gate reduces false positives independently of the others. The six gates work together to ensure that only the highest-quality trading opportunities reach execution.
+
+The system provides five critical capabilities:
+
+1. Entropy-based market structure validation prevents trading during random, unprofitable conditions
+2. Expert agreement scoring ensures the signal represents genuine consensus, not noise
+3. Confidence thresholding eliminates weak, low-conviction predictions
+4. Regime-adjusted probability scoring accounts for varying prediction accuracy across market states
+5. Kill Switch protection prevents cascading losses during regime transitions
+
+In the next article, we introduce *ETARE* — the Entropy-based Trading system that provides the raw intelligence feeding into the gates. ETARE handles compression-based regime detection, walk-forward evolutionary training, Darwin selection of expert models, and the Signal Farm aggregation pipeline that generates the interference and confidence scores consumed by Jardine's Gate.
+
+The complete Expert Advisor source code implementing everything discussed in this article is attached for download. It compiles directly in MetaEditor 5 and can be attached to any chart for testing in the Strategy Tester.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21351.zip "Download all attachments in the single ZIP archive")
+
+[Article\_02\_EA.mq5](https://www.mql5.com/en/articles/download/21351/Article_02_EA.mq5 "Download Article_02_EA.mq5")
+(49.42 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Trading Tools (Part 26): Integratin
+
+
+----------------------------------------------------------------------
+
+
+##### 21720 | Examples | RiskGate: Centralized Risk Management for Multiple EAs
+### Conclusion
+The important mental shift is this: EAs are no longer isolated programs trying to protect themselves; they are clients of a single, central risk engine that protects the account. That engine runs inside MetaTrader 5, speaks MQL5, and can evolve with your understanding of risk—without forcing you to rebuild your whole infrastructure every time you add a new strategy.
+
+
+----------------------------------------------------------------------
+
+
+##### 22274 | Examples | Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades
+### Introduction
+This article implements the pipeline on seven years of EURUSD H1 data from MetaTrader 5. Section 2 quantifies the failure mode; Sections 3–5 define the framework, features, and validation; Sections 6–7 report results. The companion MQL5 article in this series implements the two-EA execution architecture that translates these Python outputs into a live trading system.
+
+### Results: Three Tracks
+The backtest runs on 576 test-period signals across three parallel accounting tracks. Spread cost at each signal bar is taken from the MT5 export's spread column.
+
+| Track | Trades | Win rate | Avg win | Avg loss | Profit factor | Total P&L | Max DD |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Plain RSI | 576 | 49.3% | +29.8 pips | -31.1 pips | 0.93 | -625 pips | -1,392 pips |
+| Meta-labeled | 121 | 43.0% | +28.7 pips | -30.0 pips | 0.72 | -577 pips | -593 pips |
+| Meta + Bet-sized | 121 | 43.0% | +4.3 pips | -4.5 pips | 0.72 | -86 pips | -96 pips |
+
+Three observations deserve precise statement.
+
+First, the meta-labeled win rate (43.0%) is *lower* than plain RSI (49.3%). The filter did not select a higher-quality subset on the test set. The model's test accuracy is 48% (below chance), and the approved trades had a lower realized win rate than the full signal set. This is stated directly because the article's argument does not depend on the classifier being accurate.
+
+Second, the total P&L improved only modestly from plain RSI to meta-labeled (-625 to -577 pips), despite removing 455 of 576 trades. The filter's contribution to P&L is minimal. Its contribution to drawdown is substantial: max DD fell from 1,392 to 593 pips, a 57% reduction, from reducing trade exposure alone.
+
+Third, bet sizing then reduced the -577 pip loss to -86 pips — an 85% reduction from the meta-labeled baseline — and compressed max DD from 593 to 96 pips. Both reductions are structural. They come from scaling position sizes by a factor in [0, 1], which reduces drawdown depth even if the strategy remains unprofitable.
+
+[img]
+
+Figure 3. Cumulative P&L across three strategy tracks — EURUSD H1 test period (January 2022 – December 2024)
+
+- Orange: Plain RSI — all 576 signals at full size. Ended at -625 pips; max DD -1,392 pips during the 2022 trending period.
+- Blue: Meta-labeled RSI — 121 of 576 signals approved at full size. Ended at -577 pips; max DD compressed to -593 pips.
+- Green: Meta-labeled with bet sizing — same 121 signals, position scaled by *clip((p - 0.5) / 0.5, 0, 1)*. Ended at -86 pips; max DD -96 pips.
+
+### Conclusion
+RSI is a signal generator, not a complete trading system. It encodes the directional premise — mean reversion from extreme readings — but nothing about whether the market environment at the moment of each signal makes that premise valid. The meta-labeling framework from AFML Chapter 3 separates these two decisions: RSI handles direction; a secondary classifier handles the bet.
+
+The next article in this series applies the same framework to Wilder's ADX — an indicator that fires on trend initiation rather than exhaustion. The forecast specification, label construction, and feature set change; the pipeline architecture does not.
+
+
+----------------------------------------------------------------------
+
+
+##### 22754 | Trading systems | Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades
+### Introduction
+
+
+### Results: Three Tracks
+The per-trade metrics and equity curves for the three tracks are shown in Figure 4.
+
+[img]
+
+Figure 4. 3-panel illustration of out-of-sample results across three tracks on EURUSD H1
+
+- Panel (a): Cumulative P&L for all three tracks over the 36-month out-of-sample period. The gate alone removes the worst drawdown periods by filtering out ranging-market signal bursts; the classifier further concentrates performance into the highest-confidence subset.
+- Panel (b): Monthly signal count by track. Each successive filtering layer reduces signal count; the table in this panel summarizes win rate, average P&L per trade, and maximum drawdown for each track.
+- Panel (c): Rolling 6-month Sharpe ratio for Track 1 and Track 3. The Sharpe differential quantifies the stability gain from the two-layer filter across different sub-regimes within the test period.
+
+#### Per-trade summary
+
+| Track | Signals | Win rate | Avg P&L / trade | Max drawdown |
+| --- | --- | --- | --- | --- |
+| 1 — Plain DI crossover (ADXR ≥ 25) | 546 | 48.9% | −0.9 pips | −965 pips |
+| 2 — HPO gate (ADXR ≥ 40, period=14, sep ≥ 2) | 51 | 47.1% | −1.2 pips | −255 pips |
+| 3 — HPO gate + classifier + bet sizing | 29 | 51.7% | −0.4 pips | −44 pips |
+
+### Conclusion
+
+
+
+----------------------------------------------------------------------
+
+
+##### 23665 | Trading | Does This Entry Filter Really Add Edge? A Block-Permutation Test in MQL5
+### Introduction
+Entry filters are commonly evaluated by comparing an Expert Advisor backtest with and without the filter. This comparison measures the operational effect on net profit, drawdown, and trading activity. However, it does not show whether the accepted trades form an unusually favorable subset of the trades produced by the base strategy.
+
+This article presents FilterEdgeAnalyzer.mqh, a reusable MQL5 module that reconstructs completed Strategy Tester positions, separates accepted and rejected trades, and compares their mean net-profit outcomes with fixed-count placebo selections. Individual permutations, equal-block permutations, and circular shifts provide three null models for evaluating the observed difference.
+
+The selection-test path is summarized below. Every transformation retains the observed acceptance count, ensuring that the actual filter is compared with placebo selections of the same size. The operational branch and final pairing are introduced after the decision rules.
+
+[img]
+
+Image 1: Workflow from completed base trades to the fixed-count placebo comparison.
+
+### Operational improvement versus selection ability
+**Operational improvement**
+
+A standard comparison runs the base EA and then runs the EA with the filter enforced. It measures the resulting portfolio path through net profit, trade count, Profit Factor, drawdown, Recovery Factor, and the Sharpe ratio.
+
+This question is indispensable because a filter changes more than a list of trades. Rejecting one entry may leave the EA flat, permitting a later trade that the base run could not take. Position occupancy, compounding, volume rules, and portfolio constraints can therefore produce different opportunity paths.
+
+**Selection ability**
+
+The placebo test conditions on the base run instead. The base EA calculates the acceptance label but does not enforce it. Every completed base trade receives an accepted or rejected label. The test then asks whether the accepted labels align with better realized outcomes more strongly than fixed-count placebo labels.
+
+The two claims are related but not equivalent. A filter can improve drawdown or Profit Factor through exposure control even when its accepted set is not statistically unusual. Conversely, a filter can label better base trades yet fail to improve an operational run after occupancy and sizing effects.
+
+Evaluating these claims separately requires fixed definitions for the analyzed trades, filter labels, monetary outcomes, and placebo transformations.
+
+### Limitations and safeguards
+The history collector returns net profit in the account currency and assumes one labeled entry followed by one complete exit. This design is appropriate for the fixed-volume, single-symbol case study. Variable sizing, mixed instruments, partial exits, or scale-in entries require an explicit outcome-normalization rule together with remaining-volume and label-allocation logic.
+
+The placebo analysis conditions on trades completed by the base EA. Enforcing the filter can change later opportunities through position occupancy, so the selection test cannot replace the operational A/B comparison. The two tests answer different questions even when they use the same entry rule.
+
+The structured verdict applies declared rules; it is not an economic utility function. The operational status counts metric directions without weighting their magnitudes. Its 1e-9 comparison threshold suppresses floating-point noise; it is not an economic materiality threshold. MIXED deliberately leaves the trade-off to the deployment objective.
+
+The experiment identifier prevents accidental cross-pairing only if it is changed after any material change in settings, interval, data, or the execution model. The shared state-file workflow is intended for two sequential single tests, not parallel optimization passes that can target the same filename.
+
+Equal-block permutation preserves label dependence inside each block but not arbitrary dependence across block boundaries. It also excludes the incomplete final block, so every result must retain its corresponding N and dropped count. Circular shifts preserve the cyclic label pattern, but the implementation samples nonzero shifts with replacement.
+
+The SMA label is evaluated at the completed M15 entry-bar timestamp and can therefore use the D1 bar still forming at that time. Both Strategy Tester passes apply the same convention. History quality, tick generation, spread assumptions, and execution modeling still affect the trades supplied to the analyzer.
+
+Permutation testing reuses the observed trade sequence and does not establish performance on later data. Selecting filters, thresholds, or block sizes after inspecting the results adds researcher degrees 
+
+### Conclusion and possible improvements
+The resulting workflow is direct: record the filter label at entry, reconstruct completed positions, compare the observed mean difference with fixed-count placebo models, inspect block-size sensitivity, and validate the complete decision process out of sample. Future extensions can expand individual stages without changing this separation of responsibilities.
+
+Proposed enhancements are grouped below by the part of the workflow they extend:
+
+| Category | Proposed enhancement | Operational objective |
+| --- | --- | --- |
+| Position accounting | Partial-exit and scale-in tracking | Track remaining volume and assign entry labels consistently across multi-deal position lifecycles. |
+| Outcome scaling | User-defined normalization | Compare heterogeneous symbols, volumes, or risk budgets through an explicit common outcome scale. |
+| Dependence models | Stationary and moving-block variants | Test the observed association under additional assumptions about temporal dependence. |
+| Validation automation | Predeclared walk-forward evaluation | Automate holdout windows and multiple-testing control when several filters or thresholds are compared. |
+
+
+----------------------------------------------------------------------
+
+
+##### 16380 | Trading | Trading with the MQL5 Economic Calendar (Part 3): Adding Currency, Importance, and Time Filters
+### Introduction
+1. [Introduction](https://www.mql5.com/en/articles/16380#introduction)
+2. [Understanding Filter Types in Economic Calendars](https://www.mql5.com/en/articles/16380#understanding_filter_types_in_economic_calendars)
+3. [Implementing the Filters in MQL5](https://www.mql5.com/en/articles/16380#implementing_the_filters_in_mql5)
+4. [Conclusion](https://www.mql5.com/en/articles/16380#conclusion)
+
+With these additions, our dashboard will become a powerful tool for monitoring and filtering economic news within the [MQL5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") environment, tailored to traders’ needs for timely and relevant information.
+
+### Conclusion
+By refining the dashboard with these filters, we make it a more powerful and efficient tool for informed decision-making. In the next part, we will expand on this foundation by adding live updates to the calendar dashboard logic, enabling it to constantly refresh with the latest economic news directly within our MQL5 dashboard.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16380.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_3.mq5](https://www.mql5.com/en/articles/download/16380/mql5_news_calendar_part_3.mq5 "Download MQL5_NEWS_CALENDAR_PART_3.mq5")
+(43.96 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[MQL5 Wizard Techniques you should know (Part 50): Awesome Oscillator](https://www.mql5.com/en/articles/16502)
+
+The Awesome Oscillator is another Bill Williams Indicator that is used to measure momentum. It can generate multiple signals, and therefore we review these on a pattern basis, as in prior articles, by capitalizing on the MQL5 wizard classes and assembly.
+
+[img]
+[Neural Networks Made Easy (Part 94): Optimizing the Input Sequence](https://www.mql5.com/en/articles/15074)
+
+When working with time series, we always use the source data in their historical sequence. But is this the best option? There is an opinion that changing the sequence of the input data will improve the efficiency of the trained models. In this article I invite you to get acquainted with one of the methods for optimizing the input sequence.
+
+[img]
+[Price Action Analysis Toolkit Development (Part 3): Analytics Master — EA](https://www.mql5.com/en/articles/16434)
+
+[img]
+[Mastering Log Records (Part 1): Fundamental Concepts and First Steps in MQL5](https://www.mql5.com/en/articles/16447)
+
+Welcome to the beginning of another journey! This ar
+
+
+----------------------------------------------------------------------
+
+
+##### 17956 | Integration | Custom Debugging and Profiling Tools for MQL5 Development (Part III): Regression Gates for Performance and Trading Rules
+### Introduction
+The practical problem is familiar: an Expert Advisor can compile and the Strategy Tester can finish, while a regression remains hidden behind a harmless-looking log. Typical examples are listed below.
+
+- A buffer-copy path becomes more expensive after an indicator change.
+- A section that used to run on new bars starts running on every tick.
+- A lot-size rule passes on EURUSD but fails on a symbol with a different volume step.
+- A signal accidentally reads the current forming bar after a refactor.
+
+The gate answers three practical questions.
+
+- Did the selected profiled sections move enough to deserve PASS, WARN, SKIP, or FAIL?
+- Do the pure trading-math tests from Part II continue to pass?
+- Do the symbol-specific assumptions used by the example EA remain valid?
+
+### Conclusion
+Part III turns the reports from Part II into a decision. PerfMeter.mqh measures named sections, TestLite checks pure trading math, and TradeMathCore owns reusable calculations. The new gate reads those outputs, adds symbol-aware assertions, and produces a final status that can be reviewed without guessing. The package adds a decision layer without forking the earlier profiler or test helper.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17956.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/17956/MQL5.zip "Download MQL5.zip")
+(21.05 KB)
+
+[ProfilerExampleEA.mq5](https://www.mql5.com/en/articles/download/17956/ProfilerExampleEA.mq5 "Download ProfilerExampleEA.mq5")
+(6.93 KB)
+
+[PerfMeter.mqh](https://www.mql5.com/en/articles/download/17956/PerfMeter.mqh "Download PerfMeter.mqh")
+(9.66 KB)
+
+[RegressionGate.mqh](https://www.mql5.com/en/articles/download/17956/RegressionGate.mqh "Download RegressionGate.mqh")
+(32.3 KB)
+
+[TestLite.mqh](https://www.mql5.com/en/articles/download/17956/TestLite.mqh "Download TestLite.mqh")
+(11.08 KB)
+
+[TradeAssertions.mqh](https://www.mql5.com/en/articles/download/17956/TradeAssertions.mqh "Download TradeAssertions.mqh")
+(9.23 KB)
+
+[TradeMathCore.mqh](https://www.mql5.com/en/articles/download/17956/TradeMathCore.mqh "Download TradeMathCore.mqh")
+(6.41 KB)
+
+[DiagnosticGateRunner.mq5](https://www.mql5.com/en/articles/download/17956/DiagnosticGateRunner.mq5 "Download DiagnosticGateRunner.mq5")
+(10.14 KB)
+
+[PromoteProfilerBaseline.mq5](https://www.mql5.com/en/articles/download/17956/PromoteProfilerBaseline.mq5 "Download PromoteProfilerBaseline.mq5")
+(2.42 KB)
+
+[UnitTestRunner.mq5](https://www.mql5.com/en/articles/download/17956/UnitTestRunner.mq5 "Download UnitTestRunner.mq5")
+(5.6 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of t
+
+
+----------------------------------------------------------------------
+
+
+##### 19619 | Examples | Reusing Invalidated Orderblocks As Mitigation Blocks (SMC)
+### Introduction
+###
+
+### Conclusion
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/19619.zip "Download all attachments in the single ZIP archive")
+
+[OB\_t\_MitigationOB.mq5](https://www.mql5.com/en/articles/download/19619/OB_t_MitigationOB.mq5 "Download OB_t_MitigationOB.mq5")
+(14.75 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[From Novice to Expert: Market Periods Synchronizer](https://www.mql5.com/en/articles/19841)
+
+[img]
+[Market Simulation (Part 03): A Matter of Performance](https://www.mql5.com/en/articles/12580)
+
+Often we have to take a step back and then move forward. In this article, we will show all the changes necessary to ensure that the Mouse and Chart Trade indicators do not break. As a bonus, we'll also cover other changes that have occurred in other header files that will be widely used in the future.
+
+[img]
+[Introduction to MQL5 (Part 22): Building an Expert Advisor for the 5-0 Harmonic Pattern](https://www.mql5.com/en/articles/19856)
+
+This article explains how to detect and trade the 5-0 harmonic pattern in MQL5, validate it using Fibonacci levels, and display it on the chart.
+
+[img]
+[How to publish code to CodeBase: A practical guide](https://www.mql5.com/en/articles/19441)
+
+In this article, we will use real-life examples to illustrate posting various types of terminal programs in the MQL5 source code base.
+
+
+----------------------------------------------------------------------
+
+
+##### 21133 | Examples | From Novice to Expert:  Extending a Liquidity Strategy with Trend Filters
+### Introduction
+The objective of this article is to address that limitation. We will extend the original liquidity strategy by introducing a trend-based constraint, allowing the trader to control how and when liquidity setups are taken. By doing so, we preserve the core mechanics of the liquidity model while aligning it with a higher-probability market bias.
+
+This article assumes that you have followed the previous installments of the “[From Novice to Expert](https://www.mql5.com/en/articles/20986)” series and understand the foundational liquidity strategy discussed earlier. In the next section, we will explore several approaches for filtering bad setups and then select one for practical implementation in MQL5.
+
+###
+
+### Conclusion
+For a concise summary of the main insights discussed, refer to the Key Lessons table below, as well as the Attachments section containing the source code used throughout this article.
+
+Importantly, this extension preserves the original strategy’s flexibility while providing greater confidence and consistency. The liquidity mechanics remain unchanged: zones are still identified, compression is still measured, and orders are still placed with precision. What has changed is the framework within which these mechanics operate—one that respects the market’s dominant direction.
+
+
+----------------------------------------------------------------------
+
+
+##### 21279 | Examples | The MQL5 Standard Library Explorer (Part 9): Using ALGLIB to Filter Excessive MA Crossover Signals
+### Introduction
+Many traders attempt to address this by increasing the periods (making the averages smoother but slower) or by adding filters (RSI, ADX, etc.). These approaches can help, but they remain heuristic adjustments layered on top of the original structure.
+
+In this article, we’ll transform a basic moving average crossover into a mathematically preprocessed system using three ALGLIB techniques:
+
+- basic statistical filters,
+- Singular Spectrum Analysis (SSA),
+- and spline-based derivative analysis.
+
+By the end, you’ll see how mathematical preprocessing can reduce signal frequency in ranging conditions while preserving responsiveness during trends.
+
+###
+
+### Conclusion
+Now that we've seen the indicator in action—both on live charts and across historical data in the Strategy Tester—let's reflect on what we've accomplished together.
+
+We now have a working indicator that lets us visually compare filtered moving average crossovers side by side. On our charts, we can clearly see how the baseline EMAs behave compared to their filtered counterparts. The filtered crossovers appear less frequently during sideways markets—exactly what we hoped mathematical preprocessing would achieve.
+
+We've learned that we can experiment with parameters to discover how each filter behaves. By adjusting FilterWindow, SSAWindow, SSARank, and SplineDerivScale, we can immediately see the impact on smoothness, lag, and signal frequency. This hands-on exploration builds intuition far better than reading theory alone.
+
+The modular structure of our code means we could:
+
+- Replace the EMA-filtered crossover with crossovers from any of the other filtered series (SMA-filtered, LRMA-filtered, SSA trend, etc.) and compare them.
+- Extract the filtered signals to generate alerts or notifications when crossovers occur.
+- Use the preprocessing techniques we've demonstrated here as the foundation for an Expert Advisor—taking our filtered crossover logic and automating it for backtesting and forward testing.
+- Experiment with entirely different ALGLIB functions—optimization routines, clustering algorithms, or advanced statistical tests—and apply them to our trading ideas.
+
+Download the indicator from the attachment below. Apply it to your favorite pairs and timeframes. Twist the parameters. Break it, fix it, improve it. Let the visual feedback guide your understanding. And when you're ready, take the next step—build that robot, run that optimization, explore that new filter.
+
+I'd love to hear your observations, questions, and experiments in the discussion. The code is yours to use, modify, and learn from. Your contributions help refine these ideas and strengthen our community.
+
+Happy coding, everyone.
+
+###
+
+
+----------------------------------------------------------------------
+
+
+##### 21446 | Trading | Using the MQL5 Economic Calendar for News Filtering (Part 2): Stop Management Positions During News Releases
+### Introduction
+###
+
+### Conclusion
+Below is an image showing print statements of a news window in action.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21446.zip "Download all attachments in the single ZIP archive")
+
+[News\_Filter\_integration\_Part2.mq5](https://www.mql5.com/en/articles/download/21446/News_Filter_integration_Part2.mq5 "Download News_Filter_integration_Part2.mq5")
+(16.05 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Neural Networks in Trading: Dual Clustering of Multivariate Time Series (DUET)](https://www.mql5.com/en/articles/17459)
+
+The DUET framework offers an innovative approach to time series analysis, combining temporal and channel clustering to uncover hidden patterns in the analyzed data. This allows models to adapt to changes over time and improve forecasting quality by eliminating noise.
+
+[img]
+[Larry Williams Market Secrets (Part 14): Detecting Hidden Smash Day Reversals with a Custom Indicator](https://www.mql5.com/en/articles/21392)
+
+This article develops a practical MQL5 indicator that identifies Hidden Smash Day bars by strict numeric criteria and optional confirmation on the following session. We cover detection routines, buffer registration, and plot configuration to place arrows at valid bars. The approach delivers stable, non-repainting signals for historical testing and real-time monitoring.
+
+[img]
+[From Novice to Expert: Enhancing Liquidity Strategies with Multi-Timeframe Structural Confirmation in MQL5](https://www.mql5.com/en/articles/21581)
+
+[img]
+[Low-Frequency Quantitative Strategies in Metatrader 5: (Part 1) Setting Up An OLAP-Friendly Data Store](https://www.mql5.com/en/articles/21679)
+
+[[img]
+
+Learn to create your own robots
+Read our book "MQL5 Programming for Traders"
+
+
+----------------------------------------------------------------------
+
+
+##### 21460 | Examples | Formulating Dynamic Multi-Pair EA (Part 7): Cross-Pair Correlation Mapping for Real-Time Trade Filtering
+### Introduction
+
+
+### Conclusion
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21460.zip "Download all attachments in the single ZIP archive")
+
+[Cross-Pair\_Correlation.mq5](https://www.mql5.com/en/articles/download/21460/Cross-Pair_Correlation.mq5 "Download Cross-Pair_Correlation.mq5")
+(20.17 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[The MQL5 Standard Library Explorer (Part 9): Using ALGLIB to Filter Excessive MA Crossover Signals](https://www.mql5.com/en/articles/21279)
+
+During sideways price movements, traders face excessive signals from multiple moving average crossovers. Today, we discuss how ALGLIB preprocesses raw price data to produce filtered crossover layers, which can also generate alerts when they occur. Join this discussion to learn how a mathematical library can be leveraged in MQL5 programs.
+
+[img]
+[Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Attraos)](https://www.mql5.com/en/articles/17351)
+
+The Attraos framework integrates chaos theory into long-term time series forecasting, treating them as projections of multidimensional chaotic dynamic systems. Exploiting attractor invariance, the model uses phase space reconstruction and dynamic multi-resolution memory to preserve historical structures.
+
+[img]
+[Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Final Part)](https://www.mql5.com/en/articles/17371)
+
+We continue to integrate methods proposed by the authors of the Attraos framework into trading models. Let me remind you that this framework uses concepts of chaos theory to solve time series forecasting problems, interpreting them as projections of multidimensional chaotic dynamic systems.
+
+[img]
+[Price Action Analysis Toolkit Development (Part 63): Automating Rising and Falling Wedge Detecti
+
+
+----------------------------------------------------------------------
+
+
+##### 22290 | Trading systems | Three MACD Filters on US_TECH100: Five Years of Broker Data
+### Introduction
+I have been looking at charts for more than twenty years, and I have been programming in MQL5 for about ten. It took me almost a decade of programming to feel that I understood what I was doing, rather than just copying patterns from other people's code. Two years ago something clicked, and since then I have been building my own tools instead of buying them.
+
+So I used real broker H1 data for US\_TECH100, ran the raw MACD crossover strategy, and then added each filter one at a time to measure the impact on the results. There are no opinions and no narratives, just closed trades, win rates, and expectancy over five years.
+
+The result surprised me. The filter everyone talks about the least is the one that moved the needle the most. Two of the three "standard" filters barely changed anything when used alone. Below is the full breakdown, with the MQL5 code so you can reproduce it on your own data.
+
+The article targets two audiences: traders new to systematic analysis, and developers who want the full MQL5 implementation and results. Both should leave with the same conclusion: on this particular instrument and timeframe, conventional wisdom about MACD filters is not supported by the data.
+
+###
+
+### Results: The Full Comparison
+Here is the complete table for five years of data on the same instrument and entry logic; only the filters change:
+
+| Configuration | Trades | Win Rate | Expectancy | Profit Factor | Max Drawdown |
+| --- | --- | --- | --- | --- | --- |
+| Raw MACD | 2,213 | 46.5% | +0.017R | 1.03 | -28.8R |
+| + Regime | 1,634 | 46.1% | +0.013R | 1.02 | -33.4R |
+| + Regime + HTF | 794 | 45.8% | +0.007R | 1.01 | -29.6R |
+| + Regime + HTF + Session | 195 | 50.3% | +0.100R | 1.20 | -9.7R |
+
+Let me translate what this means for a trader reading the table.
+
+The raw MACD on US\_TECH100 is not as bad as some people paint it. With 2.5/3.0 ATR stops, over five years it produces a barely positive expectancy of +0.017R per trade and a profit factor just above break-even. You would not get rich with it, but it is not pure noise either. That is an honest starting point that many vendor pitches conveniently omit.
+
+Adding the regime filter alone did almost nothing. It removed 579 trades (26% of the flow), but the surviving trades have similar win rates and expectancies. The maximum drawdown even got slightly worse, which is an uncomfortable result, but it is what the data shows. This contradicts what many vendors claim about regime filters.
+
+Adding HTF alignment on top of the regime filter made things slightly worse again. Another 840 trades are removed, and the expectancy drops to +0.007R, effectively break-even. The 'trade with the trend' rule did not add edge here, at least on H1 using EMA200 as the trend definition.
+
+The session filter is what changed everything. Restricting trading to the main US session removed another 599 trades, leaving only 195 over five years (about 40 per year). But those 195 trades have a +0.100R expectancy, a profit factor of 1.20, and a maximum drawdown three times smaller than the raw version.
+
+[img]
+
+Figure 1. Cumulative R multiples for the four configurations over five years of US\_TECH100 H1 data
+
+The equity curves illustrate this visually. Notice how the raw MACD (gray) and the two intermediate configurations (light and medium blue) produce similar shapes: choppy, with deep drawdowns, marginally positive over the full period. The session-filtered curve (dark b
+
+### Conclusion
+The three-filter combination on a MACD crossover strategy produces meaningful improvement over the raw version, but not in the way most vendor pitches suggest. Regime filtering alone did nothing measurable. HTF alignment alone did nothing measurable. The session filter did most of the work.
+
+The practical takeaway from five years of data on TECH100 H1 is this: if you are going to trade MACD crossovers on US indices, the single most important parameter is not the MACD settings or the regime logic. It is what hours of the day you let the system fire. Everything else is marginal.
+
+This goes against the complexity-sells-more bias of the indicator market. But the data is what the data is.
+
+All code referenced in this article is attached below. The following table describes the source code files that accompany the article.
+
+| # | Name | Description |
+| --- | --- | --- |
+| 1 | RegimeClassifier.mqh | Include file containing the CRegimeClassifier class. Provides 4-state market regime detection (TREND, NORMAL, RANGE, VOLATILE) using ADX and adaptive ATR percentile thresholds. Should be placed in MQL5/Include/MBorasi/ before compiling the script |
+| 2 | MACD\_Filter\_Backtest.mq5 | Standalone script that reproduces the full backtest from the article. Iterates over all available historical bars on the chart, applies the four progressive filter configurations (raw MACD, +Regime, +Regime+HTF, +Regime+HTF+Session), and reports complete metrics to the Experts log. Also exports a detailed CSV file to MQL5/Files/ for further analysis |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22290.zip "Download all attachments in the single ZIP archive")
+
+[MACD\_Filter\_Backtest.mq5](https://www.mql5.com/en/articles/download/22290/MACD_Filter_Backtest.mq5 "Download MACD_Filter_Backtest.mq5")
+(20 KB)
+
+[RegimeClassifier.mqh](https://www.mql5.com/en/articles/download/22290/RegimeClassifier.mqh "Download RegimeClassifier.mqh")
+(4.58 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal 
+
+
+----------------------------------------------------------------------
+
+
+##### 22580 | Trading systems | News Filtering with MetaTrader 5 Economic Calendar and CSV Fallback
+### Introduction
+###
+
+### Conclusion
+The MetaTrader 5 economic calendar has been available to MQL5 programmers for several years and remains one of the least-used features in the platform. The six calendar functions give every MetaTrader 5 user free access to the same news schedule that manual traders consult on Forex Factory and DailyFX — but accessible directly in code, without web scraping, API keys, or subscriptions.
+
+**Programs used in this article**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | NewsFilter.mqh | Include File | The core include file containing all filtering logic, live API integration, and automated CSV health checks. It automatically toggles between live and tester modes to manage news-based trade restrictions. |
+| 2 | NewsEventLogger.mq5 | Script | A companion script that generates date-stamped CSV files from the MetaTrader 5 Calendar for backtesting. It saves these files to the Common folder, ensuring the filter has historical data during strategy simulations. |
+| 3 | NewsFilterDemo.mq5 | Demo EA | A sample EMA crossover EA that demonstrates the integration. It features a real-time dashboard for live trading and a detailed trade-block summary in the Journal for backtest verification. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22580.zip "Download all attachments in the single ZIP archive")
+
+[NewsFilter.mqh](https://www.mql5.com/en/articles/download/22580/NewsFilter.mqh "Download NewsFilter.mqh")
+(11.64 KB)
+
+[NewsEventLogger.mq5](https://www.mql5.com/en/articles/download/22580/NewsEventLogger.mq5 "Download NewsEventLogger.mq5")
+(4.56 KB)
+
+[NewsFilterDemo.mq5](https://www.mql5.com/en/articles/download/22580/NewsFilterDemo.mq5 "Download NewsFilterDemo.mq5")
+(6.31 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Integrating AI into 3 Smart Mo
+
+
+----------------------------------------------------------------------
+
+
+##### 22755 | Trading systems | Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades
+### Introduction
+The implementation follows the two-stage *ModelDevelopmentPipeline* workflow established in [Blueprint Part 9](https://www.mql5.com/en/articles/21823 "Integrating Bayesian HPO into the Production Pipeline"). It reuses *BollingerStrategy* and adds *create\_bollinger\_features* for Bollinger-specific features. Deployment uses the two‑EA file‑bus architecture adapted for ONNX inference.
+
+[img]
+
+Figure 1. Three-panel illustration of Bollinger Band signal quality by regime
+
+- Panel (a): Synthetic price with 20-period Bollinger Bands. Buy signals (▲) appear at lower-band touches; sell signals (▼) appear at upper-band touches. The shaded region marks the trending phase where most sell signals produce losses rather than mean reversion.
+- Panel (b): ADX(14) over the same period. ADX rises above 25 during the trending phase and falls when the market returns to a ranging state.
+- Panel (c): Synthetic win rates by ADX quartile. Both buy and sell signals degrade monotonically as ADX rises; signals in the highest-ADX quartile fall well below the 50% random baseline. The meta-labeler's job is to suppress these low-quality signals at inference time.
+
+### Results
+Figure 5 shows an illustrative outcome of applying the meta-labeling filter. These results are generated from synthetic data and are included to demonstrate the pipeline's structure rather than to make empirical claims about EUR/USD performance.
+
+[img]")
+
+Figure 5. Two-panel illustration of primary vs meta-labeled strategy outcomes (synthetic data)
+
+- Panel (a): Cumulative return over the out-of-sample period. The primary strategy (all signals, grey) accumulates losses due to trending-regime failures. The meta-labeled strategy (blue) retains profitable signals while suppressing the systematic loss cluster.
+- Panel (b): Win rate and trade count comparison. Meta-labeling reduces trade count from 300 to 140 (-53%) while raising win rate from 50.2% to 56.8%. The key observation is not the absolute win rate improvement but the direction: the filter must be better than random at identifying the profitable half of the primary model's signals.
+
+The trade-off between precision and coverage is the central operational question in meta-labeling. A higher threshold (eg, 0.65 instead of 0.55) increases precision but reduces coverage. Fewer accepted signals reduce both expected P&L and the sample size for inference. Step-discretized bet sizing mitigates this by allocating smaller positions to borderline signals.
+
+### Conclusion
+The next article in this series applies the same framework to MACD divergence signals, which present a different challenge: the primary signal is rare and the secondary model must learn to distinguish genuine momentum shifts from noise within an already sparse signal set.
+
+
+----------------------------------------------------------------------
+
+
+##### 23700 | Machine learning | Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)
+### Introduction
+Machine learning is the obvious next step, but most articles that reach for it train a model once offline, freeze the weights, and export them into the EA. That inherits the same blind spot: the model is a snapshot, and the relationship it learned is not guaranteed to still hold once the market's character changes, with no mechanism to notice it hasn't.
+
+This article builds a filter with that missing mechanism included: an online logistic regression whose weights update themselves after every closed trade, using nothing but native MQL5 arrays and a five-line SGD step. No external training script, no ONNX export, no retraining schedule to remember.
+
+### Operational notes: running this live
+Three things beyond the mechanism itself matter once this runs unattended: keeping the weights file honest, avoiding leakage, and knowing where to start.
+
+### Conclusion
+What isn't proven: that these features or this label carry a real, cost-resistant edge on any instrument. That's a trading claim, open until Section 13's walk-forward runs on real tick data.
+
+| File | Type | Description |
+| --- | --- | --- |
+| OnlineLogReg.mqh | Library | The COnlineLogReg class: sigmoid forward pass, per-sample SGD update with L2 regularization, optional learning-rate decay, and CSV save/load persistence. |
+| OnlineML\_SignalFilter\_EA.mq5 | Expert Advisor | EMA crossover signal, six-feature construction, probability-threshold filtering, ATR-based trade management, and the closed-trade feedback loop that labels and updates the model. |
+| OnlineML\_ProbabilityView.mq5 | Indicator | Read-only sub-window plot of the model's win-probability estimate, loaded from the EA's saved weights file. |
+| OnlineML\_SyntheticEvidence.mq5 | Script | v2.00: single-seed checkpoint table, plus a 200-seed statistical summary, six-way feature ablation (50 seeds each), and calibration diagnostics (ROC-AUC, Brier, log-loss, reliability table). |
+| OnlineML\_RegimeShift\_Evidence.mq5 | Script | v2.00: compares four policies across a regime shift, online, frozen, periodic (all-history batch retrain), and rolling (400-trade window retrain), with a single-seed printout and a 30-seed summary table. |
+| MQL5.zip | Archive | Archive with all five source files above plus the figure images. Unpack it into the terminal installation directory and every file is placed in its required location. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23700.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23700/MQL5.zip "Download MQL5.zip")
+(13.6 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Feature Engineering fo
+
+
+----------------------------------------------------------------------
+
+
+##### 17781 | Trading | Building a Custom Market Regime Detection System in MQL5 (Part 2): Expert Advisor
+### Introduction
+This is precisely the gap we will bridge in Part 2. Building upon the foundation laid previously, we will now focus on practical application and refinement. In this article, we will delve into:
+
+- Building an Adaptive Expert Advisor (EA): We'll construct a complete MarketRegimeEA that integrates our CMarketRegimeDetector to automatically select and execute different trading strategies (trend-following, mean-reversion, breakout) tailored to the detected regime.
+- Implementing Regime-Specific Risk Management: The EA will demonstrate how to adjust parameters like lot size, stop loss, and take profit based on the current market state.
+- Practical Considerations: We'll explore crucial aspects of real-world implementation, including parameter optimization for different instruments and timeframes.
+- Handling Regime Transitions: Strategies to manage the critical moments when the market shifts from one regime to another, ensuring smoother strategy adjustments.
+- Integration Techniques: Discussing how to incorporate the Market Regime Detection System into your existing trading frameworks to enhance their adaptability.
+
+By the end of this second part, you will not only understand how to detect market regimes but also how to build an automated trading system that intelligently adapts its behavior, aiming for more consistent performance across the diverse conditions financial markets present. Let's transform our detection system into a truly adaptive trading solution.
+
+### Practical Considerations and Optimization
+In this final section, we'll discuss practical considerations for implementing and optimizing the Market Regime Detection System in real trading environments. We'll cover parameter optimization, regime transition handling, and integration with existing trading systems.
+
+**Parameter Optimization**
+
+The effectiveness of our Market Regime Detection System depends significantly on the choice of parameters. Here are key parameters that traders should optimize for their specific trading instruments and timeframes:
+
+1. Lookback Period:The lookback period determines how much historical data is used for regime detection. Longer periods provide more stable regime classifications but may be less responsive to recent market changes. Shorter periods are more responsive but may generate more false signals.  
+
+   
+[CODE]
+
+   Typically, lookback periods between 50 and 200 bars work well for most instruments and timeframes. The optimal value depends on the typical duration of market regimes for the specific instrument being traded.
+2. Trend Threshold:The trend threshold determines how strong a trend must be to classify the market as trending. Higher thresholds result in fewer trending classifications but with higher confidence. Lower thresholds identify more trends but may include weaker ones.  
+
+   
+[CODE]
+
+   Trend thresholds between 0.1 and 0.3 are common starting points. The optimal value depends on the instrument's typical trending behavior.
+3. Volatility Threshold: The volatility threshold determines how much volatility is required to classify the market as volatile. Higher thresholds result in fewer volatile classifications, while lower thresholds identify more volatile periods.  
+
+   
+[CODE]
+
+   Volatility thresholds between 1.5 and 2.5 are common starting points. The optimal value depends on the instrument's typical volatility characteristics.
+
+**Handling Regime Transitions**
+
+Note: The following 5 code blocks are not the implementation of the idea rather just the ideas and pseudo code of how teh implementation might look like.
+
+Regime transitions are critical moments that require special attention. Abrupt changes in trading strategy during transitions can lead to poor 
+
+### Conclusion
+###
+
+
+----------------------------------------------------------------------
+
+
+##### 1441 | Trading systems | Filtering by History
+### Introduction
+There are different filters: values of indicators, market volatility, time, weekday.
+They all can be used for sifting loss trades. It is quite easy to add such a filter
+into an Expert Advisor - just add one more condition before the opening block.  
+  
+But what should be done, if you want to use the EA history as a filter? If you
+switch off your trade system after a number of unsuccessful trades, you will not
+have a history later, and therefore there will be nothing to be analyzed. To solve
+this problem we need to teach an Expert Advisor trade virtually, i.e. simulate
+opening, modification and closing of trades without real trading activity.   
+  
+This is what this article is about.
+
+### Conclusion
+I think, such filters are not enough for a real system improvement - much deeper
+research must be conducted and new conclusions made.  
+  
+The filters described may be more complex and absolutely different for each strategy.
+Their efficiency directly depends on the interchange of profitable and losing positions.
+  
+  
+This article dwells only on the mater of filtering. But I hope it will give an
+impulse to further developments.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/1441>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/1441.zip "Download all attachments in the single ZIP archive")
+
+[CrossMACD\_TradeFiltr.mq4](https://www.mql5.com/en/articles/download/1441/crossmacd_tradefiltr.mq4 "Download CrossMACD_TradeFiltr.mq4")
+(41.09 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Trading Using Linux](https://www.mql5.com/en/articles/1438)
+
+The article describes how to use indicators to watch the situation on financial markets online.
+
+[img]
+[How Not to Fall into Optimization Traps?](https://www.mql5.com/en/articles/1434)
+
+The article describes the methods of how to understand the tester optimization results better. It also gives some tips that help to avoid "harmful optimization".
+
+[img]
+[Break Through The Strategy Tester Limit On Testing Hedge EA](https://www.mql5.com/en/articles/1493)
+
+An idea of testing the hedge Expert Advisors using the strategy tester.
+
+[img]
+[Universal Expert Advisor Template](https://www.mql5.com/en/articles/1495)
+
+The article will help newbies in trading to create flexibly adjustable Expert Advisors.
+
+
+----------------------------------------------------------------------
+
+
+##### 22389 | Trading systems | MQL5 Wizard Techniques you should know (Part 88): Using Blooms Filter with a Custom Trailing Class
+### Introduction
+
+
+### Conclusion
+| name | description |
+| --- | --- |
+| wz\_88.mq5 | Wizard Assembled Expert Advisor |
+| TrailingBlooming.mqh | Custom Trailing Class used in MQL5 Wizard Assembly |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22389.zip "Download all attachments in the single ZIP archive")
+
+[TrailingBlooming.mqh](https://www.mql5.com/en/articles/download/22389/TrailingBlooming.mqh "Download TrailingBlooming.mqh")
+(7.58 KB)
+
+[wz\_88.mq5](https://www.mql5.com/en/articles/download/22389/wz_88.mq5 "Download wz_88.mq5")
+(8.68 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Graph Theory: Heuristic Search Algorithm (A-Star) Applied in Trading](https://www.mql5.com/en/articles/22184)
+
+[img]
+[Price Action Analysis Toolkit Development (Part 68): Price-Attached RSI Panel in MQL5](https://www.mql5.com/en/articles/22110)
+
+We present a chart-embedded RSI panel that removes the need for a separate window by attaching momentum directly to live price. The article explains the design and MQL5 code: real-time RSI retrieval, slope-based signal classification, and adaptive positioning. Traders get RSI value, state, and signal strength where decisions are made, improving clarity across timeframes.
+
+[img]
+[How to implement AutoARIMA forecasting in MQL5](https://www.mql5.com/en/articles/22224)
+
+This article presents an MQL5 implementation of AutoARIMA that builds ARIMA models without manual tuning. It estimates d via a variance-based heuristic, fits ARMA(p,q) by gradient optimization with Adam, and selects p and q using AICc. The code returns a one-step-ahead price forecast by differencing, model estimation, and integration back to price level, ready to call on a Close series.
+
+[img]
+[Feature Engineering for ML (Part 2): Implementing Fixed-Width Fractional Differentiation in MQL5](https://
+
+
+----------------------------------------------------------------------
+
+
+##### 23149 | Trading systems | Digital Signal Processing for Traders: Building Ehlers' Filter Library in MQL5
+### Introduction
+We will keep the mathematics honest but practical. You will see the formulas and the exact coefficients Ehlers specified, with enough explanation to understand why each one is there, but we will not derive transfer functions from first principles. The goal is practical code a developer can read, trust, and reuse—not a signal-processing course.
+
+### Conclusion
+You now have two indicators you can use immediately and a library that the rest of the series builds on. In Part 2 we measure the dominant cycle with the Hilbert transform, build the MESA Adaptive Moving Average, and put everything together into a regime-switching Expert Advisor that we test in the Strategy Tester. The filters built here are the foundation that makes that strategy possible.
+
+| File | Type | Description |
+| --- | --- | --- |
+| EhlersDSP.mqh | Library | The full DSP class library: SignalHistory, SuperSmoother, RoofingFilter, CyclePeriod, MAMA, and EvenBetterSinewave. |
+| EhlersRoofingFilter.mq5 | Indicator | Roofing Filter (2-pole high-pass cascaded into a Super Smoother) plotted in a subwindow. |
+| EhlersEvenBetterSinewave.mq5 | Indicator | Even Better Sinewave oscillator with level lines, showing cycle swings and trend-mode railing. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23149.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23149/MQL5.zip "Download MQL5.zip")
+(7.65 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Beyond GARCH (Part VII): Monte Carlo Volatility Forecasting in MQL5](https://www.mql5.com/en/articles/22537)
+
+[img]
+[Heatmap Visualization of Intraday Return Patterns in MQL5 Using CCanvas](https://www.mql5.com/en/articles/23168)
+
+[img]
+[Implementation of the Quantum Reservoir Computing (QRC) circuit](https://www.mql5.com/en/articles/19043)
+
+A revolutionary approach to machine learning in trading through quantum computing. The article demonstrates a practical implementation of an adaptive QRC system with continuous retraining for predicting market movements in real time.
+
+[img]
+[Market Microstructure in MQL5 (Part 7): Regime Classification](https://www.
+
+
+----------------------------------------------------------------------
+
+
+##### 23532 | Trading systems | Designing a Unified Order Execution Gateway Class in MQL5
+### Introduction
+This is not a hypothetical problem. It is the normal trajectory of an EA codebase that started small and grew. The execution logic is not wrong, exactly — it is just scattered, which makes it hard to test in isolation and hard to change with confidence.
+
+[img]
+
+Architectural diagram showing CExecutionGateway mediating between the strategy layer and OrderSend, using CLotNormalizer and CSlTpValidator to validate requests before submission.
+
+###
+
+### Conclusion
+**Programs used in the article:**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | GatewayResult.mqh | Include File | CGatewayResult struct holding the outcome of a single execution attempt. |
+| 2 | LotNormalizer.mqh | Include File | CLotNormalizer class rounding and clamping lot size to broker constraints. |
+| 3 | SlTpValidator.mqh | Include File | CSlTpValidator class checking and widening SL/TP against the broker's reported minimum stop distance. |
+| 4 | ExecutionGateway.mqh | Include File | CExecutionGateway class, the central single point of contact for all trade operations, including filling-mode resolution. |
+| 5 | GatewayEA.mq5 | Demo EA | Demo EA that wires up CExecutionGateway and opens/closes one position per day. |
+| 6 | TestExecutionGateway.mq5 | Script | Verification script with synthetic unit tests for the normalizer, validator, and retcode classification logic. |
+| 7 | Execution\_Gateway.zip | Zip Archive | Zip archive containing all the attached files and their paths relative to the terminal's root folder. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23532.zip "Download all attachments in the single ZIP archive")
+
+[GatewayResult.mqh](https://www.mql5.com/en/articles/download/23532/GatewayResult.mqh "Download GatewayResult.mqh")
+(2.59 KB)
+
+[LotNormalizer.mqh](https://www.mql5.com/en/articles/download/23532/LotNormalizer.mqh "Download LotNormalizer.mqh")
+(5.33 KB)
+
+[SlTpValidator.mqh](https://www.mql5.com/en/articles/download/23532/SlTpValidator.mqh "Download SlTpValidator.mqh")
+(7.11 KB)
+
+[ExecutionGateway.mqh](https://www.mql5.com/en/articles/download/23532/ExecutionGateway.mqh "Download ExecutionGateway.mqh")
+(16 KB)
+
+[GatewayEA.mq5](https://www.mql5.com/en/articles/download/23532/GatewayEA.mq5 "Download GatewayEA.mq5")
+(5.1 KB)
+
+[TestExecutionGateway.mq5](https://www.mql5.com/en/articles/download/23532/TestExecutionGateway.mq5 "Download TestExecutionGateway.mq5")
+(8.83 KB)
+
+[Execution\_Gateway.zip](https://www.mql5.com/en/articles/download/23532/Execution_Gateway.zip "Download Execution_Gateway.zip")
+(13.62 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Cop
+
+
+----------------------------------------------------------------------
+
+
+##### 21803 | Trading | Using the MQL5 Economic Calendar for News Filter (Part 3): Surviving Terminal Restarts During News Window
+### Introduction
+Problem: State Loss on Restart
+
+To address this, we define a recovery contract. The system must persist trade state externally: ticket IDs, stop levels, and suspension status. Upon reinitialization, this data must be restored accurately, ensuring that the system resumes operation without prematurely restoring stops or leaving trades unprotected.
+
+This article implements a persistent state layer using global variables of the terminal, ensuring that the system maintains continuity across interruptions and behaves deterministically under all restart conditions.
+
+[img]
+
+Solution: Persistent Storage Using Global Variables of the Terminal
+
+To solve this, we must move the suspension state from volatile memory to persistent storage that survives a restart. MetaTrader 5 provides a simple but powerful mechanism: global variables of the terminal.
+
+These are named double-valued variables stored by the terminal itself, accessible from any Expert Advisor, and they persist even after the terminal is closed and reopened. By using them, we can reconstruct the entire suspension state when the EA restarts.
+
+### Conclusion
+The complete source code is available in the attached files, I recommend implementing the changes yourself, to better understand the EA and troubleshoot future issues. You can now integrate this news filter into your own Expert Advisors, knowing that it will help protect your trading edge even through terminal restarts.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21803.zip "Download all attachments in the single ZIP archive")
+
+[News\_Filter\_integration\_part3.mq5](https://www.mql5.com/en/articles/download/21803/News_Filter_integration_part3.mq5 "Download News_Filter_integration_part3.mq5")
+(18.64 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Pair Trading: Algorithmic Trading with Auto Optimization Based on Z-Score Differences](https://www.mql5.com/en/articles/17800)
+
+In this article, we will explore what pair trading is and how correlation trading works. We will also create an EA for automating pair trading and add the ability to automatically optimize this trading algorithm based on historical data. In addition, as part of the project, we will learn how to calculate the differences between two pairs using the z-score.
+
+[img]
+[MQL5 Trading Tools (Part 26): Integrating Frequency Binning, Entropy, and Chi-Square in Visual Analyzer](https://www.mql5.com/en/articles/21339)
+
+[img]
+[Market Simulation (Part 18): First Steps with SQL (I)](https://www.mql5.com/en/articles/12926)
+
+[img]
+[Neuro-Structural Trading Engine — NSTE (Part II): Jardine's Gate Six-Gate Quantum Filter](https://www.mql5.com/en/articles/21351)
+
+[Need a reliable hosting solution for your robots?
+Contact your broker and find out about available Sponsored MetaTrader VPS offerings
+Learn more
+
+[img]](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=vljwvezfjkfbvvioc
+
+
+----------------------------------------------------------------------
+
+
+##### 20996 | Examples | Price Action Analysis Toolkit Development (Part 57): Developing a Market State Classification Module in MQL5
+### Introduction
+In this part of the [Price Action Analysis Toolkit Development](https://www.mql5.com/en/users/lynnchris/publications) series, we introduce an automated MQL5 system designed to classify the current state of the market using pure price action. The sections that follow explain the underlying concept, the classification logic, and the implementation approach in detail.
+
+### Conclusion
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20996.zip "Download all attachments in the single ZIP archive")
+
+[Market\_State\_Classifier.mq5](https://www.mql5.com/en/articles/download/20996/Market_State_Classifier.mq5 "Download Market_State_Classifier.mq5")
+(38.35 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Automating Trading Strategies in MQL5 (Part 47): Nick Rypock Trailing Reverse (NRTR) with Hedging Features](https://www.mql5.com/en/articles/21096)
+
+In this article, we develop a Nick Rypock Trailing Reverse (NRTR) trading system in MQL5 that uses channel indicators for reversal signals, enabling trend-following entries with hedging support for buys and sells. We incorporate risk management features like auto lot sizing based on equity or balance, fixed or dynamic stop-loss and take-profit levels using ATR multipliers, and position limits.
+
+[img]
+[MQL5 Trading Tools (Part 14): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar](https://www.mql5.com/en/articles/21072)
+
+[img]
+[Triangular and Sawtooth Waves: Analytical Tools for Traders](https://www.mql5.com/en/articles/17595)
+
+Wave analysis is one of the methods used in technical analysis. This article focuses on two less conventional wave patterns: triangular and sawtooth waves. These formations underpin a number of technical indicators designed for market price analysis.
+
+[img]
+[Larry Williams Market Secrets (Part 8): Combining Volatility, Structure and Time Filters](https://www.mql5.com/en/articles/21003)
+
+An in-depth walkthrough of building a Larry Williams inspired volatility breakout Expert Advisor in MQL5, combining swing structure, volatility-based entries, trade day of the week filtering, time filters, and flexible risk management, with a complete implementati
+
+
+----------------------------------------------------------------------
+
+
+##### 23444 | Trading | Digital Signal Processing for Traders (Part 2): The Dominant Cycle, MAMA, and a Regime-Switching Expert Advisor
+### Introduction
+
+
+### Conclusion
+1. **CyclePeriod class and indicator.** The Hilbert homodyne discriminator that returns a smoothed dominant period in bars, with hard clamps (6 to 50 bars, no more than 50% change bar-to-bar), double smoothing, and public accessors *Value()* (smoothed period), *RawPeriod()*, *InPhase()*, *Quadrature()* and *Ready()*. This is a stable, testable input for any adaptive module.
+
+| File | Type | Description |
+| --- | --- | --- |
+| EhlersDSP.mqh | Library | The full DSP class library: SignalHistory, SuperSmoother, RoofingFilter, CyclePeriod, MAMA, and EvenBetterSinewave. |
+| EhlersRoofingFilter.mq5 | Indicator | Roofing Filter (2-pole high-pass cascaded into a Super Smoother) plotted in a subwindow. Built in Part 1. |
+| EhlersEvenBetterSinewave.mq5 | Indicator | Even Better Sinewave oscillator with level lines, showing cycle swings and trend-mode railing. Built in Part 1. |
+| EhlersCyclePeriod.mq5 | Indicator | Dominant-cycle period (bars) via the Hilbert homodyne discriminator, plotted in a subwindow. |
+| EhlersMAMA.mq5 | Indicator | MESA Adaptive Moving Average (MAMA) and its follower FAMA, plotted on the price chart. |
+| EhlersRegimeEA.mq5 | Expert Advisor | Regime-switching EA: Even Better Sinewave selects cycle vs trend mode, then fades the sinewave (cycle) or follows MAMA/FAMA (trend). |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23444.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23444/MQL5.zip "Download MQL5.zip")
+(12.59 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Price Action Analysis Toolkit Development (Part 75): Building a Modular Multi-Symbol Trading Panel in MQL5](https://www.mql5.com/en/articles/23352)
+
+A structured MQL5 implementation of a multi‑symbol trading panel w
+
+
+----------------------------------------------------------------------
+
+
+##### 22783 | Trading systems | Low-Frequency Quantitative Strategies in MetaTrader 5 (Part 3): A Regime-Adaptive Mean-Reversion Swing Trading System
+### Introduction
+Almost a decade later, quantitative systems designer David Abrams and portfolio manager Scott Walker used the Value Charts and Price Action Profile methods to build a sophisticated mean-reversion swing trading system. They published it in 2010 and reported impressive equity-market results. They named the system MR Swing.
+
+MRSwing was included 'as a 20% component in a diversified portfolio of low-correlation ETFs based on the Ivy Portfolio, modeled after university endowments. MR Swing increased the combined portfolio CAGR by a factor of 1.5 while reducing the max drawdown to only 4%.'
+
+Beyond the good stats in the equity market, the MR Swing system presents at least two characteristics that deserve our attention, irrespective of the market:
+
+- non-symmetrical trading algorithms for different market regimes
+- volatility adaptive metrics
+
+We will start with a brief description of what Value Charts and Price Action Profile are, along with an overview of how they are used in the MR Swing system.
+
+Next, we will dissect the indicators and trading logic that compose the system and their MQL5 implementation.
+
+Finally, we comment on two backtests. First, we run an optimization on 'All Market Watch symbols' to select the best-performing symbol among six high-liquidity Nasdaq stocks. Second, we run a single test on the selected symbol.
+
+### Conclusion
+It is worth noting that the backtests were run with their default parameters and without any optimization, except for the symbol choice among the most liquid tech stocks from Nasdaq. Thus, there is plenty of room for experimentation with similar symbols, different markets, other asset classes, along with a combination of EA and indicator parameters.
+
+
+----------------------------------------------------------------------
+
+
+##### 15033 | Integration | Integrating Hidden Markov Models in MetaTrader 5
+### Introduction
+
+
+### Conclusion
+All the code described in the article is attached below. Each of the source code files are described in the table.
+
+| File | Description |
+| --- | --- |
+| Mql5\Python\script\saveHMM.py | demonstrates training and saving a hidden Markov model, contains the definition of hmm2json() function |
+| Mql5\include\hmmlearn.mqh | contains definition of HMM class that enables the import of HMMs trained in Python to be used in MQL5 |
+| Mql5\script\testHMM.mq5 | MT5 script demonstrating how to load a saved HMM |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15033.zip "Download all attachments in the single ZIP archive")
+
+[hmmlearn.mqh](https://www.mql5.com/en/articles/download/15033/hmmlearn.mqh "Download hmmlearn.mqh")
+(27.54 KB)
+
+[TestHMM.mq5](https://www.mql5.com/en/articles/download/15033/testhmm.mq5 "Download TestHMM.mq5")
+(2.13 KB)
+
+[saveHMM.py](https://www.mql5.com/en/articles/download/15033/savehmm.py "Download saveHMM.py")
+(2.73 KB)
+
+[Mql5.zip](https://www.mql5.com/en/articles/download/15033/mql5.zip "Download Mql5.zip")
+(7.86 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Building A Candlestick Trend Constraint Model (Part 4): Customizing Display Style For Each Trend Wave](https://www.mql5.com/en/articles/14899)
+
+In this article, we will explore the capabilities of the powerful MQL5 language in drawing various indicator styles on Meta Trader 5. We will also look at scripts and how they can be used in our model.
+
+[img]
+[Gain An Edge Over Any Market (Part II): Forecasting Technical Indicators](https://www.mql5.com/en/articles/14936)
+
+Did you know that we can gain more accuracy forecasting certain technical indicators than predicting the underlying price of a traded symbol? Join us to explore how to leverage this insight for better trading strategies.
+
+[
+
+
+----------------------------------------------------------------------
+
+
+##### 23043 | Indicators | Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 1): From Statistical Theory to a Working MQL5 Indicator
+### Introduction
+Trading systems often degrade when market regimes shift. Fixed-window indicators such as moving averages or ATR react only after a structural change has already affected prices, because they summarize the recent past rather than test for an active change.
+
+This article presents a sequential alternative based on the Cumulative Sum (CUSUM) control chart. The method processes returns bar by bar, accumulates evidence of a distributional shift, and declares a breakpoint as soon as a statistical threshold is crossed.
+
+### Practical Usage Patterns
+**Reading Breakpoints from an Expert Advisor**
+
+The indicator’s accumulator buffers are readable from any EA or script via iCustom() and CopyBuffer(). A minimal single-symbol check looks like this:
+
+[CODE]
+
+**As a Volatility-Regime Gate**
+
+**Combining With a Trend or Mean-Reversion Filter**
+
+###
+
+### Conclusion
+**Program used in the article:**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | CUSUM\_Breakpoint.mq5 | Custom Indicator | A dual-sided CUSUM structural breakpoint detector operating on standardized log-returns. It plots both accumulators against ±h threshold boundaries in a dedicated sub-window and marks every declared breakpoint as a vertical line on the main chart. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23043.zip "Download all attachments in the single ZIP archive")
+
+[CUSUM\_Breakpoint.mq5](https://www.mql5.com/en/articles/download/23043/CUSUM_Breakpoint.mq5 "Download CUSUM_Breakpoint.mq5")
+(14.11 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5](https://www.mql5.com/en/articles/23070)
+
+[img]
+[Market Microstructure in MQL5 (Part 8): Micro-Trend Strength](https://www.mql5.com/en/articles/23372)
+
+[img]
+[Building a Hierarchical Market Structure Framework (Prototype) in MQL5 Using Modular Architecture and Event-Driven Design](https://www.mql5.com/en/articles/23049)
+
+[img]
+[From Basic to Intermediate: Random Access (II)](https://www.mql5.com/en/articles/16271)
+
+In this article, we will examine how two slightly different approaches can significantly affect the overall implementation strategy, both in performance and in disk I/O design, while helping to prevent compatibility issues between applications.
+
+[What's wrong with regular VPS?
+Here are the 8 most common problems that algorithmic traders may encounter
+Read
+
+[img]](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/450486&a=drhremihlwuaqyvgpzfddbtmgciejpba&s=c37d25bcceb93ed153b814e6ba4d4839461a9b2d68dd82b95b142be06d310f3f&uid=&ref=https://www.mql5.com/en/
+
+
+----------------------------------------------------------------------
+
+
+##### 23103 | Indicators | Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 2): Implementing the Detector as a Native MQL5 Indicator
+### Introduction
+
+
+### Conclusion
+**Program used in the article:**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | CUSUM\_Breakpoint.mq5 | Custom Indicator | A two-sided CUSUM structural breakpoint detector operating on standardized log-returns. It plots both accumulators against ±h threshold boundaries in a dedicated subwindow and marks every declared breakpoint as a vertical line on the main chart. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23103.zip "Download all attachments in the single ZIP archive")
+
+[CUSUM\_Breakpoint.mq5](https://www.mql5.com/en/articles/download/23103/CUSUM_Breakpoint.mq5 "Download CUSUM_Breakpoint.mq5")
+(14.11 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Measuring What Matters (Part 3): The Reconstruction Engine — Validating Risk Footprints with Matrix Algebra](https://www.mql5.com/en/articles/23440)
+
+This article performs a numerical verification of MQL5 eigendecomposition for a covariance matrix using the spectral theorem A = V Λ Vᵀ. It reconstructs the matrix with Diag(), Transpose(), and MatMul(), computes the residual and its Frobenius norm, and shows that deviations remain at floating‑point precision, with results printed to the Experts journal.
+
+[img]
+[Neural Networks in Trading: An Intelligent Forecast Pipeline (Conclusion)](https://www.mql5.com/en/articles/18548)
+
+The article provides a fascinating look at how SwiGLU embedding reveals hidden market patterns, and how a sparse Mixture of Experts within a Decoder-Only Transformer makes forecasts more accurate at reasonable computational cost. We take an in-depth look at the integration of Time‑MoE into MQL5 and OpenCL, and provide a step-by-step guide to configuring and training the model.
+
+[img]
+[Price Action Analysis Toolkit Development (Part 78): Extending the Indicator 
+
+
+----------------------------------------------------------------------
+
+
+##### 17999 | Trading | Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs
+### Introduction
+1. [A Visual Chronograph for Seamless News-Driven Trading Across Live and Offline Realms](https://www.mql5.com/en/articles/17999#a_visual_chronograph_for_seamless_news_driven)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/17999#implementation_in_mql5)
+3. [Testing and Validation](https://www.mql5.com/en/articles/17999#testing_and_validation)
+4. [Conclusion](https://www.mql5.com/en/articles/17999#conclusion)
+
+Let’s explore these advancements!
+
+### Conclusion
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17999.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_8.mq5](https://www.mql5.com/en/articles/download/17999/mql5_news_calendar_part_8.mq5 "Download MQL5_NEWS_CALENDAR_PART_8.mq5")
+(73.85 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Developing a Replay System (Part 68): Getting the Time Right (I)](https://www.mql5.com/en/articles/12309)
+
+[img]
+[Artificial Ecosystem-based Optimization (AEO) algorithm](https://www.mql5.com/en/articles/16058)
+
+[img]
+[From Basic to Intermediate: Arrays and Strings (III)](https://www.mql5.com/en/articles/15461)
+
+This article considers two aspects. First, how the standard library can convert binary values to other representations such as octal, decimal, and hexadecimal. Second, we will talk about how we can determine the width of our password based on the secret phrase, using the knowledge we have already acquired.
+
+[img]
+[Data Science and ML (Part 39): News + Artificial Intelligence, Would You Bet on it?](https://www.mql5.com/en/articles/17986)
+
+News drives the financial markets, especially major releases like Non-Farm Payrolls (NFPs). We've all witnessed how a single headline can trigger sharp price movements. In this article, we dive into the powerful intersection of news data and Artificial Intelligence.
+
+
+----------------------------------------------------------------------
+
+
+##### 20157 | Trading | Automating Trading Strategies in MQL5 (Part 38): Hidden RSI Divergence Trading with Slope Angle Filters
+### Introduction
+This system identifies hidden bullish and bearish divergences using swing points, applies clean checks with bar ranges and tolerance, filters signals via customizable slope angles on price and RSI lines, executes trades with risk management, and includes visual markers with angle displays on charts. We will cover the following topics:
+
+1. [Understanding the Hidden RSI Divergence Strategy](https://www.mql5.com/en/articles/20157#understanding_the_hidden_rsi_divergence_strategy)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/20157#para2)
+3. [Backtesting](https://www.mql5.com/en/articles/20157#backtesting)
+4. [Conclusion](https://www.mql5.com/en/articles/20157#conclusion)
+
+By the end, you’ll have a functional MQL5 strategy for trading hidden RSI divergences, ready for customization—let’s dive in!
+
+### Conclusion
+Disclaimer: This article is for educational purposes only. Trading carries significant financial risks, and market volatility may result in losses. Thorough backtesting and careful risk management are crucial before deploying this program in live markets.
+
+With this hidden RSI divergence strategy, you’re equipped to trade continuation signals effectively, ready for further optimization in your trading journey. Happy trading!
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20157.zip "Download all attachments in the single ZIP archive")
+
+[RSI\_Hidden\_Divergence\_Convergence\_EA.mq5](https://www.mql5.com/en/articles/download/20157/RSI_Hidden_Divergence_Convergence_EA.mq5 "Download RSI_Hidden_Divergence_Convergence_EA.mq5")
+(69.59 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Optimizing Long-Term Trades: Engulfing Candles and Liquidity Strategies](https://www.mql5.com/en/articles/19756)
+
+[img]
+[Circle Search Algorithm (CSA)](https://www.mql5.com/en/articles/17143)
+
+The article presents a new metaheuristic optimization Circle Search Algorithm (CSA) based on the geometric properties of a circle. The algorithm uses the principle of moving points along tangents to find the optimal solution, combining the phases of global exploration and local exploitation.
+
+[img]
+[Statistical Arbitrage Through Cointegrated Stocks (Part 7): Scoring System 2](https://www.mql5.com/en/articles/20173)
+
+[img]
+[MetaTrader 5 Machine Learning Blueprint (Part 5): Sequential Bootstrapping—Debiasing Labels, Improving Returns](https://www.mql5.com/en/articles/20059)
+
+
+----------------------------------------------------------------------
+
+
+##### 20851 | Tester | Price Action Analysis Toolkit Development (Part 54): Filtering Trends with EMA and Smoothed Price Action
+### Introduction
+[img]
+
+In the sections that follow, we will look at the system mechanics, followed by implementation in MQL5, a breakdown of core functions, a deployment guide, testing procedures, and finally, the conclusion.
+
+### Conclusion
+The development and early testing of the *Candle Smoothing EMA Signal EA* suggest that using multiple filters helps solve many of the weaknesses seen in Heikin-Ashi-only strategies. In my tests, combining the EMA20 high and low boundaries with an EMA50 trend check resulted in fewer and cleaner signals that stayed more consistent with the overall market direction.
+
+Both backtests and demo or live runs show that the EA reduces noise-driven reversals and false signals. Testing was carried out across multiple instruments and timeframes. Full details, including symbols, timeframes, date ranges, tick model, and spread settings, are provided in the Backtesting section to support reproducibility.
+
+With clear chart arrows, EMA overlays, and alerts generated at bar close, the EA is intended as a practical, signal-only tool that adds confirmation to a trader’s workflow. It is not an automated money-management system. Users should run their own tests and apply proper risk management. Past performance does not guarantee future results.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20851.zip "Download all attachments in the single ZIP archive")
+
+[CandleSmoothing\_EMA\_Engine.mq5](https://www.mql5.com/en/articles/download/20851/CandleSmoothing_EMA_Engine.mq5 "Download CandleSmoothing_EMA_Engine.mq5")
+(12.11 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Optimizing Trend Strength: Trading in Trend Direction and Strength](https://www.mql5.com/en/articles/19755)
+
+[img]
+[Larry Williams Market Secrets (Part 5): Automating the Volatility Breakout Strategy in MQL5](https://www.mql5.com/en/articles/20745)
+
+[img]
+[Forex arbitrage trading: Analyzing synthetic currencies movements and their mean reversion](https://www.mql5.com/en/articles/17512)
+
+In this article, we will ex
+
+
+----------------------------------------------------------------------
+
+
+##### 22231 | Tester | Using the MQL5 Economic Calendar for News Filter (Part 4): Accurate Backtesting with Static Data
+### Introduction
+In [Part 3](https://www.mql5.com/en/articles/21803), we solved the problem of state-loss during terminal restarts by introducing persistent storage using terminal global variables. The news-filter suspension system could now survive a VPS reboot or an EA recompile without losing track of which trades had their stops removed. That was a big step toward operational robustness.
+
+The Problem: Historical News Events Are Not Available
+
+Why This Breaks Backtesting
+
+When historical news events are not available in the Strategy Tester, it produces specific, observable distortions in the results.
+
+In a typical backtest:
+
+- The EA never detects news windows because no events are returned.
+- Trade-blocking logic is never triggered.
+- Stop-loss and take-profit suspension routines remain inactive.
+- Position-closing logic before high-impact events is never executed.
+
+This leads to misleading output, as volatility spikes are ignored, and inability to validate behavior since no logs or actions confirm that the news filter is working.
+
+As a result, the trader cannot answer these questions:
+
+- Did the EA correctly detect a news window?
+- Were trades blocked at the right time?
+- Were stops removed and later restored?
+- Did overlapping events produce continuous restriction periods?
+
+Without observable evidence of these behaviors, the backtest is unverifiable and incomplete.
+
+Why the "Sliding 24-Hour Window" Does Not Help
+
+Success Criteria: What a Correct Backtest Must Show
+
+Before implementing a solution, we must define what a correct backtest looks like when the news filter is functioning properly.
+
+A valid and testable result must include the following observable behaviors:
+
+1. Deterministic Event Detection
+
+- News events are consistently detected at the same timestamps across multiple runs.
+- Journal logs contain clear markers (e.g., STATIC NEWS: or NEWS:) at expected times.
+
+2. Correct Trade Restrictions (if enabled)
+
+- New trades are blocked during defined news windows. Meaning no entries occur between NewsMinutesBefore and NewsMinutesAfter.
+
+3. Stop Management Behavior (if enabled)
+
+- Stop-loss and take-profit levels are suspended when entering a news window.
+- Stops are rest
+
+### Conclusion
+Problem recap: the Strategy Tester often lacks historical calendar data, so news‑sensitive logic is invisible in backtests, and you cannot tell whether observed drawdowns are genuine strategy failures or news‑induced volatility. What we implemented closes that gap.
+
+What do you have now?
+
+- A static CSV loader that the EA uses only in tester mode (MQL\_TESTER), providing deterministic historical events.
+- A compact CSV format (event *time,currency,importance,event* name) and a helper script to export real calendar data into that format.
+- A cached list of relevant currencies per symbol to make event filtering fast and reliable.
+- Seamless switching so live trading still uses the terminal calendar while backtests use the static file.
+- An optional dummy trade generator for validating behavior during tests.
+
+Measurable success criteria
+
+- The journal contains STATIC NEWS/NEWS entries at the expected times.
+- The EA blocks openings, suspends SL/TP, or closes trades according to inputs during news windows.
+- Overlapping events produce continuous news windows and a single state transition sequence.
+- Results are reproducible: the same CSV —> the same detections and EA actions.
+
+Quick validation checklist:
+
+1. Place your CSV in the terminal's Files (or Common\Files) folder.
+2. Set HistoricalNewsFile to its name and enable the news filter.
+3. Run a single backtest in “Every tick” mode for the CSV period.
+4. Verify journal markers, stop suspension/restoration messages, and closed/opened trades at expected times.
+
+Why this matters: You can now separate news‑induced losses from true strategy faults, run “what‑if” experiments by editing the CSV, and confidently validate stop‑suspension and blocking logic across historical periods. Attach the code to your EA, run the tests, and remove the temporary trade generator once verification is complete.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22231.zip "Download all attachments in the single ZIP archive")
+
+[News\_Filter\_integration\_part\_4.mq5](https://www.mql5.com/en/articles/download/22231/News_Filter_integration_part_4.mq5 "Download News_Filter_integration_part_4.mq5")
+(25.82 KB)
+
+**Warni
+
+
+----------------------------------------------------------------------
+
+
+##### 23112 | Trading systems | MQL5 Wizard Techniques you should know (Part 98): Using an Unscented Kalman Filter and a Capsule Network in a Custom Signal Class
+### Introduction
+In principle we keep pivoting between deterministic models and those that depend on probability or that try to make sense of markets in more uncertain times, and in each approach we provide a new algorithm-network pairing.
+
+Target Environment:
+
+This custom signal is thus intended to thrive in these "noisy middle" environments where a quantitative trader could be looking to capitalize. If one's trading style depends on situations where indicators (esp. MA) get whipsawed or where latency can result in missed entries then this model could be a relief.
+
+### Conclusion
+| Name | Description |
+| --- | --- |
+| wz\_98.mq5 | [Wizard Assembled](https://www.mql5.com/en/articles/171) Expert Advisor |
+| SignalUKFCapsNet.mqh | Custom Signal Class required for [MQL5 Wizard Assembly](https://www.mql5.com/en/articles/171) |
+| r1.set | Input settings of first run |
+| r2.set | Input settings of second run |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23112.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23112/MQL5.zip "Download MQL5.zip")
+(7.65 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[Quantum Neural Network in MQL5 (Part III): A Virtual Quantum Processor Based on Qubits](https://www.mql5.com/en/articles/18890)
+
+The article focuses on creating a trading system with a real quantum simulator instead of mathematical analogies. The system uses 3 virtual qubits, quantum gates and superposition principles to analyze markets. It is implemented as a trading EA for MetaTrader 5 in MQL5. The main achievement is the transition from simulation to real quantum principles of financial information processing.
+
+[img]
+[Encoding Candlestick Patterns (Part 3): Frequency Analysis for Single Candlestick Type Structure](https://www.mql5.com/en/articles/23009)
+
+[img]
+[Artificial Atom Algorithm (A3)](https://www.mql5.com/en/articles/18958)
+
+The article describes implementation of the A3 algorithm - a metaheuristic optimization method inspired by chemical processes - in MQL5. Only two adjustable parameters, compactness and a small population, ensure high operating speed with sufficient quality of solutions.
+
+[img]
+[CSV Data Analysis (Part 5): Real-Time CSV Streaming from Live MetaTrader 5 Sessions](https://www.mql5.com/en/articles/23065)
+
+
+----------------------------------------------------------------------
+
+
+##### 23488 | Trading | Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes
+### Introduction
+We will cover:
+
+1. [What catch22 Is, and Why Twenty-Two](https://www.mql5.com/en/articles/23488#what_catch22_is_and_why_twenty_two)
+2. [The Feature Engine: the CCatch22 Class](https://www.mql5.com/en/articles/23488#the_feature_engine_the_ccatch22_class)
+3. [Validating Against pycatch22](https://www.mql5.com/en/articles/23488#validating_against_pycatch22)
+4. [From Features to a Leak-Free Dataset](https://www.mql5.com/en/articles/23488#from_features_to_a_leak_free_dataset)
+5. [The Ablation: Do the Features Add Value?](https://www.mql5.com/en/articles/23488#the_ablation_do_the_features_add_value)
+6. [Trading the Regime Filter](https://www.mql5.com/en/articles/23488#trading_the_regime_filter)
+7. [Conclusion](https://www.mql5.com/en/articles/23488#conclusion)
+
+### Conclusion
+We set out to bring the catch22 canonical feature set to MQL5 and to test it honestly. The deliverables stand on their own regardless of the trading result:
+
+- A validated feature engine. All twenty-two catch22 features in a single reusable CCatch22 class, pure MQL5, using ALGLIB only for the FFT, cross-checked feature-by-feature against the reference pycatch22 package.
+- A leak-free evaluation methodology. A three-arm ablation with chronological splitting, purging, embargo, non-overlapping stride sampling, and train-only label terciles, showing that catch22 adds real, orthogonal information on top of classic indicators for volatility-regime classification, and naming the specific features that do it.
+- An honest live test. A regime-filter EA and a two-run Strategy Tester comparison whose lesson, that an informative feature does not automatically improve an unrelated strategy, is more valuable than a polished profit curve would have been.
+
+The natural next step is to align the filter with an edge that actually lives in one volatility regime, a breakout system for high volatility, a mean-reversion system for low, and to ask the same honest question again. The tools to do that are all here.
+
+The programs presented in this article are intended for educational purposes only. Trading involves substantial risk, and past performance, including any backtested result shown here, does not guarantee future returns. Validate any method on your own data and broker conditions before risking capital.
+
+**Getting the Source Code via MQL5 Algo Forge**
+
+All source files are attached to this article below, but the full repository is also available on [MQL5 Algo Forge](https://forge.mql5.io/ayantrader/catch22 "https://forge.mql5.io/ayantrader/catch22"), the community's Git-based platform for sharing and collaborating on trading projects.
+
+| File name | Description |
+| --- | --- |
+| MQL5\Include\Catch22\Catch22.mqh | The catch22 engine: all 22 canonical time-series features in the CCatch22 class |
+| MQL5\Include\Catch22\Catch22Features.mqh | Shared feature builder (classic / catch22 / combined arms) used by both the Lab and the EA |
+| MQL5\Scripts\Catch22\Catch22Validate.mq5 | Valida
+
+
+----------------------------------------------------------------------
+
+
+##### 11930 | Tester | MQL5 Wizard techniques you should know (Part 05): Markov Chains
+### Introduction
+Probability estimation for a Markov chain model from financial time series data can be accomplished in several ways. I am going to point out 8, the most prominent of which is expectation maximisation. This is the method implemented by alglib as adopted my MQL5 code library.
+
+Once the probability (or parameters of a Markov chain model) has been estimated, the model can be used to make forecasts about future states or events. For example, in the case of financial time series data, a Markov chain model could be used to forecast future stock prices or exchange rates based on the current state of the market and the transition probabilities between different market states.
+
+### Conclusion
+Markov chains are a mathematical tool that can be used to model the behavior of financial markets. They are particularly useful because they allow traders to analyze the probability of future market states based on the current state of the market. This can be very useful in trading, as it allows traders to make informed decisions about which trades to make and when to make them.
+
+Another benefit of Markov chains is that they can be used to analyze the risk associated with different trades. By analyzing the probabilities of different market states, traders can determine the risk associated with different trades and choose trades that are most likely to be successful. This can be especially useful in volatile markets, where the risk of loss is higher.
+
+In conclusion, Markov chains are an essential tool for traders in financial markets because they allow traders to analyze and predict the behavior of the market, identify the most likely paths that the market will take, and assess the risk associated with different trades.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/11930.zip "Download all attachments in the single ZIP archive")
+
+[Signal\_MCPD.mqh](https://www.mql5.com/en/articles/download/11930/signal_mcpd.mqh "Download Signal_MCPD.mqh")
+(8.06 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[img]
+[DoEasy. Controls (Part 27): Working on ProgressBar WinForms object](https://www.mql5.com/en/articles/11764)
+
+In this article, I will continue the development of the ProgressBar control. In particular, I will create the functionality for managing the progress bar and visual effects.
+
+[img]
+[DoEasy. Controls (Part 26): Finalizing the ToolTip WinForms object and moving on to ProgressBar development](https://www.mql5.com/en/articles/11732)
+
+In this article, I will com
+
+
+----------------------------------------------------------------------
+

@@ -1,0 +1,229 @@
+# Price Action Analysis Toolkit Development (Part 57): Developing a Market State Classification Module in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 29 January 2026 at 03:29
+4 364
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+2](https://www.mql5.com/en/forum/504370 "Comments")
+[Christian Benjamin](https://www.mql5.com/en/users/lynnchris)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20996#introduction)
+- [Understanding Market States](https://www.mql5.com/en/articles/20996#understanding_market_states)
+- [MQL5 Implementation](https://www.mql5.com/en/articles/20996#mql5_implementation)
+- [Testing](https://www.mql5.com/en/articles/20996#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20996#conclusion)
+### Introduction
+Whenever we look at a price chart, it is important to understand what the current price movement represents before forming any expectations about what may follow. This context helps determine whether conditions are suitable for participation or whether it is better to wait for a clearer and more stable structure to emerge. Identifying the current market state through manual analysis requires time and sustained focus, particularly when working across multiple timeframes. Repeating this process consistently can become demanding and inefficient.
+In this part of the [Price Action Analysis Toolkit Development](https://www.mql5.com/en/users/lynnchris/publications) series, we introduce an automated MQL5 system designed to classify the current state of the market using pure price action. The sections that follow explain the underlying concept, the classification logic, and the implementation approach in detail.
+### Understanding Market States
+Before examining market states in the context of price action, it is useful to begin with a familiar scientific concept: the states of matter. Matter is anything that has mass and occupies space, and it can exist in different physical states depending on internal energy and external pressure. These states are commonly identified as solid, liquid, and gas.
+In a solid state, particles possess relatively low energy. They are tightly packed and strongly bound, limiting their freedom of movement. As energy increases, these bonds weaken, and matter transitions into a liquid state, where particles remain close but are no longer rigidly fixed. With further increases in energy, particles become highly active and disperse freely, forming a gaseous state.
+A key principle is that the substance itself does not change—only its state does. Water remains water whether it is ice, liquid, or vapor. What changes is the internal energy and how that energy expresses itself through structure and movement. This principle provides a useful framework for interpreting market behavior. Price does not change its identity; instead, it expresses different behavioral states depending on internal conditions such as volatility and structural organization. These states describe how the market behaves, not where it is headed.
+From Physical States to Market States
+The diagram below illustrates how the states of matter are used as an analogy for market states, focusing on volatility and structural constraint rather than directional trend.
+In science, gases are more compressible than solids, which may appear counterintuitive when using the states-of-matter analogy. However, in this context, compression refers to a condition of constraint rather than the ability to be compressed. A solid represents a state where particles are already tightly packed and movement is restricted. Likewise, a market in compression is one where price is already constrained within a narrow range. The analogy therefore focuses on freedom of movement and internal energy, not mechanical compressibility. Within this framework, market states are treated as descriptive conditions, not predictive signals. The objective is to determine whether the price is constrained, loosening, or freely moving, based on observable characteristics in recent, fully closed candles.
+The mapping used in this development is
+- Solid—Compression
+- Liquid—Transition
+- Gas—Expansion
+These states evolve continuously rather than abruptly. Markets typically move through intermediate conditions as volatility and structure change, rather than shifting instantly from one state to another.
+Compression State (Solid)
+A compression state represents a condition in which price is structurally constrained. Candle ranges contract, volatility diminishes, and price oscillates within a relatively narrow band. Highs and lows overlap, and directional progress remains limited.
+Compression is not synonymous with inactivity. Price continues to fluctuate, but movement is absorbed rather than extended. Identifying compression provides contextual awareness of restricted movement using closed-candle data, without implying future direction. Compression may persist for extended periods across multiple timeframes, especially when market participation is balanced or external drivers are absent. On lower timeframes, this often appears as overlapping candles with frequent wicks and minimal net displacement, while higher timeframes may present as a compact consolidation structure. Importantly, compression does not imply weakness or indecision; rather, it reflects a temporary equilibrium where price movement is absorbed instead of extended. Recognizing this state helps frame expectations around reduced movement efficiency, allowing subsequent price behavior to be interpreted in proper context.
+Transition State (Liquid)
+A transition state reflects a loosening of structural constraint. Candle ranges become less uniform, volatility varies, and price may probe beyond recent extremes without sustained follow-through. Structural signals often appear mixed, and containment weakens without fully breaking down.
+This state explains why price behavior may appear inconsistent or fluid without implying randomness. Transition serves as an intermediate condition where neither constraint nor free movement dominates.
+Expansion State (Gas)
+An expansion state is characterized by elevated volatility and wide candle ranges. Structural containment weakens, and price moves freely with large, irregular swings. Directional consistency is not required; expansion describes the extent of movement rather than its coherence.
+Expansion does not imply continuation, trend, or duration. It describes a condition of increased internal energy expressed through broad price movement, evaluated strictly on closed candles.
+Trend as a Structural Condition
+A trending condition is identified when price forms a sequence of
+- Higher highs and higher lows, or
+- lower highs and lower lows.
+Accompanied by a consistent directional bias in candle closes. A market may exhibit expansion without a stable trend, or maintain a trend amid modest volatility. For this reason, trend is evaluated independently of the volatility-based analogy. It complements the classification framework by adding directional context without introducing predictive assumptions.
+Why Market State Awareness Matters
+Understanding market states enables contextual interpretation of price action. The same structural feature can carry different meanings depending on whether the market is compressed, transitioning, expanding, or trending. By classifying the prevailing state using closed-candle data, analysis becomes more coherent and internally consistent. This framework emphasizes observation and classification rather than execution, providing a neutral foundation for informed interpretation.
+### 
+### MQL5 Implementation
+With the conceptual framework established, the next step is translating market state classification into a concrete and reliable MQL5 implementation. This module is designed as a non-trading Expert Advisor, whose sole purpose is to observe closed-candle price action, classify the prevailing market state, and render that context visually on the chart. No orders are placed, no signals are issued, and no forward-looking assumptions are made. The EA functions strictly as an analytical layer.
+From an architectural perspective, the implementation is organized to remain systematic, readable, and easily extensible. Rather than combining all logic into a single execution loop, responsibilities are clearly separated. In practice, the EA operates around four core tasks:
+- Closed-candle sampling and gating
+- Swing-structure extraction
+- Market state classification
+- Chart-based visualization
+This architectural separation is intentional. By isolating feature extraction, classification logic, and visualization, the implementation remains easy to inspect, debug, and extend. Changes to visual presentation do not affect analytical outcomes, and classification rules can be refined without altering execution flow. The structure mirrors professional analytical system design, where clarity and reproducibility are prioritized over compactness or optimization tricks. Separation ensures that analytical decisions remain independent of presentation, allowing the classifier to be evaluated on its own merits.
+Closed-candle evaluation
+To begin with, all calculations in the EA are gated by a strict closed-candle check. On every tick, the EA inspects the timestamp of bar index 1, which represents the most recently completed candle. If this timestamp has not changed since the previous tick, execution halts immediately.
+Only when a new candle has fully closed does the EA proceed to recompute ranges, evaluate structure, classify the market state, and refresh chart objects. This approach guarantees non-repainting behavior. It also ensures that historical playback and live operation behave identically, as both rely exclusively on completed data. From a performance standpoint, this design keeps CPU usage stable, since the classifier executes once per bar rather than continuously on every tick.
+```
+void OnTick()
+   // 1. Closed-candle gating (non-repainting core)
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Price Action Analysis Toolkit Development (Part 57): Developing a Market State Classification Module in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Contents
+- [Introduction](https://www.mql5.com/en/articles/20996#introduction)
+- [Testing](https://www.mql5.com/en/articles/20996#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20996#conclusion)
+### Introduction
+Whenever we look at a price chart, it is important to understand what the current price movement represents before forming any expectations about what may follow. This context helps determine whether conditions are suitable for participation or whether it is better to wait for a clearer and more stable structure to emerge. Identifying the current market state through manual analysis requires time and sustained focus, particularly when working across multiple timeframes. Repeating this process consistently can become demanding and inefficient.
+### Understanding Market States
+Before examining market states in the context of price action, it is useful to begin with a familiar scientific concept: the states of matter. Matter is anything that has mass and occupies space, and it can exist in different physical states depending on internal energy and external pressure. These states are commonly identified as solid, liquid, and gas.
+In a solid state, particles possess relatively low energy. They are tightly packed and strongly bound, limiting their freedom of movement. As energy increases, these bonds weaken, and matter transitions into a liquid state, where particles remain close but are no longer rigidly fixed. With further increases in energy, particles become highly active and disperse freely, forming a gaseous state.
+A key principle is that the substance itself does not change—only its state does. Water remains water whether it is ice, liquid, or vapor. What changes is the internal energy and how that energy expresses itself through structure and movement. This principle provides a useful framework for interpreting market behavior. Price does not change its identity; instead, it expresses different behavioral states depending on internal conditions such as volatility and structural organization. These states describe how the market behaves, not where it is headed.
+From Physical States to Market States
+The diagram below illustrates how the states of matter are used as an analogy for market states, focusing on volatility and structural constraint rather than directional trend.
+These states evolve continuously rather than abruptly. Markets typically move through intermediate conditions as volatility and structure change, rather than shifting instantly from one state to another.
+Compression State (Solid)
+A compression state represents a condition in which price is structurally constrained. Candle ranges contract, volatility diminishes, and price oscillates within a relatively narrow band. Highs and lows overlap, and directional progress remains limited.
+![](https://c.mql5.com/2/190/Compression_State.png)
+
+Transition State (Liquid)
+A transition state reflects a loosening of structural constraint. Candle ranges become less uniform, volatility varies, and price may probe beyond recent extremes without sustained follow-through. Structural signals often appear mixed, and containment weakens without fully breaking down.
+![](https://c.mql5.com/2/190/Transition_State.png)
+This state explains why price behavior may appear inconsistent or fluid without implying randomness. Transition serves as an intermediate condition where neither constraint nor free movement dominates.
+Expansion State (Gas)
+An expansion state is characterized by elevated volatility and wide candle ranges. Structural containment weakens, and price moves freely with large, irregular swings. Directional consistency is not required; expansion describes the extent of movement rather than its coherence.
+![](https://c.mql5.com/2/190/Expansion.png)
+A trending condition is identified when price forms a sequence of
+- Higher highs and higher lows, or
+Why Market State Awareness Matters
+Understanding market states enables contextual interpretation of price action. The same structural feature can carry different meanings depending on whether the market is compressed, transitioning, expanding, or trending. By classifying the prevailing state using closed-candle data, analysis becomes more coherent and internally consistent. This framework emphasizes observation and classification rather than execution, providing a neutral foundation for informed interpretation.
+### 
+### MQL5 Implementation
+With the conceptual framework established, the next step is translating market state classification into a concrete and reliable MQL5 implementation. This module is designed as a non-trading Expert Advisor, whose sole purpose is to observe closed-candle price action, classify the prevailing market state, and render that context visually on the chart. No orders are placed, no signals are issued, and no forward-looking assumptions are made. The EA functions strictly as an analytical layer.
+- Swing-structure extraction
+- Market state classification
+- Chart-based visualization
+   double avgR,lastR,lastCLV,meanCLV,swingScore,recentAvg,prevAvg;
+   ENUM_MARKET_STATE newState =
+      ClassifyState(avgR,lastR,lastCLV,meanCLV,
+                    swingScore,recentAvg,prevAvg);
+
+   // 3. State transition handling
+   DrawStateHistory(g_state,newState);
+   g_prevState=g_state;
+   g_state=newState;
+   // 4. Visualization layer
+With the execution model defined, the EA exposes a set of inputs that control sensitivity, thresholds, and visual output. These inputs are grouped conceptually so that behavioral logic and presentation preferences remain distinct.
+```
+Threshold inputs
+Thresholds govern how aggressively the classifier distinguishes between states:
+- InpRangeShrinkRatio defines how much average recent range must contract relative to the previous window to qualify as compression.
+- InpExpansionMult specifies how much larger the last candle’s range must be compared to the baseline average to qualify as expansion.
+- InpCLVStrong filters expansion so that only wide candles with decisive closes are considered.
+- InpTrendBiasCLV and InpTrendMinSwingScore define the minimum directional close bias and structural consistency required for a trend state.
+At the heart of the classifier is a small set of price-derived features computed exclusively from closed candles. These measures are intentionally simple and transparent, making the logic easy to audit and reason about.
+Candle range
+{
+   return iHigh(_Symbol, _Period, shift)
+        - iLow (_Symbol, _Period, shift);
+}
+This dual approach allows the EA to detect both relative contraction and abnormal expansion without relying on fixed point or pip thresholds.
+
+Closing Location Value (CLV)
+bool IsSwingHigh(int shift, int lr)
+   double mid = iHigh(_Symbol, _Period, shift);
+   for(int i = 1; i <= lr; i++)
+      if(mid <= iHigh(_Symbol, _Period, shift + i) ||
+         mid <= iHigh(_Symbol, _Period, shift - i))
+         return false;
+   double score = 0;
+   score += Sign(iHigh(_Symbol, _Period, lastHigh)
+               - iHigh(_Symbol, _Period, prevHigh));
+   score += Sign(iLow (_Symbol, _Period, lastLow)
+               - iLow (_Symbol, _Period, prevLow));
+State model and classification hierarchy
+Once the underlying features are computed, the EA evaluates market state using an enumeration with four possible values:
+The classification logic is intentionally hierarchical to avoid ambiguous overlaps. Evaluation proceeds in the following order:
+1. Expansion
+```
+ENUM_MARKET_STATE ClassifyState(double avgRange,
+                                double lastRange,
+                                double lastCLV,
+      MathAbs(lastCLV) >= InpCLVStrong)
+      return STATE_EXPANSION;
+
+   // Compression: relative contraction in recent volatility
+      recentAvg <= prevAvg * InpRangeShrinkRatio)
+      return STATE_COMPRESSION;
+   // Trend: agreement between structure and directional close bias
+      MathAbs(swingScore) >= InpTrendMinSwingScore)
+      return STATE_TREND;
+   // Transition: mixed or intermediate behavior
+   return STATE_TRANSITION;
+}
+With classification complete, the EA renders context on the chart through a set of optional visual elements. These visuals are invoked sequentially within the OnTick() handler after a new candle has fully closed. This approach keeps execution flow explicit and avoids introducing additional abstraction layers that are not required for analysis.
+Each visual routine is gated by its corresponding input flag, allowing individual components to be enabled or disabled without affecting the underlying classification logic.
+- Compression boxes visualize the occupied price region of the recent compression window.
+- State history blocks provide a faint background timeline of state changes.
+- The stacked info panel summarizes state, structure, and volatility metrics in a vertical, readable format.
+### Testing
+Testing focused on behavioral consistency rather than performance metrics. The EA was evaluated in the Strategy Tester to confirm algorithmic behavior across historical data and then observed on live charts to verify visual stability during real-time candle formation. Particular attention was given to ensuring that state labels, background regions, and informational text updated only after candle close, maintaining identical behavior between historical and live conditions. The Market State Classifier was evaluated using both the MetaTrader Strategy Tester (visual mode) and live chart observation. Testing focused on behavioral correctness, non-repainting guarantees, and visual consistency. The objective was to confirm that the EA behaves systematically and presents stable contextual information across historical and live environments.
+Strategy Tester Visualization
+State transitions occurred at consistent timestamps during repeated test runs. Compression zones aligned with periods of reduced volatility, expansion states appeared only when abnormal ranges and decisive closes were present, and transition states filled intermediate conditions without retroactive changes. Swing dots and structure labels (HH, HL, LH, LL) were applied only when sufficient confirmation existed, and once drawn, they remained fixed.
+![](https://c.mql5.com/2/190/market_state.gif)
+- Market state classification is rule-based and non-repainting
+- Visual elements remain stable once rendered
+- Historical and live behavior are identical
+
+These results confirm that the market state classifier functions as intended. This makes it suitable for integration into a broader price action analysis workflow where state awareness is required before applying discretionary or systematic strategies.
+### Conclusion
+This article presented the design and MQL5 implementation of a market state classification module developed as part of the Price Action Analysis Toolkit. The objective was to provide a framework for describing how price is behaving at any given moment. By combining relative volatility analysis, structural swing evaluation, and a hierarchical classification model, the EA distinguishes between compression, transition, expansion, and trend conditions without relying on indicators, optimization, or execution logic.
+The resulting tool functions as a contextual layer, clarifying whether price is constrained, fluid, or freely expanding, and whether directional structure is present. This separation of state from direction reinforces disciplined analysis and helps avoid misinterpretation of price action when conditions are not aligned. As with the other components of the toolkit, this module is intentionally descriptive. Its value lies in enhancing situational awareness and providing a stable analytical foundation upon which discretionary or systematic decision-making can be applied separately.
+**Attached files** |
+[Market\_State\_Classifier.mq5](https://www.mql5.com/en/articles/download/20996/Market_State_Classifier.mq5 "Download Market_State_Classifier.mq5")
+(38.35 KB)
+In this article, we develop a Nick Rypock Trailing Reverse (NRTR) trading system in MQL5 that uses channel indicators for reversal signals, enabling trend-following entries with hedging support for buys and sells. We incorporate risk management features like auto lot sizing based on equity or balance, fixed or dynamic stop-loss and take-profit levels using ATR multipliers, and position limits.
+![MQL5 Trading Tools (Part 14): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar](https://c.mql5.com/2/191/21072-mql5-trading-tools-part-14-logo__1.png)
+Does your broker offer sponsored hosting for trading?
+Now it's even easier to get MetaTrader VPS for free – contact your broker for details](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=xscnzeyhifcgygpwvysykhqydcmmbgpp&s=f87b748147e376d34c8f0fdb9737b1766f20cc2174769a0e6b9975b5c2e8ddae&uid=&ref=https://www.mql5.com/en/articles/20996&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5122326002151329607)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+This article presented the design and MQL5 implementation of a market state classification module developed as part of the Price Action Analysis Toolkit. The objective was to provide a framework for describing how price is behaving at any given moment. By combining relative volatility analysis, structural swing evaluation, and a hierarchical classification model, the EA distinguishes between compression, transition, expansion, and trend conditions without relying on indicators, optimization, or execution logic.
+
+The resulting tool functions as a contextual layer, clarifying whether price is constrained, fluid, or freely expanding, and whether directional structure is present. This separation of state from direction reinforces disciplined analysis and helps avoid misinterpretation of price action when conditions are not aligned. As with the other components of the toolkit, this module is intentionally descriptive. Its value lies in enhancing situational awareness and providing a stable analytical foundation upon which discretionary or systematic decision-making can be applied separately.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20996.zip "Download all attachments in the single ZIP archive")
+
+[Market\_State\_Classifier.mq5](https://www.mql5.com/en/articles/download/20996/Market_State_Classifier.mq5 "Download Market_State_Classifier.mq5")
+(38.35 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Automating Trading Strategies in MQL5 (Part 47): Nick Rypock Trailing Reverse (NRTR) with Hedging Features](https://c.mql5.com/2/192/21096-automating-trading-strategies-logo.png)
+[Automating Trading Strategies in MQL5 (Part 47): Nick Rypock Trailing Reverse (NRTR) with Hedging Features](https://www.mql5.com/en/articles/21096)
+
+In this article, we develop a Nick Rypock Trailing Reverse (NRTR) trading system in MQL5 that uses channel indicators for reversal signals, enabling trend-following entries with hedging support for buys and sells. We incorporate risk management features like auto lot sizing based on equity or balance, fixed or dynamic stop-loss and take-profit levels using ATR multipliers, and position limits.
+
+![MQL5 Trading Tools (Part 14): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar](https://c.mql5.com/2/191/21072-mql5-trading-tools-part-14-logo__1.png)
+[MQL5 Trading Tools (Part 14): Pixel-Perfect Scrollable Text Canvas with Antialiasing and Rounded Scrollbar](https://www.mql5.com/en/articles/21072)
+
+In this article, we enhance the canvas-based price dashboard in MQL5 by adding a pixel-perfect scrollable text panel for usage guides, overcoming native scrolling limitations through custom antialiasing and a rounded scrollbar design with hover-expand functionality. The text panel supports themed backgrounds with opacity, dynamic line wrapping for content like instructions and contacts, and interactive navigation via up/down buttons, slider dragging, and mouse wheel scrolling within the body area.
+
+![Triangular and Sawtooth Waves: Analytical Tools for Traders](https://c.mql5.com/2/128/Triangle_and_Sawtooth_Waves_Tools_for_the_Trader__LOGO__2.png)
+[Triangular and Sawtooth Waves: Analytical Tools for Traders](https://www.mql5.com/en/articles/17595)
+
+Wave analysis is one of the methods used in technical analysis. This article focuses on two less conventional wave patterns: triangular and sawtooth waves. These formations underpin a number of technical indicators designed for market price analysis.
+
+![Larry Williams Market Secrets (Part 8): Combining Volatility, Structure and Time Filters](https://c.mql5.com/2/192/21003-larry-williams-market-secrets-logo.png)
+[Larry Williams Market Secrets (Part 8): Combining Volatility, Structure and Time Filters](https://www.mql5.com/en/articles/21003)
+
+An in-depth walkthrough of building a Larry Williams inspired volatility breakout Expert Advisor in MQL5, combining swing structure, volatility-based entries, trade day of the week filtering, time filters, and flexible risk management, with a complete implementation and reproducible test setup.
+
+[![](https://www.mql5.com/ff/sh/x8fwvn495ta7y774z2/01.png)
+
+Does your broker offer sponsored hosting for trading?
+Now it's even easier to get MetaTrader VPS for free – contact your broker for details](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=xscnzeyhifcgygpwvysykhqydcmmbgpp&s=f87b748147e376d34c8f0fdb9737b1766f20cc2174769a0e6b9975b5c2e8ddae&uid=&ref=https://www.mql5.com/en/articles/20996&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5122326002151329607)

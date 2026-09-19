@@ -1,0 +1,289 @@
+# Evolutionary trading algorithm with reinforcement learning and extinction of feeble individuals (ETARE)
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Integration](https://www.mql5.com/en/articles/mt5/integration)
+| 7 October 2025 at 08:55
+4 489
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+7](https://www.mql5.com/en/forum/497040 "Comments")
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+### Introduction
+Do you know what evolution, neural networks and traders have in common? They all learn from their mistakes. This is exactly the thought that came to me after yet another sleepless night at the terminal, when my "perfect" trading algorithm once again lost its deposit due to an unexpected market movement.
+I remember that day like it was yesterday: June 23, 2016, the Brexit referendum. My algorithm, based on classic technical analysis patterns, confidently held a long position on GBP. "All the polls show that Britain will remain in the EU," I thought then. At 4 a.m. Moscow time, when the first results showed a victory for Brexit supporters, GBP collapsed by 1800 points in a matter of minutes. My deposit lost 40%.
+In March 2023, I started developing ETARE - Evolutionary Trading Algorithm with Reinforcement and Extinction (Elimination). Why elimination? Because in nature, the strongest survive. So why not apply this principle to trading strategies?
+Are you ready to dive into the world where classic technical analysis meets the latest advances in artificial intelligence? Where every trading strategy struggles for survival in Darwinian natural selection? Then fasten your seat belts – it is going to be interesting. Because what you are about to see is not just another trading robot. It is the result of 15 years of trial and error, thousands of hours of programming and, frankly, a few destroyed deposits. But the main thing is that it is a working system that already brings real profit to its users.
+### 
+### System architecture
+At the heart of ETARE is a hybrid architecture reminiscent of a modern quantum computer. Remember the days when we wrote simple scripts for MetaTrader 4 based on the intersection of two moving averages? At the time, it seemed like a breakthrough. Looking back now, I realize we were like ancient sailors trying to cross the ocean using only a compass and the stars.
+After the 2022 crash, it became clear that the market is too complex for simple solutions. That is when my journey into the world of machine learning began.
+```
+class HybridTrader:
+    def __init__(self, symbols, population_size=50):
+        self.population = []  # Population of strategies
+        self.extinction_rate = 0.3  # Extinction rate
+        self.elite_size = 5  # Elite individuals
+        self.inefficient_extinction_interval = 5  # Cleaning interval
+```
+Imagine a colony of ants, where each ant is a trading strategy. Strong individuals survive and pass on their genes to their offspring, while weak ones disappear. In my system, the role of genes is played by the weight ratios of the neural network.
+Why population\_size=50? Because fewer strategies do not provide sufficient diversification, while more make it difficult to quickly adapt to market changes.
+In nature, ants constantly explore new territories, find food and pass on information to their relatives. In ETARE, each strategy also researches the market, and successful trading patterns are passed on to future generations through a cross-breeding mechanism:
+```
+def _crossover(self, parent1, parent2):
+    child = TradingIndividual(self.input_size)
+    # Cross scales through a mask
+    for attr in ['input_weights', 'hidden_weights', 'output_weights']:
+        parent1_weights = getattr(parent1.weights, attr)
+        parent2_weights = getattr(parent2.weights, attr)
+        mask = np.random.random(parent1_weights.shape) < 0.5
+        child_weights = np.where(mask, parent1_weights, parent2_weights)
+        setattr(child.weights, attr, child_weights)
+    return child
+```
+In December 2024, while analyzing trading logs, I noticed that the most successful codes are often "hybrids" of other successful approaches. Just as in nature, strong genes produce healthy offspring, so in algorithmic trading, successful patterns can combine to create even more efficient strategies.
+The heart of the system was the LSTM network, a special type of neural network with "memory". After months of experimenting with various architectures, from simple multilayer perceptrons to complex transformers, we settled on this configuration:
+```
+class LSTMModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(LSTMModel, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
+        self.dropout = nn.Dropout(0.4)  # Protection from overfitting
+        self.fc = nn.Linear(hidden_size, output_size)
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.dropout(out[:, -1, :])  # Use the last LSTM output
+        out = self.fc(out)
+        return out
+```
+Every 100 trades, the system performs "cleaning" ruthlessly removing unprofitable strategies. This is one of the key mechanisms of ETARE, and its creation is a separate story. I remember a night in December 2023 when I was analyzing my trading logs and noticed a surprising pattern: most strategies that had shown losses in the first 100-150 trades continued to be unprofitable thereafter. This observation completely changed the system architecture:
+```
+def _inefficient_extinction_event(self):
+    """Periodic extinction of inefficient individuals"""
+    initial_size = len(self.population)
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Evolutionary trading algorithm with reinforcement learning and extinction of feeble individuals (ETARE)
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Integration](https://www.mql5.com/en/articles/mt5/integration)
+### Introduction
+Do you know what evolution, neural networks and traders have in common? They all learn from their mistakes. This is exactly the thought that came to me after yet another sleepless night at the terminal, when my "perfect" trading algorithm once again lost its deposit due to an unexpected market movement.
+### 
+### System architecture
+At the heart of ETARE is a hybrid architecture reminiscent of a modern quantum computer. Remember the days when we wrote simple scripts for MetaTrader 4 based on the intersection of two moving averages? At the time, it seemed like a breakthrough. Looking back now, I realize we were like ancient sailors trying to cross the ocean using only a compass and the stars.
+After the 2022 crash, it became clear that the market is too complex for simple solutions. That is when my journey into the world of machine learning began.
+    # Remove unprofitable strategies taking into account a comprehensive assessment
+    self.population = [ind for ind, metrics in zip(self.population, performance_metrics)
+                      if metrics['profit_factor'] > 1.5 or metrics['win_rate'] > 0.6]
+    
+### Reinforcement learning mechanism
+There is a paradox in developing trading robots: the more complex the algorithm, the worse it performs in the real market.
+        
+    def add(self, state, action, reward, next_state):
+        priority = max(self.priorities) if self.priorities else 1.0
+        self.memory.append((state, action, reward, next_state))
+```
+def update(self, state, action, reward, next_state):
+    self.memory.add(state, action, reward, next_state)
+    self.total_profit += reward
+
+        batch = self.memory.sample(32)
+        self._train_on_batch(batch)
+    # Dynamic adaptation to the market
+    market_volatility = self._get_current_volatility()
+    return (base_confidence * 0.7 + pattern_confidence * 0.3) / market_volatility
+def _train_on_batch(self, batch):
+    states = torch.FloatTensor(np.array([x[0] for x in batch]))
+    actions = torch.LongTensor(np.array([x[1].value for x in batch]))
+    rewards = torch.FloatTensor(np.array([x[2] for x in batch]))
+    next_states = torch.FloatTensor(np.array([x[3] for x in batch]))
+    
+    current_q = self.forward(states).gather(1, actions.unsqueeze(1))
+    next_q = self.forward(next_states).max(1)[0].detach()
+    target = rewards + self.gamma * next_q
+    loss.backward()
+    self.optimizer.step()
+```
+As a result, we have a system that learns not from ideal backtests, but from real trading experience. Over the past year of live market testing, ETARE has demonstrated its ability to adapt to a variety of market conditions, from calm trends to highly volatile periods.
+But the most important thing is that the system continues to evolve. With every trade, with every market loop, it gets a little smarter, a little more efficient. As one of our beta testers said, "This is the first time I have seen an algorithm that actually learns from its mistakes, rather than just adjusting parameters to fit historical data."
+### 
+
+### The mechanism of extinction of feeble individuals
+Charles Darwin never traded in the financial markets, but his theory of evolution provides a remarkable description of the dynamics of successful trading strategies. In nature, it is not the strongest or fastest individuals that survive, but those that best adapt to environmental changes. The same thing happens in the market.
+    # Dynamic survival threshold
+    survival_threshold = np.percentile(
+        adaptability_scores, 
+        30  # The bottom 30% of the population is dying out
+    survivors = []
+    for ind, score in zip(self.population, adaptability_scores):
+        if score > survival_threshold:
+            survivors.append(ind)
+    
+    market_phase = self._identify_market_phase()
+    volatility = self._calculate_market_volatility()
+    trend_strength = self._measure_trend_strength()
+    # Adaptive sorting by survival
+                template,
+                volatility,
+                trend_strength
+            )
+    # Dynamic adjustment of mutation strength
+    self.mutation_strength = self._calculate_mutation_strength(
+        market_conditions.volatility,
+        market_conditions.trend_strength
+        # Mutation of neural network weights
+        for weight_matrix in [
+            self.weights.input_weights,
+            self.weights.hidden_weights,
+        ]:
+            # Mutation mask with adaptive threshold
+            mutation_threshold = 0.1 * (
+                1 + market_conditions.uncertainty
+            mask = np.random.random(weight_matrix.shape) < mutation_threshold
+            
+            # Volatility-aware mutation generation
+            mutations = np.random.normal(
+                0,
+            # Apply mutations
+            weight_matrix[mask] += mutations
+        # Mutation of hyperparameters
+```
+def _calculate_mutation_strength(self, volatility, trend_strength):
+    """Calculate mutation strength based on market conditions"""
+    base_strength = self.base_mutation_strength
+    # Mutation enhancement under high volatility
+    volatility_factor = 1 + (volatility / self.average_volatility - 1)
+    
+    # Weaken mutations in a strong trend
+        base_strength * 
+        volatility_factor * 
+        trend_factor
+    )
+    return np.clip(
+        mutation_strength,
+        self.min_mutation_strength,
+    """ Maintain diversity in the population"""
+    # Calculate the strategy similarity matrix
+    similarity_matrix = np.zeros(
+        (len(self.population), len(self.population))
+            similarity = self._calculate_strategy_similarity(ind1, ind2)
+            similarity_matrix[i,j] = similarity_matrix[j,i] = similarity
+    # Identify clusters of similar strategies
+    clusters = self._identify_strategy_clusters(similarity_matrix)
+    # Forced diversification when necessary
+
+Result? The system that does not just trade, but evolves with the market. As Darwin said, it is not the strongest that survives, but the most adaptive. In the world of algorithmic trading, this is more relevant than ever.
+### 
+### Trading decisions database
+Maintaining trading experience is just as important as gaining it. Over the years of working with algorithmic systems, I have repeatedly become convinced that without a reliable database, any trading system will sooner or later "forget" its best strategies. In ETARE, we have implemented multi-level storage for trading decisions:
+### Data and features
+Over the years of working with algorithmic trading, I have tried hundreds of indicator combinations. At one point, my trading system used more than 50 different indicators, from the classic RSI to exotic indicators of my own design. But do you know what I realized after another lost deposit? It is not about quantity, but about proper data handling.
+```
+# MACD - to determine the trend
+    exp1 = df['close'].ewm(span=12, adjust=False).mean()
+    exp2 = df['close'].ewm(span=26, adjust=False).mean()
+# Bollinger Bands with adaptive period
+    volatility = df['close'].rolling(50).std()
+    adaptive_period = int(20 * (1 + volatility.mean()))
+    
+# Momentum - market "temperature"
+    df['momentum'] = df['close'] / df['close'].shift(10)
+    df['momentum_ma'] = df['momentum'].rolling(20).mean()
+    # Volatility is our "seismograph"
+    df['atr'] = df['high'].rolling(14).max() - df['low'].rolling(14).min()
+    df['price_change'] = df['close'].pct_change()
+    df['price_change_abs'] = df['price_change'].abs()
+    # Volume volatility
+    df['volume_volatility'] = df['tick_volume'].rolling(20).std() / df['tick_volume'].rolling(20).mean()
+
+# Volume analysis - market "pulse"
+    df['volume_ma'] = df['tick_volume'].rolling(20).mean()
+    df['volume_std'] = df['tick_volume'].rolling(20).std()
+```
+# Normalization considering market phases
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+    for col in numeric_cols:
+    # Removing outliers
+    df = df.clip(-4, 4)  # Limit values to the range [-4, 4]
+    return df
+### 
+### Trading Logic
+I present to you a description of an innovative trading system that embodies cutting-edge algorithmic trading technologies. The system is based on a hybrid approach that combines genetic optimization, machine learning, and advanced risk management.
+            result = mt5.order_send(request)
+            if result and result.retcode == mt5.TRADE_RETCODE_DONE:
+                trade = Trade(symbol=symbol, action=action, volume=volume,
+                              entry_price=result.price, entry_time=time.time())
+                position.is_open = False
+                position.exit_price = result.price
+The result is a reliable, self-learning trading system capable of operating efficiently in a variety of market conditions. The combination of evolutionary algorithms, machine learning, and proven trading strategies makes it a powerful tool for modern trading.
+
+### Conclusion
+In conclusion, I would like to emphasize that ETARE is not just another trading algorithm, but the result of many years of evolution in algorithmic trading. The system combines best practices from various fields: genetic algorithms for adaptation to changing market conditions, deep learning for decision-making, and classical risk management methods.
+ETARE's uniqueness lies in its ability to continuously learn from its own experiences. Every trade, regardless of outcome, becomes part of the system's collective memory, helping to improve future trading decisions. The mechanism of natural selection of trading strategies, inspired by Darwin's theory of evolution, ensures the survival of only the most effective approaches.
+The future of algorithmic trading lies precisely in such adaptive systems, capable of evolving with the market. ETARE is a step in this direction, demonstrating how modern technologies can be applied to create reliable and profitable trading solutions.
+Translated from Russian by MetaQuotes Ltd.   
+In the last article, we examined the pairing of Ichimoku and the ADX under an Inference Learning framework. For this piece we revisit, Reinforcement Learning when used with an indicator pairing we considered last in ‘Part 68’. The TRIX and Williams Percent Range. Our algorithm for this review will be the Quantile Regression DQN. As usual, we present this as a custom signal class designed for implementation with the MQL5 Wizard.
+![Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention](https://c.mql5.com/2/107/Neural_Networks_in_Trading_-_Models_Using_Wavelet_Transform_and_Multitask_Attention__LOGO.png)
+In this article, we explore a data-driven approach to discovering and validating non-standard Fibonacci retracement levels that markets may respect. We present a complete workflow tailored for implementation in MQL5, beginning with data collection and bar or swing detection, and extending through clustering, statistical hypothesis testing, backtesting, and integration into an MetaTrader 5 Fibonacci tool. The goal is to create a reproducible pipeline that transforms anecdotal observations into statistically defensible trading signals.
+[![](https://www.mql5.com/ff/sh/20jc81m23z78s5z9z2/01.png)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+In conclusion, I would like to emphasize that ETARE is not just another trading algorithm, but the result of many years of evolution in algorithmic trading. The system combines best practices from various fields: genetic algorithms for adaptation to changing market conditions, deep learning for decision-making, and classical risk management methods.
+
+ETARE's uniqueness lies in its ability to continuously learn from its own experiences. Every trade, regardless of outcome, becomes part of the system's collective memory, helping to improve future trading decisions. The mechanism of natural selection of trading strategies, inspired by Darwin's theory of evolution, ensures the survival of only the most effective approaches.
+
+During development and testing, the system has proven its resilience in a variety of market conditions, from calm trend movements to highly volatile periods. It is especially important to note the efficiency of the DCA strategy and the mechanism of separate position closing, which allow us to maximize profits while controlling the level of risk.
+
+Now, regarding efficiency. I will say it straight out: the main ETARE module itself does not trade for me. It is integrated, as a module, into the wider Midas trading ecosystem.
+
+![](https://c.mql5.com/2/174/ReportHistory-67131902.png)
+
+There are currently 24 modules in Midas, including this one. The complexity will increase steadily, and I will describe a lot of it in future articles.
+
+![](https://c.mql5.com/2/174/ReportHistory-104565.png)
+
+The future of algorithmic trading lies precisely in such adaptive systems, capable of evolving with the market. ETARE is a step in this direction, demonstrating how modern technologies can be applied to create reliable and profitable trading solutions.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/16971>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16971.zip "Download all attachments in the single ZIP archive")
+
+[ETARE\_module.py](https://www.mql5.com/en/articles/download/16971/ETARE_module.py "Download ETARE_module.py")
+(34.39 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![MQL5 Wizard Techniques you should know (Part 82): Using Patterns of TRIX and the WPR with DQN Reinforcement Learning](https://c.mql5.com/2/174/19794-mql5-wizard-techniques-you-logo.png)
+[MQL5 Wizard Techniques you should know (Part 82): Using Patterns of TRIX and the WPR with DQN Reinforcement Learning](https://www.mql5.com/en/articles/19794)
+
+In the last article, we examined the pairing of Ichimoku and the ADX under an Inference Learning framework. For this piece we revisit, Reinforcement Learning when used with an indicator pairing we considered last in ‘Part 68’. The TRIX and Williams Percent Range. Our algorithm for this review will be the Quantile Regression DQN. As usual, we present this as a custom signal class designed for implementation with the MQL5 Wizard.
+
+![Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention](https://c.mql5.com/2/107/Neural_Networks_in_Trading_-_Models_Using_Wavelet_Transform_and_Multitask_Attention__LOGO.png)
+[Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention](https://www.mql5.com/en/articles/16747)
+
+We invite you to explore a framework that combines wavelet transforms and a multi-task self-attention model, aimed at improving the responsiveness and accuracy of forecasting in volatile market conditions. The wavelet transform allows asset returns to be decomposed into high and low frequencies, carefully capturing long-term market trends and short-term fluctuations.
+
+![Building a Trading System (Part 4): How Random Exits Influence Trading Expectancy](https://c.mql5.com/2/173/19211-building-a-trading-system-part-logo.png)
+[Building a Trading System (Part 4): How Random Exits Influence Trading Expectancy](https://www.mql5.com/en/articles/19211)
+
+Many traders have experienced this situation, often stick to their entry criteria but struggle with trade management. Even with the right setups, emotional decision-making—such as panic exits before trades reach their take-profit or stop-loss levels—can lead to a declining equity curve. How can traders overcome this issue and improve their results? This article will address these questions by examining random win-rates and demonstrating, through Monte Carlo simulation, how traders can refine their strategies by taking profits at reasonable levels before the original target is reached.
+
+![From Novice to Expert: Demystifying Hidden Fibonacci Retracement Levels](https://c.mql5.com/2/173/19780-from-novice-to-expert-demystifying-logo.png)
+[From Novice to Expert: Demystifying Hidden Fibonacci Retracement Levels](https://www.mql5.com/en/articles/19780)
+
+In this article, we explore a data-driven approach to discovering and validating non-standard Fibonacci retracement levels that markets may respect. We present a complete workflow tailored for implementation in MQL5, beginning with data collection and bar or swing detection, and extending through clustering, statistical hypothesis testing, backtesting, and integration into an MetaTrader 5 Fibonacci tool. The goal is to create a reproducible pipeline that transforms anecdotal observations into statistically defensible trading signals.
+
+[![](https://www.mql5.com/ff/sh/20jc81m23z78s5z9z2/01.png)
+![](https://www.mql5.com/ff/sh/20jc81m23z78s5z9z2/02.png)
+
+Create your own AI for trading
+Read our book "Neural Networks in Algo Trading with MQL5"
+Begin](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=elbyupbppbqpzzvzhxtydvlupfcbmnmb&s=0d2f8feb92df3772a11aca1f195d2996b59d6539e283cdf4a18ccff02e5ad43d&uid=&ref=https://www.mql5.com/en/articles/16971&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6414535563910200940)

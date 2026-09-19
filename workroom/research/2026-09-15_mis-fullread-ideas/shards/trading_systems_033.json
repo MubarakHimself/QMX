@@ -1,0 +1,83 @@
+{
+  "shard_id": "trading_systems_033",
+  "section": "Trading systems",
+  "n": 8,
+  "series_in_shard": [
+    "creating an mql5-telegram integrated expert advisor",
+    "custom indicator workshop"
+  ],
+  "articles": [
+    {
+      "id": 15457,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 1): Sending Messages from MQL5 to Telegram",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Sending Messages from MQL5 to Telegram",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15457.md"
+    },
+    {
+      "id": 15495,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 2): Sending Signals from MQL5 to Telegram",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Sending Signals from MQL5 to Telegram",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15495.md"
+    },
+    {
+      "id": 15616,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 3): Sending Chart Screenshots with Captions from MQL5 to Telegram",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Sending Chart Screenshots with Captions from MQL5 to Telegram",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15616.md"
+    },
+    {
+      "id": 15706,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 4): Modularizing Code Functions for Enhanced Reusability",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Modularizing Code Functions for Enhanced Reusability",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15706.md"
+    },
+    {
+      "id": 15750,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 5): Sending Commands from Telegram to MQL5 and Receiving Real-Time Responses",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Sending Commands from Telegram to MQL5 and Receiving Real-Time Responses",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15750.md"
+    },
+    {
+      "id": 15823,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 6): Adding Responsive Inline Buttons",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Adding Responsive Inline Buttons",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15823.md"
+    },
+    {
+      "id": 15962,
+      "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 7): Command Analysis for Indicator Automation on Charts",
+      "section": "Trading systems",
+      "series_title": "Creating an MQL5-Telegram Integrated Expert Advisor (): Command Analysis for Indicator Automation on Charts",
+      "series_key": "creating an mql5-telegram integrated expert advisor",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15962.md"
+    },
+    {
+      "id": 20908,
+      "title": "Custom Indicator Workshop (Part 2) : Building a Practical Supertrend Expert Advisor in MQL5",
+      "section": "Trading systems",
+      "series_title": "Custom Indicator Workshop () : Building a Practical Supertrend Expert Advisor in MQL5",
+      "series_key": "custom indicator workshop",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20908.md"
+    }
+  ]
+}

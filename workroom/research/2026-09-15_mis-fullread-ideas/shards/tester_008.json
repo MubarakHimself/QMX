@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_008",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15565,
+      "title": "Artificial Algae Algorithm (AAA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15565.md"
+    },
+    {
+      "id": 15625,
+      "title": "William Gann methods (Part III): Does Astrology Work?",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15625.md"
+    },
+    {
+      "id": 15654,
+      "title": "Tabu Search (TS)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15654.md"
+    },
+    {
+      "id": 15779,
+      "title": "Quantitative approach to risk management: Applying VaR model to optimize multi-currency portfolio using Python and MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15779.md"
+    },
+    {
+      "id": 15782,
+      "title": "Archery Algorithm (AA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15782.md"
+    },
+    {
+      "id": 15849,
+      "title": "Atmosphere Clouds Model Optimization (ACMO): Theory",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15849.md"
+    },
+    {
+      "id": 15921,
+      "title": "Atmosphere Clouds Model Optimization (ACMO): Practice",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15921.md"
+    },
+    {
+      "id": 15980,
+      "title": "Artificial Showering Algorithm (ASHA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15980.md"
+    },
+    {
+      "id": 16024,
+      "title": "African Buffalo Optimization (ABO)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16024.md"
+    },
+    {
+      "id": 16058,
+      "title": "Artificial Ecosystem-based Optimization (AEO) algorithm",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16058.md"
+    },
+    {
+      "id": 16133,
+      "title": "ALGLIB library optimization methods (Part I)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16133.md"
+    },
+    {
+      "id": 16164,
+      "title": "ALGLIB library optimization methods (Part II)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16164.md"
+    }
+  ]
+}

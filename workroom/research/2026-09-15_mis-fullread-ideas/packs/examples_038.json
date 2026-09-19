@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_038",
+  "section": "Examples",
+  "parent_shard": "examples_038",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 14053,
+      "title": "Population optimization algorithms: Binary Genetic Algorithm (BGA). Part I",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14053.md"
+    },
+    {
+      "id": 14105,
+      "title": "DRAW_ARROW drawing type in multi-symbol multi-period indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14105.md"
+    },
+    {
+      "id": 14136,
+      "title": "Population optimization algorithms: Evolution of Social Groups (ESG)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14136.md"
+    },
+    {
+      "id": 14163,
+      "title": "Balancing risk when trading multiple instruments simultaneously",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14163.md"
+    },
+    {
+      "id": 14167,
+      "title": "Trailing stop in trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14167.md"
+    },
+    {
+      "id": 14251,
+      "title": "Multibot in MetaTrader (Part II): Improved dynamic template",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14251.md"
+    },
+    {
+      "id": 14326,
+      "title": "Angle-based operations for traders",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14326.md"
+    },
+    {
+      "id": 14340,
+      "title": "Risk manager for manual trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14340.md"
+    },
+    {
+      "id": 14352,
+      "title": "Population optimization algorithms: Resistance to getting stuck in local extrema (Part I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14352.md"
+    },
+    {
+      "id": 14354,
+      "title": "Master MQL5 from Beginner to Pro (Part III): Complex Data Types and Include Files",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14354.md"
+    },
+    {
+      "id": 14365,
+      "title": "A Generic Optimization Formulation (GOF) to Implement Custom Max with Constraints",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14365.md"
+    },
+    {
+      "id": 14389,
+      "title": "Hybridization of population algorithms. Sequential and parallel structures",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14389.md"
+    }
+  ]
+}

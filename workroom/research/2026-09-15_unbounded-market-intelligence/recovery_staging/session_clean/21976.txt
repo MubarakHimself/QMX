@@ -1,0 +1,1234 @@
+---
+id: 21976
+source_url: https://www.mql5.com/en/articles/21976
+title: "Formulating Dynamic Multi-Pair EA (Part 8): Time-of-Day Capital Rotation Approach"
+author: ""
+author_url: 
+published: 2026-04-16T11:30Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "Formulating Dynamic Multi-Pair EA (): Time-of-Day Capital Rotation Approach"
+series_part: 8
+source: mql5
+language: en
+---
+
+# Formulating Dynamic Multi-Pair EA (Part 8): Time-of-Day Capital Rotation Approach
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 16 April 2026 at 07:30
+
+2 555
+[
+0](https://www.mql5.com/en/forum/508467 "Comments")
+
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+
+### Table of Contents
+
+1. [Introduction](https://www.mql5.com/en/articles/21976#introduction)
+2. [System Overview and Understanding](https://www.mql5.com/en/articles/21976#system_overview_and_understanding)
+3. [Getting Started](https://www.mql5.com/en/articles/21976#getting_started)
+4. [Backtest](https://www.mql5.com/en/articles/21976#backtest_results)
+5. [Conclusion](https://www.mql5.com/en/articles/21976#conclusion)
+
+### Introduction
+
+Most automated systems treat every trading hour equally. They allocate the same risk to Asia's tight ranges, London's breakout moves, and New York's volatile expansions. This one-size-fits-all approach ignores a fundamental market reality: each trading session has a distinct personality, volatility profile, and edge characteristics. Traders often see accounts drained by low-probability off-hours setups. They also miss prime-session moves because capital is tied up in earlier losing positions. The result is inefficient capital utilization, uneven risk distribution, and suboptimal returns across the trading day.
+
+The Time of Day Capital Rotation Approach solves this by dynamically allocating risk capital across sessions based on their unique statistical edge. Instead of trading the same way all day, the system shifts focus by session. It allocates less to range-bound Asian markets, increases exposure during London breakouts, and assigns the largest share to New York momentum moves. Each session trades only its historically strongest instruments (USDJPY and XAUUSD during Asia, GBPUSD during London, and XAUUSD and USDZAR during New York), using session-specific breakout logic with volatility confirmation.
+
+The approach tracks daily and session-level risk usage, automatically resets at each new trading day, and preserves profitable positions across session changes while closing only losing ones. This rotational approach ensures capital is always deployed where the probability of success is highest, at the time when it matters most.
+
+### System Overview and Understanding
+
+The Time of Day Capital Allocation Approach is fundamentally a capital allocation engine designed to plug into different execution models rather than being a rigid trading system. At its core, the engine solves a simple but critical problem: how much risk capital should be deployed during each trading session, and on which instruments? By separating the allocation logic from the actual entry signals, the system becomes strategy-agnostic—whether you prefer breakouts, mean reversion, or momentum, the rotation engine ensures your capital is directed to the right session at the right time.
+
+Capital allocation in this system follows a hierarchical risk budgeting approach. First, the trader defines a DailyCapitalPercent (e.g., 30% of account balance), which represents the maximum total risk exposure for the entire trading day. This daily budget is then subdivided among active sessions using either equal split (e.g., 30% ÷ 3 sessions = 10% per session) or manual percentages (e.g., Asian 7%, London 8%, New York 15% of the daily budget).
+
+When a signal triggers, the system calculates remaining session risk (max minus used). It then sizes the position by dividing remaining risk by (stop-loss pips × pip value). For example, if the London session has a remaining budget of $240 and the stop loss requires 30 pips at $1 per pip, the lot size would be 0.08 lots. This ensures that every trade respects both session-level and daily-level risk limits, while automatically adjusting lot sizes downward as the session's risk budget gets consumed by open trades (regardless of outcome).
+
+For this implementation, we will be integrating a [volatility-based breakout system](https://www.mql5.com/en/articles/19459) that we have specifically adapted for session-based trading. Unlike traditional breakout strategies that trade the same way all day, our approach recognizes that a breakout during the Asian session (low volatility, range-bound) behaves fundamentally differently from a London breakout (high momentum, trend-starting) or a New York breakout (volatility expansion, continuation).
+
+The system automatically calculates previous session highs and lows for each symbol, then applies volatility confirmation using ATR to distinguish between genuine breakouts and false ones. When price clears the volatility stop (session high/low plus ATR multiplier), the strategy trades in the breakout direction; when it fails to clear, it fades the move. This adaptive logic ensures the execution model fits naturally within the rotation framework, with each session's unique volatility profile determining how aggressively or cautiously the system responds to price action.
+
+### 
+
+### Getting Started
+
+```
+//+------------------------------------------------------------------+
+//|                                             ToD Cap Rotation.mq5 |
+//|                        Git, copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+//+------------------------------------------------------------------+
+#property copyright "Git, copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+
+CTrade trade;
+CPositionInfo posInfo;
+
+//--- Input parameters
+input string   Symbols                = "XAUUSD,GBPUSD,USDJPY,USDZAR"; // Symbols to monitor
+
+//--- Session activation
+input bool     UseAsianSession        = true;
+input bool     UseLondonSession       = true;
+input bool     UseNewYorkSession      = true;
+
+//--- Session times (broker time, 24h format)
+input int      AsianStart             = 0;
+input int      AsianEnd               = 8;
+input int      LondonStart            = 8;
+input int      LondonEnd              = 16;
+input int      NYStart                = 13;
+input int      NYEnd                  = 22;
+
+//--- Symbols active per session
+input string   AsianSymbols           = "USDJPY,XAUUSD";
+input string   LondonSymbols          = "GBPUSD";
+input string   NYSymbols              = "XAUUSD,USDZAR";
+
+//--- Session Range Parameters
+input int      SessionRangeBars       = 100;       // Bars to look back for session high/low
+input bool     RequireSessionFormation = true;     // Wait for session to form before trading
+input int      SessionFormationMinutes = 60;       // Minutes after session start to start trading
+
+//--- Volatility Stop Parameters
+input bool     UseVolatilityStop      = true;      // Use ATR for volatility filter
+input int      ATRPeriod              = 14;        // Period for ATR
+input double   ATRMultiplier          = 1.5;       // ATR multiplier for volatility stop
+
+// ============================================================
+// CAPITAL ALLOCATION SETTINGS
+// ============================================================
+input double   DailyCapitalPercent    = 30.0;      // Total daily capital to risk (30%)
+
+input bool     UseEqualSplit          = true;      // true = Equal split, false = Manual allocation
+
+//--- Manual allocation (only used if UseEqualSplit = false)
+input double   AsianAllocationPercent = 7.0;       // Asian session allocation (% of daily)
+input double   LondonAllocationPercent = 8.0;      // London session allocation (% of daily)
+input double   NYAllocationPercent    = 15.0;      // NY session allocation (% of daily)
+
+//--- Breakout parameters
+input double   StopLossATRMultiplier  = 1.5;       // SL = ATR * multiplier
+input double   TakeProfitRR           = 2.0;       // Risk:Reward ratio
+input bool     UseDynamicTP           = true;      // Use RR for TP instead of fixed
+
+//--- Trade execution
+input int      StopLoss_Pips_Fallback = 30;        // Fallback SL if ATR not available
+input int      TakeProfit_Pips_Fallback = 60;      // Fallback TP if not using RR
+input int      MagicNumber            = 123456;
+input int      Slippage               = 30;
+```
+
+To get started, we define the core trading environment by including the necessary trade and position management libraries. We then set up configurable inputs that allow us to control how our multi-pair Expert Advisor operates across different market sessions. We specify which symbols to trade and enable or disable participation in the Asian, London, and New York sessions, each with clearly defined broker-time windows and associated instruments. Likewise, we then introduce session-based structure by defining how many bars to use for calculating the session range, optionally requiring a formation period before trading begins, and applying a volatility filter using ATR to distinguish genuine breakouts from weak moves.
+
+Moreover, we design a capital allocation framework that distributes a fixed percentage of daily account risk across sessions. This can be done either equally or manually (e.g., 7%, 8%, 15%), ensuring controlled exposure throughout the day. Finally, we define the execution logic using dynamic, risk-based stop-loss and take-profit settings. We also include fallback values for robustness, along with essential parameters such as slippage and a unique magic number. This results in a flexible, session-aware, and well risk-managed trading foundation.
+
+```
+//+------------------------------------------------------------------+
+//| Enumerations and structures                                      |
+//+------------------------------------------------------------------+
+enum SessionType
+  {
+   SESSION_ASIAN,
+   SESSION_LONDON,
+   SESSION_NEWYORK,
+   SESSION_OFF
+  };
+
+struct SymbolData
+  {
+   string            name;
+   double            sessionHigh;
+   double            sessionLow;
+   double            upperVolatilityStop;
+   double            lowerVolatilityStop;
+   bool              highBreakoutTriggered;
+   bool              lowBreakoutTriggered;
+   datetime          sessionStartTime;
+   datetime          lastTradeTime;
+   double            currentATR;
+  };
+
+struct SessionInfo
+  {
+   SessionType       type;
+   double            allocationPercent;
+   double            usedRisk;
+   double            maxRisk;
+   string            activeSymbols;
+   datetime          startTime;
+   datetime          endTime;
+   bool              isActive;
+  };
+
+//+------------------------------------------------------------------+
+//| Global variables                                                 |
+//+------------------------------------------------------------------+
+int         m_numSymbols;
+SymbolData  m_symbols[];
+SessionInfo m_currentSession;
+SessionInfo m_asianSession;
+SessionInfo m_londonSession;
+SessionInfo m_nySession;
+datetime    m_lastBarTime;
+SessionType m_previousSession;
+double      m_dailyRiskUsed;
+double      m_dailyMaxRisk;
+datetime    m_lastResetDate;
+int         m_atrHandle[];
+bool        m_dailyResetPrinted;
+double      m_dailyNetProfit;
+datetime    m_lastProfitUpdate;
+bool        m_allocationValid;
+```
+
+Here, we define a clear structural foundation for the EA through the use of enumerations and data structures. The SessionType enum allows us to categorize the market into Asian, London, New York, or off-session states, which drives all session-based logic. The SymbolData structure stores all per-symbol information needed during runtime, including session highs and lows, volatility stop levels, breakout flags, timing of trades, and the current ATR value. This ensures that each symbol is handled independently while still fitting into the broader system. In parallel, the SessionInfo structure organizes everything related to each trading session, such as its allocation percentage, used and maximum risk, active symbols, timing, and whether the session is currently active.
+
+We then declare global variables that tie everything together into a working system. Arrays like m\_symbols[] and m\_atrHandle[] allow us to scale across multiple instruments efficiently, while session objects such as m\_asianSession, m\_londonSession, and m\_nySession maintain independent state for each trading window. Variables like m\_dailyRiskUsed, m\_dailyMaxRisk, and m\_dailyNetProfit handle overall capital tracking and performance measurement. Additionally, control variables such as m\_previousSession, m\_lastResetDate, and m\_allocationValid ensure smooth transitions between sessions, proper daily resets, and consistent allocation logic.
+
+```
+//+------------------------------------------------------------------+
+//| Validate allocation inputs                                       |
+//+------------------------------------------------------------------+
+bool ValidateAllocation()
+  {
+   m_allocationValid = true;
+
+   if(!UseEqualSplit)
+     {
+      double totalPercent = 0;
+      int activeSessions = 0;
+
+      if(UseAsianSession)
+        {
+         if(AsianAllocationPercent < 0 || AsianAllocationPercent > 100)
+           {
+            Print("ERROR: Asian allocation must be between 0 and 100. Got: ", AsianAllocationPercent);
+            m_allocationValid = false;
+           }
+         totalPercent += AsianAllocationPercent;
+         activeSessions++;
+        }
+
+      if(UseLondonSession)
+        {
+         if(LondonAllocationPercent < 0 || LondonAllocationPercent > 100)
+           {
+            Print("ERROR: London allocation must be between 0 and 100. Got: ", LondonAllocationPercent);
+            m_allocationValid = false;
+           }
+         totalPercent += LondonAllocationPercent;
+         activeSessions++;
+        }
+
+      if(UseNewYorkSession)
+        {
+         if(NYAllocationPercent < 0 || NYAllocationPercent > 100)
+           {
+            Print("ERROR: NY allocation must be between 0 and 100. Got: ", NYAllocationPercent);
+            m_allocationValid = false;
+           }
+         totalPercent += NYAllocationPercent;
+         activeSessions++;
+        }
+
+      //--- Check if total exceeds 100%
+      if(totalPercent > 100.01) // Small tolerance for floating point
+        {
+         Print("ERROR: Total session allocation (", totalPercent, "%) exceeds 100% of daily capital!");
+         m_allocationValid = false;
+        }
+
+      //--- Check if total is significantly less than 100%
+      if(activeSessions > 0 && totalPercent < 99.99)
+        {
+         Print("WARNING: Total session allocation (", totalPercent, "%) is less than 100% of daily capital. Remaining ",
+               100 - totalPercent, "% will not be used.");
+        }
+
+      if(m_allocationValid)
+         Print("Allocation validation passed. Total: ", totalPercent, "%");
+     }
+   else
+     {
+      Print("Using equal split allocation mode");
+     }
+
+   return m_allocationValid;
+  }
+
+//+------------------------------------------------------------------+
+//| Calculate session allocation based on user settings              |
+//+------------------------------------------------------------------+
+double CalculateSessionAllocation(SessionType session)
+  {
+   if(UseEqualSplit)
+     {
+      int activeSessions = 0;
+      if(UseAsianSession)
+         activeSessions++;
+      if(UseLondonSession)
+         activeSessions++;
+      if(UseNewYorkSession)
+         activeSessions++;
+
+      if(activeSessions == 0)
+         return 0;
+
+      return 100.0 / activeSessions;
+     }
+   else
+     {
+      switch(session)
+        {
+         case SESSION_ASIAN:
+            return AsianAllocationPercent;
+         case SESSION_LONDON:
+            return LondonAllocationPercent;
+         case SESSION_NEWYORK:
+            return NYAllocationPercent;
+         default:
+            return 0;
+        }
+     }
+  }
+```
+
+The first function ensures that the user-defined capital allocation across sessions is valid and logically consistent. When manual allocation is enabled, we check each active session to confirm that its percentage lies within a valid range (0–100). As we loop through the enabled sessions, we accumulate the total allocation and track how many sessions are active. This allows us to detect critical issues, such as allocations exceeding 100% of the daily capital, which would break the risk model, or being significantly below 100%, which would leave part of the capital unused. Errors immediately invalidate the configuration, while warnings highlight inefficiencies. If everything is correct, we confirm that validation passed, ensuring the EA operates on a solid and predictable capital distribution.
+
+The second function translates those validated settings into actual allocation values used during execution. If equal split mode is enabled, we dynamically divide 100% of the session allocation across all active sessions, ensuring fairness and simplicity without requiring manual input. If manual mode is selected, we directly return the predefined allocation for each session based on its type. This separation between validation and calculation keeps the system clean and robust, allowing us to safely switch between flexible manual control and automatic distribution while maintaining consistency in how capital is assigned.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   //--- Validate allocation settings first
+   if(!ValidateAllocation())
+     {
+      Print("FATAL: Allocation validation failed! EA will not start.");
+      return(INIT_FAILED);
+     }
+
+   //--- Build symbol list
+   string list = Symbols;
+   if(StringFind(list, _Symbol) < 0)
+      list = list + "," + _Symbol;
+
+   string parts[];
+   int num = StringSplit(list, ',', parts);
+   if(num <= 0)
+     {
+      Print("No symbols specified!");
+      return(INIT_FAILED);
+     }
+
+   m_numSymbols = num;
+   ArrayResize(m_symbols, m_numSymbols);
+   ArrayResize(m_atrHandle, m_numSymbols);
+
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      string sym = parts[i];
+      StringTrimRight(sym);
+
+      if(!SymbolSelect(sym, true))
+        {
+         Print("Failed to select symbol: ", sym);
+         return(INIT_FAILED);
+        }
+
+      m_symbols[i].name = sym;
+      m_symbols[i].sessionHigh = 0;
+      m_symbols[i].sessionLow = 0;
+      m_symbols[i].upperVolatilityStop = 0;
+      m_symbols[i].lowerVolatilityStop = 0;
+      m_symbols[i].highBreakoutTriggered = false;
+      m_symbols[i].lowBreakoutTriggered = false;
+      m_symbols[i].sessionStartTime = 0;
+      m_symbols[i].lastTradeTime = 0;
+      m_symbols[i].currentATR = 0;
+
+      //--- Create ATR handle for each symbol
+      m_atrHandle[i] = iATR(sym, PERIOD_M15, ATRPeriod);
+      if(m_atrHandle[i] == INVALID_HANDLE)
+        {
+         Print("Failed to create ATR handle for ", sym);
+         return(INIT_FAILED);
+        }
+     }
+
+   //--- Get account balance
+   double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+   //--- Initialize daily risk
+   m_dailyMaxRisk = accountBalance * (DailyCapitalPercent / 100.0);
+   m_dailyRiskUsed = 0;
+   m_lastResetDate = 0;
+   m_dailyResetPrinted = false;
+   m_dailyNetProfit = 0;
+   m_lastProfitUpdate = 0;
+
+   //--- Calculate session allocations
+   double asianAllocPct = CalculateSessionAllocation(SESSION_ASIAN);
+   double londonAllocPct = CalculateSessionAllocation(SESSION_LONDON);
+   double nyAllocPct = CalculateSessionAllocation(SESSION_NEWYORK);
+
+   //--- Setup session configurations with calculated allocations
+   m_asianSession.type = SESSION_ASIAN;
+   m_asianSession.allocationPercent = asianAllocPct;
+   m_asianSession.maxRisk = m_dailyMaxRisk * (asianAllocPct / 100.0);
+   m_asianSession.usedRisk = 0;
+   m_asianSession.activeSymbols = AsianSymbols;
+   m_asianSession.startTime = 0;
+   m_asianSession.endTime = 0;
+   m_asianSession.isActive = false;
+
+   m_londonSession.type = SESSION_LONDON;
+   m_londonSession.allocationPercent = londonAllocPct;
+   m_londonSession.maxRisk = m_dailyMaxRisk * (londonAllocPct / 100.0);
+   m_londonSession.usedRisk = 0;
+   m_londonSession.activeSymbols = LondonSymbols;
+   m_londonSession.startTime = 0;
+   m_londonSession.endTime = 0;
+   m_londonSession.isActive = false;
+
+   m_nySession.type = SESSION_NEWYORK;
+   m_nySession.allocationPercent = nyAllocPct;
+   m_nySession.maxRisk = m_dailyMaxRisk * (nyAllocPct / 100.0);
+   m_nySession.usedRisk = 0;
+   m_nySession.activeSymbols = NYSymbols;
+   m_nySession.startTime = 0;
+   m_nySession.endTime = 0;
+   m_nySession.isActive = false;
+
+   m_currentSession.type = SESSION_OFF;
+   m_currentSession.maxRisk = 0;
+   m_currentSession.usedRisk = 0;
+   m_currentSession.isActive = false;
+
+   m_previousSession = SESSION_OFF;
+   m_lastBarTime = 0;
+
+   trade.SetExpertMagicNumber(MagicNumber);
+
+   //--- Print initialization summary
+   Print("═══════════════════════════════════════════");
+   Print("SESSION BASED CAPITAL ALLOC EA Initialized");
+   Print("═══════════════════════════════════════════");
+   Print("Account Balance: ", DoubleToString(accountBalance, 2));
+   Print("Daily Capital: ", DoubleToString(m_dailyMaxRisk, 2), " (", DailyCapitalPercent, "% of balance)");
+   Print("Allocation Mode: ", UseEqualSplit ? "EQUAL SPLIT" : "MANUAL");
+   Print("───────────────────────────────────────────");
+   if(UseAsianSession)
+      Print("Asian Session: ", DoubleToString(asianAllocPct, 1), "% (", DoubleToString(m_asianSession.maxRisk, 2), ")");
+   if(UseLondonSession)
+      Print("London Session: ", DoubleToString(londonAllocPct, 1), "% (", DoubleToString(m_londonSession.maxRisk, 2), ")");
+   if(UseNewYorkSession)
+      Print("NY Session: ", DoubleToString(nyAllocPct, 1), "% (", DoubleToString(m_nySession.maxRisk, 2), ")");
+   Print("═══════════════════════════════════════════");
+
+   return(INIT_SUCCEEDED);
+  }
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      if(m_atrHandle[i] != INVALID_HANDLE)
+         IndicatorRelease(m_atrHandle[i]);
+     }
+   ObjectsDeleteAll(0, "Session_");
+   Comment("");
+  }
+```
+
+The initialization function begins by validating the capital allocation settings to ensure the EA starts with a consistent and safe configuration. If validation fails, the EA immediately stops, preventing any unintended risk exposure. It then builds and processes the symbol list, ensuring that all instruments—including the current chart symbol—are properly selected and available for trading. For each symbol, we initialize its internal state and create an ATR indicator handle, which is essential for volatility-based logic later on. This step ensures that every symbol is fully prepared with the data structures and indicators required for accurate session tracking and breakout detection.
+
+Next, we establish the core capital management framework by calculating the daily risk based on account balance and the defined percentage. Using this, we derive session-specific allocations—either equally or manually—and assign each session its maximum allowable risk. Each session structure is then fully configured, including its allocation percentage, active symbols, and initial state. We also reset tracking variables such as used risk, profit, and timing controls to ensure a clean start. Finally, we set the EA’s magic number and print a detailed initialization summary, giving a clear overview of balance, daily capital, and session allocations. The deinitialization function complements this by releasing indicator resources and cleaning up chart objects, ensuring efficient memory usage and a tidy shutdown.
+
+```
+//+------------------------------------------------------------------+
+//| Tick function                                                    |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   //--- Update daily net profit
+   UpdateDailyNetProfit();
+
+   //--- Reset daily risk at start of new day (ONCE per day)
+   ResetDailyRisk();
+
+   //--- Update ATR values for all symbols
+   UpdateATRValues();
+
+   //--- Session handling
+   SessionType currentSessionType = GetCurrentSession();
+   UpdateCurrentSession(currentSessionType);
+
+   //--- Display session info on chart
+   DisplaySessionInfo();
+
+   //--- Draw session objects on chart
+   DrawSessionObjects();
+
+   //--- Detect session change and reset session state
+   if(currentSessionType != m_previousSession)
+     {
+      OnSessionChange(currentSessionType);
+      m_previousSession = currentSessionType;
+     }
+
+   if(m_currentSession.type == SESSION_OFF)
+      return;
+
+   //--- Update session ranges for all symbols
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      UpdateSessionRange(i);
+     }
+
+   //--- Check for breakouts on all active symbols
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      string sym = m_symbols[i].name;
+
+      //--- Session activation check
+      if(!IsSymbolActive(sym, m_currentSession.type))
+         continue;
+
+      //--- Check for breakouts using enhanced logic
+      CheckForBreakouts(i);
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Update daily net profit from historical deals                    |
+//+------------------------------------------------------------------+
+void UpdateDailyNetProfit()
+  {
+   //--- Update every minute or when there's a new deal
+   datetime now = TimeCurrent();
+   if(now - m_lastProfitUpdate < 60 && m_lastProfitUpdate > 0)
+      return;
+
+   m_lastProfitUpdate = now;
+   m_dailyNetProfit = GetDailyNetProfit();
+  }
+
+//+------------------------------------------------------------------+
+//| Get daily net profit                                             |
+//+------------------------------------------------------------------+
+double GetDailyNetProfit()
+  {
+   double profit = 0.0;
+
+   datetime todayStart;
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+
+   dt.hour = 0;
+   dt.min  = 0;
+   dt.sec  = 0;
+
+   todayStart = StructToTime(dt);
+
+   if(!HistorySelect(todayStart, TimeCurrent()))
+     {
+      return 0;
+     }
+
+   for(int i = 0; i < HistoryDealsTotal(); i++)
+     {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != MagicNumber)
+         continue;
+
+      double dealProfit = HistoryDealGetDouble(ticket, DEAL_PROFIT);
+      double dealCommission = HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+      double dealSwap = HistoryDealGetDouble(ticket, DEAL_SWAP);
+
+      profit += dealProfit + dealCommission + dealSwap;
+     }
+
+   return profit;
+  }
+```
+
+In OnTick, the EA updates daily PnL and resets risk at day boundaries, refreshes ATR values, identifies the active session, updates session state, and then scans active symbols for breakout conditions. At every tick, we first align the EA with its financial state. We do this by updating daily net profit and resetting risk if a new day has started. We then refresh volatility using ATR values across all symbols. This keeps our decisions grounded in current market conditions. Next, we determine the active session and update our internal session model. We also display this information on the chart using visual elements. This creates a strong feedback loop. The EA does not just react to price, but also understands when and how to operate.
+
+Once the session context is ready, we move into execution logic. We detect any session change and reset state when needed. This prevents overlap between trading periods. If the session is inactive, we exit early. For active sessions, we loop through all tracked symbols. We update their session ranges and filter based on session rules. We then apply breakout detection using enhanced logic. This helps us find opportunities in a controlled way. At the same time, UpdateDailyNetProfit and GetDailyNetProfit track performance in real time. They scan historical deals from the start of the day and filter by magic number. Profit, commission, and swap are all included. This ensures every decision is based on both market structure and current risk exposure.
+
+```
+//+------------------------------------------------------------------+
+//| Reset daily risk at start of new trading day (ONCE per day)      |
+//+------------------------------------------------------------------+
+void ResetDailyRisk()
+  {
+   datetime now = TimeCurrent();
+   MqlDateTime dt;
+   TimeToStruct(now, dt);
+
+   //--- Set to midnight of current day for comparison
+   MqlDateTime todayDt;
+   TimeToStruct(now, todayDt);
+   todayDt.hour = 0;
+   todayDt.min = 0;
+   todayDt.sec = 0;
+   datetime todayStart = StructToTime(todayDt);
+
+   //--- Check if we need to reset (new day detected)
+   if(m_lastResetDate == 0)
+     {
+      m_lastResetDate = todayStart;
+      m_dailyResetPrinted = false;
+      return;
+     }
+
+   //--- If last reset date is before today's start, we need to reset
+   if(m_lastResetDate < todayStart)
+     {
+      double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+      //--- Reset daily tracking
+      m_dailyRiskUsed = 0;
+      m_dailyMaxRisk = accountBalance * (DailyCapitalPercent / 100.0);
+
+      //--- Recalculate session allocations based on current balance
+      double asianAllocPct = CalculateSessionAllocation(SESSION_ASIAN);
+      double londonAllocPct = CalculateSessionAllocation(SESSION_LONDON);
+      double nyAllocPct = CalculateSessionAllocation(SESSION_NEWYORK);
+
+      //--- Reset session risks with updated values
+      m_asianSession.maxRisk = m_dailyMaxRisk * (asianAllocPct / 100.0);
+      m_asianSession.usedRisk = 0;
+      m_asianSession.allocationPercent = asianAllocPct;
+
+      m_londonSession.maxRisk = m_dailyMaxRisk * (londonAllocPct / 100.0);
+      m_londonSession.usedRisk = 0;
+      m_londonSession.allocationPercent = londonAllocPct;
+
+      m_nySession.maxRisk = m_dailyMaxRisk * (nyAllocPct / 100.0);
+      m_nySession.usedRisk = 0;
+      m_nySession.allocationPercent = nyAllocPct;
+
+      //--- Update current session max risk if active
+      if(m_currentSession.type != SESSION_OFF)
+        {
+         switch(m_currentSession.type)
+           {
+            case SESSION_ASIAN:
+               m_currentSession.maxRisk = m_asianSession.maxRisk;
+               break;
+            case SESSION_LONDON:
+               m_currentSession.maxRisk = m_londonSession.maxRisk;
+               break;
+            case SESSION_NEWYORK:
+               m_currentSession.maxRisk = m_nySession.maxRisk;
+               break;
+           }
+        }
+
+      m_lastResetDate = todayStart;
+      m_dailyResetPrinted = false;
+
+      //--- Print reset message only once
+      if(!m_dailyResetPrinted)
+        {
+         Print("═══════════════════════════════════════════");
+         Print("        DAILY RISK RESET - NEW DAY         ");
+         Print("═══════════════════════════════════════════");
+         Print("Account Balance: ", DoubleToString(accountBalance, 2));
+         Print("New Daily Max Risk: ", DoubleToString(m_dailyMaxRisk, 2), " (", DailyCapitalPercent, "% of balance)");
+         Print("Allocation Mode: ", UseEqualSplit ? "EQUAL SPLIT" : "MANUAL");
+         Print("Asian Session Max: ", DoubleToString(m_asianSession.maxRisk, 2), " (", DoubleToString(asianAllocPct, 1), "%)");
+         Print("London Session Max: ", DoubleToString(m_londonSession.maxRisk, 2), " (", DoubleToString(londonAllocPct, 1), "%)");
+         Print("NY Session Max: ", DoubleToString(m_nySession.maxRisk, 2), " (", DoubleToString(nyAllocPct, 1), "%)");
+         Print("═══════════════════════════════════════════");
+         m_dailyResetPrinted = true;
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Update risk used after trade execution                           |
+//+------------------------------------------------------------------+
+void UpdateRiskUsed(int index, double lot, int slPips, double pipValue)
+  {
+   double tradeRisk = lot * slPips * pipValue;
+
+   //--- Update session risk
+   m_currentSession.usedRisk += tradeRisk;
+
+   //--- Update session specific risk based on session type
+   switch(m_currentSession.type)
+     {
+      case SESSION_ASIAN:
+         m_asianSession.usedRisk += tradeRisk;
+         break;
+      case SESSION_LONDON:
+         m_londonSession.usedRisk += tradeRisk;
+         break;
+      case SESSION_NEWYORK:
+         m_nySession.usedRisk += tradeRisk;
+         break;
+     }
+
+   //--- Update daily risk
+   m_dailyRiskUsed += tradeRisk;
+
+   Print("═══════════════════════════════════════════");
+   Print("RISK UPDATED AFTER TRADE:");
+   Print("Trade Risk: ", DoubleToString(tradeRisk, 2));
+   Print("Session Risk Used: ", DoubleToString(m_currentSession.usedRisk, 2), "/", DoubleToString(m_currentSession.maxRisk, 2));
+   Print("Daily Risk Used: ", DoubleToString(m_dailyRiskUsed, 2), "/", DoubleToString(m_dailyMaxRisk, 2));
+   Print("═══════════════════════════════════════════");
+  }
+```
+
+The ResetDailyRisk function ensures that our risk framework stays aligned with the current trading day. We begin by converting the current time into a structured format and deriving the exact start of the day at midnight. This gives us a clean reference point for comparison. If the EA is running for the first time, we simply initialize the reset date and exit. Otherwise, we check if a new day has started by comparing timestamps. When a new day is detected, we reset all daily tracking variables. We recalculate the maximum daily risk based on the current account balance and defined percentage. From there, we dynamically redistribute this risk across the Asian, London, and New York sessions. Each session gets updated limits and reset usage, ensuring a fresh allocation cycle for the day.
+
+Also, we make sure that the currently active session reflects the updated risk limits immediately. This keeps execution consistent with the new daily boundaries. To maintain transparency, we print a detailed reset summary, but only once per day to avoid clutter. In parallel, the UpdateRiskUsed function tracks risk in real time after each trade. It calculates the exact trade risk using lot size, stop loss in pips, and pip value. This risk is then added to the active session, the specific session bucket, and the overall daily usage. By doing this, we maintain a synchronized view of risk at all levels. The printed output provides a clear snapshot of how much risk has been consumed versus the allowed limits.
+
+```
+//+------------------------------------------------------------------+
+//| Update ATR values for all symbols                                |
+//+------------------------------------------------------------------+
+void UpdateATRValues()
+  {
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      double atr[1];
+      if(CopyBuffer(m_atrHandle[i], 0, 0, 1, atr) > 0)
+        {
+         m_symbols[i].currentATR = atr[0];
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Enhanced breakout checking logic                                 |
+//+------------------------------------------------------------------+
+void CheckForBreakouts(int index)
+  {
+   string sym = m_symbols[index].name;
+
+   //--- Get current bid/ask
+   double bid = SymbolInfoDouble(sym, SYMBOL_BID);
+   double ask = SymbolInfoDouble(sym, SYMBOL_ASK);
+
+   //--- Check if session has formed enough (optional)
+   if(RequireSessionFormation)
+     {
+      datetime now = TimeCurrent();
+      int minutesSinceStart = (int)((now - m_symbols[index].sessionStartTime) / 60);
+      if(minutesSinceStart < SessionFormationMinutes)
+         return;
+     }
+
+   //--- Calculate volatility stops
+   if(UseVolatilityStop && m_symbols[index].currentATR > 0)
+     {
+      m_symbols[index].upperVolatilityStop = m_symbols[index].sessionHigh + (m_symbols[index].currentATR * ATRMultiplier);
+      m_symbols[index].lowerVolatilityStop = m_symbols[index].sessionLow - (m_symbols[index].currentATR * ATRMultiplier);
+     }
+   else
+     {
+      //--- Fallback: use session range * 0.5 as volatility stop
+      double range = m_symbols[index].sessionHigh - m_symbols[index].sessionLow;
+      m_symbols[index].upperVolatilityStop = m_symbols[index].sessionHigh + (range * 0.5);
+      m_symbols[index].lowerVolatilityStop = m_symbols[index].sessionLow - (range * 0.5);
+     }
+
+   //--- Check for HIGH breakout (price breaks above session high)
+   if(!m_symbols[index].highBreakoutTriggered && ask >= m_symbols[index].sessionHigh)
+     {
+      m_symbols[index].highBreakoutTriggered = true;
+      m_symbols[index].lastTradeTime = TimeCurrent();
+
+      //--- Check if price has cleared volatility stop (genuine breakout)
+      if(UseVolatilityStop && ask >= m_symbols[index].upperVolatilityStop)
+        {
+         Print("GENUINE HIGH breakout on ", sym, " - GOING LONG");
+         ExecuteBreakoutTrade(index, ORDER_TYPE_BUY, "Genuine High Breakout - Long");
+        }
+      else
+        {
+         Print("FALSE HIGH breakout on ", sym, " - FADING SHORT");
+         ExecuteBreakoutTrade(index, ORDER_TYPE_SELL, "False High Breakout - Fade Short");
+        }
+     }
+
+   //--- Check for LOW breakout (price breaks below session low)
+   if(!m_symbols[index].lowBreakoutTriggered && bid <= m_symbols[index].sessionLow)
+     {
+      m_symbols[index].lowBreakoutTriggered = true;
+      m_symbols[index].lastTradeTime = TimeCurrent();
+
+      //--- Check if price has cleared volatility stop (genuine breakout)
+      if(UseVolatilityStop && bid <= m_symbols[index].lowerVolatilityStop)
+        {
+         Print("GENUINE LOW breakout on ", sym, " - GOING SHORT");
+         ExecuteBreakoutTrade(index, ORDER_TYPE_SELL, "Genuine Low Breakout - Short");
+        }
+      else
+        {
+         Print("FALSE LOW breakout on ", sym, " - FADING LONG");
+         ExecuteBreakoutTrade(index, ORDER_TYPE_BUY, "False Low Breakout - Fade Long");
+        }
+     }
+  }
+```
+
+The UpdateATRValues function keeps our volatility data fresh across all tracked symbols. We loop through each symbol and pull the latest ATR value using CopyBuffer. If the data is successfully retrieved, we store it in the symbol’s structure. This ensures that every symbol has an up-to-date measure of market volatility. By doing this continuously, we allow the EA to adapt its behavior to changing market conditions. ATR becomes a core input for decision-making, especially in breakout validation and stop calculations.
+
+The CheckForBreakouts function builds on this by applying structured and context-aware trade logic. We start by retrieving the current bid and ask prices for the symbol. If session formation is required, we check that enough time has passed before allowing any trades. We then calculate volatility stops using ATR when available, or fall back to a range-based method if needed. Once levels are set, we monitor for price breaking above the session high or below the session low. When a breakout occurs, we classify it as genuine or false based on whether price clears the volatility stop. Genuine breakouts lead to momentum trades, while false ones trigger fade trades in the opposite direction.
+
+```
+//+------------------------------------------------------------------+
+//| Execute breakout trade                                           |
+//+------------------------------------------------------------------+
+void ExecuteBreakoutTrade(int index, ENUM_ORDER_TYPE direction, string reason)
+  {
+   string sym = m_symbols[index].name;
+
+   //--- Check if already have a position
+   if(PositionSelect(sym))
+     {
+      Print("Already have position on ", sym, " - skipping");
+      return;
+     }
+
+   //--- Check if we still have risk budget for this session
+   if(m_currentSession.usedRisk >= m_currentSession.maxRisk)
+     {
+      Print("Session risk limit reached. Used: ", m_currentSession.usedRisk, " Max: ", m_currentSession.maxRisk);
+      return;
+     }
+
+   //--- Calculate remaining risk for this trade
+   double remainingRisk = m_currentSession.maxRisk - m_currentSession.usedRisk;
+
+   //--- Calculate stop loss in pips
+   int slPips = GetStopLossPips(index);
+   if(slPips <= 0)
+      slPips = StopLoss_Pips_Fallback;
+
+   //--- Calculate lot size based on available risk
+   double pipValue = GetPipValue(sym);
+   if(pipValue <= 0)
+      return;
+
+   double lot = remainingRisk / (slPips * pipValue);
+   lot = NormalizeDouble(lot, 2);
+   lot = MathMax(lot, SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN));
+   lot = MathMin(lot, SymbolInfoDouble(sym, SYMBOL_VOLUME_MAX));
+
+   if(lot <= 0)
+     {
+      Print("Lot size too small for ", sym);
+      return;
+     }
+
+   //--- Calculate SL and TP prices
+   double price, slPrice, tpPrice;
+   double pipSize = GetPipSize(sym);
+
+   if(direction == ORDER_TYPE_BUY)
+     {
+      price = SymbolInfoDouble(sym, SYMBOL_ASK);
+      slPrice = price - slPips * pipSize;
+
+      if(UseDynamicTP)
+         tpPrice = price + (slPips * TakeProfitRR) * pipSize;
+      else
+         tpPrice = price + TakeProfit_Pips_Fallback * pipSize;
+
+      Print("═══════════════════════════════════════════");
+      Print("BUY on ", sym, " - ", reason);
+      Print("Lot: ", lot, " SL: ", slPips, "pips TP: ", (UseDynamicTP ? TakeProfitRR * slPips : TakeProfit_Pips_Fallback), "pips");
+      Print("═══════════════════════════════════════════");
+
+      if(trade.Buy(lot, sym, price, slPrice, tpPrice, "Session Breakout - " + reason))
+        {
+         Print("BUY executed successfully");
+         UpdateRiskUsed(index, lot, slPips, pipValue);
+        }
+      else
+         Print("BUY failed. Error: ", GetLastError());
+     }
+   else
+      if(direction == ORDER_TYPE_SELL)
+        {
+         price = SymbolInfoDouble(sym, SYMBOL_BID);
+         slPrice = price + slPips * pipSize;
+
+         if(UseDynamicTP)
+            tpPrice = price - (slPips * TakeProfitRR) * pipSize;
+         else
+            tpPrice = price - TakeProfit_Pips_Fallback * pipSize;
+
+         Print("═══════════════════════════════════════════");
+         Print("SELL on ", sym, " - ", reason);
+         Print("Lot: ", lot, " SL: ", slPips, "pips TP: ", (UseDynamicTP ? TakeProfitRR * slPips : TakeProfit_Pips_Fallback), "pips");
+         Print("═══════════════════════════════════════════");
+
+         if(trade.Sell(lot, sym, price, slPrice, tpPrice, "Session Breakout - " + reason))
+           {
+            Print("SELL executed successfully");
+            UpdateRiskUsed(index, lot, slPips, pipValue);
+           }
+         else
+            Print("SELL failed. Error: ", GetLastError());
+        }
+  }
+
+//+------------------------------------------------------------------+
+//| Get stop loss in pips based on ATR or range                      |
+//+------------------------------------------------------------------+
+int GetStopLossPips(int index)
+  {
+   double pipSize = GetPipSize(m_symbols[index].name);
+
+   if(UseVolatilityStop && m_symbols[index].currentATR > 0)
+     {
+      int slPips = (int)((m_symbols[index].currentATR * StopLossATRMultiplier) / pipSize);
+      if(slPips >= 10)
+         return slPips;
+     }
+
+   //--- Fallback to range-based SL
+   double range = m_symbols[index].sessionHigh - m_symbols[index].sessionLow;
+   if(range > 0 && pipSize > 0)
+     {
+      int slPips = (int)((range * 0.5) / pipSize);
+      if(slPips >= 10)
+         return slPips;
+     }
+
+   return StopLoss_Pips_Fallback;
+  }
+```
+
+Here, the ExecuteBreakoutTrade function handles the full trade execution process in a controlled and risk-aware manner. We begin by checking if a position already exists for the symbol. If so, we skip to avoid duplication. We then verify whether the session risk limit has been reached. If the risk budget is exhausted, no trade is allowed. Next, we calculate the remaining risk available for the trade. Using this, we determine the stop-loss in pips, falling back to a default if needed. We also compute the pip value and use it to derive the lot size based on the remaining risk. The lot is normalized and constrained within the broker’s minimum and maximum limits. This ensures that position sizing is always aligned with the available risk.
+
+Once sizing is complete, we calculate the entry price, stop-loss, and take-profit levels. For buy trades, we use the ask price, and for sell trades, the bid price. The take profit can be dynamic, based on a risk-reward ratio, or fixed using a fallback value. We then print a detailed summary of the trade before execution. If the trade is successful, we immediately update the used risk to reflect the new exposure. If it fails, we log the error for debugging. Supporting this, the GetStopLossPips function determines an adaptive stop loss. It first attempts to use ATR-based volatility. If that is not valid, it falls back to a session range method. If both fail, a default value is returned.
+
+```
+//+------------------------------------------------------------------+
+//| Update session range for a symbol                                |
+//+------------------------------------------------------------------+
+void UpdateSessionRange(int index)
+  {
+   string sym = m_symbols[index].name;
+
+   double highs[], lows[];
+   ArrayResize(highs, 0);
+   ArrayResize(lows, 0);
+   ArraySetAsSeries(highs, true);
+   ArraySetAsSeries(lows, true);
+
+   //--- Get high/low data for the range period
+   if(CopyHigh(sym, PERIOD_M15, 1, SessionRangeBars, highs) <= 0)
+      return;
+
+   if(CopyLow(sym, PERIOD_M15, 1, SessionRangeBars, lows) <= 0)
+      return;
+
+   //--- Find highest high and lowest low
+   double maxH = highs[0];
+   double minL = lows[0];
+
+   for(int i = 1; i < ArraySize(highs); i++)
+     {
+      if(highs[i] > maxH)
+         maxH = highs[i];
+      if(lows[i] < minL)
+         minL = lows[i];
+     }
+
+   //--- Only update if not already triggered (preserve breakout state)
+   if(!m_symbols[index].highBreakoutTriggered)
+      m_symbols[index].sessionHigh = maxH;
+
+   if(!m_symbols[index].lowBreakoutTriggered)
+      m_symbols[index].sessionLow = minL;
+  }
+
+//+------------------------------------------------------------------+
+//| Handle session change                                            |
+//+------------------------------------------------------------------+
+void OnSessionChange(SessionType newSession)
+  {
+   Print("═══════════════════════════════════════════");
+   Print("Session changed to: ", EnumToString(newSession));
+   Print("═══════════════════════════════════════════");
+
+   //--- Reset breakout triggers for all symbols for the new session
+   for(int i = 0; i < m_numSymbols; i++)
+     {
+      m_symbols[i].highBreakoutTriggered = false;
+      m_symbols[i].lowBreakoutTriggered = false;
+      m_symbols[i].sessionStartTime = TimeCurrent();
+     }
+
+   //--- Close losing positions from previous session
+   CloseLosingPositionsFromPreviousSession();
+  }
+```
+
+The UpdateSessionRange function keeps track of the current session’s price boundaries for each symbol. We retrieve recent high and low data from the M15 timeframe over a defined number of bars. These arrays are processed as time series, so the latest data is always at the front. We then loop through the values to find the highest high and lowest low within that range. This gives us the active session range. To preserve trade logic integrity, we only update these levels if a breakout has not already been triggered. This prevents the EA from shifting key levels after a breakout has occurred.
+
+The OnSessionChange function handles transitions between trading sessions. When a new session begins, we log the change for visibility. We then reset all breakout flags across symbols to prepare for fresh opportunities. Each symbol also gets a new session start time, which is used for timing conditions later. In addition, we clean up risk by closing any losing positions carried over from the previous session. This ensures that each session starts with a clean and controlled state, both structurally and financially.
+
+```
+//+------------------------------------------------------------------+
+//| Update current session info                                      |
+//+------------------------------------------------------------------+
+void UpdateCurrentSession(SessionType sessionType)
+  {
+   datetime now = TimeCurrent();
+   MqlDateTime dt;
+   TimeToStruct(now, dt);
+
+   switch(sessionType)
+     {
+      case SESSION_ASIAN:
+         m_currentSession = m_asianSession;
+         dt.hour = AsianStart;
+         dt.min = 0;
+         dt.sec = 0;
+         m_currentSession.startTime = StructToTime(dt);
+         dt.hour = AsianEnd;
+         m_currentSession.endTime = StructToTime(dt);
+         m_currentSession.isActive = true;
+         break;
+      case SESSION_LONDON:
+         m_currentSession = m_londonSession;
+         dt.hour = LondonStart;
+         dt.min = 0;
+         dt.sec = 0;
+         m_currentSession.startTime = StructToTime(dt);
+         dt.hour = LondonEnd;
+         m_currentSession.endTime = StructToTime(dt);
+         m_currentSession.isActive = true;
+         break;
+      case SESSION_NEWYORK:
+         m_currentSession = m_nySession;
+         dt.hour = NYStart;
+         dt.min = 0;
+         dt.sec = 0;
+         m_currentSession.startTime = StructToTime(dt);
+         dt.hour = NYEnd;
+         m_currentSession.endTime = StructToTime(dt);
+         m_currentSession.isActive = true;
+         break;
+      default:
+         m_currentSession.type = SESSION_OFF;
+         m_currentSession.maxRisk = 0;
+         m_currentSession.usedRisk = 0;
+         m_currentSession.isActive = false;
+         break;
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Session detection                                                |
+//+------------------------------------------------------------------+
+SessionType GetCurrentSession()
+  {
+   datetime now = TimeCurrent();
+   MqlDateTime dt;
+   TimeToStruct(now, dt);
+   int hour = dt.hour;
+
+   if(UseAsianSession && hour >= AsianStart && hour < AsianEnd)
+      return SESSION_ASIAN;
+   if(UseLondonSession && hour >= LondonStart && hour < LondonEnd)
+      return SESSION_LONDON;
+   if(UseNewYorkSession && hour >= NYStart && hour < NYEnd)
+      return SESSION_NEWYORK;
+   return SESSION_OFF;
+  }
+```
+
+The UpdateCurrentSession and GetCurrentSession functions work together to keep the EA aligned with the active trading session. First, GetCurrentSession checks the current server hour and determines whether it falls within the Asian, London, or New York session, based on user-defined time ranges and enabled flags. It returns the appropriate session type or SESSION\_OFF if none are active.
+
+Then, UpdateCurrentSession uses this result to load the corresponding session structure into m\_currentSession. It sets the exact start and end times for that session by adjusting the current date with the configured session hours. It also marks the session as active and ensures all relevant parameters, such as risk limits, are correctly assigned. If no session is active, the EA resets the session state to inactive with zero risk exposure, ensuring no trades are taken outside defined trading windows.
+
+```
+//+------------------------------------------------------------------+
+//| Check if symbol is active during current session                 |
+//+------------------------------------------------------------------+
+bool IsSymbolActive(string symbol, SessionType session)
+  {
+   string activeList = "";
+   switch(session)
+     {
+      case SESSION_ASIAN:
+         activeList = AsianSymbols;
+         break;
+      case SESSION_LONDON:
+         activeList = LondonSymbols;
+         break;
+      case SESSION_NEWYORK:
+         activeList = NYSymbols;
+         break;
+      default:
+         return false;
+     }
+
+   string parts[];
+   int count = StringSplit(activeList, ',', parts);
+   for(int i = 0; i < count; i++)
+     {
+      string sym = parts[i];
+      StringTrimRight(sym);
+      if(sym == symbol)
+         return true;
+     }
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//| Display session info on chart                                    |
+//+------------------------------------------------------------------+
+void DisplaySessionInfo()
+  {
+   string sessionName = "";
+   double allocPercent = 0;
+   double usedRisk = 0;
+   double maxRisk = 0;
+
+   if(m_currentSession.type == SESSION_OFF)
+     {
+      Comment("NO ACTIVE SESSION");
+      return;
+     }
+
+   switch(m_currentSession.type)
+     {
+      case SESSION_ASIAN:
+         sessionName = "ASIAN";
+         allocPercent = m_asianSession.allocationPercent;
+         break;
+      case SESSION_LONDON:
+         sessionName = "LONDON";
+         allocPercent = m_londonSession.allocationPercent;
+         break;
+      case SESSION_NEWYORK:
+         sessionName = "NEW YORK";
+         allocPercent = m_nySession.allocationPercent;
+         break;
+     }
+
+   usedRisk = m_currentSession.usedRisk;
+   maxRisk  = m_currentSession.maxRisk;
+
+   double sessionPct = (maxRisk > 0) ? (usedRisk / maxRisk) * 100 : 0;
+   double sessionAccountPct = (AccountInfoDouble(ACCOUNT_BALANCE) > 0) ? (usedRisk / AccountInfoDouble(ACCOUNT_BALANCE)) * 100 : 0;
+
+   double dailyPct = (m_dailyMaxRisk > 0) ? (m_dailyRiskUsed / m_dailyMaxRisk) * 100 : 0;
+   double dailyAccountPct = (AccountInfoDouble(ACCOUNT_BALANCE) > 0) ? (m_dailyRiskUsed / AccountInfoDouble(ACCOUNT_BALANCE)) * 100 : 0;
+
+   string profitSign = (m_dailyNetProfit >= 0) ? "+" : "";
+
+   string info = "";
+   info += "═══════════════════════════════════════════\n";
+   info += "   SESSION BASED CAPITAL ALLOCATION EA\n";
+   info += "═══════════════════════════════════════════\n";
+   info += "Session: " + sessionName + "\n";
+   info += "Mode: " + (UseEqualSplit ? "EQUAL SPLIT" : "MANUAL") + "\n";
+   info += "───────────────────────────────────────────\n";
+   info += "Daily Net PnL: " + profitSign + DoubleToString(m_dailyNetProfit, 2) + "\n";
+   info += "Daily Budget: " + DoubleToString(DailyCapitalPercent, 1) + "%\n";
+   info += "Used: " + DoubleToString(dailyPct, 1) + "% of daily\n";
+   info += "Exposure: " + DoubleToString(dailyAccountPct, 2) + "% account\n";
+   info += "───────────────────────────────────────────\n";
+   info += "Session Budget: " + DoubleToString(allocPercent, 1) + "%\n";
+   info += "Used: " + DoubleToString(sessionPct, 1) + "% of session\n";
+   info += "Exposure: " + DoubleToString(sessionAccountPct, 2) + "% account\n";
+   info += "───────────────────────────────────────────\n";
+   info += "Symbols: " + m_currentSession.activeSymbols + "\n";
+   info += "═══════════════════════════════════════════";
+
+   Comment(info);
+  }
+```
+
+The IsSymbolActive function controls which symbols are allowed to trade during a specific session. We begin by selecting the appropriate symbol list based on the current session type. Each session has its own predefined list of symbols stored as a comma-separated string. We then split this string into individual symbols and loop through them. Before comparison, we trim any extra spaces to avoid mismatches. If the given symbol matches any entry in the list, we return true. Otherwise, we return false, ensuring that only session-relevant symbols are considered for trading.
+
+The DisplaySessionInfo function provides a clear, real-time view of the EA’s state directly on the chart. If no session is active, we simply display a message and exit. Otherwise, we identify the current session and retrieve its allocation and risk data. We calculate key metrics such as used risk percentages, account exposure, and daily performance. We also format the daily profit with a sign for clarity. All this information is then structured into a clean visual block, showing session details, risk usage, and active symbols. This helps us monitor both performance and risk in a simple and intuitive way while the EA is running.
+
+### 
+
+### Backtest Results
+
+The backtest was conducted across roughly a 2-month testing window from 20 November 2025 to 30 January 2026, with the following settings:
+
+Now the equity curve and the backtest results:
+
+### 
+
+### Conclusion
+
+In conclusion, we have transformed the traditional breakout concept. It is no longer a simplistic "price above or below a level" trigger. Instead, it becomes a sophisticated, session-adaptive capital rotation framework. This framework respects the unique volatility fingerprint of each trading period. We introduced several validation layers. These include volatility confirmation via ATR, session-based high/low structure, and the distinction between genuine breakouts versus false fades. As a result, we move from reactive price detection to intelligent market interpretation.
+
+Each breakout signal must prove its authenticity. It does so through interaction with session-specific volatility stops. This effectively filters out low-probability noise during range-bound Asian hours. At the same time, it captures high-momentum moves during London and New York sessions.
+
+Practically, after implementing this framework, you will be able to:
+
+- Distinguish between genuine volatility-expanding breakouts and false range-extending wicks.
+- Allocate risk capital dynamically across Asian, London, and New York sessions based on their unique behavioral profiles.
+- Automatically adjust lot sizes as session risk budgets get consumed.
+- Preserve profitable positions across session transitions while cutting losses that no longer align with session edge.
+- Anchor every trade to session-specific structural levels rather than arbitrary fixed stops.
+
+In essence, this approach shifts your trading system from a one-strategy-fits-all-day model to context-aware capital rotation. Every action is backed by session-appropriate breakout logic, volatility confirmation, and disciplined risk budgeting. This improves the precision of entries and the management of intraday risk. It also creates a robust, extensible foundation that can integrate with any execution model. Whether you use mean reversion, momentum, or order flow, capital allocation remains at the core of decision-making.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21976.zip "Download all attachments in the single ZIP archive")
+
+[ToD\_Cap\_Rotation.mq5](https://www.mql5.com/en/articles/download/21976/ToD_Cap_Rotation.mq5 "Download ToD_Cap_Rotation.mq5")
+(44.49 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Feature Engineering for ML (Part 1): Fractional Differentiation — Stationarity Without Memory Loss](https://www.mql5.com/en/articles/22014)
+
+Integer differentiation forces a binary choice between stationarity and memory: returns (d=1) are stationary but discard all price-level information; raw prices (d=0) preserve memory but violate ML stationarity assumptions. We implement the fixed-width fractional differentiation (FFD) method from AFML Chapter 5, covering get\_weights\_ffd (iterative recurrence with threshold cutoff), frac\_diff\_ffd (bounded dot product per bar), and fracdiff\_optimal (binary search for minimum stationary d\*).
+
+[MetaTrader 5 Machine Learning Blueprint (Part 12): Probability Calibration for Financial Machine Learning](https://www.mql5.com/en/articles/21938)
+
+Tree-based classifiers are typically overconfident: true win rates near 0.55 appear as 0.65–0.80 and inflate position sizes and Kelly fractions. This article presents afml.calibration and CalibratorCV, which generate out-of-fold predictions via PurgedKFold and fit isotonic regression or Platt scaling. We define Brier score, ECE, and MCE, and show diagnostics that trace miscalibration into position sizes, realized P&L, and CPCV path Sharpe distributions to support leakage-free, correctly sized trading.
+
+[GoertzelBrain: Adaptive Spectral Cycle Detection with Neural Network Ensemble in MQL5](https://www.mql5.com/en/articles/21376)
+
+GoertzelBrain combines Goertzel spectral analysis with an online‑trained neural network ensemble to convert cycle features into a directional confirmation signal. The indicator builds a compact feature vector from the dominant period, amplitude, confidence and their dynamics, plus local volatility, and outputs +1, −1 or 0. The article provides the full MQL5 implementation, explains the architecture and feature engineering, and shows how to use it as a directional filter.
+
+[Forex Arbitrage Trading: A Matrix Trading System for Return to Fair Value with Risk Control](https://www.mql5.com/en/articles/17947)
+
+The article contains a detailed description of the cross-rate calculation algorithm, a visualization of the imbalance matrix, and recommendations for optimally setting the MinDiscrepancy and MaxRisk parameters for efficient trading. The system automatically calculates the "fair value" of each currency pair using cross rates, generating buy signals in case of negative deviations and sell signals in case of positive ones.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F523%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dchoose.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&a=fyznzyduwsltgnhlftytumasbfgbwlqw&s=91bc0eca8f132d3df7d14cdb1baebac753aef179403d60dc83856af55a4d6769&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=nmaiufmttfvnmzrhmujmxlrjbqpsrjpj&ssn=1788778978768088772&ssn_dr=0&ssn_sr=0&fv_date=1788778978&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21976&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Formulating%20Dynamic%20Multi-Pair%20EA%20(Part%208)%3A%20Time-of-Day%20Capital%20Rotation%20Approach%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877897873287170&fz_uniq=5122069820237024226&sv=2552)

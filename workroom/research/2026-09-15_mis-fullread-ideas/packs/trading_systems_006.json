@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_006",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_006",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 5798,
+      "title": "A DLL for MQL5 in 10 Minutes (Part II): Creating with Visual Studio 2017",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5798.md"
+    },
+    {
+      "id": 6301,
+      "title": "Studying candlestick analysis techniques (part IV): Updates and additions to Pattern Analyzer",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6301.md"
+    },
+    {
+      "id": 6834,
+      "title": "Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6834.md"
+    },
+    {
+      "id": 7013,
+      "title": "Developing a cross-platform grider EA (part III): Correction-based grid with martingale",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7013.md"
+    },
+    {
+      "id": 7144,
+      "title": "Parsing HTML with curl",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7144.md"
+    },
+    {
+      "id": 7219,
+      "title": "Developing a cross-platform grid EA (Last part): Diversification as a way to increase profitability",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7219.md"
+    },
+    {
+      "id": 7777,
+      "title": "Developing a cross-platform grid EA: testing a multi-currency EA",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7777.md"
+    },
+    {
+      "id": 7908,
+      "title": "Manual charting and trading toolkit (Part II). Chart graphics drawing tools",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7908.md"
+    },
+    {
+      "id": 8390,
+      "title": "Grid and martingale: what are they and how to use them?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8390.md"
+    },
+    {
+      "id": 8410,
+      "title": "Optimal approach to the development and analysis of trading systems",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8410.md"
+    },
+    {
+      "id": 8411,
+      "title": "The market and the physics of its global patterns",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8411.md"
+    },
+    {
+      "id": 8586,
+      "title": "Use MQL5.community channels and group chats",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8586.md"
+    }
+  ]
+}

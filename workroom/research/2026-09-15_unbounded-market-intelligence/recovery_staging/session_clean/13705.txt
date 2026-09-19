@@ -1,0 +1,1945 @@
+---
+id: 13705
+source_url: https://www.mql5.com/en/articles/13705
+title: "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session"
+author: ""
+author_url: 
+published: 2023-11-09T12:49Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Added symbols prefixes and/or suffixes and Trading Time Session"
+series_part: 3
+source: mql5
+language: en
+---
+
+# How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 9 November 2023 at 07:49
+
+7 040
+[
+0](https://www.mql5.com/en/forum/457143 "Comments")
+
+[Roberto Jacobs](https://www.mql5.com/en/users/3rjfx)
+
+### Introduction
+
+Several fellow traders sent emails or commented about how to use this Multi-Currency EA on brokers with symbol names that have prefixes and/or suffixes, and also
+
+how to implement trading time zones or trading time sessions on this Multi-Currency EA.
+
+Therefore, on this occasion I will explain and create a function to be implemented in the EA in the previous [article](https://www.mql5.com/en/articles/13470) FXSAR\_MTF\_MCEA by adding an automatic detection function for broker symbols with prefixes and/or suffixes and Trading Time Zones.
+
+  
+
+### Plans and Features
+
+**1. Trading Currency Pairs.**  
+
+This Multi-Currency Expert Advisor is planned to trade on a Symbol or Pair as follows:
+
+For Forex:
+
+> EURUSD,GBPUSD,AUDUSD,NZDUSD,USDCAD,USDCHF,USDJPY,EURGBP,
+>
+> EURAUD, EURNZD, EURCAD, EURCHF, EURJPY, GBPAUD, GBPNZD, GBPCAD,
+>
+> GBPCHF,GBPJPY,AUDNZD,AUDCAD,AUDCHF,AUDJPY,NZDCAD,NZDCHF,
+>
+> NZDJPY, CADCHF, CADJPY, CHFJPY = 28 pairs
+>
+> Plus 2 Metal pairs: XAUUSD (Gold) and XAGUSD (Silver)
+
+Total is 30 pairs.
+
+In the previous [article](https://www.mql5.com/en/articles/13470) I said that, this Multi-Currency Expert Advisor will not work with brokers with symbol or pair names that have prefixes or suffixes.
+
+In Expert Advisors (EAs) that only work on single currencies (one pair, one EA), there will be no problems regarding brokers with symbol names that have prefixes and/or suffixes.
+
+But in the multi-currency EA that I created, it became a problem because we first registered 30 pairs that would be traded with standard symbol names commonly used by many brokers. This method is the fastest and simplest compared to having to input the pair names one by one in the expert input properties, there is also the possibility of errors due to typos.
+
+Actually, traders or coders who will use EA principles like the ones we created can manually edit all 30 pairs that listed and it won't cause any problems.
+
+But all of us, including me, would actually prefer it if a function was created to automatically handle symbol names that have prefixes and/or suffixes, so that if an EA is used on MetaTrader5  from a broker with special symbol names like that, everything will run smoothly.
+
+The weakness of the function for detecting symbol names that have prefixes and suffixes is that this function only works on pairs or symbol names for forex and metal in MT5, but will not work on custom symbols and indexes.
+
+In this version, because we add a trading session (trading time zone), we will also add 10 option pairs to be traded which may correspond to the time for the trading session.
+
+One of the 10 option pairs that will be traded is "Trader Wishes Pairs", where the pairs that will be traded must be input manually by the trader on the expert input property.
+
+**Note:** always remember that the name of the pair entered must already be in the list of 30 pairs.
+
+**2. Trading Session (Time Zone).**
+
+As we know, Metatrader platform  has two versions: MT4 and MT5, which were created by MetaQuotes Software Corporation in 2005 (Metatrader4) and 2010 (Metatrader5). This company is of Russian origin and is a leader in the financial software market.
+
+The MetaTrader5 time offset setting is different for each broker depending on the time zone of the broker referring to GMT/UTC Time. You can also see the broker time offset setting for the trade server on the top left of the Metatrader5 platform. But in general the broker's time of trade server refers to the New York Exchange Market (NYEM) Closing time, as when the MetaTrader5 shows 00:00, NYEM is closing.
+
+The forex market is open 24 hours a day, 5 days a week, across the world. The market first opens on Monday in New Zealand at 8:00 AM local time or 20:00 GMT/UTC, followed by the start of one of the major market sessions in Sydney at 9:00 AM Monday local time, which is 21:00 GMT/UTC Sunday. (Standard time offset)
+
+To get the trading time zone, we must first know the latest time from the current time of the trade server. Then we also have to know the time difference (in hours) from the time of trader server compared to GMT/UTC time. In term of changing the time forward by 1 hour during daylight saving time has no effect on the time of trade server, because the time trade server of Metatrader5 will also advance by 1 hour.
+
+There are 5 forex time zones that are most widely used by traders in the world:
+
+- New Zealand open at 20:00 and closes at 05:00 AM GMT/UTC, which is 8:00 AM and 5:00 PM local time.
+- Sydney opens at 21:00 and closes at 7:00 AM GMT/UTC, which is 9:00 AM and 5:00 PM local time.
+- Tokyo opens at 00:00 and closes at 9:00 AM GMT/UTC, which is 8:00 AM and 6:00 PM local time.
+- London opens at 9:00 AM and closes at 19:00 GMT/UTC, which is 9:00 AM and 7:00 PM local time.
+- New York opens at 13:00 and closes at 22:00 GMT/UTC, which is 9:00 AM and 7:00 PM local time.
+
+### Implementation of planning in the MQL5 program
+
+**1. Program header and properties input.**
+
+Include Header file MQL5
+
+```
+//+------------------------------------------------------------------+
+//|                             Include                              |
+//+------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\AccountInfo.mqh>
+//--
+CTrade              mc_trade;
+CSymbolInfo         mc_symbol;
+CPositionInfo       mc_position; 
+CAccountInfo        mc_account;
+//---
+```
+
+Enumeration to use Time Zone
+
+```
+//--
+enum tm_zone
+ {
+   Cus_Session,        // Trading on Custom Session
+   New_Zealand,        // Trading on New Zealand Session
+   Australia,          // Trading on Autralia Sydney Session
+   Asia_Tokyo,         // Trading on Asia Tokyo Session
+   Europe_London,      // Trading on Europe London Session
+   US_New_York         // Trading on US New York Session
+ };
+//--
+```
+
+Enumeration to select time hour
+
+```
+//--
+enum swhour
+  {
+    hr_00=0,   // 00:00
+    hr_01=1,   // 01:00
+    hr_02=2,   // 02:00
+    hr_03=3,   // 03:00
+    hr_04=4,   // 04:00
+    hr_05=5,   // 05:00
+    hr_06=6,   // 06:00
+    hr_07=7,   // 07:00
+    hr_08=8,   // 08:00
+    hr_09=9,   // 09:00
+    hr_10=10,  // 10:00
+    hr_11=11,  // 11:00
+    hr_12=12,  // 12:00
+    hr_13=13,  // 13:00
+    hr_14=14,  // 14:00
+    hr_15=15,  // 15:00
+    hr_16=16,  // 16:00
+    hr_17=17,  // 17:00
+    hr_18=18,  // 18:00
+    hr_19=19,  // 19:00
+    hr_20=20,  // 20:00
+    hr_21=21,  // 21:00
+    hr_22=22,  // 22:00
+    hr_23=23   // 23:00
+  };
+//--
+```
+
+Enumeration to select time minutes
+
+```
+//--
+enum inmnt
+  {
+    mn_00=0,   // Minute 0
+    mn_05=5,   // Minute 5
+    mn_10=10,  // Minute 10
+    mn_15=15,  // Minute 15
+    mn_20=20,  // Minute 20
+    mn_25=25,  // Minute 25
+    mn_30=30,  // Minute 30
+    mn_35=35,  // Minute 35
+    mn_40=40,  // Minute 40
+    mn_45=45,  // Minute 45
+    mn_50=50,  // Minute 50
+    mn_55=55   // Minute 55
+  };
+//--
+```
+
+Enumeration to select 10 option pairs to be traded
+
+```
+//--
+enum PairsTrade
+ {
+   All30,  // All Forex 30 Pairs
+   TrdWi,  // Trader Wishes Pairs 
+   Usds,   // Forex USD Pairs
+   Eurs,   // Forex EUR Pairs
+   Gbps,   // Forex GBP Pairs
+   Auds,   // Forex AUD Pairs
+   Nzds,   // Forex NZD Pairs
+   Cads,   // Forex CDD Pairs
+   Chfs,   // Forex CHF Pairs
+   Jpys    // Forex JPY Pairs
+ };   
+//--
+```
+
+Enumeration YN is used for options (Yes) or (No) in expert input properties.
+
+```
+//--
+enum YN
+  {
+   No,
+   Yes
+  };
+//--
+```
+
+Enumeration to use Money Management Lot size
+
+```
+//--
+enum mmt
+  {
+   FixedLot,   // Fixed Lot Size
+   DynamLot    // Dynamic Lot Size
+  };
+//--
+```
+
+Expert input properties:
+
+```
+//---
+input group               "=== Select Pairs to Trade ===";  // Selected Pairs to trading
+input PairsTrade         usepairs = All30;           // Select Pairs to Use
+input string         traderwishes = "eg. eurusd,usdchf,gbpusd,gbpchf"; // If Use Trader Wishes Pairs, input pair name here, separate by comma
+//--
+input group               "=== Money Management Lot Size Parameter ==="; // Money Management Lot Size Parameter
+input mmt                  mmlot = DynamLot;         // Money Management Type
+input double                Risk = 10.0;             // Percent Equity Risk per Trade (Min=1.0% / Max=10.0%)
+input double                Lots = 0.01;             // Input Manual Lot Size FixedLot
+//--Trade on Specific Time
+input group               "=== Trade on Specific Time ==="; // Trade on Specific Time
+input YN           trd_time_zone = Yes;              // Select If You Like to Trade on Specific Time Zone
+input tm_zone            session = Cus_Session;      // Select Trading Time Zone
+input swhour            stsescuh = hr_00;            // Time Hour to Start Trading Custom Session (0-23)
+input inmnt             stsescum = mn_15;            // Time Minute to Start Trading Custom Session (0-55)
+input swhour            clsescuh = hr_23;            // Time Hour to Stop Trading Custom Session (0-23)
+input inmnt             clsescum = mn_55;            // Time Minute to Stop Trading Custom Session (0-55)
+//--Day Trading On/Off
+input group               "=== Day Trading On/Off ==="; // Day Trading On/Off
+input YN                    ttd0 = No;               // Select Trading on Sunday (Yes) or (No)
+input YN                    ttd1 = Yes;              // Select Trading on Monday (Yes) or (No)
+input YN                    ttd2 = Yes;              // Select Trading on Tuesday (Yes) or (No)
+input YN                    ttd3 = Yes;              // Select Trading on Wednesday (Yes) or (No)
+input YN                    ttd4 = Yes;              // Select Trading on Thursday (Yes) or (No)
+input YN                    ttd5 = Yes;              // Select Trading on Friday (Yes) or (No)
+input YN                    ttd6 = No;               // Select Trading on Saturday (Yes) or (No)
+//--Trade & Order management Parameter
+input group               "=== Trade & Order management Parameter ==="; // Trade & Order management Parameter
+input YN                  use_sl = No;               // Use Order Stop Loss (Yes) or (No)
+input YN                  autosl = Yes;              // Use Automatic Calculation Stop Loss (Yes) or (No)
+input double               SLval = 30;               // If Not Use Automatic SL - Input SL value in Pips
+input YN                  use_tp = Yes;               // Use Order Take Profit (Yes) or (No)
+input YN                  autotp = Yes;              // Use Automatic Calculation Take Profit (Yes) or (No)
+input double               TPval = 10;               // If Not Use Automatic TP - Input TP value in Pips
+input YN            TrailingSLTP = Yes;              // Use Trailing SL/TP (Yes) or (No)
+input YN                 autotrl = Yes;              // Use Automatic Trailing (Yes) or (No)
+input double               TSval = 5;                // If Not Use Automatic Trailing Input Trailing value in Pips
+input double               TSmin = 5;                // Minimum Pips to start Trailing Stop
+input double               TPmin = 25;               // Input Trailing Profit Value in Pips
+input YN           Close_by_Opps = Yes;              // Close Trade By Opposite Signal (Yes) or (No)
+input YN               SaveOnRev = Yes;              // Close Trade and Save profit due to weak signal (Yes) or (No)
+//--Others Expert Advisor Parameter
+input group               "=== Others Expert Advisor Parameter ==="; // Others EA Parameter
+input YN                  alerts = Yes;              // Display Alerts / Messages (Yes) or (No)
+input YN           UseEmailAlert = No;               // Email Alert (Yes) or (No)
+input YN           UseSendnotify = No;               // Send Notification (Yes) or (No)
+input YN      trade_info_display = Yes;              // Select Display Trading Info on Chart (Yes) or (No)
+input ulong               magicEA = 2023102;          // Expert ID (Magic Number)
+//---
+```
+
+In the expert input property group Trade on Specific Time, here the trader will choose:
+
+to Trade on Specific Time Zone (Yes) or (No).
+
+If Yes, select the enumeration options:
+
+- Trading on Custom Session
+- Trading on New Zealand Session
+- Trading on Australia Sydney Session
+- Trading on Asia Tokyo Session
+- Trading on Europe London Session
+- Trading on America New York Session
+
+Trading on Custom Session:
+
+In this session, traders must set the time or hours and minutes to start trading and the hours and minutes to close trading. So the EA will only carry out activities during the specified time from start time to close time.
+
+In Trading on New Zealand Session to Trading on US New York Session, the time from start of trading to close of trading is calculated by the EA.
+
+**2. Class for working Expert Advisor.**
+
+To declare all variables, objects and functions needed in this Multi-Currency Expert Advisor, we will create a Class to specify the construction and configuration in the expert advisor workflow.
+
+In particular, the variables used in the function for detecting prefix symbol names and/or suffix symbol names as well as time zone calculations we made it in the MCEA Class.
+
+```
+//+------------------------------------------------------------------+
+//| Class for working Expert Advisor                                 |
+//+------------------------------------------------------------------+
+class MCEA
+  {
+//---
+    private:
+    //---- 
+    int              x_year;       // Year 
+    int              x_mon;        // Month 
+    int              x_day;        // Day of the month 
+    int              x_hour;       // Hour in a day 
+    int              x_min;        // Minutes 
+    int              x_sec;        // Seconds
+    //--
+    int              oBm,
+                     oSm,
+                     ldig;
+    //--- Variables used in prefix and suffix symbols
+    int              posCur1,
+                     posCur2;
+    int              inpre,
+                     insuf;
+    string           pre,suf;           
+    //--- Variables are used in Trading Time Zone
+    int              ishour,
+                     onhour;
+    datetime         rem,
+                     znop,
+                     zncl,
+                     zntm;
+    datetime         SesCuOp,
+                     SesCuCl,
+                     Ses01Op,
+                     Ses01Cl,
+                     Ses02Op,
+                     Ses02Cl,
+                     Ses03Op,
+                     Ses03Cl,
+                     Ses04Op,
+                     Ses04Cl,
+                     Ses05Op,
+                     Ses05Cl,
+                     SesNoOp,
+                     SesNoCl;
+    //--
+    string           tz_ses,
+                     tz_opn,
+                     tz_cls;
+    //--
+    string           tmopcu,
+                     tmclcu,
+                     tmop01,
+                     tmcl01,
+                     tmop02,
+                     tmcl02,
+                     tmop03,
+                     tmcl03,
+                     tmop04,
+                     tmcl04,
+                     tmop05,
+                     tmcl05,
+                     tmopno,
+                     tmclno;      
+    //----------------------    
+    //--
+    double           LotPS;
+    double           slv,
+                     tpv,
+                     pip,
+                     xpip;
+    double           differ;                 
+    double           floatprofit,
+                     fixclprofit;
+    //--
+    string           pairs,
+                     hariini,
+                     daytrade,
+                     trade_mode;
+    //--
+    double           OPEN[],
+                     HIGH[],
+                     LOW[],
+                     CLOSE[];
+    datetime         TIME[];
+    datetime         closetime;
+    //--
+    //------------
+     
+    //------------
+    void             SetSymbolNamePS(void);
+    void             HandlingSymbolArrays(void);
+    void             Set_Time_Zone(void);
+    void             Time_Zone(void);
+    bool             Trade_session(void);
+    string           PosTimeZone(void);
+    int              ThisTime(const int reqmode);
+    int              ReqTime(datetime reqtime,const int reqmode);
+    //--
+    int              DirectionMove(const string symbol);
+    int              GetPSARSignalMTF(string symbol);
+    int              PARSAR05(const string symbol);
+    int              PARSARMTF(const string symbol,ENUM_TIMEFRAMES mtf);
+    int              LotDig(const string symbol);
+    //--
+    double           MLots(const string symbx);
+    double           NonZeroDiv(double val1,double val2);
+    double           OrderSLSet(const string xsymb,ENUM_ORDER_TYPE type,double atprice);
+    double           OrderTPSet(const string xsymb,ENUM_ORDER_TYPE type,double atprice);
+    double           SetOrderSL(const string xsymb,ENUM_POSITION_TYPE type,double atprice);
+    double           SetOrderTP(const string xsymb,ENUM_POSITION_TYPE type,double atprice);
+    double           TSPrice(const string xsymb,ENUM_POSITION_TYPE ptype,int TS_type);
+    //--
+    string           ReqDate(int d,int h,int m);
+    string           TF2Str(ENUM_TIMEFRAMES period);
+    string           timehr(int hr,int mn);
+    string           TradingDay(void);
+    string           AccountMode();
+    string           GetCommentForOrder(void)             { return(expname); }
+    //------------
+
+    public:
+    //---
+    
+    //-- FXSAR_MTF_MCEA_sptz Config --
+    string           DIRI[],
+                     AS30[],
+                     VSym[];
+    string           SPC[];
+    string           USD[];
+    string           EUR[];
+    string           GBP[];
+    string           AUD[];
+    string           NZD[];
+    string           CAD[];
+    string           CHF[];
+    string           JPY[];             
+    //--                 
+    string           expname;
+    //--
+    int              hPar05[];
+    int              hPSAR[][5];
+    int              ALO,
+                     dgts,
+                     arrsar,
+                     arrsymbx;
+    int              sall,
+                     arusd,
+                     aretc,
+                     arspc,
+                     arper;
+    ulong            slip;        
+    //--
+    double           SARstep,
+                     SARmaxi;
+    double           profitb[],
+                     profits[];
+    //--
+    int              Buy,
+                     Sell;
+    int              ccur,
+                     psec,
+                     xtto,
+                     TFArrays,
+                     checktml;
+    int              OpOr[],xob[],xos[];         
+    //--
+    int              year,  // Year 
+                     mon,   // Month 
+                     day,   // Day 
+                     hour,  // Hour 
+                     min,   // Minutes 
+                     sec,   // Seconds 
+                     dow,   // Day of week (0-Sunday, 1-Monday, ... ,6-Saturday) 
+                     doy;   // Day number of the year (January 1st is assigned the number value of zero)
+    //--
+    ENUM_TIMEFRAMES  TFt,
+                     TFT05,
+                     TFSAR[];
+    //--
+    bool             PanelExtra;
+    //------------
+                     MCEA(void);
+                     ~MCEA(void);            
+    //------------
+    //--
+    virtual void     FXSAR_MTF_MCEA_sptz_Config(void);
+    virtual void     ExpertActionTrade(void);
+    //--
+    void             ArraySymbolResize(void);
+    void             CurrentSymbolSet(const string symbol);
+    void             Pips(const string symbol);
+    void             TradeInfo(void);
+    void             Do_Alerts(const string symbx,string msgText);
+    void             CheckOpenPMx(const string symbx);
+    void             SetSLTPOrders(void);
+    void             CloseBuyPositions(const string symbol);
+    void             CloseSellPositions(const string symbol);
+    void             CloseAllOrders(void);
+    void             CheckClose(const string symbx);
+    void             TodayOrders(void);
+    void             UpdatePrice(const string symbol,ENUM_TIMEFRAMES xtf);
+    void             RefreshPrice(const string symbx,ENUM_TIMEFRAMES xtf,int bars);
+    //--
+    bool             RefreshTick(const string symbx);  
+    bool             TradingToday(void);
+    bool             OpenBuy(const string symbol);
+    bool             OpenSell(const string symbol);
+    bool             ModifyOrderSLTP(double mStop,double ordtp);
+    bool             ModifySLTP(const string symbx,int TS_type);          
+    bool             CloseAllProfit(void);
+    bool             ManualCloseAllProfit(void);
+    //--
+    int              PairsIdxArray(const string symbol);
+    int              ValidatePairs(const string symbol);
+    int              TFIndexArray(ENUM_TIMEFRAMES TF);
+    int              GetOpenPosition(const string symbol);
+    int              GetCloseInWeakSignal(const string symbol,int exis);
+    //--
+    string           getUninitReasonText(int reasonCode);
+    //--
+    //------------
+//---
+  }; //-end class MCEA
+//---------//
+```
+
+The very first and foremost function in the Multi-Currency Expert Advisor work process that is called from OnInit() is FXSAR\_MTF\_MCEA\_sptz\_Config().
+
+In the FXSAR\_MTF\_MCEA\_sptz\_Config() function, all symbols to be used are configured, all handle indicators used and some important functions of the include file header for the expert advisor workflow.
+
+```
+//+------------------------------------------------------------------+
+//| Expert Configuration                                             |
+//+------------------------------------------------------------------+
+void MCEA::FXSAR_MTF_MCEA_sptz_Config(void) 
+  {
+//---
+    //--
+    HandlingSymbolArrays(); // With this function we will handle all pairs that will be traded
+    //--
+    TFT05=PERIOD_M5;
+    ENUM_TIMEFRAMES TFA[]={PERIOD_M15,PERIOD_M30,PERIOD_H1,PERIOD_H4,PERIOD_D1};
+    TFArrays=ArraySize(TFA);
+    ArrayResize(TFSAR,TFArrays,TFArrays);
+    ArrayCopy(TFSAR,TFA,0,0,WHOLE_ARRAY);
+    //--
+    TFt=TFSAR[2];
+    //--
+    //-- iSAR Indicators handle for all symbol
+    for(int x=0; x<arrsymbx; x++) 
+      {
+        hPar05[x]=iSAR(DIRI[x],TFT05,SARstep,SARmaxi);
+        //--
+        for(int i=0; i<TFArrays; i++)
+          {
+            hPSAR[x][i]=iSAR(DIRI[x],TFSAR[i],SARstep,SARmaxi);
+          }
+      }
+    //--
+    ALO=(int)mc_account.LimitOrders()>arrsymbx ? arrsymbx : (int)mc_account.LimitOrders();
+    //--
+    LotPS=(double)ALO;
+    //--
+    mc_trade.SetExpertMagicNumber(magicEA);
+    mc_trade.SetDeviationInPoints(slip);
+    mc_trade.SetMarginMode();
+    Set_Time_Zone();
+    //--
+    return;
+//---
+  } //-end FXSAR_MTF_MCEA_sptz_Config()
+//---------//
+```
+
+To configure the pair to be traded, we will call the HandlingSymbolArrays() function.
+
+With HandlingSymbolArrays() function we will handle all pairs that will be traded.
+
+```
+void MCEA::HandlingSymbolArrays(void)
+  {
+//---
+    string All30[]={"EURUSD","GBPUSD","AUDUSD","NZDUSD","USDCAD","USDCHF","USDJPY","EURGBP",
+                    "EURAUD","EURNZD","EURCAD","EURCHF","EURJPY","GBPAUD","GBPNZD","GBPCAD",
+                    "GBPCHF","GBPJPY","AUDNZD","AUDCAD","AUDCHF","AUDJPY","NZDCAD","NZDCHF",
+                    "NZDJPY","CADCHF","CADJPY","CHFJPY","XAUUSD","XAGUSD"}; // 30 pairs
+    string USDs[]={"USDCAD","USDCHF","USDJPY","AUDUSD","EURUSD","GBPUSD","NZDUSD","XAUUSD","XAGUSD"}; // USD pairs
+    string EURs[]={"EURAUD","EURCAD","EURCHF","EURGBP","EURJPY","EURNZD","EURUSD"}; // EUR pairs
+    string GBPs[]={"GBPAUD","GBPCAD","GBPCHF","EURGBP","GBPJPY","GBPNZD","GBPUSD"}; // GBP pairs
+    string AUDs[]={"AUDCAD","AUDCHF","EURAUD","GBPAUD","AUDJPY","AUDNZD","AUDUSD"}; // AUD pairs
+    string NZDs[]={"AUDNZD","NZDCAD","NZDCHF","EURNZD","GBPNZD","NZDJPY","NZDUSD"}; // NZD pairs
+    string CADs[]={"AUDCAD","CADCHF","EURCAD","GBPCAD","CADJPY","NZDCAD","USDCAD"}; // CAD pairs
+    string CHFs[]={"AUDCHF","CADCHF","EURCHF","GBPCHF","NZDCHF","CHFJPY","USDCHF"}; // CHF pairs
+    string JPYs[]={"AUDJPY","CADJPY","CHFJPY","EURJPY","GBPJPY","NZDJPY","USDJPY"}; // JPY pairs
+    //--
+    sall=ArraySize(All30);
+    arusd=ArraySize(USDs);
+    aretc=ArraySize(EURs);
+    ArrayResize(VSym,sall,sall);
+    ArrayCopy(VSym,All30,0,0,WHOLE_ARRAY);
+    //--
+    if(usepairs==TrdWi && StringFind(traderwishes,"eg.",0)<0)
+      {
+        string to_split=traderwishes; // A string to split into substrings pairs name
+        string sep=",";               // A separator as a character 
+        ushort u_sep;                 // The code of the separator character 
+        //--- Get the separator code 
+        u_sep=StringGetCharacter(sep,0);
+        //--- Split the string to substrings 
+        int p=StringSplit(to_split,u_sep,SPC); 
+        if(p>0)
+          {
+            for(int i=0; i<p; i++) StringToUpper(SPC[i]);
+            //--
+            for(int i=0; i<p; i++)
+              {
+                if(ValidatePairs(SPC[i])<0) ArrayRemove(SPC,i,1);
+              }
+          }
+        arspc=ArraySize(SPC);
+      }
+    //--
+    SetSymbolNamePS();      // With this function we will detect whether the Symbol Name has a prefix and/or suffix
+    //--
+    if(inpre>0 || insuf>0)
+      {
+        if(usepairs==TrdWi && arspc>0)
+          {
+            for(int t=0; t<arspc; t++)
+              {
+                SPC[t]=pre+SPC[t]+suf;
+              }
+          }
+        //--
+        for(int t=0; t<sall; t++)
+          {
+            All30[t]=pre+All30[t]+suf;
+          }
+        for(int t=0; t<arusd; t++)
+          {
+            USDs[t]=pre+USDs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            EURs[t]=pre+EURs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            GBPs[t]=pre+GBPs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            AUDs[t]=pre+AUDs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            NZDs[t]=pre+NZDs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            CADs[t]=pre+CADs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            CHFs[t]=pre+CHFs[t]+suf;
+          }
+        for(int t=0; t<aretc; t++)
+          {
+            JPYs[t]=pre+JPYs[t]+suf;
+          }
+      }
+    //--
+    ArrayCopy(VSym,All30,0,0,WHOLE_ARRAY);
+    ArrayResize(AS30,sall,sall);
+    ArrayCopy(AS30,All30,0,0,WHOLE_ARRAY);
+    for(int x=0; x<sall; x++) {SymbolSelect(AS30[x],true);}
+    //--
+    switch(usepairs)
+      {
+        case 0: // All Forex 30 Pairs
+          {
+            ArrayResize(DIRI,sall,sall);
+            arrsymbx=sall;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,All30,0,0,WHOLE_ARRAY);
+            pairs="Multi Currency 30 Pairs";
+            //--
+            break;
+          }
+        case 1: // Trader wishes pairs
+          {
+            ArrayResize(DIRI,arspc,arspc);
+            arrsymbx=arspc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,SPC,0,0,WHOLE_ARRAY);
+            pairs="("+string(arspc)+") Trader Wishes Pairs";
+            //--
+            break;
+          }
+        case 2: // USD pairs
+          {
+            ArrayResize(DIRI,arusd,arusd);
+            arrsymbx=arusd;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,USDs,0,0,WHOLE_ARRAY);
+            pairs="("+string(arusd)+") Multi Currency USD Pairs";
+            //--
+            break;
+          }
+        case 3: // EUR pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,EURs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex EUR Pairs";
+            //--
+            break;
+          }
+        case 4: // GBP pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,GBPs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex GBP Pairs";
+            //--
+            break;
+          }
+        case 5: // AUD pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,AUDs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex AUD Pairs";
+            //--
+            break;
+          }
+        case 6: // NZD pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,NZDs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex NZD Pairs";
+            //--
+            break;
+          }
+        case 7: // CAD pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,CADs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex CAD Pairs";
+            //--
+            break;
+          }
+        case 8: // CHF pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,CHFs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex CHF Pairs";
+            //--
+            break;
+          }
+        case 9: // JPY pairs
+          {
+            ArrayResize(DIRI,aretc,aretc);
+            arrsymbx=aretc;
+            ArraySymbolResize();
+            ArrayCopy(DIRI,JPYs,0,0,WHOLE_ARRAY);
+            pairs="("+string(aretc)+") Forex JPY Pairs";
+            //--
+            break;
+          }
+      }
+    //--
+    return;
+//---
+  } //-end HandlingSymbolArrays()
+//---------//
+```
+
+Inside the HandlingSymbolArrays() function we will call the SetSymbolNamePS() function.
+
+With the SetSymbolNamePS() function, we will be able to detect and handle symbol names that have prefixes and/or suffixes.
+
+```
+void MCEA::SetSymbolNamePS(void)
+  {
+//---
+   int sym_Lenpre=0;
+   int sym_Lensuf=0;
+   string sym_pre="";
+   string sym_suf="";
+   string insymbol=Symbol();
+   int inlen=StringLen(insymbol);
+   int toseek=-1;
+   string dep="";
+   string bel="";
+   string sym_use ="";
+   int pairx=-1;
+   string xcur[]={"EUR","GBP","AUD","NZD","USD","CAD","CHF"}; // 7 major currency
+   int xcar=ArraySize(xcur);
+   //--
+   for(int x=0; x<xcar; x++)
+     {
+       toseek=StringFind(insymbol,xcur[x],0);
+       if(toseek>=0)
+         {
+           pairx=x;
+           break;
+         }
+     }
+   if(pairx>=0)
+     {
+       int awl=toseek-3 <0 ? 0 : toseek-3;
+       int sd=StringFind(insymbol,"SD",0);
+       if(toseek==0 && sd<4)
+         {
+           dep=StringSubstr(insymbol,toseek,3);
+           bel=StringSubstr(insymbol,toseek+3,3);
+           sym_use=dep+bel;
+         }
+       else
+       if(toseek>0)
+         {
+           dep=StringSubstr(insymbol,toseek,3);
+           bel=StringSubstr(insymbol,toseek+3,3);
+           sym_use=dep+bel;
+         }
+       else
+         {
+           dep=StringSubstr(insymbol,awl,3);
+           bel=StringSubstr(insymbol,awl+3,3);
+           sym_use=dep+bel;
+         }
+     }
+   //--
+   string sym_nmx=sym_use;
+   int lensx=StringLen(sym_nmx);
+   //--
+   if(inlen>lensx && lensx==6)
+     {
+       sym_Lenpre=StringFind(insymbol,sym_nmx,0);
+       sym_Lensuf=inlen-lensx-sym_Lenpre;
+       //--
+       if(sym_Lenpre>0)
+         {
+           sym_pre=StringSubstr(insymbol,0,sym_Lenpre);
+           for(int i=0; i<xcar; i++)
+             if(StringFind(sym_pre,xcur[i],0)>=0) sym_pre="";
+         }
+       if(sym_Lensuf>0)
+         {
+           sym_suf=StringSubstr(insymbol,sym_Lenpre+lensx,sym_Lensuf);
+           for(int i=0; i<xcar; i++)
+             if(StringFind(sym_suf,xcur[i],0)>=0) sym_suf="";
+         }
+     }
+   //--
+   pre=sym_pre;
+   suf=sym_suf;
+   inpre=StringLen(pre);
+   insuf=StringLen(suf);
+   posCur1=inpre;
+   posCur2=posCur1+3;
+   //--
+   return;
+//---
+  } //-end SetSymbolNamePS()
+//---------//
+```
+
+**3. Expert tick function.**
+
+Inside the Expert tick function (OnTick() function) we will call one of the main functions in a multi-currency expert advisor namely function ExpertActionTrade().
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick(void)
+  {
+//---
+    mc.ExpertActionTrade();
+    //--
+    return;
+//---
+  } //-end OnTick()
+//---------//
+```
+
+The sequence of the EA work process inside this function.
+
+The ExpertActionTrade() function will carry out all activities and manage automatic trading, starting from Open Orders, Close Orders, Trailing Stop or Trading Profits and other additional activities.
+
+```
+void MCEA::ExpertActionTrade(void)
+  {
+//---
+    //Check Trading Terminal
+    ResetLastError();
+    //--
+    if(!MQLInfoInteger(MQL_TRADE_ALLOWED) && mc.checktml==0) //-- Check whether MT5 Algorithmic trading is Allow or Prohibit
+      {
+        mc.Do_Alerts(Symbol(),"Trading Expert at "+Symbol()+" are NOT Allowed by Setting.");
+        mc.checktml=1;  //-- Variable checktml is given a value of 1, so that the alert is only done once.
+        return;
+      }
+    //--
+    if(!DisplayManualButton("M","C","R")) DisplayManualButton(); //-- Show the expert manual button panel
+    //--
+    if(trade_info_display==Yes) mc.TradeInfo(); //-- Displayed Trading Info on Chart
+    //---
+    //--
+    int mcsec=mc.ThisTime(mc.sec); 
+    //--
+    if(fmod((double)mcsec,5.0)==0) mc.ccur=mcsec;
+    //--
+    if(mc.ccur!=mc.psec)
+      {
+        string symbol;
+        //-- Here we start with the rotation of the name of all symbol or pairs to be traded
+        for(int x=0; x<mc.arrsymbx && !IsStopped(); x++) 
+          {
+            //-- 
+            if(mc.DIRI[x]==Symbol()) symbol=Symbol();
+            else symbol=mc.DIRI[x];
+            //--
+            mc.CurrentSymbolSet(symbol);
+            //--
+            if(mc.TradingToday() && mc.Trade_session())
+              {
+                //--
+                mc.OpOr[x]=mc.GetOpenPosition(symbol); //-- Get trading signals to open positions
+                //--                                   //-- and store in the variable OpOr[x]
+                if(mc.OpOr[x]==mc.Buy) //-- If variable OpOr[x] get result of GetOpenPosition(symbol) as "Buy" (value=1)
+                  {
+                    //--
+                    mc.CheckOpenPMx(symbol);
+                    //--
+                    if(Close_by_Opps==Yes && mc.xos[x]>0) mc.CloseSellPositions(symbol);
+                    //--
+                    if(mc.xob[x]==0 && mc.xtto<mc.ALO) mc.OpenBuy(symbol);
+                    else
+                    if(mc.xtto>=mc.ALO)
+                      {
+                        //--
+                        mc.Do_Alerts(symbol,"Maximum amount of open positions and active pending orders has reached"+
+                                            "\n the limit = "+string(mc.ALO)+" Orders ");
+                        //--
+                        mc.CheckOpenPMx(symbol);
+                        //--
+                        if(mc.xos[x]>0 && mc.profits[x]<-1.02 && mc.xob[x]==0) {mc.CloseSellPositions(symbol); mc.OpenBuy(symbol);}
+                        else
+                        if(SaveOnRev==Yes) mc.CloseAllProfit();
+                      }
+                  }
+                if(mc.OpOr[x]==mc.Sell) //-- If variable OpOr[x] get result of GetOpenPosition(symbol) as "Sell" (value=-1)
+                  {
+                    //--
+                    mc.CheckOpenPMx(symbol);
+                    //--
+                    if(Close_by_Opps==Yes && mc.xob[x]>0) mc.CloseBuyPositions(symbol);
+                    //--
+                    if(mc.xos[x]==0 && mc.xtto<mc.ALO) mc.OpenSell(symbol);
+                    else
+                    if(mc.xtto>=mc.ALO)
+                      {
+                        //--
+                        mc.Do_Alerts(symbol,"Maximum amount of open positions and active pending orders has reached"+
+                                            "\n the limit = "+string(mc.ALO)+" Orders ");
+                        //--
+                        mc.CheckOpenPMx(symbol);
+                        //--
+                        if(mc.xob[x]>0 && mc.profitb[x]<-1.02 && mc.xos[x]==0) {mc.CloseBuyPositions(symbol); mc.OpenSell(symbol);}
+                        else
+                        if(SaveOnRev==Yes) mc.CloseAllProfit();
+                      }
+                  }
+              }
+            //--
+            mc.CheckOpenPMx(symbol);
+            //--
+            if(mc.xtto>0)
+              {
+                //--
+                if(SaveOnRev==Yes) //-- Close Trade and Save profit due to weak signal (Yes)
+                  {
+                    mc.CheckOpenPMx(symbol);
+                    if(mc.profitb[x]>0.02 && mc.xob[x]>0 && mc.GetCloseInWeakSignal(symbol,mc.Buy)==mc.Sell) 
+                      {
+                        mc.CloseBuyPositions(symbol); 
+                        mc.Do_Alerts(symbol,"Close BUY order "+symbol+" to save profit due to weak signal.");
+                      }
+                    if(mc.profits[x]>0.02 && mc.xos[x]>0 && mc.GetCloseInWeakSignal(symbol,mc.Sell)==mc.Buy)
+                      {
+                        mc.CloseSellPositions(symbol); 
+                        mc.Do_Alerts(symbol,"Close SELL order "+symbol+" to save profit due to weak signal.");
+                      }
+                  }
+                //--
+                if(TrailingSLTP==Yes) //-- Use Trailing SL/TP (Yes)
+                  {
+                    if(autotrl==Yes) mc.ModifySLTP(symbol,1); //-- If Use Automatic Trailing (Yes)
+                    if(autotrl==No)  mc.ModifySLTP(symbol,0); //-- Use Automatic Trailing (No)
+                  }
+              }
+            //--
+            mc.CheckClose(symbol);
+          }
+        //--
+        mc.psec=mc.ccur;
+      }
+    //--
+    return;
+//---
+  } //-end ExpertActionTrade()
+//---------//
+```
+
+Specifically for Trading Time Zones, in the ExpertActionTrade() function, a call to the Trade Session() boolean function is added.
+
+If Trade\_session() is true, then the EA work process will continue until it is finished, but if it is false, then the EA will only carry out the tasks "Close Trade and Save profit due to weak signal (Yes)" and "Trailing Stop (Yes)".
+
+```
+bool MCEA::Trade_session(void)
+  {
+//---
+   bool trd_ses=false;
+   ishour=ThisTime(hour);
+   if(ishour!=onhour) Set_Time_Zone();
+   datetime tcurr=TimeCurrent(); // Server Time
+   //--
+   switch(session)
+     {
+       case Cus_Session:
+         {
+           if(tcurr>=SesCuOp && tcurr<=SesCuCl) trd_ses=true;
+           break;
+         }
+       case New_Zealand:
+         {
+           if(tcurr>=Ses01Op && tcurr<=Ses01Cl) trd_ses=true;
+           break;
+         }
+       case Australia:
+         {
+           if(tcurr>=Ses02Op && tcurr<=Ses02Cl) trd_ses=true;
+           break;
+         }
+       case Asia_Tokyo:
+         {
+           if(tcurr>=Ses03Op && tcurr<=Ses03Cl) trd_ses=true;
+           break;
+         }
+       case Europe_London:
+         {
+           if(tcurr>=Ses04Op && tcurr<=Ses04Cl) trd_ses=true;
+           break;
+         }
+       case US_New_York:
+         {
+           if(tcurr>=Ses05Op && tcurr<=Ses05Cl) trd_ses=true;
+           break;
+         }
+     }
+   //--
+   if(trd_time_zone==No) 
+     {
+      if(tcurr>=SesNoOp && tcurr<=SesNoCl) trd_ses=true;
+     }
+   //--
+   onhour=ishour;
+   //--
+   return(trd_ses);
+//---  
+  } //-end Trade_session()
+//---------//
+```
+
+```
+void MCEA::Set_Time_Zone(void)
+  {
+//---
+    //-- Server Time==TimeCurrent()
+    datetime TTS=TimeTradeServer();
+    datetime GMT=TimeGMT();
+    //--
+    MqlDateTime svrtm,gmttm; 
+    TimeToStruct(TTS,svrtm); 
+    TimeToStruct(GMT,gmttm); 
+    int svrhr=svrtm.hour;  // Server time hour
+    int gmthr=gmttm.hour;  // GMT time hour
+    int difhr=svrhr-gmthr; // Time difference Server time to GMT time
+    //--
+    int NZSGMT=12;  // New Zealand Session GMT/UTC+12
+    int AUSGMT=10;  // Australia Sydney Session GMT/UTC+10
+    int TOKGMT=9;   // Asia Tokyo Session GMT/UTC+9
+    int EURGMT=0;   // Europe London Session GMT/UTC 0
+    int USNGMT=-5;  // US New York Session GMT/UTC-5
+    //--
+    int NZSStm=8;   // New Zealand Session time start: 08:00 Local Time
+    int NZSCtm=17;  // New Zealand Session time close: 17:00 Local Time 
+    int AUSStm=7;   // Australia Sydney Session time start: 07:00 Local Time 
+    int AUSCtm=17;  // Australia Sydney Session time close: 17:00 Local Time  
+    int TOKStm=9;   // Asia Tokyo Session time start: 09:00 Local Time 
+    int TOKCtm=18;  // Asia Tokyo Session time close: 18:00 Local Time  
+    int EURStm=9;   // Europe London Session time start: 09:00 Local Time 
+    int EURCtm=19;  // Europe London Session time close: 19:00 Local Time  
+    int USNStm=8;   // US New York Session time start: 08:00 Local Time 
+    int USNCtm=17;  // US New York Session time close: 17:00 Local Time  
+    //--
+    int nzo = (NZSStm+difhr-NZSGMT)<0 ? 24+(NZSStm+difhr-NZSGMT) : (NZSStm+difhr-NZSGMT);
+    int nzc = (NZSCtm+difhr-NZSGMT)<0 ? 24+(NZSCtm+difhr-NZSGMT) : (NZSCtm+difhr-NZSGMT);
+    //--
+    int auo = (AUSStm+difhr-AUSGMT)<0 ? 24+(AUSStm+difhr-AUSGMT) : (AUSStm+difhr-AUSGMT);
+    int auc = (AUSCtm+difhr-AUSGMT)<0 ? 24+(AUSCtm+difhr-AUSGMT) : (AUSCtm+difhr-AUSGMT);
+    //--
+    int tko = (TOKStm+difhr-TOKGMT)<0 ? 24+(TOKStm+difhr-TOKGMT) : (TOKStm+difhr-TOKGMT);
+    int tkc = (TOKCtm+difhr-TOKGMT)<0 ? 24+(TOKCtm+difhr-TOKGMT) : (TOKCtm+difhr-TOKGMT);
+    //--
+    int euo = (EURStm+difhr-EURGMT)<0 ? 24+(EURStm+difhr-EURGMT) : (EURStm+difhr-EURGMT);
+    int euc = (EURCtm+difhr-EURGMT)<0 ? 24+(EURCtm+difhr-EURGMT) : (EURCtm+difhr-EURGMT);
+    //--
+    int uso = (USNStm+difhr-USNGMT)<0 ? 24+(USNStm+difhr-USNGMT) : (USNStm+difhr-USNGMT);
+    int usc = (USNCtm+difhr-USNGMT)<0 ? 24+(USNCtm+difhr-USNGMT) : (USNCtm+difhr-USNGMT);
+    if(usc==0||usc==24) usc=23;
+    //--
+    //---Trading on Custom Session
+    int _days00=ThisTime(day);
+    int _days10=ThisTime(day);
+    if(stsescuh>clsescuh) _days10=ThisTime(day)+1;
+    tmopcu=ReqDate(_days00,stsescuh,stsescum); 
+    tmclcu=ReqDate(_days10,clsescuh,clsescum); 
+    //--
+    //--Trading on New Zealand Session GMT/UTC+12
+    int _days01=ThisTime(hour)<nzc ? ThisTime(day)-1 : ThisTime(day);
+    int _days11=ThisTime(hour)<nzc ? ThisTime(day) : ThisTime(day)+1;
+    tmop01=ReqDate(_days01,nzo,0);    // start: 08:00 Local Time == 20:00 GMT/UTC
+    tmcl01=ReqDate(_days11,nzc-1,59); // close: 17:00 Local Time == 05:00 GMT/UTC
+    //--
+    //--Trading on Australia Sydney Session GMT/UTC+10
+    int _days02=ThisTime(hour)<auc ? ThisTime(day)-1 : ThisTime(day);
+    int _days12=ThisTime(hour)<auc ? ThisTime(day) : ThisTime(day)+1;
+    tmop02=ReqDate(_days02,auo,0);    // start: 07:00 Local Time == 21:00 GMT/UTC
+    tmcl02=ReqDate(_days12,auc-1,59); // close: 17:00 Local Time == 07:00 GMT/UTC
+    //--
+    //--Trading on Asia Tokyo Session GMT/UTC+9
+    int _days03=ThisTime(hour)<tkc ? ThisTime(day) : ThisTime(day)+1;
+    int _days13=ThisTime(hour)<tkc ? ThisTime(day) : ThisTime(day)+1;
+    tmop03=ReqDate(_days03,tko,0);    // start: 09:00 Local Time == 00:00 GMT/UTC
+    tmcl03=ReqDate(_days13,tkc-1,59); // close: 18:00 Local Time == 09:00 GMT/UTC
+    //--
+    //--Trading on Europe London Session GMT/UTC 00:00
+    int _days04=ThisTime(hour)<euc ? ThisTime(day) : ThisTime(day)+1;
+    int _days14=ThisTime(hour)<euc ? ThisTime(day) : ThisTime(day)+1;
+    tmop04=ReqDate(_days04,euo,0);     // start: 09:00 Local Time == 09:00 GMT/UTC
+    tmcl04=ReqDate(_days14,euc-1,59);  // close: 19:00 Local Time == 19:00 GMT/UTC
+    //--
+    //--Trading on US New York Session GMT/UTC-5
+    int _days05=ThisTime(hour)<usc  ? ThisTime(day) : ThisTime(day)+1;
+    int _days15=ThisTime(hour)<=usc ? ThisTime(day) : ThisTime(day)+1;
+    tmop05=ReqDate(_days05,uso,0);  // start: 08:00 Local Time == 13:00 GMT/UTC
+    tmcl05=ReqDate(_days15,usc,59); // close: 17:00 Local Time == 22:00 GMT/UTC
+    //--
+    //--Not Use Trading Time Zone
+    if(trd_time_zone==No)
+      {
+        tmopno=ReqDate(ThisTime(day),0,15); 
+        tmclno=ReqDate(ThisTime(day),23,59);
+      }
+    //--
+    Time_Zone();
+    //--
+    return;
+//---
+  } //-end Set_Time_Zone()
+//---------//
+```
+
+```
+void MCEA::Time_Zone(void)
+  {
+//---
+   //--
+   tz_ses="";
+   //--
+   switch(session)
+     {
+       case Cus_Session:
+         {
+           SesCuOp=StringToTime(tmopcu);
+           SesCuCl=StringToTime(tmclcu);
+           zntm=SesCuOp;
+           znop=SesCuOp;
+           zncl=SesCuCl;
+           tz_ses="Custom_Session";
+           tz_opn=timehr(stsescuh,stsescum);
+           tz_cls=timehr(clsescuh,clsescum);
+           break;
+         }
+       case New_Zealand:
+         {
+           Ses01Op=StringToTime(tmop01);
+           Ses01Cl=StringToTime(tmcl01);
+           zntm=Ses01Op;
+           znop=Ses01Op;
+           zncl=Ses01Cl;
+           tz_ses="New_Zealand/Oceania";
+           tz_opn=timehr(ReqTime(Ses01Op,hour),ReqTime(Ses01Op,min));
+           tz_cls=timehr(ReqTime(Ses01Cl,hour),ReqTime(Ses01Cl,min));
+           break;
+         }
+       case Australia:
+         {
+           Ses02Op=StringToTime(tmop02);
+           Ses02Cl=StringToTime(tmcl02);
+           zntm=Ses02Op;
+           znop=Ses02Op;
+           zncl=Ses02Cl;
+           tz_ses="Australia Sydney";
+           tz_opn=timehr(ReqTime(Ses02Op,hour),ReqTime(Ses02Op,min));
+           tz_cls=timehr(ReqTime(Ses02Cl,hour),ReqTime(Ses02Cl,min));
+           break;
+         }
+       case Asia_Tokyo:
+         {
+           Ses03Op=StringToTime(tmop03);
+           Ses03Cl=StringToTime(tmcl03);
+           zntm=Ses03Op;
+           znop=Ses03Op;
+           zncl=Ses03Cl;
+           tz_ses="Asia/Tokyo";
+           tz_opn=timehr(ReqTime(Ses03Op,hour),ReqTime(Ses03Op,min));
+           tz_cls=timehr(ReqTime(Ses03Cl,hour),ReqTime(Ses03Cl,min));
+           break;
+         }
+       case Europe_London:
+         {
+           Ses04Op=StringToTime(tmop04);
+           Ses04Cl=StringToTime(tmcl04);
+           zntm=Ses04Op;
+           znop=Ses04Op;
+           zncl=Ses04Cl;
+           tz_ses="Europe/London";
+           tz_opn=timehr(ReqTime(Ses04Op,hour),ReqTime(Ses04Op,min));
+           tz_cls=timehr(ReqTime(Ses04Cl,hour),ReqTime(Ses04Cl,min));
+           break;
+         }
+       case US_New_York:
+         {
+           Ses05Op=StringToTime(tmop05);
+           Ses05Cl=StringToTime(tmcl05);
+           zntm=Ses05Op;
+           znop=Ses05Op;
+           zncl=Ses05Cl;
+           tz_ses="US/New_York";
+           tz_opn=timehr(ReqTime(Ses05Op,hour),ReqTime(Ses05Op,min));
+           tz_cls=timehr(ReqTime(Ses05Cl,hour),ReqTime(Ses05Cl,min));
+           break;
+         }
+     }
+   //--
+   if(trd_time_zone==No)
+     {
+       SesNoOp=StringToTime(tmopno);
+       SesNoCl=StringToTime(tmclno);
+       zntm=SesNoOp;
+       znop=SesNoOp;
+       zncl=SesNoCl;
+       tz_ses="Not Use Time Zone";
+       tz_opn=timehr(ReqTime(SesNoOp,hour),ReqTime(SesNoOp,min));
+       tz_cls=timehr(ReqTime(SesNoCl,hour),ReqTime(SesNoCl,min));
+     }
+   //--
+   return;
+//---
+  } //-end Time_Zone()
+//---------//
+```
+
+Some supporting functions for time calculations are:
+
+```
+string MCEA::TradingDay(void)
+  {
+//---
+   int trdday=ThisTime(dow);
+   switch(trdday)
+     {
+        case 0: daytrade="Sunday";    break;
+        case 1: daytrade="Monday";    break;
+        case 2: daytrade="Tuesday";   break;
+        case 3: daytrade="Wednesday"; break;
+        case 4: daytrade="Thursday";  break;
+        case 5: daytrade="Friday";    break;
+        case 6: daytrade="Saturday";  break;
+     }
+   return(daytrade);
+//---
+  } //-end TradingDay()  
+//---------//
+
+bool MCEA::TradingToday(void)
+  {
+//---
+    bool tradetoday=false;
+    int trdday=ThisTime(dow);
+    hariini="No";
+    //--
+    int ttd[];
+    ArrayResize(ttd,7);
+    ttd[0]=ttd0;
+    ttd[1]=ttd1;
+    ttd[2]=ttd2;
+    ttd[3]=ttd3;
+    ttd[4]=ttd4;
+    ttd[5]=ttd5;
+    ttd[6]=ttd6;
+    //--
+    if(ttd[trdday]==Yes) {tradetoday=true; hariini="Yes";}
+   //--
+   return(tradetoday);
+//---
+  } //-end TradingToday()
+//---------//
+
+string MCEA::timehr(int hr,int mn)
+  {
+//---
+    string scon="";
+    string men=mn==0 ? "00" : string(mn);
+    int shr=hr==24 ? 0 : hr;
+    if(shr<10) scon="0"+string(shr)+":"+men;
+    else scon=string(shr)+":"+men;
+    //--
+    return(scon);
+//---
+  } //-end timehr()
+//---------//
+
+string MCEA::ReqDate(int d,int h,int m) 
+  { 
+//---
+   MqlDateTime mdt; 
+   datetime t=TimeCurrent(mdt); 
+   x_year=mdt.year; 
+   x_mon=mdt.mon; 
+   x_day=d; 
+   x_hour=h; 
+   x_min=m;
+   x_sec=mdt.sec;
+   //--
+   string mdr=string(x_year)+"."+string(x_mon)+"."+string(x_day)+"   "+timehr(x_hour,x_min);
+   return(mdr);
+//---
+  } //-end ReqDate()
+//---------//
+
+int MCEA::ThisTime(const int reqmode) 
+  {
+//---
+    MqlDateTime tm;
+    TimeCurrent(tm);
+    int valtm=0;
+    //--
+    switch(reqmode)
+      {
+        case 0: valtm=tm.year; break;        // Return Year 
+        case 1: valtm=tm.mon;  break;        // Return Month 
+        case 2: valtm=tm.day;  break;        // Return Day 
+        case 3: valtm=tm.hour; break;        // Return Hour 
+        case 4: valtm=tm.min;  break;        // Return Minutes 
+        case 5: valtm=tm.sec;  break;        // Return Seconds 
+        case 6: valtm=tm.day_of_week; break; // Return Day of week (0-Sunday, 1-Monday, ... ,6-Saturday) 
+        case 7: valtm=tm.day_of_year; break; // Return Day number of the year (January 1st is assigned the number value of zero) 
+      }
+    //--
+    return(valtm);
+//---
+  } //-end ThisTime()
+//---------//
+
+int MCEA::ReqTime(datetime reqtime,
+                  const int reqmode) 
+  {
+    MqlDateTime tm;
+    TimeToStruct(reqtime,tm);
+    int valtm=0;
+    //--
+    switch(reqmode)
+      {
+        case 0: valtm=tm.year; break;        // Return Year 
+        case 1: valtm=tm.mon;  break;        // Return Month 
+        case 2: valtm=tm.day;  break;        // Return Day 
+        case 3: valtm=tm.hour; break;        // Return Hour 
+        case 4: valtm=tm.min;  break;        // Return Minutes 
+        case 5: valtm=tm.sec;  break;        // Return Seconds 
+        case 6: valtm=tm.day_of_week; break; // Return Day of week (0-Sunday, 1-Monday, ... ,6-Saturday) 
+        case 7: valtm=tm.day_of_year; break; // Return Day number of the year (January 1st is assigned the number value of zero) 
+      }
+    //--
+    return(valtm);
+//---
+  } //-end ReqTime()
+//---------//
+```
+
+**4. How to get trading signals for open or close position?**
+
+In the previous [article](https://www.mql5.com/en/articles/13470), I took multi timeframe signals based on 5 timeframes
+
+```
+void MCEA::FXSAR_MTF_MCEA_Config(void) 
+  {
+    //---
+
+    ENUM_TIMEFRAMES TFA[]={PERIOD_M15,PERIOD_M30,PERIOD_H1,PERIOD_H4,PERIOD_D1};
+    TFArrays=ArraySize(TFA);
+    ArrayResize(TFSAR,TFArrays,TFArrays);
+    ArrayCopy(TFSAR,TFA,0,0,WHOLE_ARRAY);
+
+    //--
+    return;
+//---
+  } //-end FXSAR_MTF_MCEA_Config()
+//---------//
+```
+
+But in this article, I changed the multi timeframe signal base 4 timeframe, starting from M5, M30, H1 and finally H4.
+
+```
+void MCEA::FXSAR_MTF_MCEA_sptz_Config(void) 
+  {
+//---
+    //--
+    ENUM_TIMEFRAMES TFA[]={PERIOD_M5,PERIOD_M30,PERIOD_H1,PERIOD_H4};
+    TFArrays=ArraySize(TFA);
+    ArrayResize(TFSAR,TFArrays,TFArrays); // TFArrays now the value of array size is 4
+    ArrayCopy(TFSAR,TFA,0,0,WHOLE_ARRAY);
+
+    //--
+    return;
+//---
+  } //-end FXSAR_MTF_MCEA_sptz_Config()
+//---------//
+```
+
+So, to get a multi timeframe PSAR signal we will call the function GetPSARSignalMTF() to get the position of the ParabolicSAR indicator on the requested Timeframe,
+
+```
+int MCEA::GetPSARSignalMTF(string symbol)
+  {
+//---
+    int mv=0;
+    int rise=1,
+        down=-1;
+    //--
+    int sarup=0,
+        sardw=0;
+    //--    
+    for(int x=0; x<TFArrays; x++)  // The TFArrays variable has a value of 54which is taken from the number of time frames from TF_M5, M30, H1 and H4.
+      {
+        if(PARSARMTF(symbol,TFSAR[x])>0) sarup++;
+        if(PARSARMTF(symbol,TFSAR[x])<0) sardw++;
+      }   
+    //--
+    if(sarup==TFArrays) mv=rise;
+    if(sardw==TFArrays) mv=down;
+    //--
+    return(mv);
+//---
+  } //- end GetPSARSignalMTF()
+//---------//
+```
+
+Then the appropriate indicator handle is called to get the buffers value of the iSAR indicator from that requested Timeframe.
+
+```
+int MCEA::PARSARMTF(const string symbol,ENUM_TIMEFRAMES mtf) // formula Parabolic SAR in set timeframe
+  {
+//---
+    int ret=0;
+    int rise=1,
+        down=-1;
+    //--
+    int br=2;
+    //--
+    double PSAR[];
+    ArrayResize(PSAR,br,br);
+    ArraySetAsSeries(PSAR,true);
+    int xx=PairsIdxArray(symbol);
+    int tx=TFIndexArray(mtf);
+    CopyBuffer(hPSAR[xx][tx],0,0,br,PSAR);
+    //--
+    double OPN0=iOpen(symbol,TFSAR[tx],0);
+    double HIG0=iHigh(symbol,TFSAR[tx],0);
+    double LOW0=iLow(symbol,TFSAR[tx],0);
+    double CLS0=iClose(symbol,TFSAR[tx],0);
+    //--
+    if(PSAR[0]<LOW0 && CLS0>OPN0) ret=rise;
+    if(PSAR[0]>HIG0 && CLS0<OPN0) ret=down;
+    //--
+    return(ret);
+//---
+  } //-end PARSARMTF()
+//---------//
+```
+
+GetPSARSignalMTF function is called from GetOpenPosition() to get a trading signal for open position.
+
+```
+int MCEA::GetOpenPosition(const string symbol) // Signal Open Position 
+  {
+//---
+    int ret=0;
+    int rise=1,
+        down=-1;
+    //--
+    int dirmov=DirectionMove(symbol);
+    int parsOp=GetPSARSignalMTF(symbol);
+    //--
+    if(parsOp==rise && dirmov==rise) ret=rise;
+    if(parsOp==down && dirmov==down) ret=down;
+    //--
+    return(ret);
+//---
+  } //-end GetOpenPosition()
+//---------//
+```
+
+The GetPSARSignalMTF() function will call a function PARSARMTF() that calculates the iSAR signal according to the requested timeframe.
+
+As you can see, inside the PARSARMTF() function, we use and call 2 functions:
+
+1. int xx= PairsIdxArray(symbol)
+
+The PairsIdxArray() function is used to get the name of the requested symbol.
+
+```
+int MCEA::PairsIdxArray(const string symbol)
+  {
+//---
+    int pidx=-1;
+    //--
+    for(int x=0; x<arrsymbx; x++)
+      {
+        if(DIRI[x]==symbol)
+          {
+            pidx=x;
+            break;
+          }
+      } 
+    //--
+    return(pidx);
+//---
+  } //-end PairsIdxArray()
+//---------//
+```
+
+2. int tx=TFIndexArray(mtf).
+
+The TFIndexArray() function is used to get the timeframe array sequence of the requested timeframe.
+
+```
+int MCEA::TFIndexArray(ENUM_TIMEFRAMES TF)
+  {
+//---
+    int res=-1;
+    //--
+    for(int x=0; x<TFArrays; x++)
+      {
+        if(TF==TFSAR[x])
+          {
+            res=x;
+            break;
+          }
+      }
+    //--
+    return(res);
+//---
+  } //-end TFIndexArray() 
+//---------//
+```
+
+**5. ChartEvent Function**
+
+To support effectiveness and efficiency in the use of Multi-Currency Expert Advisors, it is deemed necessary to create oneseveral manual buttons in managing orders and changing charts or symbols. Because this version uses 10 options for trading pairs, the OnChartEvent function has been changed slightly.
+
+```
+//+------------------------------------------------------------------+
+//| ChartEvent function                                              |
+//+------------------------------------------------------------------+
+void OnChartEvent(const int id,
+                  const long &lparam,
+                  const double &dparam,
+                  const string &sparam)
+  {
+//---
+//--- handling CHARTEVENT_CLICK event ("Clicking the chart")
+   ResetLastError();
+   //--
+   ENUM_TIMEFRAMES CCS=mc.TFt;
+   //--
+   if(id==CHARTEVENT_OBJECT_CLICK) 
+     {
+       int lensymbol=StringLen(Symbol());
+       int lensparam=StringLen(sparam);
+       //--
+       //--- if "Set SL All Orders" button is click
+       if(sparam=="Set SL/TP All Orders") 
+         { 
+           mc.SetSLTPOrders();
+           Alert("-- "+mc.expname+" -- ",Symbol()," -- Set SL/TP All Orders");
+           //--- unpress the button 
+           ObjectSetInteger(0,"Set SL/TP All Orders",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"Set SL/TP All Orders",OBJPROP_ZORDER,0);
+           CreateManualPanel();
+         }
+       //--- if "Close All Order" button is click
+       if(sparam=="Close All Order") 
+         { 
+           mc.CloseAllOrders();
+           Alert("-- "+mc.expname+" -- ",Symbol()," -- Close All Orders");
+           //--- unpress the button 
+           ObjectSetInteger(0,"Close All Order",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"Close All Order",OBJPROP_ZORDER,0);
+           CreateManualPanel();
+         }
+       //--- if "Close All Profit" button is click
+       if(sparam=="Close All Profit") 
+         { 
+           mc.ManualCloseAllProfit();
+           Alert("-- "+mc.expname+" -- ",Symbol()," -- Close All Profit");
+           //--- unpress the button 
+           ObjectSetInteger(0,"Close All Profit",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"Close All Profit",OBJPROP_ZORDER,0);
+           CreateManualPanel();
+         }
+       //--- if "X" button is click
+       if(sparam=="X") 
+         { 
+           ObjectsDeleteAll(0,0,OBJ_BUTTON);
+           ObjectsDeleteAll(0,0,OBJ_LABEL);
+           ObjectsDeleteAll(0,0,OBJ_RECTANGLE_LABEL);
+           //--- unpress the button 
+           ObjectSetInteger(0,"X",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"X",OBJPROP_ZORDER,0);
+           //--
+           DeleteButtonX();
+           mc.PanelExtra=false;
+           DisplayManualButton();
+         }
+       //--- if "M" button is click
+       if(sparam=="M") 
+         { 
+           //--- unpress the button 
+           ObjectSetInteger(0,"M",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"M",OBJPROP_ZORDER,0);
+           mc.PanelExtra=true;
+           CreateManualPanel();
+         }
+       //--- if "C" button is click
+       if(sparam=="C") 
+         { 
+           //--- unpress the button 
+           ObjectSetInteger(0,"C",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"C",OBJPROP_ZORDER,0);
+           mc.PanelExtra=true;
+           CreateSymbolPanel();
+         }
+       //--- if "R" button is click
+       if(sparam=="R") 
+         { 
+           Alert("-- "+mc.expname+" -- ",Symbol()," -- expert advisor will be Remove from the chart.");
+           ExpertRemove();
+           //--- unpress the button 
+           ObjectSetInteger(0,"R",OBJPROP_STATE,false);
+           ObjectSetInteger(0,"R",OBJPROP_ZORDER,0);
+           if(!ChartSetSymbolPeriod(0,Symbol(),Period()))
+             ChartSetSymbolPeriod(0,Symbol(),Period());
+           DeletePanelButton();
+           ChartRedraw(0);
+         }
+       //--- if Symbol button is click
+       if(lensparam==lensymbol)
+         {
+           int sx=mc.ValidatePairs(sparam);
+           ChangeChartSymbol(mc.AS30[sx],CCS);
+           mc.PanelExtra=false;
+         }
+       //--
+     }
+    //--
+    return;
+//---
+  } //-end OnChartEvent()
+//---------//
+```
+
+To change chart symbols with one click, when one of the symbol names is clicked, the OnChartEvent() will be called function ChangeChartSymbol().
+
+```
+void ChangeChartSymbol(string c_symbol,ENUM_TIMEFRAMES cstf)
+  {
+//---
+   //--- unpress the button 
+   ObjectSetInteger(0,c_symbol,OBJPROP_STATE,false);
+   ObjectSetInteger(0,c_symbol,OBJPROP_ZORDER,0);
+   ObjectsDeleteAll(0,0,OBJ_BUTTON);
+   ObjectsDeleteAll(0,0,OBJ_LABEL);
+   ObjectsDeleteAll(0,0,OBJ_RECTANGLE_LABEL);
+   //--
+   ChartSetSymbolPeriod(0,c_symbol,cstf);
+   //--
+   ChartRedraw(0);
+   //--
+   return;
+//---
+  } //-end ChangeChartSymbol()
+//---------//
+```
+
+Because we are adding a Trade Session or Trading Time Zone and options for the pairs that will be traded, we need additional information in the Displayed Trading Info on Chart.
+
+To add information to the Displayed Trading Info on Chart, we made changes to the TradeInfo() function.
+
+```
+void MCEA::TradeInfo(void) // function: write comments on the chart
+  {
+//----
+   Pips(Symbol());
+   double spread=SymbolInfoInteger(Symbol(),SYMBOL_SPREAD)/xpip;
+   rem=zntm-TimeCurrent();
+   string postime=PosTimeZone();
+   string eawait=" - Waiting for active time..!";
+   //--
+   string comm="";
+   TodayOrders();
+   //--
+   comm="\n     :: Server Date Time : "+string(ThisTime(year))+"."+string(ThisTime(mon))+"."+string(ThisTime(day))+ "   "+TimeToString(TimeCurrent(),TIME_SECONDS)+
+        "\n     ------------------------------------------------------------"+
+        "\n      :: Broker               :  "+ TerminalInfoString(TERMINAL_COMPANY)+
+        "\n      :: Expert Name      :  "+ expname+
+        "\n      :: Acc. Name         :  "+ mc_account.Name()+
+        "\n      :: Acc. Number      :  "+ (string)mc_account.Login()+
+        "\n      :: Acc. TradeMode :  "+ AccountMode()+
+        "\n      :: Acc. Leverage    :  1 : "+ (string)mc_account.Leverage()+
+        "\n      :: Acc. Equity       :  "+ DoubleToString(mc_account.Equity(),2)+
+        "\n      :: Margin Mode     :  "+ (string)mc_account.MarginModeDescription()+
+        "\n      :: Magic Number   :  "+ string(magicEA)+
+        "\n      :: Trade on TF      :  "+ EnumToString(TFt)+
+        "\n      :: Today Trading   :  "+ TradingDay()+" : "+hariini+
+        "\n      :: Trading Session :  "+ tz_ses+
+        "\n      :: Trading Time    :  "+ postime;
+        if(TimeCurrent()<zntm)
+          {
+            comm=comm+
+            "\n      :: Time Remaining :  "+(string)ReqTime(rem,hour)+":"+(string)ReqTime(rem,min)+":"+(string)ReqTime(rem,sec) + eawait;
+          }
+        comm=comm+
+        "\n     ------------------------------------------------------------"+
+        "\n      :: Trading Pairs     :  "+pairs+
+        "\n      :: BUY Market      :  "+string(oBm)+
+        "\n      :: SELL Market     :  "+string(oSm)+
+        "\n      :: Total Order       :  "+string(oBm+oSm)+
+        "\n      :: Order Profit      :  "+DoubleToString(floatprofit,2)+
+        "\n      :: Fixed Profit       :  "+DoubleToString(fixclprofit,2)+
+        "\n      :: Float Money     :  "+DoubleToString(floatprofit,2)+
+        "\n      :: Nett Profit        :  "+DoubleToString(floatprofit+fixclprofit,2);
+   //--
+   Comment(comm);
+   ChartRedraw(0);
+   return;
+//----
+  } //-end TradeInfo()  
+//---------//
+```
+
+We add a function to explain the time according to trading time zone conditions
+
+```
+string MCEA::PosTimeZone(void)
+  {
+//---
+    string tzpos="";
+    //--
+    if(ReqTime(zntm,day)>ThisTime(day))
+     {
+       tzpos=tz_opn+ " Next day to " +tz_cls + " Next day";
+     }
+    else
+    if(TimeCurrent()<znop)
+      {
+        if(ThisTime(day)==ReqTime(znop,day) && ThisTime(day)==ReqTime(zncl,day))
+          tzpos=tz_opn+" to " +tz_cls+ " Today";
+        //else
+        if(ThisTime(day)==ReqTime(znop,day) && ThisTime(day)<ReqTime(zncl,day))
+          tzpos=tz_opn+ " Today to " +tz_cls+ " Next day";
+      }
+    else
+    if(TimeCurrent()>=znop && TimeCurrent()<zncl)
+      {
+        if(ThisTime(day)<ReqTime(zncl,day))
+          tzpos=tz_opn+ " Today to " +tz_cls+ " Next day";
+        else
+        if(ThisTime(day)==ReqTime(zncl,day))
+          tzpos=tz_opn+" to " +tz_cls+ " Today";
+      }
+    else
+    if(ThisTime(day)==ReqTime(znop,day) && ThisTime(day)<ReqTime(zncl,day))
+      {
+        tzpos=tz_opn+" Today to " +tz_cls+ " Next day";
+      }
+    //--
+    return(tzpos);
+//----
+  } //-end PosTimeZone()
+//---------//
+```
+
+And the TradeInfo() display will be like the image below.
+
+**Notes:** For other functions and algorithms, it remains the same as the Multi-Currency Expert Advisor in the previous [article](https://www.mql5.com/en/articles/13470).
+
+Under the Expert Advisor name FXSAR\_MTF\_MCEA as you can see there are buttons "M", "C" and "R"
+
+If the "M" or "C" button is clicked, a manual click button panel will be displayed as shown below
+
+If the M button is clicked, a manual click button panel will be displayed, then the trader can manage orders:
+
+1. Set SL/TP All Orders
+2. Close All Orders
+3. Close All Profits
+
+If the C button is clicked, a panel button of 30 symbol names or pairs will be displayed and traders can click on one of the pair names or symbol names. If one of the pair names or symbols is clicked, the chart symbol will immediately be replaced with the symbol whose name was clicked.
+
+```
+void CreateSymbolPanel()
+  {
+//---    
+    //--
+    ResetLastError();
+    DeletePanelButton();
+    int sydis=83;
+    int tsatu=int(mc.sall/2);
+    //--
+    CreateButtonTemplate(0,"Template",180,367,STYLE_SOLID,5,BORDER_RAISED,clrYellow,clrBurlyWood,clrWhite,CORNER_RIGHT_UPPER,187,45,true);
+    CreateButtonTemplate(0,"TempCCS",167,25,STYLE_SOLID,5,BORDER_RAISED,clrYellow,clrBlue,clrWhite,CORNER_RIGHT_UPPER,181,50,true);
+    CreateButtonClick(0,"X",14,14,"Arial Black",10,BORDER_FLAT,"X",clrWhite,clrWhite,clrRed,ANCHOR_CENTER,CORNER_RIGHT_UPPER,22,48,true,"Close Symbol Panel");
+    //--
+    string chsym="Change SYMBOL";
+    int cspos=int(181/2)+int(StringLen(chsym)/2);
+    CreateButtontLable(0,"CCS","Bodoni MT Black",chsym,11,clrWhite,ANCHOR_CENTER,CORNER_RIGHT_UPPER,cspos,62,true,"Change Chart Symbol");
+    //--
+    for(int i=0; i<tsatu; i++)
+      CreateButtonClick(0,mc.AS30[i],80,17,"Bodoni MT Black",8,BORDER_RAISED,mc.AS30[i],clrYellow,clrBlue,clrWhite,ANCHOR_CENTER,CORNER_RIGHT_UPPER,180,sydis+(i*22),true,"Change to "+mc.AS30[i]);
+    //--
+    for(int i=tsatu; i<mc.sall; i++)
+      CreateButtonClick(0,mc.AS30[i],80,17,"Bodoni MT Black",8,BORDER_RAISED,mc.AS30[i],clrYellow,clrBlue,clrWhite,ANCHOR_CENTER,CORNER_RIGHT_UPPER,94,sydis+((i-15)*22),true,"Change to "+mc.AS30[i]);
+    //--
+    ChartRedraw(0);
+    //--
+    return;
+//---
+   } //-end CreateSymbolPanel()
+//---------//
+```
+
+If the R button is clicked, the Multi-Currency Expert Advisor FXSAR\_MTF\_MCEA will be removed from the chart.
+
+### **Strategy Tester**
+
+I did a back test by trying several time zones and pairs that would be traded.
+
+The results in Strategy Tester can be seen in the image below.
+
+In the back test below, the time zone setting is selected at US New York
+
+In the back test below, the time zone setting is selected at Asia/Tokyo
+
+In the back test below, the time zone setting is selected at Trader Custom time zone
+
+### Conclusion
+
+1. The problem of symbol names from brokers having prefix and/or suffix names in multi-currency EAs can be resolved easily and runs smoothly with MQL5 without having to create custom symbols.
+2. By adding a trading session or trading time zone and add 10 option pairs to be traded, it is hoped that traders will get a better strategy by only trading at certain pairs and in certain times or sessions.
+3. This multi-currency EA is just an example for learning and developing ideas, so if you have ideas for improvement, I invite you to modify this EA code according to your wishes.
+
+Hopefully this article and the MQL5 Multi-Currency Expert Advisor program will be useful for traders in learning and developing ideas. Thanks for reading.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/13705.zip "Download all attachments in the single ZIP archive")
+
+[FXSAR\_MTF\_MCEA\_sptz.mq5](https://www.mql5.com/en/articles/download/13705/fxsar_mtf_mcea_sptz.mq5 "Download FXSAR_MTF_MCEA_sptz.mq5")
+(105.39 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Developing a Replay System — Market simulation (Part 10): Using only real data for Replay](https://www.mql5.com/en/articles/10932)
+
+Here we will look at how we can use more reliable data (traded ticks) in the replay system without worrying about whether it is adjusted or not.
+
+[Developing a Replay System — Market simulation (Part 09): Custom events](https://www.mql5.com/en/articles/10919)
+
+Here we'll see how custom events are triggered and how the indicator reports the state of the replay/simulation service.
+
+[Developing a Replay System — Market simulation (Part 11): Birth of the SIMULATOR (I)](https://www.mql5.com/en/articles/10973)
+
+In order to use the data that forms the bars, we must abandon replay and start developing a simulator. We will use 1 minute bars because they offer the least amount of difficulty.
+
+[Design Patterns in software development and MQL5 (Part I): Creational Patterns](https://www.mql5.com/en/articles/13622)
+
+There are methods that can be used to solve many problems that can be repeated. Once understand how to use these methods it can be very helpful to create your software effectively and apply the concept of DRY ((Do not Repeat Yourself). In this context, the topic of Design Patterns will serve very well because they are patterns that provide solutions to well-described and repeated problems.
+
+[
+
+Build Smarter with MQL5 Algo Forge
+
+Use Git-powered tools in MetaEditor for structured, reliable development
+
+Learn more](https://www.mql5.com/ff/go?link=https://forge.mql5.io%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.mql5.226&a=oygnrjjxveoqzycxkjkckcgtshfunvdu&s=1e458fdafe5955c82ea32b518845e77efbe1196295936353793e9e23a750f4d6&uid=&ref=https://www.mql5.com/en/articles/13705&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5126321477082829467)

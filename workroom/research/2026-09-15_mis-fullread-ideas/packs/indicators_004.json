@@ -1,0 +1,119 @@
+{
+  "pack_id": "indicators_004",
+  "section": "Indicators",
+  "parent_shard": "indicators_004",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 22742,
+      "title": "Building an EquiVolume Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22742.md"
+    },
+    {
+      "id": 22875,
+      "title": "Building a Traditional Point and Figure Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22875.md"
+    },
+    {
+      "id": 22968,
+      "title": "Building an Internal and External Market Structure Indicator",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22968.md"
+    },
+    {
+      "id": 22978,
+      "title": "Rolling Sharpe Ratio with Statistical Significance Bands in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22978.md"
+    },
+    {
+      "id": 23016,
+      "title": "A Practical Kalman Filter Price Smoother in MQL5: Adaptive Noise Estimation Without External Libraries",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23016.md"
+    },
+    {
+      "id": 23049,
+      "title": "Building a Hierarchical Market Structure Framework (Prototype) in MQL5 Using Modular Architecture and Event-Driven Design",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23049.md"
+    },
+    {
+      "id": 23130,
+      "title": "Linear Regression Prediction Channels in MQL5: Constructing Statistically Grounded Confidence and Prediction Bands",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23130.md"
+    },
+    {
+      "id": 23168,
+      "title": "Heatmap Visualization of Intraday Return Patterns in MQL5 Using CCanvas",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23168.md"
+    },
+    {
+      "id": 23169,
+      "title": "Automatic Session Volume Profile Builder in MQL5: Rendering POC and Value Area Without Third-Party Tools",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23169.md"
+    },
+    {
+      "id": 23217,
+      "title": "Detecting and Visualizing Outlier Bars in MQL5 Using Modified Z-Score on OHLCV Features",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23217.md"
+    },
+    {
+      "id": 23224,
+      "title": "Building a Traditional Daily Pivot Point Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23224.md"
+    },
+    {
+      "id": 23254,
+      "title": "How To Profile MQL5 Code in MetaEditor",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23254.md"
+    }
+  ]
+}

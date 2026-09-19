@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_016",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2128,
+      "title": "Graphical Interfaces I: Functions for the Form Buttons and Deleting Interface Elements (Chapter 4)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2128.md"
+    },
+    {
+      "id": 2129,
+      "title": "Graphical Interfaces I: Testing Library in Programs of Different Types and in the MetaTrader 4 Terminal (Chapter 5)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2129.md"
+    },
+    {
+      "id": 2171,
+      "title": "Adding a control panel to an indicator or an Expert Advisor in no time",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2171.md"
+    },
+    {
+      "id": 2200,
+      "title": "Graphical Interfaces II: the Menu Item Element (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2200.md"
+    },
+    {
+      "id": 2202,
+      "title": "Graphical Interfaces II: the Separation Line and Context Menu Elements (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2202.md"
+    },
+    {
+      "id": 2204,
+      "title": "Graphical Interfaces II: Setting Up the Event Handlers of the Library (Chapter 3)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2204.md"
+    },
+    {
+      "id": 2207,
+      "title": "Graphical Interfaces II: The Main Menu Element (Chapter 4)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2207.md"
+    },
+    {
+      "id": 2281,
+      "title": "Creating an assistant in manual trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2281.md"
+    },
+    {
+      "id": 2296,
+      "title": "Graphical Interfaces III: Simple and Multi-Functional Buttons (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2296.md"
+    },
+    {
+      "id": 2297,
+      "title": "How to create an indicator of non-standard charts for MetaTrader Market",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2297.md"
+    },
+    {
+      "id": 2298,
+      "title": "Graphical Interfaces III: Groups of Simple and Multi-Functional Buttons (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2298.md"
+    },
+    {
+      "id": 2307,
+      "title": "Graphical Interfaces IV: Informational Interface Elements (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2307.md"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+4: title: "Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar"
+11: series_title: "Trading with the MQL5 Economic Calendar (): Mastering the Functions of the MQL5 Economic Calendar"
+20: # Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar
+25: | 30 October 2024 at 07:16
+36: ### Introduction
+38: In this article, we explore the powerful features of the [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) Economic Calendar and how they can be integrated into algorithmic trading. The [Economic Calendar](https://www.mql5.com/en/book/advanced/calendar), incorporated in the trading
+40: We will begin with an overview of the MQL5 Economic Calendar, covering its key components and how it works. Next, we will focus on the implementation in MQL5, demonstrating how to access and display news events on the chart programmatically. Finally, we will conclude by summarizing the insights gained and the benefits of incorporating the Economic Calendar into trading systems. Here are the subtop
+42: 1. Overview of the MQL5 Economic Calendar
+46: By the end of this article, you will be equipped with the knowledge to develop an MQL5 Expert Advisor that effectively utilizes the MQL5 economic calendar in your trading strategies. Let's get started.
+48: ### Overview of the MQL5 Economic Calendar
+50: The MQL5 Economic Calendar is an excellent tool that supplies traders with current, coherent information about the key economic events capable of making a significant impact on the financial markets. It is a useful tool that is even more accessible because it is embedded into the MetaTrader 5 platform.
+52: The economic calendar provides a good overview of the various upcoming events that could affect the financial markets. It shows everything from the interest rate decision-making dates, reports on [inflation](https://www.investopedia.com/ask/answers/what-is-inflation-and-how-should-it-affect-investing/ "https://www.investopedia.com/ask/answers/what-is-inflation-and-how-should-it-affect-investing/")
+54: To open the calendar, navigate to the taskbar and select "View", then "Toolbox". Below is an illustration.
+58: Once the toolbox window is opened, navigate to the "Calendar" tab and click on it. This will open the calendar window, which should depict the one below.
+62: Now, it is worth noting that the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) lists forthcoming events that hold relevance to the markets in an orderly fashion, sorted by their anticipated impact. It characterizes each one by a clear, non-ambiguous label of "low", "medium", or "high" for its level of potential influence. Thus, it is very easy to quickly glean from the c
+64: One of the core advantages of the MQL5 Economic Calendar is its integration with MQL5, which enables traders to programmatically access economic data and incorporate it into their Expert Advisors (EAs) or automated trading systems. Using its predefined functions, we can retrieve data such as the event's name, scheduled time, country, and forecasted or actual value. This functionality allows trader
+72: Lastly, it is the importance or priority filter which brings help in sorting the news in levels of impact. To apply any of the filters, just right-click inside the calendar field and apply the filter accordingly. This is again illustrated below.
+76: Thus, by using the MQL5 Economic Calendar, traders can better formulate their trading plans ahead of influential market events. They can do this by either checking the calendar manually in MetaTrader 5 or through automated trading strategies that act on the calendar's data. This setup paves the way for clearly comprehending the MQL5 Economic Calendar and for figuring out how to put it to work insi
+78: ### Implementation in MQL5
+100: ```
+102: //|                                    MQL5 NEWS CALENDAR PART 1.mq5 |
+106: #property copyright "Copyright 2024, ALLAN MUNENE MUTIIRIA. #@Forex Algo-Trader"
+107: #property link      "https://forexalgo-trader.com"
+108: #property description "MQL5 NEWS CALENDAR PART 1"
+109: #property version   "1.00"
+110: ```
+112: At this point, the first thing that we need to do is understand the structures for working with the economic calendar. There are three of them; [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) which sets the country descriptions, [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) which sets event 
+116: ```
+126: ```
+130: ```
+134:    ENUM_CALENDAR_EVENT_TYPE            type;                  // event type from the ENUM_CALENDAR_EVENT_TYPE enumeration 
+135:    ENUM_CALENDAR_EVENT_SECTOR          sector;                // sector an event is related to 
+136:    ENUM_CALENDAR_EVENT_FREQUENCY       frequency;             // event frequency 
+137:    ENUM_CALENDAR_EVENT_TIMEMODE        time_mode;             // event time mode 
+139:    ENUM_CALENDAR_EVENT_UNIT            unit;                  // economic indicator value's unit of measure 
+140:    ENUM_CALENDAR_EVENT_IMPORTANCE      importance;            // event importance 
+141:    ENUM_CALENDAR_EVENT_MULTIPLIER      multiplier;            // economic indicator value multiplier 
+147: ```
+151: ```
+163:    ENUM_CALENDAR_EVENT_IMPACT          impact_type;           // potential impact on the currency rate 
+175: ```
+179: ```
+184: int valuesTotal = CalendarValueHistory(values, startTime, endTime, NULL, NULL);
+187: ```
+189: Here, we declare an array called "values" of the type MqlCalendarValue structure, which will hold the economic calendar data retrieved from the MQL5 Economic Calendar. We then set up two [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variables, "startTime" and "endTime", which define the time range for the data extraction. We calculate the start time of the values as one day
+191: Next, we use the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function to populate the values array with economic events within this specified time range. This function returns the total number of events, which we store in the "valuesTotal" variable. The parameters for CalendarValueHistory include the "values" array, "startTime", and "endTime", as well as two 
+197: ```
+202: ```
+204: Here, we first check if the total values are greater than or equal to zero, indicating that the CalendarValueHistory function has successfully retrieved some economic calendar events or returned zero without errors. If this condition is met, we use the Print function to output a message, "Calendar values as they are:", as a header to inform us that the values will now be displayed. Following this,
+210: ```
+216: ```
+218: Here, we create a [for loop](https://www.mql5.com/en/docs/basis/operators/for) that iterates over each element in the "values" array, which holds the economic calendar data. The loop initializes an integer variable "i" to zero, representing the starting index, and runs as long as "i" is less than the total values, which is the total number of events retrieved by the CalendarValueHistory function. 
+220: ```
+222: CalendarEventById(values[i].event_id,event);
+223: ```
+225: We declare a variable "event" of type [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent), which will store the detailed information for a specific economic event. We then call [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid), passing in two parameters. The first parameter retrieves the unique ID of the current economic eve
+227: ```
+229: ```
+231: However, this will print too much data to the log, so let us reduce the time range of selection to one hour before and after the current time. All that we need to change is the period section only. We have highlighted them in yellow for easier reference.
+233: ```
+236: ```
+248: ```
+271: ```
+281: ```
+283: CalendarCountryById(event.country_id,country);
+284: ```
+286: Here, we declare a variable "country" of type [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry), which we intended to store the country-specific information related to the economic event. We then use the [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid) function to retrieve the country details by passing two parame
+288: The first parameter provides the unique identifier of the country associated with the current economic event, while the parameter, which is "country" serves as the container for this country's data. By calling the CalendarCountryById function, we populate our variable "country" with relevant information, such as the country’s name, code, and other characteristics, allowing us to use this data for 
+292: ```
+299: ```
+305: That was a success. We now have a complete introduction to the necessary functions in MQL5 that give us access to the calendar data. Now, we can proceed to apply filters to our code block to typically trade specific country data, priority data, currency as well as time-specific news. To achieve this dynamically, we can shift our logic to a function that we can use for the aforementioned purpose.
+307: ```
+319: ```
+325: ```
+340: ```
+346: ```
+355: ```
+367: ```
+369:    if (event.importance == CALENDAR_IMPORTANCE_MODERATE){
+381: ```
+385: This is similar to the other logic we used, only that it is dynamic by automatically checking the currency availability in the selected symbol. If this check is met, we move to the next condition to confirm that the event’s importance level matches [CALENDAR\_IMPORTANCE\_MODERATE](https://www.mql5.com/en/docs/constants/structures/mqlcalendar), meaning we are targeting events with moderate impact o
+391: ```
+397: ```
+399: We declare these logics just before the [for loop](https://www.mql5.com/en/docs/basis/operators/for) to establish a time range around the current server time to define how far back and forward we want to consider news events. We first declare a datetime variable, "timeRange", and assign it the duration of one day by using the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) funct
+401: We calculate the variable "timeBefore" by subtracting the time range from the current server time, which gives us the furthest time point we want to look back at. Similarly, "timeAfter" is determined by adding "timeRange" to the current server time, providing the latest time point we want to consider in the future. Together, "timeBefore" and "timeAfter" create a 24-hour window centered around the 
+407: ```
+416: ```
+420: Conversely, if total news is equal to zero or less, it implies that no relevant news events were found. In this scenario, we set "isNews" to false and print a message labeled "(NOT FOUND NEWS)", showing that total news is zero along with the size of the "values" array. This structure helps us track whether any news events matching our criteria were found and provides a log of results, useful for v
+426: ```
+429: ```
+435: From the image, we can see that we have 5 relevant news out of 81 and we print that there are relevant news events, which we can use to make trading decisions, that is either enter into the market or get out of the market. That is all for this part and the full function responsible for the identification and filtering of news from the MQL5 calendar is as in the following code snippet:
+437: ```
+459:    int valuesTotal = CalendarValueHistory(values,startTime,endTime,NULL,NULL);
+464:    //   Print("Calendar values as they are: ");
+477:       CalendarEventById(values[i].event_id,event);
+481:       CalendarCountryById(event.country_id,country);
+484:          if (event.importance == CALENDAR_IMPORTANCE_MODERATE){
+510: ```
+512: ### Conclusion
+514: To sum up, we have put in place the initial steps necessary to explore the [MQL5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") Economic Calendar. It comes down to extracting information and then judging it according to the importance of the currencies and the significance of the events. We developed a struc
+516: In the next part of this series, we will expand our functionality to show the filtered economic data right on the chart window, increasing its visibility for real-time trading decisions. We will also improve our Expert Advisor to make it use this information to open up trading positions based on major economic events. With these features integrated, we will move from the analysis of economic news 
+522: [MQL5\_NEWS\_CALENDAR\_PART\_1.mq5](https://www.mql5.com/en/articles/download/16223/mql5_news_calendar_part_1.mq5 "Download MQL5_NEWS_CALENDAR_PART_1.mq5")
+537: This article will dive into methods to improve the expert's runtime in the strategy tester, the code will be written to divide news event times into hourly categories. These news event times will be accessed within their specified hour. This ensures that the EA can efficiently manage event-driven trades in both high and low-volatility environments.
+540: [Exploring Cryptography in MQL5: A Step-by-Step Approach](https://www.mql5.com/en/articles/16238)
+542: This article explores the integration of cryptography within MQL5, enhancing the security and functionality of trading algorithms. We’ll cover key cryptographic methods and their practical implementation in automated trading.
+549: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%

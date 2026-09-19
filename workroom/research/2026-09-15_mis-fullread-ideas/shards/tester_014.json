@@ -1,0 +1,190 @@
+{
+  "shard_id": "tester_014",
+  "section": "Tester",
+  "n": 20,
+  "series_in_shard": [
+    "developing a multi-currency expert advisor"
+  ],
+  "articles": [
+    {
+      "id": 14336,
+      "title": "Developing a multi-currency Expert Advisor (Part 5): Variable position sizes",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Variable position sizes",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14336.md"
+    },
+    {
+      "id": 14478,
+      "title": "Developing a multi-currency Expert Advisor (Part 6): Automating the selection of an instance group",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Automating the selection of an instance group",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14478.md"
+    },
+    {
+      "id": 14549,
+      "title": "Developing a multi-currency Expert Advisor (Part 7): Selecting a group based on forward period",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Selecting a group based on forward period",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14549.md"
+    },
+    {
+      "id": 14574,
+      "title": "Developing a multi-currency Expert Advisor (Part 8): Load testing and handling a new bar",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Load testing and handling a new bar",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14574.md"
+    },
+    {
+      "id": 14680,
+      "title": "Developing a multi-currency Expert Advisor (Part 9): Collecting optimization results for single trading strategy instances",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Collecting optimization results for single trading strategy instances",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14680.md"
+    },
+    {
+      "id": 14741,
+      "title": "Developing a multi-currency Expert Advisor (Part 11): Automating the optimization (first steps)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Automating the optimization (first steps)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14741.md"
+    },
+    {
+      "id": 14892,
+      "title": "Developing a multi-currency Expert Advisor (Part 13): Automating the second stage \u2014 selection into groups",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Automating the second stage \u2014 selection into groups",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14892.md"
+    },
+    {
+      "id": 15294,
+      "title": "Developing a multi-currency Expert Advisor (Part 15): Preparing EA for real trading",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Preparing EA for real trading",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15294.md"
+    },
+    {
+      "id": 15330,
+      "title": "Developing a multi-currency Expert Advisor (Part 16): Impact of different quote histories on test results",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Impact of different quote histories on test results",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15330.md"
+    },
+    {
+      "id": 15360,
+      "title": "Developing a multi-currency Expert Advisor (Part 17): Further preparation for real trading",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Further preparation for real trading",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15360.md"
+    },
+    {
+      "id": 15683,
+      "title": "Developing a multi-currency Expert Advisor (Part 18): Automating group selection considering forward period",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Automating group selection considering forward period",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15683.md"
+    },
+    {
+      "id": 15911,
+      "title": "Developing a multi-currency Expert Advisor (Part 19): Creating stages implemented in Python",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Creating stages implemented in Python",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15911.md"
+    },
+    {
+      "id": 16134,
+      "title": "Developing a multi-currency Expert Advisor (Part 20): Putting in order the conveyor of automatic project optimization stages (I)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Putting in order the conveyor of automatic project optimization stages (I)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16134.md"
+    },
+    {
+      "id": 16373,
+      "title": "Developing a multi-currency Expert Advisor (Part 21): Preparing for an important experiment and optimizing the code",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Preparing for an important experiment and optimizing the code",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16373.md"
+    },
+    {
+      "id": 16452,
+      "title": "Developing a multi-currency Expert Advisor (Part 22): Starting the transition to hot swapping of settings",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Starting the transition to hot swapping of settings",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16452.md"
+    },
+    {
+      "id": 16913,
+      "title": "Developing a multi-currency Expert Advisor (Part 23): Putting in order the conveyor of automatic project optimization stages (II)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Putting in order the conveyor of automatic project optimization stages (II)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16913.md"
+    },
+    {
+      "id": 17277,
+      "title": "Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (I)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Adding a new strategy (I)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17277.md"
+    },
+    {
+      "id": 17328,
+      "title": "Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (II)",
+      "section": "Tester",
+      "series_title": "Developing a multi-currency Expert Advisor (): Adding a new strategy (II)",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17328.md"
+    },
+    {
+      "id": 17606,
+      "title": "Developing a Multi-Currency Expert Advisor (Part 26): Informer for Trading Instruments",
+      "section": "Tester",
+      "series_title": "Developing a Multi-Currency Expert Advisor (): Informer for Trading Instruments",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17606.md"
+    },
+    {
+      "id": 17607,
+      "title": "Developing a Multi-Currency Expert Advisor (Part 29): Improving the Conveyor",
+      "section": "Tester",
+      "series_title": "Developing a Multi-Currency Expert Advisor (): Improving the Conveyor",
+      "series_key": "developing a multi-currency expert advisor",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17607.md"
+    }
+  ]
+}

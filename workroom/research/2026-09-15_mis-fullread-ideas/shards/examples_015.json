@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_015",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1971,
+      "title": "Handling ZIP Archives in Pure MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1971.md"
+    },
+    {
+      "id": 1977,
+      "title": "Using Assertions in MQL5 Programs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1977.md"
+    },
+    {
+      "id": 1991,
+      "title": "An Introduction to Fuzzy Logic",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1991.md"
+    },
+    {
+      "id": 1998,
+      "title": "Using Layouts and Containers for GUI Controls: The CGrid Class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1998.md"
+    },
+    {
+      "id": 2027,
+      "title": "Rope Indicator by Erik Nayman",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2027.md"
+    },
+    {
+      "id": 2032,
+      "title": "Applying fuzzy logic in trading by means of MQL4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2032.md"
+    },
+    {
+      "id": 2041,
+      "title": "Error Handling and Logging in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2041.md"
+    },
+    {
+      "id": 2043,
+      "title": "Self-organizing feature maps (Kohonen maps) - revisiting the subject",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2043.md"
+    },
+    {
+      "id": 2118,
+      "title": "Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2118.md"
+    },
+    {
+      "id": 2125,
+      "title": "Graphical Interfaces I: Preparation of the Library Structure (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2125.md"
+    },
+    {
+      "id": 2126,
+      "title": "Graphical Interfaces I: Form for Controls (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2126.md"
+    },
+    {
+      "id": 2127,
+      "title": "Graphical Interfaces I: Animating the Graphical Interface (Chapter 3)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2127.md"
+    }
+  ]
+}

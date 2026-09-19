@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_022",
+  "section": "Examples",
+  "parent_shard": "examples_022",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 3280,
+      "title": "Cross-Platform Expert Advisor: Money Management",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3280.md"
+    },
+    {
+      "id": 3298,
+      "title": "Custom indicators and infographics in CCanvas",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3298.md"
+    },
+    {
+      "id": 3331,
+      "title": "Using cloud storage services for data exchange between terminals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3331.md"
+    },
+    {
+      "id": 3336,
+      "title": "Implementing a Scalping Market Depth Using the CGraphic Library",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3336.md"
+    },
+    {
+      "id": 3365,
+      "title": "Graphical Interfaces XI: Refactoring the Library code (build 14.1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3365.md"
+    },
+    {
+      "id": 3366,
+      "title": "Graphical Interfaces XI: Rendered controls (build 14.2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3366.md"
+    },
+    {
+      "id": 3394,
+      "title": "Graphical Interfaces XI: Text edit boxes and Combo boxes in table cells (build 15)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3394.md"
+    },
+    {
+      "id": 3395,
+      "title": "Cross-Platform Expert Advisor: Time Filters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3395.md"
+    },
+    {
+      "id": 3456,
+      "title": "Practical evaluation of the adaptive market following method",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3456.md"
+    },
+    {
+      "id": 3460,
+      "title": "Auto search for divergences and convergences",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3460.md"
+    },
+    {
+      "id": 3527,
+      "title": "Graphical Interfaces XI: Integrating the Standard Graphics Library (build 16)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3527.md"
+    },
+    {
+      "id": 3540,
+      "title": "Creating and testing custom symbols in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3540.md"
+    }
+  ]
+}

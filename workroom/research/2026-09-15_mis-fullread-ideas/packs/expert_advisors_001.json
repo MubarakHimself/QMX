@@ -1,0 +1,114 @@
+{
+  "pack_id": "expert_advisors_001",
+  "section": "Expert Advisors",
+  "parent_shard": "expert_advisors_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "creating an ea that works automatically",
+    "csv data analysis",
+    "custom indicator workshop"
+  ],
+  "n": 11,
+  "articles": [
+    {
+      "id": 18890,
+      "title": "Quantum Neural Network in MQL5 (Part III): A Virtual Quantum Processor Based on Qubits",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18890.md"
+    },
+    {
+      "id": 18916,
+      "title": "Training a nonlinear U-Transformer on the residuals of a linear autoregressive model",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18916.md"
+    },
+    {
+      "id": 19439,
+      "title": "Developing Trading Strategies with the Parafrac and Parafrac V2 Oscillators: Single Entry Performance Insights",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19439.md"
+    },
+    {
+      "id": 19911,
+      "title": "Building a Smart Trade Manager in MQL5: Automate Break-Even, Trailing Stop, and Partial Close",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19911.md"
+    },
+    {
+      "id": 22277,
+      "title": "Keeping Memory Across Restarts: EA State Persistence Using Binary Files in MQL5",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22277.md"
+    },
+    {
+      "id": 22930,
+      "title": "Building a Type-Safe Event Bus in MQL5: Decoupling EA Components Without Global Variables",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22930.md"
+    },
+    {
+      "id": 23093,
+      "title": "Building Automated Daily Trading Reports with the SendMail Function",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23093.md"
+    },
+    {
+      "id": 23361,
+      "title": "Building a Synthetic Custom Symbol in MQL5 Using Multi-Symbol Price Averaging",
+      "section": "Expert Advisors",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23361.md"
+    },
+    {
+      "id": 23065,
+      "title": "CSV Data Analysis (Part 5): Real-Time CSV Streaming from Live MetaTrader 5 Sessions",
+      "section": "Expert Advisors",
+      "series_title": "CSV Data Analysis (): Real-Time CSV Streaming from Live MetaTrader 5 Sessions",
+      "series_key": "csv data analysis",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23065.md"
+    },
+    {
+      "id": 11216,
+      "title": "Creating an EA that works automatically (Part 01): Concepts and structures",
+      "section": "Expert Advisors",
+      "series_title": "Creating an EA that works automatically (): Concepts and structures",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11216.md"
+    },
+    {
+      "id": 21856,
+      "title": "Custom Indicator Workshop (Part 4) : Automating UT Bot Alerts into a Trading Expert Advisor",
+      "section": "Expert Advisors",
+      "series_title": "Custom Indicator Workshop () : Automating UT Bot Alerts into a Trading Expert Advisor",
+      "series_key": "custom indicator workshop",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21856.md"
+    }
+  ]
+}

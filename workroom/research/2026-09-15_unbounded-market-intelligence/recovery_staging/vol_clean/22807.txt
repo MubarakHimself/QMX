@@ -1,0 +1,1613 @@
+---
+id: 22807
+source_url: https://www.mql5.com/en/articles/22807
+title: "Swing Extremes and Pullbacks (Part 4): Dynamic Pullback Depth Using Volatility Models"
+author: ""
+author_url: 
+published: 2026-06-16T10:38Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "Swing Extremes and Pullbacks (): Dynamic Pullback Depth Using Volatility Models"
+series_part: 4
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Swing Extremes and Pullbacks (Part 4): Dynamic Pullback Depth Using Volatility Models
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 16 June 2026 at 06:38
+
+[IMG]
+3 857
+[[IMG]
+1](https://www.mql5.com/en/forum/511267 "Comments")
+
+[IMG]
+
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+
+### Table of contents
+
+1. [Introduction](https://www.mql5.com/en/articles/22807#introduction)
+2. [System Overview](https://www.mql5.com/en/articles/22807#system_overview)
+3. [Getting Started](https://www.mql5.com/en/articles/22807#getting_started)
+4. [Backtest](https://www.mql5.com/en/articles/22807#backtest)
+5. [Conclusion](https://www.mql5.com/en/articles/22807#conclusion)
+
+### Introduction
+
+[Previously](https://www.mql5.com/en/articles/21888), we built a structure-based framework capable of detecting valid swings, validating market structure, and identifying pullbacks for trade execution. Yet most traders using structure-based systems eventually hit the same wall: the EA marks valid swings, detects a pullback, and enters—then gets stopped out repeatedly on moves that formerly worked. The system cannot explain why. A 40-point retracement triggers a buy in one session and leads straight into a loss in another. The logic feels sound, but the results are inconsistent. The real problem is not the entry itself—it is that the system treats all pullbacks as equivalent. It has no vocabulary for depth, no awareness of how far price should retrace given current volatility, and no way to distinguish a healthy correction from structural breakdown in progress.
+
+The solution is to stop asking, "Did the price pull back?" and start asking, "How deep was the pullback relative to what the market's current volatility actually justifies?" This framework introduces a volatility-normalized retracement model. It measures each correction as a ratio of the prior impulse and calibrates acceptable depth thresholds to a rolling ATR regime. A 40-point pullback in a low-ATR environment is flagged as dangerously deep. The same 40 point during a high-ATR expansion phase is classified as healthy and tradable. Each pullback receives a quality score, compression is detected before expansion, and stop losses expand or contract with the regime—so the EA is no longer fighting market conditions it cannot see.
+
+  
+
+### System Overview
+
+The EA detects swing highs and lows using a lookback window. Each candidate undergoes multiple validation checks, including a structure break (new high or low), candle size displacement, liquidity sweep, and time-based respect. Valid swings form the foundation for market structure and liquidity zone mapping. A state machine then classifies the market as accumulation, expansion, distribution, or reversal based on swing progression and sweep failures.
+
+[IMG]
+
+Layer 1 reads raw price structure; Layer 2 validates swings through four independent checks; Layer 3 maps liquidity pools that act as future magnets for price.
+
+How Mapping Market Architecture goes about:
+
+- Step 1: Swing Candidates Detected -> Validated by Structure Break, Displacement, Sweep & Time Respect.
+- Step 2: State Machine Classifies Market as Accumulation, Expansion, Distribution or Reversal.
+- Step 3: Liquidity Zones Tracked—Clustered Highs & Lows, Marked Taken Once Swept.
+
+A second layer models pullbacks within each impulse leg. It measures retracement depth, normalizes it against ATR, and adjusts acceptable ranges according to the current volatility regime. Each pullback receives a quality score that considers depth, candle overlap, momentum decay, and volatility compression. A trade triggers only when a pullback scores high, aligns with the market state, stays within adaptive depth limits, and is confirmed by either a liquidity sweep or a strong displacement candle. Stop losses are placed dynamically using nearby swing levels cushioned by ATR.
+
+[IMG]
+
+No trade fires without a scored pullback passing adaptive depth limits, and every entry demands a confirming sweep or displacement candle—the EA waits for structure to prove itself.
+
+How Quality Filtering and Execution Logic goes about:
+
+- Step 1: Each Impulse Leg Measured -> Pullback Depth Normalized Against ATR -> Quality Score Assigned.
+- Step 2: Adaptive Depth Thresholds Adjust to Volatility Regime—Compression Bonus Applied.
+- Step 3: Entry Requires Sweep or Displacement Confirmation—SL Anchored to Swing Structure.
+
+### Getting Started
+
+```
+//+------------------------------------------------------------------+
+//|                                            Dynmc Pllbck Dpth.mq5 |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+
+#include <Trade/Trade.mqh>
+CTrade trade;
+
+//+------------------------------------------------------------------+
+//| Input Parameters                                                 |
+//+------------------------------------------------------------------+
+input int             SwingLookback           = 5;       // Bars for swing detection
+input double          DisplacementFactor      = 1.5;     // Impulse strength factor
+input int             StructureHoldBars       = 3;       // Bars structure must hold
+input int             ATR_Period              = 14;      // ATR calculation period
+input int             ATR_AvgPeriod           = 50;      // ATR rolling average period
+input double          RiskPercent             = 1.0;     // Risk per trade (%)
+input int             StopLossPoints          = 2000;    // Fallback SL in points
+input double          RiskRewardRatio         = 2.0;     // Risk:Reward ratio
+input double          ATR_SL_Multiplier       = 1.5;     // ATR multiplier for dynamic SL
+input double          PullbackMinDepth        = 0.25;    // Minimum pullback depth
+input double          PullbackMaxDepth        = 0.65;    // Maximum pullback depth (structure valid)
+input bool            RequireCompression      = true;    // Require ATR compression before entry
+input bool            Visualize               = true;    // Show visualization
+
+//+------------------------------------------------------------------+
+//| Enumerations                                                     |
+//+------------------------------------------------------------------+
+enum MarketState
+  {
+   ACCUMULATION,
+   EXPANSION,
+   DISTRIBUTION,
+   REVERSAL
+  };
+
+enum VolatilityRegime
+  {
+   LOW_VOL,
+   NORMAL_VOL,
+   HIGH_VOL,
+   EXTREME_VOL
+  };
+
+enum PullbackRegime
+  {
+   PULLBACK_AGGRESSIVE,   // 0.00-0.25  : Aggressive continuation / barely pulled back
+   PULLBACK_HEALTHY,      // 0.25-0.50  : Ideal trend pullback
+   PULLBACK_DEEP,         // 0.50-0.75  : Deep, still within structure
+   PULLBACK_WEAK,         // 0.75-1.00  : Structural weakness
+   PULLBACK_INVALID       // > 1.00       : Structure failure
+  };
+```
+
+To get started, we define the core configuration and classification system that will drive our volatility-aware pullback framework. The input parameters allow us to control swing detection, displacement strength, structural validation, ATR calculations, risk management, pullback depth limits, and dynamic stop-loss behavior. We also introduce three enumerations that help organize market behavior into meaningful categories. MarketState classifies the broader structural phase of the market, such as accumulation or expansion. VolatilityRegime classifies current volatility conditions using ATR-based measurements, while PullbackRegime classifies retracement quality from aggressive continuations to complete structural failure.
+
+```
+//+------------------------------------------------------------------+
+//| Structures                                                       |
+//+------------------------------------------------------------------+
+struct SwingPoint
+  {
+   datetime          time;
+   double            price;
+   bool              isHigh;
+   bool              isValid;
+   bool              isUsed;
+   int               barIndex;
+   double            candleSize;
+
+   void              Reset()
+     {
+      time       = 0;
+      price      = 0.0;
+      isHigh     = true;
+      isValid    = false;
+      isUsed     = false;
+      barIndex   = -1;
+      candleSize = 0.0;
+     }
+  };
+
+struct LiquidityZone
+  {
+   double            price;
+   datetime          time;
+   bool              taken;
+   bool              isHigh;
+   string            type;
+
+   void              Reset()
+     {
+      price  = 0.0;
+      time   = 0;
+      taken  = false;
+      isHigh = true;
+      type   = "";
+     }
+  };
+
+struct MarketStructure
+  {
+   double            lastHigh;
+   double            lastLow;
+   datetime          lastHighTime;
+   datetime          lastLowTime;
+   bool              bullish;
+   MarketState       state;
+
+   void              Reset()
+     {
+      lastHigh     = 0.0;
+      lastLow      = 0.0;
+      lastHighTime = 0;
+      lastLowTime  = 0;
+      bullish      = true;
+      state        = ACCUMULATION;
+     }
+  };
+
+//--- Pullback Model Structure
+struct PullbackModel
+  {
+   //--- Impulse leg definition
+   double            impulseStart;       // Price at impulse origin
+   double            impulseEnd;         // Price at impulse peak/trough
+   double            impulseSizePoints;  // Raw impulse size in points
+
+   //--- Retracement measurement
+   double            retracementPrice;   // Current pullback extreme
+   double            retracementDepth;   // Normalized depth [0.0-1.0+]
+
+   //--- Volatility context
+   double            atrAtImpulse;       // ATR value when impulse occurred
+   double            atrDuringPullback;  // ATR during the pullback phase
+   double            normalizedDepth;    // retracementDistance / ATR
+
+   //--- Regime classification
+   bool              shallowPullback;    // depth < 0.25
+   bool              healthyPullback;    // depth 0.20-0.50
+   bool              deepPullback;       // depth 0.50-0.75
+   bool              invalidPullback;    // depth > 1.0
+   PullbackRegime    regime;
+
+   //--- Efficiency metrics
+   double            avgCounterCandleSize; // Average size of retracement candles
+   double            overlapPercent;       // % of candles overlapping prior candle
+   bool              momentumDecaying;     // Counter-trend momentum is fading
+
+   //--- Compression signal
+   bool              compressionDetected; // ATR contracted during pullback
+
+   //--- Quality score
+   double            pullbackScore;      // 0-10 quality metric
+
+   //--- Direction
+   bool              isBullish;          // Bullish impulse = true
+
+   //--- Timing
+   datetime          startTime;
+   datetime          endTime;
+
+   void              Reset()
+     {
+      impulseStart         = 0;
+      impulseEnd           = 0;
+      impulseSizePoints    = 0;
+      retracementPrice     = 0;
+      retracementDepth     = 0;
+      atrAtImpulse         = 0;
+      atrDuringPullback    = 0;
+      normalizedDepth      = 0;
+      shallowPullback      = false;
+      healthyPullback      = false;
+      deepPullback         = false;
+      invalidPullback      = false;
+      regime               = PULLBACK_INVALID;
+      avgCounterCandleSize = 0;
+      overlapPercent       = 0;
+      momentumDecaying     = false;
+      compressionDetected  = false;
+      pullbackScore        = 0;
+      isBullish            = true;
+      startTime            = 0;
+      endTime              = 0;
+     }
+  };
+
+//+------------------------------------------------------------------+
+//| Global Variables                                                 |
+//+------------------------------------------------------------------+
+SwingPoint         swingCandidates[];
+SwingPoint         validSwings[];
+LiquidityZone      liquidityZones[];
+MarketStructure    marketStruct;
+PullbackModel      pullbacks[];         // Pullback models array
+
+int                atrHandle;
+int                atrAvgHandle;        // Longer-period ATR for average
+datetime           lastBarTime = 0;
+double             avgCandleSize = 0;
+double             currentATR    = 0;   // live ATR
+double             avgATR        = 0;   // rolling ATR average
+VolatilityRegime   currentVolRegime = NORMAL_VOL; // current vol regime
+
+//--- Trade tracking
+datetime           lastTradeTime  = 0;
+double             lastTradePrice = 0;
+int                lastTradeType  = 0;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   ArrayResize(swingCandidates, 0);
+   ArrayResize(validSwings, 0);
+   ArrayResize(liquidityZones, 0);
+   ArrayResize(pullbacks, 0);
+
+   marketStruct.Reset();
+
+   atrHandle = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
+   if(atrHandle == INVALID_HANDLE)
+     {
+      Print("Failed to create ATR handle");
+      return INIT_FAILED;
+     }
+
+   //--- Second ATR handle for longer rolling average
+   atrAvgHandle = iATR(_Symbol, PERIOD_CURRENT, ATR_AvgPeriod);
+   if(atrAvgHandle == INVALID_HANDLE)
+     {
+      Print("Failed to create ATR average handle");
+      return INIT_FAILED;
+     }
+
+   DetectSwingCandidates();
+   ValidateSwings();
+   AnalyzePullbackDepth();       // NEW LAYER 2.5
+   UpdateLiquidityZones();
+   UpdateMarketState();
+
+   return INIT_SUCCEEDED;
+  }
+```
+
+In this code section, the first group of structures forms the data foundation of the trading system. SwingPoint stores information about detected highs and lows, including their price, time, candle size, and validation status. This allows us to separate raw swing candidates from swings that have passed structural validation. LiquidityZone tracks important areas where liquidity may exist, such as equal highs, equal lows, or untouched swing points, while also recording whether that liquidity has already been taken. MarketStructure maintains the current view of the market by storing the latest significant highs and lows, the prevailing directional bias, and the active market state. Each structure contains a Reset() function, which ensures that all fields are returned to a known default state before being reused.
+
+The PullbackModel extends the system beyond simple swing analysis by introducing a complete framework for measuring retracement quality. We store the impulse leg, pullback depth, ATR values, volatility-normalized measurements, and pullback classifications ranging from healthy retracements to structural failure. Additional metrics such as candle overlap, counter-trend momentum, and ATR compression help us evaluate the quality and behavior of a pullback rather than relying solely on price distance.
+
+Below the structures, we declare the global arrays and variables that hold swing data, liquidity zones, market structure information, pullback models, ATR calculations, and trade-tracking details. Finally, within OnInit(), we initialize these containers, create ATR indicators for both current and average volatility measurements, and execute the first analysis cycle. This establishes the initial market structure and pullback context before the EA begins processing live market data.
+
+```
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+   if(atrHandle != INVALID_HANDLE)
+      IndicatorRelease(atrHandle);
+   if(atrAvgHandle != INVALID_HANDLE)
+      IndicatorRelease(atrAvgHandle);
+
+   if(Visualize)
+     {
+      ObjectsDeleteAll(0, "SF_");
+      ChartRedraw();
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   datetime currentBarTime = iTime(_Symbol, PERIOD_CURRENT, 0);
+
+   if(currentBarTime != lastBarTime)
+     {
+      lastBarTime = currentBarTime;
+
+      UpdateAvgCandleSize();
+      UpdateATRValues();            // refresh ATR + regime
+
+      DetectSwingCandidates();
+      ValidateSwings();
+      AnalyzePullbackDepth();       // NEW LAYER 2.5
+      UpdateLiquidityZones();
+      UpdateMarketState();
+      CheckTradeConditions();
+
+      if(Visualize)
+         UpdateVisualization();
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Update ATR Values and Volatility Regime                          |
+//+------------------------------------------------------------------+
+void UpdateATRValues()
+  {
+   double atrBuf[];
+   double atrAvgBuf[];
+   ArraySetAsSeries(atrBuf,    true);
+   ArraySetAsSeries(atrAvgBuf, true);
+
+   if(CopyBuffer(atrHandle,    0, 0, 1, atrBuf)    > 0) currentATR = atrBuf[0];
+   if(CopyBuffer(atrAvgHandle, 0, 0, 1, atrAvgBuf) > 0) avgATR     = atrAvgBuf[0];
+
+   if(avgATR == 0) return;
+
+   double ratio = currentATR / avgATR;
+
+   if(ratio < 0.7)
+      currentVolRegime = LOW_VOL;
+   else if(ratio < 1.2)
+      currentVolRegime = NORMAL_VOL;
+   else if(ratio < 1.8)
+      currentVolRegime = HIGH_VOL;
+   else
+      currentVolRegime = EXTREME_VOL;
+  }
+```
+
+This section manages the EA's lifecycle and ensures that market analysis remains synchronized with newly completed candles. In OnDeinit(), we release both ATR indicator handles to free platform resources and remove any chart objects created by the visualization system before forcing a chart refresh. Within OnTick(), we process logic only when a new bar appears, preventing unnecessary calculations on every incoming tick.
+
+The execution flow updates candle statistics, refreshes ATR values, determines the current volatility regime, detects and validates swings, analyzes pullback depth, updates liquidity zones, evaluates market structure, and finally checks for trading opportunities. The UpdateATRValues() function plays a key role in volatility adaptation by comparing the current ATR against a longer-term ATR average. This comparison classifies market conditions as low, normal, high, or extreme volatility, providing the context needed for dynamic pullback analysis and volatility-aware trade decisions.
+
+```
+//+------------------------------------------------------------------+
+//| NEW LAYER 2.5: Dynamic Pullback Depth Analysis                   |
+//+------------------------------------------------------------------+
+void AnalyzePullbackDepth()
+  {
+   ArrayResize(pullbacks, 0);
+   int pbCount = 0;
+
+   int swingCount = ArraySize(validSwings);
+   if(swingCount < 3)
+      return;
+
+   //--- Pair consecutive swings into impulse legs
+   //--- Bullish impulse: Low -> High
+   //--- Bearish impulse: High -> Low
+   for(int i = 0; i < swingCount - 2; i++)
+     {
+      SwingPoint a = validSwings[i];
+      SwingPoint b = validSwings[i + 1];
+      SwingPoint c = validSwings[i + 2]; // The pullback extreme
+
+      bool bullishImpulse = (!a.isHigh && b.isHigh);
+      bool bearishImpulse = (a.isHigh  && !b.isHigh);
+
+      if(!bullishImpulse && !bearishImpulse)
+         continue;
+
+      PullbackModel pb;
+      pb.Reset();
+      pb.isBullish  = bullishImpulse;
+      pb.startTime  = a.time;
+      pb.endTime    = c.time;
+
+      if(bullishImpulse)
+        {
+         pb.impulseStart = a.price;  // swing low
+         pb.impulseEnd   = b.price;  // swing high
+         pb.retracementPrice = c.price; // next swing low (pullback)
+        }
+      else
+        {
+         pb.impulseStart = a.price;  // swing high
+         pb.impulseEnd   = b.price;  // swing low
+         pb.retracementPrice = c.price; // next swing high (pullback)
+        }
+
+      pb.impulseSizePoints = MathAbs(pb.impulseEnd - pb.impulseStart) / _Point;
+
+      //--- Skip negligible impulses
+      if(pb.impulseSizePoints < 10)
+         continue;
+
+      //--- Calculate normalized retracement depth [0.0 - 1.0+]
+      double impulseRange = MathAbs(pb.impulseEnd - pb.impulseStart);
+
+      if(bullishImpulse)
+         pb.retracementDepth = (pb.impulseEnd - pb.retracementPrice) / impulseRange;
+      else
+         pb.retracementDepth = (pb.retracementPrice - pb.impulseEnd) / impulseRange;
+
+      //--- Clamp floor
+      if(pb.retracementDepth < 0) pb.retracementDepth = 0;
+
+      //--- ATR context at impulse
+      pb.atrAtImpulse = currentATR;
+
+      //--- Volatility-normalized depth: how many ATRs is the pullback?
+      double retracementDistance = MathAbs(pb.impulseEnd - pb.retracementPrice);
+      pb.normalizedDepth = (currentATR > 0) ? retracementDistance / currentATR : 0;
+
+      //--- Adaptive depth thresholds based on vol regime
+      double adaptiveMax = PullbackMaxDepth;
+      double adaptiveMin = PullbackMinDepth;
+
+      switch(currentVolRegime)
+        {
+         case LOW_VOL:
+            //--- Low vol = expect tighter, shallower pullbacks
+            adaptiveMax = PullbackMaxDepth - 0.10;
+            adaptiveMin = PullbackMinDepth;
+            break;
+         case HIGH_VOL:
+            //--- High vol = accept deeper pullbacks before invalidation
+            adaptiveMax = PullbackMaxDepth + 0.10;
+            adaptiveMin = PullbackMinDepth - 0.05;
+            break;
+         case EXTREME_VOL:
+            adaptiveMax = PullbackMaxDepth + 0.15;
+            adaptiveMin = PullbackMinDepth - 0.10;
+            break;
+         default:
+            break;
+        }
+
+      //--- Classify pullback regime
+      if(pb.retracementDepth < 0.25)
+        {
+         pb.shallowPullback = true;
+         pb.regime = PULLBACK_AGGRESSIVE;
+        }
+      else if(pb.retracementDepth < 0.50)
+        {
+         pb.healthyPullback = true;
+         pb.regime = PULLBACK_HEALTHY;
+        }
+      else if(pb.retracementDepth < 0.75)
+        {
+         pb.deepPullback = true;
+         pb.regime = PULLBACK_DEEP;
+        }
+      else if(pb.retracementDepth < 1.0)
+        {
+         pb.regime = PULLBACK_WEAK;
+        }
+      else
+        {
+         pb.invalidPullback = true;
+         pb.regime = PULLBACK_INVALID;
+        }
+
+      //--- Pullback efficiency analysis
+      MeasurePullbackEfficiency(pb, i + 1);
+
+      //--- Compression detection
+      pb.compressionDetected = DetectVolatilityCompression(pb);
+
+      //--- Score the pullback quality (0–10)
+      pb.pullbackScore = ScorePullback(pb, adaptiveMin, adaptiveMax);
+
+      ArrayResize(pullbacks, pbCount + 1);
+      pullbacks[pbCount] = pb;
+      pbCount++;
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Measure pullback efficiency (candle overlap + momentum decay)    |
+//+------------------------------------------------------------------+
+void MeasurePullbackEfficiency(PullbackModel &pb, int impulseEndSwingIdx)
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, 80, rates);
+   if(copied < 5) return;
+
+   //--- Find bar index of impulse end
+   int startBar = FindBarIndexByTime(validSwings[impulseEndSwingIdx].time);
+   if(startBar < 0) return;
+
+   double totalCounterSize = 0;
+   int    overlapCount     = 0;
+   int    candleCount      = 0;
+   double lastCounterSize  = 0;
+
+   //--- Scan up to 15 bars of pullback
+   int scanBars = MathMin(startBar, 15);
+   for(int i = 1; i <= scanBars; i++)
+     {
+      if(startBar - i < 0 || startBar - i >= copied) break;
+
+      double candleBody = MathAbs(rates[startBar - i].close - rates[startBar - i].open);
+      totalCounterSize += candleBody;
+
+      //--- Check overlap with previous candle (sign of weak counter-trend)
+      if(i > 1)
+        {
+         double prevHigh = rates[startBar - i + 1].high;
+         double prevLow  = rates[startBar - i + 1].low;
+         double curHigh  = rates[startBar - i].high;
+         double curLow   = rates[startBar - i].low;
+         if(curHigh < prevHigh && curLow > prevLow)
+            overlapCount++;
+        }
+
+      //--- Momentum decay: compare early vs late pullback candle size
+      if(i == 1) lastCounterSize = candleBody;
+      candleCount++;
+     }
+
+   pb.avgCounterCandleSize = (candleCount > 0) ? totalCounterSize / candleCount : 0;
+   pb.overlapPercent       = (candleCount > 1)  ? (double)overlapCount / (candleCount - 1) * 100.0 : 0;
+
+   //--- Momentum is decaying if average counter candle is shrinking
+   pb.momentumDecaying = (pb.avgCounterCandleSize > 0 &&
+                          lastCounterSize < pb.avgCounterCandleSize * 0.7);
+  }
+```
+
+The AnalyzePullbackDepth() function introduces the dynamic pullback framework by converting validated swings into impulse-and-retracement models. We identify bullish impulses from a swing low to a swing high, and bearish impulses from a swing high to a swing low. The following swing is then treated as the pullback extreme. Using these points, we calculate the impulse size, retracement depth, and ATR-normalized pullback distance. The function also adapts acceptable pullback thresholds to the current volatility regime, allowing deeper pullbacks during volatile conditions and tighter pullbacks during quieter markets. Finally, each pullback is classified into a regime that ranges from aggressive continuation to complete structural failure.
+
+The MeasurePullbackEfficiency() function evaluates the quality of the retracement rather than just its depth. We analyze the pullback candles to calculate average counter-trend candle size, candle overlap, and momentum decay. A high degree of candle overlap often suggests a weak correction, while shrinking candle sizes indicate fading counter-trend momentum. These measurements are then combined with volatility compression analysis and pullback scoring. Together, they help us determine whether a pullback represents a healthy trend continuation or a sign of structural weakness.
+
+```
+//+------------------------------------------------------------------+
+//| Detect volatility compression during pullback                    |
+//+------------------------------------------------------------------+
+bool DetectVolatilityCompression(PullbackModel &pb)
+  {
+   if(avgATR == 0) return false;
+
+   //--- ATR has contracted below 80% of average during pullback
+   return (currentATR < avgATR * 0.8);
+  }
+
+//+------------------------------------------------------------------+
+//| Score pullback quality (0–10)                                    |
+//+------------------------------------------------------------------+
+double ScorePullback(PullbackModel &pb, double adaptiveMin, double adaptiveMax)
+  {
+   double score = 0;
+
+   //--- Depth scoring
+   if(pb.retracementDepth >= adaptiveMin && pb.retracementDepth <= adaptiveMax)
+      score += 4.0;   // ideal zone
+   else if(pb.retracementDepth < adaptiveMin)
+      score += 2.0;   // too shallow, possible continuation but lower conviction
+   else if(pb.retracementDepth > adaptiveMax && pb.retracementDepth < 1.0)
+      score += 1.0;   // deep but not invalid
+   //--- > 1.0 = 0 points
+
+   //--- ATR-normalized depth bonus
+   //--- 1-2 ATRs of pullback is ideal
+   if(pb.normalizedDepth >= 0.8 && pb.normalizedDepth <= 2.0)
+      score += 2.0;
+   else if(pb.normalizedDepth > 2.0)
+      score -= 1.0;  // over-extended
+
+   //--- Efficiency bonus
+   if(pb.overlapPercent > 50.0)
+      score += 1.5;   // choppy/overlapping pullback = weak counter-trend
+   if(pb.momentumDecaying)
+      score += 1.0;   // fading counter-trend momentum
+
+   //--- Compression bonus
+   if(pb.compressionDetected)
+      score += 1.5;   // volatility coil before expansion
+
+   //--- Penalty for structural weakness
+   if(pb.regime == PULLBACK_WEAK || pb.regime == PULLBACK_INVALID)
+      score -= 3.0;
+
+   return MathMax(0.0, MathMin(10.0, score));
+  }
+
+//+------------------------------------------------------------------+
+//| Get best (most recent, highest scoring) pullback for direction   |
+//+------------------------------------------------------------------+
+bool GetBestPullback(bool bullish, PullbackModel &outPb)
+  {
+   int    bestIdx   = -1;
+   double bestScore = -1;
+
+   for(int i = 0; i < ArraySize(pullbacks); i++)
+     {
+      if(pullbacks[i].isBullish != bullish) continue;
+      if(pullbacks[i].invalidPullback)      continue;
+      if(pullbacks[i].pullbackScore > bestScore)
+        {
+         bestScore = pullbacks[i].pullbackScore;
+         bestIdx   = i;
+        }
+     }
+
+   if(bestIdx < 0) return false;
+   outPb = pullbacks[bestIdx];
+   return true;
+  }
+```
+
+In this section, we evaluate and rank pullbacks so that we can focus on the highest-quality trading opportunities. DetectVolatilityCompression() checks whether the current ATR has contracted below 80% of its longer-term average, which can indicate a period of reduced volatility before a potential expansion. ScorePullback() then assigns a score between 0 and 10 by combining retracement depth, ATR-normalized distance, pullback efficiency, momentum decay, volatility compression, and structural strength.
+
+Pullbacks that occur within the ideal retracement zone receive the highest scores, while weak or invalid structures are penalized. Finally, GetBestPullback() searches through all analyzed pullbacks and returns the highest-scoring valid setup for the requested direction. This gives the EA a simple way to prioritize the most favorable bullish or bearish pullback available at any given time.
+
+```
+//+------------------------------------------------------------------+
+//| LAYER 1: Raw Swing Detection                                     |
+//+------------------------------------------------------------------+
+void DetectSwingCandidates()
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, 100, rates);
+
+   if(copied < SwingLookback * 2 + 1) return;
+
+   SwingPoint tempCandidates[];
+   ArrayResize(tempCandidates, 0);
+   int newCount = 0;
+
+   for(int i = SwingLookback; i < copied - SwingLookback; i++)
+     {
+      bool isSwingHigh = true;
+      bool isSwingLow  = true;
+
+      for(int j = 1; j <= SwingLookback; j++)
+        {
+         if(rates[i].high <= rates[i-j].high || rates[i].high <= rates[i+j].high) isSwingHigh = false;
+         if(rates[i].low  >= rates[i-j].low  || rates[i].low  >= rates[i+j].low)  isSwingLow  = false;
+        }
+
+      if(isSwingHigh)
+        {
+         SwingPoint sp; sp.Reset();
+         sp.time       = rates[i].time;
+         sp.price      = rates[i].high;
+         sp.isHigh     = true;
+         sp.barIndex   = i;
+         sp.candleSize = (rates[i].high - rates[i].low) / _Point;
+         ArrayResize(tempCandidates, newCount + 1);
+         tempCandidates[newCount++] = sp;
+        }
+
+      if(isSwingLow)
+        {
+         SwingPoint sp; sp.Reset();
+         sp.time       = rates[i].time;
+         sp.price      = rates[i].low;
+         sp.isHigh     = false;
+         sp.barIndex   = i;
+         sp.candleSize = (rates[i].high - rates[i].low) / _Point;
+         ArrayResize(tempCandidates, newCount + 1);
+         tempCandidates[newCount++] = sp;
+        }
+     }
+
+   ArrayResize(swingCandidates, newCount);
+   for(int i = 0; i < newCount; i++)
+      swingCandidates[i] = tempCandidates[i];
+  }
+
+//+------------------------------------------------------------------+
+//| LAYER 2: Structural Validation Engine                            |
+//+------------------------------------------------------------------+
+void ValidateSwings()
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   CopyRates(_Symbol, PERIOD_CURRENT, 0, 50, rates);
+
+   if(ArraySize(rates) < StructureHoldBars + 1) return;
+
+   for(int i = 0; i < ArraySize(swingCandidates); i++)
+      swingCandidates[i].isValid = false;
+
+   ArrayResize(validSwings, 0);
+   int validCount = 0;
+
+   for(int i = 0; i < ArraySize(swingCandidates); i++)
+     {
+      bool isValid = false;
+      if(CheckBreakOfStructure(swingCandidates[i], rates)) isValid = true;
+      if(CheckDisplacement(swingCandidates[i], rates))     isValid = true;
+      if(CheckLiquiditySweep(swingCandidates[i], rates))   isValid = true;
+      if(CheckTimeRespect(swingCandidates[i], rates))      isValid = true;
+
+      if(isValid)
+        {
+         swingCandidates[i].isValid = true;
+         ArrayResize(validSwings, validCount + 1);
+         validSwings[validCount++] = swingCandidates[i];
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Validation A: Break of Structure                                 |
+//+------------------------------------------------------------------+
+bool CheckBreakOfStructure(SwingPoint &sp, MqlRates &rates[])
+{
+   double extreme = 0;
+   if(sp.isHigh)
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(validSwings[i].isHigh && validSwings[i].time < sp.time)
+            if(extreme == 0 || validSwings[i].price > extreme)
+               extreme = validSwings[i].price;
+      return (extreme > 0 && sp.price > extreme);
+     }
+   else
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(!validSwings[i].isHigh && validSwings[i].time < sp.time)
+            if(extreme == 0 || validSwings[i].price < extreme)
+               extreme = validSwings[i].price;
+      return (extreme > 0 && sp.price < extreme);
+     }
+}
+//+------------------------------------------------------------------+
+//| Validation B: Displacement                                       |
+//+------------------------------------------------------------------+
+bool CheckDisplacement(SwingPoint &sp, MqlRates &rates[])
+  {
+   if(avgCandleSize == 0) return false;
+   return (sp.candleSize > avgCandleSize * DisplacementFactor);
+  }
+
+//+------------------------------------------------------------------+
+//| Validation C: Liquidity Sweep                                    |
+//+------------------------------------------------------------------+
+bool CheckLiquiditySweep(SwingPoint &sp, MqlRates &rates[])
+  {
+   int barIndex = FindBarIndexByTime(sp.time);
+   if(barIndex < 0 || barIndex >= ArraySize(rates)) return false;
+
+   if(sp.isHigh)
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(validSwings[i].isHigh && validSwings[i].time < sp.time)
+            if(rates[barIndex].high > validSwings[i].price && rates[barIndex].close < validSwings[i].price)
+               return true;
+     }
+   else
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(!validSwings[i].isHigh && validSwings[i].time < sp.time)
+            if(rates[barIndex].low < validSwings[i].price && rates[barIndex].close > validSwings[i].price)
+               return true;
+     }
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//| Validation D: Time-Based Respect                                 |
+//+------------------------------------------------------------------+
+bool CheckTimeRespect(SwingPoint &sp, MqlRates &rates[])
+{
+   int barIndex = FindBarIndexByTime(sp.time);
+   //--- If not enough bars ahead, we cannot confirm, so accept the swing
+   if(barIndex < 0 || barIndex + StructureHoldBars >= ArraySize(rates))
+      return true;
+
+   if(sp.isHigh)
+     {
+      for(int i = 1; i <= StructureHoldBars; i++)
+         if(rates[barIndex + i].high > sp.price) return false;
+      return true;
+     }
+   else
+     {
+      for(int i = 1; i <= StructureHoldBars; i++)
+         if(rates[barIndex + i].low < sp.price) return false;
+      return true;
+     }
+}
+```
+
+The first stage of the framework focuses on identifying raw swing candidates from historical price data. We scan each candle and compare its high and low against neighboring candles within the configured lookback period. A candle is marked as a swing high if its high exceeds surrounding highs, while a swing low must be lower than surrounding lows. For every detected swing, we store important details such as its price, time, candle size, and chart position. These candidates represent potential structural turning points, but they have not yet been confirmed as meaningful market structure.
+
+The second stage validates these swing candidates using multiple structural tests. We evaluate whether a swing creates a break of structure, forms a strong displacement move, performs a liquidity sweep, or remains respected for a specified number of bars. The break of structure check confirms that a swing exceeds previous structural extremes, while the displacement check ensures the move is larger than normal market activity. The liquidity sweep test looks for false breaks that quickly reverse back into structure, and the time-respect check verifies that the swing level continues to hold after formation. Any swing that passes at least one of these validation methods is promoted into the validSwings array, where it becomes part of the higher-level market structure and pullback analysis process.
+
+```
+//+------------------------------------------------------------------+
+//| LAYER 3: Liquidity Interaction Layer                             |
+//+------------------------------------------------------------------+
+void UpdateLiquidityZones()
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   CopyRates(_Symbol, PERIOD_CURRENT, 0, 100, rates);
+   if(ArraySize(rates) < 50) return;
+
+   ArrayResize(liquidityZones, 0);
+   int zoneCount = 0;
+
+   for(int i = 0; i < ArraySize(validSwings) - 1; i++)
+      for(int j = i + 1; j < ArraySize(validSwings); j++)
+        {
+         double priceDiff = MathAbs(validSwings[i].price - validSwings[j].price);
+         if(priceDiff < _Point * 10 && validSwings[i].isHigh == validSwings[j].isHigh)
+           {
+            LiquidityZone zone; zone.Reset();
+            zone.price  = validSwings[i].price;
+            zone.time   = validSwings[i].time;
+            zone.isHigh = validSwings[i].isHigh;
+            zone.type   = "equal";
+            zone.taken  = CheckIfLiquidityTaken(zone, rates);
+            ArrayResize(liquidityZones, zoneCount + 1);
+            liquidityZones[zoneCount++] = zone;
+            break;
+           }
+        }
+
+   for(int i = 0; i < ArraySize(validSwings); i++)
+      if(!validSwings[i].isUsed)
+        {
+         LiquidityZone zone; zone.Reset();
+         zone.price  = validSwings[i].price;
+         zone.time   = validSwings[i].time;
+         zone.isHigh = validSwings[i].isHigh;
+         zone.type   = "untouched";
+         zone.taken  = CheckIfLiquidityTaken(zone, rates);
+         ArrayResize(liquidityZones, zoneCount + 1);
+         liquidityZones[zoneCount++] = zone;
+        }
+  }
+
+//+------------------------------------------------------------------+
+//| Check if liquidity zone has been taken                           |
+//+------------------------------------------------------------------+
+bool CheckIfLiquidityTaken(LiquidityZone &zone, MqlRates &rates[])
+  {
+   for(int i = 0; i < ArraySize(rates); i++)
+     {
+      if(zone.isHigh  && rates[i].high > zone.price) return true;
+      if(!zone.isHigh && rates[i].low  < zone.price) return true;
+     }
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//| LAYER 4: Structural State Machine                                |
+//+------------------------------------------------------------------+
+void UpdateMarketState()
+  {
+   if(ArraySize(validSwings) < 2) return;
+
+   SwingPoint lastSwing = validSwings[ArraySize(validSwings) - 1];
+
+   if(lastSwing.isHigh && lastSwing.price > marketStruct.lastHigh)
+     {
+      marketStruct.lastHigh     = lastSwing.price;
+      marketStruct.lastHighTime = lastSwing.time;
+     }
+   if(!lastSwing.isHigh && (marketStruct.lastLow == 0 || lastSwing.price < marketStruct.lastLow))
+     {
+      marketStruct.lastLow     = lastSwing.price;
+      marketStruct.lastLowTime = lastSwing.time;
+     }
+
+   bool higherHigh = false;
+   bool higherLow  = false;
+   for(int i = 0; i < ArraySize(validSwings); i++)
+     {
+      if(validSwings[i].isHigh  && validSwings[i].price > marketStruct.lastHigh) higherHigh = true;
+      if(!validSwings[i].isHigh && validSwings[i].price > marketStruct.lastLow)  higherLow  = true;
+     }
+   marketStruct.bullish = (higherHigh && higherLow);
+
+   bool liquiditySweepFailed = CheckLiquiditySweepFailure();
+
+   switch(marketStruct.state)
+     {
+      case ACCUMULATION:
+         if(marketStruct.bullish)  marketStruct.state = EXPANSION;
+         else if(ArraySize(validSwings) > 5) marketStruct.state = DISTRIBUTION;
+         break;
+      case EXPANSION:
+         if(!marketStruct.bullish) marketStruct.state = DISTRIBUTION;
+         else if(liquiditySweepFailed) marketStruct.state = REVERSAL;
+         break;
+      case DISTRIBUTION:
+         if(marketStruct.bullish)  marketStruct.state = ACCUMULATION;
+         else if(liquiditySweepFailed) marketStruct.state = REVERSAL;
+         break;
+      case REVERSAL:
+         if(marketStruct.bullish)  marketStruct.state = ACCUMULATION;
+         else if(!marketStruct.bullish) marketStruct.state = ACCUMULATION;
+         break;
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Check liquidity sweep failure                                    |
+//+------------------------------------------------------------------+
+bool CheckLiquiditySweepFailure()
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   CopyRates(_Symbol, PERIOD_CURRENT, 0, 10, rates);
+   if(ArraySize(rates) < 5) return false;
+
+   for(int i = 0; i < ArraySize(liquidityZones); i++)
+     {
+      if(liquidityZones[i].isHigh && !liquidityZones[i].taken)
+         if(rates[0].high > liquidityZones[i].price && rates[0].close < liquidityZones[i].price)
+            return true;
+      if(!liquidityZones[i].isHigh && !liquidityZones[i].taken)
+         if(rates[0].low < liquidityZones[i].price && rates[0].close > liquidityZones[i].price)
+            return true;
+     }
+   return false;
+  }
+```
+
+The third layer focuses on liquidity analysis by converting validated swing points into actionable liquidity zones. We first search for equal highs and equal lows, since these areas often attract stop orders and resting liquidity. When two swings form at nearly the same price level, a liquidity zone is created and tracked. We also add unused swing highs and lows as untouched liquidity zones, allowing the system to monitor structural levels that have not yet been revisited by price. Each zone is checked against recent market data to determine whether liquidity has already been taken or remains available as a potential future target.
+
+The fourth layer acts as a structural state machine that interprets the overall condition of the market. We continuously update the most important swing highs and lows, then evaluate whether price is producing higher highs and higher lows to determine directional strength. Based on this information, the market transitions between accumulation, expansion, distribution, and reversal states. The system also watches for failed liquidity sweeps, where price briefly moves beyond a liquidity zone before closing back inside the range. Such behavior often signals exhaustion or rejection, allowing the state machine to detect potential reversals and adapt its view of market structure before trade decisions are made.
+
+```
+//+------------------------------------------------------------------+
+//| LAYER 5: Execution Engine (Pullback-Upgraded)                    |
+//+------------------------------------------------------------------+
+void CheckTradeConditions()
+  {
+   if(PositionSelect(_Symbol))
+     {
+      ManageOpenPosition();
+      return;
+     }
+
+   if(TimeCurrent() - lastTradeTime < PeriodSeconds(PERIOD_CURRENT) * 3)
+      return;
+
+   MqlRates current[];
+   ArraySetAsSeries(current, true);
+   CopyRates(_Symbol, PERIOD_CURRENT, 0, 3, current);
+   if(ArraySize(current) < 2) return;
+   if(ArraySize(validSwings) == 0) return;
+
+   SwingPoint lastValidSwing = validSwings[ArraySize(validSwings) - 1];
+
+   if(CheckBuyConditions(lastValidSwing, current))
+     {
+      ExecuteTrade(ORDER_TYPE_BUY);
+      lastTradeTime = TimeCurrent();
+      lastTradeType = 1;
+     }
+   else if(CheckSellConditions(lastValidSwing, current))
+     {
+      ExecuteTrade(ORDER_TYPE_SELL);
+      lastTradeTime = TimeCurrent();
+      lastTradeType = -1;
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| NEW: Check Buy Conditions (Pullback-Aware)                       |
+//+------------------------------------------------------------------+
+bool CheckBuyConditions(SwingPoint &lastSwing, MqlRates &rates[])
+  {
+   if(lastSwing.isHigh || !lastSwing.isValid) return false;
+
+   //--- Market state filter
+   bool goodState = (marketStruct.state == EXPANSION || marketStruct.state == ACCUMULATION);
+   if(!goodState) return false;
+
+   //--- Layer 2.5 gate: require a high-quality bullish pullback
+   PullbackModel bestPb;
+   bool hasPullback = GetBestPullback(true, bestPb);
+
+   if(!hasPullback) return false;
+   if(bestPb.invalidPullback) return false;
+   if(bestPb.pullbackScore < 4.0) return false;          // Minimum quality threshold
+
+   //--- Require pullback within healthy or deep zone (not way too shallow or broken)
+   if(bestPb.retracementDepth < PullbackMinDepth) return false;
+
+   //--- Adaptive max depth
+   double adaptiveMax = PullbackMaxDepth;
+   if(currentVolRegime == HIGH_VOL)    adaptiveMax += 0.10;
+   if(currentVolRegime == EXTREME_VOL) adaptiveMax += 0.15;
+   if(bestPb.retracementDepth > adaptiveMax) return false;
+
+   //--- Compression gate (optional)
+   if(RequireCompression && !bestPb.compressionDetected) return false;
+
+   //--- Liquidity sweep below (confirming)
+   bool liquiditySweep = false;
+   for(int i = 0; i < ArraySize(liquidityZones); i++)
+      if(!liquidityZones[i].isHigh && !liquidityZones[i].taken)
+         if(rates[0].low < liquidityZones[i].price && rates[0].close > liquidityZones[i].price)
+           { liquiditySweep = true; break; }
+
+   //--- Bullish displacement return candle
+   bool bullishDisplacement = false;
+   if(ArraySize(rates) >= 2)
+     {
+      double candleSize = (rates[0].close - rates[0].open) / _Point;
+      if(candleSize > avgCandleSize * DisplacementFactor)
+         bullishDisplacement = true;
+     }
+
+   return (liquiditySweep || bullishDisplacement);
+  }
+
+//+------------------------------------------------------------------+
+//| NEW: Check Sell Conditions (Pullback-Aware)                      |
+//+------------------------------------------------------------------+
+bool CheckSellConditions(SwingPoint &lastSwing, MqlRates &rates[])
+  {
+   if(!lastSwing.isHigh || !lastSwing.isValid) return false;
+
+   bool goodState = (marketStruct.state == DISTRIBUTION || marketStruct.state == REVERSAL);
+   if(!goodState) return false;
+
+   PullbackModel bestPb;
+   bool hasPullback = GetBestPullback(false, bestPb);
+
+   if(!hasPullback) return false;
+   if(bestPb.invalidPullback) return false;
+   if(bestPb.pullbackScore < 4.0) return false;
+
+   if(bestPb.retracementDepth < PullbackMinDepth) return false;
+
+   double adaptiveMax = PullbackMaxDepth;
+   if(currentVolRegime == HIGH_VOL)    adaptiveMax += 0.10;
+   if(currentVolRegime == EXTREME_VOL) adaptiveMax += 0.15;
+   if(bestPb.retracementDepth > adaptiveMax) return false;
+
+   if(RequireCompression && !bestPb.compressionDetected) return false;
+
+   bool liquiditySweep = false;
+   for(int i = 0; i < ArraySize(liquidityZones); i++)
+      if(liquidityZones[i].isHigh && !liquidityZones[i].taken)
+         if(rates[0].high > liquidityZones[i].price && rates[0].close < liquidityZones[i].price)
+           { liquiditySweep = true; break; }
+
+   bool bearishDisplacement = false;
+   if(ArraySize(rates) >= 2)
+     {
+      double candleSize = (rates[0].open - rates[0].close) / _Point;
+      if(candleSize > avgCandleSize * DisplacementFactor)
+         bearishDisplacement = true;
+     }
+
+   return (liquiditySweep || bearishDisplacement);
+  }
+
+//+------------------------------------------------------------------+
+//| Execute Trade                                                    |
+//+------------------------------------------------------------------+
+void ExecuteTrade(ENUM_ORDER_TYPE tradeType)
+  {
+   double price = (tradeType == ORDER_TYPE_BUY) ?
+                  SymbolInfoDouble(_Symbol, SYMBOL_ASK) :
+                  SymbolInfoDouble(_Symbol, SYMBOL_BID);
+
+   double sl = CalculateStopLoss(tradeType);
+   if(sl == 0) return;
+
+   double riskPoints = MathAbs(price - sl) / _Point;
+   double tpPoints   = riskPoints * RiskRewardRatio;
+   double tp = (tradeType == ORDER_TYPE_BUY) ?
+               price + tpPoints * _Point :
+               price - tpPoints * _Point;
+
+   price = NormalizeDouble(price, _Digits);
+   sl    = NormalizeDouble(sl,    _Digits);
+   tp    = NormalizeDouble(tp,    _Digits);
+
+   double volume = CalculateLotSize(price, sl);
+
+   string comment = StringFormat("SF_%s_PB", (tradeType == ORDER_TYPE_BUY) ? "BUY" : "SELL");
+   bool success = trade.PositionOpen(_Symbol, tradeType, volume, price, sl, tp, comment);
+
+   if(success)
+     {
+      lastTradePrice = price;
+      string volLabel = "";
+      switch(currentVolRegime)
+        {
+         case LOW_VOL:     volLabel = "LOW";     break;
+         case NORMAL_VOL:  volLabel = "NORMAL";  break;
+         case HIGH_VOL:    volLabel = "HIGH";    break;
+         case EXTREME_VOL: volLabel = "EXTREME"; break;
+        }
+      Print(StringFormat("Trade: %s | Price: %.5f | SL: %.5f | TP: %.5f | Lots: %.2f | VolRegime: %s",
+                         (tradeType == ORDER_TYPE_BUY) ? "BUY" : "SELL",
+                         price, sl, tp, volume, volLabel));
+
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(MathAbs(validSwings[i].price - price) < _Point * 10)
+            validSwings[i].isUsed = true;
+     }
+   else
+      Print("Trade failed: ", trade.ResultRetcodeDescription());
+  }
+
+//+------------------------------------------------------------------+
+//| NEW: ATR-Dynamic Stop Loss                                       |
+//+------------------------------------------------------------------+
+double CalculateStopLoss(ENUM_ORDER_TYPE tradeType)
+  {
+   double atr = (currentATR > 0) ? currentATR : GetCurrentATR();
+
+   if(tradeType == ORDER_TYPE_BUY)
+     {
+      double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double nearestLow   = 0;
+
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(!validSwings[i].isHigh && validSwings[i].price < currentPrice)
+            if(nearestLow == 0 || validSwings[i].price > nearestLow)
+               nearestLow = validSwings[i].price;
+
+      if(nearestLow > 0)
+        {
+         //--- Swing-based SL with ATR buffer
+         double buffer = atr * ATR_SL_Multiplier * 0.3;
+         return NormalizeDouble(nearestLow - buffer, _Digits);
+        }
+     }
+   else
+     {
+      double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double nearestHigh  = 0;
+
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(validSwings[i].isHigh && validSwings[i].price > currentPrice)
+            if(nearestHigh == 0 || validSwings[i].price < nearestHigh)
+               nearestHigh = validSwings[i].price;
+
+      if(nearestHigh > 0)
+        {
+         double buffer = atr * ATR_SL_Multiplier * 0.3;
+         return NormalizeDouble(nearestHigh + buffer, _Digits);
+        }
+     }
+
+   //--- Fallback: pure ATR-based SL
+   double currentPrice = (tradeType == ORDER_TYPE_BUY) ?
+                         SymbolInfoDouble(_Symbol, SYMBOL_BID) :
+                         SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+
+   if(atr > 0)
+      return (tradeType == ORDER_TYPE_BUY) ?
+             currentPrice - atr * ATR_SL_Multiplier :
+             currentPrice + atr * ATR_SL_Multiplier;
+
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   return (tradeType == ORDER_TYPE_BUY) ?
+          currentPrice - StopLossPoints * point :
+          currentPrice + StopLossPoints * point;
+  }
+```
+
+The fifth layer is the execution engine, where we convert all structural and pullback analysis into actual trade decisions. We first ensure we are not already in a position and that trading frequency is controlled to avoid overtrading. We then retrieve the latest market data and confirm that a valid swing structure exists before proceeding. For entries, we require both a confirmed market bias and a high-quality pullback model that meets strict conditions such as minimum score, valid retracement depth, and volatility-adjusted limits. We also use liquidity sweeps and displacement candles as confirmation triggers. Once these conditions align, we execute either a buy or sell trade with full risk management.
+
+The execution is tightly linked to volatility and structure, making the system adaptive rather than static. The stop loss is calculated dynamically using both swing structure and ATR, ensuring it expands or contracts based on market conditions. A buffer is added to avoid premature stop-outs, while a fallback ATR-based method ensures reliability when structure is unclear. The take profit is derived from a fixed risk-to-reward ratio, keeping the system consistent across different volatility regimes. Every trade also logs the current volatility regime and marks used swing points to prevent reuse, which helps maintain clean and non-redundant decision-making across future cycles.
+
+```
+//+------------------------------------------------------------------+
+//| Manage Open Position (ATR-Dynamic Trailing)                      |
+//+------------------------------------------------------------------+
+void ManageOpenPosition()
+  {
+   if(!PositionSelect(_Symbol)) return;
+
+   double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+   double openPrice    = PositionGetDouble(POSITION_PRICE_OPEN);
+   int    type         = (int)PositionGetInteger(POSITION_TYPE);
+   double atr          = (currentATR > 0) ? currentATR : GetCurrentATR();
+
+   if(type == POSITION_TYPE_BUY)
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(!validSwings[i].isHigh && validSwings[i].price > openPrice &&
+            validSwings[i].price < currentPrice)
+           {
+            double newSL = validSwings[i].price - atr * ATR_SL_Multiplier * 0.3;
+            if(newSL > PositionGetDouble(POSITION_SL))
+              {
+               trade.PositionModify(_Symbol, NormalizeDouble(newSL, _Digits),
+                                    PositionGetDouble(POSITION_TP));
+               Print(StringFormat("Trail SL -> %.5f (ATR buf: %.5f)", newSL, atr));
+              }
+           }
+     }
+   else if(type == POSITION_TYPE_SELL)
+     {
+      for(int i = 0; i < ArraySize(validSwings); i++)
+         if(validSwings[i].isHigh && validSwings[i].price < openPrice &&
+            validSwings[i].price > currentPrice)
+           {
+            double newSL = validSwings[i].price + atr * ATR_SL_Multiplier * 0.3;
+            if(newSL < PositionGetDouble(POSITION_SL) || PositionGetDouble(POSITION_SL) == 0)
+              {
+               trade.PositionModify(_Symbol, NormalizeDouble(newSL, _Digits),
+                                    PositionGetDouble(POSITION_TP));
+               Print(StringFormat("Trail SL -> %.5f (ATR buf: %.5f)", newSL, atr));
+              }
+           }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Calculate Lot Size                                               |
+//+------------------------------------------------------------------+
+double CalculateLotSize(double entry, double sl)
+  {
+   double riskAmount = AccountInfoDouble(ACCOUNT_BALANCE) * (RiskPercent / 100.0);
+   double tickSize   = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double tickValue  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   double pointValue = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+
+   if(tickValue == 0 || pointValue == 0) return 0.01;
+
+   double riskPoints = MathAbs(entry - sl) / pointValue;
+   double lots = riskAmount / (riskPoints * tickValue * pointValue / tickSize);
+
+   double lotStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   lots = MathFloor(lots / lotStep) * lotStep;
+
+   return MathMax(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN),
+                  MathMin(lots, SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX)));
+  }
+
+//+------------------------------------------------------------------+
+//| Helper: Update Average Candle Size                               |
+//+------------------------------------------------------------------+
+void UpdateAvgCandleSize()
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, 50, rates);
+   if(copied < 20) return;
+
+   double totalSize = 0;
+   for(int i = 0; i < copied; i++)
+      totalSize += (rates[i].high - rates[i].low) / _Point;
+   avgCandleSize = totalSize / copied;
+  }
+
+//+------------------------------------------------------------------+
+//| Helper: Find Bar Index by Time                                   |
+//+------------------------------------------------------------------+
+int FindBarIndexByTime(datetime targetTime)
+  {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, 100, rates);
+   for(int i = 0; i < copied; i++)
+      if(rates[i].time == targetTime) return i;
+   return -1;
+  }
+
+//+------------------------------------------------------------------+
+//| Helper: Get Current ATR                                          |
+//+------------------------------------------------------------------+
+double GetCurrentATR()
+  {
+   double atr[];
+   ArraySetAsSeries(atr, true);
+   if(CopyBuffer(atrHandle, 0, 0, 1, atr) <= 0) return 0;
+   return atr[0];
+  }
+
+//+------------------------------------------------------------------+
+//| Helper: Pullback regime to readable string                       |
+//+------------------------------------------------------------------+
+string PullbackRegimeToString(PullbackRegime r)
+  {
+   switch(r)
+     {
+      case PULLBACK_AGGRESSIVE: return "AGGRESSIVE";
+      case PULLBACK_HEALTHY:    return "HEALTHY";
+      case PULLBACK_DEEP:       return "DEEP";
+      case PULLBACK_WEAK:       return "WEAK";
+      case PULLBACK_INVALID:    return "INVALID";
+     }
+   return "UNKNOWN";
+  }
+```
+
+The position management layer is responsible for dynamically protecting and adjusting open trades using both market structure and volatility context. We first confirm that a position exists, then extract key trade information such as entry price, current price, and trade direction. For buy trades, we scan valid swing lows between entry and current price and trail the stop-loss just below the most recent meaningful swing, adjusted with an ATR-based buffer to avoid tight stop-outs. For sell trades, we mirror this logic using swing highs above entry. This ensures that our stop-loss moves harmonize with the market structure while still adapting to current volatility conditions through ATR scaling.
+
+The remaining helper functions support the system by maintaining accurate market measurements and clean data handling. We calculate position size using account risk, tick value, and stop distance so that every trade respects a fixed percentage risk model. We also compute average candle size to understand normal market movement and use it in displacement logic elsewhere in the system. Additional utilities allow us to locate candles by time, retrieve real-time ATR values, and convert pullback regimes into readable labels for debugging and visualization. Together, these components ensure the system remains adaptive, consistent, and structurally aware across all stages of execution.
+
+```
+//+------------------------------------------------------------------+
+//| Helper: Vol regime to string                                     |
+//+------------------------------------------------------------------+
+string VolRegimeToString(VolatilityRegime r)
+  {
+   switch(r)
+     {
+      case LOW_VOL:     return "LOW";
+      case NORMAL_VOL:  return "NORMAL";
+      case HIGH_VOL:    return "HIGH";
+      case EXTREME_VOL: return "EXTREME";
+     }
+   return "UNKNOWN";
+  }
+
+//+------------------------------------------------------------------+
+//| Visualization                                                    |
+//+------------------------------------------------------------------+
+void UpdateVisualization()
+  {
+   ObjectsDeleteAll(0, "SF_");
+
+   //--- Valid swings
+   for(int i = 0; i < ArraySize(validSwings); i++)
+     {
+      color  clr    = validSwings[i].isHigh ? clrGreen : clrRed;
+      string prefix = validSwings[i].isHigh ? "ValidHigh" : "ValidLow";
+      string name   = StringFormat("SF_%s_%d", prefix, validSwings[i].time);
+      ObjectCreate(0, name, OBJ_ARROW, 0, validSwings[i].time, validSwings[i].price);
+      ObjectSetInteger(0, name, OBJPROP_ARROWCODE, validSwings[i].isHigh ? 218 : 217);
+      ObjectSetInteger(0, name, OBJPROP_COLOR,     clr);
+      ObjectSetInteger(0, name, OBJPROP_FONTSIZE,  10);
+     }
+
+   //--- Invalid swing candidates (gray)
+   for(int i = 0; i < ArraySize(swingCandidates); i++)
+      if(!swingCandidates[i].isValid)
+        {
+         string name = StringFormat("SF_Invalid_%d", swingCandidates[i].time);
+         ObjectCreate(0, name, OBJ_ARROW, 0, swingCandidates[i].time, swingCandidates[i].price);
+         ObjectSetInteger(0, name, OBJPROP_ARROWCODE, swingCandidates[i].isHigh ? 218 : 217);
+         ObjectSetInteger(0, name, OBJPROP_COLOR,     clrGray);
+         ObjectSetInteger(0, name, OBJPROP_FONTSIZE,  10);
+        }
+
+   //--- NEW: Draw pullback retracement zones (30%, 50%, 70% levels)
+   for(int i = 0; i < ArraySize(pullbacks); i++)
+     {
+      PullbackModel pb = pullbacks[i];
+      if(pb.impulseSizePoints < 10) continue;
+
+      double impulseRange = MathAbs(pb.impulseEnd - pb.impulseStart);
+      double level30, level50, level70;
+
+      if(pb.isBullish)
+        {
+         level30 = pb.impulseEnd - impulseRange * 0.30;
+         level50 = pb.impulseEnd - impulseRange * 0.50;
+         level70 = pb.impulseEnd - impulseRange * 0.70;
+        }
+      else
+        {
+         level30 = pb.impulseEnd + impulseRange * 0.30;
+         level50 = pb.impulseEnd + impulseRange * 0.50;
+         level70 = pb.impulseEnd + impulseRange * 0.70;
+        }
+
+      datetime tStart = pb.startTime;
+      datetime tEnd   = pb.endTime;
+      if(tEnd <= tStart) tEnd = tStart + PeriodSeconds(PERIOD_CURRENT) * 20;
+
+      //--- 30%-50% zone: green (healthy)
+      string nameGreen = StringFormat("SF_PB_Green_%d", i);
+      ObjectCreate(0, nameGreen, OBJ_RECTANGLE, 0,
+                   tStart, (pb.isBullish ? level50 : level30),
+                   tEnd,   (pb.isBullish ? level30 : level50));
+      ObjectSetInteger(0, nameGreen, OBJPROP_COLOR, clrDarkGreen);
+      ObjectSetInteger(0, nameGreen, OBJPROP_FILL,  true);
+      ObjectSetInteger(0, nameGreen, OBJPROP_BACK,  true);
+
+      //--- 50%-70% zone: yellow (deep)
+      string nameYellow = StringFormat("SF_PB_Yellow_%d", i);
+      ObjectCreate(0, nameYellow, OBJ_RECTANGLE, 0,
+                   tStart, (pb.isBullish ? level70 : level50),
+                   tEnd,   (pb.isBullish ? level50 : level70));
+      ObjectSetInteger(0, nameYellow, OBJPROP_COLOR, clrDarkKhaki);
+      ObjectSetInteger(0, nameYellow, OBJPROP_FILL,  true);
+      ObjectSetInteger(0, nameYellow, OBJPROP_BACK,  true);
+
+      //--- Score label
+      string scoreLabel = StringFormat("SF_Score_%d", i);
+      ObjectCreate(0, scoreLabel, OBJ_TEXT, 0, tStart, pb.impulseEnd);
+      ObjectSetString(0, scoreLabel, OBJPROP_TEXT,
+                      StringFormat("PB:%.2f | %s | Sc:%.1f%s",
+                                   pb.retracementDepth,
+                                   PullbackRegimeToString(pb.regime),
+                                   pb.pullbackScore,
+                                   pb.compressionDetected ? " [COMP]" : ""));
+      ObjectSetInteger(0, scoreLabel, OBJPROP_COLOR,    clrCyan);
+      ObjectSetInteger(0, scoreLabel, OBJPROP_FONTSIZE, 8);
+     }
+
+   //--- Liquidity zones
+   for(int i = 0; i < ArraySize(liquidityZones); i++)
+      if(!liquidityZones[i].taken)
+        {
+         string name     = StringFormat("SF_Liq_%d", i);
+         datetime tNow   = TimeCurrent();
+         datetime tStart = tNow - PeriodSeconds(PERIOD_CURRENT) * 10;
+         color zoneClr   = liquidityZones[i].isHigh ? clrOrange : clrLightBlue;
+         ObjectCreate(0, name, OBJ_RECTANGLE, 0,
+                      tStart, liquidityZones[i].price + _Point * 5,
+                      tNow,   liquidityZones[i].price - _Point * 5);
+         ObjectSetInteger(0, name, OBJPROP_COLOR, zoneClr);
+         ObjectSetInteger(0, name, OBJPROP_FILL,  true);
+         ObjectSetInteger(0, name, OBJPROP_WIDTH, 1);
+        }
+
+   //--- HUD labels
+   string stateText = "State: ";
+   switch(marketStruct.state)
+     {
+      case ACCUMULATION: stateText += "ACCUMULATION"; break;
+      case EXPANSION:    stateText += "EXPANSION";    break;
+      case DISTRIBUTION: stateText += "DISTRIBUTION"; break;
+      case REVERSAL:     stateText += "REVERSAL";     break;
+     }
+
+   CreateLabel("State",      stateText, 10, 20, clrWhite);
+   CreateLabel("Trend",      StringFormat("Trend: %s", marketStruct.bullish ? "BULLISH" : "BEARISH"),
+               10, 40, marketStruct.bullish ? clrLime : clrRed);
+   CreateLabel("VolRegime",  StringFormat("Vol Regime: %s (ATR: %.5f | Avg: %.5f)",
+               VolRegimeToString(currentVolRegime), currentATR, avgATR),
+               10, 60, clrYellow);
+   CreateLabel("ValidSwings",StringFormat("Valid Swings: %d | Pullbacks: %d",
+               ArraySize(validSwings), ArraySize(pullbacks)),
+               10, 80, clrCyan);
+
+   //--- Best pullback info
+   PullbackModel bestBull, bestBear;
+   bool hasBull = GetBestPullback(true,  bestBull);
+   bool hasBear = GetBestPullback(false, bestBear);
+
+   if(hasBull)
+      CreateLabel("BestBull", StringFormat("Bull PB: %.2f | %s | Score: %.1f%s%s",
+                  bestBull.retracementDepth,
+                  PullbackRegimeToString(bestBull.regime),
+                  bestBull.pullbackScore,
+                  bestBull.compressionDetected ? " COMP" : "",
+                  bestBull.momentumDecaying    ? " DECAY" : ""),
+                  10, 100, clrLimeGreen);
+
+   if(hasBear)
+      CreateLabel("BestBear", StringFormat("Bear PB: %.2f | %s | Score: %.1f%s%s",
+                  bestBear.retracementDepth,
+                  PullbackRegimeToString(bestBear.regime),
+                  bestBear.pullbackScore,
+                  bestBear.compressionDetected ? " COMP" : "",
+                  bestBear.momentumDecaying    ? " DECAY" : ""),
+                  10, 120, clrOrangeRed);
+
+   ChartRedraw();
+  }
+
+//+------------------------------------------------------------------+
+//| Create Label helper                                              |
+//+------------------------------------------------------------------+
+void CreateLabel(string name, string text, int x, int y, color clr)
+  {
+   string objName = "SF_" + name;
+   ObjectCreate(0, objName, OBJ_LABEL, 0, 0, 0);
+   ObjectSetString(0,  objName, OBJPROP_TEXT,      text);
+   ObjectSetInteger(0, objName, OBJPROP_XDISTANCE, x);
+   ObjectSetInteger(0, objName, OBJPROP_YDISTANCE, y);
+   ObjectSetInteger(0, objName, OBJPROP_COLOR,     clr);
+   ObjectSetInteger(0, objName, OBJPROP_FONTSIZE,  10);
+  }
+//+------------------------------------------------------------------+
+```
+
+Here, we focus on converting raw market and model data into a clear visual representation on the chart. We begin by drawing valid swing points in color, where highs and lows are visually separated for easier structure reading, while invalid swing candidates are shown in gray to highlight rejected setups. We then overlay pullback analysis by drawing retracement zones based on 30%, 50%, and 70% levels of each impulse move. These zones help us visually understand how deep price is retracing within a trend. We also attach labels that display pullback depth, regime classification, score, and compression signals so we can quickly assess quality without inspecting raw data.
+
+The last part extends the visualization into liquidity, market context, and decision support. We draw liquidity zones as shaded rectangles around key price levels that have not yet been taken, giving us a clear view of where stops and targets may exist. A dashboard is added to display market state, trend direction, volatility regime, and system-wide statistics like valid swings and pullback counts. We also highlight the best bullish and bearish pullbacks based on scoring, showing whether they are strong, decaying, or compressed. Finally, helper functions ensure consistent label creation, and the chart is refreshed so all updates remain synchronized and visually clean.
+
+### Backtest
+
+The backtest was conducted across roughly a two-month testing window from 01 April 2026 to 30 May 2026, with the following settings:
+
+[IMG]
+
+Below are the equity curve and the backtest results:
+
+[IMG]
+
+[IMG]
+
+### Conclusion
+
+Throughout this implementation, the EA was rebuilt from a binary swing validator into a multi-layer pullback intelligence system. A new Layer 2.5 pairs impulse legs, measures retracement depth as a normalized ratio, and scores each pullback from 0 to 10. A dual ATR handle setup was introduced to separate the fast regime signal from the rolling average, producing four distinct volatility states that dynamically widen or tighten acceptable depth thresholds. The broken state machine was replaced with a clean bias engine reading confirmed highs and lows directly. Stop losses were decoupled from fixed points and anchored to ATR multiples. Every gate in the execution layer now requires the pullback model to pass before a trade fires.
+
+A trader who works through this article leaves with something most systems never provide—a principled answer to why a pullback should be traded or skipped. The guesswork around retracement depth is replaced with a scored, regime-aware model that adapts to what the market is actually doing. Entries are no longer triggered by price returning to a zone—they require the correction to be statistically appropriate for the current volatility environment. Stop losses breathe with the market instead of fighting it. The result is a system that does not just find structure—it understands context. This shift—from pattern recognition to volatility-calibrated decisions—separates a reactive EA from one that can survive across market conditions.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22807.zip "Download all attachments in the single ZIP archive")
+
+[Dynmc\_Pllbck\_Dpth.mq5](https://www.mql5.com/en/articles/download/22807/Dynmc_Pllbck_Dpth.mq5 "Download Dynmc_Pllbck_Dpth.mq5")
+(51.79 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[CSV Data Analysis (Part 4): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation](https://www.mql5.com/en/articles/22921)
+
+The article presents a reproducible MetaTrader 5 to Python pipeline for large-scale indicator research. An MQL5 export schema captures fixed columns, including custom lag and whipsaw counters. A baseline module performs parameter-matched comparisons across symbols and timeframes, while a walk-forward module locks the InSample optimum and evaluates it on unseen data. Readers gain unbiased robustness measurements and automation that removes manual selection bias.
+
+[IMG]
+[From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5](https://www.mql5.com/en/articles/22695)
+
+This article introduces the Self-Adaptive Moving Average (SAMA), an adaptive filter leveraging the Normalized Least Mean Squares (NLMS) algorithm. It explores why fixed-period averages fail, how NLMS adapts bar by bar, and the engineering protections required for production. This conceptual and mathematical foundation prepares you for the MQL5 code implementation in Part 2.
+
+[IMG]
+[Neural Networks in Trading: Actor—Director—Critic (Final Part)](https://www.mql5.com/en/articles/17819)
+
+The Actor–Director–Critic framework is an evolution of the classic agent learning architecture. The article presents practical experience of its implementation and adaptation to financial market conditions.
+
+[IMG]
+[MQL5 Trading Tools (Part 36): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer](https://www.mql5.com/en/articles/22856)
+
+We add eight shape tools and nine annotation tools to the canvas and implement a full in-place label-editing system. The article walks through geometry, AA rendering, shared word-wrap and supersampled text helpers, and the caret-driven state machine for typing, navigation, and selection. This yields a complete, consistent annotation toolkit with editable labels that plugs into the prior interaction pipeline.
+
+[[IMG]
+
+Use mql5.com login on metatrader.com
+
+Access our new hub for expert analytics, trading insights, global financial news, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/22807&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121746130026760154)

@@ -1,0 +1,16 @@
+Final pre-package validation:
+
+jsonl_lines=86
+scenario_records=85
+pass1_scenarios=65
+pass2_added_scenarios=20
+feature_files=5
+feature_scenario_ids=85
+pass2_added_feature_tags=20
+missing_feature_ids=0
+extra_feature_ids=0
+duplicate_catalog_ids=0
+duplicate_feature_ids=0
+required_output_paths_missing=0
+evidence_manifest_file_mismatches=0
+validation_exit=0

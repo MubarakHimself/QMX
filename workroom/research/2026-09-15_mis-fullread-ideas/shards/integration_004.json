@@ -1,0 +1,116 @@
+{
+  "shard_id": "integration_004",
+  "section": "Integration",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16979,
+      "title": "Biological neuron for forecasting financial time series",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16979.md"
+    },
+    {
+      "id": 17168,
+      "title": "Fibonacci in Forex (Part I): Examining the Price-Time Relationship",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17168.md"
+    },
+    {
+      "id": 17171,
+      "title": "Analyzing all price movement options on the IBM quantum computer",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17171.md"
+    },
+    {
+      "id": 17219,
+      "title": "Angular Analysis of Price Movements: A Hybrid Model for Predicting Financial Markets",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17219.md"
+    },
+    {
+      "id": 17512,
+      "title": "Forex arbitrage trading: Analyzing synthetic currencies movements and their mean reversion",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17512.md"
+    },
+    {
+      "id": 17854,
+      "title": "CRUD Operations in Firebase using MQL",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17854.md"
+    },
+    {
+      "id": 17933,
+      "title": "Custom Debugging and Profiling Tools for MQL5 Development (Part I): Advanced Logging",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17933.md"
+    },
+    {
+      "id": 17956,
+      "title": "Custom Debugging and Profiling Tools for MQL5 Development (Part III): Regression Gates for Performance and Trading Rules",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17956.md"
+    },
+    {
+      "id": 18303,
+      "title": "CFTC Data Mining in Python and Building an AI Model",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18303.md"
+    },
+    {
+      "id": 18451,
+      "title": "Downloading International Monetary Fund Data Using Python",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18451.md"
+    },
+    {
+      "id": 18455,
+      "title": "Determining Fair Exchange Rates Using PPP and IMF Data",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18455.md"
+    },
+    {
+      "id": 18550,
+      "title": "Sending Messages from MQL5 to Discord, Creating a Discord-MetaTrader 5 Bot",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18550.md"
+    }
+  ]
+}

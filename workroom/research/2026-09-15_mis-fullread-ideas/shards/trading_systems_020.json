@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_020",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 18629,
+      "title": "Neural Networks in Trading: Adaptive Periodic Segmentation (Creating Tokens)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18629.md"
+    },
+    {
+      "id": 18672,
+      "title": "Seasonality Indicator by Hours, Days of the Week, and Days of the Month",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18672.md"
+    },
+    {
+      "id": 18680,
+      "title": "MetaTrader tick info access from MQL5 services to Python application using sockets",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18680.md"
+    },
+    {
+      "id": 18686,
+      "title": "Neural Networks in Trading: Adaptive Periodic Segmentation (Conclusion)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18686.md"
+    },
+    {
+      "id": 18734,
+      "title": "Neural Networks in Trading: Probabilistic Time Series Forecasting (K2VAE)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18734.md"
+    },
+    {
+      "id": 18766,
+      "title": "Neural Networks in Trading: Probabilistic Time Series Forecasting (Encoder)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18766.md"
+    },
+    {
+      "id": 18807,
+      "title": "Neural Networks in Trading: Probabilistic Time Series Forecasting (Conclusion)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18807.md"
+    },
+    {
+      "id": 18854,
+      "title": "Neural Networks in Trading: An End-to-End Multivariate Time Series Forecasting Model (GinAR)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18854.md"
+    },
+    {
+      "id": 18892,
+      "title": "Neural Networks in Trading: An End-to-End Multivariate Time Series Forecasting Model (Key Components)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18892.md"
+    },
+    {
+      "id": 18914,
+      "title": "Neural Networks in Trading: An End-to-End Multivariate Time Series Forecasting Model (Conclusion)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18914.md"
+    },
+    {
+      "id": 18918,
+      "title": "Risk Manager for Trading Robots (Part I): Risk Control Include File for Expert Advisors",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18918.md"
+    },
+    {
+      "id": 18950,
+      "title": "Neural Networks in Trading: Unraveling Structural Components (SCNN)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18950.md"
+    }
+  ]
+}

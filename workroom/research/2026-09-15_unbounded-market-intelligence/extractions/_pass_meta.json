@@ -1,0 +1,31 @@
+{
+  "pass": "2026-09-15_unbounded-market-intelligence/placement",
+  "prior_24_excluded_from_count": [
+    17737,
+    23286,
+    22940,
+    16830,
+    15223,
+    23482,
+    23016,
+    10715,
+    23454,
+    21003,
+    14203,
+    19944,
+    9804,
+    23355,
+    22938,
+    22939,
+    15748,
+    19290,
+    18867,
+    1575,
+    21235,
+    16752,
+    9231,
+    22772
+  ],
+  "new_fullreads_placement_and_stratified": 50,
+  "qmx_law": "MIS labels/filters/vetoes; does not switch playbooks; Book door may later class-activate; bots own direction."
+}

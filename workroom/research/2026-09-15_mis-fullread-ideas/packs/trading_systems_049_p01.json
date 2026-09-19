@@ -1,0 +1,103 @@
+{
+  "pack_id": "trading_systems_049_p01",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_049",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "price action analysis toolkit development"
+  ],
+  "n": 10,
+  "articles": [
+    {
+      "id": 18985,
+      "title": "Price Action Analysis Toolkit Development (Part 35): Training and Deploying Predictive Models",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Training and Deploying Predictive Models",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18985.md"
+    },
+    {
+      "id": 19065,
+      "title": "Price Action Analysis Toolkit Development (Part 36): Unlocking Direct Python Access to MetaTrader 5 Market Streams",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Unlocking Direct Python Access to MetaTrader 5 Market Streams",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19065.md"
+    },
+    {
+      "id": 19589,
+      "title": "Price Action Analysis Toolkit Development (Part 41): Building a Statistical Price-Level EA in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a Statistical Price-Level EA in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19589.md"
+    },
+    {
+      "id": 19945,
+      "title": "Price Action Analysis Toolkit Development (Part 46): Designing an Interactive Fibonacci Retracement EA with Smart Visualization in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Designing an Interactive Fibonacci Retracement EA with Smart Visualization in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 46,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19945.md"
+    },
+    {
+      "id": 19944,
+      "title": "Price Action Analysis Toolkit Development (Part 47): Tracking Forex Sessions and Breakouts in MetaTrader 5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Tracking Forex Sessions and Breakouts in MetaTrader 5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 47,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19944.md"
+    },
+    {
+      "id": 22194,
+      "title": "Price Action Analysis Toolkit Development (Part 66): Developing a Structured Head and Shoulders Scanner in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Developing a Structured Head and Shoulders Scanner in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 66,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22194.md"
+    },
+    {
+      "id": 22796,
+      "title": "Price Action Analysis Toolkit Development (Part 71): Weekend Gap Structure Mapping in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Weekend Gap Structure Mapping in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 71,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22796.md"
+    },
+    {
+      "id": 23015,
+      "title": "Price Action Analysis Toolkit Development (Part 74): Building an MQL5 Expert Advisor from Indicator Buffers",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Building an MQL5 Expert Advisor from Indicator Buffers",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 74,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23015.md"
+    },
+    {
+      "id": 23500,
+      "title": "Price Action Analysis Toolkit Development (Part 76): One-Click Symbol Dashboard for Centralized Multi-Chart Management in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): One-Click Symbol Dashboard for Centralized Multi-Chart Management in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 76,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23500.md"
+    },
+    {
+      "id": 23606,
+      "title": "Price Action Analysis Toolkit Development (Part 78): Extending the Indicator Search Panel with Symbol Selection in MQL5",
+      "section": "Trading systems",
+      "series_title": "Price Action Analysis Toolkit Development (): Extending the Indicator Search Panel with Symbol Selection in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 78,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23606.md"
+    }
+  ]
+}

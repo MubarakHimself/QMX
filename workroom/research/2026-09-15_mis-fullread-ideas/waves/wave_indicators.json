@@ -1,0 +1,1162 @@
+{
+  "packs": [
+    {
+      "pack_id": "indicators_000",
+      "section": "Indicators",
+      "parent_shard": "indicators_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 802,
+          "title": "Continuous futures contracts in MetaTrader 5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\802.md"
+        },
+        {
+          "id": 812,
+          "title": "Creating Non-Lagging Digital Filters",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\812.md"
+        },
+        {
+          "id": 975,
+          "title": "Cycle analysis using the Goertzel algorithm",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\975.md"
+        },
+        {
+          "id": 1103,
+          "title": "Third Generation Neural Networks: Deep Networks",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1103.md"
+        },
+        {
+          "id": 1979,
+          "title": "MQL5 for beginners: Anti-vandal protection of graphic objects",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1979.md"
+        },
+        {
+          "id": 2564,
+          "title": "Using text files for storing input parameters of Expert Advisors, indicators and scripts",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2564.md"
+        },
+        {
+          "id": 2837,
+          "title": "MTF indicators as the technical analysis tool",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2837.md"
+        },
+        {
+          "id": 3236,
+          "title": "Developing custom indicators using CCanvas class",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3236.md"
+        },
+        {
+          "id": 3264,
+          "title": "Naive Bayes classifier for signals of a set of indicators",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3264.md"
+        },
+        {
+          "id": 3791,
+          "title": "Comparing different types of moving averages in trading",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3791.md"
+        },
+        {
+          "id": 5204,
+          "title": "Scraping bond yield data from the web",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5204.md"
+        },
+        {
+          "id": 5751,
+          "title": "Studying candlestick analysis techniques (part III): Library for pattern operations",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5751.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_001",
+      "section": "Indicators",
+      "parent_shard": "indicators_001",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 5913,
+          "title": "How to visualize multicurrency trading history based on HTML and CSV reports",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5913.md"
+        },
+        {
+          "id": 8860,
+          "title": "CCI indicator. Three transformation steps",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8860.md"
+        },
+        {
+          "id": 9801,
+          "title": "Improved candlestick pattern recognition illustrated by the example of Doji",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9801.md"
+        },
+        {
+          "id": 10770,
+          "title": "Indicators with on-chart interactive controls",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10770.md"
+        },
+        {
+          "id": 10963,
+          "title": "Creating a ticker tape panel: Improved version",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10963.md"
+        },
+        {
+          "id": 11078,
+          "title": "Mountain or Iceberg charts",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11078.md"
+        },
+        {
+          "id": 13578,
+          "title": "Creating multi-symbol, multi-period indicators",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13578.md"
+        },
+        {
+          "id": 14035,
+          "title": "Forex spread trading using seasonality",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14035.md"
+        },
+        {
+          "id": 15042,
+          "title": "Elements of correlation analysis in MQL5: Pearson chi-square test of independence and correlation ratio",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15042.md"
+        },
+        {
+          "id": 15223,
+          "title": "Econometric tools for forecasting volatility: GARCH model",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15223.md"
+        },
+        {
+          "id": 16614,
+          "title": "Mastering File Operations in MQL5: From Basic I/O to Building a Custom CSV Reader",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16614.md"
+        },
+        {
+          "id": 16741,
+          "title": "Analyzing binary code of prices on the exchange (Part I): A new look at technical analysis",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16741.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_002",
+      "section": "Indicators",
+      "parent_shard": "indicators_002",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 16931,
+          "title": "Redefining MQL5 and MetaTrader 5 Indicators",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16931.md"
+        },
+        {
+          "id": 17252,
+          "title": "How can century-old functions update your trading strategies?",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17252.md"
+        },
+        {
+          "id": 17595,
+          "title": "Triangular and Sawtooth Waves: Analytical Tools for Traders",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17595.md"
+        },
+        {
+          "id": 18661,
+          "title": "Analyzing Price Time Gaps in MQL5 (Part II): Creating a Heat Map of Liquidity Distribution Over Time",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18661.md"
+        },
+        {
+          "id": 18681,
+          "title": "MQL5 Custom Symbols: Creating a 3D Bars Symbol",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18681.md"
+        },
+        {
+          "id": 18785,
+          "title": "Quantum Neural Network in MQL5 (Part II): Training a Neural Network with Backpropagation on ALGLIB Markov Matrices",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18785.md"
+        },
+        {
+          "id": 19100,
+          "title": "Parafrac Oscillator: Combination of Parabolic and Fractal Indicator",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19100.md"
+        },
+        {
+          "id": 19354,
+          "title": "The Parafrac V2 Oscillator: Integrating Parabolic SAR with Average True Range",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19354.md"
+        },
+        {
+          "id": 19683,
+          "title": "Forecasting a Conditional Distribution Using MLP",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19683.md"
+        },
+        {
+          "id": 19918,
+          "title": "From Novice to Expert: Parameter Control Utility",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19918.md"
+        },
+        {
+          "id": 20239,
+          "title": "Mastering Kagi Charts in MQL5 (Part I): Creating the Indicator",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20239.md"
+        },
+        {
+          "id": 20330,
+          "title": "Market Heat Map Indicator Based on Prime-Number Density",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20330.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_003",
+      "section": "Indicators",
+      "parent_shard": "indicators_003",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 20669,
+          "title": "Tracking Account Dynamics: Balance, Equity, and Floating P/L Visualization in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20669.md"
+        },
+        {
+          "id": 20728,
+          "title": "Sigma Score Indicator for MetaTrader 5: A Simple Statistical Anomaly Detector",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20728.md"
+        },
+        {
+          "id": 21871,
+          "title": "Building a Volume Bubble Indicator in MQL5 Using Standard Deviation",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21871.md"
+        },
+        {
+          "id": 22096,
+          "title": "Foundation Models in Trading: Time Series Forecasting with Google's TimesFM 2.5 in MetaTrader 5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22096.md"
+        },
+        {
+          "id": 22227,
+          "title": "Creating a Traditional Renko Overlay Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22227.md"
+        },
+        {
+          "id": 22288,
+          "title": "Recurrence Quantification Analysis (RQA) in MQL5: Building a Complete Analysis Library",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22288.md"
+        },
+        {
+          "id": 22342,
+          "title": "Building a Liquidity Spectrum Volume Profile Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22342.md"
+        },
+        {
+          "id": 22363,
+          "title": "Leak-Free Multi-Timeframe Engine with Closed-Bar Reads in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22363.md"
+        },
+        {
+          "id": 22460,
+          "title": "Creating a Custom Tick Chart in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22460.md"
+        },
+        {
+          "id": 22572,
+          "title": "Building a Megaphone Pattern Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22572.md"
+        },
+        {
+          "id": 22610,
+          "title": "Joint Recurrence Quantification Analysis (JRQA) in MQL5: Detecting Simultaneous Recurrence in Two Series",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22610.md"
+        },
+        {
+          "id": 22652,
+          "title": "Recurrence Network Analysis (RNA) in MQL5: From Recurrence Matrices to Complex Networks",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22652.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_004",
+      "section": "Indicators",
+      "parent_shard": "indicators_004",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 22742,
+          "title": "Building an EquiVolume Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22742.md"
+        },
+        {
+          "id": 22875,
+          "title": "Building a Traditional Point and Figure Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22875.md"
+        },
+        {
+          "id": 22968,
+          "title": "Building an Internal and External Market Structure Indicator",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22968.md"
+        },
+        {
+          "id": 22978,
+          "title": "Rolling Sharpe Ratio with Statistical Significance Bands in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22978.md"
+        },
+        {
+          "id": 23016,
+          "title": "A Practical Kalman Filter Price Smoother in MQL5: Adaptive Noise Estimation Without External Libraries",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23016.md"
+        },
+        {
+          "id": 23049,
+          "title": "Building a Hierarchical Market Structure Framework (Prototype) in MQL5 Using Modular Architecture and Event-Driven Design",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23049.md"
+        },
+        {
+          "id": 23130,
+          "title": "Linear Regression Prediction Channels in MQL5: Constructing Statistically Grounded Confidence and Prediction Bands",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23130.md"
+        },
+        {
+          "id": 23168,
+          "title": "Heatmap Visualization of Intraday Return Patterns in MQL5 Using CCanvas",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23168.md"
+        },
+        {
+          "id": 23169,
+          "title": "Automatic Session Volume Profile Builder in MQL5: Rendering POC and Value Area Without Third-Party Tools",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23169.md"
+        },
+        {
+          "id": 23217,
+          "title": "Detecting and Visualizing Outlier Bars in MQL5 Using Modified Z-Score on OHLCV Features",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23217.md"
+        },
+        {
+          "id": 23224,
+          "title": "Building a Traditional Daily Pivot Point Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23224.md"
+        },
+        {
+          "id": 23254,
+          "title": "How To Profile MQL5 Code in MetaEditor",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23254.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_005",
+      "section": "Indicators",
+      "parent_shard": "indicators_005",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 23278,
+          "title": "Extreme Value Theory in MQL5: Building a Tail-Risk Crash Gauge Beyond Monte Carlo VaR",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23278.md"
+        },
+        {
+          "id": 23301,
+          "title": "Implementing a Circular Buffer Class in MQL5: Fixed-Memory Rolling Windows for Real-Time Indicator Calculations",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23301.md"
+        },
+        {
+          "id": 23335,
+          "title": "Online Linear Regression with Recursive Least Squares in MQL5: A Parameter-Free Adaptive Trend Estimator",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23335.md"
+        },
+        {
+          "id": 23351,
+          "title": "Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23351.md"
+        },
+        {
+          "id": 23482,
+          "title": "Bayesian Online Change-Point Detection (BOCPD) in MQL5: One Regime-Break Signal, Three Ways to Use It",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23482.md"
+        },
+        {
+          "id": 23484,
+          "title": "Symbolic Aggregate Approximation (SAX) in MQL5: Historical Analog Search and Forecasting",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23484.md"
+        },
+        {
+          "id": 23491,
+          "title": "Implementing and Benchmarking Bag-of-SFA-Symbols (BOSS) Against Dynamic Time Warping (DTW)",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23491.md"
+        },
+        {
+          "id": 23499,
+          "title": "Exporting Custom Indicator Buffers to CSV for Python Backtesting Pipelines",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23499.md"
+        },
+        {
+          "id": 23550,
+          "title": "Building a Volume-Based Liquidity Heatmap Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23550.md"
+        },
+        {
+          "id": 23633,
+          "title": "Machine Learning Without the Black Box: The Tsetlin Machine for Trading",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23633.md"
+        },
+        {
+          "id": 23637,
+          "title": "Building a Future Swing Projection Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23637.md"
+        },
+        {
+          "id": 23644,
+          "title": "How To Debug MQL5 Code in MetaEditor",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23644.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_006",
+      "section": "Indicators",
+      "parent_shard": "indicators_006",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "custom indicator workshop",
+        "data science and machine learning",
+        "data science and ml",
+        "detecting structural breakpoints in price series using cusum in mql5",
+        "developing a trading expert advisor from scratch"
+      ],
+      "n": 10,
+      "articles": [
+        {
+          "id": 23656,
+          "title": "Learnable Curves, Not Weights: A Kolmogorov-Arnold Network from Scratch",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23656.md"
+        },
+        {
+          "id": 23759,
+          "title": "Building a Dynamic ATR-Based Trend Channel Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23759.md"
+        },
+        {
+          "id": 23815,
+          "title": "Building a Hull Moving Average Momentum Oscillator in MQL5",
+          "section": "Indicators",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23815.md"
+        },
+        {
+          "id": 20755,
+          "title": "Custom Indicator Workshop (Part 1): Building the Supertrend Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "Custom Indicator Workshop (): Building the Supertrend Indicator in MQL5",
+          "series_key": "custom indicator workshop",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20755.md"
+        },
+        {
+          "id": 21497,
+          "title": "Custom Indicator Workshop (Part 3): Building the UT Bot Alerts Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "Custom Indicator Workshop (): Building the UT Bot Alerts Indicator in MQL5",
+          "series_key": "custom indicator workshop",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21497.md"
+        },
+        {
+          "id": 17361,
+          "title": "Data Science and ML (Part 34): Time series decomposition, Breaking the stock market down to the core",
+          "section": "Indicators",
+          "series_title": "Data Science and ML (): Time series decomposition, Breaking the stock market down to the core",
+          "series_key": "data science and ml",
+          "series_part": 34,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17361.md"
+        },
+        {
+          "id": 14760,
+          "title": "Data Science and Machine Learning (Part 22): Leveraging Autoencoders Neural Networks for Smarter Trades by Moving from Noise to Signal",
+          "section": "Indicators",
+          "series_title": "Data Science and Machine Learning (): Leveraging Autoencoders Neural Networks for Smarter Trades by Moving from Noise to Signal",
+          "series_key": "data science and machine learning",
+          "series_part": 22,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14760.md"
+        },
+        {
+          "id": 23043,
+          "title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 1): From Statistical Theory to a Working MQL5 Indicator",
+          "section": "Indicators",
+          "series_title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (): From Statistical Theory to a Working MQL5 Indicator",
+          "series_key": "detecting structural breakpoints in price series using cusum in mql5",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23043.md"
+        },
+        {
+          "id": 23103,
+          "title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 2): Implementing the Detector as a Native MQL5 Indicator",
+          "section": "Indicators",
+          "series_title": "Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (): Implementing the Detector as a Native MQL5 Indicator",
+          "series_key": "detecting structural breakpoints in price series using cusum in mql5",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23103.md"
+        },
+        {
+          "id": 10363,
+          "title": "Developing a trading Expert Advisor from scratch (Part 9): A conceptual leap (II)",
+          "section": "Indicators",
+          "series_title": "Developing a trading Expert Advisor from scratch (): A conceptual leap (II)",
+          "series_key": "developing a trading expert advisor from scratch",
+          "series_part": 9,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10363.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_007",
+      "section": "Indicators",
+      "parent_shard": "indicators_007",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "feature engineering for ml",
+        "from static ma to adaptive filtering",
+        "gaussian processes in machine learning",
+        "introduction to mql5"
+      ],
+      "n": 8,
+      "articles": [
+        {
+          "id": 23657,
+          "title": "Feature Engineering for ML (Part 12): Fractal Features in MQL5",
+          "section": "Indicators",
+          "series_title": "Feature Engineering for ML (): Fractal Features in MQL5",
+          "series_key": "feature engineering for ml",
+          "series_part": 12,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23657.md"
+        },
+        {
+          "id": 23659,
+          "title": "Feature Engineering for ML (Part 13): Trend-Scanning Features in Python",
+          "section": "Indicators",
+          "series_title": "Feature Engineering for ML (): Trend-Scanning Features in Python",
+          "series_key": "feature engineering for ml",
+          "series_part": 13,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23659.md"
+        },
+        {
+          "id": 23660,
+          "title": "Feature Engineering for ML (Part 14): Trend-Scanning Features in MQL5",
+          "section": "Indicators",
+          "series_title": "Feature Engineering for ML (): Trend-Scanning Features in MQL5",
+          "series_key": "feature engineering for ml",
+          "series_part": 14,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23660.md"
+        },
+        {
+          "id": 22695,
+          "title": "From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5",
+          "section": "Indicators",
+          "series_title": "From Static MA to Adaptive Filtering (): Introducing SAMA with NLMS in MQL5",
+          "series_key": "from static ma to adaptive filtering",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22695.md"
+        },
+        {
+          "id": 23033,
+          "title": "From Static MA to Adaptive Filtering (Part 2): Implementing the SAMA_NLMS Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "From Static MA to Adaptive Filtering (): Implementing the SAMA_NLMS Indicator in MQL5",
+          "series_key": "from static ma to adaptive filtering",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23033.md"
+        },
+        {
+          "id": 19013,
+          "title": "Gaussian Processes in Machine Learning (Part 2): Implementing and Testing a Classification Model in MQL5",
+          "section": "Indicators",
+          "series_title": "Gaussian Processes in Machine Learning (): Implementing and Testing a Classification Model in MQL5",
+          "series_key": "gaussian processes in machine learning",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19013.md"
+        },
+        {
+          "id": 16956,
+          "title": "Introduction to MQL5 (Part 11): A Beginner's Guide to Working with Built-in Indicators in MQL5 (II)",
+          "section": "Indicators",
+          "series_title": "Introduction to MQL5 (): A Beginner's Guide to Working with Built-in Indicators in MQL5 (II)",
+          "series_key": "introduction to mql5",
+          "series_part": 11,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16956.md"
+        },
+        {
+          "id": 21326,
+          "title": "Introduction to MQL5 (Part 42): Beginner Guide to File Handling in MQL5 (IV)",
+          "section": "Indicators",
+          "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (IV)",
+          "series_key": "introduction to mql5",
+          "series_part": 42,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21326.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_008",
+      "section": "Indicators",
+      "parent_shard": "indicators_008",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "larry williams market secrets",
+        "making custom indicators for beginners",
+        "mql5 wizard techniques you should know"
+      ],
+      "n": 8,
+      "articles": [
+        {
+          "id": 20511,
+          "title": "Larry Williams Market Secrets (Part 1): Building a Swing Structure Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "Larry Williams Market Secrets (): Building a Swing Structure Indicator in MQL5",
+          "series_key": "larry williams market secrets",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20511.md"
+        },
+        {
+          "id": 20745,
+          "title": "Larry Williams Market Secrets (Part 5): Automating the Volatility Breakout Strategy in MQL5",
+          "section": "Indicators",
+          "series_title": "Larry Williams Market Secrets (): Automating the Volatility Breakout Strategy in MQL5",
+          "series_key": "larry williams market secrets",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20745.md"
+        },
+        {
+          "id": 21128,
+          "title": "Larry Williams Market Secrets (Part 11): Detecting Smash Day Reversals with a Custom Indicator",
+          "section": "Indicators",
+          "series_title": "Larry Williams Market Secrets (): Detecting Smash Day Reversals with a Custom Indicator",
+          "series_key": "larry williams market secrets",
+          "series_part": 11,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21128.md"
+        },
+        {
+          "id": 21392,
+          "title": "Larry Williams Market Secrets (Part 14): Detecting Hidden Smash Day Reversals with a Custom Indicator",
+          "section": "Indicators",
+          "series_title": "Larry Williams Market Secrets (): Detecting Hidden Smash Day Reversals with a Custom Indicator",
+          "series_key": "larry williams market secrets",
+          "series_part": 14,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21392.md"
+        },
+        {
+          "id": 21867,
+          "title": "Larry Williams Market Secrets (Part 17) : Detecting Oops Signals Using a Custom Indicator",
+          "section": "Indicators",
+          "series_title": "Larry Williams Market Secrets () : Detecting Oops Signals Using a Custom Indicator",
+          "series_key": "larry williams market secrets",
+          "series_part": 17,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21867.md"
+        },
+        {
+          "id": 15615,
+          "title": "MQL5 Wizard Techniques you should know (Part 33): Gaussian Process Kernels",
+          "section": "Indicators",
+          "series_title": "MQL5 Wizard Techniques you should know (): Gaussian Process Kernels",
+          "series_key": "mql5 wizard techniques you should know",
+          "series_part": 33,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15615.md"
+        },
+        {
+          "id": 18992,
+          "title": "MQL5 Wizard Techniques you should know (Part 78): Gator and AD Oscillator Strategies for Market Resilience",
+          "section": "Indicators",
+          "series_title": "MQL5 Wizard Techniques you should know (): Gator and AD Oscillator Strategies for Market Resilience",
+          "series_key": "mql5 wizard techniques you should know",
+          "series_part": 78,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18992.md"
+        },
+        {
+          "id": 23587,
+          "title": "Making Custom Indicators for Beginners (Part 1): SuperTrend Indicator",
+          "section": "Indicators",
+          "series_title": "Making Custom Indicators for Beginners (): SuperTrend Indicator",
+          "series_key": "making custom indicators for beginners",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23587.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_009",
+      "section": "Indicators",
+      "parent_shard": "indicators_009",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "market microstructure in mql5",
+        "multicurrency monitoring of trading signals"
+      ],
+      "n": 8,
+      "articles": [
+        {
+          "id": 22553,
+          "title": "Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Measuring long memory in MQL5 with Hurst estimators",
+          "series_key": "market microstructure in mql5",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22553.md"
+        },
+        {
+          "id": 22598,
+          "title": "Market Microstructure in MQL5 (Part 3): Estimating ARFIMA d with GPH",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Estimating ARFIMA d with GPH",
+          "series_key": "market microstructure in mql5",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22598.md"
+        },
+        {
+          "id": 22638,
+          "title": "Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Volatility That Remembers",
+          "series_key": "market microstructure in mql5",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22638.md"
+        },
+        {
+          "id": 22938,
+          "title": "Market Microstructure in MQL5 (Part 5): Microstructure Noise",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Microstructure Noise",
+          "series_key": "market microstructure in mql5",
+          "series_part": 5,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22938.md"
+        },
+        {
+          "id": 22939,
+          "title": "Market Microstructure in MQL5 (Part 6): Order Flow",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Order Flow",
+          "series_key": "market microstructure in mql5",
+          "series_part": 6,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22939.md"
+        },
+        {
+          "id": 22940,
+          "title": "Market Microstructure in MQL5 (Part 7): Regime Classification",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Regime Classification",
+          "series_key": "market microstructure in mql5",
+          "series_part": 7,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22940.md"
+        },
+        {
+          "id": 23372,
+          "title": "Market Microstructure in MQL5 (Part 8): Micro-Trend Strength",
+          "section": "Indicators",
+          "series_title": "Market Microstructure in MQL5 (): Micro-Trend Strength",
+          "series_key": "market microstructure in mql5",
+          "series_part": 8,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23372.md"
+        },
+        {
+          "id": 7417,
+          "title": "Multicurrency monitoring of trading signals (Part 1): Developing the application structure",
+          "section": "Indicators",
+          "series_title": "Multicurrency monitoring of trading signals (): Developing the application structure",
+          "series_key": "multicurrency monitoring of trading signals",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7417.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "indicators_010",
+      "section": "Indicators",
+      "parent_shard": "indicators_010",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "price action analysis toolkit development"
+      ],
+      "n": 7,
+      "articles": [
+        {
+          "id": 17234,
+          "title": "Price Action Analysis Toolkit Development (Part 14): Parabolic Stop and Reverse Tool",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Parabolic Stop and Reverse Tool",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 14,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17234.md"
+        },
+        {
+          "id": 18052,
+          "title": "Price Action Analysis Toolkit Development (Part 22): Correlation Dashboard",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Correlation Dashboard",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 22,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18052.md"
+        },
+        {
+          "id": 18297,
+          "title": "Price Action Analysis Toolkit Development (Part 25): Dual EMA Fractal Breaker",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Dual EMA Fractal Breaker",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 25,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18297.md"
+        },
+        {
+          "id": 20390,
+          "title": "Price Action Analysis Toolkit Development (Part 53): Pattern Density Heatmap for Support and Resistance Zone Discovery",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Pattern Density Heatmap for Support and Resistance Zone Discovery",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 53,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20390.md"
+        },
+        {
+          "id": 20949,
+          "title": "Price Action Analysis Toolkit Development (Part 55): Designing a CPI Mini-Candle Overlay for Intra-bar Pressure",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Designing a CPI Mini-Candle Overlay for Intra-bar Pressure",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 55,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20949.md"
+        },
+        {
+          "id": 22884,
+          "title": "Price Action Analysis Toolkit Development (Part 72): Building a Gap Fill Indicator in MQL5",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Building a Gap Fill Indicator in MQL5",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 72,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22884.md"
+        },
+        {
+          "id": 23666,
+          "title": "Price Action Analysis Toolkit Development (Part 79): Extending the Indicator Search Panel with Dynamic Input Parameter Configuration",
+          "section": "Indicators",
+          "series_title": "Price Action Analysis Toolkit Development (): Extending the Indicator Search Panel with Dynamic Input Parameter Configuration",
+          "series_key": "price action analysis toolkit development",
+          "series_part": 79,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23666.md"
+        }
+      ]
+    }
+  ]
+}

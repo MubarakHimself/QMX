@@ -1,0 +1,49 @@
+{
+  "pack_id": "examples_076_p02",
+  "section": "Examples",
+  "parent_shard": "examples_076",
+  "part_index": 2,
+  "part_count": 3,
+  "series_in_pack": [
+    "graphics in doeasy library"
+  ],
+  "n": 4,
+  "articles": [
+    {
+      "id": 10482,
+      "title": "Graphics in DoEasy library (Part 97): Independent handling of form object movement",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Independent handling of form object movement",
+      "series_key": "graphics in doeasy library",
+      "series_part": 97,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10482.md"
+    },
+    {
+      "id": 10521,
+      "title": "Graphics in DoEasy library (Part 98): Moving pivot points of extended standard graphical objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Moving pivot points of extended standard graphical objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 98,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10521.md"
+    },
+    {
+      "id": 10584,
+      "title": "Graphics in DoEasy library (Part 99): Moving an extended graphical object using a single control point",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Moving an extended graphical object using a single control point",
+      "series_key": "graphics in doeasy library",
+      "series_part": 99,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10584.md"
+    },
+    {
+      "id": 10634,
+      "title": "Graphics in DoEasy library (Part 100): Making improvements in handling extended standard graphical objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Making improvements in handling extended standard graphical objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 100,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10634.md"
+    }
+  ]
+}

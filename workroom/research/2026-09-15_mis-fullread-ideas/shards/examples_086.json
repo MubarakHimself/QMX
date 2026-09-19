@@ -1,0 +1,73 @@
+{
+  "shard_id": "examples_086",
+  "section": "Examples",
+  "n": 7,
+  "series_in_shard": [
+    "other classes in doeasy library"
+  ],
+  "articles": [
+    {
+      "id": 9146,
+      "title": "Other classes in DoEasy library (Part 66): MQL5.com Signals collection class",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): MQL5.com Signals collection class",
+      "series_key": "other classes in doeasy library",
+      "series_part": 66,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9146.md"
+    },
+    {
+      "id": 9213,
+      "title": "Other classes in DoEasy library (Part 67): Chart object class",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Chart object class",
+      "series_key": "other classes in doeasy library",
+      "series_part": 67,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9213.md"
+    },
+    {
+      "id": 9236,
+      "title": "Other classes in DoEasy library (Part 68): Chart window object class and indicator object classes in the chart window",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Chart window object class and indicator object classes in the chart window",
+      "series_key": "other classes in doeasy library",
+      "series_part": 68,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9236.md"
+    },
+    {
+      "id": 9260,
+      "title": "Other classes in DoEasy library (Part 69): Chart object collection class",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Chart object collection class",
+      "series_key": "other classes in doeasy library",
+      "series_part": 69,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9260.md"
+    },
+    {
+      "id": 9293,
+      "title": "Other classes in DoEasy library (Part 70): Expanding functionality and auto updating the chart object collection",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Expanding functionality and auto updating the chart object collection",
+      "series_key": "other classes in doeasy library",
+      "series_part": 70,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9293.md"
+    },
+    {
+      "id": 9360,
+      "title": "Other classes in DoEasy library (Part 71): Chart object collection events",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Chart object collection events",
+      "series_key": "other classes in doeasy library",
+      "series_part": 71,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9360.md"
+    },
+    {
+      "id": 9385,
+      "title": "Other classes in DoEasy library (Part 72): Tracking and recording chart object parameters in the collection",
+      "section": "Examples",
+      "series_title": "Other classes in DoEasy library (): Tracking and recording chart object parameters in the collection",
+      "series_key": "other classes in doeasy library",
+      "series_part": 72,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9385.md"
+    }
+  ]
+}

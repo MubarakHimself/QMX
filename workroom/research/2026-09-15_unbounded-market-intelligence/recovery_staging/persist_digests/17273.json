@@ -1,0 +1,42 @@
+{
+  "article_id": 17273,
+  "title": "The Kalman Filter for Forex Mean-Reversion Strategies",
+  "chars": 32353,
+  "heads": [
+    "# The Kalman Filter for Forex Mean-Reversion Strategies",
+    "### Introduction",
+    "### The Kalman Filter",
+    "### Coding the Strategy",
+    "#include <Trade/Trade.mqh>",
+    "#include <Trade/Trade.mqh>",
+    "###",
+    "### Statistical Analysis",
+    "# Convert \"Time\" columns to datetime",
+    "# Find intersections",
+    "# Create the Venn diagram",
+    "# Plot the Venn diagram",
+    "### Conclusion"
+  ],
+  "intro": "--- id: 17273 source_url: https://www.mql5.com/en/articles/17273 title: \"The Kalman Filter for Forex Mean-Reversion Strategies\" author: \"\" author_url: published: 2025-02-27T09:47Z platform: \"MetaTrader 5\" section: \"Examples\" tags: [] series_title: \"\" series_part: source: mql5 language: en --- ![preview](data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABAUCBv/EAB0QAAICAgMBAAAAAAAAAAAAAAECAAMEESEiMUH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAv/EABURAQEAAAAAAAAAAAAAAAAAAAAB/9oADAMBAAIRAxEAPwDmaMFTr5H14CEcsAIKu0j0RSXDXaWms34taDroyZZigt5KlmQoHCiCewlvII//2Q==)\n\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5) \u2014 [Examples](https://www.mql5.com/en/articles/mt5/examples) | 27 February 2025 at 04:47\n\n[Zhuo Kai Chen](https://www.mql5.com/en/users/sicklemql)\n\nThe Kalman filter is a recursive algorithm used in algorithmic trading to estimate the true state of a financial time series by filtering out noise from price movements. It dynamically updates predictions based on new market data, making it valuable for adaptive strategies like mean reversion. This article first introduces the Kalman filter, covering its calculation and implementation. Next, we apply the filter to a classic mean-reversion forex strategy as an example. Finally, we conduct various statistical analyses by comparing the filter with a moving average across different forex pairs.",
+  "conclusion": "In this article, we introduced an advanced recursive algorithm for algorithmic trading called the Kalman filter. We started by explaining its mechanisms and implementations, providing visualizations and formulas. Then, we walked through the entire process of developing a forex mean-reversion strategy and implementing the Kalman filter in MQL5. Finally, we conducted various statistical analyses, including market scanning, backtesting, and overlapping comparisons, to evaluate its filtering ability in comparison to the moving average and baseline.\n\nIn actual trading, the Kalman filter is widely used by top quantitative trading institutions but remains lesser known in the retail trading space. This article aims to provide insights and practical implementation for the MQL5 community, offering an approach to evaluate the filtering ability of the Kalman filter, so it can be better integrated into future strategy development. Readers are encouraged to experiment with this framework themselves and incorporate it into their own trading arsenal.\n\n| File Name | File Usage | | --- | --- | | Kalman visualizations.ipynb | The python code for visualizations used in this article | | MR-Kalman.mq5 | The expert advisor code |\n\n[Download ZIP](https://www.mql5.com/en/articles/download/17273.zip \"Download all attachments in the single ZIP archive\")",
+  "claim_hits": [
+    "title: \"The Kalman Filter for Forex Mean-Reversion Strategies\"",
+    "![The Kalman Filter for Forex Mean-Reversion Strategies](https://c.mql5.com/2/121/The_Kalman_Filter_for_Forex_Mean-Reversion_Strategies__up_600x314.jpg)",
+    "The Kalman filter is a recursive algorithm used in algorithmic trading to estimate the true state of a financial time series by filtering out noise from price movements. It dynamically updates predictions based on new market data, making it valuable for adaptive strategies like mean reversion. This article first introduces the Kalman filter, covering its calculation and implementation. Next, we apply the filter to a classic mean-reversion forex strategy as an example. Finally, we conduct various",
+    "The Kalman filter, introduced by Rudolf E. Kalman in 1960, is an optimal recursive estimator used for tracking and predicting dynamic systems. Originally developed for aerospace and control systems, it has been widely applied in finance, robotics, and signal processing. The filter operates in two steps: a prediction step, where it estimates the system\u2019s next state, and an update step, where it refines the estimate based on new observations while minimizing noise.",
+    "In the field of algorithmic trading, one can simply see it as a common regime filter that traders normally use, akin to moving average or linear regression models. The Kalman filter adapts dynamically to new data, reduces noise, and efficiently updates estimates in real-time, making it effective for detecting market regime shifts. However, it assumes linear dynamics, requires careful parameter tuning, may lag in detecting abrupt changes, and is computationally more complex than simpler filters l",
+    "Some common usages for using the Kalman filter in algorithmic trading:",
+    "- Mean Reversion Trading: Using current price compared to estimated price as an entry filter.",
+    "- Trend Following: Filters short-term noise to detect long-term price trends more accurately.",
+    "The formula of calculating the Kalman filter value is as follows:",
+    "![Kalman formula](https://c.mql5.com/2/121/Kalmam_formula.png \"Kalman formula\")",
+    "![Kalman Visualization](https://c.mql5.com/2/120/Kalman_visualization.png \"Kalman Visualization\")",
+    "The Kalman filter works by updating its estimate of the true price based on noisy measurements and predictions. It is usually obtained in three steps:",
+    "1. Prediction: The filter starts with an initial guess for the price (predicted price) and its uncertainty (predicted covariance). This is shown by the orange Predicted Zone\u2014the range within which the filter expects the true price to be, considering both the previous estimate and the process noise.",
+    "2. Update: When new price data (measured prices) is available, the Kalman filter compares it to the predicted price. It then calculates something called the Kalman Gain (purple line) to decide how much weight to give the new measurement versus the prediction. If the measurement is very noisy, the filter trusts its prediction more.",
+    "3. Estimate: The filter updates the predicted price by incorporating the new measurement. The updated price (shown by the blue Estimate Zone) has a reduced uncertainty compared to the prediction. This zone shrinks as the filter refines its estimate.",
+    "Here, the prediction uncertainty is defined by covariance between the measurement and prediction. A larger covariance means a less confident estimate, while a smaller covariance means the filter is more certain about its estimate. If the measurement is reliable, the Kalman gain is high, and the filter trusts the new data more (shrinking uncertainty). If the measurement is noisy, the gain is lower, and the filter relies more on the previous prediction.",
+    "The nosiness is defined by the variance, namely the measurement variance and process variance. They don't self-adjust like covariance, they are determined from the start based on how smooth you want your Kalman filter to be.",
+    "In general, process variance (Q) represents how much the model expects the true state to change over time, while measurement variance (R) reflects the confidence in the observed data. HigherQ makes the filter more responsive to sudden changes, but increases volatility. HigherR smooths predictions by trusting past estimates more, at the cost of delayed adjustments. Low Q and moderate R yield stable predictions, while high Q and low R make the filter more reactive but noisier."
+  ]
+}

@@ -1,0 +1,320 @@
+# Self-Learning Expert Advisor with a Neural Network Based on a Markov State-Transition Matrix
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 24 April 2026 at 07:04
+7 186
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+11](https://www.mql5.com/en/forum/508878 "Comments")
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+Imagine not just a program that executes an embedded algorithm, but a digital organism that continuously evolves, adapts, and, in a sense, understands the complex symphony of market movements. This article is devoted to such a system — a new-generation trading EA.
+The key to this breakthrough lies at the intersection of three different fields of knowledge: the probabilistic mathematics of Markov processes, the intuitive power of neural networks, and the practical logic of hedging strategies. When these three forces come together, something greater than the sum of its parts is born — a qualitatively new system emerges, capable of thriving in the volatile and unpredictable environment of financial markets.
+The results of our experiments speak for themselves: an average annual return of 28.7% with a maximum drawdown of only 14.2%, a Sharpe ratio of 1.65, and 62.3% of profitable trades. But behind these dry numbers lies a much more significant achievement: a system that performs with equal confidence in the quiet harbor of sideways movements and in the storm of high volatility.
+### 
+### Theoretical foundation: Where math meets reality
+**Markov chains: Memory hidden in the present**
+Let's start with a question that may seem philosophical: how much of the past do you need to know to predict the future? The Markov chain gives an elegant answer to this: it is enough to know only the present if... we correctly define what "the present" is.
+Our approach is based on the special mathematical beauty of Markov processes — stochastic systems, in which the future depends only on the current state, but not on previous history. Mathematically, this is expressed as an elegant equation:
+```
+P(X_t+1 = j | X_t = i, X_t-1 = i_t-1, ..., X_0 = i_0) = P(X_t+1 = j | X_t = i) = P_ij
+```
+At first glance, this seems to contradict the very essence of technical analysis with its belief that "history repeats itself" and "the past matters". But this contradiction is only apparent. It all comes down to how we define the concept of "state".
+In our model, the state of the market is not just the current price. It is a multidimensional portrait of market reality, including trend direction and strength measured by ATR, volatility profile, and the relative position of price compared to key levels. In such a rich definition of "state" all the relevant information about the past is already encoded, and the Markov process becomes both "memory-less" and surprisingly insightful.
+The transition probability matrix becomes in this context a real map of market opportunities. Each of its elements P(i,j) tells us about the chances of transition from one state to another, forming a kind of DNA of a specific financial instrument.
+**Multilayer perceptron: A neural network for transition analysis**
+To process the Markov matrix data, we use a multilayer perceptron (MLP), a classic neural-network architecture well suited to classification and regression tasks. In our case, the MLP takes as input the elements of the transition probability matrix and produces a forecast of future price movement.
+The structure of our neural network resembles an architectural masterpiece: a graceful, airy foundation of an input layer with nine neurons, each carefully accepting an element of a 3x3 matrix; a majestic hidden layer, where forty neurons with ReLU activation work like alchemists, turning linear dependencies into the gold of non-linear patterns; and, finally, an elegant top in the form of an output layer with two neurons – guardians of secret knowledge about the probabilities of future price movements.
+This digital cathedral allows the neural network to discern deep and subtle relationships in Markov transitions that would remain forever hidden from the gaze of even the most insightful statistical analysis. Like a finely tuned musical ear capable of discerning overtones inaccessible to ordinary perception, our neural network captures the invisible "melody of the market" encoded in the seemingly chaotic movement of prices.
+### 
+### Practical implementation: From theory to code
+Now that the theoretical foundation has been laid, let's take an exciting journey into the world of practical implementation. Let's dive into the alchemical laboratory of programming, where abstract ideas crystallize into lines of code, and mathematical equations are transformed into living algorithms capable of changing financial reality.
+**Determining market states**
+At the heart of our trading EA is a function that determines the current market state — a kind of seismograph recording the slightest fluctuations in the financial world:
+```
+// Enumeration of possible market states
+enum MARKET_STATE
+   STATE_FLAT = 0,     // Sideways market
+   STATE_UPTREND = 1,  // Bullish market
+   STATE_DOWNTREND = 2 // Bearish market
+};
+// Function to determine current market state based on price movement relative to volatility
+MARKET_STATE GetMarketState(int shift)
+   double close[], atr[];
+   ArraySetAsSeries(close, true);
+   ArraySetAsSeries(atr, true);
+   // Get closing prices and ATR values
+   if(CopyClose(_Symbol, PERIOD_D1, shift, 2, close) < 2 ||
+      CopyBuffer(atrHandle, 0, shift, 1, atr) < 1) {
+      return STATE_FLAT; // Default to flat if data is insufficient
+   // Calculate price change and get ATR value
+   double priceChange = close[0] - close[1];
+   double atrValue = atr[0];
+   // Determine market state based on price change relative to ATR
+   if(priceChange > 0.5 * atrValue) return STATE_UPTREND;
+   if(priceChange < -0.5 * atrValue) return STATE_DOWNTREND;
+   return STATE_FLAT;
+```
+Behind the apparent simplicity of this code lies a profound idea: we compare the daily price change with the ATR indicator, essentially normalizing price movements relative to current market volatility. Thanks to this, the same system operates equally reliably both during periods of calm and during sharp bursts of activity.
+This is one of the key advantages of our approach: adaptability to different market states. Traditional systems that use fixed thresholds (e.g., "a 50 pip move up means an uptrend") inevitably face the problem of adjusting these thresholds for different instruments and volatility periods. Our system elegantly circumvents this problem by automatically scaling its sensitivity according to current market volatility.
+We distinguish three key regimes: an uptrend, a downtrend and a sideways movement (flat). This triad becomes the foundation for all further calculations, just as the three primary colors give birth to all the diversity of the visual world.
+Here is the additional code we use to initialize and store the ATR indicator:
+```
+
+----- METHOD/CLAIM SWEEP -----
+
+
+![Self-Learning Expert Advisor with a Neural Network Based on a Markov State-Transition Matrix](https://c.mql5.com/2/143/18192-samoobuchauschiysya-sovetnik-s-neyrosetu-na-matrice-sostoyaniy_600x314.jpg)
+# Self-Learning Expert Advisor with a Neural Network Based on a Markov State-Transition Matrix
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+The results of our experiments speak for themselves: an average annual return of 28.7% with a maximum drawdown of only 14.2%, a Sharpe ratio of 1.65, and 62.3% of profitable trades. But behind these dry numbers lies a much more significant achievement: a system that performs with equal confidence in the quiet harbor of sideways movements and in the storm of high volatility.
+### 
+### Theoretical foundation: Where math meets reality
+**Markov chains: Memory hidden in the present**
+Let's start with a question that may seem philosophical: how much of the past do you need to know to predict the future? The Markov chain gives an elegant answer to this: it is enough to know only the present if... we correctly define what "the present" is.
+P(X_t+1 = j | X_t = i, X_t-1 = i_t-1, ..., X_0 = i_0) = P(X_t+1 = j | X_t = i) = P_ij
+In our model, the state of the market is not just the current price. It is a multidimensional portrait of market reality, including trend direction and strength measured by ATR, volatility profile, and the relative position of price compared to key levels. In such a rich definition of "state" all the relevant information about the past is already encoded, and the Markov process becomes both "memory-less" and surprisingly insightful.
+The transition probability matrix becomes in this context a real map of market opportunities. Each of its elements P(i,j) tells us about the chances of transition from one state to another, forming a kind of DNA of a specific financial instrument.
+**Multilayer perceptron: A neural network for transition analysis**
+To process the Markov matrix data, we use a multilayer perceptron (MLP), a classic neural-network architecture well suited to classification and regression tasks. In our case, the MLP takes as input the elements of the transition probability matrix and produces a forecast of future price movement.
+The structure of our neural network resembles an architectural masterpiece: a graceful, airy foundation of an input layer with nine neurons, each carefully accepting an element of a 3x3 matrix; a majestic hidden layer, where forty neurons with ReLU activation work like alchemists, turning linear dependencies into the gold of non-linear patterns; and, finally, an elegant top in the form of an output layer with two neurons – guardians of secret knowledge about the probabilities of future price movements.
+This digital cathedral allows the neural network to discern deep and subtle relationships in Markov transitions that would remain forever hidden from the gaze of even the most insightful statistical analysis. Like a finely tuned musical ear capable of discerning overtones inaccessible to ordinary perception, our neural network captures the invisible "melody of the market" encoded in the seemingly chaotic movement of prices.
+### Practical implementation: From theory to code
+Now that the theoretical foundation has been laid, let's take an exciting journey into the world of practical implementation. Let's dive into the alchemical laboratory of programming, where abstract ideas crystallize into lines of code, and mathematical equations are transformed into living algorithms capable of changing financial reality.
+// Enumeration of possible market states
+enum MARKET_STATE
+{
+   STATE_FLAT = 0,     // Sideways market
+   STATE_UPTREND = 1,  // Bullish market
+   STATE_DOWNTREND = 2 // Bearish market
+};
+
+// Function to determine current market state based on price movement relative to volatility
+MARKET_STATE GetMarketState(int shift)
+   double close[], atr[];
+   ArraySetAsSeries(close, true);
+   ArraySetAsSeries(atr, true);
+   
+   // Get closing prices and ATR values
+   if(CopyClose(_Symbol, PERIOD_D1, shift, 2, close) < 2 ||
+      CopyBuffer(atrHandle, 0, shift, 1, atr) < 1) {
+      return STATE_FLAT; // Default to flat if data is insufficient
+   }
+   // Calculate price change and get ATR value
+   double priceChange = close[0] - close[1];
+   double atrValue = atr[0];
+   // Determine market state based on price change relative to ATR
+   if(priceChange > 0.5 * atrValue) return STATE_UPTREND;
+   if(priceChange < -0.5 * atrValue) return STATE_DOWNTREND;
+   return STATE_FLAT;
+}
+```
+
+Behind the apparent simplicity of this code lies a profound idea: we compare the daily price change with the ATR indicator, essentially normalizing price movements relative to current market volatility. Thanks to this, the same system operates equally reliably both during periods of calm and during sharp bursts of activity.
+This is one of the key advantages of our approach: adaptability to different market states. Traditional systems that use fixed thresholds (e.g., "a 50 pip move up means an uptrend") inevitably face the problem of adjusting these thresholds for different instruments and volatility periods. Our system elegantly circumvents this problem by automatically scaling its sensitivity according to current market volatility.
+We distinguish three key regimes: an uptrend, a downtrend and a sideways movement (flat). This triad becomes the foundation for all further calculations, just as the three primary colors give birth to all the diversity of the visual world.
+Here is the additional code we use to initialize and store the ATR indicator:
+// Global variables
+int atrHandle;          // Handle for the ATR indicator
+int ATR_Period = 14;    // Default ATR period
+// Initialize indicators in OnInit function
+{
+   // Create ATR indicator handle
+   atrHandle = iATR(_Symbol, PERIOD_D1, ATR_Period);
+   if(atrHandle == INVALID_HANDLE) {
+      Print("Error creating ATR indicator: ", GetLastError());
+      return INIT_FAILED;
+   }
+   // Release ATR indicator handle
+   IndicatorRelease(atrHandle);
+**Construction of a transition matrix**
+Once the states are identified, we proceed to create a matrix of transition probabilities – a true map of market sentiment. Just as an astronomer meticulously records the positions of celestial bodies, our algorithm meticulously calculates the frequency of transitions between different market states, creating a unique probabilistic portrait of a financial instrument:
+```
+// Global variables for Markov matrix
+double markovMatrix[3][3];  // 3x3 matrix of transition probabilities
+int stateCounts[3];         // Count of each state
+int transitionCounts[3][3]; // Count of transitions between states
+
+// Function to update the Markov transition matrix based on historical data
+void UpdateMarkovMatrix(int bars)
+   // Initialize arrays
+   ArrayInitialize(markovMatrix, 0);
+   ArrayInitialize(stateCounts, 0);
+   ArrayInitialize(transitionCounts, 0);
+   
+   // Get the initial state
+   MARKET_STATE prevState = GetMarketState(bars - 1);
+   // Process historical data to count transitions
+   for(int i = bars - 2; i >= 0; i--) {
+      MARKET_STATE currentState = GetMarketState(i);
+      stateCounts[currentState]++;
+      transitionCounts[prevState][currentState]++;
+      prevState = currentState;
+   }
+   for(int i = 0; i < 3; i++) {
+      if(stateCounts[i] > 0) {
+         // If we have observations for this state, calculate actual probabilities
+         for(int j = 0; j < 3; j++) {
+            markovMatrix[i][j] = (double)transitionCounts[i][j] / stateCounts[i];
+         }
+      } else {
+         // If this state was never observed, assign equal probabilities
+            markovMatrix[i][j] = 1.0 / 3.0;
+      }
+   // Optional: Debug output of the matrix
+   PrintMarkovMatrix();
+}
+
+// Helper function to print the Markov matrix for debugging
+void PrintMarkovMatrix()
+{
+   Print("=== Markov Transition Matrix ===");
+   string states[3] = {"FLAT", "UPTREND", "DOWNTREND"};
+   
+   Print("FROM\\TO\t| FLAT\t| UPTREND\t| DOWNTREND");
+   for(int i = 0; i < 3; i++) {
+      string row = states[i] + "\t| ";
+      for(int j = 0; j < 3; j++) {
+         row += DoubleToString(markovMatrix[i][j], 2) + "\t| ";
+      Print(row);
+This algorithm is a true time machine, traveling through market history and transforming the chaotic dance of prices into a coherent mathematical structure. Each element of the resulting matrix is not just a number, but a distilled quintessence of market experience, telling us how often one state is followed by another.
+The construction of the transition matrix involves three key steps:
+1. **Data preparation:** We analyze the historical sequence of market states, determining for each bar its belonging to one of three possible states.
+2. **Counting transitions:** for each pair of consecutive states (previous → current) we increase the corresponding counter in the transitionCounts matrix.
+3. **Probability calculation:** For each initial state i, we calculate the probability of transition to each possible j state by dividing the number of observed transitions by the total number of occurrences of i state.
+Additionally, we have implemented a visualization feature for the transition matrix, allowing traders to "look under the hood" of the system and better understand the characteristics of a specific financial instrument. For example, high values along the diagonal of the matrix (the probabilities of transition from a state to the same state) indicate a tendency for the market to maintain the current state, which is typical for strong trends or sustained sideways movements.
+For a deeper understanding, let's look at an example of a transition matrix obtained for the EURUSD pair on a daily timeframe:
+```
+=== Markov Transition Matrix ===
+FROM\TO | FLAT  | UPTREND       | DOWNTREND
+--------|-------|-----------|----------
+FLAT    | 0.68  | 0.17  | 0.15
+UPTREND | 0.21  | 0.63  | 0.16
+DOWNTREND       | 0.19  | 0.14  | 0.67
+
+This matrix tells us a fascinating story about the nature of this market. We see that all three states have significant "inertia" - the probability of remaining in the current state is significantly higher than moving to another. This is especially noticeable for the FLAT (sideways) regime, where the probability of persistence is 0.68, which reflects the well-known tendency of the market to spend a significant amount of time in consolidation phases.
+**Training the neural network**
+The next step is training the neural network, a process similar to raising a financial sage. We carefully collect historical data, structure it, extract its essence in the form of Markov transition matrices, and then feed this intellectual nectar to our digital neural network:
+CMLPBase mlp;               // Neural network object
+const int INPUT_SIZE = 9;   // 3x3 Markov matrix elements
+const int OUTPUT_SIZE = 2;  // Buy and Sell signals
+datetime lastTrainingTime;  // Time of last training
+// Function to train the neural network using historical data
+bool TrainAdvancedMLP()
+{
+   // Load historical price data
+   int samples = 600;
+   CMatrixDouble xy;
+   xy.Resize(samples, INPUT_SIZE + OUTPUT_SIZE);
+   
+   for(int i = 0; i < samples; i++) {
+      // Prepare feature vector (Markov matrix elements)
+      double features[];
+      ArrayResize(features, INPUT_SIZE);
+      
+      // Update Markov matrix with a sliding window
+      UpdateMarkovMatrix(100);
+      // Flatten Markov matrix into feature vector
+      for(int m = 0; m < 3; m++) {
+         for(int n = 0; n < 3; n++) {
+            features[featureIndex++] = markovMatrix[m][n];
+         }
+      }
+      // Set input layer values (normalized Markov matrix elements)
+      for(int j = 0; j < INPUT_SIZE; j++) {
+         xy.Set(i, j, features[j]);
+      int barsPerDay = 0;
+      switch(Period()) {
+         case PERIOD_M1:  barsPerDay = 24 * 60; break;
+         case PERIOD_M5:  barsPerDay = 24 * 12; break;
+   lastTrainingTime = TimeCurrent();
+   Print("Training completed successfully. Used ", samples, " examples of Markov matrix");
+   return true;
+}
+      Print("Retraining neural network (48 hours passed)");
+      if(!TrainAdvancedMLP()) {
+         return false;
+   
+   // Prepare input vector with current Markov matrix
+   double input[INPUT_SIZE], output[OUTPUT_SIZE];
+   UpdateMarkovMatrix(100);
+   int idx = 0;
+      for(int j = 0; j < 3; j++) {
+         input[idx++] = markovMatrix[i][j];
+      }
+   }
+
+1. **Data preparation:** We form a training set of 600 examples, where the input data are the elements of the Markov transition matrix, and the target values are future price movements over a time interval depending on the current timeframe.
+2. **Normalization of features:** All elements of the transition matrix are normalized to ensure stability and training efficiency — a classic technique in machine learning that avoids the dominance of individual features and accelerates algorithm convergence.
+3. **Network initialization and training:** We use a three-layer architecture (9 input neurons, 40 hidden neurons, and 2 output neurons) and the L-BFGS (Limited-memory Broyden–Fletcher–Goldfarb–Shanno) algorithm, one of the most effective optimization methods for training neural networks.
+4. **Regular retraining:** The system automatically retrains every 48 hours, allowing it to adapt to changing market states.
+One of the features of our implementation is also the use of a "floating window" for updating the Markov matrix. For each training example, we recalculate the transition matrix based on the previous 100 bars, which allows the neural network to capture the relationship between local market characteristics and subsequent price movements.
+The GetPrediction function demonstrates how a trained neural network is used to generate trading signals: the current Markov transition matrix is transformed into a feature vector, which is fed to the neural network input, and the output is the probabilities of price increases and decreases. These probabilities are directly used to make trading decisions, as we will see in the next section.
+**Trading decision strategy and its art of capital protection**
+   // Open BUY position if:
+   // 1. Buy signal is strong enough (threshold 0.55)
+   // 2. We haven't reached max positions for BUY
+   // 3. Price is far enough from the last buy to avoid clustering
+Of particular interest is the behavior of our system at the boundaries of market regimes, when the market switches from a trending state to a sideways one or vice versa. At such moments, traditional systems often fail, discovering that their "map" no longer matches the "terrain". Our system, through continuous updating of the Markov matrix and regular retraining of the neural network, quickly adapts to changes, making it particularly effective during periods of increased uncertainty.
+### 
+### Testing and optimization: From theory to practice
+After implementing the basic EA structure, we plunged into a fascinating study of its efficiency on historical data for several currency pairs over the period 2017-2025. The results exceeded the wildest expectations, especially for currency pairs with high liquidity – EURUSD and GBPUSD.
+Let's look at a detailed analysis of the test results on the EURUSD pair with the parameters determined during optimization (LotSize = 0.01, MaxPositions = 5, ATR\_Period = 14)
+We will take a closer look at these metrics:
+### Beyond the basic model: Directions for expansion
+The presented implementation is only the first note in a potential symphony of possibilities. There are many exciting directions ahead for further improvement of the system.
+**Extending the state model**
+
+Imagine a system where, instead of the modest triad of market states (uptrend, flat, downtrend), a whole spectrum of market sentiment unfolds: from a furious bullish gallop to a rapid bearish onslaught, from a barely noticeable positive drift to a gentle downward slide, with a majestic, clean sideways trend in the center of this continuum.
+```
+// Enhanced market state enumeration
+enum ENHANCED_MARKET_STATE
+{
+   STATE_STRONG_DOWNTREND = 0,    // Strong bearish movement
+   STATE_MODERATE_DOWNTREND = 1,  // Moderate bearish movement
+   STATE_WEAK_DOWNTREND = 2,      // Weak bearish movement
+   STATE_FLAT = 3,                // Sideways market
+   STATE_WEAK_UPTREND = 4,        // Weak bullish movement
+   STATE_MODERATE_UPTREND = 5,    // Moderate bullish movement
+   STATE_STRONG_UPTREND = 6       // Strong bullish movement
+};
+// Enhanced market state detection function
+ENHANCED_MARKET_STATE GetEnhancedMarketState(int shift)
+   double close[], atr[];
+   ArraySetAsSeries(close, true);
+   ArraySetAsSeries(atr, true);
+   
+   // Get data
+   if(CopyClose(_Symbol, PERIOD_D1, shift, 2, close) < 2 ||
+      CopyBuffer(atrHandle, 0, shift, 1, atr) < 1) {
+      return STATE_FLAT;
+   }
+   double priceChange = close[0] - close[1];
+   double atrValue = atr[0];
+   double normalizedChange = priceChange / atrValue;
+   // Determine enhanced market state based on price change relative to ATR
+   if(normalizedChange < -1.5) return STATE_STRONG_DOWNTREND;
+   if(normalizedChange < -0.75) return STATE_MODERATE_DOWNTREND;
+   if(normalizedChange <= 1.5) return STATE_MODERATE_UPTREND;
+   return STATE_STRONG_UPTREND;
+}
+```
+
+### 
+**Enriching the market context**
+The current model uses primarily ATR to determine market states. But imagine the depth of understanding we can achieve by adding to this orchestra the sound of RSI, the melody of MACD, the harmonic sequences of Fibonacci levels, and the rhythmic structures of volumes!
+Just as the human senses combine to create a holistic perception of the world, so too can a multitude of technical indicators give our system an almost intuitive understanding of market dynamics. The combination of oscillators, trend indicators, and volume indicators can lead to a qualitative leap in forecasting accuracy.
+Imagine an EA that analyzes Markov chains across multiple timeframes simultaneously, from monthly to minute, and forms an integrated picture of the market, where long-term trends guide short-term fluctuations. This approach will not only allow you to more accurately determine the direction of movement, but also identify ideal entry points with tick accuracy.
+### Epilogue: The philosopher's stone of algorithmic trading
+The trading EA presented in this article is not just a symbiosis of various technical approaches. This is a true alchemy of financial technologies, where something qualitatively new is born from the interaction of disparate elements – just as in legends the philosopher's stone turned ordinary metals into gold.
+1. Koshtenko, Y. (2025). Markov Chain-Based Matrix Forecasting Model
+2. ALGLIB - Numerical Analysis Library: [https://www.alglib.net/](https://www.alglib.net/ "https://www.alglib.net/")
+3. MQL5 documentation: <https://www.mql5.com/en/docs>
+[Matrix\_MLP\_EA.mq5](https://www.mql5.com/en/articles/download/18192/matrix_mlp_ea.mq5 "Download Matrix_MLP_EA.mq5")
+(35.48 KB)
+![MetaTrader 5 Machine Learning Blueprint (Part 13):  Implementing Bet Sizing in MQL5](https://c.mql5.com/2/208/22047-metatrader-5-machine-learning-logo__1.png)
+[MetaTrader 5 Machine Learning Blueprint (Part 13): Implementing Bet Sizing in MQL5](https://www.mql5.com/en/articles/22047)
+We build a production MQL5 bet‑sizing toolkit: utilities, snippets, and user‑level functions that mirror the Python originals. The methods cover probability‑to‑size mapping with overlap correction, dynamic forecast‑price sizing (calibrated sigmoid/power with limit price), occupancy‑based budgeting, and mixture‑model reserve sizing (EF3M). The result is a signed [−1, ..., 1] position plus diagnostics you can plug directly into order logic.
+We expand the capabilities of the MetaTrader 5 butterfly curve canvas by adding multi-layered wing fills, vein lines, scale dots, and a full body (abdomen, thorax, head, eyes, antennae). This article implements polygon fills with vertical and radial gradients, as well as filled circles and ellipses, all using supersampling antialiasing. You will also receive reusable MQL5 helper functions and a rendering order that transforms a simple curve into a customizable, detailed chart illustration.
+![Creating a Traditional Renko Overlay Indicator in MQL5](https://c.mql5.com/2/208/22227-creating-a-traditional-renko-logo.png)
+[![](https://www.mql5.com/ff/si/w766tj9vyj3g607n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=oowkmbobqmffcqacipbhaicflooumozt&ssn=1788790171420448721&ssn_dr=0&ssn_sr=0&fv_date=1788790171&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F18192&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Self-Learning%20Expert%20Advisor%20with%20a%20Neural%20Network%20Based%20on%20a%20Markov%20State-Transition%20Matrix%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178879017153769792&fz_uniq=6372565053299373979&sv=2552)

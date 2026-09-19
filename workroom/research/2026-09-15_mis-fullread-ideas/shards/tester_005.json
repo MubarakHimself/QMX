@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_005",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 9922,
+      "title": "Visual evaluation of optimization results",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9922.md"
+    },
+    {
+      "id": 10212,
+      "title": "The correct way to choose an Expert Advisor from the Market",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10212.md"
+    },
+    {
+      "id": 11667,
+      "title": "Magic of time trading intervals with Frames Analyzer tool",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11667.md"
+    },
+    {
+      "id": 11933,
+      "title": "How to choose an Expert Advisor: Twenty strong criteria to reject a trading bot",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11933.md"
+    },
+    {
+      "id": 12103,
+      "title": "Testing and optimization of binary options strategies in MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12103.md"
+    },
+    {
+      "id": 12212,
+      "title": "Population optimization algorithms: Monkey algorithm (MA)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12212.md"
+    },
+    {
+      "id": 12355,
+      "title": "Trading strategy based on the improved Doji candlestick pattern recognition indicator",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12355.md"
+    },
+    {
+      "id": 12579,
+      "title": "Rebuy algorithm: Multicurrency trading simulation",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12579.md"
+    },
+    {
+      "id": 12635,
+      "title": "Understand and Use MQL5 Strategy Tester Effectively",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12635.md"
+    },
+    {
+      "id": 13062,
+      "title": "Market Simulation: Getting started with SQL in MQL5 (I)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13062.md"
+    },
+    {
+      "id": 13110,
+      "title": "Market Simulation: Getting started with SQL in MQL5 (IV)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13110.md"
+    },
+    {
+      "id": 13117,
+      "title": "Market Simulation: Getting Started with SQL in MQL5 (V)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13117.md"
+    }
+  ]
+}

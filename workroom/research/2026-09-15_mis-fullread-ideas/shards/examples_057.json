@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_057",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 18937,
+      "title": "Chart Synchronization for Easier Technical Analysis",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18937.md"
+    },
+    {
+      "id": 18941,
+      "title": "The View and Controller components for tables in the MQL5 MVC paradigm: Resizable elements",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18941.md"
+    },
+    {
+      "id": 18975,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (VIII) \u2014 Quick Trade Buttons for News Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18975.md"
+    },
+    {
+      "id": 19008,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (IX) \u2014 Multiple Symbol Management on a single chart for News Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19008.md"
+    },
+    {
+      "id": 19012,
+      "title": "Forecasting in Trading Using Grey Models",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19012.md"
+    },
+    {
+      "id": 19288,
+      "title": "Tables in the MVC Paradigm in MQL5: Integrating the Model Component into the View Component",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19288.md"
+    },
+    {
+      "id": 19299,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (X)\u2014Multiple Symbol Chart View for News Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19299.md"
+    },
+    {
+      "id": 19343,
+      "title": "From Novice to Expert: Animated News Headline Using MQL5 (XI)\u2014Correlation in News Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19343.md"
+    },
+    {
+      "id": 19422,
+      "title": "Developing a Custom Market Sentiment Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19422.md"
+    },
+    {
+      "id": 19441,
+      "title": "How to publish code to CodeBase: A practical guide",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19441.md"
+    },
+    {
+      "id": 19496,
+      "title": "From Novice to Expert: Implementation of Fibonacci Strategies in Post-NFP Market Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19496.md"
+    },
+    {
+      "id": 19508,
+      "title": "Developing A Custom Account Performance Matrix Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19508.md"
+    }
+  ]
+}

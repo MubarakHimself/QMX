@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_010",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1497,
+      "title": "Features of Custom Indicators Creation",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1497.md"
+    },
+    {
+      "id": 1502,
+      "title": "Displaying a News Calendar",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1502.md"
+    },
+    {
+      "id": 1504,
+      "title": "Equivolume Charting Revisited",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1504.md"
+    },
+    {
+      "id": 1507,
+      "title": "Trend Lines Indicator Considering T. Demark's Approach",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1507.md"
+    },
+    {
+      "id": 1510,
+      "title": "Expert Advisor Sample",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1510.md"
+    },
+    {
+      "id": 1512,
+      "title": "Testing Features and Limits in MetaTrader 4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1512.md"
+    },
+    {
+      "id": 1514,
+      "title": "MetaEditor:Templates as a Spot to Stand On",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1514.md"
+    },
+    {
+      "id": 1519,
+      "title": "A Trader's Assistant Based on Extended MACD Analysis",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1519.md"
+    },
+    {
+      "id": 1520,
+      "title": "Easy Way to Publish a Video at MQL4.Community",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1520.md"
+    },
+    {
+      "id": 1528,
+      "title": "Interaction between MetaTrader 4 and Matlab via DDE",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1528.md"
+    },
+    {
+      "id": 1529,
+      "title": "Two-Stage Modification of Opened Positions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1529.md"
+    },
+    {
+      "id": 1533,
+      "title": "Integrating MetaTrader 4  Client Terminal with MS SQL Server",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1533.md"
+    }
+  ]
+}

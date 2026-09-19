@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_064",
+  "section": "Examples",
+  "parent_shard": "examples_064",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "account audit system in mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 23374,
+      "title": "Building a Correlation-Aware Portfolio Risk Monitor in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23374.md"
+    },
+    {
+      "id": 23391,
+      "title": "Building an Interactive AnchorFlow Volume Profile Indicator (MTF) in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23391.md"
+    },
+    {
+      "id": 23456,
+      "title": "Developing a Manual Backtesting Expert Advisor: Additional Features",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23456.md"
+    },
+    {
+      "id": 23547,
+      "title": "Interactive Supply and Demand Zone Manager in MQL5 (Part IV): Trading Supply and Demand Zones",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23547.md"
+    },
+    {
+      "id": 23568,
+      "title": "Controller Objects for Everything: Draggable Slider Control",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23568.md"
+    },
+    {
+      "id": 23595,
+      "title": "Building a Crosshair Volume Profile Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23595.md"
+    },
+    {
+      "id": 23609,
+      "title": "From Novice to Expert: Weekend Gap Size Effect Research Using MQL5 and Python",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23609.md"
+    },
+    {
+      "id": 23620,
+      "title": "From Novice to Expert: Candlestick Momentum Confirmation for Classic Crossover Strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23620.md"
+    },
+    {
+      "id": 23677,
+      "title": "Building Volatility Models in MQL5 (Part V): Implementing EGARCH as an Alternate Asymmetric Volatility Process",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23677.md"
+    },
+    {
+      "id": 23734,
+      "title": "Building a Gold Volatility Regime Monitor from Options Data in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23734.md"
+    },
+    {
+      "id": 23742,
+      "title": "Hypothesis Testing for Trading Strategies \u2014 Proving Whether Your Edge is Real",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23742.md"
+    },
+    {
+      "id": 22032,
+      "title": "Account Audit System in MQL5 (Part 1): Designing the User Interface",
+      "section": "Examples",
+      "series_title": "Account Audit System in MQL5 (): Designing the User Interface",
+      "series_key": "account audit system in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22032.md"
+    }
+  ]
+}

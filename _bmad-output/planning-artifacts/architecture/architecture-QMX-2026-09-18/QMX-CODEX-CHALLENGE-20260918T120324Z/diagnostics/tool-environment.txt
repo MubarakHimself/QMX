@@ -1,0 +1,16 @@
+Observed host tools:
+git 2.55.0.windows.2
+ripgrep 15.2.0
+uv 0.12.9
+Python 3.14.6
+Node.js v24.18.0
+npx 11.17.0
+
+mutmut:
+Not installed on the Windows PATH. Not run.
+
+WSL:
+Available; default distribution docker-desktop; default WSL version 2.
+
+Safety disposition:
+Mutation testing remains optional. If performed later, it must use fork-capable WSL/POSIX in a disposable isolated copy. Never run mutmut apply against the shared QMX worktree.

@@ -1,0 +1,116 @@
+{
+  "shard_id": "statistics_and_analysis_003",
+  "section": "Statistics and analysis",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 20008,
+      "title": "MCMC Sampling Methods \u2014 The Metropolis-Hastings Algorithm",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20008.md"
+    },
+    {
+      "id": 20163,
+      "title": "MCMC Sampling Methods: The Slice Sampling Algorithm",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20163.md"
+    },
+    {
+      "id": 20590,
+      "title": "Markov Chain Monte Carlo Sampling Methods: The HMC Algorithm",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20590.md"
+    },
+    {
+      "id": 21603,
+      "title": "Unified Validation Pipeline Against Backtest Overfitting",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21603.md"
+    },
+    {
+      "id": 22958,
+      "title": "The Repository Pattern in MQL5: Abstracting Trade History Access for Testable EA Logic",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22958.md"
+    },
+    {
+      "id": 23175,
+      "title": "Beyond Maximum Drawdown: Building a Drawdown DNA Analyzer in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23175.md"
+    },
+    {
+      "id": 23178,
+      "title": "Creating a Profit Concentration Analyzer in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23178.md"
+    },
+    {
+      "id": 23200,
+      "title": "Creating an Interactive Portfolio Analyzer Dashboard with CCanvas in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23200.md"
+    },
+    {
+      "id": 23250,
+      "title": "Implementing Walk-Forward Efficiency Ratio Scoring in MQL5 to Detect Over-Optimized Strategies",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23250.md"
+    },
+    {
+      "id": 23299,
+      "title": "Execution Cost and Slippage Sensitivity Analyzer",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23299.md"
+    },
+    {
+      "id": 23328,
+      "title": "Comparing Trade Return Distributions with Mann-Whitney U in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23328.md"
+    },
+    {
+      "id": 23387,
+      "title": "Constructing a Trade Replay Engine in MQL5: Stepping Through Historical Trades Bar by Bar for Manual Review",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23387.md"
+    }
+  ]
+}

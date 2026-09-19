@@ -1,0 +1,83 @@
+{
+  "shard_id": "trading_036",
+  "section": "Trading",
+  "n": 8,
+  "series_in_shard": [
+    "integrate your own llm into ea",
+    "integrating mql5 with data processing packages"
+  ],
+  "articles": [
+    {
+      "id": 13495,
+      "title": "Integrate Your Own LLM into EA (Part 1): Hardware and Environment Deployment",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Hardware and Environment Deployment",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13495.md"
+    },
+    {
+      "id": 13496,
+      "title": "Integrate Your Own LLM into EA (Part 2): Example of Environment Deployment",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Example of Environment Deployment",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13496.md"
+    },
+    {
+      "id": 13498,
+      "title": "Integrate Your Own LLM into EA (Part 4): Training Your Own LLM with GPU",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Training Your Own LLM with GPU",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13498.md"
+    },
+    {
+      "id": 13497,
+      "title": "Integrate Your Own LLM into EA (Part 5): Develop and Test Trading Strategy with LLMs(I)-Fine-tuning",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Develop and Test Trading Strategy with LLMs(I)-Fine-tuning",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13497.md"
+    },
+    {
+      "id": 13499,
+      "title": "Integrate Your Own LLM into EA (Part 5): Develop and Test Trading Strategy with LLMs (II)-LoRA-Tuning",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Develop and Test Trading Strategy with LLMs (II)-LoRA-Tuning",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13499.md"
+    },
+    {
+      "id": 13500,
+      "title": "Integrate Your Own LLM into EA (Part 5): Develop and Test Trading Strategy with LLMs (III) \u2013 Adapter-Tuning",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Develop and Test Trading Strategy with LLMs (III) \u2013 Adapter-Tuning",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13500.md"
+    },
+    {
+      "id": 13506,
+      "title": "Integrate Your Own LLM into EA (Part 5): Develop and Test Trading Strategy with LLMs(IV) \u2014 Test Trading Strategy",
+      "section": "Trading",
+      "series_title": "Integrate Your Own LLM into EA (): Develop and Test Trading Strategy with LLMs(IV) \u2014 Test Trading Strategy",
+      "series_key": "integrate your own llm into ea",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13506.md"
+    },
+    {
+      "id": 20235,
+      "title": "Integrating MQL5 with Data Processing Packages (Part 6): Merging Market Feedback with Model Adaptation",
+      "section": "Trading",
+      "series_title": "Integrating MQL5 with Data Processing Packages (): Merging Market Feedback with Model Adaptation",
+      "series_key": "integrating mql5 with data processing packages",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20235.md"
+    }
+  ]
+}

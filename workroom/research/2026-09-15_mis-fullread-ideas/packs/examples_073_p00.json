@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_073_p00",
+  "section": "Examples",
+  "parent_shard": "examples_073",
+  "part_index": 0,
+  "part_count": 3,
+  "series_in_pack": [
+    "doeasy. controls"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 10663,
+      "title": "DoEasy. Controls (Part 1): First steps",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): First steps",
+      "series_key": "doeasy. controls",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10663.md"
+    },
+    {
+      "id": 10697,
+      "title": "DoEasy. Controls (Part 2): Working on the CPanel class",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Working on the CPanel class",
+      "series_key": "doeasy. controls",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10697.md"
+    },
+    {
+      "id": 10733,
+      "title": "DoEasy. Controls (Part 3): Creating bound controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Creating bound controls",
+      "series_key": "doeasy. controls",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10733.md"
+    },
+    {
+      "id": 10756,
+      "title": "DoEasy. Controls (Part 4): Panel control, Padding and Dock parameters",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Panel control, Padding and Dock parameters",
+      "series_key": "doeasy. controls",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10756.md"
+    },
+    {
+      "id": 10794,
+      "title": "DoEasy. Controls (Part 5): Base WinForms object, Panel control, AutoSize parameter",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base WinForms object, Panel control, AutoSize parameter",
+      "series_key": "doeasy. controls",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10794.md"
+    },
+    {
+      "id": 10989,
+      "title": "DoEasy. Controls (Part 6): Panel control, auto resizing the container to fit inner content",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Panel control, auto resizing the container to fit inner content",
+      "series_key": "doeasy. controls",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10989.md"
+    },
+    {
+      "id": 11045,
+      "title": "DoEasy. Controls (Part 7): Text label control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Text label control",
+      "series_key": "doeasy. controls",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11045.md"
+    },
+    {
+      "id": 11075,
+      "title": "DoEasy. Controls (Part 8): Base WinForms objects by categories, GroupBox and CheckBox controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base WinForms objects by categories, GroupBox and CheckBox controls",
+      "series_key": "doeasy. controls",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11075.md"
+    },
+    {
+      "id": 11121,
+      "title": "DoEasy. Controls (Part 9): Re-arranging WinForms object methods, RadioButton and Button controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Re-arranging WinForms object methods, RadioButton and Button controls",
+      "series_key": "doeasy. controls",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11121.md"
+    },
+    {
+      "id": 11173,
+      "title": "DoEasy. Controls (Part 10): WinForms objects \u2014 Animating the interface",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): WinForms objects \u2014 Animating the interface",
+      "series_key": "doeasy. controls",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11173.md"
+    },
+    {
+      "id": 11194,
+      "title": "DoEasy. Controls (Part 11): WinForms objects \u2014 groups, CheckedListBox WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): WinForms objects \u2014 groups, CheckedListBox WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11194.md"
+    },
+    {
+      "id": 11228,
+      "title": "DoEasy. Controls (Part 12): Base list object, ListBox and ButtonListBox WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base list object, ListBox and ButtonListBox WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11228.md"
+    }
+  ]
+}

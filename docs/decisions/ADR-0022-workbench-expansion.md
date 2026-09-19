@@ -5,10 +5,10 @@ type: adr
 status: ratified
 component: COMP-QMB
 depends_on: [COMP-QMB, COMP-QML, COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON, COMP-QMF-REGISTRY, COMP-QMF-RISK, COMP-QMF-DATA, COMP-QMN]
-decisions: [DEC-0269, DEC-0270, DEC-0271, DEC-0272, DEC-0273, DEC-0274, DEC-0275, DEC-0276, DEC-0277, DEC-0278, DEC-0279, DEC-0280, DEC-0281, DEC-0282, DEC-0283, DEC-0284, DEC-0285, DEC-0286, DEC-0287, DEC-0381, DEC-0402, DEC-0403]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/CAPABILITY-EXPANSION.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/.memlog.md, _docwork/workbench-increment-brief.md, _docwork/ledger.yaml, docs/architecture/dependencies.yaml, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0020-qma-agentic-system.md, docs/decisions/ADR-0019-trading-node.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0269, DEC-0270, DEC-0271, DEC-0272, DEC-0273, DEC-0274, DEC-0275, DEC-0276, DEC-0277, DEC-0278, DEC-0279, DEC-0280, DEC-0281, DEC-0282, DEC-0283, DEC-0284, DEC-0285, DEC-0286, DEC-0287, DEC-0381, DEC-0402, DEC-0403, DEC-0417, DEC-0419, DEC-0444, DEC-0445, DEC-0448, DEC-0449]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/CAPABILITY-EXPANSION.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/.memlog.md, _docwork/workbench-increment-brief.md, _docwork/ledger.yaml, docs/architecture/dependencies.yaml, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0020-qma-agentic-system.md, docs/decisions/ADR-0019-trading-node.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0024-workflows-construction-kit.md]
 generated: 2026-09-14
-verified: 2026-09-16
+verified: 2026-09-19
 stale_after: 1y
 ---
 
@@ -106,3 +106,13 @@ This ADR's 2026-09-14 Decision stands as written. The 2026-09-16 QML research ex
 - **Workbench AD-3 roster unchanged (DEC-0381).** Hypotheses are not Library objects and not registry kinds until CT-33 registration. `strats` stays a refused Library kind.
 - **Proposed discovery commentary only (DEC-0403).** Product discovery may federate Knowledge hits as a distinct class; the kind roster is unchanged.
 - **No sixth COMP confirmed again (DEC-0402).** Preflight remains reuse of existing applications.
+
+## Follow-up — 2026-09-19 Workflows construction kit (ADR-0024)
+
+This ADR's 2026-09-14 Decision stands as written. The 2026-09-19 Workflows construction-kit spine ([ADR-0024](ADR-0024-workflows-construction-kit.md), DEC-0445) composes over the same applications and does not mint a sixth COMP.
+
+- **Experimentation Board display alias (DEC-0417).** "Experimentation Board" is an allowed display alias for the exploratory working-surface projection; it still mints no Project/Workspace/Mission/sqlite record (Workbench AD-16 commentary). Board layout is client-only and must not become a field of `product_session`, Mission, Task Graph, or Graph Template.
+- **DAG amend (DEC-0419).** Graph Template topology is a DAG: registration refuses self-loops and any directed cycle. This closes the inspected implementation hole under procedure registration; runtime Loops remain node state, not template cycles.
+- **ContributionHit beside Library projection (DEC-0449).** Workbench AD-3 Artifact Library kinds stay the listed `fp1` roster. Product discovery may concatenate `ContributionHit` as a third discovery class beside Knowledge and Artifact hits — never fp1, never a Library kind, never `ArtifactHit.kind` (DEC-0415, DEC-0449).
+- **ATC / L36 pointer (DEC-0448).** Book/BMS remain the default accounting and risk/sizing implementations, not the ceiling. A complete Alternative Trading Composition / `PolicyPair` may occupy those roles without dummy records; dummy Book stays `INVALID_INPUT`; L17 and sequential paper-then-live remain.
+- **Recipe-definition identity (DEC-0444).** `RecipeDefinition` identity is `(recipe_def_id, recipe_def_version, recipe_def_hash)` and is distinct from the output release `fp1` (Workbench AD-13). Two runs of one definition are two releases, not two recipes. CT-06 recipe kind stays deferred.

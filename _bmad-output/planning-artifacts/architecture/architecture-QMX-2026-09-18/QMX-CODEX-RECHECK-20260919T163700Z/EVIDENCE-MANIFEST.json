@@ -1,0 +1,58 @@
+{
+  "package_type": "independent-focused-architecture-recheck",
+  "date": "2026-09-19",
+  "candidate_id": "qmx-workflows-arch-2026-09-19-c",
+  "predecessor_candidate_id": "qmx-workflows-arch-2026-09-18-a",
+  "implementation_commit": "270e992995c2378ca63cf6343254ef8140a8c97e",
+  "disposition": "repairs-required-not-ratified",
+  "input": {
+    "file": "CODEX-RECHECK-PACKET-2026-09-19.zip",
+    "sha256": "101ddefe89253ccb62ccbed83b2c3be71c0e312a30eae87f99db960171cdfab8",
+    "bytes": 95333
+  },
+  "frozen_pass_i_sha256": "1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8",
+  "scenario_evidence": {
+    "catalogue_sha256": "8a8e709c2a0788b25943ef86bddf6ab92e8015b317af2fe049ca5297d34ccbe9",
+    "total_unique_ids": 85,
+    "pass_i": 65,
+    "pass_ii": 20,
+    "catalogue_ids_missing_from_bdd": 0,
+    "bdd_ids_missing_from_catalogue": 0,
+    "gherkin_is_execution_evidence": false
+  },
+  "outputs": [
+    {
+      "file": "CODEX-RECHECK-RETURN.md",
+      "sha256": "ad7bb3b5c7d85077cc5b69f257ba9bd989eb6268675dba7a9f3c2eae2a2399a9"
+    },
+    {
+      "file": "AD23-31-FINDINGS.md",
+      "sha256": "08e4951e4a9885f8150eee2bad91f4ca1e5e05c568959f7cba6646cee3a745fa"
+    },
+    {
+      "file": "AF-DISPOSITION-RECHECK.md",
+      "sha256": "80be628cb77bdd7ef3e5000c322326ea01500f01342d70d59557b13839899904"
+    },
+    {
+      "file": "DOCS-DRIFT.md",
+      "sha256": "ad9a0d40da0ff1f789aebfa383b313a4f5ea5f8aec858abdc733789b27882cb2"
+    },
+    {
+      "file": "GROK-DESK-FIX-HANDOFF.md",
+      "sha256": "6de13c1ba8c3c434c93a0d4f33ba9cc9988030710358cdde495690b28ca0263b"
+    },
+    {
+      "file": "diagnostics/packet-integrity.txt",
+      "sha256": "b97abd50e120cf6353b85891f418d21893c776a4d5f42cb2f636f44ef7c10349"
+    }
+  ],
+  "excluded_working_material": "_working/",
+  "prohibitions_observed": [
+    "no_pass_i_rederivation",
+    "no_ratification",
+    "no_production_code_edits",
+    "no_documentation_factory",
+    "no_epics_and_stories",
+    "no_implementation"
+  ]
+}

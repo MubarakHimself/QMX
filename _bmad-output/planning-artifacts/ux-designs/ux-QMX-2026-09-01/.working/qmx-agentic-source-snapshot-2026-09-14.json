@@ -1,0 +1,74 @@
+[
+  {
+    "path": "docs/components/qma-core.md",
+    "bytes": 35736,
+    "modified_utc": "2026-09-14T10:44:24.6737304Z",
+    "sha256": "E1533A12A885938CEF3D6C89A17C4BE81A030009466E755BE884F66C7998EC52"
+  },
+  {
+    "path": "docs/components/qma-daemon.md",
+    "bytes": 94592,
+    "modified_utc": "2026-09-14T10:43:33.8097922Z",
+    "sha256": "35DB8519B142EF7F377BF6EBF672BD405AA5281546ABAD2C1C777A108BF75A40"
+  },
+  {
+    "path": "docs/components/qma-wire.md",
+    "bytes": 27289,
+    "modified_utc": "2026-09-14T10:44:36.4018489Z",
+    "sha256": "DCE9CF4692F7D48637FEBC598BF6C3C2A76E75551BF1AAAC6845C5FEAB218BB2"
+  },
+  {
+    "path": "docs/components/qmb.md",
+    "bytes": 62235,
+    "modified_utc": "2026-09-14T10:44:24.6737304Z",
+    "sha256": "CDA3D8CBED8A4E2BDDF766BE80A5F01F162E99B5F5661C308CC423A525D12FDA"
+  },
+  {
+    "path": "docs/components/qml.md",
+    "bytes": 59455,
+    "modified_utc": "2026-09-14T10:24:39.0459372Z",
+    "sha256": "C325A8DC6614FF60E852156F0CD9F82DE32C6DF24A29BB3757BE525BFFBB0862"
+  },
+  {
+    "path": "docs/components/qmf-data.md",
+    "bytes": 40401,
+    "modified_utc": "2026-09-14T10:42:19.4388761Z",
+    "sha256": "389DD120C3EE78EDEEFBB50D55D430552E9C0C5CC8D58591A5A13B5C7FE819E8"
+  },
+  {
+    "path": "docs/components/qmf-risk.md",
+    "bytes": 85625,
+    "modified_utc": "2026-09-14T10:43:33.8097922Z",
+    "sha256": "304BE7314A23F567504EEA7569280462D7351969CB7E9BCBBF02FD0774F071FD"
+  },
+  {
+    "path": "docs/components/qmf-registry.md",
+    "bytes": 28395,
+    "modified_utc": "2026-09-14T10:43:33.8097922Z",
+    "sha256": "51517422C7F6090A5A061E536DB3CEC877825A541F7CCC30087C41656F86AD21"
+  },
+  {
+    "path": "docs/decisions/ADR-0022-workbench-expansion.md",
+    "bytes": 13272,
+    "modified_utc": "2026-09-14T10:42:19.4378759Z",
+    "sha256": "75E448A448F7B790D72C902B1FB796F764B86A6632BFFE82E399845F264DA5A6"
+  },
+  {
+    "path": "_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md",
+    "bytes": 29728,
+    "modified_utc": "2026-09-14T08:13:03.5655045Z",
+    "sha256": "3B4AFF64FE26B68365B411D27BE5EF92A108C3094944A7EE4352907A63338B81"
+  },
+  {
+    "path": "_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/CAPABILITY-EXPANSION.md",
+    "bytes": 9089,
+    "modified_utc": "2026-09-14T08:12:21.1415483Z",
+    "sha256": "A2DFCD1E80B2F003D414859BE68D8B9153E191B521DBCEA7B8E83C9F4C4BCD7F"
+  },
+  {
+    "path": "_bmad-output/planning-artifacts/epics-QMA-2026-08-29.md",
+    "bytes": 212405,
+    "modified_utc": "2026-08-31T18:04:32.8005654Z",
+    "sha256": "5F7832273D336DEC754DB8C00DA13851EDE453B0F82395D8B84FFC6E205F13DB"
+  }
+]

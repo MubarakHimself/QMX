@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_037_p00",
+  "section": "Trading",
+  "parent_shard": "trading_037",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "introduction to mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 14306,
+      "title": "Introduction to MQL5 (Part 5): A Beginner's Guide to Array Functions in MQL5",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Array Functions in MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14306.md"
+    },
+    {
+      "id": 14407,
+      "title": "Introduction to MQL5 (Part 6): A Beginner's Guide to Array Functions in MQL5 (II)",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Array Functions in MQL5 (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14407.md"
+    },
+    {
+      "id": 14651,
+      "title": "Introduction to MQL5 (Part 7): Beginner's Guide to Building Expert Advisors and Utilizing AI-Generated Code in MQL5",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Beginner's Guide to Building Expert Advisors and Utilizing AI-Generated Code in MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14651.md"
+    },
+    {
+      "id": 15299,
+      "title": "Introduction to MQL5 (Part 8): Beginner's Guide to Building Expert Advisors (II)",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Beginner's Guide to Building Expert Advisors (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15299.md"
+    },
+    {
+      "id": 16514,
+      "title": "Introduction to MQL5 (Part 10): A Beginner's Guide to Working with Built-in Indicators in MQL5",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Working with Built-in Indicators in MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16514.md"
+    },
+    {
+      "id": 17096,
+      "title": "Introduction to MQL5 (Part 12): A Beginner's Guide to Building Custom Indicators",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Building Custom Indicators",
+      "series_key": "introduction to mql5",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17096.md"
+    },
+    {
+      "id": 18259,
+      "title": "Introduction to MQL5 (Part 17): Building Expert Advisors for Trend Reversals",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Building Expert Advisors for Trend Reversals",
+      "series_key": "introduction to mql5",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18259.md"
+    },
+    {
+      "id": 18555,
+      "title": "Introduction to MQL5 (Part 18): Introduction to Wolfe Wave Pattern",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Introduction to Wolfe Wave Pattern",
+      "series_key": "introduction to mql5",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18555.md"
+    },
+    {
+      "id": 19179,
+      "title": "Introduction to MQL5 (Part 20): Introduction to Harmonic Patterns",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Introduction to Harmonic Patterns",
+      "series_key": "introduction to mql5",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19179.md"
+    },
+    {
+      "id": 19331,
+      "title": "Introduction to MQL5 (Part 21): Automating Harmonic Pattern Detection",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Automating Harmonic Pattern Detection",
+      "series_key": "introduction to mql5",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19331.md"
+    },
+    {
+      "id": 19886,
+      "title": "Introduction to MQL5 (Part 23): Automating Opening Range Breakout Strategy",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Automating Opening Range Breakout Strategy",
+      "series_key": "introduction to mql5",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19886.md"
+    },
+    {
+      "id": 19912,
+      "title": "Introduction to MQL5 (Part 24): Building an EA that Trades with Chart Objects",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Building an EA that Trades with Chart Objects",
+      "series_key": "introduction to mql5",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19912.md"
+    }
+  ]
+}

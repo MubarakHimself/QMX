@@ -1,0 +1,364 @@
+# Build Self Optimizing Expert Advisors in MQL5 (Part 7): Trading With Multiple Periods At Once
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 30 May 2025 at 05:07
+3 386
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/487792 "Comments")
+[Gamuchirai Zororo Ndawana](https://www.mql5.com/en/users/gamuchiraindawa)
+Technical indicators present the modern investor with many opportunities and equivalent challenges. There are many well-known limitations of technical indicators such as their inherent lag, which have been discussed extensively.
+In this discussion, we want to focus on more nuanced challenges associated with identifying the right period to use for your indicator. The period of an indicator is a common parameter shared across most technical indicators that controls how much historical data the indicator relies on for its calculations.
+Generally speaking, selecting period values that are too small results in the technical indicator picking up considerable market noise, while period values that are too large will often generate signals long after the market move has already unfolded. Either case results in missed trading opportunities and dismal performance levels.
+Our proposed solution in this article allows us to eliminate the complexity of identifying the optimal period and instead use all periods we have available at once. To accomplish this goal, will introduce the reader to a family of machine learning algorithms known as Dimension Reduction Algorithms, with a particular focus on a relatively new algorithm known as Uniform Manifold Approximation And Projection (UMAP). Subsequently, we will illustrate that this family of algorithms, allows us to employ all the available data describing a problem in a meaningful representation that yields more insight than the dataset offered us in its original form.
+Additionally, we will also consider relevant principles of Object-Oriented Programming (OOP) in MQL5 that are necessary for us to build useful classes to help us efficiently manage the namespace, memory usage and other routine operations needed for our trading applications. Among the 4 classes we will write together, we will build a dedicated class that allows us to rapidly develop applications relying on ONNX models. There is a lot for us to cover, let us get started
+### Building The Classes We Need in MQL5
+In our last discussion on Self Optimizing Expert Advisors, we built an RSI class that provided us with a meaningful and organized way of fetching indicator data on many different RSI periods. Readers unfamiliar with that discussion can quickly catch up by following the link provided, [here](https://www.mql5.com/en/articles/17571). For this discussion, however, we will depart from the RSI and instead substitute it with the William's Percent Range indicator (WPR).
+The WPR is generally considered a momentum oscillator, and its total possible range is from 0 to -100. Readings from 0 to -20 are considered bearish, while readings ranging from -80 to -100 are considered bullish. The indicator essentially works by comparing the current price of a given symbol to the highest high established within the period the user selected. Our first goal will be to build a new class called "SingleBufferIndicator" that will be shared by both or RSI and WPR class. By having our RSI and WPR classes share a common parent, we will experience consistent functionality from both indicator classes. We will get started by defining the "SingleBufferIndicator" class and listing its class members.
+This design approach offers us many advantages, for example, if we realize new functionality we want all indicator classes to have in the future, we only need to update one class, the parent class "SingleBufferIndicator.mqh", from there we only need to compile the children classes for the updates to be available. Inheritance is an indispensable feature of Object-Oriented Programming because we can effectively control many classes, by only modifying one class.
+Fig. 1: Visualizing the inheritance tree of our family of single buffer indicators
+To get the ball rolling, we will generalize the functionality we used when designing the RSI class so that it is appropriate for any indicator that has only 1 buffer. The reader should note that, MetaTrader 5 offers a comprehensive suite of indicators the reader can choose from. The fact that we are building a class for indicators with a single buffer, should inform the reader that there are indicators that have more than 1 buffer. When designing classes, generally we want the class to have a clear and definite purpose.
+Trying to design a single class that handles all indicators, regardless of how many buffers they have, may prove too challenging to accomplish at once. Additionally, if you are not careful in your design, your code may contain logical errors and other unintentional bugs. Therefore, by limiting the scope of the class, we are setting ourselves up for success.
+```
+//+------------------------------------------------------------------+
+//|                                        SingleBufferIndicator.mqh |
+//|                                               Gamuchirai Ndawana |
+//|                    https://www.mql5.com/en/users/gamuchiraindawa |
+//+------------------------------------------------------------------+
+#property copyright "Gamuchirai Ndawana"
+#property link      "https://www.mql5.com/en/users/gamuchiraindawa"
+#property version   "1.00"
+class SingleBufferIndicator
+public:
+   //--- Class methods
+   bool              SetIndicatorValues(int buffer_size,bool set_as_series);
+   double            GetReadingAt(int index);
+   bool              SetDifferencedIndicatorValues(int buffer_size,int differencing_period,bool set_as_series);
+   double            GetDifferencedReadingAt(int index);
+   double            GetCurrentReading(void);
+   //--- Have the indicator values been copied to the buffer?
+   bool              indicator_values_initialized;
+   bool              indicator_differenced_values_initialized;
+   //--- How far into the future we wish to forecast
+   int               forecast_horizon;
+   //--- The buffer for our indicator
+   double            indicator_reading[];
+   vector            indicator_differenced_values;
+   //--- The current size of the buffer the user last requested
+   int               indicator_buffer_size;
+   int               indicator_differenced_buffer_size;
+   //--- The handler for our indicator
+   int               indicator_handler;
+   //--- The time frame our indicator should be applied on
+   ENUM_TIMEFRAMES   indicator_time_frame;
+   //--- The price should the indicator be applied on
+   ENUM_APPLIED_PRICE indicator_price;
+   //--- Give the user feedback
+   string            user_feedback(int flag);
+   //--- The Symbol our indicator should be applied on
+   string            indicator_symbol;
+   //--- Our period
+   int               indicator_period;
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Build Self Optimizing Expert Advisors in MQL5 (Part 7): Trading With Multiple Periods At Once
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Building The Classes We Need in MQL5
+In our last discussion on Self Optimizing Expert Advisors, we built an RSI class that provided us with a meaningful and organized way of fetching indicator data on many different RSI periods. Readers unfamiliar with that discussion can quickly catch up by following the link provided, [here](https://www.mql5.com/en/articles/17571). For this discussion, however, we will depart from the RSI and instead substitute it with the William's Percent Range indicator (WPR).
+To get the ball rolling, we will generalize the functionality we used when designing the RSI class so that it is appropriate for any indicator that has only 1 buffer. The reader should note that, MetaTrader 5 offers a comprehensive suite of indicators the reader can choose from. The fact that we are building a class for indicators with a single buffer, should inform the reader that there are indicators that have more than 1 buffer. When designing classes, generally we want the class to have a clear and definite purpose.
+Trying to design a single class that handles all indicators, regardless of how many buffers they have, may prove too challenging to accomplish at once. Additionally, if you are not careful in your design, your code may contain logical errors and other unintentional bugs. Therefore, by limiting the scope of the class, we are setting ourselves up for success.
+//+------------------------------------------------------------------+
+#property copyright "Gamuchirai Ndawana"
+#property link      "https://www.mql5.com/en/users/gamuchiraindawa"
+#property version   "1.00"
+class SingleBufferIndicator
+#include <VolatilityDoctor\Indicators\SingleBuffer\SingleBufferIndicator.mqh>
+```
+class Time
+   if(OnnxModelIsValid())
+      Print("Volatility Doctor ONNXFloat Class Loaded Correctly: ",__FUNCSIG__," ",&this);
+   else
+class TradeInfo
+  {
+                     double MaxVolume(void);
+                     double VolumeStep(void);
+                     double GetAsk(void);
+                     double GetBid(void);
+double TradeInfo::GetHigh(void)
+   {
+      double res = iHigh(user_symbol,user_time_frame,0);
+      return(res);
+   }
+//+------------------------------------------------------------------+
+double TradeInfo::VolumeStep(void)
+      double res = volume_step;
+#property copyright "Copyright 2024, MetaQuotes Ltd."
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property script_show_inputs
+
+#define HORIZON 10
+#include <VolatilityDoctor\Indicators\WPR.mqh>
+                   iOpen(_Symbol,PERIOD_CURRENT,i),
+                   iHigh(_Symbol,PERIOD_CURRENT,i),
+                   iLow(_Symbol,PERIOD_CURRENT,i),
+                   iClose(_Symbol,PERIOD_CURRENT,i),
+                   iOpen(_Symbol,PERIOD_CURRENT,i) - iOpen(Symbol(),PERIOD_CURRENT,i + HORIZON),
+                   iHigh(_Symbol,PERIOD_CURRENT,i) - iHigh(Symbol(),PERIOD_CURRENT,i + HORIZON),
+                   iLow(_Symbol,PERIOD_CURRENT,i) - iLow(Symbol(),PERIOD_CURRENT,i + HORIZON),
+                   iClose(_Symbol,PERIOD_CURRENT,i) - iClose(Symbol(),PERIOD_CURRENT,i + HORIZON),
+#undef HORIZON
+```
+### Analyzing Our Data With Python
+Once you have finished, apply the script to your chosen market so that we will have market data to analyze. We are applying the script to the EURGBP pair in this discussion, and now that our data is ready, let us load our Python libraries for analysis.
+#Load the libraries
+import pandas as pd
+import numpy as np
+#Read in the data
+data = pd.read_csv("..\EURGBP WPR Algorithmic Input Selection.csv")
+#Label the data
+HORIZON = 10
+data['Target'] = data['Close'].shift(-HORIZON) - data['Close']
+
+#Drop the last 10 rows 
+data = data.iloc[:-HORIZON,:]
+#Define inputs and target
+X = data.iloc[:,1:-1].copy() 
+y = data.iloc[:,-1].copy()
+#Store Z-scores
+Z1 = X.mean()
+Z2 = X.std()
+#Scale the data
+X = ((X - Z1)/ Z2)
+```
+#Return our cross validated accuracy
+def score(f_model,f_X,f_y):
+    return(np.mean(np.abs(cross_val_score(f_model,f_X,f_y,scoring='neg_mean_squared_error',cv=tscv,n_jobs=-1))))
+Record the error produced by always predicting the average market return(total sum of squares/TSS). Now that we have recorded the error threshold defined by always predicting the average market return, we can now confidently assert that any model that produces error levels greater than 0.000324 has no skill that impresses us, as far as this discussion is concerned.
+#This will be the last entry in our list of results
+#Record our error if we always predict the average market return (total sum of squares/TSS)
+tss = score(get_model(),X[['Null']],y)
+tss
+The first result we want to record, is our error levels using OHLC market data in its original form.
+
+#This will be our first entry in our list of results 
+#Record our error using OHLC price data
+res.append(score(get_model(),X.iloc[:,:8],y))
+#Second
+#Record our error using just indicators
+res.append(score(get_model(),X.iloc[:,8:-1],y))
+#Third
+#Record our error using all the data we have
+res.append(score(get_model(),X.iloc[:,:-1],y))
+for i in range(EPOCHS):
+    reducer = umap.UMAP(n_components=(i+1),metric='euclidean',random_state=0,transform_seed=0,n_neighbors=30)
+    X_embedded = pd.DataFrame(reducer.fit_transform(X.iloc[:,:-1]))
+    res.append(score(get_model(),X_embedded,y))
+Join our results.
+```
+reducer = umap.UMAP(n_components=2,metric='euclidean',random_state=0,transform_seed=0,n_neighbors=30)
+X_embedded = pd.DataFrame(reducer.fit_transform(X.iloc[:,:-1]))
+#Sample mean
+Z1 = train.iloc[:,1:-2].mean()
+#Sample standard deviation
+Z2 = train.iloc[:,1:-2].std()
+
+X_embedded = pd.DataFrame(reducer.fit_transform(train_scaled.iloc[:,1:-2],columns=['UMAP 1','UMAP 2']))
+#Learn To Estimate UMAP Embeddings From The Data
+umap_model = MLPRegressor(shuffle=False,hidden_layer_sizes=(train.iloc[:,1:-2].shape[1],10,20,100,20,10,2),random_state=0,solver='lbfgs',activation='relu',learning_rate='constant',learning_rate_init=1e-4,power_t=1e-1)
+np.mean(np.abs(cross_val_score(umap_model,train.iloc[:,1:-2],X_embedded,scoring='neg_mean_squared_error',n_jobs=-1)))
+    #Try different random states
+    model = MLPRegressor(shuffle=False,early_stopping=False,hidden_layer_sizes=(2,1,10,20,1),activation='identity',solver='lbfgs',random_state=i,max_iter=int(2e5))
+    res.append(score(model,predictions,train['Target']))
+Visualizing our results.
+embedded_model = MLPRegressor(shuffle=False,early_stopping=False,hidden_layer_sizes=(2,1,10,20,1),activation='identity',solver='lbfgs',random_state=res.index(np.min(res)),max_iter=int(2e5))
+embedded_model.fit(predictions,train['Target'])
+### Building Our Application in MQL5
+Now let us start building our application. We will first need to specify system constants that aren't going to change in our program.
+//+------------------------------------------------------------------+
+#property copyright "Gamuchirai Ndawana"
+#property link      "https://www.mql5.com/en/users/gamuchiraindawa"
+#property version   "1.00"
+//| outside of these time periods, on the Daily Time-Frame for       |
+//| reliable results.                                                |
+//--- ONNX Model I/O Parameters
+#define UMAP_INPUTS 36
+#define UMAP_OUTPUTS 2
+#define EMBEDDED_INPUTS  2
+#define EMBEDDED_OUTPUTS 1
+
+//--- Our forecasting periods
+#define HORIZON 10
+//--- Our desired time frame
+#define SYSTEM_TIMEFRAME_1 PERIOD_D1
+```
+//--- ONNX Model Prototypes
+#resource  "\\Files\\EURGBP WPR UMAP.onnx" as const uchar umap_proto[];
+#resource  "\\Files\\EURGBP WPR EMBEDDED.onnx" as const uchar embedded_proto[];
+#include <Trade\Trade.mqh>
+#include <VolatilityDoctor\Time\Time.mqh>
+#include <VolatilityDoctor\Indicators\WPR.mqh>
+#include <VolatilityDoctor\ONNX\OnnxFloat.mqh>
+#include <VolatilityDoctor\Trade\TradeInfo.mqh>
+         position_timer =0;
+         find_setup();
+        }
+//+------------------------------------------------------------------+
+void find_setup(void)
+  {
+//--- Update our indicators
+//--- Prepare our input vector
+   vectorf market_state(UMAP_INPUTS);
+
+//--- Fill in the Market Data that has to embedded into UMAP form
+   market_state[0] = (float) iOpen(_Symbol,SYSTEM_TIMEFRAME_1,0);
+   market_state[1] = (float) iHigh(_Symbol,SYSTEM_TIMEFRAME_1,0);
+   market_state[2] = (float) iLow(_Symbol,SYSTEM_TIMEFRAME_1,0);
+   market_state[3] = (float) iClose(_Symbol,SYSTEM_TIMEFRAME_1,0);
+   market_state[4] = (float)(iOpen(_Symbol,SYSTEM_TIMEFRAME_1,0) - iOpen(Symbol(),SYSTEM_TIMEFRAME_1,HORIZON));
+   market_state[5] = (float)(iHigh(_Symbol,SYSTEM_TIMEFRAME_1,0) - iHigh(Symbol(),SYSTEM_TIMEFRAME_1,HORIZON));
+   market_state[6] = (float)(iLow(_Symbol,SYSTEM_TIMEFRAME_1,0) - iLow(Symbol(),SYSTEM_TIMEFRAME_1,HORIZON));
+   market_state[7] = (float)(iClose(_Symbol,SYSTEM_TIMEFRAME_1,0) - iClose(Symbol(),SYSTEM_TIMEFRAME_1,HORIZON));
+   market_state[8] = (float) wpr_array[0].GetReadingAt(0);
+   market_state[9] = (float) wpr_array[1].GetReadingAt(0);
+   market_state[10] = (float) wpr_array[2].GetReadingAt(0);
+   market_state[11] = (float) wpr_array[3].GetReadingAt(0);
+   market_state[12] = (float) wpr_array[4].GetReadingAt(0);
+   market_state[13] = (float) wpr_array[5].GetReadingAt(0);
+   market_state[14] = (float) wpr_array[6].GetReadingAt(0);
+   market_state[15] = (float) wpr_array[7].GetReadingAt(0);
+   market_state[16] = (float) wpr_array[8].GetReadingAt(0);
+   market_state[17] = (float) wpr_array[9].GetReadingAt(0);
+   market_state[18] = (float) wpr_array[10].GetReadingAt(0);
+   market_state[19] = (float) wpr_array[11].GetReadingAt(0);
+   market_state[20] = (float) wpr_array[12].GetReadingAt(0);
+   market_state[21] = (float) wpr_array[13].GetReadingAt(0);
+   market_state[22] = (float) wpr_array[0].GetDifferencedReadingAt(0);
+   market_state[23] = (float) wpr_array[1].GetDifferencedReadingAt(0);
+   market_state[24] = (float) wpr_array[2].GetDifferencedReadingAt(0);
+   market_state[25] = (float) wpr_array[3].GetDifferencedReadingAt(0);
+   market_state[26] = (float) wpr_array[4].GetDifferencedReadingAt(0);
+   market_state[27] = (float) wpr_array[5].GetDifferencedReadingAt(0);
+   market_state[27] = (float) wpr_array[6].GetDifferencedReadingAt(0);
+   market_state[29] = (float) wpr_array[7].GetDifferencedReadingAt(0);
+   market_state[30] = (float) wpr_array[8].GetDifferencedReadingAt(0);
+   market_state[31] = (float) wpr_array[9].GetDifferencedReadingAt(0);
+   market_state[32] = (float) wpr_array[10].GetDifferencedReadingAt(0);
+   market_state[33] = (float) wpr_array[11].GetDifferencedReadingAt(0);
+   market_state[34] = (float) wpr_array[12].GetDifferencedReadingAt(0);
+   market_state[35] = (float) wpr_array[13].GetDifferencedReadingAt(0);
+
+//--- Standardize and scale each input
+     {
+      market_state[i] = (float)((market_state[i] - Z1[i]) / Z2[i]);
+     };
+//+------------------------------------------------------------------+
+#undef EMBEDDED_INPUTS
+#undef EMBEDDED_OUTPUTS
+#undef UMAP_INPUTS
+#undef UMAP_OUTPUTS
+#undef HORIZON
+#undef SYSTEM_TIMEFRAME_1
+```
+### Conclusion
+Through this discussion, the reader walks away with actionable insights on the practical benefits of statistical modelling, beyond the ordinary task of price prediction. We illustrated to the reader that:
+| Use\_All\_Data.ipynb | The Jupyter Notebook we used to analyze our market data. |
+| Fetch\_Data\_Algorithmic\_Input\_Selection.mq5 | The MQL5 script we used to fetch the market data we needed. |
+| EURGBP\_Multiple\_Periods\_Analysis.mq5 | The Expert Advisor we built together that used 14 different WPR periods, at once. |
+| EURGBP\_WPR\_Algorithmic\_Input\_Selection.csv | The historical market data we fetched from our broker. |
+| EURGBP\_WPR\_EMBEDDED.onnx | The ONNX model responsible for approximating our 36 columns of data, down to 2 UMAP embeddings. |
+| EURGBP\_WPR\_UMAP.onnx | The ONNX model responsible for forecasting the EURGBP market return, given 2 UMAP embeddings. |
+
+[Fetch\_Data\_Algorithmic\_Input\_Selection.mq5](https://www.mql5.com/en/articles/download/18187/fetch_data_algorithmic_input_selection.mq5 "Download Fetch_Data_Algorithmic_Input_Selection.mq5")
+(5.42 KB)
+[EURGBP\_WPR\_Algorithmic\_Input\_Selection.csv](https://www.mql5.com/en/articles/download/18187/eurgbp_wpr_algorithmic_input_selection.csv "Download EURGBP_WPR_Algorithmic_Input_Selection.csv")
+(4581.65 KB)
+Learn how to display logs directly on the MetaTrader chart in an organized way, with frames, titles and automatic scrolling. In this article, we show you how to create a visual log system using MQL5, ideal for monitoring what your robot is doing in real time.
+![Neural Networks in Trading: Market Analysis Using a Pattern Transformer](https://c.mql5.com/2/97/Market_Situation_Analysis_Using_Pattern_Transformer___LOGO.png)
+[Launching MetaTrader VPS for the first time?
+Read our comprehensive, step-by-step instructions
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Through this discussion, the reader walks away with actionable insights on the practical benefits of statistical modelling, beyond the ordinary task of price prediction. We illustrated to the reader that:
+
+1. Machine learning can be used for money management: By increasing our lot size when our model aligned with our trading signal, we are effectively giving the statistical model control over the trading volume, allowing our computer to place bigger trades when it is "feeling confident".
+2. Machine learning can also be used to uncover more meaningful ways of looking at data: We can use a family of machine learning algorithms known as dimension reduction methods, to compact our data, allowing use to expose the important patterns in large datasets.
+
+This means that, the reader can substitute the WPR indicator, with a combination of their favorite indicators, and by applying dimension reduction techniques as demonstrated in this article, you may find novel representations of your private strategies that may improve your trading performance, as we saw earlier when we outperformed all the market data we had on hand, using a UMAP representation of only 2 columns from the original 36 columns.
+
+The reader additionally receives many benefits from using the UMAP algorithm suggested in this article, over popular choices such as PCA (Principal Components Analysis). We will highlight a few material benefits:
+
+1. UMAP is a non-linear method: Popular dimension reduction techniques such as PCA inherently assume that there exists a linear relationship in the data. The algorithms fail when this assumption is not true. UMAP, on the other hand, is explicitly intended to look for non-linear relationships. The reader should not say that UMAP is more "powerful" than PCA, but rather it is more appropriate to say that UMAP is more "flexible" than PCA.
+2. UMAP is Geometric And Not Euclidean: This to say, UMAP sees shapes, not just straight line distances. Unlike methods like PCA that slice data with straight lines, UMAP bends with your data. It doesn’t assume the world is flat, rather, it assumes your data lives on a curved surface called a Riemannian manifold, a concept from the mathematical study of topology that helps describe complex, nonlinear spaces. This lets UMAP preserve the true geometry of your data, not by flattening it, but rather by flowing with it.
+
+Lastly, the reader has benefited from an appreciation of the value of Object-Oriented Programming in MQL5. While OOP may be considered an old technology, it still holds immense value by allowing us to centralize control and all failures to a single file. It saves us time from having to repeat boilerplate code, allowing us to rapidly execute our ideas with predictable outcomes.
+
+| File Name | File Description |
+| --- | --- |
+| Use\_All\_Data.ipynb | The Jupyter Notebook we used to analyze our market data. |
+| Fetch\_Data\_Algorithmic\_Input\_Selection.mq5 | The MQL5 script we used to fetch the market data we needed. |
+| EURGBP\_Multiple\_Periods\_Analysis.mq5 | The Expert Advisor we built together that used 14 different WPR periods, at once. |
+| EURGBP\_WPR\_Algorithmic\_Input\_Selection.csv | The historical market data we fetched from our broker. |
+| EURGBP\_WPR\_EMBEDDED.onnx | The ONNX model responsible for approximating our 36 columns of data, down to 2 UMAP embeddings. |
+| EURGBP\_WPR\_UMAP.onnx | The ONNX model responsible for forecasting the EURGBP market return, given 2 UMAP embeddings. |
+| EURGBP\_Multiple\_Periods\_Analysis.ex5 | A compiled version of our Expert Advisor. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/18187.zip "Download all attachments in the single ZIP archive")
+
+[Use\_All\_Data.ipynb](https://www.mql5.com/en/articles/download/18187/use_all_data.ipynb "Download Use_All_Data.ipynb")
+(466.69 KB)
+
+[Fetch\_Data\_Algorithmic\_Input\_Selection.mq5](https://www.mql5.com/en/articles/download/18187/fetch_data_algorithmic_input_selection.mq5 "Download Fetch_Data_Algorithmic_Input_Selection.mq5")
+(5.42 KB)
+
+[EURGBP\_Multiple\_Periods\_Analysis.mq5](https://www.mql5.com/en/articles/download/18187/eurgbp_multiple_periods_analysis.mq5 "Download EURGBP_Multiple_Periods_Analysis.mq5")
+(12.41 KB)
+
+[EURGBP\_WPR\_Algorithmic\_Input\_Selection.csv](https://www.mql5.com/en/articles/download/18187/eurgbp_wpr_algorithmic_input_selection.csv "Download EURGBP_WPR_Algorithmic_Input_Selection.csv")
+(4581.65 KB)
+
+[EURGBP\_WPR\_EMBEDDED.onnx](https://www.mql5.com/en/articles/download/18187/eurgbp_wpr_embedded.onnx "Download EURGBP_WPR_EMBEDDED.onnx")
+(2.33 KB)
+
+[EURGBP\_WPR\_UMAP.onnx](https://www.mql5.com/en/articles/download/18187/eurgbp_wpr_umap.onnx "Download EURGBP_WPR_UMAP.onnx")
+(26.5 KB)
+
+[EURGBP\_Multiple\_Periods\_Analysis.ex5](https://www.mql5.com/en/articles/download/18187/eurgbp_multiple_periods_analysis.ex5 "Download EURGBP_Multiple_Periods_Analysis.ex5")
+(75.9 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Developing a multi-currency Expert Advisor (Part 19): Creating stages implemented in Python](https://c.mql5.com/2/99/Developing_a_Multicurrency_Advisor_Part_19__LOGO.png)
+[Developing a multi-currency Expert Advisor (Part 19): Creating stages implemented in Python](https://www.mql5.com/en/articles/15911)
+
+So far we have considered the automation of launching sequential procedures for optimizing EAs exclusively in the standard strategy tester. But what if we would like to perform some handling of the obtained data using other means between such launches? We will attempt to add the ability to create new optimization stages performed by programs written in Python.
+
+![Mastering Log Records (Part 7): How to Show Logs on Chart](https://c.mql5.com/2/145/18291-mastering-log-records-part-logo.png)
+[Mastering Log Records (Part 7): How to Show Logs on Chart](https://www.mql5.com/en/articles/18291)
+
+Learn how to display logs directly on the MetaTrader chart in an organized way, with frames, titles and automatic scrolling. In this article, we show you how to create a visual log system using MQL5, ideal for monitoring what your robot is doing in real time.
+
+![Neural Networks in Trading: Market Analysis Using a Pattern Transformer](https://c.mql5.com/2/97/Market_Situation_Analysis_Using_Pattern_Transformer___LOGO.png)
+[Neural Networks in Trading: Market Analysis Using a Pattern Transformer](https://www.mql5.com/en/articles/16130)
+
+When we use models to analyze the market situation, we mainly focus on the candlestick. However, it has long been known that candlestick patterns can help in predicting future price movements. In this article, we will get acquainted with a method that allows us to integrate both of these approaches.
+
+![MQL5 Wizard Techniques you should know (Part 67): Using Patterns of TRIX and the Williams Percent Range](https://c.mql5.com/2/146/18251-mql5-wizard-techniques-you-logo__1.png)
+[MQL5 Wizard Techniques you should know (Part 67): Using Patterns of TRIX and the Williams Percent Range](https://www.mql5.com/en/articles/18251)
+
+The Triple Exponential Moving Average Oscillator (TRIX) and the Williams Percentage Range Oscillator are another pair of indicators that could be used in conjunction within an MQL5 Expert Advisor. This indicator pair, like those we’ve covered recently, is also complementary given that TRIX defines the trend while Williams Percent Range affirms support and Resistance levels. As always, we use the MQL5 wizard to prototype any potential these two may have.
+
+[Launching MetaTrader VPS for the first time?
+Read our comprehensive, step-by-step instructions
+
+![](https://www.mql5.com/ff/sh/0xb0c8bjq5sadh89z2/01.png)

@@ -1,0 +1,89 @@
+4: title: "Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System"
+11: series_title: "Automating Trading Strategies in MQL5 (): Session-Based Opening Range Breakout (ORB) System"
+20: # Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System
+25: | 26 November 2025 at 07:20
+36: ### Introduction
+38: In our [previous article (Part 41)](https://www.mql5.com/en/articles/20323), we developed a [Candle Range Theory (CRT)](https://innercircletrader.net/tutorials/candle-range-theory-crt/ "https://innercircletrader.net/tutorials/candle-range-theory-crt/") trading system incorporating Accumulation, Manipulation, and Distribution ([AMD](https://innercircletrader.net/tutorials/ict-power-of-3/ "https://i
+40: This system allows us to define the start time and duration of any session in minutes. It automatically captures the true high and low during that period on a chosen timeframe. It detects breakouts with optional multi-bar close confirmation to reduce false signals. The system executes trades only in the breakout direction. Stop-loss and take-profit levels can be dynamic (range-size based) or stati
+42: 1. [Understanding the Opening Range Breakout (ORB) Strategy](https://www.mql5.com/en/articles/20339#understanding_the_opening_range_breakout_orb)
+47: By the end, you’ll have an MQL5 program capable of trading clean opening range breakouts in any market session — London, New York, Asian, or even custom openings — ready for further customization. Let’s dive in!
+49: ### Understanding the Opening Range Breakout (ORB) Strategy
+51: [The](https://www.mql5.com/en/articles/20339#understanding_the_opening_range_breakout_orb) [Opening Range Breakout (ORB)](https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout "https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout") is a classic intraday momentum strategy that capitalizes on the initial directional
+55: Our plan is to create a fully session-flexible ORB system that works on any instrument and any trading session (New York, London, Asian, or even custom openings).  We will allow users to set the exact start time. For example, 09:30 for the NYSE or 08:00 for London. Users will also be able to define the range duration in minutes. The system will automatically calculate the true high and low on the 
+57: The algorithm will execute only one trade per direction per session. We will offer two types of stop-loss and take-profit calculations: dynamic (based on the range size) and static, with customizable risk-reward ratios. Points-based trailing stops will also be available, activating after a minimum profit threshold is reached. In addition, the tool will provide rich chart visualization. This includ
+63: ### Implementation in MQL5
+67: ```
+69: //|                                ORB Opening Range Breakout EA.mq5 |
+73: #property copyright "Copyright 2025, Allan Munene Mutiiria."
+74: #property link      "https://t.me/Forex_Algo_Trader"
+75: #property version   "1.00"
+77: #include <Trade\Trade.mqh>
+95: input ENUM_TIMEFRAMES RangeTF = PERIOD_M5;                        // Timeframe for Opening Range Calculation
+96: input int RangeDurationMinutes = 30;                              // Duration of Opening Range in Minutes
+97: input string SessionStartTime = "09:00";                          // Session Start Time (HH:MM)
+109: ```
+111: We begin the implementation by including the trade library with "[#include](https://www.mql5.com/en/docs/basis/preprosessor/include) <Trade\Trade.mqh>", which supplies the CTrade class and functions necessary for order execution and position management. We then define two [enumerations](https://www.mql5.com/en/docs/basis/types/integer/enumeration) to organize user options clearly. The "SLTP\_Metho
+113: Next, we declare [input parameters](https://www.mql5.com/en/docs/basis/variables/inputvariables) that make the program highly configurable directly from the properties window. These include "RangeTF" to select the timeframe used for calculating the opening range high and low, "RangeDurationMinutes" to set how many minutes after session start constitute the opening range, "SessionStartTime" as a st
+115: ```
+120: datetime sessionStart = 0;                                        //--- Session start time
+128: string highLevelObj = "ORB_HighLevel";                            //--- High level object name
+129: string lowLevelObj = "ORB_LowLevel";                              //--- Low level object name
+130: string highTextObj = "ORB_High_Text";                             //--- High text object
+131: string lowTextObj = "ORB_Low_Text";                               //--- Low text object
+135: ```
+137: We continue by declaring a set of [global variables](https://www.mql5.com/en/docs/basis/variables/global) that maintain the program's state throughout each trading session and ensure proper tracking of the opening range breakout logic. We instantiate "obj\_Trade" from the [CTrade](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/ctrade) class to handle all order executions and position mo
+139: ```
+147: ```
+151: ```
+220: ```
+222: Here, we create several helper functions to handle chart visualization and position management, ensuring the opening range and trade signals are clearly displayed while maintaining clean code organization. The "RenderLevel" function draws or updates persistent horizontal lines for the range high and low. It deletes any existing object with the given name, creates a new [OBJ\_HLINE](https://www.mql
+224: Similarly, the "RenderVLine" function places vertical lines to mark session start and range end times. It removes prior instances, creates an [OBJ\_VLINE](https://www.mql5.com/en/docs/constants/objectconstants/enum_object/obj_vline) at the given datetime, configures it with blue color, dotted style, width 1, background placement, rightward ray extension, hidden from object list, a tooltip showing 
+232: ```
+237:    datetime currentTime = TimeCurrent();                          //--- Get current time
+240:    // Determine if a new session has started
+241:    string currentTimeStr = StringFormat("%02d:%02d", timeStruct.hour, timeStruct.min); //--- Format time string
+242:    if (currentTimeStr == SessionStartTime && sessionStart != currentTime - (timeStruct.hour * 3600 + timeStruct.min * 60 + timeStruct.sec)) { //--- Check new session
+243:       sessionStart = currentTime - timeStruct.sec;                //--- Align to minute start
+244:       rangeEndTime = sessionStart + RangeDurationMinutes * 60;    //--- Calc end time
+259:    if (sessionStart == 0) return;                                 //--- Return if no session
+269:       string rectObj = "ORB_Rectangle_" + IntegerToString(sessionStart); //--- Rect name
+270:       ObjectCreate(ChartID(), rectObj, OBJ_RECTANGLE, 0, sessionStart, rangeHigh, rangeEndTime, rangeLow); //--- Create rect
+277:       string startVLineObj = "ORB_StartVLine_" + IntegerToString(sessionStart); //--- Start vline name
+278:       RenderVLine(startVLineObj, sessionStart, clrBlue, "ORB Start at " + TimeToString(sessionStart, TIME_MINUTES)); //--- Render start vline
+279:       string endVLineObj = "ORB_EndVLine_" + IntegerToString(sessionStart); //--- End vline name
+280:       RenderVLine(endVLineObj, rangeEndTime, clrBlue, "ORB End at " + TimeToString(rangeEndTime, TIME_MINUTES)); //--- Render end vline
+283:       string startTimeTextObj = "ORB_StartTime_Text_" + IntegerToString(sessionStart); //--- Start text name
+284:       RenderText(startTimeTextObj, sessionStart, rangeLow - textOffset, TimeToString(sessionStart, TIME_MINUTES), clrBlue, ANCHOR_UPPER); //--- Render start text
+285:       string endTimeTextObj = "ORB_EndTime_Text_" + IntegerToString(sessionStart); //--- End text name
+288:       RenderLevel(highLevelObj, rangeHigh, clrGreen, "ORB High"); //--- Render high level
+289:       RenderLevel(lowLevelObj, rangeLow, clrRed, "ORB Low");      //--- Render low level
+291:       RenderText(highTextObj, rangeEndTime, rangeHigh, "ORB High", clrGreen, ANCHOR_RIGHT_LOWER); //--- Render high text
+292:       RenderText(lowTextObj, rangeEndTime, rangeLow, "ORB Low", clrRed, ANCHOR_RIGHT_UPPER); //--- Render low text
+295: ```
+297: In the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) event handler, we begin by capturing the server's current time with [TimeCurrent](https://www.mql5.com/en/docs/dateandtime/timecurrent) into "currentTime", converting it to an [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure via [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostr
+299: ```
+310: ```
+312: Segregating into a structure helps us get the specific components with ease. To detect the exact start of a new trading session, we compare this string to the user-defined "SessionStartTime". The additional condition ensures we trigger only once per day by checking that "sessionStart" does not already match the current day aligned to that minute (subtracting seconds to normalize). When a new sessi
+314: During the opening range formation period (while "currentTime" < "rangeEndTime"), we continuously update the range boundaries by setting "rangeHigh" to the maximum of its current value or the latest bar's high on "RangeTF" at shift 0 via "iHigh", and "rangeLow" to the minimum of its current value or the latest bar's low via the [iLow](https://www.mql5.com/en/docs/series/ilow) function. Once the ra
+316: We draw a filled light-blue rectangle spanning from "sessionStart" at "rangeHigh" to "rangeEndTime" at "rangeLow" using a unique name based on the session timestamp, with solid style and background placement. Vertical blue dotted lines are added at both start and end times via "RenderVLine" with descriptive tooltips. Time labels are placed just below the range using "RenderText" with a small offse
+322: ```
+367:          if (obj_Trade.Buy(TradeVolume, _Symbol, currAsk, sl, tp, "ORB Long Breakout")) { //--- Open buy
+383:          if (obj_Trade.Sell(TradeVolume, _Symbol, currBid, sl, tp, "ORB Short Breakout")) { //--- Open sell
+393: ```
+395: Once the opening range is fully defined, we immediately return if "rangeDefined" is still false, ensuring no breakout logic runs prematurely. We then monitor for a breakout: if the current ask price exceeds "rangeHigh" and "breakoutHigh" is not yet set, we mark a bullish breakout by setting "breakoutHigh" to true, record the exact breakout price in "breakoutPrice", and note that a fresh breach has
+397: We respect the "UseBreakoutFilter" input (though currently it simply passes the confirmation forward — room for future enhancements if you want to add more filters). Once confirmed, we calculate stop-loss and take-profit levels according to the chosen method. For a bullish breakout, if buy positions are below "MaxPositionsDir" and no long has been traded yet, we use dynamic mode to place stop-loss
+403: ```
+437: ```
+443: ```
+453:    ObjectsDeleteAll(ChartID(), "ORB_Rectangle_", OBJ_RECTANGLE);  //--- Delete rectangles
+454:    ObjectsDeleteAll(ChartID(), "ORB_StartVLine_", OBJ_VLINE);     //--- Delete start vlines
+455:    ObjectsDeleteAll(ChartID(), "ORB_EndVLine_", OBJ_VLINE);       //--- Delete end vlines
+456:    ObjectsDeleteAll(ChartID(), "ORB_StartTime_Text_", OBJ_TEXT);  //--- Delete start texts
+457:    ObjectsDeleteAll(ChartID(), "ORB_EndTime_Text_", OBJ_TEXT);    //--- Delete end texts
+460: ```
+462: In the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) function, which runs when the program is removed from the chart or the terminal shuts down, we first delete the four persistent objects by name: the high and low horizontal levels via "highLevelObj" and "lowLevelObj", and their text labels with "highTextObj" and "lowTextObj". We then use [ObjectsDeleteAll](https://www.mql5.com
+468: ### Backtesting
+480: ### Conclusion
+482: In conclusion, we’ve developed a session-based [Opening Range Breakout (ORB)](https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout "https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout") system in [MQL5](https://www.mql5.com/) that allows custom session start times and opening range durations in minutes, automati
+486: With this session-based Opening Range Breakout strategy, you’re equipped to trade intraday breakout setups in any chosen market session, ready for further optimization in your trading journey. Happy trading!
+492: [ORB\_Opening\_Range\_Breakout\_EA.mq5](https://www.mql5.com/en/articles/download/20339/ORB_Opening_Range_Breakout_EA.mq5 "Download ORB_Opening_Range_Breakout_EA.mq5")

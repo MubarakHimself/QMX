@@ -1,0 +1,78 @@
+{
+  "pack_id": "trading_032",
+  "section": "Trading",
+  "parent_shard": "trading_032",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "design patterns in software development and mql5",
+    "developing a terminal manager",
+    "developing smart chart objects in mql5"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 13724,
+      "title": "Design Patterns in software development and MQL5 (Part 2): Structural Patterns",
+      "section": "Trading",
+      "series_title": "Design Patterns in software development and MQL5 (): Structural Patterns",
+      "series_key": "design patterns in software development and mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13724.md"
+    },
+    {
+      "id": 13796,
+      "title": "Design Patterns in software development and MQL5 (Part 3): Behavioral Patterns 1",
+      "section": "Trading",
+      "series_title": "Design Patterns in software development and MQL5 (): Behavioral Patterns 1",
+      "series_key": "design patterns in software development and mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13796.md"
+    },
+    {
+      "id": 13876,
+      "title": "Design Patterns in software development and MQL5 (Part 4): Behavioral Patterns 2",
+      "section": "Trading",
+      "series_title": "Design Patterns in software development and MQL5 (): Behavioral Patterns 2",
+      "series_key": "design patterns in software development and mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13876.md"
+    },
+    {
+      "id": 23626,
+      "title": "Developing Smart Chart Objects in MQL5 (Part 1): Building a Stateful Trendline Management Framework",
+      "section": "Trading",
+      "series_title": "Developing Smart Chart Objects in MQL5 (): Building a Stateful Trendline Management Framework",
+      "series_key": "developing smart chart objects in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23626.md"
+    },
+    {
+      "id": 19804,
+      "title": "Developing a Terminal Manager (Part 1): Problem Statement",
+      "section": "Trading",
+      "series_title": "Developing a Terminal Manager (): Problem Statement",
+      "series_key": "developing a terminal manager",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19804.md"
+    },
+    {
+      "id": 19852,
+      "title": "Developing a Terminal Manager (Part 2): Running Multiple Terminal Instances",
+      "section": "Trading",
+      "series_title": "Developing a Terminal Manager (): Running Multiple Terminal Instances",
+      "series_key": "developing a terminal manager",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19852.md"
+    },
+    {
+      "id": 19946,
+      "title": "Developing a Terminal Manager (Part 3): Getting Account Information and Adding Configuration",
+      "section": "Trading",
+      "series_title": "Developing a Terminal Manager (): Getting Account Information and Adding Configuration",
+      "series_key": "developing a terminal manager",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19946.md"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "pack_id": "examples_095",
+  "section": "Examples",
+  "parent_shard": "examples_095",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "three aspects of manual trading automation"
+  ],
+  "n": 1,
+  "articles": [
+    {
+      "id": 1363,
+      "title": "Three Aspects of Manual Trading Automation. Part 1: Trading",
+      "section": "Examples",
+      "series_title": "Three Aspects of Manual Trading Automation. : Trading",
+      "series_key": "three aspects of manual trading automation",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1363.md"
+    }
+  ]
+}

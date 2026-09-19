@@ -38,3 +38,9 @@ adws/adw_data/sssf.db*
 .hermes/
 .reticle/
 .scratch/
+
+# scratch diffs
+.tmp-*.diff
+
+# nested clone inside a UX import (not this repo's git)
+_bmad-output/planning-artifacts/ux-designs/ux-QMX-2026-09-01/imports/lieflat-charts/.git/

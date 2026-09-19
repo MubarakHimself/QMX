@@ -1,0 +1,122 @@
+{
+  "pack_id": "integration_010",
+  "section": "Integration",
+  "parent_shard": "integration_010",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "metatrader 5 machine learning blueprint",
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17159,
+      "title": "MQL5 Wizard Techniques you should know (Part 54): Reinforcement Learning with hybrid SAC and Tensors",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): Reinforcement Learning with hybrid SAC and Tensors",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 54,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17159.md"
+    },
+    {
+      "id": 17254,
+      "title": "MQL5 Wizard Techniques you should know (Part 55): SAC with Prioritized Experience Replay",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): SAC with Prioritized Experience Replay",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 55,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17254.md"
+    },
+    {
+      "id": 17668,
+      "title": "MQL5 Wizard Techniques you should know (Part 58): Reinforcement Learning (DDPG) with Moving Average and Stochastic Oscillator Patterns",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): Reinforcement Learning (DDPG) with Moving Average and Stochastic Oscillator Patterns",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 58,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17668.md"
+    },
+    {
+      "id": 18033,
+      "title": "MQL5 Wizard Techniques you should know (Part 64): Using Patterns of DeMarker and Envelope Channels with the White-Noise Kernel",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of DeMarker and Envelope Channels with the White-Noise Kernel",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 64,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18033.md"
+    },
+    {
+      "id": 18305,
+      "title": "MQL5 Wizard Techniques you should know (Part 68):  Using Patterns of TRIX and the Williams Percent Range with a Cosine Kernel Network",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know ():  Using Patterns of TRIX and the Williams Percent Range with a Cosine Kernel Network",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 68,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18305.md"
+    },
+    {
+      "id": 18433,
+      "title": "MQL5 Wizard Techniques you should know (Part 70):  Using Patterns of SAR and the RVI with a Exponential Kernel Network",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know ():  Using Patterns of SAR and the RVI with a Exponential Kernel Network",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 70,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18433.md"
+    },
+    {
+      "id": 18878,
+      "title": "MQL5 Wizard Techniques you should know (Part 76):  Using Patterns of Awesome Oscillator and the Envelope Channels with Supervised Learning",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know ():  Using Patterns of Awesome Oscillator and the Envelope Channels with Supervised Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 76,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18878.md"
+    },
+    {
+      "id": 19781,
+      "title": "MQL5 Wizard Techniques you should know (Part 81):  Using Patterns of Ichimoku and the ADX-Wilder with Beta VAE Inference Learning",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know ():  Using Patterns of Ichimoku and the ADX-Wilder with Beta VAE Inference Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 81,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19781.md"
+    },
+    {
+      "id": 19794,
+      "title": "MQL5 Wizard Techniques you should know (Part 82): Using Patterns of TRIX and the WPR with DQN Reinforcement Learning",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of TRIX and the WPR with DQN Reinforcement Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 82,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19794.md"
+    },
+    {
+      "id": 19948,
+      "title": "MQL5 Wizard Techniques you should know (Part 85): Using Patterns of Stochastic-Oscillator and the FrAMA with Beta VAE Inference Learning",
+      "section": "Integration",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of Stochastic-Oscillator and the FrAMA with Beta VAE Inference Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 85,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19948.md"
+    },
+    {
+      "id": 22040,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 16): Nested CV for Unbiased Evaluation",
+      "section": "Integration",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Nested CV for Unbiased Evaluation",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22040.md"
+    },
+    {
+      "id": 21954,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 17): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence",
+      "section": "Integration",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): CPCV Backtesting \u2014 From Python Model to Tick-Level Evidence",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21954.md"
+    }
+  ]
+}

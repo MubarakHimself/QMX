@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_039_p00",
+  "section": "Trading",
+  "parent_shard": "trading_039",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "mql5 trading tools"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17931,
+      "title": "MQL5 Trading Tools (Part 1): Building an Interactive Visual Pending Orders Trade Assistant Tool",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Building an Interactive Visual Pending Orders Trade Assistant Tool",
+      "series_key": "mql5 trading tools",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17931.md"
+    },
+    {
+      "id": 17972,
+      "title": "MQL5 Trading Tools (Part 2): Enhancing the Interactive Trade Assistant with Dynamic Visual Feedback",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Enhancing the Interactive Trade Assistant with Dynamic Visual Feedback",
+      "series_key": "mql5 trading tools",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17972.md"
+    },
+    {
+      "id": 18319,
+      "title": "MQL5 Trading Tools (Part 3): Building a Multi-Timeframe Scanner Dashboard for Strategic Trading",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Building a Multi-Timeframe Scanner Dashboard for Strategic Trading",
+      "series_key": "mql5 trading tools",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18319.md"
+    },
+    {
+      "id": 18786,
+      "title": "MQL5 Trading Tools (Part 4): Improving the Multi-Timeframe Scanner Dashboard with Dynamic Positioning and Toggle Features",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Improving the Multi-Timeframe Scanner Dashboard with Dynamic Positioning and Toggle Features",
+      "series_key": "mql5 trading tools",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18786.md"
+    },
+    {
+      "id": 18844,
+      "title": "MQL5 Trading Tools (Part 5): Creating a Rolling Ticker Tape for Real-Time Symbol Monitoring",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Creating a Rolling Ticker Tape for Real-Time Symbol Monitoring",
+      "series_key": "mql5 trading tools",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18844.md"
+    },
+    {
+      "id": 18880,
+      "title": "MQL5 Trading Tools (Part 6): Dynamic Holographic Dashboard with Pulse Animations and Controls",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Dynamic Holographic Dashboard with Pulse Animations and Controls",
+      "series_key": "mql5 trading tools",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18880.md"
+    },
+    {
+      "id": 19059,
+      "title": "MQL5 Trading Tools (Part 8): Enhanced Informational Dashboard with Draggable and Minimizable Features",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Enhanced Informational Dashboard with Draggable and Minimizable Features",
+      "series_key": "mql5 trading tools",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19059.md"
+    },
+    {
+      "id": 19714,
+      "title": "MQL5 Trading Tools (Part 9): Developing a First Run User Setup Wizard for Expert Advisors with Scrollable Guide",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Developing a First Run User Setup Wizard for Expert Advisors with Scrollable Guide",
+      "series_key": "mql5 trading tools",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19714.md"
+    },
+    {
+      "id": 20945,
+      "title": "MQL5 Trading Tools (Part 11): Correlation Matrix Dashboard (Pearson, Spearman, Kendall) with Heatmap and Standard Modes",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Correlation Matrix Dashboard (Pearson, Spearman, Kendall) with Heatmap and Standard Modes",
+      "series_key": "mql5 trading tools",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20945.md"
+    },
+    {
+      "id": 20962,
+      "title": "MQL5 Trading Tools (Part 12): Enhancing the Correlation Matrix Dashboard with Interactivity",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Enhancing the Correlation Matrix Dashboard with Interactivity",
+      "series_key": "mql5 trading tools",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20962.md"
+    },
+    {
+      "id": 21140,
+      "title": "MQL5 Trading Tools (Part 15): Canvas Blur Effects, Shadow Rendering, and Smooth Mouse Wheel Scrolling",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Canvas Blur Effects, Shadow Rendering, and Smooth Mouse Wheel Scrolling",
+      "series_key": "mql5 trading tools",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21140.md"
+    },
+    {
+      "id": 21264,
+      "title": "MQL5 Trading Tools (Part 17): Exploring Vector-Based Rounded Rectangles and Triangles",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Exploring Vector-Based Rounded Rectangles and Triangles",
+      "series_key": "mql5 trading tools",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21264.md"
+    }
+  ]
+}

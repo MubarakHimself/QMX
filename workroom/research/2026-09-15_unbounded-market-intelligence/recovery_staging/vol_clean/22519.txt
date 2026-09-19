@@ -1,0 +1,791 @@
+---
+id: 22519
+source_url: https://www.mql5.com/en/articles/22519
+title: "Beyond GARCH (Part V): Fitting the Multifractal Spectrum in MQL5"
+author: ""
+author_url: 
+published: 2026-06-09T12:23Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Beyond GARCH (Part V): Fitting the Multifractal Spectrum in MQL5
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 9 June 2026 at 08:23
+
+[IMG]
+957
+[[IMG]
+0](https://www.mql5.com/en/forum/510950 "Comments")
+
+[IMG]
+
+[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)
+
+### Introduction
+
+In [Part 4](https://www.mql5.com/en/articles/21299), we built the partition analysis engine: the module that takes raw price data, computes the scaling function τ(q), estimates the Hurst exponent, and determines whether the data exhibits multifractal behavior. The output of that module is a curve, τ(q), that encodes how different statistical moments scale across time. But a curve alone is not enough to generate synthetic price paths. To build the multiplicative cascade that creates multifractal trading time, we need a specific distribution and its parameters.
+
+This article bridges that gap. We will implement the Spectrum Fitter, the module that transforms the raw τ(q) curve into a fitted probability distribution ready for simulation. The process has two stages. First, we apply the Legendre transform to convert τ(q) into the singularity spectrum f(α), a more physically interpretable representation of the multifractal structure. Second, we fit four candidate distributions to the empirical spectrum using bounded optimization (BLEIC from ALGLIB). We then select the model with the lowest sum of squared errors. The winner provides the exact parameters that the cascade generator will use in Part 6.
+
+We will cover:
+
+1. [From τ(q) to f(α): The Legendre Transform](https://www.mql5.com/en/articles/22519#from_q_to_f_the_legendre_transform)
+2. [Four Theoretical Spectrum Models](https://www.mql5.com/en/articles/22519#four_theoretical_spectrum_models)
+3. [Bounded Optimization with BLEIC](https://www.mql5.com/en/articles/22519#bounded_optimization_with_bleic)
+4. [The CSpectrumFitter Class](https://www.mql5.com/en/articles/22519#the_cspectrumfitter_class)
+5. [Running the Full Pipeline](https://www.mql5.com/en/articles/22519#running_the_full_pipeline)
+6. [Conclusion](https://www.mql5.com/en/articles/22519#conclusion)
+
+### From τ(q) to f(α): The Legendre Transform
+
+The scaling function τ(q) tells us how the q-th moment of returns scales with time. But there is a more intuitive representation of multifractal structure: the singularity spectrum f(α). Here, α represents the local Hölder exponent (how "rough" or "smooth" the process is at a given point), and f(α) represents the fractal dimension of the set of points that share that exponent. A broad f(α) curve means the process has many different local scaling behaviors, which is the hallmark of multifractality.
+
+The two representations are connected by the Legendre transform:
+
+```
+α(q) = d(τ(q)) / dq
+
+f(α) = q * α(q) - τ(q)
+```
+
+The first equation says that α at a given q is the slope of the τ(q) curve at that point. The second equation computes f(α) from the tangent line relationship. Figure 1 animates the process. A tangent line sweeps along the τ(q) curve; at each position, its slope gives α, and the tangent-line relationship yields f(α). Point by point, the singularity spectrum builds up on the right, revealing the characteristic parabolic shape whose width measures the degree of multifractality.
+
+[IMG] to points on f(α)")
+
+Fig. 1. The Legendre transform in action: each tangent slope on τ(q) maps to a point on the singularity spectrum f(α)
+
+In practice, since we have τ(q) at discrete points rather than as a continuous function, we approximate the derivative using central finite differences:
+
+```
+//+------------------------------------------------------------------+
+//| ComputeSpectrum - Legendre transform: tau(q) → f(alpha)          |
+//+------------------------------------------------------------------+
+bool CSpectrumFitter::ComputeSpectrum(void)
+  {
+   double temp_alpha[];
+   double temp_f[];
+   ArrayResize(temp_alpha, m_n_q);
+   ArrayResize(temp_f, m_n_q);
+   int count = 0;
+
+   for(int i = 1; i < m_n_q - 1; i++)
+     {
+      if(m_q_values[i] < 0.5)
+         continue;
+
+      double q_prev = m_q_values[i - 1];
+      double q_next = m_q_values[i + 1];
+      double tau_prev = m_tau_q[i - 1];
+      double tau_next = m_tau_q[i + 1];
+
+      double dq = q_next - q_prev;
+      if(MathAbs(dq) < 1e-15)
+         continue;
+
+      double alpha = (tau_next - tau_prev) / dq;
+      double f_alpha = alpha * m_q_values[i] - m_tau_q[i];
+
+      if(!MathIsValidNumber(alpha) || !MathIsValidNumber(f_alpha))
+         continue;
+
+      if(f_alpha < -0.5)
+         continue;
+
+      temp_alpha[count] = alpha;
+      temp_f[count] = f_alpha;
+      count++;
+     }
+
+   if(count < 3)
+     {
+      Print("SpectrumFitter::ComputeSpectrum - only ", count, " valid spectrum points");
+      return false;
+     }
+
+   m_n_spectrum = count;
+   ArrayResize(m_alpha, count);
+   ArrayResize(m_f_alpha, count);
+   ArrayCopy(m_alpha, temp_alpha, 0, 0, count);
+   ArrayCopy(m_f_alpha, temp_f, 0, 0, count);
+
+   double a_min = m_alpha[0], a_max = m_alpha[0];
+   double f_max = m_f_alpha[0];
+   int f_max_idx = 0;
+   for(int i = 1; i < m_n_spectrum; i++)
+     {
+      if(m_alpha[i] < a_min)
+         a_min = m_alpha[i];
+      if(m_alpha[i] > a_max)
+         a_max = m_alpha[i];
+      if(m_f_alpha[i] > f_max)
+        {
+         f_max = m_f_alpha[i];
+         f_max_idx = i;
+        }
+     }
+
+   PrintFormat("SpectrumFitter: %d spectrum points, alpha=[%.4f, %.4f], peak at alpha_0=%.4f f=%.4f",
+               m_n_spectrum, a_min, a_max, m_alpha[f_max_idx], f_max);
+
+   return true;
+  }
+```
+
+Several decisions are embedded in this implementation. We skip q values below 0.5 because, at very small q, the partition function is dominated by near-zero returns and the numerical derivative becomes unreliable. We use the central difference formula (tau[i+1] - tau[i-1]) / (q[i+1] - q[i-1]) for second-order accuracy rather than a forward or backward difference. We also discard spectrum points where f(α) falls below -0.5. Since f(α) represents a fractal dimension, it should theoretically be non-negative, but numerical noise from the discrete derivative can push it slightly negative. The -0.5 threshold is generous enough to keep borderline points while discarding clearly nonsensical values.
+
+The result is an empirical spectrum: a set of (α, f(α)) pairs that form a roughly parabolic curve. The peak of this curve occurs at α₀, where f(α₀) should be close to 1.0 (the fractal dimension of the full time series). The width of the curve measures the degree of multifractality: a wider spectrum means more heterogeneous scaling behavior.
+
+### Four Theoretical Spectrum Models
+
+With the empirical spectrum in hand, we need to fit it to a parametric model. The choice of model determines which distribution will generate the cascade multipliers in the simulation stage. Our library implements four candidates, each with a different theoretical basis and number of parameters.
+
+**Normal Spectrum**
+
+The simplest model assumes the cascade multipliers are drawn from a log-normal distribution. The theoretical spectrum is a downward-opening parabola centered at α₀:
+
+```
+f(α) = 1 - (α - α₀)^2 / [4H(α₀ - H)]
+```
+
+```
+//+------------------------------------------------------------------+
+//| Normal spectrum model: f(alpha) = 1 - (alpha-a0)^2 / [4H(a0-H)]  |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::NormalSpectrum(double alpha, double alpha_0, double H)
+  {
+   double denom = 4.0 * H * (alpha_0 - H);
+   if(denom <= 0.0)
+      return -1e10;
+   return 1.0 - (alpha - alpha_0) * (alpha - alpha_0) / denom;
+  }
+```
+
+This model has a single free parameter: α₀, the location of the spectrum peak. The constraint α₀ > H ensures the denominator is positive and the parabola opens downward. The Normal model produces symmetric spectra and works well when the data has homogeneous scaling at both extremes.
+
+**Binomial Spectrum**
+
+The binomial model assumes the cascade uses only two possible multiplier values at each split. The spectrum is entropy-based:
+
+```
+f(α) = -[r1 * log(r1) + r2 * log(r2)] / log(2)
+
+where r1 = (α_max - α) / (α_max - α_min)
+and   r2 = (α - α_min) / (α_max - α_min)
+```
+
+```
+//+------------------------------------------------------------------+
+//| Binomial spectrum model: entropy-based                           |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::BinomialSpectrum(double alpha, double alpha_min, double alpha_max)
+  {
+   if(alpha_max <= alpha_min)
+      return -1e10;
+
+   double a = MathMax(alpha_min + 1e-10, MathMin(alpha, alpha_max - 1e-10));
+
+   double r1 = (alpha_max - a) / (alpha_max - alpha_min);
+   double r2 = (a - alpha_min) / (alpha_max - alpha_min);
+
+   r1 = MathMax(r1, 1e-10);
+   r2 = MathMax(r2, 1e-10);
+
+   return -(r1 * MathLog(r1) + r2 * MathLog(r2)) / MathLog(2.0);
+  }
+```
+
+This model has two free parameters: α\_min and α\_max, defining the endpoints of the spectrum support. The entropy formula produces a curve that peaks at 1.0 when α is at the midpoint and falls to 0 at the extremes. Despite its simplicity (only two multiplier values), the binomial model can produce excellent fits because the entropy function closely mimics the shape of many empirical spectra. The clamping of α to [α\_min, α\_max] and the floor on r1, r2 prevent log(0) errors at the boundaries.
+
+**Poisson Spectrum**
+
+The Poisson model uses multipliers derived from a Poisson-distributed random variable:
+
+```
+//+------------------------------------------------------------------+
+//| Poisson spectrum model                                           |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::PoissonSpectrum(double alpha, double alpha_0, double H, double b)
+  {
+   if(alpha_0 <= 0.0)
+      return -1e10;
+
+   double a = MathMax(alpha, 1e-10);
+   double term1 = 1.0 - alpha_0 / (H * MathLog(b));
+   double term2 = (a / H) * (MathLog(alpha_0 * M_E / a) / MathLog(b));
+   return term1 + term2;
+  }
+```
+
+The Poisson model has one free parameter (α₀) but produces an asymmetric spectrum, unlike the Normal model's symmetric parabola. The asymmetry comes from the Poisson distribution's inherent skewness. The cascade base b is fixed at 2 (binary cascade).
+
+**Gamma Spectrum**
+
+The most flexible model uses multipliers from a Gamma distribution:
+
+```
+//+------------------------------------------------------------------+
+//| Gamma spectrum model                                             |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::GammaSpectrum(double alpha, double alpha_0, double gamma, double b)
+  {
+   if(alpha_0 <= 0.0 || gamma <= 0.0)
+      return -1e10;
+
+   double a = MathMax(alpha, 1e-10);
+   double term1 = gamma * MathLog(a / alpha_0) / MathLog(b);
+   double term2 = gamma * (alpha_0 - a) / (alpha_0 * MathLog(b));
+   return 1.0 + term1 + term2;
+  }
+```
+
+With two free parameters (α₀ and γ), the Gamma model can produce both symmetric and asymmetric spectra. The γ shape parameter controls how peaked or flat the distribution is. When γ is large, the spectrum narrows; when γ is small, it broadens. This flexibility often makes it competitive with the Binomial model in terms of fit quality.
+
+With all four models defined, we can identify which one best matches the empirical spectrum. Figure 2 puts them head to head. Each theoretical curve is drawn over the same set of empirical data points, and the sum of squared errors (SSE) reveals a clear hierarchy. The Normal parabola, constrained to symmetry, misses badly. The Poisson improves but still drifts. The Gamma gets close. And the Binomial, with its entropy-based shape, hugs the empirical dots almost exactly.
+
+[IMG] spectrum")
+
+Fig. 2. Four distributions compete to fit the empirical spectrum: the Binomial wins decisively with SSE = 0.148
+
+### Bounded Optimization with BLEIC
+
+Fitting each distribution model to the empirical spectrum is a nonlinear optimization problem: find the parameter values that minimize the sum of squared errors (SSE) between the theoretical spectrum model and the empirical points. We use the BLEIC (Boundary L-BFGS with Equality/Inequality Constraints) algorithm from the ALGLIB library, which is included with MetaTrader 5. BLEIC supports box constraints (upper and lower bounds on each parameter), which is essential because our parameters have physical constraints: α₀ must exceed H, α\_max must exceed α\_min, γ must be positive, and so on.
+
+The optimizer works by evaluating the objective function (SSE) at different parameter values and iteratively moving toward the minimum. Since we use the derivative-free variant (MinBLEICCreateF), it approximates gradients via finite differences. This is slightly slower than providing analytical gradients but much simpler to implement and debug.
+
+Figure 3 shows BLEIC's behavior for the Binomial fit. The SSE surface over the two-dimensional parameter space (α\_min, α\_max) forms a smooth bowl. The optimizer starts at the midpoint of the feasible region and moves downhill while respecting the box constraints, with the step size shrinking as the minimum approaches. The purple dashed boundaries show the box constraints that keep the parameters physically meaningful. Without them, the optimizer could wander into regions where α\_min exceeds α\_max, producing nonsensical results.
+
+[IMG]
+
+Fig. 3. BLEIC navigates the SSE surface: bounded optimization finds the minimum while respecting physical parameter constraints
+
+Let us look at the Normal fit as an example of the code pattern. It optimizes the single parameter α₀:
+
+```
+//+------------------------------------------------------------------+
+//| FitNormal - Optimize alpha_0 for Normal spectrum model           |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::FitNormal(void)
+  {
+   double alpha_min_data = m_alpha[0];
+   double alpha_max_data = m_alpha[0];
+   for(int i = 1; i < m_n_spectrum; i++)
+     {
+      if(m_alpha[i] < alpha_min_data)
+         alpha_min_data = m_alpha[i];
+      if(m_alpha[i] > alpha_max_data)
+         alpha_max_data = m_alpha[i];
+     }
+
+   double lb = MathMax(m_H + 1e-6, alpha_min_data);
+   double ub = alpha_max_data;
+
+   if(lb >= ub)
+     {
+      PrintFormat("SpectrumFitter::FitNormal - no valid range (need alpha_0 > H=%.4f, alpha_max=%.4f)", m_H, alpha_max_data);
+      return DBL_MAX;
+     }
+
+   double x0[];
+   ArrayResize(x0, 1);
+   x0[0] = (lb + ub) / 2.0;
+
+   double bndl[];
+   ArrayResize(bndl, 1);
+   bndl[0] = lb;
+
+   double bndu[];
+   ArrayResize(bndu, 1);
+   bndu[0] = ub;
+
+   CMinBLEICState state;
+   CMinBLEIC::MinBLEICCreateF(1, x0, 1e-6, state);
+   CMinBLEIC::MinBLEICSetBC(state, bndl, bndu);
+   CMinBLEIC::MinBLEICSetCond(state, 1e-8, 1e-8, 1e-8, 200);
+
+   while(CMinBLEIC::MinBLEICIteration(state))
+     {
+      if(state.m_needf)
+        {
+         double alpha_0 = state.m_x[0];
+         state.m_f = ComputeSSE_Normal(alpha_0);
+        }
+     }
+
+   double result[];
+   CMinBLEICReport rep;
+   CMinBLEIC::MinBLEICResults(state, result, rep);
+
+   if(rep.m_terminationtype <= 0)
+     {
+      PrintFormat("SpectrumFitter::FitNormal - optimizer failed (type=%d)", rep.m_terminationtype);
+      return DBL_MAX;
+     }
+
+   m_params[MMAR_DIST_NORMAL][0] = result[0];
+   m_n_params[MMAR_DIST_NORMAL] = 1;
+   double sse = ComputeSSE_Normal(result[0]);
+   m_sse[MMAR_DIST_NORMAL] = sse;
+
+   PrintFormat("  Normal:   SSE=%.6f  alpha_0=%.6f", sse, result[0]);
+   return sse;
+  }
+```
+
+The pattern is consistent across all four distributions. We (1) derive parameter bounds from the data, (2) set the initial guess to the feasible midpoint, (3) configure BLEIC with convergence tolerances and maximum iterations, (4) run the loop that evaluates the SSE at each candidate point, and (5) extract the best parameters from the result. The termination type check ensures we do not accept results from a failed optimization (which can happen if the feasible region is too narrow or the objective is flat).
+
+The SSE evaluation function is straightforward. It loops over all empirical spectrum points, computes the theoretical f(α) at each, and accumulates the squared differences:
+
+```
+//+------------------------------------------------------------------+
+//| ComputeSSE_Normal                                                |
+//+------------------------------------------------------------------+
+double CSpectrumFitter::ComputeSSE_Normal(double alpha_0)
+  {
+   double sse = 0.0;
+   for(int i = 0; i < m_n_spectrum; i++)
+     {
+      double f_fit = NormalSpectrum(m_alpha[i], alpha_0, m_H);
+      double diff = m_f_alpha[i] - f_fit;
+      sse += diff * diff;
+     }
+   return sse;
+  }
+```
+
+The Binomial and Gamma fits follow the same pattern but with two-dimensional parameter spaces. The Binomial optimizes α\_min and α\_max simultaneously, with the constraint that α\_max > α\_min enforced both through the bounds and an explicit check inside the objective function (returning a penalty of 1e10 if violated). The Gamma optimizes α₀ and the shape parameter γ, bounded between 0.1 and 10.0.
+
+### The CSpectrumFitter Class
+
+The full class brings together the Legendre transform and the four fitting routines into a clean pipeline. Let us first look at the class interface to understand the overall structure:
+
+```
+//+------------------------------------------------------------------+
+//| CSpectrumFitter class                                            |
+//+------------------------------------------------------------------+
+class CSpectrumFitter
+  {
+private:
+   //--- Input data
+   double            m_q_values[];
+   double            m_tau_q[];
+   double            m_H;
+   int               m_n_q;
+
+   //--- Computed spectrum
+   double            m_alpha[];
+   double            m_f_alpha[];
+   int               m_n_spectrum;
+
+   //--- Fitting results
+   double            m_sse[4];
+   double            m_params[4][4];
+   int               m_n_params[4];
+   ENUM_MMAR_DISTRIBUTION m_best_dist;
+   bool              m_fitted;
+
+   //--- Spectrum model functions
+   double            NormalSpectrum(double alpha, double alpha_0, double H);
+   double            BinomialSpectrum(double alpha, double alpha_min, double alpha_max);
+   double            PoissonSpectrum(double alpha, double alpha_0, double H, double b);
+   double            GammaSpectrum(double alpha, double alpha_0, double gamma, double b);
+
+   //--- Distribution fitting
+   double            FitNormal(void);
+   double            FitBinomial(void);
+   double            FitPoisson(void);
+   double            FitGamma(void);
+
+   //--- SSE evaluation helpers
+   double            ComputeSSE_Normal(double alpha_0);
+   double            ComputeSSE_Binomial(double alpha_min, double alpha_max);
+   double            ComputeSSE_Poisson(double alpha_0);
+   double            ComputeSSE_Gamma(double alpha_0, double gamma);
+
+public:
+                     CSpectrumFitter(void);
+                    ~CSpectrumFitter(void);
+
+   //--- Initialization
+   bool              Init(const double &q_values[], const double &tau_q[], int n_q, double H);
+
+   //--- Computation
+   bool              ComputeSpectrum(void);
+   bool              FitAllDistributions(void);
+
+   //--- Results access
+   ENUM_MMAR_DISTRIBUTION GetBestDistribution(void) { return m_best_dist; }
+   void              GetBestParams(double &params[]);
+   void              GetSpectrum(double &alpha[], double &f_alpha[]);
+   int               GetSpectrumSize(void) { return m_n_spectrum; }
+   double            GetBestSSE(void)     { return m_sse[(int)m_best_dist]; }
+   bool              IsFitted(void)       { return m_fitted; }
+  };
+```
+
+The private section splits into three logical groups. The input data stores the τ(q) curve and Hurst exponent received from the partition analysis module. The computed spectrum holds the (α, f(α)) pairs produced by the Legendre transform. The fitting results track the SSE and parameters for all four candidate distributions, indexed by the ENUM\_MMAR\_DISTRIBUTION enumeration we defined in MMARConstants.mqh. The two-dimensional m\_params[4][4] array allows up to four parameters per distribution (though our models use at most two). The public interface follows a two-step pattern: call Init() and ComputeSpectrum() to produce the empirical spectrum, then FitAllDistributions() to find the best model. Result accessors let the caller retrieve the winning distribution, its parameters, and the raw spectrum data.
+
+After initialization with the τ(q) curve from Part 4, calling ComputeSpectrum() followed by FitAllDistributions() runs the entire process and selects the best model. Here is the orchestration method:
+
+```
+//+------------------------------------------------------------------+
+//| FitAllDistributions - Fit all 4 models and select best           |
+//+------------------------------------------------------------------+
+bool CSpectrumFitter::FitAllDistributions(void)
+  {
+   if(m_n_spectrum < 3)
+     {
+      Print("SpectrumFitter::FitAllDistributions - spectrum not computed");
+      return false;
+     }
+
+   Print("Fitting spectrum to 4 distributions...");
+
+   ArrayInitialize(m_sse, DBL_MAX);
+   int n_success = 0;
+
+   double sse_n = FitNormal();
+   if(sse_n < DBL_MAX)
+      n_success++;
+
+   double sse_b = FitBinomial();
+   if(sse_b < DBL_MAX)
+      n_success++;
+
+   double sse_p = FitPoisson();
+   if(sse_p < DBL_MAX)
+      n_success++;
+
+   double sse_g = FitGamma();
+   if(sse_g < DBL_MAX)
+      n_success++;
+
+   if(n_success == 0)
+     {
+      Print("SpectrumFitter::FitAllDistributions - all fits failed");
+      return false;
+     }
+
+//--- Select best fit (lowest SSE)
+   m_best_dist = MMAR_DIST_NORMAL;
+   double best_sse = m_sse[MMAR_DIST_NORMAL];
+
+   for(int d = 1; d < 4; d++)
+     {
+      if(m_sse[d] < best_sse)
+        {
+         best_sse = m_sse[d];
+         m_best_dist = (ENUM_MMAR_DISTRIBUTION)d;
+        }
+     }
+
+   string dist_names[] = {"Normal", "Binomial", "Poisson", "Gamma"};
+   double rmse = MathSqrt(best_sse / m_n_spectrum);
+   PrintFormat("BEST FIT: %s (SSE=%.6f, RMSE=%.6f)", dist_names[(int)m_best_dist], best_sse, rmse);
+
+   m_fitted = true;
+   return true;
+  }
+```
+
+The selection criterion is simple: lowest SSE wins. We do not penalize for the number of parameters (as AIC or BIC would) because the parameter counts are small (1 or 2) and the differences in fit quality are typically large enough that parsimony corrections would not change the outcome. The RMSE (root mean squared error) is printed alongside the SSE for interpretability, since it gives the average error in f(α) units.
+
+The results are accessible through getter methods. GetBestDistribution() returns the winning enum value, GetBestParams() fills an array with the distribution parameters, and GetSpectrum() provides the empirical (α, f(α)) pairs for external visualization or validation.
+
+### Running the Full Pipeline
+
+We can now write a test script that chains the partition analysis from Part 4 with the new spectrum fitting module. This script loads market data, runs partition analysis to extract τ(q), then passes the result to the spectrum fitter:
+
+```
+//+------------------------------------------------------------------+
+//|                                               MMAR Spectrum Test |
+//|                      Copyright 2026, MMQ - Muhammad Minhas Qamar |
+//|                           https://www.mql5.com/en/articles/22519 |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2026, MMQ - Muhammad Minhas Qamar"
+#property link      "https://www.mql5.com/en/articles/22519"
+#property version   "1.00"
+#property strict
+#property script_show_inputs
+
+#include <MMAR\PartitionAnalysis.mqh>
+#include <MMAR\SpectrumFitter.mqh>
+
+input int    InpBars       = 50000;
+input double InpQMin       = 0.01;
+input double InpQMax       = 30.0;
+input double InpQStep      = 0.5;
+input int    InpDtMin      = 1;
+input int    InpDtMax      = 150;
+input double InpDtSpacing  = 1.1;
+input double InpMinR2      = 0.60;
+
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+   PrintFormat("=== MMAR Spectrum Fitting Test ===");
+   PrintFormat("Symbol: %s | Period: %s", _Symbol, EnumToString(_Period));
+
+//--- Load close prices and compute log returns
+   double close[];
+   int copied = CopyClose(_Symbol, _Period, 0, InpBars, close);
+   if(copied < 1000)
+     {
+      PrintFormat("Not enough bars: %d (need 1000+)", copied);
+      return;
+     }
+   PrintFormat("Loaded %d bars", copied);
+
+   double returns[];
+   int n_returns = copied - 1;
+   ArrayResize(returns, n_returns);
+   for(int i = 0; i < n_returns; i++)
+      returns[i] = MathLog(close[i + 1] / close[i]);
+
+//--- Phase 2: Partition Analysis
+   CPartitionAnalysis partition;
+   partition.SetPartitionConfig(InpDtMin, InpDtMax, InpDtSpacing);
+   partition.SetMomentConfig(InpQMin, InpQMax, InpQStep);
+   partition.SetMinRSquared(InpMinR2);
+
+   if(!partition.Init(returns, n_returns))
+     {
+      Print("Partition Init failed");
+      return;
+     }
+
+   uint t0 = GetTickCount();
+   if(!partition.Analyze())
+     {
+      Print("Partition Analyze failed");
+      return;
+     }
+   uint t_partition = GetTickCount() - t0;
+
+   double H = partition.GetH();
+   PrintFormat("\n--- Partition Results (%.0f ms) ---", (double)t_partition);
+   PrintFormat("H = %.4f | Vol = %.6f | R2 = %.4f | Score = %d/9",
+               H, partition.GetSampleVolatility(),
+               partition.GetMeanRSquared(), partition.GetMultifractalScore());
+
+//--- Phase 3: Spectrum Fitting
+   double tau[], q_vals[];
+   partition.GetTauQ(tau, q_vals);
+   int n_q = partition.GetNumQ();
+
+   CSpectrumFitter fitter;
+   if(!fitter.Init(q_vals, tau, n_q, H))
+     {
+      Print("SpectrumFitter Init failed");
+      return;
+     }
+
+   t0 = GetTickCount();
+   if(!fitter.ComputeSpectrum())
+     {
+      Print("ComputeSpectrum failed");
+      return;
+     }
+
+   if(!fitter.FitAllDistributions())
+     {
+      Print("FitAllDistributions failed");
+      return;
+     }
+   uint t_spectrum = GetTickCount() - t0;
+
+//--- Print spectrum results
+   PrintFormat("\n--- Spectrum Results (%.0f ms) ---", (double)t_spectrum);
+
+   string dist_names[] = {"Normal", "Binomial", "Poisson", "Gamma"};
+   ENUM_MMAR_DISTRIBUTION best = fitter.GetBestDistribution();
+   PrintFormat("Best distribution: %s", dist_names[(int)best]);
+
+   double params[];
+   fitter.GetBestParams(params);
+   PrintFormat("Parameters:");
+   switch(best)
+     {
+      case MMAR_DIST_NORMAL:
+         PrintFormat("  alpha_0 = %.6f", params[0]);
+         break;
+      case MMAR_DIST_BINOMIAL:
+         PrintFormat("  alpha_min = %.6f", params[0]);
+         PrintFormat("  alpha_max = %.6f", params[1]);
+         break;
+      case MMAR_DIST_POISSON:
+         PrintFormat("  alpha_0 = %.6f", params[0]);
+         break;
+      case MMAR_DIST_GAMMA:
+         PrintFormat("  alpha_0 = %.6f", params[0]);
+         PrintFormat("  gamma   = %.6f", params[1]);
+         break;
+     }
+
+   double best_sse = fitter.GetBestSSE();
+   double rmse = MathSqrt(best_sse / fitter.GetSpectrumSize());
+   PrintFormat("SSE = %.6f | RMSE = %.6f", best_sse, rmse);
+
+//--- Print empirical spectrum (every 5th point)
+   double alpha[], f_alpha[];
+   fitter.GetSpectrum(alpha, f_alpha);
+   int n_spec = fitter.GetSpectrumSize();
+
+   PrintFormat("\n--- Empirical Spectrum (every 5th point) ---");
+   PrintFormat("%10s %10s", "alpha", "f(alpha)");
+   for(int i = 0; i < n_spec; i += 5)
+      PrintFormat("%10.4f %10.4f", alpha[i], f_alpha[i]);
+
+   PrintFormat("\n--- Summary ---");
+   PrintFormat("Partition time: %u ms", t_partition);
+   PrintFormat("Spectrum time:  %u ms", t_spectrum);
+   PrintFormat("Total time:     %u ms", t_partition + t_spectrum);
+
+   Print("\n=== Spectrum Fitting Test Complete ===");
+  }
+```
+
+Running this on EURUSD M10 with 50,000 bars produces:
+
+```
+=== MMAR Spectrum Fitting Test ===
+Symbol: EURUSD | Period: PERIOD_M10
+Loaded 50000 bars
+Multifractality check: concavity=0 linearity=1 variation=1 total=2/9
+
+--- Partition Results (438 ms) ---
+H = 0.4819 | Vol = 0.000419 | R2 = 0.8712 | Score = 2/9
+SpectrumFitter: 58 spectrum points, alpha=[0.1308, 0.5148], peak at alpha_0=0.5148 f=0.9924
+Fitting spectrum to 4 distributions...
+  Normal:   SSE=76.783833  alpha_0=0.514816
+  Binomial: SSE=0.148225  alpha_min=0.183507  alpha_max=0.772224
+  Poisson:  SSE=8.972094  alpha_0=0.514816
+  Gamma:    SSE=0.192775  alpha_0=0.514816  gamma=1.195666
+BEST FIT: Binomial (SSE=0.148225, RMSE=0.050553)
+
+--- Spectrum Results (0 ms) ---
+Best distribution: Binomial
+Parameters:
+  alpha_min = 0.183507
+  alpha_max = 0.772224
+SSE = 0.148225 | RMSE = 0.050553
+
+--- Empirical Spectrum (every 5th point) ---
+     alpha   f(alpha)
+    0.5148     0.9924
+    0.2886     0.5433
+    0.1385    -0.0312
+    0.1317    -0.0696
+    0.1360    -0.0303
+    0.1386     0.0005
+    0.1399     0.0185
+    0.1405     0.0282
+    0.1407     0.0330
+    0.1408     0.0349
+    0.1408     0.0353
+    0.1408     0.0347
+
+--- Summary ---
+Partition time: 438 ms
+Spectrum time:  0 ms
+Total time:     438 ms
+
+=== Spectrum Fitting Test Complete ===
+```
+
+The results are instructive on multiple levels. First, the Binomial distribution wins decisively with an SSE of 0.148 versus the Gamma's 0.193, the Poisson's 8.97, and the Normal's 76.78. The Normal model performs poorly because its symmetric parabola cannot capture the asymmetry of the empirical spectrum, which has a steep left flank (α drops rapidly from the peak at 0.51 down to 0.13) and a flat right tail. The Binomial's entropy-based formula handles this shape naturally.
+
+Second, the spectrum peak at α₀ = 0.5148 with f(α₀) = 0.9924 is very close to the theoretical ideal of f(α₀) = 1.0. This confirms that the Legendre transform is working correctly, because the dominant scaling exponent has a fractal dimension near 1.0, meaning it characterizes nearly the entire time series.
+
+Third, the fitted Binomial parameters (α\_min = 0.1835, α\_max = 0.7722) define the cascade's behavior. In Part 6, when we build the multiplicative cascade, each split will assign multipliers derived from one of these two exponents. The wide gap between α\_min and α\_max (0.59 units) indicates substantial heterogeneity in the scaling, meaning some intervals will be very smooth (high α) while others are very rough (low α). This heterogeneity is exactly what produces realistic volatility clustering in the final MMAR process.
+
+Finally, notice that the spectrum fitting itself takes essentially zero milliseconds. All the computational cost is in the partition analysis (438 ms). The BLEIC optimization converges quickly because the SSE surfaces are smooth and the parameter spaces are low-dimensional (1 or 2 parameters). This means adding spectrum fitting to a live system incurs negligible additional cost beyond the partition analysis we already computed in Part 4.
+
+### Conclusion
+
+In this article, we built the second analytical module of the MMAR library: the CSpectrumFitter class. Starting from the τ(q) scaling function produced by the partition analysis engine in Part 4, we applied the Legendre transform to obtain the empirical singularity spectrum f(α), then fitted four theoretical distribution models using bounded nonlinear optimization.
+
+- The Legendre transform. Converts the scaling function into a physically interpretable representation, where α gives the local smoothness and f(α) gives the fractal dimension of points sharing that smoothness.
+- Four candidate models. (Normal, Binomial, Poisson, Gamma) compete based on SSE. Each encodes different assumptions about the cascade multiplier distribution.
+- BLEIC optimization. From ALGLIB handles the parameter constraints and converges in negligible time for these low-dimensional problems.
+- The Binomial model. Won on our EURUSD M10 data, providing α\_min and α\_max parameters that define the cascade's heterogeneity.
+
+The two analytical stages are now complete. We can take any return series, determine whether it is multifractal, and if so, extract the exact distribution and parameters needed for simulation. In Part 6, we will put these parameters to work: building the multiplicative cascade that warps uniform time into multifractal trading time, generating Fractional Brownian Motion via Davies–Harte and Cholesky methods, and composing them into the full MMAR process X(t) = B H [θ(t)].
+
+The programs presented in this article are intended for educational purposes only. They are not designed for use in live trading and are not optimized for performance in real-market conditions. The code serves as a foundation for understanding multifractal spectrum analysis; always validate thoroughly on demo accounts before considering any adaptation for live trading.
+
+**Getting the Source Code via MQL5 Algo Forge**
+
+All source files are attached below. The full repository is also available on [MQL5 Algo Forge](https://forge.mql5.io/ayantrader/MMAR "https://forge.mql5.io/ayantrader/MMAR"), a Git-based platform for sharing and collaborating on trading projects. Algo Forge stores version history both locally and in the cloud, so you will always have the latest version of the code, including any updates or fixes made after this article was published.
+
+To clone the repository, open a terminal (Command Prompt, PowerShell, or the integrated terminal in your editor) and run:
+
+git clone https://forge.mql5.io/ayantrader/MMAR.git
+
+This requires [Git](https://git-scm.com/downloads/ "https://git-scm.com/downloads") to be installed on your machine. If you are using Visual Studio Code, you can open the integrated terminal with Ctrl+` and run the command directly. The repository will be cloned into an MMAR folder in your current directory.
+
+Alternatively, you can browse the project at [forge.mql5.io/ayantrader/MMAR](https://forge.mql5.io/ayantrader/MMAR "https://forge.mql5.io/ayantrader/MMAR"), where you can view the source files, commit history, and any updates directly in your browser. The Algo Forge advantage over the attached files is that you get the full Git history and can pull future updates with a single command:
+
+git pull
+
+| File name | Description |
+| --- | --- |
+| MQL5\Include\MMAR\MMARConstants.mqh | Shared enumerations, structures, and type definitions for the MMAR library (Part 4) |
+| MQL5\Include\MMAR\OLS.mqh | Ordinary Least Squares regression via SVD pseudo-inverse with full diagnostics (Part 4) |
+| MQL5\Include\MMAR\HurstGHE.mqh | Generalized Hurst Exponent estimator, fallback method (Part 4) |
+| MQL5\Include\MMAR\PartitionAnalysis.mqh | Multifractal partition function analysis with scaling diagnostics (Part 4) |
+| MQL5\Include\MMAR\SpectrumFitter.mqh | Multifractal spectrum computation and four-distribution fitting via BLEIC optimization (Part 5) |
+| MQL5\Scripts\MMAR\MMAR\_PartitionTest.mq5 | Test script for partition analysis on live market data (Part 4) |
+| MQL5\Scripts\MMAR\MMAR\_SpectrumTest.mq5 | Test script for the full partition + spectrum pipeline on live market data (Part 5) |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22519.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/22519/MQL5.zip "Download MQL5.zip")
+(84.71 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Neural Networks in Trading: Hierarchical Skill Discovery for Adaptive Agent Behavior (HiSSD)](https://www.mql5.com/en/articles/17729)
+
+In this article, we explore the HiSSD framework, which combines hierarchical learning and multi-agent approaches to create adaptive systems. We examine in detail how this innovative methodology helps uncover hidden patterns in financial markets and optimize trading strategies in decentralized environments.
+
+[IMG]
+[Carry Trade Logic in MQL5: Building an EA That Factors Swap Rates Into Position Sizing and Holding Decisions](https://www.mql5.com/en/articles/22175)
+
+Most retail traders ignore overnight swap rates, but for long-term positions, these interest payments can make or break your strategy. This article shows you how to build a dynamic MQL5 module that retrieves real-time swap data and converts it into actual profit or loss in your account currency. You will learn how to program an Expert Advisor that automatically calculates if a trade is worth holding based on carry income and adjusts your position size to account for expected interest. It is a practical guide to turning a hidden cost into a mathematical advantage for your trading systems.
+
+[IMG]
+[Engineering Trading Discipline into Code (Part 7): Automating Equity Protection Through Governance Logic](https://www.mql5.com/en/articles/22833)
+
+Automated trading systems often focus heavily on signal generation while neglecting the mechanisms required to protect capital during periods of stress. This article presents an Equity Governance Framework in MQL5 that monitors drawdown conditions, evaluates equity pressure, and dynamically controls trading activity through a state-driven risk management model. By combining drawdown analysis, cooldown logic, trade authorization, and execution restrictions, the framework demonstrates how trading discipline can be engineered directly into code using a modular and extensible architecture.
+
+[IMG]
+[Exchange Market Algorithm (EMA)](https://www.mql5.com/en/articles/18605)
+
+The article presents a detailed analysis of the Exchange Market Algorithm (EMA) inspired by the behavior of stock market traders. The algorithm simulates stock trading, where market participants with varying levels of success employ different strategies to maximize profits.
+
+[[IMG]
+
+Trade from your iPhone or Android device
+
+You only need an internet connection to use the new powerful MetaTrader 5 Web terminal
+
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=wtigumvtenarnsocpyfoqnanxrilnbxx&s=ec8c539e52b83881ff2d16eaff6913b25803952eb277cac55f670a102b2edc1f&uid=&ref=https://www.mql5.com/en/articles/22519&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121879776524110211)

@@ -1,0 +1,118 @@
+{
+  "shard_id": "statistics_and_analysis_004",
+  "section": "Statistics and analysis",
+  "n": 12,
+  "series_in_shard": [
+    "csv data analysis"
+  ],
+  "articles": [
+    {
+      "id": 23443,
+      "title": "Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23443.md"
+    },
+    {
+      "id": 23465,
+      "title": "Exporting Symbol Tick Data to Binary Files in MQL5 for Offline Analysis",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23465.md"
+    },
+    {
+      "id": 23502,
+      "title": "Generating a Per-Symbol Trade Analytics PDF Report from MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23502.md"
+    },
+    {
+      "id": 23560,
+      "title": "Enhancing the MQL5 Portfolio Analyzer Dashboard: Active Mitigation, Data Exports, and AI Integration",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23560.md"
+    },
+    {
+      "id": 23673,
+      "title": "Building a Hidden Risk of Ruin Auditor in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23673.md"
+    },
+    {
+      "id": 24106,
+      "title": "Survival Analysis for Trade Exits: A Discrete-Time Competing-Risks Model in MQL5",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\24106.md"
+    },
+    {
+      "id": 22902,
+      "title": "CSV Data Analysis (Part 2): Building a Production-Grade CSV Export and Parsing Pipeline for Quantitative Strategy Analysis",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Building a Production-Grade CSV Export and Parsing Pipeline for Quantitative Strategy Analysis",
+      "series_key": "csv data analysis",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22902.md"
+    },
+    {
+      "id": 22907,
+      "title": "CSV Data Analysis (Part 3): Engineering a Python Analytics Pipeline for MetaTrader 5 CSV Exports",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Engineering a Python Analytics Pipeline for MetaTrader 5 CSV Exports",
+      "series_key": "csv data analysis",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22907.md"
+    },
+    {
+      "id": 22921,
+      "title": "CSV Data Analysis (Part 4): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation",
+      "series_key": "csv data analysis",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22921.md"
+    },
+    {
+      "id": 23067,
+      "title": "CSV Data Analysis (Part 6): Multi-Broker Result Normalization and Cross-Platform CSV Reconciliation",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Multi-Broker Result Normalization and Cross-Platform CSV Reconciliation",
+      "series_key": "csv data analysis",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23067.md"
+    },
+    {
+      "id": 23125,
+      "title": "CSV Data Analysis (Part 7): Statistical Robustness Testing on MQL5 CSV Exports with Monte Carlo Simulation",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Statistical Robustness Testing on MQL5 CSV Exports with Monte Carlo Simulation",
+      "series_key": "csv data analysis",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23125.md"
+    },
+    {
+      "id": 23280,
+      "title": "CSV Data Analysis (Part 8): Building an SQLite Strategy Registry from Accumulated CSV Exports",
+      "section": "Statistics and analysis",
+      "series_title": "CSV Data Analysis (): Building an SQLite Strategy Registry from Accumulated CSV Exports",
+      "series_key": "csv data analysis",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23280.md"
+    }
+  ]
+}

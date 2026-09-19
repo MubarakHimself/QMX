@@ -1,0 +1,103 @@
+{
+  "pack_id": "tester_018",
+  "section": "Tester",
+  "parent_shard": "tester_018",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 10,
+  "articles": [
+    {
+      "id": 11066,
+      "title": "MQL5 Wizard techniques you should know (Part 01): Regression Analysis",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard techniques you should know (): Regression Analysis",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11066.md"
+    },
+    {
+      "id": 11487,
+      "title": "MQL5 Wizard techniques you should know (Part 03): Shannon's Entropy",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard techniques you should know (): Shannon's Entropy",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11487.md"
+    },
+    {
+      "id": 11930,
+      "title": "MQL5 Wizard techniques you should know (Part 05): Markov Chains",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard techniques you should know (): Markov Chains",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11930.md"
+    },
+    {
+      "id": 12599,
+      "title": "MQL5 Wizard techniques you should know (Part 06): Fourier Transform",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard techniques you should know (): Fourier Transform",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12599.md"
+    },
+    {
+      "id": 14273,
+      "title": "MQL5 Wizard Techniques you should know (Part 12): Newton Polynomial",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): Newton Polynomial",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14273.md"
+    },
+    {
+      "id": 15101,
+      "title": "MQL5 Wizard Techniques you should know (Part 23): CNNs",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): CNNs",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15101.md"
+    },
+    {
+      "id": 15767,
+      "title": "MQL5 Wizard Techniques you should know (Part 37): Gaussian Process Regression with Linear and Mat\u00e9rn Kernels",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): Gaussian Process Regression with Linear and Mat\u00e9rn Kernels",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15767.md"
+    },
+    {
+      "id": 16213,
+      "title": "MQL5 Wizard Techniques you should know (Part 44): Average True Range (ATR) technical indicator",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): Average True Range (ATR) technical indicator",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 44,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16213.md"
+    },
+    {
+      "id": 18723,
+      "title": "MQL5 Wizard Techniques you should know (Part 73): Using Patterns of Ichimoku and the ADX-Wilder",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of Ichimoku and the ADX-Wilder",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 73,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18723.md"
+    },
+    {
+      "id": 18946,
+      "title": "MQL5 Wizard Techniques you should know (Part 77): Using Gator Oscillator and the Accumulation/Distribution Oscillator",
+      "section": "Tester",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Gator Oscillator and the Accumulation/Distribution Oscillator",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 77,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18946.md"
+    }
+  ]
+}

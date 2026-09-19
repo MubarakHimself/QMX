@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_018",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2537,
+      "title": "Graphical Interfaces VIII: The Calendar Control (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2537.md"
+    },
+    {
+      "id": 2539,
+      "title": "Graphical Interfaces VIII: The Tree View Control (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2539.md"
+    },
+    {
+      "id": 2541,
+      "title": "Graphical Interfaces VIII: the File Navigator Control (Chapter 3)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2541.md"
+    },
+    {
+      "id": 2555,
+      "title": "The checks a trading robot must pass before publication in the Market",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2555.md"
+    },
+    {
+      "id": 2579,
+      "title": "Graphical Interfaces IX: The Color Picker Control (Chapter 1)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2579.md"
+    },
+    {
+      "id": 2580,
+      "title": "Graphical Interfaces IX: The Progress Bar and Line Chart Controls (Chapter 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2580.md"
+    },
+    {
+      "id": 2599,
+      "title": "Working with sockets in MQL, or How to become a signal provider",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2599.md"
+    },
+    {
+      "id": 2612,
+      "title": "Testing trading strategies on real ticks",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2612.md"
+    },
+    {
+      "id": 2626,
+      "title": "LifeHack for trader: \"Quiet\" optimization or Plotting trade distributions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2626.md"
+    },
+    {
+      "id": 2634,
+      "title": "Graphical Interfaces X: Updates for Easy And Fast Library (Build 2)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2634.md"
+    },
+    {
+      "id": 2635,
+      "title": "MQL5 vs QLUA - Why trading operations in MQL5 are up to 28 times faster?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2635.md"
+    },
+    {
+      "id": 2646,
+      "title": "Portfolio trading in MetaTrader 4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2646.md"
+    }
+  ]
+}

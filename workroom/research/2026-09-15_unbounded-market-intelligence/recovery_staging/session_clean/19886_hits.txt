@@ -1,0 +1,85 @@
+4: title: "Introduction to MQL5 (Part 23): Automating Opening Range Breakout Strategy"
+11: series_title: "Introduction to MQL5 (): Automating Opening Range Breakout Strategy"
+20: # Introduction to MQL5 (Part 23): Automating Opening Range Breakout Strategy
+25: | 14 October 2025 at 07:43
+36: ### Introduction
+38: Welcome back to Part 23 of the Introduction to MQL5 series! I'll walk you through automating the Opening Range Breakout (ORB) approach with MQL5 in this article. The objective is to teach you MQL5 in a project-based, beginner-friendly manner, not to promise profits or endorse a trading strategy. Working on actual examples like these will help you develop your MQL5 skills in a useful way while givi
+40: This article will explain the Opening Range Breakout (ORB) strategy and show you how to use MQL5 to automate it. You'll learn how to set trade conditions, record the opening range, and configure your Expert Advisor to make trades automatically in response to breakouts. To make sure that entries only take place during the specified market window, we'll also look at how to employ time-based logic to
+42: ### **Opening Range Breakout (ORB)**
+44: The opening range breakout strategy tracks the high and low for a brief window of time immediately following the market's opening. The opening range is made up of that high and low. After that, you can look for the price to break either below or above the range low. Potential bullish momentum is indicated by a breakout above the high, while possible bearish momentum is indicated by a breakout belo
+46: The first five, fifteen, thirty, or sixty minutes of the session are typical opening range lengths. Shorter ranges provide more signals but also more noise, capturing extremely early volatility. Although they generate fewer signals and are smoother, longer ranges are frequently of greater quality. Choose a range that corresponds to the asset and trading period.  You might use the first 15 or 30 mi
+48: The price closing above the starting range high for a long entry or below the opening range low for a short entry is a straightforward breakout rule. Some traders need more confirmation, such as a candle closure plus a little pips buffer to prevent noise-induced false breakouts. Others watch for a retest, in which the price breaks out, moves back to the range border, and then moves back toward the
+52: Consider a scenario in which the market opens at precisely 9:30 a.m. The M15 candle that begins to form at that moment is then your main focus. You take note of the candle's high and low prices after it closes, and this becomes your opening range.
+56: In simple terms, you are setting boundaries during the first fifteen minutes after the market opens and then keeping an eye out for your Opening Range Breakout (ORB), which occurs when the price breaks those parameters.
+60: ### **How the EA Works**
+62: Before beginning the programmatic implementation, you have to first understand the Expert Advisor's (EA) operation by following its detailed procedure. The first step is to determine that the market opens at 9:30 a.m. (server time). The first 15-minute candle that forms at precisely 9:30 will then be carefully awaited by the EA. The EA will identify the opening range by marking and drawing lines o
+72: ### **Identifying the Market Start Time**
+74: The next step is to determine the market opening time once we have a thorough understanding of how the EA operates. As an illustration, suppose the market opens at 9:30 server time. We require the EA to automatically detect that particular time at all times. If your EA is running on a VPS and you don't want to manually update the date every day, you need a way to isolate just the time portion beca
+76: The difficulty arises from the fact that, although the underlying date varies, the same hour and minute recur daily. A complete datetime value will only match once before failing on consecutive days if you merely compare it to a set number. The EA must distinguish between the time and date components to deal with this. This allows it to determine whether the current bar or tick, regardless of the 
+80: ```
+122: ```
+134: Next, it draws a vertical line on the chart at the exact time the market opens. This vertical line acts as a visual marker for the start of the opening range.
+136: ### **Identifying the First 15-Minute Candle High and Low**
+138: Copying the candle data for the first 15-minute candle that forms at precisely 9:30 server time is the next step. Because they establish the day's opening range, these two prices are significant. This candle's low indicates the level for a bearish breakout, and its high indicates the level at which a bullish breakout would be verified. We establish the reference range that the EA will utilize to d
+140: Because it establishes the limit for possible price fluctuations, capturing the opening range is essential. Following the initial phase of consolidation, you can use these levels to determine if the market is going upward or downward. These values will act as the benchmark in the EA; a buy signal may be generated if the price rises above the high, and a sell signal may be triggered if it falls bel
+144: ```
+203:       ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+207:       ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+214: ```
+222: This part determines the whole formation time of the first 15-minute candle, extracts its important pricing information, and transforms its closure time from a string so that it may be used in computations. The program then waits to verify the completion of the candle and securely extracts its high, low, open, and close values when the server time reaches or surpasses this closing time.
+224: The Opening Range Breakout approach depends on these recovered values. The program will use the high and low prices, which delineate the opening range, to keep an eye out for breakout circumstances on shorter time frames. For viewing purposes, lines are also added on the chart at these high and low levels. Before making any trades, this helps you make sure the EA is tracking the right levels and l
+226: The program displays a vertical line to mark the exact market opening hour each day because open time is a single variable. It then waits for the M15 candle to fully close before using its high and low values to guarantee correct data and prevent "array out of range" problems.
+228: ### **Using 5-Minute Charts to Detect Opening Range Breakouts**
+234: ```
+254: ```
+256: ```
+265:    ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+269:    ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+280: if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0])
+287: if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0])
+293: ```
+303: Following the closing of the first fifteen-minute candle, this logic looks for breakthrough conditions. If the most recent lower time frame candle closed above the high of the fifteen-minute opening range, and the prior five-minute candle was still below that high, then the first criterion indicates a bullish breakout. This attests to the price's upward breakout. When the most recent five-minute c
+307: You'll notice that the reasoning is different from the more well-known open-based method in that it refers to the closing of the previous candle rather than the open of the current one. This close-based check has the advantage of verifying that the price actually passed the opening range between two completed candles. A true breakout was shown by the most recent candle closing above the range when
+313: ### **Trade Execution**
+319: ```
+320: #include <Trade/Trade.mqh>
+325: ```
+327: ```
+384:       ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+388:       ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+401:    if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime)
+411:    if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime)
+420: ```
+430: To guarantee that the EA's unique identification number is included in each deal it opens, a command is utilized. While one variable records the most recent market ask price, another collects the current candle's opening time. Nevertheless, it becomes problematic when the EA makes several breakout trades in a single session, which can be risky in an erratic market. Risk exposure is increased by ma
+432: To accomplish this, we must change the program so that it looks for the first breakout and then stops accepting trades for the remainder of the session after completing that trade. By doing this, the EA is guaranteed to maintain discipline and concentrate solely on the first breakout opportunity rather than responding to each potential false move that may arise later in the day.
+436: ```
+439: ```
+441: ```
+466:       ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+470:       ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+474:       open_to_current = Bars(_Symbol,PERIOD_M5,open_time_bar_close,TimeCurrent());
+486:    if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+496:    if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+529: ```
+539: To let the EA execute only one deal every session, the isBreakout variable acts as a flag. When it is first set to false, the system is free to execute a breakout trade. When a legitimate breakout is identified, either bullish or bearish, the code within the loop sets isBreakout to true, which stops any further trades from being made. This aids in upholding the guideline that the EA should only ca
+541: All available candle data from the end of the opening range to the present is now gathered by the program using a dynamic variable. This enhancement increases the accuracy and efficiency of breakout detection by enabling it to continuously monitor new candles as they form.
+543: Finally, the section if(TimeCurrent() < open\_time) resets isBreakout to false before the new trading day starts, so the EA will be ready to detect and trade the next day’s breakout.
+549: ```
+550: #include <Trade/Trade.mqh>
+556: ```
+558: ```
+559: if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+572: if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+600: ```
+608: Additionally, we want to confirm that the EA can only take trades before 15:00 server time. By doing this, trading discipline is preserved, and the system is kept from making transactions during periods of lower activity, when volatility and liquidity may have decreased. The EA should cease making any more trades when the clock strikes fifteen o'clock. Furthermore, the EA ought to immediately clos
+612: ```
+615: ```
+617: ```
+627: ```
+629: ```
+630: if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+643: if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+693: ```
+709: ### **Conclusion**
+711: We looked at automating the Opening Range Breakout (ORB) method with MQL5 in this article. We created an EA that recognizes breakouts between several timeframes and automatically makes trades in accordance with preset guidelines. Additionally, we designed a specific trading window to stop deals after 15:00 server time and implemented trade limitations to limit the number of entries per breakout. T
+737: Trading strategies may be challenging to improve because we often don’t fully understand what the strategy is doing wrong. In this discussion, we introduce linear system identification, a branch of control theory. Linear feedback systems can learn from data to identify a system’s errors and guide its behavior toward intended outcomes. While these methods may not provide fully interpretable explana

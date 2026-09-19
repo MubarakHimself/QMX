@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_002",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2552,
+      "title": "LifeHack for trader: four backtests are better than one",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2552.md"
+    },
+    {
+      "id": 3074,
+      "title": "Comparative Analysis of 10 Trend Strategies",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3074.md"
+    },
+    {
+      "id": 3146,
+      "title": "Trading with Donchian Channels",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3146.md"
+    },
+    {
+      "id": 3188,
+      "title": "How Long Is the Trend?",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3188.md"
+    },
+    {
+      "id": 3279,
+      "title": "Custom Walk Forward optimization in MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3279.md"
+    },
+    {
+      "id": 3442,
+      "title": "TradeObjects: Automation of trading based on MetaTrader graphical objects",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3442.md"
+    },
+    {
+      "id": 3642,
+      "title": "Optimizing a strategy using balance graph and comparing results with \"Balance + max Sharpe Ratio\" criterion",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3642.md"
+    },
+    {
+      "id": 3965,
+      "title": "Mini Market Emulator or Manual Strategy Tester",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3965.md"
+    },
+    {
+      "id": 3968,
+      "title": "Resolving entries into indicators",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3968.md"
+    },
+    {
+      "id": 4150,
+      "title": "Controlled optimization: Simulated annealing",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4150.md"
+    },
+    {
+      "id": 4347,
+      "title": "Applying the Monte Carlo method for optimizing trading strategies",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4347.md"
+    },
+    {
+      "id": 4395,
+      "title": "Visualizing trading strategy optimization in MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4395.md"
+    }
+  ]
+}

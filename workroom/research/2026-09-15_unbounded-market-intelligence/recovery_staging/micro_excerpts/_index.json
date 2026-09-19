@@ -1,0 +1,771 @@
+[
+  {
+    "id": 22263,
+    "title": "Market Microstructure in MQL5 (Part 1): Robust Foundation",
+    "heads": [
+      "# Market Microstructure in MQL5 (Part 1): Robust Foundation",
+      "### Introduction",
+      "###",
+      "### Why Intraday Data Is Different",
+      "###",
+      "### The Architecture of the Toolkit",
+      "###",
+      "### Constants and Configuration",
+      "###",
+      "### Data Structures",
+      "###",
+      "### Safe Math Functions",
+      "###",
+      "### Data Validation and Access",
+      "###"
+    ],
+    "n_hits": 35
+  },
+  {
+    "id": 22553,
+    "title": "Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+    "heads": [
+      "# Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+      "### Introduction",
+      "###",
+      "### What the Hurst Exponent Means for an NQ Trader",
+      "###",
+      "### Three Estimators, Three Lenses",
+      "###",
+      "### Implementation: HurstExponentRS()",
+      "###",
+      "### Implementation: AdvancedHurstExponent()",
+      "###",
+      "### Implementation: HurstExponentRobust()",
+      "###",
+      "### The HurstProfile Indicator",
+      "###"
+    ],
+    "n_hits": 46
+  },
+  {
+    "id": 22598,
+    "title": "Market Microstructure in MQL5 (Part 3): Estimating ARFIMA d with GPH",
+    "heads": [
+      "# Market Microstructure in MQL5 (Part 3): Estimating ARFIMA d with GPH",
+      "### Introduction",
+      "###",
+      "### The ARFIMA Connection: d, H, and What Each Measures",
+      "###",
+      "### The GPH Estimator: Log\u2011Periodogram Regression",
+      "###",
+      "### Implementation: GPHEstimator()",
+      "###",
+      "### Implementation: PopulateARFIMAAnalysis()",
+      "###",
+      "### Empirical Study: GPH Applied to US100 M1",
+      "###",
+      "### Practical Interpretation and Trading Thresholds",
+      "###"
+    ],
+    "n_hits": 46
+  },
+  {
+    "id": 22638,
+    "title": "Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+    "heads": [
+      "# Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+      "### Introduction",
+      "###",
+      "### The Stylized Facts of Volatility",
+      "### Implementation 1: Revised Multifractal Spectrum (MFDFA)",
+      "###",
+      "### Implementation 2: Realized and Duration-Adjusted Volatility",
+      "###",
+      "### Implementation 3: Fractional Volatility",
+      "###",
+      "### Implementation 4: FIGARCH-Inspired Proxy",
+      "###",
+      "### Implementation 5: Clustering Index, GJR Leverage Effect, Bipower Jump Intensity",
+      "###",
+      "### Implementation 6: PopulateVolatilityAnalysis Wrapper"
+    ],
+    "n_hits": 46
+  },
+  {
+    "id": 23372,
+    "title": "Market Microstructure in MQL5 (Part 8): Micro-Trend Strength",
+    "heads": [
+      "# Market Microstructure in MQL5 (Part 8): Micro-Trend Strength",
+      "## Introduction",
+      "## The micro-trend Problem",
+      "## Theory: Four Sub-Scores and a Penalty",
+      "### EMA alignment",
+      "### ATR-normalized price position",
+      "### Slope consistency",
+      "### Volume confirmation",
+      "### The contradiction penalty",
+      "### The combination formula",
+      "## Implementation",
+      "### Enumeration and struct",
+      "### GetMicroTrendStrength()",
+      "### Classification functions",
+      "### Populate functions and the Part 7 link"
+    ],
+    "n_hits": 41
+  },
+  {
+    "id": 8818,
+    "title": "Prices in DoEasy library (part 59): Object to store data of one tick",
+    "heads": [
+      "# Prices in DoEasy library (part 59): Object to store data of one tick",
+      "### Table of contents",
+      "### Concept",
+      "### Preparing data",
+      "### Tick data object class",
+      "### Testing tick data object",
+      "### What's next?"
+    ],
+    "n_hits": 10
+  },
+  {
+    "id": 8912,
+    "title": "Prices in DoEasy library (part 60): Series list of symbol tick data",
+    "heads": [
+      "# Prices in DoEasy library (part 60): Series list of symbol tick data",
+      "### Contents",
+      "### Concept",
+      "### Improving library classes",
+      "### Tick data series object class",
+      "### Testing the list creation and data retrieval",
+      "### What's next?"
+    ],
+    "n_hits": 12
+  },
+  {
+    "id": 8952,
+    "title": "Prices in DoEasy library (part 61): Collection of symbol tick series",
+    "heads": [
+      "# Prices in DoEasy library (part 61): Collection of symbol tick series",
+      "### Contents",
+      "### Concept",
+      "### Class collection of tick data",
+      "### Test",
+      "### What's next?"
+    ],
+    "n_hits": 10
+  },
+  {
+    "id": 8988,
+    "title": "Prices in DoEasy library (part 62): Updating tick series in real time, preparation for working with Depth of Market",
+    "heads": [
+      "# Prices in DoEasy library (part 62): Updating tick series in real time, preparation for working with Depth of Market",
+      "### Contents",
+      "### Concept",
+      "### Improving library classes",
+      "### Updating tick series",
+      "### Improving the symbol class for working with the Depth of Market",
+      "### Test",
+      "### What's next?"
+    ],
+    "n_hits": 34
+  },
+  {
+    "id": 9010,
+    "title": "Prices in DoEasy library (part 63): Depth of Market and its abstract request class",
+    "heads": [
+      "# Prices in DoEasy library (part 63): Depth of Market and its abstract request class",
+      "### Contents",
+      "### Concept",
+      "### Class of the abstract order object in the Depth of Market",
+      "### Descendant classes of the abstract order object",
+      "### Test",
+      "### What's next?"
+    ],
+    "n_hits": 52
+  },
+  {
+    "id": 9044,
+    "title": "Prices in DoEasy library (Part 64): Depth of Market, classes of DOM snapshot and snapshot series objects",
+    "heads": [
+      "# Prices in DoEasy library (Part 64): Depth of Market, classes of DOM snapshot and snapshot series objects",
+      "### Contents",
+      "### Concept",
+      "### Improving library classes",
+      "### Depth of Market snapshot object class",
+      "### Depth of Market snapshot series object class",
+      "### Test",
+      "### What's next?"
+    ],
+    "n_hits": 74
+  },
+  {
+    "id": 9095,
+    "title": "Prices and Signals in DoEasy library (Part 65): Depth of Market collection and the class for working with MQL5.com Signals",
+    "heads": [
+      "# Prices and Signals in DoEasy library (Part 65): Depth of Market collection and the class for working with MQL5.com Signals",
+      "### Contents",
+      "### Concept",
+      "### Improving library classes",
+      "### DOM collection class",
+      "### MQL5 signal object class",
+      "### Test",
+      "### What's next?"
+    ],
+    "n_hits": 74
+  },
+  {
+    "id": 1179,
+    "title": "MQL5 Cookbook: Handling BookEvent",
+    "heads": [
+      "# MQL5 Cookbook: Handling BookEvent",
+      "### Introduction",
+      "### 1. BookEvent",
+      "### 2. Event Handler of BookEvent",
+      "### 3. BookEvent Handling Template",
+      "### 4. Depth of Market",
+      "##",
+      "### Conclusion"
+    ],
+    "n_hits": 33
+  },
+  {
+    "id": 1793,
+    "title": "MQL5 Cookbook: Implementing Your Own Depth of Market",
+    "heads": [
+      "# MQL5 Cookbook: Implementing Your Own Depth of Market",
+      "### Table of Contents",
+      "### Introduction",
+      "### Chapter 1. Standard Depth of Market in MetaTrader 5 and methods of using it",
+      "### Chapter 2. CMarketBook class for easy access and operation with Depth of Market",
+      "### Chapter 3. Writing your own Depth of Market as a panel indicator",
+      "### Chapter 4. Documentation for CMarketBook class",
+      "### Conclusion"
+    ],
+    "n_hits": 160
+  },
+  {
+    "id": 3336,
+    "title": "Implementing a Scalping Market Depth Using the CGraphic Library",
+    "heads": [
+      "# Implementing a Scalping Market Depth Using the CGraphic Library",
+      "### Table of Contents",
+      "### Introduction",
+      "### Changes made since the release of previous version",
+      "### Overview of the CPanel graphics library",
+      "### Synchronizing the tick stream with the order book",
+      "### CGraphic Basics",
+      "### Integration of CGraphic with the CPanel library",
+      "### Installation. Performance in dynamics. Comparative characteristics of Market Depth features",
+      "### Conclusion"
+    ],
+    "n_hits": 27
+  },
+  {
+    "id": 18821,
+    "title": "Analyzing the Hourly Movement of Trading Symbols and Their Spreads in MetaTrader 5",
+    "heads": [
+      "# Analyzing the Hourly Movement of Trading Symbols and Their Spreads in MetaTrader 5",
+      "### Introduction",
+      "###",
+      "### **Choosing the right time to trade**",
+      "###",
+      "### Features of the trading symbols movement,\u00a0**interpretation of\u00a0ISI ProSpread SMA readings**",
+      "###",
+      "### **The magic of repetition: The phenomenon of intraday seasonality**",
+      "###",
+      "### **Detailed description of indicator formulas**",
+      "### **Dashboard - How to read data**",
+      "###",
+      "### Instructions for using the indicator",
+      "###",
+      "### Conclusion"
+    ],
+    "n_hits": 66
+  },
+  {
+    "id": 20371,
+    "title": "Formulating Dynamic Multi-Pair EA (Part 6): Adaptive Spread Sensitivity for High-Frequency Symbol Switching",
+    "heads": [
+      "# Formulating Dynamic Multi-Pair EA (Part 6): Adaptive Spread Sensitivity for High-Frequency Symbol Switching",
+      "### Introduction",
+      "### System Overview and Strategic Approach",
+      "###",
+      "### Getting Started",
+      "### **Back Test Results**",
+      "###",
+      "### Conclusion"
+    ],
+    "n_hits": 60
+  },
+  {
+    "id": 22998,
+    "title": "Measuring broker execution quality in MQL5: Why your live account doesn't match the backtest",
+    "heads": [
+      "# Measuring broker execution quality in MQL5: Why your live account doesn't match the backtest",
+      "### Introduction",
+      "### What execution quality really is",
+      "### MetaTrader 5 execution modes and why they matter",
+      "### The approach: a diagnostic, not a filter",
+      "### How to use it",
+      "### A word of caution: what you are really measuring",
+      "### Extending the tool",
+      "### Limitations",
+      "### Conclusion"
+    ],
+    "n_hits": 52
+  },
+  {
+    "id": 23299,
+    "title": "Execution Cost and Slippage Sensitivity Analyzer",
+    "heads": [
+      "# Execution Cost and Slippage Sensitivity Analyzer",
+      "### Introduction",
+      "### Why a Backtest Understates Costs",
+      "### What Cost Sensitivity Measures",
+      "### Architecture of the Execution Cost Sensitivity Analyzer",
+      "### The Main Script: Putting It All Together",
+      "### Exporting Your Own Trades",
+      "### Interpreting the Results",
+      "### Applicability and Limitations",
+      "### Conclusion"
+    ],
+    "n_hits": 39
+  },
+  {
+    "id": 23755,
+    "title": "A Reusable Breakeven Manager in MQL5 with Spread Compensation",
+    "heads": [
+      "# A Reusable Breakeven Manager in MQL5 with Spread Compensation",
+      "### Introduction",
+      "### Section 1: The Breakeven Record",
+      "### Section 2: Sampling the Live Spread",
+      "###",
+      "### Section 3: Computing the Breakeven Level",
+      "###",
+      "### Section 4: Executing the Modification",
+      "###",
+      "### Section 5: The Breakeven Manager",
+      "###",
+      "### Section 6: BreakevenEA.mq5\u00a0\u2014 Integration Demo",
+      "###",
+      "### Section 7: Verification, TestBreakevenManager.mq5",
+      "###"
+    ],
+    "n_hits": 66
+  },
+  {
+    "id": 2739,
+    "title": "An Example of Developing a Spread Strategy for Moscow Exchange Futures",
+    "heads": [
+      "# An Example of Developing a Spread Strategy for Moscow Exchange Futures",
+      "### Negative Correlation of Assets: Si and RTS",
+      "### Calculating Linear Regression between Si and RTS",
+      "### Drawing an indicator of spread between Si and a synthetic sequence",
+      "### Creating a linear regression channel on the spread channel over the last 100 bars",
+      "### Strategy #1: Linear regression slope change on a spread chart",
+      "### Testing the trading Strategy #1",
+      "### Optimization of trading Strategy #1",
+      "### Strategy #2: Spread sign change on a completed bar",
+      "### Strategy #3: Spread sign change on the current bar and confirmation over N ticks",
+      "### Strategy 4: Spread reaches a preset percent value",
+      "### MetaTrader 5 \u2014\u00a0Trading strategy developing environment",
+      "### Important notes on the Strategies"
+    ],
+    "n_hits": 50
+  },
+  {
+    "id": 14035,
+    "title": "Forex spread trading using seasonality",
+    "heads": [
+      "# Forex spread trading using seasonality",
+      "### Introduction",
+      "### 1. Pair trading on Forex",
+      "### 2. Plotting a spread chart",
+      "###",
+      "### 3. Calculating the size of spread symbol positions",
+      "### **4. Examples of seasonal analysis in spread trading**",
+      "### 5. Providing data in the seasonal analysis of symbol spread movements",
+      "### Conclusion"
+    ],
+    "n_hits": 56
+  },
+  {
+    "id": 15622,
+    "title": "Evaluating the Quality of Forex Spread Trading Based on Seasonal Factors in MetaTrader 5",
+    "heads": [
+      "# Evaluating the Quality of Forex Spread Trading Based on Seasonal Factors in MetaTrader 5",
+      "### Introduction",
+      "### Seasonality and spread trading",
+      "###",
+      "### Seasonality analysis methodology",
+      "### Seasonal spread trading: Description and graphical representation",
+      "###",
+      "### Applying the SpreadMultiYearComparison indicator",
+      "###",
+      "### Trading seasonality on the daily timeframe: general principles",
+      "### **How to use the SpreadMultiYearComparison indicator**",
+      "### Conclusion"
+    ],
+    "n_hits": 62
+  },
+  {
+    "id": 17934,
+    "title": "Advanced Order Execution Algorithms in MQL5: TWAP, VWAP, and Iceberg Orders",
+    "heads": [
+      "# Advanced Order Execution Algorithms in MQL5: TWAP, VWAP, and Iceberg Orders",
+      "### Introduction",
+      "###",
+      "### Understanding Execution Algorithms",
+      "### Implementation in MQL5",
+      "###",
+      "### Performance Analyzer Implementation",
+      "###",
+      "###",
+      "### Comparing Algorithm Performance",
+      "###",
+      "### Integrating Execution Algorithms with Trading Strategies",
+      "### Integration Examples",
+      "### Integrated Strategy",
+      "###"
+    ],
+    "n_hits": 148
+  },
+  {
+    "id": 22963,
+    "title": "Implementing Anchored VWAP Indicator in MQL5: A Step-by-Step Guide",
+    "heads": [
+      "# Implementing Anchored VWAP Indicator in MQL5: A Step-by-Step Guide",
+      "### Introduction",
+      "### Why Anchored VWAP Matters",
+      "### Calculation Methodology",
+      "### Indicator Template",
+      "### Properties",
+      "### Headers",
+      "### Input Definition and Validation",
+      "### Buffer Declaration",
+      "### Initialization",
+      "### The Anchor Line",
+      "### Applied Price",
+      "### Volume Types",
+      "### Next Anchor Time",
+      "### Indicator Calculation"
+    ],
+    "n_hits": 76
+  },
+  {
+    "id": 22990,
+    "title": "Building an Object-Oriented Session VWAP Engine in MQL5",
+    "heads": [
+      "# Building an Object-Oriented Session VWAP Engine in MQL5",
+      "### Introduction and Practical Pain Points",
+      "### The Core Math and Daily Time Anchors",
+      "### The VWAP Signal Contract",
+      "### Architecting the Reusable Include File",
+      "### Tracking Midnight via MqlDateTime",
+      "### Implementing the Double-Pass Calculation Loop",
+      "### Building the Visual Diagnostic Indicator",
+      "### EA Integration and Execution Layer",
+      "### Backtesting Constraints and Market Dynamics",
+      "### Conclusion and Reusable Artifacts",
+      "### File Structure Table"
+    ],
+    "n_hits": 64
+  },
+  {
+    "id": 16984,
+    "title": "Price Action Analysis Toolkit Development (Part 10): External Flow (II) VWAP",
+    "heads": [
+      "# Price Action Analysis Toolkit Development (Part 10): External Flow (II) VWAP",
+      "### Introduction",
+      "### Understanding the Strategy",
+      "### Core Logic",
+      "# Ensure critical columns have no missing values",
+      "# Convert 'date' column to datetime",
+      "# Handle zero volume by replacing with NaN and dropping invalid rows",
+      "# Check if data exists after filtering",
+      "# Calculate VWAP and additional metrics",
+      "# Calculate strength and generate signals",
+      "# Generate Buy/Sell signals based on VWAP",
+      "# Signal explanation",
+      "# Return data with major and minor support/resistance levels included",
+      "### Outcomes",
+      "### Conclusion"
+    ],
+    "n_hits": 43
+  },
+  {
+    "id": 22063,
+    "title": "Beyond the Clock (Part 1): Building Activity and Imbalance Bars in Python and MQL5",
+    "heads": [
+      "# Beyond the Clock (Part 1): Building Activity and Imbalance Bars in Python and MQL5",
+      "### Table of Contents",
+      "### Introduction",
+      "###",
+      "### The Problem with Sampling on the Clock",
+      "###",
+      "### Infrastructure: Parquet Storage and Dask Loading",
+      "###",
+      "### Cleaning Tick Data Before Bar Construction",
+      "###",
+      "### Standard Bars: Time, Tick, Volume, Dollar",
+      "###",
+      "### Information Bars: Sampling on Market Intent",
+      "# Preferred \u2014 auto-calibrated dollar imbalance bars targeting M15 cadence",
+      "# Advanced \u2014 explicit initialization when calibration has been done offline"
+    ],
+    "n_hits": 73
+  },
+  {
+    "id": 21825,
+    "title": "Creating Custom Indicators in MQL5 (Part 9): Order Flow Footprint Chart with Price Level Volume Tracking",
+    "heads": [
+      "# Creating Custom Indicators in MQL5 (Part 9): Order Flow Footprint Chart with Price Level Volume Tracking",
+      "### Introduction",
+      "### Decoding the Footprint Chart - What Price Levels Reveal About Market Participation",
+      "### Implementation in MQL5",
+      "### Backtesting",
+      "### Conclusion"
+    ],
+    "n_hits": 90
+  },
+  {
+    "id": 21829,
+    "title": "Creating Custom Indicators in MQL5 (Part 10): Enhancing the Footprint Chart with Per-Bar Volume Sentiment Information Box",
+    "heads": [
+      "# Creating Custom Indicators in MQL5 (Part 10): Enhancing the Footprint Chart with Per-Bar Volume Sentiment Information Box",
+      "### Introduction",
+      "### Reading the Bar Story \u2014 What Per-Bar Volume Sentiment Reveals at a Glance",
+      "### Implementation in MQL5",
+      "### Backtesting",
+      "### Conclusion"
+    ],
+    "n_hits": 67
+  },
+  {
+    "id": 21984,
+    "title": "Creating Custom Indicators in MQL5 (Part 11): Enhancing the Footprint Chart with Market Structure and Order Flow Layers",
+    "heads": [
+      "# Creating Custom Indicators in MQL5 (Part 11): Enhancing the Footprint Chart with Market Structure and Order Flow Layers",
+      "### Introduction",
+      "### Layering the Market \u2014 How Structure and Order Flow Combine Inside Each Bar",
+      "### Implementation in MQL5",
+      "### Backtesting",
+      "### Conclusion"
+    ],
+    "n_hits": 83
+  },
+  {
+    "id": 2612,
+    "title": "Testing trading strategies on real ticks",
+    "heads": [
+      "# Testing trading strategies on real ticks",
+      "### Trading strategy",
+      "### Testing",
+      "### Comparing results of different test modes",
+      "###",
+      "### Trading systems depending on ticks",
+      "###",
+      "### Four tick generation modes",
+      "### Start developing a system with \"1 minute OHLC\" mode",
+      "### Next step \u2013 debugging and \"Every tick\" mode",
+      "### Accuracy vs speed"
+    ],
+    "n_hits": 11
+  },
+  {
+    "id": 11106,
+    "title": "Developing a Replay System \u2014 Market simulation (Part 17): Ticks and more ticks (I)",
+    "heads": [
+      "# Developing a Replay System \u2014 Market simulation (Part 17): Ticks and more ticks (I)",
+      "### Introduction",
+      "### Implementing the first version",
+      "### Modifying the C\\_Replay class",
+      "### Final considerations"
+    ],
+    "n_hits": 14
+  },
+  {
+    "id": 11113,
+    "title": "Developing a Replay System \u2014 Market simulation (Part 18): Ticks and more ticks (II)",
+    "heads": [
+      "# Developing a Replay System \u2014 Market simulation (Part 18): Ticks and more ticks (II)",
+      "### Introduction",
+      "### Implementing a correction for the 1-minute bar creation time",
+      "### Implementing fixes in the quick navigation system",
+      "### Using simulated data in Market Watch",
+      "### Conclusion"
+    ],
+    "n_hits": 14
+  },
+  {
+    "id": 23465,
+    "title": "Exporting Symbol Tick Data to Binary Files in MQL5 for Offline Analysis",
+    "heads": [
+      "# Exporting Symbol Tick Data to Binary Files in MQL5 for Offline Analysis",
+      "### Introduction",
+      "###",
+      "### Why Binary for Tick Data",
+      "###",
+      "### The Binary File Format",
+      "###",
+      "### The MQL5 Tick Data API",
+      "###",
+      "### Binary File I/O in MQL5",
+      "###",
+      "### Implementation \u2014 TickRecord.mqh",
+      "###",
+      "### Implementation \u2014 TickFileHeader.mqh",
+      "###"
+    ],
+    "n_hits": 33
+  },
+  {
+    "id": 22460,
+    "title": "Creating a Custom Tick Chart in MQL5",
+    "heads": [
+      "# Creating a Custom Tick Chart in MQL5",
+      "### Table of Contents",
+      "### **Introduction**",
+      "### **Project Overview and Implementation Plan**",
+      "### **Creating a Custom Tick Chart in MQL5**",
+      "### **Conclusion**"
+    ],
+    "n_hits": 10
+  },
+  {
+    "id": 18680,
+    "title": "MetaTrader tick info access from MQL5 services to Python application using sockets",
+    "heads": [
+      "# MetaTrader tick info access from MQL5 services to Python application using sockets",
+      "### Introduction",
+      "### Program Flow",
+      "### Why services and python?",
+      "### Services Program",
+      "### Python Server Program",
+      "### Python Client Program",
+      "### Demo of Data Flow",
+      "### Conclusion"
+    ],
+    "n_hits": 6
+  },
+  {
+    "id": 20327,
+    "title": "Analytical Volume Profile Trading (AVPT): Liquidity Architecture, Market Memory, and Algorithmic Execution",
+    "heads": [
+      "# Analytical Volume Profile Trading (AVPT): Liquidity Architecture, Market Memory, and Algorithmic Execution",
+      "### Table of contents:",
+      "### Introduction",
+      "###",
+      "### System Overview and Understanding",
+      "### Getting Started",
+      "### **Back Test Results**",
+      "### Conclusion"
+    ],
+    "n_hits": 21
+  },
+  {
+    "id": 23550,
+    "title": "Building a Volume-Based Liquidity Heatmap Indicator in MQL5",
+    "heads": [
+      "# Building a Volume-Based Liquidity Heatmap Indicator in MQL5",
+      "### **Introduction**",
+      "### **Project Overview and Implementation Plan**",
+      "### **Implementation in MQL5**",
+      "### **Conclusion**"
+    ],
+    "n_hits": 49
+  },
+  {
+    "id": 22342,
+    "title": "Building a Liquidity Spectrum Volume Profile Indicator in MQL5",
+    "heads": [
+      "# Building a Liquidity Spectrum Volume Profile Indicator in MQL5",
+      "### **Introduction**",
+      "### **Project Overview and Implementation Plan**",
+      "### **Creating the Liquidity Spectrum Volume Profile Indicator in MQL5**",
+      "### **Conclusion**"
+    ],
+    "n_hits": 39
+  },
+  {
+    "id": 18661,
+    "title": "Analyzing Price Time Gaps in MQL5 (Part II): Creating a Heat Map of Liquidity Distribution Over Time",
+    "heads": [
+      "# Analyzing Price Time Gaps in MQL5 (Part II): Creating a Heat Map of Liquidity Distribution Over Time",
+      "###",
+      "### Mathematical foundation: From chaos to order",
+      "###",
+      "### Solution architecture: Modularity as the basis for reliability",
+      "###",
+      "### Algorithm: Math meets reality",
+      "###",
+      "### Color alchemy: Transforming numbers into images",
+      "###",
+      "### Visualization: From algorithm to chart",
+      "### Interpreting the results: What the colors mean",
+      "###",
+      "### Customization for different markets: Versatility through adaptation",
+      "###"
+    ],
+    "n_hits": 15
+  },
+  {
+    "id": 21876,
+    "title": "How to Detect Round-Number Liquidity in MQL5",
+    "heads": [
+      "# How to Detect Round-Number Liquidity in MQL5",
+      "###",
+      "### Introduction: The Geometry of Institutional Liquidity",
+      "### Theoretical Framework: The Psychology of Clustering at Zeros",
+      "### The Custom Algorithm: Beyond Simple Modulo Math",
+      "###",
+      "### Technical Implementation: The Core MQL5 Logic",
+      "### Case Studies: Universal Application Across Assets",
+      "### Developing a Trading Strategy: Confluence is Key",
+      "### Frequently Asked Questions (FAQ)",
+      "### Risk Management and Position Sizing",
+      "###",
+      "### Conclusion: The Blueprint for Professional S/R Trading"
+    ],
+    "n_hits": 30
+  },
+  {
+    "id": 15895,
+    "title": "Scalping Orderflow for MQL5",
+    "heads": [
+      "# Scalping Orderflow for MQL5",
+      "### Introduction",
+      "### The Code",
+      "### Backtesting",
+      "### Conclusion"
+    ],
+    "n_hits": 18
+  },
+  {
+    "id": 20287,
+    "title": "Automating Black-Scholes Greeks: Advanced Scalping and Microstructure Trading",
+    "heads": [
+      "# Automating Black-Scholes Greeks: Advanced Scalping and Microstructure Trading",
+      "### Introduction",
+      "### Automation Overview",
+      "### Getting Started",
+      "### **Back Test Results**",
+      "### Conclusion"
+    ],
+    "n_hits": 14
+  },
+  {
+    "id": 8136,
+    "title": "Price series discretization, random component and noise",
+    "heads": [
+      "# Price series discretization, random component and noise",
+      "### Introduction",
+      "###",
+      "### Signal Discretization Features",
+      "### Is the Price Series Discrete or Continuous?",
+      "### The Function of What Is the Price",
+      "### Features of Price Series Discretization by Time Intervals and the Random Component",
+      "### Density of Distribution of Price Series Increments",
+      "### High and Low Volatility Areas",
+      "### Alternative Price Series Discretization",
+      "### Conclusion"
+    ],
+    "n_hits": 33
+  }
+]

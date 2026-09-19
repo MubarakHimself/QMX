@@ -1,0 +1,111 @@
+{
+  "shard_id": "trading_042",
+  "section": "Trading",
+  "n": 11,
+  "series_in_shard": [
+    "trading with the mql5 economic calendar",
+    "universal regression model for market price prediction",
+    "using the mql5 economic calendar for news filter"
+  ],
+  "articles": [
+    {
+      "id": 16223,
+      "title": "Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Mastering the Functions of the MQL5 Economic Calendar",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16223.md"
+    },
+    {
+      "id": 16301,
+      "title": "Trading with the MQL5 Economic Calendar (Part 2): Creating a News Dashboard Panel",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Creating a News Dashboard Panel",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16301.md"
+    },
+    {
+      "id": 16380,
+      "title": "Trading with the MQL5 Economic Calendar (Part 3): Adding Currency, Importance, and Time Filters",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Adding Currency, Importance, and Time Filters",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16380.md"
+    },
+    {
+      "id": 16386,
+      "title": "Trading with the MQL5 Economic Calendar (Part 4): Implementing Real-Time News Updates in the Dashboard",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Implementing Real-Time News Updates in the Dashboard",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16386.md"
+    },
+    {
+      "id": 16404,
+      "title": "Trading with the MQL5 Economic Calendar (Part 5): Enhancing the Dashboard with Responsive Controls and Filter Buttons",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Enhancing the Dashboard with Responsive Controls and Filter Buttons",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16404.md"
+    },
+    {
+      "id": 17271,
+      "title": "Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Automating Trade Entry with News Event Analysis and Countdown Timers",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17271.md"
+    },
+    {
+      "id": 17999,
+      "title": "Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17999.md"
+    },
+    {
+      "id": 18135,
+      "title": "Trading with the MQL5 Economic Calendar (Part 9): Elevating News Interaction with a Dynamic Scrollbar and Polished Display",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Elevating News Interaction with a Dynamic Scrollbar and Polished Display",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18135.md"
+    },
+    {
+      "id": 18241,
+      "title": "Trading with the MQL5 Economic Calendar (Part 10): Draggable Dashboard and Interactive Hover Effects for Seamless News Navigation",
+      "section": "Trading",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Draggable Dashboard and Interactive Hover Effects for Seamless News Navigation",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18241.md"
+    },
+    {
+      "id": 9868,
+      "title": "Universal regression model for market price prediction (Part 2): Natural, technological and social transient functions",
+      "section": "Trading",
+      "series_title": "Universal regression model for market price prediction (): Natural, technological and social transient functions",
+      "series_key": "universal regression model for market price prediction",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9868.md"
+    },
+    {
+      "id": 21803,
+      "title": "Using the MQL5 Economic Calendar for News Filter (Part 3): Surviving Terminal Restarts During News Window",
+      "section": "Trading",
+      "series_title": "Using the MQL5 Economic Calendar for News Filter (): Surviving Terminal Restarts During News Window",
+      "series_key": "using the mql5 economic calendar for news filter",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21803.md"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "pack_id": "examples_073_p02",
+  "section": "Examples",
+  "parent_shard": "examples_073",
+  "part_index": 2,
+  "part_count": 3,
+  "series_in_pack": [
+    "doeasy. controls"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 11700,
+      "title": "DoEasy. Controls (Part 25): Tooltip WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Tooltip WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11700.md"
+    },
+    {
+      "id": 11732,
+      "title": "DoEasy. Controls (Part 26): Finalizing the ToolTip WinForms object and moving on to ProgressBar development",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Finalizing the ToolTip WinForms object and moving on to ProgressBar development",
+      "series_key": "doeasy. controls",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11732.md"
+    },
+    {
+      "id": 11764,
+      "title": "DoEasy. Controls (Part 27): Working on ProgressBar WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Working on ProgressBar WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11764.md"
+    },
+    {
+      "id": 11823,
+      "title": "DoEasy. Controls (Part 28): Bar styles in the ProgressBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Bar styles in the ProgressBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11823.md"
+    },
+    {
+      "id": 11847,
+      "title": "DoEasy. Controls (Part 29): ScrollBar auxiliary control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): ScrollBar auxiliary control",
+      "series_key": "doeasy. controls",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11847.md"
+    },
+    {
+      "id": 11887,
+      "title": "DoEasy. Controls (Part 30): Animating the ScrollBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Animating the ScrollBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11887.md"
+    },
+    {
+      "id": 11926,
+      "title": "DoEasy. Controls (Part 31): Scrolling the contents of the ScrollBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Scrolling the contents of the ScrollBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11926.md"
+    },
+    {
+      "id": 12849,
+      "title": "DoEasy. Controls (Part 32): Horizontal ScrollBar, mouse wheel scrolling",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Horizontal ScrollBar, mouse wheel scrolling",
+      "series_key": "doeasy. controls",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12849.md"
+    },
+    {
+      "id": 14278,
+      "title": "DoEasy. Controls (Part 33): Vertical ScrollBar",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Vertical ScrollBar",
+      "series_key": "doeasy. controls",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14278.md"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "pack_id": "integration_011",
+  "section": "Integration",
+  "parent_shard": "integration_011",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "moving to mql5 algo forge",
+    "neural networks made easy",
+    "price action analysis toolkit development"
+  ],
+  "n": 6,
+  "articles": [
+    {
+      "id": 17698,
+      "title": "Moving to MQL5 Algo Forge (Part 2): Working with Multiple Repositories",
+      "section": "Integration",
+      "series_title": "Moving to MQL5 Algo Forge (): Working with Multiple Repositories",
+      "series_key": "moving to mql5 algo forge",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17698.md"
+    },
+    {
+      "id": 11245,
+      "title": "Neural networks made easy (Part 22): Unsupervised learning of recurrent models",
+      "section": "Integration",
+      "series_title": "Neural networks made easy (): Unsupervised learning of recurrent models",
+      "series_key": "neural networks made easy",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11245.md"
+    },
+    {
+      "id": 11330,
+      "title": "Neural networks made easy (Part 25): Practicing Transfer Learning",
+      "section": "Integration",
+      "series_title": "Neural networks made easy (): Practicing Transfer Learning",
+      "series_key": "neural networks made easy",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11330.md"
+    },
+    {
+      "id": 12428,
+      "title": "Neural networks made easy (Part 37): Sparse Attention",
+      "section": "Integration",
+      "series_title": "Neural networks made easy (): Sparse Attention",
+      "series_key": "neural networks made easy",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12428.md"
+    },
+    {
+      "id": 18789,
+      "title": "Price Action Analysis Toolkit Development (Part 31): Python Candlestick Recognition Engine (I) \u2014 Manual Detection",
+      "section": "Integration",
+      "series_title": "Price Action Analysis Toolkit Development (): Python Candlestick Recognition Engine (I) \u2014 Manual Detection",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18789.md"
+    },
+    {
+      "id": 22993,
+      "title": "Price Action Analysis Toolkit Development (Part 73): Building a Weekend Gap Trading Signal System in MQL5",
+      "section": "Integration",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a Weekend Gap Trading Signal System in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 73,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22993.md"
+    }
+  ]
+}

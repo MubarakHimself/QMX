@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_024",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 4236,
+      "title": "Using OpenCL to test candlestick patterns",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4236.md"
+    },
+    {
+      "id": 4267,
+      "title": "The Channel Breakout pattern",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4267.md"
+    },
+    {
+      "id": 4304,
+      "title": "How to create Requirements Specification for ordering an indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4304.md"
+    },
+    {
+      "id": 4332,
+      "title": "LifeHack for traders: Blending ForEach with defines (#define)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4332.md"
+    },
+    {
+      "id": 4368,
+      "title": "How to create Requirements Specification for ordering a trading robot",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4368.md"
+    },
+    {
+      "id": 4430,
+      "title": "Multi-symbol balance graph in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4430.md"
+    },
+    {
+      "id": 4465,
+      "title": "Synchronizing several same-symbol charts on different timeframes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4465.md"
+    },
+    {
+      "id": 4502,
+      "title": "Developing the oscillator-based ZigZag indicator. Example of executing a requirements specification",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4502.md"
+    },
+    {
+      "id": 4503,
+      "title": "How to create a graphical panel of any complexity level",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4503.md"
+    },
+    {
+      "id": 4575,
+      "title": "Improving Panels: Adding transparency, changing background color and inheriting from CAppDialog/CWndClient",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4575.md"
+    },
+    {
+      "id": 4602,
+      "title": "Implementing indicator calculations into an Expert Advisor code",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4602.md"
+    },
+    {
+      "id": 4636,
+      "title": "Visualizing optimization results using a selected criterion",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4636.md"
+    }
+  ]
+}

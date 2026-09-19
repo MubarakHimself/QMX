@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_015",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_015",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17069,
+      "title": "Neural Networks in Trading: Hierarchical Dual-Tower Transformer (Hidformer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17069.md"
+    },
+    {
+      "id": 17104,
+      "title": "Neural Networks in Trading: Hierarchical Dual-Tower Transformer (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17104.md"
+    },
+    {
+      "id": 17142,
+      "title": "Neural Networks in Trading: Multi-Task Learning Based on the ResNeXt Model",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17142.md"
+    },
+    {
+      "id": 17155,
+      "title": "Building a Keltner Channel Indicator with Custom Canvas Graphics in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17155.md"
+    },
+    {
+      "id": 17157,
+      "title": "Neural Networks in Trading: Multi-Task Learning Based on the ResNeXt Model (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17157.md"
+    },
+    {
+      "id": 17210,
+      "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Chimera)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17210.md"
+    },
+    {
+      "id": 17241,
+      "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17241.md"
+    },
+    {
+      "id": 17279,
+      "title": "Neural Networks in Trading: Hybrid Graph Sequence Models (GSM++)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17279.md"
+    },
+    {
+      "id": 17310,
+      "title": "Neural Networks in Trading: Hybrid Graph Sequence Models (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17310.md"
+    },
+    {
+      "id": 17351,
+      "title": "Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Attraos)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17351.md"
+    },
+    {
+      "id": 17371,
+      "title": "Neural Networks in Trading: Integrating Chaos Theory into Time Series Forecasting (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17371.md"
+    },
+    {
+      "id": 17422,
+      "title": "Forex Arbitrage Trading: Relationship Assessment Panel",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17422.md"
+    }
+  ]
+}

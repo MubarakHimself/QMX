@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QMB
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
-decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0013, DEC-0059, DEC-0082, DEC-0084, DEC-0116, DEC-0121, DEC-0135, DEC-0143, DEC-0146, DEC-0155, DEC-0157, DEC-0158, DEC-0173, DEC-0174, DEC-0177, DEC-0178, DEC-0180, DEC-0183, DEC-0186, DEC-0188, DEC-0190, DEC-0204, DEC-0206, DEC-0259, DEC-0261, DEC-0269, DEC-0270, DEC-0273, DEC-0275, DEC-0276, DEC-0277, DEC-0279, DEC-0281, DEC-0282, DEC-0283, DEC-0285, DEC-0286, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413]
-sources: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, docs/decisions/ADR-0023-qml-research-expansion.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-02-time-calendar.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-25-risk-journal.yaml, docs/contracts/ct-27-bms-definition.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-32-performance-result.yaml, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0013, DEC-0059, DEC-0082, DEC-0084, DEC-0116, DEC-0121, DEC-0135, DEC-0143, DEC-0146, DEC-0155, DEC-0157, DEC-0158, DEC-0173, DEC-0174, DEC-0177, DEC-0178, DEC-0180, DEC-0183, DEC-0186, DEC-0188, DEC-0190, DEC-0204, DEC-0206, DEC-0259, DEC-0261, DEC-0269, DEC-0270, DEC-0273, DEC-0275, DEC-0276, DEC-0277, DEC-0279, DEC-0281, DEC-0282, DEC-0283, DEC-0285, DEC-0286, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413, DEC-0420, DEC-0424, DEC-0425, DEC-0429, DEC-0436, DEC-0444, DEC-0445, DEC-0448, DEC-0450]
+sources: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, docs/decisions/ADR-0023-qml-research-expansion.md, docs/decisions/ADR-0024-workflows-construction-kit.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-02-time-calendar.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-25-risk-journal.yaml, docs/contracts/ct-27-bms-definition.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-32-performance-result.yaml, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
 generated: 2026-08-21
-verified: 2026-09-16
+verified: 2026-09-19
 stale_after: 90d
 ---
 
@@ -259,6 +259,40 @@ Workbench AD-3's Library-object set and kind roster are unchanged (DEC-0381) (DE
 ### Graduation is not a QMB spawn **[PROPOSED]**
 
 `spawn_governed` is not mill graduation (DEC-0387) (DEC-0397) (DEC-0270). L33 remains the two-artifact registration act — CT-33 Bot definition plus Python logic — with host-stamped CT-07 lineage; it is never an orchestrator spawn (DEC-0387) (DEC-0397). Ungoverned Python remains a legal entry that skips Stage 0 (DEC-0387). Artifact search remains QMB `library.search` / B-15; federated discovery concatenates that query with Knowledge search, and QMB does not open daemon sqlite (DEC-0389). QMB does not own Stage 0 and does not absorb the mill process; experimentation begins after something runnable exists (DEC-0387) (DEC-0388).
+
+## Workflows construction kit (2026-09-19)
+
+The 2026-09-18/19 Workflows construction-kit spine (`architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md`) is absorbed under [ADR-0024](../decisions/ADR-0024-workflows-construction-kit.md). Preflight is **reuse** of existing applications — no sixth COMP, no new CT, no new `depends_on` edge (DEC-0445). Implementation authorization remains factory-pipeline-only (DEC-0445) (DEC-0450).
+
+### Three config classes (DEC-0424, DEC-0436)
+
+QMB compiles three distinct config classes; they are not optional fields on one type (DEC-0424).
+
+1. **`ResolvedRunConfig`** — unchanged default path. `book_fp1` / `bms_fp1` / `bot_fp1` and fragments are **required**. This is the path to governed evidence, node-paper, live, and L17 seats (DEC-0424).
+2. **`AlternativeRunConfig`** — Book/BMS/bot keys are **absent, not null**. It carries a complete Alternative Trading Composition (ATC) defined by a **PolicyPair** (`AccountingPolicy` + `RiskPolicy`), both complete under the dummy test (DEC-0424) (DEC-0436). When ATC is selected, QMB evaluation and optimization adopt that composition; they do not stay secretly Book-shaped (DEC-0436). Sequential paper-then-live and L17 human promote still apply (DEC-0436) (DEC-0448).
+3. **`UngovernedWorkConfig`** — those keys absent, not null. Covers ungoverned `qmb.run()`, ordinary Python, data-ML, recipes, and QMN sensing-only. It is **not** ATC and **not** a seat (DEC-0424).
+
+**Dummy Book / BMS / bot / PolicyPair is `INVALID_INPUT`.** A CT-22 / CT-27 / CT-33, or an ATC PolicyPair, is dummy if minted solely to satisfy a required field, or if its policy is identity / no-op / unlimited / pass-through; sentinel fps (`NULL_BOOK`, empty-object Book, `mis_ref: null` as a fake MIS) are dummy. Dummy is refused at compile, register, validate, simulate, and seat (DEC-0424) (DEC-0448).
+
+### ATC evidence is QMB JSONL, not qmf-core (DEC-0436, DEC-0429)
+
+ATC run evidence is QMB JSONL ledger rows tagged `composition_class: alternative`, with CT-07 lineage to the PolicyPair hash. It is not a Book journal and not a `qmf-core` record (DEC-0436) (DEC-0429). Compare Book vs ATC only on conserved measures both policies define; do not force ATC into the Book R vocabulary or relabel filtered trades as a rerun (DEC-0424) (DEC-0436).
+
+### Recipe wrap — definition identity ≠ release fp1 (DEC-0425, DEC-0444)
+
+Data recipes are a COMP-QMB wrap of COMP-QMF-DATA (DEC-0425). **RecipeDefinition** identity is `(recipe_def_id, recipe_def_version, recipe_def_hash)` — reviewable and pinnable before execution (DEC-0444) (DEC-0425). A run produces a new output **release fp1** (Workbench AD-13) with CT-07 lineage to the definition and to each input revision; two runs of one definition are two releases, not two recipes (DEC-0444). Display rename does not change `recipe_def_hash` (DEC-0444). A CT-06 recipe kind remains **deferred** until metadata-sharing is required (DEC-0425) (DEC-0444). Non-trading recipe outputs need no CT-33 / Book / QMN wrap (`UngovernedWorkConfig` class) (DEC-0444) (DEC-0424).
+
+### No QMB task-graph module (DEC-0420)
+
+Procedures live in QMA. QMB does not grow a task-graph or workflow-engine module; Graph Templates, Mission Compiler, and Task Graph edges stay daemon-owned (DEC-0420) (DEC-0277).
+
+### Named analysis methods unchanged (Workbench AD-5)
+
+`analysis.project` and `analysis.rerun` stand as Workbench AD-5 / DEC-0273 already states. Projection ≠ path-dependent rerun; a filtered trade list is never Book or BMS truth (DEC-0273). ATC is not `analysis.rerun` of absent Book keys (DEC-0424).
+
+### Wiring honesty @ 270e992 (DEC-0450, GAP-0097)
+
+On `integration@270e992995c2378ca63cf6343254ef8140a8c97e`, `AlternativeRunConfig` and `PolicyPair` are **not in code** (DEC-0450) (GAP-0097). Inherit DEC-0286: class/test existence is not end-to-end demonstration. Do not describe proposed ATC connects as implemented; do not use `8510c03` for absence claims (DEC-0450).
 
 ## Configuration
 

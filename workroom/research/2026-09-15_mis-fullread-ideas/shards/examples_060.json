@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_060",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 21129,
+      "title": "From Novice to Expert: Developing a Liquidity Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21129.md"
+    },
+    {
+      "id": 21133,
+      "title": "From Novice to Expert:  Extending a Liquidity Strategy with Trend Filters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21133.md"
+    },
+    {
+      "id": 21142,
+      "title": "Applying L1 Trend Filtering in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21142.md"
+    },
+    {
+      "id": 21189,
+      "title": "Overcoming Accessibility Problems in MQL5 Trading Tools (Part I): How to Add Contextual Voice Alerts in MQL5 Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21189.md"
+    },
+    {
+      "id": 21255,
+      "title": "Automating Market Memory Zones Indicator: Where Price is Likely to Return",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21255.md"
+    },
+    {
+      "id": 21283,
+      "title": "From Novice to Expert: Automating Intraday Strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21283.md"
+    },
+    {
+      "id": 21376,
+      "title": "GoertzelBrain: Adaptive Spectral Cycle Detection with Neural Network Ensemble in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21376.md"
+    },
+    {
+      "id": 21387,
+      "title": "Overcoming Accessibility Challenges in MQL5 Trading Tools (Part II): Enabling EA Voice Using a Python Text-to-Speech Engine",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21387.md"
+    },
+    {
+      "id": 21533,
+      "title": "Overcoming Accessibility Problems in MQL5 Trading Tools (Part III): Bidirectional Speech Communication Between a Trader and an Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21533.md"
+    },
+    {
+      "id": 21581,
+      "title": "From Novice to Expert: Enhancing Liquidity Strategies with Multi-Timeframe Structural Confirmation in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21581.md"
+    },
+    {
+      "id": 21590,
+      "title": "Graph Theory: Traversal Depth-First Search (DFS) Applied in Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21590.md"
+    },
+    {
+      "id": 21677,
+      "title": "From Novice to Expert: Detecting Liquidity Zone Flips Using MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21677.md"
+    }
+  ]
+}

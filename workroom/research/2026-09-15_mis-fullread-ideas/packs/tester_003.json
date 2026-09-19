@@ -1,0 +1,119 @@
+{
+  "pack_id": "tester_003",
+  "section": "Tester",
+  "parent_shard": "tester_003",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 4562,
+      "title": "Processing optimization results using the graphical interface",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4562.md"
+    },
+    {
+      "id": 4566,
+      "title": "Modeling time series using custom symbols according to specified distribution laws",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4566.md"
+    },
+    {
+      "id": 4917,
+      "title": "Automated Optimization of an EA for MetaTrader 5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4917.md"
+    },
+    {
+      "id": 4951,
+      "title": "Visual strategy builder. Creating trading robots without programming",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4951.md"
+    },
+    {
+      "id": 5061,
+      "title": "Using indicators for optimizing Expert Advisors in real time",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5061.md"
+    },
+    {
+      "id": 5427,
+      "title": "Separate optimization of a strategy on trend and flat conditions",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5427.md"
+    },
+    {
+      "id": 5437,
+      "title": "Color optimization of trading strategies",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5437.md"
+    },
+    {
+      "id": 5473,
+      "title": "Practical Use of Kohonen Neural Networks in Algorithmic Trading. Part II. Optimizing and forecasting",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5473.md"
+    },
+    {
+      "id": 5576,
+      "title": "Studying candlestick analysis techniques (part I): Checking existing patterns",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5576.md"
+    },
+    {
+      "id": 5630,
+      "title": "Studying candlestick analysis techniques (Part II): Auto search for new patterns",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5630.md"
+    },
+    {
+      "id": 7022,
+      "title": "Merrill patterns",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7022.md"
+    },
+    {
+      "id": 7029,
+      "title": "Optimization management (Part I): Creating a GUI",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7029.md"
+    }
+  ]
+}

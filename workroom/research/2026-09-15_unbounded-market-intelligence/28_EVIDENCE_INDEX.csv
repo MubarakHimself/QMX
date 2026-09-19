@@ -1,0 +1,20 @@
+claim_id,claim,kind,locator
+E-INT-SHA,integration tip for MIS code,git,8510c032496bb870824ecc5c4f807e8a4e4f167e
+E-MAIN-SHA,main working tree at research start,git,f722694e3c2bd190ce01ea933d7f68f6f9dd66b7
+E-SNAP,snapshot consumers Book door+KSA,code,integration:qmn/src/qmn/mis/signal_snapshot.py
+E-CAT,V1 governed producers + unauthoritative names,code,integration:qmn/src/qmn/mis/catalog.py
+E-DES,LightGBM design-only quiet|normal|elevated|stressed,code,integration:qmn/src/qmn/mis/regime_design.py
+E-LAB,forward-range quantile labels,code,integration:qmn/src/qmn/mis/regime_labels.py
+E-L23,SQS=Spread Quality Sensor,docs,docs/constitution.md L23
+E-GAP51,MIS training deferred,docs,docs/gap-report.md GAP-0051
+E-DEC262,eight-labeler catalog,docs,docs/glossary.md MIS; docs/changelog.md
+E-SCAN,3057 ok body-scanned,file,indexes/scan_summary.json
+E-TITLES,title lead counts,file,indexes/title_leads.json
+E-20996,compression/transition/expansion closed-candle classifier,article,.worktrees/mql5-library/data/mql5-library/md/20996.md
+E-23043,CUSUM sequential breakpoint,article,.worktrees/mql5-library/data/mql5-library/md/23043.md
+E-16856,rejects discrete boxes; MA+ATR channel,article,.worktrees/mql5-library/data/mql5-library/md/16856.md
+E-15332,Lyapunov; own stats ~50/50,article,.worktrees/mql5-library/data/mql5-library/md/15332.md
+E-08,look-ahead trap; five families,research,workroom/research/08-mis-ml-regime-models.md
+E-MINERA,12 MQL5 regime full-reads,research,workroom/research/2026-09-09_mql5-mis-regime-notes.md
+E-MINERB,12 MQL5 scalp full-reads,research,workroom/research/2026-09-09_mql5-mis-scalp-notes.md
+E-ABSENT-ISING,Ising absent in-repo,recovery,04_RECOVERY_UNCERTAINTIES.md U4

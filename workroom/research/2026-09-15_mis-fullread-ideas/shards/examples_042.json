@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_042",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15302,
+      "title": "From Basic to Intermediate: Variables (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15302.md"
+    },
+    {
+      "id": 15304,
+      "title": "From Basic to Intermediate: Variables (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15304.md"
+    },
+    {
+      "id": 15305,
+      "title": "From Basic to Intermediate: Operators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15305.md"
+    },
+    {
+      "id": 15325,
+      "title": "From Novice to Expert: Collaborative Debugging in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15325.md"
+    },
+    {
+      "id": 15329,
+      "title": "Adaptive Social Behavior Optimization (ASBO): Two-phase evolution",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15329.md"
+    },
+    {
+      "id": 15336,
+      "title": "Reimagining Classic Strategies (Part II): Bollinger Bands Breakouts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15336.md"
+    },
+    {
+      "id": 15345,
+      "title": "From Basic to Intermediate: Passing by Value or by Reference",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15345.md"
+    },
+    {
+      "id": 15346,
+      "title": "Monitoring trading with push notifications \u2014 example of a MetaTrader 5 service",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15346.md"
+    },
+    {
+      "id": 15347,
+      "title": "Artificial Bee Hive Algorithm (ABHA): Theory and methods",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15347.md"
+    },
+    {
+      "id": 15357,
+      "title": "Master MQL5 from beginner to pro (Part IV): About Arrays, Functions and Global Terminal Variables",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15357.md"
+    },
+    {
+      "id": 15365,
+      "title": "From Basic to Intermediate: IF ELSE",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15365.md"
+    },
+    {
+      "id": 15375,
+      "title": "From Basic to Intermediate: WHILE and DO WHILE Statements",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15375.md"
+    }
+  ]
+}

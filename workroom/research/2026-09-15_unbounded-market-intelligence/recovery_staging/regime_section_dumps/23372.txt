@@ -1,0 +1,459 @@
+# Market Microstructure in MQL5 (Part 8): Micro-Trend Strength
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Indicators](https://www.mql5.com/en/articles/mt5/examples_indicators)
+| 20 July 2026 at 10:32
+1 138
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/513063 "Comments")
+[Max Brown](https://www.mql5.com/en/users/gcg26)
+## Introduction
+[Parts 1 through 7](https://www.mql5.com/en/users/gcg26/publications) of this series build a complete measurement layer for NQ M1 microstructure. Part 1 hardened the mathematical foundation. Parts 2 and 3 measured whether price returns have memory. Part 4 measured how volatility persists. Part 5 decomposed price variation into signal and noise. Part 6 measured the direction of informed flow. Part 7 condensed those eleven measurements into a single regime label and confidence score. What none of them did was tell you, on the current bar, whether the short-term trend is up, down, or flat.
+That is the gap Part 8 closes. A regime label describes the session environment at a 90-to-390-bar horizon. A scalper at the NY open needs a bar-by-bar answer to a narrower question: is the EMA structure currently aligned and accelerating in one direction, or is it conflicted and choppy? A standard moving average crossover gives a binary answer. What is needed is a continuous score that reflects the degree of alignment, not just its direction.
+Part 8 implements GetMicroTrendStrength() . It returns a composite score in [−1, +1] built from four EMA-derived sub-scores: three-EMA ordering alignment, ATR-normalized price position, slope consistency, and volume confirmation. A contradiction penalty dampens the score when EMA alignment disagrees with price's position relative to the fast EMA. The result is a signal that responds smoothly to changing conditions rather than snapping between discrete states.
+The new functions integrate with the Part 7 regime classifier through a session-adaptive threshold variant. When a RegimeAnalysis struct is available, the strong- and weak-signal cutoffs are scaled by reg.confidence . High-confidence sessions (Trending, Informed) loosen thresholds so signals fire more readily. Low-confidence sessions (Stressed, Noisy) tighten them. This is the first explicit downstream use of the Part 7 confidence field in the series.
+The empirical study applies the composite to 514 NQ M1 NY sessions (May 2024–May 2026), the same dataset used in Part 7. The primary finding is that the signal distributes asymmetrically across regimes: Trending sessions produce the highest persistence rate (3+ consecutive same-direction bars), while Stressed sessions produce the most flat readings. The adaptive threshold transfers approximately 18% of Stressed-session signals into the no-signal zone compared to fixed thresholds, reducing false-signal exposure without requiring a rule change.
+**Deliverable.** Four new functions added to MicroStructure\_Foundation.mqh : GetMicroTrendStrength() , GetTrendLabel() , GetBinarySignal() , and GetPersistentTrendDirection() . A new MicroTrendAnalysis struct and TREND\_LABEL enum. Two PopulateMicroTrendAnalysis() overloads — one standalone, one session-adaptive. All header additions are appended to the existing MicroStructure\_Foundation.mqh as a Part 8 section, following the convention established in Parts 2 through 7. Part 8 is also the first part of the series to produce a standalone indicator file, MicroTrendStrength.mq5 .
+## The micro-trend Problem
+EMA crossovers are the most widely used trend signal in retail algorithmic trading, and they have a well-documented failure mode: when the fast EMA crosses the slow EMA, the signal fires at a point in time that is already in the past. The crossover is a lagging acknowledgment of a move that happened bars ago. On NQ M1 at the NY open, where a 300-point move can develop in under ten minutes, a lagging signal is often not actionable.
+The deeper problem is discretization. A crossover returns 1 or 0 — the signal is either on or off. It gives no information about how strongly aligned the EMA structure is, how quickly the EMAs are sloping, or whether the current bar's volume supports the direction. Two sessions can both produce a bullish crossover where one has all three EMAs in tight alignment accelerating upward on above-average volume, and the other has a marginal fast/slow crossover with conflicting medium EMA slope and flat volume. The standard signal treats these identically.
+A continuous composite score addresses both problems. Rather than asking "has the fast EMA crossed the slow EMA," it asks "how strongly does the current EMA structure, price position, slope, and volume support a directional conclusion?" The answer varies between −1 (strong downtrend) and +1 (strong uptrend), with intermediate values reflecting partial alignment or conflicted conditions. Threshold crossings in this continuous space can still generate binary signals, but the threshold can now be adaptive rather than fixed.
+The contradiction penalty addresses a third failure mode specific to composite scores: the situation where EMA ordering says up but price has already reversed below the fast EMA. Without the penalty, the alignment sub-score contributes positively to a score even as the price action has invalidated the trend. The penalty multiplies the composite by 0.3 when this contradiction exists, preserving the sign for context while substantially reducing the magnitude.
+## Theory: Four Sub-Scores and a Penalty
+The composite is built from four independent sub-scores, each capturing a different dimension of trend quality. They combine additively, with the volume confirmation applied as a multiplicative scaling after the additive combination.
+### EMA alignment
+Three pairwise comparisons of the fast (period 5), medium (period 8), and slow (period 13) EMAs produce an alignment score in {−1, +1}. Each comparison contributes a fixed weight: fast above medium (+0.33 or −0.33), medium above slow (+0.33 or −0.33), fast above slow (+0.34 or −0.34). The weights sum to exactly 1.0 in absolute value when all three are aligned and 0.01 when the pairwise comparisons are maximally conflicted (two out of three comparisons point in the same direction). The choice of 5/8/13 for the EMA periods is deliberate: these are consecutive Fibonacci numbers, which means the periods have a harmonic relationship and avoid the coincidental crossovers that occur when periods share common factors.
+### ATR-normalized price position
+The distance from the current close to each EMA is normalized by the 14-period ATR and compressed by a hyperbolic tangent. This captures whether price is extended relative to each EMA or tightly bundled around it. The three distances are weighted 0.40 (fast), 0.30 (medium), 0.30 (slow). The tanh compression is important: without it, a session with an unusually large range would dominate the price-position sub-score and overwhelm the other components. The tanh maps any distance, however large, to the interval (−1, +1), so the price-position sub-score is always bounded and comparable across sessions.
+### Slope consistency
+The slope of each EMA over the most recent five bars is computed as the current EMA value minus the value five bars ago. If all three slopes agree in sign (all positive or all negative), a slope score is computed as the mean slope normalized by (3×ATR), then clamped to [−1, +1]. If the three slopes disagree, the slope score is zero. This means the slope sub-score contributes only when the trend is consistently accelerating in one direction, and is suppressed during transitions and conflicted markets. The five-bar lookback matches the fast EMA period. This keeps the slope estimate on a natural scale relative to the underlying signal.
+### Volume confirmation
+Current bar tick volume is compared to the 20-bar rolling average. The ratio is mapped to [0.5, 1.5] via clip(0.5 + ratio, 0.5, 1.5) , which amplifies the composite when volume is above average and dampens it when volume is below average. The bounds prevent a single extreme-volume bar from dominating the score and prevent a low-volume session from producing a negative multiplier. This multiplier is applied after the additive combination of alignment, price position, and slope.
+### The contradiction penalty
+When EMA alignment produces a positive score but price is below the fast EMA, or when alignment produces a negative score but price is above the fast EMA, the composite is multiplied by 0.3. This handles the case where the longer EMAs are still aligned from a prior trend while price has already reversed through the fast EMA — the most common source of false signals from composite EMA systems. The penalty preserves the sign (to maintain directional context) while reducing the magnitude to near-zero, which places the resulting score below any reasonable threshold for action.
+### The combination formula
+The final composite is:
+```
+//--- base = (align*0.40 + price_pos*0.40 + slope*0.20) * vol_boost
+//--- then apply contradiction penalty if alignment and price disagree
+double base = (align * 0.4 + price_pos * 0.4 + slope * 0.2) * vol_boost;
+if(align > 0 && price < ef)      base *= 0.3;
+else if(align < 0 && price > ef) base *= 0.3;
+strength = MathMax(-1.0, MathMin(1.0, base));
+```
+The alignment and price-position components receive equal weight (0.40 each) because both measure the same underlying concept from different perspectives: one measures the relative ordering of smoothed price, the other measures where current price sits within that ordering. Slope receives 0.20 because it measures rate of change rather than state — a useful secondary filter but not as fundamental as the state measures.
+## Implementation
+### Enumeration and struct
+A seven-state TREND\_LABEL enumeration provides a descriptive classification from TREND\_STRONG\_DOWN (−3) to TREND\_STRONG\_UP (+3). The MicroTrendAnalysis struct carries the continuous strength score, the label, a binary signal (−1/0/+1), the persistent direction over N consecutive bars, and the session-adaptive threshold values that were used in classification.
+```
+//+------------------------------------------------------------------+
+//| TREND_LABEL: seven-state classification of micro-trend strength. |
+//| Used in MicroTrendAnalysis.label field.                          |
+//+------------------------------------------------------------------+
+enum TREND_LABEL
+   TREND_STRONG_DOWN = -3, // strength below -threshold_high
+   TREND_DOWN        = -2, // strength below -threshold_low
+   TREND_WEAK_DOWN   = -1, // strength below -threshold_low/2
+   TREND_FLAT        =  0, // |strength| at or below threshold_low/2
+   TREND_WEAK_UP     =  1, // strength above threshold_low/2
+   TREND_UP          =  2, // strength above threshold_low
+   TREND_STRONG_UP   =  3  // strength above threshold_high
+  };
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Market Microstructure in MQL5 (Part 8): Micro-Trend Strength
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Indicators](https://www.mql5.com/en/articles/mt5/examples_indicators)
+## Introduction
+[Parts 1 through 7](https://www.mql5.com/en/users/gcg26/publications) of this series build a complete measurement layer for NQ M1 microstructure. Part 1 hardened the mathematical foundation. Parts 2 and 3 measured whether price returns have memory. Part 4 measured how volatility persists. Part 5 decomposed price variation into signal and noise. Part 6 measured the direction of informed flow. Part 7 condensed those eleven measurements into a single regime label and confidence score. What none of them did was tell you, on the current bar, whether the short-term trend is up, down, or flat.
+Part 8 implements GetMicroTrendStrength() . It returns a composite score in [−1, +1] built from four EMA-derived sub-scores: three-EMA ordering alignment, ATR-normalized price position, slope consistency, and volume confirmation. A contradiction penalty dampens the score when EMA alignment disagrees with price's position relative to the fast EMA. The result is a signal that responds smoothly to changing conditions rather than snapping between discrete states.
+The new functions integrate with the Part 7 regime classifier through a session-adaptive threshold variant. When a RegimeAnalysis struct is available, the strong- and weak-signal cutoffs are scaled by reg.confidence . High-confidence sessions (Trending, Informed) loosen thresholds so signals fire more readily. Low-confidence sessions (Stressed, Noisy) tighten them. This is the first explicit downstream use of the Part 7 confidence field in the series.
+The empirical study applies the composite to 514 NQ M1 NY sessions (May 2024–May 2026), the same dataset used in Part 7. The primary finding is that the signal distributes asymmetrically across regimes: Trending sessions produce the highest persistence rate (3+ consecutive same-direction bars), while Stressed sessions produce the most flat readings. The adaptive threshold transfers approximately 18% of Stressed-session signals into the no-signal zone compared to fixed thresholds, reducing false-signal exposure without requiring a rule change.
+**Deliverable.** Four new functions added to MicroStructure\_Foundation.mqh : GetMicroTrendStrength() , GetTrendLabel() , GetBinarySignal() , and GetPersistentTrendDirection() . A new MicroTrendAnalysis struct and TREND\_LABEL enum. Two PopulateMicroTrendAnalysis() overloads — one standalone, one session-adaptive. All header additions are appended to the existing MicroStructure\_Foundation.mqh as a Part 8 section, following the convention established in Parts 2 through 7. Part 8 is also the first part of the series to produce a standalone indicator file, MicroTrendStrength.mq5 .
+## The micro-trend Problem
+EMA crossovers are the most widely used trend signal in retail algorithmic trading, and they have a well-documented failure mode: when the fast EMA crosses the slow EMA, the signal fires at a point in time that is already in the past. The crossover is a lagging acknowledgment of a move that happened bars ago. On NQ M1 at the NY open, where a 300-point move can develop in under ten minutes, a lagging signal is often not actionable.
+A continuous composite score addresses both problems. Rather than asking "has the fast EMA crossed the slow EMA," it asks "how strongly does the current EMA structure, price position, slope, and volume support a directional conclusion?" The answer varies between −1 (strong downtrend) and +1 (strong uptrend), with intermediate values reflecting partial alignment or conflicted conditions. Threshold crossings in this continuous space can still generate binary signals, but the threshold can now be adaptive rather than fixed.
+The contradiction penalty addresses a third failure mode specific to composite scores: the situation where EMA ordering says up but price has already reversed below the fast EMA. Without the penalty, the alignment sub-score contributes positively to a score even as the price action has invalidated the trend. The penalty multiplies the composite by 0.3 when this contradiction exists, preserving the sign for context while substantially reducing the magnitude.
+## Theory: Four Sub-Scores and a Penalty
+The composite is built from four independent sub-scores, each capturing a different dimension of trend quality. They combine additively, with the volume confirmation applied as a multiplicative scaling after the additive combination.
+### EMA alignment
+Three pairwise comparisons of the fast (period 5), medium (period 8), and slow (period 13) EMAs produce an alignment score in {−1, +1}. Each comparison contributes a fixed weight: fast above medium (+0.33 or −0.33), medium above slow (+0.33 or −0.33), fast above slow (+0.34 or −0.34). The weights sum to exactly 1.0 in absolute value when all three are aligned and 0.01 when the pairwise comparisons are maximally conflicted (two out of three comparisons point in the same direction). The choice of 5/8/13 for the EMA periods is deliberate: these are consecutive Fibonacci numbers, which means the periods have a harmonic relationship and avoid the coincidental crossovers that occur when periods share common factors.
+### ATR-normalized price position
+The distance from the current close to each EMA is normalized by the 14-period ATR and compressed by a hyperbolic tangent. This captures whether price is extended relative to each EMA or tightly bundled around it. The three distances are weighted 0.40 (fast), 0.30 (medium), 0.30 (slow). The tanh compression is important: without it, a session with an unusually large range would dominate the price-position sub-score and overwhelm the other components. The tanh maps any distance, however large, to the interval (−1, +1), so the price-position sub-score is always bounded and comparable across sessions.
+
+### Slope consistency
+The slope of each EMA over the most recent five bars is computed as the current EMA value minus the value five bars ago. If all three slopes agree in sign (all positive or all negative), a slope score is computed as the mean slope normalized by (3×ATR), then clamped to [−1, +1]. If the three slopes disagree, the slope score is zero. This means the slope sub-score contributes only when the trend is consistently accelerating in one direction, and is suppressed during transitions and conflicted markets. The five-bar lookback matches the fast EMA period. This keeps the slope estimate on a natural scale relative to the underlying signal.
+### Volume confirmation
+Current bar tick volume is compared to the 20-bar rolling average. The ratio is mapped to [0.5, 1.5] via clip(0.5 + ratio, 0.5, 1.5) , which amplifies the composite when volume is above average and dampens it when volume is below average. The bounds prevent a single extreme-volume bar from dominating the score and prevent a low-volume session from producing a negative multiplier. This multiplier is applied after the additive combination of alignment, price position, and slope.
+### The contradiction penalty
+When EMA alignment produces a positive score but price is below the fast EMA, or when alignment produces a negative score but price is above the fast EMA, the composite is multiplied by 0.3. This handles the case where the longer EMAs are still aligned from a prior trend while price has already reversed through the fast EMA — the most common source of false signals from composite EMA systems. The penalty preserves the sign (to maintain directional context) while reducing the magnitude to near-zero, which places the resulting score below any reasonable threshold for action.
+### The combination formula
+The final composite is:
+## Implementation
+### Enumeration and struct
+A seven-state TREND\_LABEL enumeration provides a descriptive classification from TREND\_STRONG\_DOWN (−3) to TREND\_STRONG\_UP (+3). The MicroTrendAnalysis struct carries the continuous strength score, the label, a binary signal (−1/0/+1), the persistent direction over N consecutive bars, and the session-adaptive threshold values that were used in classification.
+```
+  {
+   TREND_STRONG_DOWN = -3, // strength below -threshold_high
+   TREND_DOWN        = -2, // strength below -threshold_low
+   TREND_WEAK_DOWN   = -1, // strength below -threshold_low/2
+   TREND_FLAT        =  0, // |strength| at or below threshold_low/2
+   TREND_WEAK_UP     =  1, // strength above threshold_low/2
+   TREND_UP          =  2, // strength above threshold_low
+   TREND_STRONG_UP   =  3  // strength above threshold_high
+  };
+
+//| Populated by PopulateMicroTrendAnalysis().                       |
+//| threshold_high/threshold_low are adaptive when a RegimeAnalysis  |
+//| from Part 7 is supplied; otherwise fixed at 0.70/0.30.           |
+//+------------------------------------------------------------------+
+   TREND_LABEL label;         // Seven-state classification
+   int         binary_signal; // -1/0/+1 from threshold_high
+   int         persistent_dir;// -1/0/+1 sustained over N bars
+   double      threshold_high; // Adaptive or fixed strong-signal cutoff
+   double      threshold_low;  // Adaptive or fixed weak-signal cutoff
+### GetMicroTrendStrength()
+The core function requests three EMA handles and one ATR handle via the standard MQL5 indicator handle API. This approach lets the terminal cache identical handles automatically. If any handle is invalid, or if fewer bars than required are available, the function returns 0.0 rather than producing a partial score.
+```
+//|   align     (0.40) — pairwise EMA ordering, +-0.33/-0.34         |
+//|   price_pos (0.40) — tanh ATR-normalized distance to each EMA    |
+//|   slope     (0.20) — EMA slope over LOOKBACK bars / (3*atr)      |
+//|   vol_boost        — current vol / 20-bar avg, clamped [0.5,1.5] |
+//|                                                                  |
+double GetMicroTrendStrength(const string symbol, const int tf,
+                              const int ema_fast, const int ema_med,
+                              const int ema_slow, const int atr_period,
+                              int shift = 1)
+  {
+   int h_slow = iMA(symbol, (ENUM_TIMEFRAMES)tf, ema_slow, 0, MODE_EMA, PRICE_CLOSE);
+   int h_atr  = iATR(symbol, (ENUM_TIMEFRAMES)tf, atr_period);
+   if(h_fast == INVALID_HANDLE || h_med  == INVALID_HANDLE ||
+      h_slow == INVALID_HANDLE || h_atr  == INVALID_HANDLE) return 0.0;
+
+   double ema_f[], ema_m[], ema_s[], atr_v[], close_v[];
+   ArraySetAsSeries(ema_f, true); ArraySetAsSeries(ema_m, true);
+   ArraySetAsSeries(ema_s, true); ArraySetAsSeries(atr_v, true);
+   ArraySetAsSeries(close_v, true);
+   if(CopyBuffer(h_slow, 0, 0, need, ema_s) < need) return 0.0;
+   if(CopyBuffer(h_atr,  0, 0, need, atr_v) < need) return 0.0;
+   if(SafeCopyClose(symbol, tf, shift, 1, close_v) < 1)  return 0.0;
+   if(price <= 0) return 0.0;
+   double atr = atr_v[shift];
+   if(atr <= 0) atr = 0.1;
+   double ef = ema_f[shift], em = ema_m[shift], es = ema_s[shift];
+   //--- (2) ATR-normalized price position, tanh compressed
+   double price_pos = SafeTanh((price - ef) / atr) * 0.40
+                     + SafeTanh((price - em) / atr) * 0.30
+                     + SafeTanh((price - es) / atr) * 0.30;
+   //--- (3) Slope consistency over MT_DEFAULT_LOOKBACK bars
+   if(sf > 0 && sm > 0 && ss > 0)
+      slope = MathMin(1.0,  (sf + sm + ss) / (3.0 * atr));
+   else if(sf < 0 && sm < 0 && ss < 0)
+      slope = MathMax(-1.0, (sf + sm + ss) / (3.0 * atr));
+
+   //--- (4) Volume confirmation: current bar vs 20-bar average
+### Classification functions
+GetTrendLabel() maps the continuous strength score to the seven-state TREND\_LABEL enum. GetBinarySignal() maps it to {−1, 0, +1}. Both accept optional threshold parameters so session-adaptive values from Part 7 can be passed in directly. GetPersistentTrendDirection() calls GetBinarySignal() on N consecutive prior bars and returns the common direction only if all N bars agree.
+```
+//| GetTrendLabel: maps strength to TREND_LABEL (seven states).      |
+//| threshold_high/threshold_low default to fixed constants.         |
+//+------------------------------------------------------------------+
+TREND_LABEL GetTrendLabel(const double strength,
+                           double threshold_high = MT_THRESH_HIGH_BASE,
+                           double threshold_low  = MT_THRESH_LOW_BASE)
+  {
+   double half_low = threshold_low / 2.0;
+   if(strength >  threshold_high) return TREND_STRONG_UP;
+   if(strength >  threshold_low)  return TREND_UP;
+   if(strength >  half_low)       return TREND_WEAK_UP;
+   if(strength < -threshold_high) return TREND_STRONG_DOWN;
+   if(strength < -threshold_low)  return TREND_DOWN;
+   if(strength < -half_low)       return TREND_WEAK_DOWN;
+   return TREND_FLAT;
+  }
+
+//| GetBinarySignal: returns -1/0/+1 from strength vs threshold_high.|
+int GetBinarySignal(const double strength,
+                     double threshold_high = MT_THRESH_HIGH_BASE)
+   if(strength >  threshold_high) return  1;
+   if(strength < -threshold_high) return -1;
+   return 0;
+                                 const int ema_fast, const int ema_med,
+                                 const int ema_slow, const int atr_period,
+                                 int n_bars = 3,
+                                 double threshold_high = MT_THRESH_HIGH_BASE)
+  {
+   if(n_bars < 1) return 0;
+     {
+      double s = GetMicroTrendStrength(symbol, tf, ema_fast, ema_med,
+                                        ema_slow, atr_period, i);
+      int b = GetBinarySignal(s, threshold_high);
+      if(b == 0) return 0;
+      if(dir == 0) dir = b;
+### Populate functions and the Part 7 link
+Two overloads of PopulateMicroTrendAnalysis() are provided. The first uses fixed thresholds and is self-contained — it does not require a Part 7 struct. The second accepts a const RegimeAnalysis &reg from Part 7 and scales both thresholds by reg.confidence . This is the first place in the series where one part's output is used to condition another part's signal generation, rather than simply being stored alongside it.
+
+The adaptive scaling formula is:
+```
+//--- Session-adaptive threshold scaling from Part 7 confidence
+//--- High confidence: thresholds loosen (signal fires more readily)
+//--- Low confidence:  thresholds tighten (fewer signals)
+mta.threshold_high = MathMax(0.10, MathMin(0.90,
+                     MT_THRESH_HIGH_BASE - 0.15 * conf));
+mta.threshold_low  = MathMax(0.10, MathMin(0.90,
+                     MT_THRESH_LOW_BASE  - 0.10 * conf));
+At the maximum regime confidence of 1.0, threshold\_high drops from 0.70 to 0.55 and threshold\_low from 0.30 to 0.20. At confidence 0.0 (or when using fixed thresholds), the values remain at the base constants. Both values are clamped to [0.10, 0.90] to prevent degenerate thresholds from dominating or suppressing all signals.
+The complete overload pair:
+//+------------------------------------------------------------------+
+//| PopulateMicroTrendAnalysis: standalone, fixed thresholds.        |
+void PopulateMicroTrendAnalysis(const string symbol, const int tf,
+                                 const int ema_fast, const int ema_med,
+                                 const int ema_slow, const int atr_period,
+                                 MicroTrendAnalysis &mta,
+                                 int persistent_n_bars = 3)
+  {
+   mta.threshold_high = MT_THRESH_HIGH_BASE;
+   mta.threshold_low  = MT_THRESH_LOW_BASE;
+   mta.strength = GetMicroTrendStrength(symbol, tf, ema_fast, ema_med,
+                                         ema_slow, atr_period, 1);
+   mta.label    = GetTrendLabel(mta.strength, mta.threshold_high,
+                                 mta.threshold_low);
+   mta.binary_signal  = GetBinarySignal(mta.strength, mta.threshold_high);
+   mta.persistent_dir = GetPersistentTrendDirection(symbol, tf, ema_fast,
+                                  ema_med, ema_slow, atr_period,
+                                  persistent_n_bars, mta.threshold_high);
+   if(!MathIsValidNumber(mta.strength)) mta.strength = 0.0;
+  }
+//| PopulateMicroTrendAnalysis: session-adaptive, uses Part 7        |
+//| RegimeAnalysis.confidence to scale thresholds.                   |
+//+------------------------------------------------------------------+
+void PopulateMicroTrendAnalysis(const string symbol, const int tf,
+                                 const int ema_fast, const int ema_med,
+                                 const int ema_slow, const int atr_period,
+                                 MicroTrendAnalysis  &mta,
+                                 const RegimeAnalysis &reg,
+   double conf = MathMax(0.0, MathMin(1.0, reg.confidence));
+   mta.threshold_high = MathMax(0.10, MathMin(0.90,
+                         MT_THRESH_HIGH_BASE - 0.15 * conf));
+   mta.threshold_low  = MathMax(0.10, MathMin(0.90,
+                         MT_THRESH_LOW_BASE  - 0.10 * conf));
+   mta.strength = GetMicroTrendStrength(symbol, tf, ema_fast, ema_med,
+                                         ema_slow, atr_period, 1);
+   mta.label    = GetTrendLabel(mta.strength, mta.threshold_high,
+                                 mta.threshold_low);
+   mta.binary_signal  = GetBinarySignal(mta.strength, mta.threshold_high);
+   mta.persistent_dir = GetPersistentTrendDirection(symbol, tf, ema_fast,
+                                  ema_med, ema_slow, atr_period,
+                                  persistent_n_bars, mta.threshold_high);
+   if(!MathIsValidNumber(mta.strength)) mta.strength = 0.0;
+  }
+
+## Empirical Study: NQ M1, 514 Sessions
+The composite score was computed bar-by-bar on 514 NY sessions of NQ M1 futures (May 2024–May 2026) using EMA periods 5/8/13 and ATR period 14. Sessions with fewer than 300 bars after the NY open filter were excluded, consistent with the Part 4–7 empirical methodology. The Part 7 regime classification was merged on session date to support the adaptive-threshold analysis.
+![Figure 1 - Distribution of session-mean micro-trend strength across 514 NQ M1 sessions](https://c.mql5.com/2/231/P8_Fig1__1v2.png)
+### Table 1 — Signal frequency by regime (fixed thresholds: 0.70/0.30)
+| Regime | Sessions | Mean strength | Strong up (%) | Strong down (%) | Flat (%) | Persistent (%) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Normal | 257 | 0.042 | 8.3 | 6.1 | 48.2 | 12.4 |
+| Informed | 38 | 0.187 | 14.6 | 4.2 | 39.5 | 18.3 |
+| Trending | 37 | 0.241 | 18.9 | 3.7 | 33.1 | 23.6 |
+| Mean-Reverting | 21 | -0.163 | 3.8 | 12.4 | 41.9 | 14.2 |
+Figure 3 - Signal frequency under fixed thresholds (0.70 / 0.30) across 514 NQ M1 sessions (May 2024-May 2026). Strong-up and strong-down bars each account for approximately 30% of session bars. The Trending regime has the highest strong-up fraction; Noisy and Stressed regimes show the highest strong-down fraction.
+![Figure 4 - Mean micro-trend strength by relative session position across 514 NQ M1 sessions](https://c.mql5.com/2/231/P8_Fig4.png)
+### Table 2 — Fixed vs adaptive threshold comparison by regime
+| Regime | Mean confidence | threshold\_high (adaptive) | Strong signal % (fixed) | Strong signal % (adaptive) | Change |
+| --- | --- | --- | --- | --- | --- |
+| Normal | 0.493 | 0.626 | 14.4 | 17.8 | +3.4 |
+| Informed | 0.540 | 0.619 | 18.8 | 23.4 | +4.6 |
+| Trending | 0.593 | 0.611 | 22.6 | 29.1 | +6.5 |
+| Mean-Reverting | 0.505 | 0.624 | 16.2 | 19.7 | +3.5 |
+The adaptive threshold produces a regime-differentiated signal rate. Trending sessions gain 6.5 percentage points in strong-signal frequency, reflecting the loosened threshold at high confidence. Stressed sessions lose 1.8 percentage points as the threshold tightens. Noisy sessions, which have near-average confidence, see a modest increase — because the confidence-based tightening for Noisy (mean confidence 0.484) is less than might be expected, suggesting that Noisy sessions are identified by noise and flow characteristics more than by low composite confidence.
+
+This comparison has a limitation: the adaptive threshold is applied at the session level, not bar-by-bar. The adaptive threshold operates on session-level mean strength as a proxy, not on the bar-by-bar strength with bar-by-bar regime confidence. Part 7's confidence field is computed once per session, so the adaptation occurs at the session level: all bars within a Trending session use the same loosened thresholds. A fully bar-adaptive implementation would require computing regime confidence at every bar, which goes beyond the current Part 7 design. The session-level adaptation is a practical approximation; it is documented here so readers know its scope.
+## The MicroTrendStrength Indicator
+Part 8 is the first part of the series to produce a standalone indicator file. MicroTrendStrength.mq5 plots the composite score in a separate sub-window and exposes three buffers: the continuous strength value, the seven-state trend label, and the binary signal. The indicator handles the EMA and ATR handle management internally — the caller does not interact with the handle lifecycle.
+The folder structure is new for Part 8. The Hurst profile indicator from Part 2 lives in MicroTrend\ together with its foundation header:
+```
+#include "Includes\MicroStructure_Foundation.mqh"
+//|                                                                  |
+//| Plots the GetMicroTrendStrength() composite score in a           |
+//| sub-window. Three buffers:                                       |
+//|   Buffer 0 — Strength: continuous score in [-1, +1]              |
+//+------------------------------------------------------------------+
+#property copyright   "Max Brown"
+#property version     "8.00"
+#property description "Micro-trend strength composite (Part 8)"
+#property indicator_separate_window
+#property indicator_buffers 3
+#property indicator_plots   3
+//--- Plot 0: Strength line
+#property indicator_label1  "Strength"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrDodgerBlue
+#property indicator_style1  STYLE_SOLID
+#property indicator_width1  2
+
+//--- Plot 1: TrendLabel histogram
+#property indicator_label2  "TrendLabel"
+#property indicator_type2   DRAW_HISTOGRAM
+#property indicator_color2  clrSilver
+#property indicator_style2  STYLE_SOLID
+#property indicator_width2  2
+//--- Plot 2: BinarySignal dotted line
+#property indicator_label3  "BinarySignal"
+#property indicator_type3   DRAW_LINE
+#property indicator_color3  clrCrimson
+#property indicator_style3  STYLE_DOT
+#property indicator_width3  1
+#include "Includes\MicroStructure_Foundation.mqh"
+//+------------------------------------------------------------------+
+input int    InpEmaSlow    = 13;   // Slow EMA period
+input int    InpAtrPeriod  = 14;   // ATR period
+input double InpThreshHigh = 0.70; // Strong-signal threshold
+input double InpThreshLow  = 0.30; // Weak-signal threshold
+int g_handle_slow  = INVALID_HANDLE;
+int g_handle_atr   = INVALID_HANDLE;
+
+     {
+      Print("MicroTrendStrength: invalid threshold configuration.");
+      return INIT_PARAMETERS_INCORRECT;
+     }
+//--- Create EMA and ATR handles once — terminal caches identical handles
+   g_handle_fast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
+   g_handle_med  = iMA(_Symbol, PERIOD_CURRENT, InpEmaMed,  0, MODE_EMA, PRICE_CLOSE);
+   g_handle_slow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
+   g_handle_atr  = iATR(_Symbol, PERIOD_CURRENT, InpAtrPeriod);
+   if(g_handle_fast == INVALID_HANDLE || g_handle_med  == INVALID_HANDLE ||
+      g_handle_slow == INVALID_HANDLE || g_handle_atr  == INVALID_HANDLE)
+      Print("MicroTrendStrength: failed to create indicator handles.");
+   if(g_handle_slow != INVALID_HANDLE) { IndicatorRelease(g_handle_slow); g_handle_slow = INVALID_HANDLE; }
+   if(g_handle_atr  != INVALID_HANDLE) { IndicatorRelease(g_handle_atr);  g_handle_atr  = INVALID_HANDLE; }
+  }
+   int need = rates_total - start + 5 + 1;
+   double ema_f[], ema_m[], ema_s[], atr_v[];
+   ArraySetAsSeries(ema_f, false); ArraySetAsSeries(ema_m, false);
+   ArraySetAsSeries(ema_s, false); ArraySetAsSeries(atr_v, false);
+   if(CopyBuffer(g_handle_fast, 0, 0, rates_total, ema_f) < rates_total) return prev_calculated;
+   if(CopyBuffer(g_handle_slow, 0, 0, rates_total, ema_s) < rates_total) return prev_calculated;
+   if(CopyBuffer(g_handle_atr,  0, 0, rates_total, atr_v) < rates_total) return prev_calculated;
+
+//--- Compute strength for each bar from start onward
+      double es0 = ema_s[i - lookback];
+      double atr = atr_v[i];
+      if(atr <= 0) atr = 0.1;
+      //--- (1) Alignment
+      //--- (2) Price position: tanh-compressed, ATR-normalised
+      double price_pos = SafeTanh((price - ef) / atr) * 0.40
+                       + SafeTanh((price - em) / atr) * 0.30
+                       + SafeTanh((price - es) / atr) * 0.30;
+      //--- (3) Slope consistency over MT_DEFAULT_LOOKBACK bars
+      if(sf > 0 && sm > 0 && ss > 0)
+         slope = MathMin( 1.0, (sf + sm + ss) / (3.0 * atr));
+      else if(sf < 0 && sm < 0 && ss < 0)
+         slope = MathMax(-1.0, (sf + sm + ss) / (3.0 * atr));
+      //--- (4) Volume confirmation: current bar vs 20-bar average, [0.5, 1.5]
+## Practical Usage
+The two-overload design means Part 8 can be used in two ways: as a standalone bar-by-bar trend score without requiring Parts 4–7, or as a regime-conditioned signal when the full measurement chain is in use.
+```
+//--- Standalone: fixed thresholds, no Part 7 required
+MicroTrendAnalysis mta;
+PopulateMicroTrendAnalysis(Symbol(), PERIOD_M1, 5, 8, 13, 14, mta);
+//--- Full chain: session-adaptive thresholds from Part 7
+RobustFractalAnalysis  rfa;
+VolatilityAnalysis     va;
+MicrostructureAnalysis msa;
+OrderFlowAnalysis      ofa;
+RegimeAnalysis         reg;
+MicroTrendAnalysis     mta;
+
+PopulateRegimeAnalysis(Symbol(), PERIOD_M1, 390, reg, rfa, va, msa, ofa,
+                        vol_baseline);
+   && mta.persistent_dir == 1
+   && reg.regime != REGIME_STRESSED
+   && reg.regime != REGIME_NOISY)
+  {
+   //--- Regime-confirmed, persistent, adaptive-threshold long signal
+   double size = 1.0 * reg.confidence; // Scale position by session confidence
+  }
+## Limitations
+EMA-based composites are lagging by construction. The five-bar slope lookback and the ATR normalization reduce but do not eliminate the lag relative to underlying price action. At NQ M1 during a fast NY-open move, the composite will typically reach its peak reading two to four bars after the directional move has started.
+The contradiction penalty addresses the most common form of false signal — alignment-price disagreement — but does not handle all false signals. A trending EMA structure with price above the fast EMA and high volume can still produce a positive score in a mean-reverting session. The regime classifier from Part 7 provides the correct tool for excluding such sessions at the session level; combining Part 8 with Part 7 via the adaptive overload is the intended use pattern for production trading.
+The EMA period choice of 5/8/13 is not validated against alternative parameterizations. These are Fibonacci-sequence periods with harmonic relationships, which is the motivation for the choice, but other period triples may produce better signal quality on different instruments or timeframes. The threshold constants MT\_THRESH\_HIGH\_BASE (0.70) and MT\_THRESH\_LOW\_BASE (0.30) are calibrated to NQ M1 and the NY session; other environments may require different values.
+The volume component uses tick volume rather than traded contract volume. On NQ M1, tick volume (the number of price updates per bar) is a reasonable proxy for trading activity, but it is not identical to the number of contracts traded. The proxy relationship is stable during normal sessions and degrades during data-feed anomalies, which are identified as Stressed sessions by Part 7 and which produce near-zero composite scores in any case.
+## Conclusion
+Part 8 adds the first bar-by-bar actionable trend signal to the series. GetMicroTrendStrength() produces a continuous [-1, +1] composite from EMA alignment, price position, slope consistency, and volume confirmation, with a contradiction penalty that suppresses the most common false-signal pattern. The seven-state TREND\_LABEL , binary signal, and persistence check give users three levels of signal granularity from the same underlying computation.
+The empirical study on 514 NQ M1 sessions confirms that the composite is regime-coherent without being given the regime label: Trending sessions produce the highest strong-signal and persistence rates, Stressed sessions the lowest, and Mean-Reverting sessions the most negative mean strength. The session-adaptive threshold variant translates Part 7's confidence field into a tighter signal filter for adverse sessions and a looser one for high-confidence sessions.
+Part 9 builds on the persistent direction output from Part 8 to implement pullback quality scoring: Fibonacci depth analysis, H1 range context, momentum autocorrelation, and a composite entry-quality classifier.
+## Getting the Source Code via MQL5 Algo Forge
+Algo Forge provides Git-based version control in the cloud, so you will always have access to the latest version of the code, including any updates or fixes made after this article was published. The full repository is available at [MQL5 Algo Forge](https://forge.mql5.io/GCG26/Market-Microstructure-Part8 "MQL5 Algo Forge — Market Microstructure Part 8").
+
+## References
+- [Previous publications](https://www.mql5.com/en/users/gcg26/publications)
+This article builds a sequential CUSUM breakpoint detector for MetaTrader 5, starting from the statistical construction and ending with a working indicator. It explains standardized log-returns, dual accumulators, the role of k and h, and the ARL₀ baseline from Siegmund. The code walkthrough covers buffer persistence, recalculation handling, idempotent chart objects, and a three-pass engine, so you can compile, attach, and use the detector to flag structural regime shifts earlier than fixed-window smoothers.
+![From Basic to Intermediate: Random Access (II)](https://c.mql5.com/2/164/16271-do-b-sico-ao-intermedi-rio-logo.png)
+![Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5](https://c.mql5.com/2/233/23070-trust-your-backtest-data-first-logo.png)
+[Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5](https://www.mql5.com/en/articles/23070)
+A reproducible, read-only Python audit for MetaTrader 5 that verifies history quality before any backtest. It exports M5 data from multiple terminals, detects gaps and synthetic bars by timestamp spacing, and reports coverage per year. The same deterministic strategy then runs on three broker feeds over a common window to quantify result drift and decompose it into spread, data/price, and trade effects.
+![MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes](https://c.mql5.com/2/233/23137-metatrader-5-machine-learning-logo.png)
+[MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes](https://www.mql5.com/en/articles/23137)
+We test AFML's claim that the sequential bootstrap decorrelates bagged trees on overlapping triple‑barrier labels by isolating two levers: draw count and draw rule. One decision identical tree is bagged under four row‑sampling regimes and evaluated on EURUSD 2022–2023 for draw uniqueness, between‑tree correlation, AUC, and calibration. Decorrelation comes almost entirely from throttling max\_samples to average uniqueness; the sequential draw adds little. Out-of-bag inflation is largest under full-count sequential sampling.
+
+----- CONCLUSION -----
+
+## Conclusion
+
+Part 8 adds the first bar-by-bar actionable trend signal to the series. GetMicroTrendStrength() produces a continuous [-1, +1] composite from EMA alignment, price position, slope consistency, and volume confirmation, with a contradiction penalty that suppresses the most common false-signal pattern. The seven-state TREND\_LABEL , binary signal, and persistence check give users three levels of signal granularity from the same underlying computation.
+
+The empirical study on 514 NQ M1 sessions confirms that the composite is regime-coherent without being given the regime label: Trending sessions produce the highest strong-signal and persistence rates, Stressed sessions the lowest, and Mean-Reverting sessions the most negative mean strength. The session-adaptive threshold variant translates Part 7's confidence field into a tighter signal filter for adverse sessions and a looser one for high-confidence sessions.
+
+Part 9 builds on the persistent direction output from Part 8 to implement pullback quality scoring: Fibonacci depth analysis, H1 range context, momentum autocorrelation, and a composite entry-quality classifier.
+
+## Getting the Source Code via MQL5 Algo Forge
+
+Algo Forge provides Git-based version control in the cloud, so you will always have access to the latest version of the code, including any updates or fixes made after this article was published. The full repository is available at [MQL5 Algo Forge](https://forge.mql5.io/GCG26/Market-Microstructure-Part8 "MQL5 Algo Forge — Market Microstructure Part 8").
+
+## References
+
+- [Previous publications](https://www.mql5.com/en/users/gcg26/publications)
+- [Brown, Max (2026). Intraday Microstructure Dynamics of E-mini S&P 500 Futures (May 29, 2026). Available at SSRN: https://ssrn.com/abstract=6847024.](https://papers.ssrn.com/abstract=6847024 "Intraday Microstructure Dynamics of E-mini S&P 500 Futures")
+- [Engle, R.F. (1982). Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation. *Econometrica*, 50(4), 987-1007.](https://doi.org/10.1016/S0304-3932(99)00041-0 "Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation")
+- [Corsi, F. (2009). A simple approximate long-memory model of realized volatility. *Journal of Financial Econometrics*, 7(2), 174-196.](https://www.sciencedirect.com/science/article/pii/S0304407605000412 "A simple approximate long-memory model of realized volatility")
+- [Lopez de Prado, M.M. (2018). *Advances in Financial Machine Learning*. Wiley.](https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086 "Advances in Financial Machine Learning")
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23372.zip "Download all attachments in the single ZIP archive")
+
+[MicroStructure\_Foundation.mqh](https://www.mql5.com/en/articles/download/23372/MicroStructure_Foundation.mqh "Download MicroStructure_Foundation.mqh")
+(117.1 KB)
+
+[MicroTrendStrength.mq5](https://www.mql5.com/en/articles/download/23372/MicroTrendStrength.mq5 "Download MicroTrendStrength.mq5")
+(10.49 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 1): From Statistical Theory to a Working MQL5 Indicator](https://c.mql5.com/2/232/23043-detecting-structural-breakpoints-logo.png)
+[Detecting Structural Breakpoints in Price Series Using CUSUM in MQL5 (Part 1): From Statistical Theory to a Working MQL5 Indicator](https://www.mql5.com/en/articles/23043)
+
+This article builds a sequential CUSUM breakpoint detector for MetaTrader 5, starting from the statistical construction and ending with a working indicator. It explains standardized log-returns, dual accumulators, the role of k and h, and the ARL₀ baseline from Siegmund. The code walkthrough covers buffer persistence, recalculation handling, idempotent chart objects, and a three-pass engine, so you can compile, attach, and use the detector to flag structural regime shifts earlier than fixed-window smoothers.
+
+![From Basic to Intermediate: Random Access (II)](https://c.mql5.com/2/164/16271-do-b-sico-ao-intermedi-rio-logo.png)
+[From Basic to Intermediate: Random Access (II)](https://www.mql5.com/en/articles/16271)
+
+In this article, we will examine how two slightly different approaches can significantly affect the overall implementation strategy, both in performance and in disk I/O design, while helping to prevent compatibility issues between applications.
+
+![Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5](https://c.mql5.com/2/233/23070-trust-your-backtest-data-first-logo.png)
+[Trust Your Backtest Data First: Building a Reproducible Historical Data Audit in Python for MetaTrader 5](https://www.mql5.com/en/articles/23070)
+
+A reproducible, read-only Python audit for MetaTrader 5 that verifies history quality before any backtest. It exports M5 data from multiple terminals, detects gaps and synthetic bars by timestamp spacing, and reports coverage per year. The same deterministic strategy then runs on three broker feeds over a common window to quantify result drift and decompose it into spread, data/price, and trade effects.
+
+![MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes](https://c.mql5.com/2/233/23137-metatrader-5-machine-learning-logo.png)
+[MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes](https://www.mql5.com/en/articles/23137)
+
+We test AFML's claim that the sequential bootstrap decorrelates bagged trees on overlapping triple‑barrier labels by isolating two levers: draw count and draw rule. One decision identical tree is bagged under four row‑sampling regimes and evaluated on EURUSD 2022–2023 for draw uniqueness, between‑tree correlation, AUC, and calibration. Decorrelation comes almost entirely from throttling max\_samples to average uniqueness; the sequential draw adds little. Out-of-bag inflation is largest under full-count sequential sampling.
+
+[![](https://www.mql5.com/ff/si/m0dtjf9x3brdz07n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dtop.experts%26utm_content%3Dbuy.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=widauvjabtsckwovwaperzkotrcrttvb&s=25ef75d39331f608a319410bf27ff02c1bd7986622ecc1eec8968a650f044731&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=wrcdjurxuqjpoquojfzezkaegictvqcr&ssn=1788777048317262317&ssn_dr=0&ssn_sr=0&fv_date=1788777048&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23372&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Market%20Microstructure%20in%20MQL5%20(Part%208)%3A%20Micro-Trend%20Strength%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877704834544693&fz_uniq=6375227842828567640&sv=2552)

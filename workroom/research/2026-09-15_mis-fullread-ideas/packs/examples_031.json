@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_031",
+  "section": "Examples",
+  "parent_shard": "examples_031",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 9717,
+      "title": "An attempt at developing an EA constructor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9717.md"
+    },
+    {
+      "id": 9827,
+      "title": "Fix PriceAction Stoploss or Fixed RSI (Smart StopLoss)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9827.md"
+    },
+    {
+      "id": 9874,
+      "title": "MQL5 Cookbook \u2013 Economic Calendar",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9874.md"
+    },
+    {
+      "id": 9914,
+      "title": "Manual charting and trading toolkit (Part III). Optimization and new tools",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9914.md"
+    },
+    {
+      "id": 10130,
+      "title": "Using AutoIt With MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10130.md"
+    },
+    {
+      "id": 10211,
+      "title": "Market math: profit, loss and costs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10211.md"
+    },
+    {
+      "id": 10215,
+      "title": "Making charts more interesting: Adding a background",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10215.md"
+    },
+    {
+      "id": 10275,
+      "title": "WebSockets for MetaTrader 5 \u2014 Using the Windows API",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10275.md"
+    },
+    {
+      "id": 10361,
+      "title": "Using the CCanvas class in MQL applications",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10361.md"
+    },
+    {
+      "id": 10431,
+      "title": "How to master Machine Learning",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10431.md"
+    },
+    {
+      "id": 10479,
+      "title": "What you can do with Moving Averages",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10479.md"
+    },
+    {
+      "id": 10922,
+      "title": "Matrix and Vector operations in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10922.md"
+    }
+  ]
+}

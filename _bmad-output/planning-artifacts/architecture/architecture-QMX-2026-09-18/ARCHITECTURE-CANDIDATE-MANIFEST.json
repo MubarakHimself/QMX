@@ -1,0 +1,58 @@
+{
+  "candidate_id": "qmx-workflows-arch-2026-09-18-a",
+  "status": "awaiting independent challenge",
+  "frozen_utc": "2026-09-18T12:39:51Z",
+  "stage": "A",
+  "not": ["ratified", "implemented", "documentation-factory-handoff"],
+  "source_revisions": {
+    "docs_workspace": {
+      "path": "C:/Users/Mubarak/Desktop/QMX",
+      "branch": "main",
+      "commit": "b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3",
+      "tracks": "origin/main"
+    },
+    "implementation": {
+      "path": "C:/Users/Mubarak/Desktop/QMX-worktrees/epic-051-skylos-mill-split",
+      "commit": "270e992995c2378ca63cf6343254ef8140a8c97e",
+      "tracks": "origin/integration"
+    },
+    "audit_era_implementation_not_used_for_absence": "8510c032496bb870824ecc5c4f807e8a4e4f167e"
+  },
+  "dirty_state": "docs workspace: untracked planning/research only; no production code edits this sitting",
+  "tests_this_sitting": {
+    "qml_mill_subset": "32 passed in 5.96s @ 270e992 CPython 3.14.6",
+    "qmn_conformance": "5 passed, 1 skipped in 2.21s",
+    "qma_daemon": "blocked — qmx-agents/.venv invalid"
+  },
+  "scope": "QMX Workflows construction kit: capabilities, extensions, workflows, mini-apps, widgets, copilot sessions, Artifact Library discovery, app orchestration, data recipes, alternative-system honesty, UI-host contracts",
+  "exclusions": ["production implementation", "visual layout", "live trading", "Documentation Factory", "simulated Codex review", "mutmut run on shared tree"],
+  "files": [
+    {"path": "ARCHITECTURE-SPINE.md", "sha256": "89999b2af2ac5018b3cbf90db5d7e30855ebc7a56469a41cc95d0e9db4adddd7", "bytes": 35927},
+    {"path": "RECON-RETURN.md", "sha256": "39e62d95c095c25ff2613ca27d00fb4db52a1ae43df22e298ae30fa64d01235f", "bytes": 5398},
+    {"path": "REQUIREMENTS-ADDENDUM.md", "sha256": "5b6f933a1c528a0f938f2bb45b5b66172084ff2f33aa6348e088a5683e1b0c2c", "bytes": 2949},
+    {"path": "CONTRACTS.md", "sha256": "9392e0586e383e0d375b3d8a4cf513be51ac020006387550d6d8640bc27d2d7e", "bytes": 4198},
+    {"path": "JOURNEYS.md", "sha256": "6e58b404b9355d40cf9bdc862f401d8e399069174151817042d3c9d54d571f03", "bytes": 3539},
+    {"path": "STACK-AND-EVALUATION.md", "sha256": "2dbdf7539a9e01cb6bd807238dbfa9ba3feb2984ac621e92d44fe8c287250953", "bytes": 3787},
+    {"path": "COPILOT-AND-APPS.md", "sha256": "e592eef14077e6206a797be3191d374e6d9f9fd148f77f05e4f9e8ccb968f3b2", "bytes": 2137},
+    {"path": "CONFLICT-REGISTER.md", "sha256": "c4ece31422660a267d06f8fcb2bbacd26b9b3327ab4b841dd8c4549fb46803a8", "bytes": 1808},
+    {"path": "IMPLEMENTATION-SEQUENCE.md", "sha256": "c04eab380fab579840f6165242b08fd5755e064185e2bb89691ebbb5321788fa", "bytes": 1946},
+    {"path": "UI-HOST.md", "sha256": "c1518ee566dd60a40d2f13771935253ebfdc2b3227dccbfea51bc8f7e3de16a9", "bytes": 1005},
+    {"path": "OPERATOR-QUESTIONS.md", "sha256": "56f6f22954d4962771905306f989f084cb78c1786bf3247ed6412ad5dc71710d", "bytes": 1498},
+    {"path": "CODEX-CHALLENGE-HANDOFF.md", "sha256": "36cf8a534ff9de476759afed167910b3305dddb180ceea775f19407d9962e229", "bytes": 2095},
+    {"path": "12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md", "sha256": "556a2811d1026f39f0f28427bfd5c8700fb94f1e3d41cbc9c05d3b6c74e7032e", "bytes": 12004},
+    {"path": "13-GROK-RESUME-AND-RECONCILE.md", "sha256": "9ed6d44f242e2c933b2674c20379bb8d749053d68fea436ca7d88e3b3d2e1636", "bytes": 4414},
+    {"path": ".memlog.md", "sha256": "e6af889f493be8266b4757d098e5e69bbef0367862014cf14a99c3c0445609ad", "bytes": 5608},
+    {"path": "reviews/gate-summary.md", "sha256": "06a677f9667bf2d0104b537b49049a6d63c01ad695171f004e4209db32124d45", "bytes": 1104},
+    {"path": "reviews/review-currency.md", "sha256": "da09d10888338ebfda87c31b9b296ddd7c2cede6620299b255c7bc25a8fdf1b7", "bytes": 18426},
+    {"path": "reviews/review-adversarial.md", "sha256": "743a6e6c0caa87efe797eea58485595429f9bb214cd76cbad7961728d2072630", "bytes": 46315},
+    {"path": "reviews/review-rubric.md", "sha256": "ed224324594de43a5ec5e99ad2d483d45d1beb742f7aa96e879c52b624b09e88", "bytes": 31734},
+    {"path": "reviews/reconcile-inputs.md", "sha256": "827504ae5fd09fc5afc4a9ed53446cbbde331d5fb52b615ea085ae3a5a865e4e", "bytes": 13312},
+    {"path": "inputs/opportunities-journeys.md", "sha256": "65a35aff185d859e99e36f9a8d3a17fcab3d9d889ecdcfcd846e20d6382ebf99", "bytes": 52669}
+  ],
+  "zip": {
+    "path": "CODEX-CHALLENGE-INPUTS.zip",
+    "sha256": "4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87",
+    "bytes": 225267
+  },
+  "hashes_are": "content identity of this reviewed snapshot; not product fingerprints or cryptographic approval"
+}

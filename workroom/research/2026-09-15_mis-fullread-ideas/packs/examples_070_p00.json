@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_070_p00",
+  "section": "Examples",
+  "parent_shard": "examples_070",
+  "part_index": 0,
+  "part_count": 4,
+  "series_in_pack": [
+    "developing a replay system"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 11393,
+      "title": "Developing a Replay System (Part 32): Order System (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Order System (I)",
+      "series_key": "developing a replay system",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11393.md"
+    },
+    {
+      "id": 11482,
+      "title": "Developing a Replay System (Part 33): Order System (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Order System (II)",
+      "series_key": "developing a replay system",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11482.md"
+    },
+    {
+      "id": 11484,
+      "title": "Developing a Replay System (Part 34): Order System (III)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Order System (III)",
+      "series_key": "developing a replay system",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11484.md"
+    },
+    {
+      "id": 11492,
+      "title": "Developing a Replay System (Part 35): Making Adjustments (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Making Adjustments (I)",
+      "series_key": "developing a replay system",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11492.md"
+    },
+    {
+      "id": 11510,
+      "title": "Developing a Replay System (Part 36): Making Adjustments (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Making Adjustments (II)",
+      "series_key": "developing a replay system",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11510.md"
+    },
+    {
+      "id": 11585,
+      "title": "Developing a Replay System (Part 37): Paving the Path (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Paving the Path (I)",
+      "series_key": "developing a replay system",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11585.md"
+    },
+    {
+      "id": 11591,
+      "title": "Developing a Replay System (Part 38): Paving the Path (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Paving the Path (II)",
+      "series_key": "developing a replay system",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11591.md"
+    },
+    {
+      "id": 11599,
+      "title": "Developing a Replay System (Part 39): Paving the Path (III)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Paving the Path (III)",
+      "series_key": "developing a replay system",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11599.md"
+    },
+    {
+      "id": 11624,
+      "title": "Developing a Replay System (Part 40): Starting the second phase (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Starting the second phase (I)",
+      "series_key": "developing a replay system",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11624.md"
+    },
+    {
+      "id": 11607,
+      "title": "Developing a Replay System (Part 41): Starting the second phase (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Starting the second phase (II)",
+      "series_key": "developing a replay system",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11607.md"
+    },
+    {
+      "id": 11652,
+      "title": "Developing a Replay System (Part 42): Chart Trade Project (I)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Chart Trade Project (I)",
+      "series_key": "developing a replay system",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11652.md"
+    },
+    {
+      "id": 11664,
+      "title": "Developing a Replay System (Part 43): Chart Trade Project (II)",
+      "section": "Examples",
+      "series_title": "Developing a Replay System (): Chart Trade Project (II)",
+      "series_key": "developing a replay system",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11664.md"
+    }
+  ]
+}

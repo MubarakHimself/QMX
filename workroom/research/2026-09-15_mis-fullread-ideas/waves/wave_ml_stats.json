@@ -1,0 +1,935 @@
+{
+  "packs": [
+    {
+      "pack_id": "machine_learning_000",
+      "section": "Machine learning",
+      "parent_shard": "machine_learning_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 12373,
+          "title": "How to use ONNX models in MQL5",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12373.md"
+        },
+        {
+          "id": 12433,
+          "title": "An example of how to ensemble ONNX models in MQL5",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12433.md"
+        },
+        {
+          "id": 13656,
+          "title": "Neural Network in Practice: Secant Line",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13656.md"
+        },
+        {
+          "id": 13670,
+          "title": "Neural Network in Practice: Least Squares",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13670.md"
+        },
+        {
+          "id": 13696,
+          "title": "Neural Network in Practice: Straight Line Function",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13696.md"
+        },
+        {
+          "id": 13706,
+          "title": "Mastering Model Interpretation: Gaining Deeper Insight From Your Machine Learning Models",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13706.md"
+        },
+        {
+          "id": 13710,
+          "title": "Neural Network in Practice: Pseudoinverse (I)",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13710.md"
+        },
+        {
+          "id": 13729,
+          "title": "The Disagreement Problem: Diving Deeper into The Complexity Explainability in AI",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13729.md"
+        },
+        {
+          "id": 13733,
+          "title": "Neural Network in Practice: Pseudoinverse (II)",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13733.md"
+        },
+        {
+          "id": 13744,
+          "title": "Neural Network in Practice: Sketching a Neuron",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13744.md"
+        },
+        {
+          "id": 13745,
+          "title": "Neural Network in Practice: The First Neuron",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13745.md"
+        },
+        {
+          "id": 13748,
+          "title": "Neural Networks in Practice: Practice Makes Perfect",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13748.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "machine_learning_001",
+      "section": "Machine learning",
+      "parent_shard": "machine_learning_001",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "generative adversarial networks (gans) for synthetic data in financial modeling",
+        "integrating ml models with the strategy tester",
+        "metatrader 5 machine learning blueprint",
+        "online machine learning for trade signal filtering in mql5",
+        "quantization in machine learning"
+      ],
+      "n": 9,
+      "articles": [
+        {
+          "id": 23676,
+          "title": "Beyond the Mean and Standard Deviation: A Robust Statistics Library for MQL5 Indicators",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23676.md"
+        },
+        {
+          "id": 23719,
+          "title": "Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares",
+          "section": "Machine learning",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23719.md"
+        },
+        {
+          "id": 16214,
+          "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling",
+          "section": "Machine learning",
+          "series_title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (): Introduction to GANs and Synthetic Data in Financial Modeling",
+          "series_key": "generative adversarial networks (gans) for synthetic data in financial modeling",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16214.md"
+        },
+        {
+          "id": 16428,
+          "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 2): Creating Synthetic Symbol for Testing",
+          "section": "Machine learning",
+          "series_title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (): Creating Synthetic Symbol for Testing",
+          "series_key": "generative adversarial networks (gans) for synthetic data in financial modeling",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16428.md"
+        },
+        {
+          "id": 12069,
+          "title": "Integrating ML models with the Strategy Tester (Part 3): Managing CSV files (II)",
+          "section": "Machine learning",
+          "series_title": "Integrating ML models with the Strategy Tester (): Managing CSV files (II)",
+          "series_key": "integrating ml models with the strategy tester",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12069.md"
+        },
+        {
+          "id": 24057,
+          "title": "MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+          "section": "Machine learning",
+          "series_title": "MetaTrader 5 Machine Learning Blueprint (): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+          "series_key": "metatrader 5 machine learning blueprint",
+          "series_part": 20,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\24057.md"
+        },
+        {
+          "id": 23700,
+          "title": "Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)",
+          "section": "Machine learning",
+          "series_title": "Online Machine Learning for Trade Signal Filtering in MQL5 ()",
+          "series_key": "online machine learning for trade signal filtering in mql5",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23700.md"
+        },
+        {
+          "id": 13219,
+          "title": "Quantization in machine learning (Part 1): Theory, sample code, analysis of implementation in CatBoost",
+          "section": "Machine learning",
+          "series_title": "Quantization in machine learning (): Theory, sample code, analysis of implementation in CatBoost",
+          "series_key": "quantization in machine learning",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13219.md"
+        },
+        {
+          "id": 13648,
+          "title": "Quantization in machine learning (Part 2): Data preprocessing, table selection, training CatBoost models",
+          "section": "Machine learning",
+          "series_title": "Quantization in machine learning (): Data preprocessing, table selection, training CatBoost models",
+          "series_key": "quantization in machine learning",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13648.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_000",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_000",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 1087,
+          "title": "Regression Analysis of the Influence of Macroeconomic Data on Currency Prices Fluctuation",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1087.md"
+        },
+        {
+          "id": 1240,
+          "title": "Trader's Statistical Cookbook: Hypotheses",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1240.md"
+        },
+        {
+          "id": 1800,
+          "title": "Statistical Verification of the Labouchere Money Management System",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1800.md"
+        },
+        {
+          "id": 2742,
+          "title": "Statistical Distributions in MQL5 - taking the best of R and making it faster",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2742.md"
+        },
+        {
+          "id": 3046,
+          "title": "Analyzing Balance/Equity graphs by symbols and EAs' ORDER_MAGIC",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3046.md"
+        },
+        {
+          "id": 3118,
+          "title": "Sorting methods and their visualization using MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3118.md"
+        },
+        {
+          "id": 3650,
+          "title": "Risk Evaluation in the Sequence of Deals with One Asset",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3650.md"
+        },
+        {
+          "id": 3973,
+          "title": "Risk Evaluation in the Sequence of Deals with One Asset. Continued",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3973.md"
+        },
+        {
+          "id": 4191,
+          "title": "Social Trading. Can a profitable signal be made even better?",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4191.md"
+        },
+        {
+          "id": 5348,
+          "title": "Developing the symbol selection and navigation utility in MQL5 and MQL4",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5348.md"
+        },
+        {
+          "id": 5373,
+          "title": "Applying the probability theory to trading gaps",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5373.md"
+        },
+        {
+          "id": 5417,
+          "title": "Selection and navigation utility in MQL5 and MQL4: Adding \"homework\" tabs and saving graphical objects",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5417.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_001",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_001",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 5436,
+          "title": "Analyzing trading results using HTML reports",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5436.md"
+        },
+        {
+          "id": 5481,
+          "title": "Practical application of correlations in trading",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5481.md"
+        },
+        {
+          "id": 5517,
+          "title": "Selection and navigation utility in MQL5 and MQL4: Adding auto search for patterns and displaying detected symbols",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5517.md"
+        },
+        {
+          "id": 5614,
+          "title": "Selection and navigation utility in MQL5 and MQL4: Adding data to charts",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5614.md"
+        },
+        {
+          "id": 7782,
+          "title": "On Methods to Detect Overbought/Oversold Zones. Part I",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7782.md"
+        },
+        {
+          "id": 8038,
+          "title": "Probability theory and mathematical statistics with examples (part I): Fundamentals and elementary theory",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8038.md"
+        },
+        {
+          "id": 8136,
+          "title": "Price series discretization, random component and noise",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8136.md"
+        },
+        {
+          "id": 10475,
+          "title": "Tips from a professional programmer (Part III): Logging. Connecting to the Seq log collection and analysis system",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10475.md"
+        },
+        {
+          "id": 11858,
+          "title": "Matrix Utils, Extending the Matrices and Vector Standard Library Functionality",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11858.md"
+        },
+        {
+          "id": 14199,
+          "title": "Spurious Regressions in Python",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14199.md"
+        },
+        {
+          "id": 14412,
+          "title": "Non-stationary processes and spurious regression",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14412.md"
+        },
+        {
+          "id": 14813,
+          "title": "Two-sample Kolmogorov-Smirnov test as an indicator of time series non-stationarity",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14813.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_002",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_002",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 15288,
+          "title": "Portfolio Optimization in Python and MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15288.md"
+        },
+        {
+          "id": 16190,
+          "title": "Feature selection and dimensionality reduction using principal components",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16190.md"
+        },
+        {
+          "id": 16285,
+          "title": "Stepwise feature selection in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16285.md"
+        },
+        {
+          "id": 16416,
+          "title": "Mutual information as criteria for Stepwise Feature Selection",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16416.md"
+        },
+        {
+          "id": 16630,
+          "title": "Ensemble methods to enhance numerical predictions in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16630.md"
+        },
+        {
+          "id": 16838,
+          "title": "Ensemble methods to enhance classification tasks in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16838.md"
+        },
+        {
+          "id": 16960,
+          "title": "Creating volatility forecast indicator using Python",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16960.md"
+        },
+        {
+          "id": 17410,
+          "title": "Build a Remote Forex Risk Management System in Python",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17410.md"
+        },
+        {
+          "id": 17845,
+          "title": "One-Dimensional Singular Spectrum Analysis",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17845.md"
+        },
+        {
+          "id": 18099,
+          "title": "Hilbert-Schmidt Independence Criterion (HSIC)",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18099.md"
+        },
+        {
+          "id": 18427,
+          "title": "Gaussian Processes in Machine Learning: Regression Model in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18427.md"
+        },
+        {
+          "id": 19188,
+          "title": "Dynamic mode decomposition applied to univariate time series in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19188.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_003",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_003",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [],
+      "n": 12,
+      "articles": [
+        {
+          "id": 20008,
+          "title": "MCMC Sampling Methods \u2014 The Metropolis-Hastings Algorithm",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20008.md"
+        },
+        {
+          "id": 20163,
+          "title": "MCMC Sampling Methods: The Slice Sampling Algorithm",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20163.md"
+        },
+        {
+          "id": 20590,
+          "title": "Markov Chain Monte Carlo Sampling Methods: The HMC Algorithm",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20590.md"
+        },
+        {
+          "id": 21603,
+          "title": "Unified Validation Pipeline Against Backtest Overfitting",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21603.md"
+        },
+        {
+          "id": 22958,
+          "title": "The Repository Pattern in MQL5: Abstracting Trade History Access for Testable EA Logic",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22958.md"
+        },
+        {
+          "id": 23175,
+          "title": "Beyond Maximum Drawdown: Building a Drawdown DNA Analyzer in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23175.md"
+        },
+        {
+          "id": 23178,
+          "title": "Creating a Profit Concentration Analyzer in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23178.md"
+        },
+        {
+          "id": 23200,
+          "title": "Creating an Interactive Portfolio Analyzer Dashboard with CCanvas in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23200.md"
+        },
+        {
+          "id": 23250,
+          "title": "Implementing Walk-Forward Efficiency Ratio Scoring in MQL5 to Detect Over-Optimized Strategies",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23250.md"
+        },
+        {
+          "id": 23299,
+          "title": "Execution Cost and Slippage Sensitivity Analyzer",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23299.md"
+        },
+        {
+          "id": 23328,
+          "title": "Comparing Trade Return Distributions with Mann-Whitney U in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23328.md"
+        },
+        {
+          "id": 23387,
+          "title": "Constructing a Trade Replay Engine in MQL5: Stepping Through Historical Trades Bar by Bar for Manual Review",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23387.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_004",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_004",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "csv data analysis"
+      ],
+      "n": 12,
+      "articles": [
+        {
+          "id": 23443,
+          "title": "Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23443.md"
+        },
+        {
+          "id": 23465,
+          "title": "Exporting Symbol Tick Data to Binary Files in MQL5 for Offline Analysis",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23465.md"
+        },
+        {
+          "id": 23502,
+          "title": "Generating a Per-Symbol Trade Analytics PDF Report from MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23502.md"
+        },
+        {
+          "id": 23560,
+          "title": "Enhancing the MQL5 Portfolio Analyzer Dashboard: Active Mitigation, Data Exports, and AI Integration",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23560.md"
+        },
+        {
+          "id": 23673,
+          "title": "Building a Hidden Risk of Ruin Auditor in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23673.md"
+        },
+        {
+          "id": 24106,
+          "title": "Survival Analysis for Trade Exits: A Discrete-Time Competing-Risks Model in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "",
+          "series_key": "",
+          "series_part": null,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\24106.md"
+        },
+        {
+          "id": 22902,
+          "title": "CSV Data Analysis (Part 2): Building a Production-Grade CSV Export and Parsing Pipeline for Quantitative Strategy Analysis",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Building a Production-Grade CSV Export and Parsing Pipeline for Quantitative Strategy Analysis",
+          "series_key": "csv data analysis",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22902.md"
+        },
+        {
+          "id": 22907,
+          "title": "CSV Data Analysis (Part 3): Engineering a Python Analytics Pipeline for MetaTrader 5 CSV Exports",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Engineering a Python Analytics Pipeline for MetaTrader 5 CSV Exports",
+          "series_key": "csv data analysis",
+          "series_part": 3,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22907.md"
+        },
+        {
+          "id": 22921,
+          "title": "CSV Data Analysis (Part 4): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation",
+          "series_key": "csv data analysis",
+          "series_part": 4,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22921.md"
+        },
+        {
+          "id": 23067,
+          "title": "CSV Data Analysis (Part 6): Multi-Broker Result Normalization and Cross-Platform CSV Reconciliation",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Multi-Broker Result Normalization and Cross-Platform CSV Reconciliation",
+          "series_key": "csv data analysis",
+          "series_part": 6,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23067.md"
+        },
+        {
+          "id": 23125,
+          "title": "CSV Data Analysis (Part 7): Statistical Robustness Testing on MQL5 CSV Exports with Monte Carlo Simulation",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Statistical Robustness Testing on MQL5 CSV Exports with Monte Carlo Simulation",
+          "series_key": "csv data analysis",
+          "series_part": 7,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23125.md"
+        },
+        {
+          "id": 23280,
+          "title": "CSV Data Analysis (Part 8): Building an SQLite Strategy Registry from Accumulated CSV Exports",
+          "section": "Statistics and analysis",
+          "series_title": "CSV Data Analysis (): Building an SQLite Strategy Registry from Accumulated CSV Exports",
+          "series_key": "csv data analysis",
+          "series_part": 8,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23280.md"
+        }
+      ]
+    },
+    {
+      "pack_id": "statistics_and_analysis_005",
+      "section": "Statistics and analysis",
+      "parent_shard": "statistics_and_analysis_005",
+      "part_index": 0,
+      "part_count": 1,
+      "series_in_pack": [
+        "data science and machine learning",
+        "data science and ml",
+        "feature engineering for ml",
+        "gaussian processes in machine learning",
+        "introduction to mql5",
+        "the price movement model and its main provisions"
+      ],
+      "n": 11,
+      "articles": [
+        {
+          "id": 15482,
+          "title": "Data Science and ML (Part 29): Essential Tips for Selecting the Best Forex Data for AI Training Purposes",
+          "section": "Statistics and analysis",
+          "series_title": "Data Science and ML (): Essential Tips for Selecting the Best Forex Data for AI Training Purposes",
+          "series_key": "data science and ml",
+          "series_part": 29,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15482.md"
+        },
+        {
+          "id": 16390,
+          "title": "Data Science and ML (Part 32): Keeping your AI models updated, Online Learning",
+          "section": "Statistics and analysis",
+          "series_title": "Data Science and ML (): Keeping your AI models updated, Online Learning",
+          "series_key": "data science and ml",
+          "series_part": 32,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16390.md"
+        },
+        {
+          "id": 17030,
+          "title": "Data Science and ML (Part 33): Pandas Dataframe in MQL5, Data Collection for ML Usage made easier",
+          "section": "Statistics and analysis",
+          "series_title": "Data Science and ML (): Pandas Dataframe in MQL5, Data Collection for ML Usage made easier",
+          "series_key": "data science and ml",
+          "series_part": 33,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17030.md"
+        },
+        {
+          "id": 11735,
+          "title": "Data Science and Machine Learning (Part 10): Ridge Regression",
+          "section": "Statistics and analysis",
+          "series_title": "Data Science and Machine Learning (): Ridge Regression",
+          "series_key": "data science and machine learning",
+          "series_part": 10,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11735.md"
+        },
+        {
+          "id": 14926,
+          "title": "Data Science and Machine Learning (Part 23): Why LightGBM and XGBoost outperform a lot of AI models?",
+          "section": "Statistics and analysis",
+          "series_title": "Data Science and Machine Learning (): Why LightGBM and XGBoost outperform a lot of AI models?",
+          "series_key": "data science and machine learning",
+          "series_part": 23,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14926.md"
+        },
+        {
+          "id": 22015,
+          "title": "Feature Engineering for ML (Part 2): Implementing Fixed-Width Fractional Differentiation in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "Feature Engineering for ML (): Implementing Fixed-Width Fractional Differentiation in MQL5",
+          "series_key": "feature engineering for ml",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22015.md"
+        },
+        {
+          "id": 23565,
+          "title": "Feature Engineering for ML (Part 11): Fractal Features in Python",
+          "section": "Statistics and analysis",
+          "series_title": "Feature Engineering for ML (): Fractal Features in Python",
+          "series_key": "feature engineering for ml",
+          "series_part": 11,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23565.md"
+        },
+        {
+          "id": 18875,
+          "title": "Gaussian Processes in Machine Learning (Part 1): Classification Model in MQL5",
+          "section": "Statistics and analysis",
+          "series_title": "Gaussian Processes in Machine Learning (): Classification Model in MQL5",
+          "series_key": "gaussian processes in machine learning",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18875.md"
+        },
+        {
+          "id": 21267,
+          "title": "Introduction to MQL5 (Part 40): Beginner Guide to File Handling in MQL5 (II)",
+          "section": "Statistics and analysis",
+          "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (II)",
+          "series_key": "introduction to mql5",
+          "series_part": 40,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21267.md"
+        },
+        {
+          "id": 10955,
+          "title": "The price movement model and its main provisions (Part 1): The simplest model version and its applications",
+          "section": "Statistics and analysis",
+          "series_title": "The price movement model and its main provisions (): The simplest model version and its applications",
+          "series_key": "the price movement model and its main provisions",
+          "series_part": 1,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10955.md"
+        },
+        {
+          "id": 11158,
+          "title": "The price movement model and its main provisions (Part 2): Probabilistic price field evolution equation and the occurrence of the observed random walk",
+          "section": "Statistics and analysis",
+          "series_title": "The price movement model and its main provisions (): Probabilistic price field evolution equation and the occurrence of the observed random walk",
+          "series_key": "the price movement model and its main provisions",
+          "series_part": 2,
+          "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11158.md"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_002",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 750,
+      "title": "MQL5 Cookbook: Indicator Subwindow Controls - Buttons",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\750.md"
+    },
+    {
+      "id": 751,
+      "title": "MQL5 Cookbook: Indicator Subwindow Controls - Scrollbar",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\751.md"
+    },
+    {
+      "id": 752,
+      "title": "MQL5 Cookbook: Developing a Multi-Symbol Volatility Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\752.md"
+    },
+    {
+      "id": 754,
+      "title": "MQL5 Cookbook: Development of a Multi-Symbol Indicator to Analyze Price Divergence",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\754.md"
+    },
+    {
+      "id": 755,
+      "title": "MQL5 Cookbook - Multi-Currency Expert Advisor and Working with Pending Orders in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\755.md"
+    },
+    {
+      "id": 770,
+      "title": "Creating a Multi-Currency Multi-System Expert Advisor",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\770.md"
+    },
+    {
+      "id": 772,
+      "title": "Indicator for Kagi Charting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\772.md"
+    },
+    {
+      "id": 792,
+      "title": "Indicator for Renko charting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\792.md"
+    },
+    {
+      "id": 862,
+      "title": "SQL and MQL5: Working with SQLite Database",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\862.md"
+    },
+    {
+      "id": 902,
+      "title": "Indicator for Constructing a Three Line Break Chart",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\902.md"
+    },
+    {
+      "id": 987,
+      "title": "MQL5 Wizard: Placing Orders, Stop-Losses and Take Profits on Calculated Prices. Standard Library Extension",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\987.md"
+    },
+    {
+      "id": 994,
+      "title": "How to Prepare a Trading Account for Migration to Virtual Hosting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\994.md"
+    }
+  ]
+}

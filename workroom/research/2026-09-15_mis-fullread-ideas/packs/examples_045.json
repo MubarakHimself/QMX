@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_045",
+  "section": "Examples",
+  "parent_shard": "examples_045",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15511,
+      "title": "Anarchic Society Optimization (ASO) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15511.md"
+    },
+    {
+      "id": 15531,
+      "title": "Reimagining Classic Strategies (Part IV): SP500 and US Treasury Notes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15531.md"
+    },
+    {
+      "id": 15566,
+      "title": "William Gann methods (Part II): Creating Gann Square indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15566.md"
+    },
+    {
+      "id": 15570,
+      "title": "Reimagining Classic Strategies (Part V): Multiple Symbol Analysis on USDZAR",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15570.md"
+    },
+    {
+      "id": 15572,
+      "title": "Pattern Recognition Using Dynamic Time Warping in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15572.md"
+    },
+    {
+      "id": 15573,
+      "title": "From Basic to Intermediate: Definitions (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15573.md"
+    },
+    {
+      "id": 15575,
+      "title": "Gain an Edge Over Any Market (Part III): Visa Spending Index",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15575.md"
+    },
+    {
+      "id": 15588,
+      "title": "From Basic to Intermediate: Definitions (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15588.md"
+    },
+    {
+      "id": 15610,
+      "title": "Reimagining Classic Strategies (Part VI): Multiple Time-Frame Analysis",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15610.md"
+    },
+    {
+      "id": 15611,
+      "title": "From Basic to Intermediate: Floating point",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15611.md"
+    },
+    {
+      "id": 15614,
+      "title": "Cycles and Forex",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15614.md"
+    },
+    {
+      "id": 15642,
+      "title": "From Basic to Intermediate: Overload",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15642.md"
+    }
+  ]
+}

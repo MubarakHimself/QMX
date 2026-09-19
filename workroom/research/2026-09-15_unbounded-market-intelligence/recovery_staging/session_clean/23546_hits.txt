@@ -1,0 +1,266 @@
+20: # MQL5 Bootstrap (III): Simplified Functions for Working with News
+25: | 20 August 2026 at 11:05
+38: - [Introduction](https://www.mql5.com/en/articles/23546#introduction)
+39: - [Understanding the news offered in MQL5](https://www.mql5.com/en/articles/23546#understanding_the_news_offered_in_mql5)
+40: - [Getting built-in news](https://www.mql5.com/en/articles/23546#getting_built_in_news)
+41: - [Checking if news exists](https://www.mql5.com/en/articles/23546#checking_if_news_exists)
+42: - [Getting the next news release](https://www.mql5.com/en/articles/23546#getting_the_next_news_release)
+43: - [Getting the previous news release](https://www.mql5.com/en/articles/23546#getting_a_previous_news_release)
+44: - [Exporting news to a CSV file](https://www.mql5.com/en/articles/23546#exporting_news_to_a_csv_file)
+45: - [Using news from a CSV file](https://www.mql5.com/en/articles/23546#using_news_from_a_csv_file)
+46: - [Backtesting news-based programs in the strategy tester](https://www.mql5.com/en/articles/23546#backtesting_news_based_programs_in_the_strategy)
+47: - [Working with news from a database](https://www.mql5.com/en/articles/23546#working_with_news_from_a_database)
+48: - [Conclusion](https://www.mql5.com/en/articles/23546#final_thoughts)
+50: ### Introduction
+54: While MetaTrader5 provides a powerful built-in economic calendar API that you can access using the MQL5 programming language, making it work properly in all scenarios could be tricky.
+58: ```
+63: bool IsThereNewsForTheSymbol(ENUM_CALENDAR_EVENT_IMPORTANCE importance, uint seconds=900)
+65:    MqlCalendarValue values[]; //https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue
+68:    int all_news  = CalendarValueHistory(values,TimeCurrent(), TimeCurrent()+seconds, NULL, NULL); //All news from the current time to some time in the future
+70:    if (all_news <= 0) //if CalendarValue History returns a value less than zero it is an indicator that there is either an error or there are no news
+87:        CalendarEventById(values[i].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+89:        MqlCalendarCountry country; //The country where the currency pair originates
+90:        CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+96:               if ((long)MathAbs(TimeCurrent()-values[i].time)<=seconds) //filter the news by time | do not trade 15 minutes before or after the news | NB: the difference in time when subtracted gives out seconds
+98:                  Comment(StringFormat("<--------- News Alert ------------>\n\nEST %d Mins remaining\nCurrency %s Time[%s]\nname[%s]\nsector[%s]\nimportance[%s]\nactual value[%.3f]\nforecast value[%.3f]\nprevious value[%.3f]",(long)MathAbs(TimeCurrent()-values[i].time)/60,country.currency,TimeToString(values[i].time,TIME_DATE|TIME_MINUTES),event.name, EnumToString(event.sector), EnumToString(event.
+106: ```
+112: ### Understanding the News Offered in MQL5
+114: It is important to understand the [three structures](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) used by the MetaTrader5 economic calendar API, as we will be building a custom structure for the news shortly.
+126: - id – A unique identifier for the country.
+127: - name – The country's name, such as United States or Japan.
+128: - code – The two-letter country code, such as US or JP.
+129: - currency – The country's currency code, such as USD, EUR, or JPY.
+130: - currency\_symbol – The currency symbol, such as $ or ¥.
+131: - url\_name – The country name used in the mql5.com website URL.
+137: - id – A unique identifier for the event.
+138: - name – The name of the economic event.
+139: - country\_id – The identifier of a country associated with the event.
+140: - [importance](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_importance) – Event's importance (Low, Medium, or High).
+141: - [frequency](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_frequency) – How often the event is released (monthly, quarterly, yearly, etc.).
+142: - [sector](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_sector) – The part of the economy the event belongs to, such as Trading, Government, consumption, etc.
+143: - [time\_mode](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_timemode) – Specifies how the event release time is provided (exact time, all-day, no time, etc.)
+144: - [unit](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_unit) – The unit used to measure the reported value, such as percent or currency.
+145: - digits – The number of decimal places used when displaying values.
+146: - source\_url – The website where the data is officially published.
+147: - event\_code – A short code that uniquely identifies the event.
+151: While MqlCalendarEvent describes what the event is, MqlCalendarValue stores the results of a particular release. For example, the U.S Consumer Price Index (CPI) is released every month. The event remains the same, but every month has its own set of values.
+155: - time – The date and time when the news was released.
+156: - period – The reporting period the data refers to.
+157: - actual\_value – The value that was actually reported.
+158: - forecast\_value – The value economists expected before the release.
+159: - prev\_value – The value reported in the previous release.
+160: - revised\_prev\_value – The corrected previous value if it was revised later.
+161: - revision – The revision number for that release.
+162: - impact\_type – The expected effect of the news on the currency.
+168: 1. *MqlCalendarCountry represents a country a news  event and its values belongs to.*
+169: 2. *MqlCalendarEvent represents an economic event being announced.*
+170: 3. *MqlCalendarValue shows the results of a particular news release.*
+176: ```
+193:    ENUM_CALENDAR_EVENT_TYPE            event_type;                  // event type from the ENUM_CALENDAR_EVENT_TYPE enumeration
+194:    ENUM_CALENDAR_EVENT_SECTOR          event_sector;                // sector an event is related to
+195:    ENUM_CALENDAR_EVENT_FREQUENCY       event_frequency;             // event frequency
+196:    ENUM_CALENDAR_EVENT_TIMEMODE        event_time_mode;             // event time mode
+197:    ENUM_CALENDAR_EVENT_UNIT            event_unit;                  // economic indicator value's unit of measure
+198:    ENUM_CALENDAR_EVENT_IMPORTANCE      event_importance;            // event importance
+199:    ENUM_CALENDAR_EVENT_MULTIPLIER      event_multiplier;            // economic indicator value multiplier
+215:    ENUM_CALENDAR_EVENT_IMPACT          value_impact_type;     // potential impact on the currency rate
+244: ```
+248: ### Getting Built-in News
+252: ```
+255: //| Calendar within the specified time range.                        |
+276:    int total = CalendarValueHistory(values, from, to, country_code, currency);
+290:       CalendarEventById(values[i].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+292:       MqlCalendarCountry country; //The couhtry where the currency pair originates
+293:       CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+304: ```
+306: For example, obtaining news for the last 24-hours on the USD currency.
+308: ```
+309: #include <Bootstrap\News\provider_builtin.mqh>
+331: ```
+335: ```
+337: FH      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+338: RS      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+339: DR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+340: CM      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+341: FQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+342: MP      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+343: PK      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+344: PE      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+345: II      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+346: EI      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+347: NP      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+348: PQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+349: NN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+350: DO      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+351: NJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+352: HK      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+353: KJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+354: JQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+355: CM      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+356: ED      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+357: IG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+358: CI      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+359: GN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+360: QN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+361: FJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+362: GG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+363: QR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+364: FR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+365: NG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+366: JJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+367: EQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+368: JN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+369: ```
+371: ### Checking if News Exists
+375: ```
+408:    ENUM_CALENDAR_EVENT_IMPORTANCE imp = (ENUM_CALENDAR_EVENT_IMPORTANCE)importance;
+418: ```
+424: ```
+429:    bool exists = CNewsBuiltinProvider::Exists(start, now, currency, CALENDAR_IMPORTANCE_HIGH);
+432:    exists = CNewsBuiltinProvider::Exists(start, now, currency, CALENDAR_IMPORTANCE_MODERATE);
+434: ```
+438: ```
+441: ```
+443: ### Getting the Next News Release
+449: ```
+489: ```
+493: ### Getting a Previous News Release
+499: ```
+538: ```
+542: ### Exporting News to a CSV File
+546: ```
+595: ```
+601: ```
+602: #include <Bootstrap\News\provider_csv.mqh>
+620: ```
+626: ### Using News from a CSV File
+634: ```
+695: ```
+701: ```
+703: ```
+707: ```
+728: ```
+732: It powers the class CNewsCSVProvider,  similarly to how we obtained news using a built-in calendar source. Below is how you can rely on news from a CSV file.
+734: ```
+735: #include <Bootstrap\News\provider_csv.mqh>
+760:    bool exists = csv_news.Exists(start, now, CALENDAR_IMPORTANCE_HIGH, currency);
+763:    exists = csv_news.Exists(start, now, CALENDAR_IMPORTANCE_MODERATE, currency);
+768: ```
+772: ```
+775: GM      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+776: CL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+777: IO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+778: RN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+779: GD      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+780: PG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+781: MH      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+782: EK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+783: DD      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+784: PK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+785: OS      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+786: EO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+787: OK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+788: IJ      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+789: GE      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+790: MI      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+791: RO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+792: CL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+793: JN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+794: PG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+795: DJ      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+796: JN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+797: FS      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+798: LK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+799: GG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+800: FR      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+801: DL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+802: OG      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+803: OE      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+804: KO      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+805: HS      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+806: KM      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+809: ```
+811: ### Backtesting News-based Programs in the Strategy Tester
+813: One limitation of the built-in Economic Calendar is that its functions aren't working in the strategy tester, i.e., they throw errors during backtesting. Functions such as CalendarValueHistory(), CalendarValueLast(), and other calendar-related APIs rely on live calendar data provided by the terminal. As a result, these functions either fail or return no data when executed inside the strategy teste
+815: This presents a challenge when developing Expert Advisors (EAs) that depend on economic news. While the trading logic can be tested, any functionality that relies on the Economic Calendar cannot, making it impossible to accurately evaluate news-based strategies during historical simulations.
+817: A common solution is to export the required economic calendar data to a CSV file while the program is running on a live or demo account. During backtesting, the Expert Advisor can then load the same data from the CSV file instead of querying the built-in calendar. This allows the program to behave consistently in both live trading and the Strategy Tester while using identical news data.
+821: ```
+822: #define NEWS_CSV "news.csv"
+823: #property tester_file NEWS_CSV
+825: #include <Bootstrap\News\provider_csv.mqh>
+899: ```
+907: ### Working with News From a Database
+909: A database provides a more structured and scalable way to store economic calendar data. *It is a great alternative to using a CSV file as a primary source of news data.*
+915: ```
+1063: ```
+1069: ```
+1089: ```
+1093: ```
+1094: #include <Bootstrap\News\provider_sqlite.mqh>
+1107: ```
+1111: ```
+1113: ```
+1117: Just like the built-in and CSV class providers, the SQLite provider class exposes the same high-level interface through methods such as Get(), Exists(), Next(), and Previous(). This means the underlying data source can be changed with little or no modification to the rest of the application, making it easy to switch between live calendar data, CSV files, and a local database depending on the use c
+1121: ```
+1292: ```
+1294: We can try requesting the same information as we did in previous examples and see if we can get a similar outcome:
+1296: ```
+1297: #include <Bootstrap\News\provider_sqlite.mqh>
+1319:    bool exists = sql_provider.Exists(start, now, currency, CALENDAR_IMPORTANCE_HIGH);
+1322:    exists = sql_provider.Exists(start, now, currency, CALENDAR_IMPORTANCE_MODERATE);
+1325: ```
+1329: ```
+1331: PD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+1332: DG      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+1333: FF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+1334: QQ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+1335: DM      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+1336: KL      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+1337: FO      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+1338: FR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+1339: GM      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+1340: KD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+1341: LD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+1342: JD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+1343: HS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+1344: RS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+1345: HN      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+1346: NF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+1347: MF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+1348: LE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+1349: QQ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+1350: KP      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+1351: GS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+1352: EE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+1353: IJ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+1354: OR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+1355: PO      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+1356: MK      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+1357: CE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+1358: DN      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+1359: DR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+1360: LG      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+1361: OD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+1362: HR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+1365: ```
+1373: ```
+1453: ```
+1459: ```
+1460: #define NEWS_DB "news.sqlite"
+1461: #define is_tester bool(MQLInfoInteger(MQL_TESTER))
+1463: #property tester_file NEWS_DB
+1465: #include <Bootstrap\News\provider_sqlite.mqh>
+1516: ```
+1518: ### Final Thoughts
+1520: In this article, we built a flexible framework for working with economic news in MQL5. From exploring the built-in Economic Calendar functions provided by MetaTrader 5 to introducing a unified news structure that simplifies working with countries, events, and published values through a single data type.
+1522: To make the framework suitable for both live trading and historical testing, we implemented multiple news providers that expose the same interface while retrieving data from different sources. The built-in provider allows direct access to the Economic Calendar during live trading, the CSV provider makes it possible to backtest news-based strategies using previously exported data, and the SQLite pr
+1532: | Filename | Description & Usage |
+1533: | --- | --- |
+1534: | Experts\Bootstrap\News Testing EA.mq5 | An expert advisor for testing news in the strategy tester. |
+1535: | Scripts\Bootstrap\News Testing.mq5 | A script that executes all examples as discussed above. |
+1536: | Include\Bootstrap\csv.mqh | A library with functions responsible for reading and writing information to CSV file formats. |
+1537: | Include\Bootstrap\fileIO.mqh | Resembles Python's file IO operations, [read more.](https://www.mql5.com/en/articles/20695) |
+1538: | Include\Bootstrap\SQLite3.mqh | A Python-like library for working with SQLite databases, [read more.](https://www.mql5.com/en/articles/18640) |
+1539: | Include\Bootstrap\News\provide\_builtin.mqh | A library containing a static class for working with news offered by the MetaTrader5 terminal. |
+1540: | Include\Bootstrap\News\provide\_csv.mqh | A library containing a class for working with news obtained from a CSV file. |
+1541: | Include\Bootstrap\News\provide\_sqlite.mqh | A library containing a class for working with news from a SQLite database. |

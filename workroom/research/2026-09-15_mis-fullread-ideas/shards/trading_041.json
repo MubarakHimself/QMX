@@ -1,0 +1,127 @@
+{
+  "shard_id": "trading_041",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [
+    "multiple indicators on one chart",
+    "neural networks made easy",
+    "news trading made easy",
+    "practical application of neural networks in trading",
+    "price action analysis toolkit development",
+    "python-metatrader 5 strategy tester",
+    "risk-based trade placement ea with on-chart ui",
+    "take a few lessons from prop firms",
+    "the mql5 standard library explorer",
+    "trading options without options"
+  ],
+  "articles": [
+    {
+      "id": 10241,
+      "title": "Multiple indicators on one chart (Part 04): Advancing to an Expert Advisor",
+      "section": "Trading",
+      "series_title": "Multiple indicators on one chart (): Advancing to an Expert Advisor",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10241.md"
+    },
+    {
+      "id": 10277,
+      "title": "Multiple indicators on one chart (Part 05): Turning MetaTrader 5 into a RAD system (I)",
+      "section": "Trading",
+      "series_title": "Multiple indicators on one chart (): Turning MetaTrader 5 into a RAD system (I)",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10277.md"
+    },
+    {
+      "id": 11344,
+      "title": "Neural networks made easy (Part 26): Reinforcement Learning",
+      "section": "Trading",
+      "series_title": "Neural networks made easy (): Reinforcement Learning",
+      "series_key": "neural networks made easy",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11344.md"
+    },
+    {
+      "id": 15359,
+      "title": "News Trading Made Easy (Part 3): Performing Trades",
+      "section": "Trading",
+      "series_title": "News Trading Made Easy (): Performing Trades",
+      "series_key": "news trading made easy",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15359.md"
+    },
+    {
+      "id": 8668,
+      "title": "Practical application of neural networks in trading (Part 2). Computer vision",
+      "section": "Trading",
+      "series_title": "Practical application of neural networks in trading (). Computer vision",
+      "series_key": "practical application of neural networks in trading",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8668.md"
+    },
+    {
+      "id": 16584,
+      "title": "Price Action Analysis Toolkit Development (Part 8): Metrics Board",
+      "section": "Trading",
+      "series_title": "Price Action Analysis Toolkit Development (): Metrics Board",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16584.md"
+    },
+    {
+      "id": 20782,
+      "title": "Python-MetaTrader 5 Strategy Tester (Part 03): MetaTrader 5-Like Trading Operations \u2014 Handling and Managing",
+      "section": "Trading",
+      "series_title": "Python-MetaTrader 5 Strategy Tester (): MetaTrader 5-Like Trading Operations \u2014 Handling and Managing",
+      "series_key": "python-metatrader 5 strategy tester",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20782.md"
+    },
+    {
+      "id": 19932,
+      "title": "Risk-Based Trade Placement EA with On-Chart UI (Part 1): Designing the User Interface",
+      "section": "Trading",
+      "series_title": "Risk-Based Trade Placement EA with On-Chart UI (): Designing the User Interface",
+      "series_key": "risk-based trade placement ea with on-chart ui",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19932.md"
+    },
+    {
+      "id": 11850,
+      "title": "Take a few lessons from Prop Firms (Part 1) \u2014 An introduction",
+      "section": "Trading",
+      "series_title": "Take a few lessons from Prop Firms () \u2014 An introduction",
+      "series_key": "take a few lessons from prop firms",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11850.md"
+    },
+    {
+      "id": 21837,
+      "title": "The MQL5 Standard Library Explorer (Part 11): How to Build a Matrix-Based Market Structure Indicator in MQL5",
+      "section": "Trading",
+      "series_title": "The MQL5 Standard Library Explorer (): How to Build a Matrix-Based Market Structure Indicator in MQL5",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21837.md"
+    },
+    {
+      "id": 18131,
+      "title": "Trading Options Without Options (Part 1): Basic Theory and Emulation Through Underlying Assets",
+      "section": "Trading",
+      "series_title": "Trading Options Without Options (): Basic Theory and Emulation Through Underlying Assets",
+      "series_key": "trading options without options",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18131.md"
+    },
+    {
+      "id": 18951,
+      "title": "Trading Options Without Options (Part 3): Complex Option Strategies",
+      "section": "Trading",
+      "series_title": "Trading Options Without Options (): Complex Option Strategies",
+      "series_key": "trading options without options",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18951.md"
+    }
+  ]
+}

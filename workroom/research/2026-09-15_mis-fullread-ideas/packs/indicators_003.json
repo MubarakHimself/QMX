@@ -1,0 +1,119 @@
+{
+  "pack_id": "indicators_003",
+  "section": "Indicators",
+  "parent_shard": "indicators_003",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 20669,
+      "title": "Tracking Account Dynamics: Balance, Equity, and Floating P/L Visualization in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20669.md"
+    },
+    {
+      "id": 20728,
+      "title": "Sigma Score Indicator for MetaTrader 5: A Simple Statistical Anomaly Detector",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20728.md"
+    },
+    {
+      "id": 21871,
+      "title": "Building a Volume Bubble Indicator in MQL5 Using Standard Deviation",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21871.md"
+    },
+    {
+      "id": 22096,
+      "title": "Foundation Models in Trading: Time Series Forecasting with Google's TimesFM 2.5 in MetaTrader 5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22096.md"
+    },
+    {
+      "id": 22227,
+      "title": "Creating a Traditional Renko Overlay Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22227.md"
+    },
+    {
+      "id": 22288,
+      "title": "Recurrence Quantification Analysis (RQA) in MQL5: Building a Complete Analysis Library",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22288.md"
+    },
+    {
+      "id": 22342,
+      "title": "Building a Liquidity Spectrum Volume Profile Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22342.md"
+    },
+    {
+      "id": 22363,
+      "title": "Leak-Free Multi-Timeframe Engine with Closed-Bar Reads in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22363.md"
+    },
+    {
+      "id": 22460,
+      "title": "Creating a Custom Tick Chart in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22460.md"
+    },
+    {
+      "id": 22572,
+      "title": "Building a Megaphone Pattern Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22572.md"
+    },
+    {
+      "id": 22610,
+      "title": "Joint Recurrence Quantification Analysis (JRQA) in MQL5: Detecting Simultaneous Recurrence in Two Series",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22610.md"
+    },
+    {
+      "id": 22652,
+      "title": "Recurrence Network Analysis (RNA) in MQL5: From Recurrence Matrices to Complex Networks",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22652.md"
+    }
+  ]
+}

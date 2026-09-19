@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_007",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 6351,
+      "title": "Grokking market \"memory\" through differentiation and entropy analysis",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6351.md"
+    },
+    {
+      "id": 6954,
+      "title": "Developing a cross-platform grider EA (part II): Range-based grid in trend direction",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6954.md"
+    },
+    {
+      "id": 6975,
+      "title": "Arranging a mailing campaign by means of Google services",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6975.md"
+    },
+    {
+      "id": 6986,
+      "title": "Developing a cross-platform Expert Advisor to set StopLoss and TakeProfit based on risk settings",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\6986.md"
+    },
+    {
+      "id": 7218,
+      "title": "Strategy builder based on Merrill patterns",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7218.md"
+    },
+    {
+      "id": 7265,
+      "title": "Developing Pivot Mean Oscillator: a novel Indicator for the Cumulative Moving Average",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7265.md"
+    },
+    {
+      "id": 7361,
+      "title": "Extending Strategy Builder Functionality",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7361.md"
+    },
+    {
+      "id": 7863,
+      "title": "Projects assist in creating profitable trading robots! Or at least, so it seems",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7863.md"
+    },
+    {
+      "id": 7892,
+      "title": "Quick Manual Trading Toolkit: Basic Functionality",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7892.md"
+    },
+    {
+      "id": 7981,
+      "title": "Quick Manual Trading Toolkit: Working with open positions and pending orders",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7981.md"
+    },
+    {
+      "id": 8093,
+      "title": "Using cryptography with external applications",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8093.md"
+    },
+    {
+      "id": 8184,
+      "title": "What is a trend and is the market structure based on trend or flat?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8184.md"
+    }
+  ]
+}

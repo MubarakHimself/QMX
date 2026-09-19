@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_011",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15820,
+      "title": "Neural Networks in Trading: Transformer for the Point Cloud (Pointformer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15820.md"
+    },
+    {
+      "id": 15859,
+      "title": "Neural Networks in Trading: Scene-Aware Object Detection (HyperDet3D)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15859.md"
+    },
+    {
+      "id": 15882,
+      "title": "Neural Networks in Trading: Exploring the Local Structure of Data",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15882.md"
+    },
+    {
+      "id": 15928,
+      "title": "Neural Networks in Trading: Superpoint Transformer (SPFormer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15928.md"
+    },
+    {
+      "id": 15973,
+      "title": "Neural Networks in Trading: Mask-Attention-Free Approach to Price Movement Forecasting",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15973.md"
+    },
+    {
+      "id": 15997,
+      "title": "Neural Networks in Trading: Generalized 3D Referring Expression Segmentation",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15997.md"
+    },
+    {
+      "id": 16034,
+      "title": "Creating an MQL5 Expert Advisor Based on the PIRANHA Strategy by Utilizing Bollinger Bands",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16034.md"
+    },
+    {
+      "id": 16038,
+      "title": "Neural Networks in Trading: Controlled Segmentation",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16038.md"
+    },
+    {
+      "id": 16057,
+      "title": "Neural Networks in Trading: Controlled Segmentation (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16057.md"
+    },
+    {
+      "id": 16097,
+      "title": "Neural Networks in Trading: Transformer with Relative Encoding",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16097.md"
+    },
+    {
+      "id": 16130,
+      "title": "Neural Networks in Trading: Market Analysis Using a Pattern Transformer",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16130.md"
+    },
+    {
+      "id": 16163,
+      "title": "Neural Networks in Trading: Contrastive Pattern Transformer",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16163.md"
+    }
+  ]
+}

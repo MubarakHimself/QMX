@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_048",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15833,
+      "title": "From Basic to Intermediate: Indicator (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15833.md"
+    },
+    {
+      "id": 15837,
+      "title": "How to Implement Auto Optimization in MQL5 Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15837.md"
+    },
+    {
+      "id": 15841,
+      "title": "Gain An Edge Over Any Market (Part IV): CBOE Euro And Gold Volatility Indexes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15841.md"
+    },
+    {
+      "id": 15847,
+      "title": "From Basic to Intermediate: Struct (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15847.md"
+    },
+    {
+      "id": 15860,
+      "title": "From Basic to Intermediate: Struct (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15860.md"
+    },
+    {
+      "id": 15868,
+      "title": "Using PSAR, Heiken Ashi, and Deep Learning Together for Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15868.md"
+    },
+    {
+      "id": 15869,
+      "title": "From Basic to Intermediate: Struct (V)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15869.md"
+    },
+    {
+      "id": 15886,
+      "title": "Self Optimizing Expert Advisor With MQL5 And Python (Part IV): Stacking Models",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15886.md"
+    },
+    {
+      "id": 15889,
+      "title": "From Basic to Intermediate: Struct (VI)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15889.md"
+    },
+    {
+      "id": 15895,
+      "title": "Scalping Orderflow for MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15895.md"
+    },
+    {
+      "id": 15899,
+      "title": "Developing Advanced ICT Trading Systems: Implementing Order Blocks in an Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15899.md"
+    },
+    {
+      "id": 15909,
+      "title": "Multiple Symbol Analysis With Python And MQL5 (Part I): NASDAQ Integrated Circuit Makers",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15909.md"
+    }
+  ]
+}

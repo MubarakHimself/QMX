@@ -1,0 +1,85 @@
+{
+  "pack_id": "examples_088_p03",
+  "section": "Examples",
+  "parent_shard": "examples_088",
+  "part_index": 3,
+  "part_count": 4,
+  "series_in_pack": [
+    "price action analysis toolkit development"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 21704,
+      "title": "Price Action Analysis Toolkit Development (Part 64): Synchronizing Manually Drawn Trendlines with Automated Monitoring",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Synchronizing Manually Drawn Trendlines with Automated Monitoring",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 64,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21704.md"
+    },
+    {
+      "id": 21890,
+      "title": "Price Action Analysis Toolkit Development (Part 65): Building an MQL5 System to Monitor and Analyze Manually Drawn Fibonacci Levels",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building an MQL5 System to Monitor and Analyze Manually Drawn Fibonacci Levels",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 65,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21890.md"
+    },
+    {
+      "id": 21961,
+      "title": "Price Action Analysis Toolkit Development (Part 67): Automating Support and Resistance Monitoring in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Automating Support and Resistance Monitoring in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 67,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21961.md"
+    },
+    {
+      "id": 22110,
+      "title": "Price Action Analysis Toolkit Development (Part 68): Price-Attached RSI Panel in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Price-Attached RSI Panel in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 68,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22110.md"
+    },
+    {
+      "id": 22503,
+      "title": "Price Action Analysis Toolkit Development (Part 69): Flag Pattern Detection in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Flag Pattern Detection in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 69,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22503.md"
+    },
+    {
+      "id": 23352,
+      "title": "Price Action Analysis Toolkit Development (Part 75): Building a Modular Multi-Symbol Trading Panel in MQL5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a Modular Multi-Symbol Trading Panel in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 75,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23352.md"
+    },
+    {
+      "id": 23544,
+      "title": "Price Action Analysis Toolkit Development (Part 77): Building a Searchable Indicator Panel for MetaTrader 5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a Searchable Indicator Panel for MetaTrader 5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 77,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23544.md"
+    },
+    {
+      "id": 23888,
+      "title": "Price Action Analysis Toolkit Development (Part 80): Building a History Navigator for MetaTrader 5",
+      "section": "Examples",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a History Navigator for MetaTrader 5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 80,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23888.md"
+    }
+  ]
+}

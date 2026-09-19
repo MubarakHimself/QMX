@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_039",
+  "section": "Examples",
+  "parent_shard": "examples_039",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 14414,
+      "title": "Population optimization algorithms: Whale Optimization Algorithm (WOA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14414.md"
+    },
+    {
+      "id": 14441,
+      "title": "Gain An Edge Over Any Market",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14441.md"
+    },
+    {
+      "id": 14454,
+      "title": "The Group Method of Data Handling: Implementing the Multilayered Iterative Algorithm in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14454.md"
+    },
+    {
+      "id": 14491,
+      "title": "Population optimization algorithms: Bird Swarm Algorithm (BSA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14491.md"
+    },
+    {
+      "id": 14576,
+      "title": "Population optimization algorithms: Boids Algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14576.md"
+    },
+    {
+      "id": 14622,
+      "title": "Brain Storm Optimization algorithm (Part II): Multimodality",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14622.md"
+    },
+    {
+      "id": 14630,
+      "title": "Build Self Optmising Expert Advisors in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14630.md"
+    },
+    {
+      "id": 14672,
+      "title": "Simple solutions for handling indicators conveniently",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14672.md"
+    },
+    {
+      "id": 14707,
+      "title": "Brain Storm Optimization algorithm (Part I): Clustering",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14707.md"
+    },
+    {
+      "id": 14782,
+      "title": "How to add Trailing Stop using Parabolic SAR",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14782.md"
+    },
+    {
+      "id": 14789,
+      "title": "Turtle Shell Evolution Algorithm (TSEA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14789.md"
+    },
+    {
+      "id": 14804,
+      "title": "The Group Method of Data Handling: Implementing the Combinatorial Algorithm in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14804.md"
+    }
+  ]
+}

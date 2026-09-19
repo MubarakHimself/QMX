@@ -1,0 +1,11 @@
+=== QML ===
+................................                                         [100%]
+32 passed in 5.96s
+QML_EXIT=0
+=== QMA ===
+error: Project virtual environment directory `C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\.venv` cannot be used because it is not a valid Python environment (no Python executable was found)
+QMA_EXIT=2
+=== QMN venue ===
+.....s                                                                   [100%]
+5 passed, 1 skipped in 2.21s
+QMN_EXIT=0

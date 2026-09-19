@@ -1,0 +1,289 @@
+# Self Optimizing Expert Advisor With MQL5 And Python (Part V): Deep Markov Models
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 8 October 2024 at 12:50
+4 586
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+2](https://www.mql5.com/en/forum/474323 "Comments")
+[Gamuchirai Zororo Ndawana](https://www.mql5.com/en/users/gamuchiraindawa)
+YouTube
+In our previous discussion on Markov Chains, linked [here](https://www.mql5.com/en/articles/15040), we demonstrated how to use a transition matrix to understand the probabilistic behavior of the market. Our transition matrix summarized a lot of information for us. It not only guided us on when to buy and sell, it also informed us whether our market had strong trends or was mostly mean reverting. In today's discussion, we shall change our definition of the system state from the moving averages we used in our first discussion to the Relative Strength Indicator (RSI) indicator instead.
+When most people are taught how to trade using the RSI, they are told to buy whenever the RSI reaches 30 and sell when it reaches 70. Some members of the community may question if this is the best decision to make across all markets. We all know that one cannot simply trade all markets the same. This article will demonstrate to you, how you can build your own Markov Chains to algorithmically learn optimal trading rules. Not only that, but the rules that we will learn, dynamically adjust themselves to the data you collect from the market you intend to trade.
+### Overview of The Trading Strategy
+The RSI is widely used by technical analysts to identify extreme price levels. Typically, market prices tend to revert to their averages. Therefore, whenever price analysts find a security hovering in extreme RSI levels, they would normally bet against the dominant trend. This strategy has been slightly altered into many different versions, that all stem from one source. The shortcoming of this strategy is that, what may be considered a strong RSI level in one market, is not necessarily a strong RSI level for all markets.
+To illustrate this point, Fig 1 below shows us how the standard deviation of the RSI value evolves on 2 different markets. The Blue line represents the average standard deviation of the RSI in XPDUSD market, while the Orange line represents the NZDJPY market. It is widely known, by all seasoned traders, that the precious metals market is significantly volatile. Therefore, we can see a clear disparity between the changes in RSI levels between the two markets. What may be considered a high reading for the RSI on a currency pair, such as the NZDUSD pair, may be considered ordinary market noise when trading a more volatile instrument, such as the XPDUSD.
+It soon becomes apparent that each market could have its own unique level of interest on the RSI indicator. In other words, when we are using the RSI indicator, the optimal level to enter a trade depends on the symbol being traded. Therefore, how can we algorithmically learn on which RSI level should we buy or sell? We can employ our transition matrix to answer this question for any symbol we have in mind.
+Fig 1: The rolling volatility of the RSI indicator on the XPDUSD Market in blue and the NZDUSD Market in orange
+### Overview of The Methodology
+To learn our strategy from the data we have, we first collected 300 000 rows of M1 data using the MetaTrader 5 library for Python. We labeled the data and then partitioned it into train and test splits. On the training set, we grouped the RSI readings into 10 bins, from 0-10, 11-20, linearly until 91-100.  We recorded how price behaved in the future, as it passed through each group on the RSI. The training data showed that price levels had the highest tendency of appreciating whenever price passed through 41-50 zone of the RSI and the highest tendency to depreciate through the 61-70 zone.
+We used this estimated transition matrix to build a greedy model that always selected the most probable outcome from the prior distributions. Our simple model scored 52% accuracy on the test set. Another advantage of this approach is its interoperability, we can easily understand how our model is making its decisions. Furthermore, it is now common for AI models being used in important industries to be explainable, and you can rest assured that this family of probabilistic models will not give you compliance issues.
+Moving on, our interest was not entirely in the accuracy of the model. Rather, we were invested in the individual accuracy levels of the 10 zones we identified in our training set. Neither of the 2 zones, that had the highest distributions in our training set, proved reliable in the validation set. On the validation set of the data, we obtained the highest accuracy when we bought in 11-20 range, and sold in the 71-80 range. We had accuracy levels of 51.4% and 75.8% from the respective zones. We selected these zones as our optimal zones for opening buy and sell positions on the NZDJPY pair.
+Finally, we then set out to build an MQL5 Expert Advisor, that implemented the results of our analysis in Python. Furthermore, we implemented 2 ways of closing positions in our application. We gave the user the decision of either closing positions when the RSI crosses over to a zone that will diminish our open positions, or alternatively, they could close positions whenever price crossed over the moving average.
+### Fetching And Cleaning The Data
+Let us get started, import the libraries we need.
+```
+#Let's get started
+import MetaTrader5       as mt5
+import pandas            as pd
+import numpy             as np
+import seaborn           as sns
+import matplotlib.pyplot as plt
+import pandas_ta         as ta
+```
+Check if the Terminal can be reached.
+```
+mt5.initialize()
+```
+True
+Define a few global variables.
+```
+#Fetch market data
+SYMBOL    = "NZDJPY"
+TIMEFRAME = mt5.TIMEFRAME_M1
+```
+Let's copy the data from our terminal.
+```
+data = pd.DataFrame(mt5.copy_rates_from_pos(SYMBOL,TIMEFRAME,0,300000))
+```
+Convert the time format from seconds.
+```
+data["time"]  = pd.to_datetime(data["time"],unit='s')
+```
+Calculate the RSI.
+```
+data.ta.rsi(length=20,append=True)
+```
+Define how far into the future we should forecast.
+```
+#Define the look ahead
+look_ahead = 20
+```
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Self Optimizing Expert Advisor With MQL5 And Python (Part V): Deep Markov Models
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+In our previous discussion on Markov Chains, linked [here](https://www.mql5.com/en/articles/15040), we demonstrated how to use a transition matrix to understand the probabilistic behavior of the market. Our transition matrix summarized a lot of information for us. It not only guided us on when to buy and sell, it also informed us whether our market had strong trends or was mostly mean reverting. In today's discussion, we shall change our definition of the system state from the moving averages we used in our first discussion to the Relative Strength Indicator (RSI) indicator instead.
+When most people are taught how to trade using the RSI, they are told to buy whenever the RSI reaches 30 and sell when it reaches 70. Some members of the community may question if this is the best decision to make across all markets. We all know that one cannot simply trade all markets the same. This article will demonstrate to you, how you can build your own Markov Chains to algorithmically learn optimal trading rules. Not only that, but the rules that we will learn, dynamically adjust themselves to the data you collect from the market you intend to trade.
+### Overview of The Trading Strategy
+The RSI is widely used by technical analysts to identify extreme price levels. Typically, market prices tend to revert to their averages. Therefore, whenever price analysts find a security hovering in extreme RSI levels, they would normally bet against the dominant trend. This strategy has been slightly altered into many different versions, that all stem from one source. The shortcoming of this strategy is that, what may be considered a strong RSI level in one market, is not necessarily a strong RSI level for all markets.
+It soon becomes apparent that each market could have its own unique level of interest on the RSI indicator. In other words, when we are using the RSI indicator, the optimal level to enter a trade depends on the symbol being traded. Therefore, how can we algorithmically learn on which RSI level should we buy or sell? We can employ our transition matrix to answer this question for any symbol we have in mind.
+![](https://c.mql5.com/2/96/1163011442879.png)
+Fig 1: The rolling volatility of the RSI indicator on the XPDUSD Market in blue and the NZDUSD Market in orange
+### Overview of The Methodology
+To learn our strategy from the data we have, we first collected 300 000 rows of M1 data using the MetaTrader 5 library for Python. We labeled the data and then partitioned it into train and test splits. On the training set, we grouped the RSI readings into 10 bins, from 0-10, 11-20, linearly until 91-100.  We recorded how price behaved in the future, as it passed through each group on the RSI. The training data showed that price levels had the highest tendency of appreciating whenever price passed through 41-50 zone of the RSI and the highest tendency to depreciate through the 61-70 zone.
+We used this estimated transition matrix to build a greedy model that always selected the most probable outcome from the prior distributions. Our simple model scored 52% accuracy on the test set. Another advantage of this approach is its interoperability, we can easily understand how our model is making its decisions. Furthermore, it is now common for AI models being used in important industries to be explainable, and you can rest assured that this family of probabilistic models will not give you compliance issues.
+Moving on, our interest was not entirely in the accuracy of the model. Rather, we were invested in the individual accuracy levels of the 10 zones we identified in our training set. Neither of the 2 zones, that had the highest distributions in our training set, proved reliable in the validation set. On the validation set of the data, we obtained the highest accuracy when we bought in 11-20 range, and sold in the 71-80 range. We had accuracy levels of 51.4% and 75.8% from the respective zones. We selected these zones as our optimal zones for opening buy and sell positions on the NZDJPY pair.
+### Fetching And Cleaning The Data
+Let us get started, import the libraries we need.
+#Let's get started
+import MetaTrader5       as mt5
+import pandas            as pd
+import numpy             as np
+```
+#Fetch market data
+SYMBOL    = "NZDJPY"
+TIMEFRAME = mt5.TIMEFRAME_M1
+#Define the look ahead
+look_ahead = 20
+#Label the data
+data["Target"] = np.nan
+
+#Create a dataframe 
+rsi_matrix = pd.DataFrame(columns=["0-10","11-20","21-30","31-40","41-50","51-60","61-70","71-80","81-90","91-100"],index=[0])
+Initialize the RSI matrix to all 0.
+#Initialize the rsi matrix to 0
+for i in np.arange(0,9):
+    rsi_matrix.iloc[0,i] = 0
+#Split the data into train and test sets
+train = data.loc[:(data.shape[0]//2),:]
+test  = data.loc[(data.shape[0]//2):,:]
+Now we shall go through the training data set and observe each RSI reading, and the corresponding future change in price levels. If the RSI reading was 11, and price levels appreciated 20 steps in the future, we will increment the corresponding 11-20 column in our RSI matrix by one. Furthermore, each time price levels fall, we will penalize the column and decrement it by one. Intuitively, we quickly understand that after in the end, any column with a positive value, corresponds to an RSI level that had a tendency to preceded increasing price levels and the opposite is true for columns that will have negative values.
+for i in np.arange(0,train.shape[0]):
+    #Fill in the rsi matrix, what happened in the future when we saw RSI readings below 10?
+    if((train.loc[i,"RSI_20"] <= 10)):
+        rsi_matrix.iloc[0,0] = rsi_matrix.iloc[0,0] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 11 and 20?
+    if((train.loc[i,"RSI_20"] > 10) & (train.loc[i,"RSI_20"] <= 20)):
+        rsi_matrix.iloc[0,1] = rsi_matrix.iloc[0,1] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 21 and 30?
+    if((train.loc[i,"RSI_20"] > 20) & (train.loc[i,"RSI_20"] <= 30)):
+        rsi_matrix.iloc[0,2] = rsi_matrix.iloc[0,2] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 31 and 40?
+    if((train.loc[i,"RSI_20"] > 30) & (train.loc[i,"RSI_20"] <= 40)):
+        rsi_matrix.iloc[0,3] = rsi_matrix.iloc[0,3] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 41 and 50?
+    if((train.loc[i,"RSI_20"] > 40) & (train.loc[i,"RSI_20"] <= 50)):
+        rsi_matrix.iloc[0,4] = rsi_matrix.iloc[0,4] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 51 and 60?
+    if((train.loc[i,"RSI_20"] > 50) & (train.loc[i,"RSI_20"] <= 60)):
+        rsi_matrix.iloc[0,5] = rsi_matrix.iloc[0,5] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 61 and 70?
+    if((train.loc[i,"RSI_20"] > 60) & (train.loc[i,"RSI_20"] <= 70)):
+        rsi_matrix.iloc[0,6] = rsi_matrix.iloc[0,6] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 71 and 80?
+    if((train.loc[i,"RSI_20"] > 70) & (train.loc[i,"RSI_20"] <= 80)):
+        rsi_matrix.iloc[0,7] = rsi_matrix.iloc[0,7] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 81 and 90?
+    if((train.loc[i,"RSI_20"] > 80) & (train.loc[i,"RSI_20"] <= 90)):
+        rsi_matrix.iloc[0,8] = rsi_matrix.iloc[0,8] + train.loc[i,"Target"]
+    #What tends to happen in the future, after seeing RSI readings between 91 and 100?
+    if((train.loc[i,"RSI_20"] > 90) & (train.loc[i,"RSI_20"] <= 100)):
+        rsi_matrix.iloc[0,9] = rsi_matrix.iloc[0,9] + train.loc[i,"Target"]
+```
+
+rsi_matrix
+sns.barplot(rsi_matrix)
+#Our estimation of the model's accuracy
+((test["Target"] == test["Predictions"]).describe().freq / (test["Target"] == test["Predictions"]).shape[0])
+### Building Our Deep Markov Model
+So far, we have only built a model that learns from the past distribution of data. Could it be possible for us to enhance this strategy by stacking a more flexible learner, to learn an optimal strategy of using our Markov Model? Let's train a deep neural network and give it the predictions made by the Markov Model as inputs, and the observed changes in price levels will be the target. To accomplish this task effectively, we will need to subdivide our training set to 2 halves. We will fit our new Markov Model using just the first half of the training set. Our neural network will be fit on the Markov Model's predictions on the first half training set, and the corresponding changes in price levels.
+#Let us now try find a machine learning model to learn how to optimally use our transition matrix
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+#Now let us partition our train set into 2 halves 
+train , train_val = train_test_split(train,shuffle=False,test_size=0.5)
+Fit the Markov model on the new train set.
+#Now let us recalculate our transition matrix, based on the first half of the training set
+rsi_matrix.iloc[0,0] = train.loc[(train["RSI_20"] < 10) & (train["Target"] == 1)].shape[0] / train.loc[(train["RSI_20"] < 10)].shape[0]
+rsi_matrix.iloc[0,1] = train.loc[((train["RSI_20"] > 10) & (train["RSI_20"] <=20)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 10) & (train["RSI_20"] <=20))].shape[0]
+rsi_matrix.iloc[0,2] = train.loc[((train["RSI_20"] > 20) & (train["RSI_20"] <=30)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 20) & (train["RSI_20"] <=30))].shape[0]
+rsi_matrix.iloc[0,3] = train.loc[((train["RSI_20"] > 30) & (train["RSI_20"] <=40)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 30) & (train["RSI_20"] <=40))].shape[0]
+rsi_matrix.iloc[0,4] = train.loc[((train["RSI_20"] > 40) & (train["RSI_20"] <=50)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 40) & (train["RSI_20"] <=50))].shape[0]
+rsi_matrix.iloc[0,5] = train.loc[((train["RSI_20"] > 50) & (train["RSI_20"] <=60)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 50) & (train["RSI_20"] <=60))].shape[0]
+rsi_matrix.iloc[0,6] = train.loc[((train["RSI_20"] > 60) & (train["RSI_20"] <=70)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 60) & (train["RSI_20"] <=70))].shape[0]
+rsi_matrix.iloc[0,7] = train.loc[((train["RSI_20"] > 70) & (train["RSI_20"] <=80)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 70) & (train["RSI_20"] <=80))].shape[0]
+rsi_matrix.iloc[0,8] = train.loc[((train["RSI_20"] > 80) & (train["RSI_20"] <=90)) & (train["Target"] == 1)].shape[0] / train.loc[((train["RSI_20"] > 80) & (train["RSI_20"] <=90))].shape[0]
+
+rsi_matrix
+```
+#From the training set, it appears that RSI readings above 61 are bearish and RSI readings below 61 are bullish
+plt.plot(rsi_matrix.iloc[0,:])
+plt.plot(fifty,'r')
+#Let's now store our model's predictions
+train["Predictions"] = -1
+train.loc[train["RSI_20"] < 61,"Predictions"] = 1
+#Let's Standardize and scale our data
+from sklearn.preprocessing import RobustScaler
+ohlc_predictors = ["open","high","low","close","tick_volume","spread","RSI_20"]
+transition_matrix = ["Predictions"]
+all_predictors = ohlc_predictors + transition_matrix
+target = ["Target"]
+#Create a dataframe to store our cv error on the training set, validation training set and the test set
+train_err     = pd.DataFrame(columns=["Transition Matrix","Deep Markov Model","OHLC Model","All Model"],index=np.arange(0,5)) 
+train_val_err = pd.DataFrame(columns=["Transition Matrix","Deep Markov Model","OHLC Model","All Model"],index=[0]) 
+test_err      = pd.DataFrame(columns=["Transition Matrix","Deep Markov Model","OHLC Model","All Model"],index=[0])
+#Create a time series split object
+tscv = TimeSeriesSplit(n_splits = 5,gap=look_ahead)
+model = MLPClassifier(hidden_layer_sizes=(20,10))
+for i , (train_index,test_index) in enumerate(tscv.split(train_scaled)):
+    #Fit the model
+    model.fit(train.loc[train_index,transition_matrix],train.loc[train_index,"Target"])
+    #Record its accuracy
+    train_err.iloc[i,1] = accuracy_score(train.loc[test_index,"Target"],model.predict(train.loc[test_index,transition_matrix]))
+
+#Record our accuracy levels on the validation training set
+train_val_err.iloc[0,1] = accuracy_score(train_val.loc[:,"Target"],model.predict(train_val.loc[:,transition_matrix]))
+#Record our accuracy levels on the test set
+test_err.iloc[0,1] = accuracy_score(test.loc[:,"Target"],model.predict(test.loc[:,transition_matrix]))
+#Our accuracy levels on the training set
+train_err
+```
+| Transition Matrix | Deep Markov Model | OHLC Model | All Model |
+| --- | --- | --- | --- |
+| 0.52309 | 0.52309 | 0.507306 | 0.517291 |
+| 0.519322 | 0.519322 | 0.497127 | 0.496724 |
+### Implementing in MQL5
+To implement our RSI based Expert Advisor, we will start by first importing the libraries we need.
+//+------------------------------------------------------------------+
+#property copyright "Gamuchirai Zororo Ndawana"
+#property link      "https://www.mql5.com/en/gamuchiraindawa"
+#property version   "1.00"
+#include <Trade\Trade.mqh>
+CTrade Trade;
+int ma_handler;
+int system_state;
+double ma_buffer[];
+double bid,ask;
+     {
+      check_setup();
+     }
+
+      manage_setup();
+  }
+void manage_setup(void)
+  {
+   if(user_close == RSI_Close)
+      if((system_state == 1) && ((rsi_buffer[0] > 71) && (rsi_buffer[80] <= 80)))
+        {
+         PositionSelect(Symbol());
+      if((system_state == -1) && ((rsi_buffer[0] > 11) && (rsi_buffer[80] <= 20)))
+         if((iClose(_Symbol,PERIOD_CURRENT,0) > ma_buffer[0]) && (system_state == -1))
+           {
+            PositionSelect(Symbol());
+         if((iClose(_Symbol,PERIOD_CURRENT,0) < ma_buffer[0]) && (system_state == 1))
+//+------------------------------------------------------------------+
+void check_setup(void)
+         Trade.Sell(trading_volume,_Symbol,bid,0,0,"Auto RSI");
+         system_state = -1;
+        }
+         Trade.Buy(trading_volume,_Symbol,ask,0,0,"Auto RSI");
+         system_state = 1;
+     }
+
+Fig 9: The results of back-testing our strategy
+### Conclusion
+In this article, we have demonstrated the power of simple probabilistic models. To our surprise, we could not outperform the simple Markov model by trying to learn from its mistakes. However, if you have been following this article series closely, then you will probably share my viewpoint that we are now heading in the right direction. We are slowly accumulating a set of algorithms that are easier to model than price itself, under the constraints of being just as informative as modelling price itself. Join us in our next discussions as we will try to learn why it will take to outperform the simple Markov Model.
+![How to create a trading journal with MetaTrader and Google Sheets](https://c.mql5.com/2/96/How_to_create_a_trading_journal_with_MetaTrader_and_Google_Sheets____LOGO__2.png)
+[How to create a trading journal with MetaTrader and Google Sheets](https://www.mql5.com/en/articles/15811)
+Create a trading journal using MetaTrader and Google Sheets! You will learn how to sync your trading data via HTTP POST and retrieve it using HTTP requests. In the end, You have a trading journal that will help you keep track of your trades effectively and efficiently.
+[![](https://www.mql5.com/ff/sh/0wxx5f0vuwq7xh89z2/01.png)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+In this article, we have demonstrated the power of simple probabilistic models. To our surprise, we could not outperform the simple Markov model by trying to learn from its mistakes. However, if you have been following this article series closely, then you will probably share my viewpoint that we are now heading in the right direction. We are slowly accumulating a set of algorithms that are easier to model than price itself, under the constraints of being just as informative as modelling price itself. Join us in our next discussions as we will try to learn why it will take to outperform the simple Markov Model.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16030.zip "Download all attachments in the single ZIP archive")
+
+[RSI\_Self\_Optimizer.ipynb](https://www.mql5.com/en/articles/download/16030/rsi_self_optimizer.ipynb "Download RSI_Self_Optimizer.ipynb")
+(131.78 KB)
+
+[Auto\_RSI.mq5](https://www.mql5.com/en/articles/download/16030/auto_rsi.mq5 "Download Auto_RSI.mq5")
+(6.11 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Creating a Trading Administrator Panel in MQL5 (Part III): Extending Built-in Classes for Theme Management (II)](https://c.mql5.com/2/96/Creating_a_Trading_Administrator_Panel_in_MQL5_Part_III___V2____LOGO.png)
+[Creating a Trading Administrator Panel in MQL5 (Part III): Extending Built-in Classes for Theme Management (II)](https://www.mql5.com/en/articles/16045)
+
+In this discussion, we will carefully extend the existing Dialog library to incorporate theme management logic. Furthermore, we will integrate methods for theme switching into the CDialog, CEdit, and CButton classes utilized in our Admin Panel project. Continue reading for more insightful perspectives.
+
+![Developing a robot in Python and MQL5 (Part 2): Model selection, creation and training, Python custom tester](https://c.mql5.com/2/79/Robot_development_in_Python_and_MQL5____Part_2____LOGO__2.png)
+[Developing a robot in Python and MQL5 (Part 2): Model selection, creation and training, Python custom tester](https://www.mql5.com/en/articles/14910)
+
+We continue the series of articles on developing a trading robot in Python and MQL5. Today we will solve the problem of selecting and training a model, testing it, implementing cross-validation, grid search, as well as the problem of model ensemble.
+
+![Reimagining Classic Strategies (Part IX): Multiple Time Frame Analysis (II)](https://c.mql5.com/2/96/Reimagining_Classic_Strategies_Part_IX___LOGO.png)
+[Reimagining Classic Strategies (Part IX): Multiple Time Frame Analysis (II)](https://www.mql5.com/en/articles/15972)
+
+In today's discussion, we examine the strategy of multiple time-frame analysis to learn on which time frame our AI model performs best. Our analysis leads us to conclude that the Monthly and Hourly time-frames produce models with relatively low error rates on the EURUSD pair. We used this to our advantage and created a trading algorithm that makes AI predictions on the Monthly time frame, and executes its trades on the Hourly time frame.
+
+![How to create a trading journal with MetaTrader and Google Sheets](https://c.mql5.com/2/96/How_to_create_a_trading_journal_with_MetaTrader_and_Google_Sheets____LOGO__2.png)
+[How to create a trading journal with MetaTrader and Google Sheets](https://www.mql5.com/en/articles/15811)
+
+Create a trading journal using MetaTrader and Google Sheets! You will learn how to sync your trading data via HTTP POST and retrieve it using HTTP requests. In the end, You have a trading journal that will help you keep track of your trades effectively and efficiently.
+
+[![](https://www.mql5.com/ff/sh/0wxx5f0vuwq7xh89z2/01.png)
+
+VPS for 24/7 trading
+Contact your broker and find out how to get a free hosting subscription
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=nhetzvgituppcfrhndpblbihmzziogdh&s=d00c975c8bda3d8c1b29f042ad33ac81952ccea2f130a8f1ffa9015bab8ade87&uid=&ref=https://www.mql5.com/en/articles/16030&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6367384128739492932)

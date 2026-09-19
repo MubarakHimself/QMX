@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_046",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15658,
+      "title": "From Basic to Intermediate: Template and Typename (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15658.md"
+    },
+    {
+      "id": 15668,
+      "title": "From Basic to Intermediate: Template and Typename (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15668.md"
+    },
+    {
+      "id": 15669,
+      "title": "From Basic to Intermediate: Template and Typename (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15669.md"
+    },
+    {
+      "id": 15670,
+      "title": "From Basic to Intermediate: Template and Typename (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15670.md"
+    },
+    {
+      "id": 15671,
+      "title": "From Basic to Intermediate: Template and Typename (V)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15671.md"
+    },
+    {
+      "id": 15684,
+      "title": "USD and EUR index charts \u2014 example of a MetaTrader 5 service",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15684.md"
+    },
+    {
+      "id": 15711,
+      "title": "Bacterial Chemotaxis Optimization (BCO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15711.md"
+    },
+    {
+      "id": 15719,
+      "title": "Reimagining Classic Strategies (Part VII) : Forex Markets And Sovereign Debt Analysis on the USDJPY",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15719.md"
+    },
+    {
+      "id": 15727,
+      "title": "Master MQL5 from Beginner to Pro (Part VI): Basics of Developing Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15727.md"
+    },
+    {
+      "id": 15730,
+      "title": "From Basic to Intermediate: Struct (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15730.md"
+    },
+    {
+      "id": 15731,
+      "title": "From Basic to Intermediate: Structs (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15731.md"
+    },
+    {
+      "id": 15732,
+      "title": "From Basic to Intermediate: Events (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15732.md"
+    }
+  ]
+}

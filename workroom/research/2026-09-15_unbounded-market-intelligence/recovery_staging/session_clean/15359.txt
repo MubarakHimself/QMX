@@ -1,0 +1,2526 @@
+---
+id: 15359
+source_url: https://www.mql5.com/en/articles/15359
+title: "News Trading Made Easy (Part 3): Performing Trades"
+author: ""
+author_url: 
+published: 2024-08-12T11:46Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "News Trading Made Easy (): Performing Trades"
+series_part: 3
+source: mql5
+language: en
+---
+
+# News Trading Made Easy (Part 3): Performing Trades
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 12 August 2024 at 07:46
+
+4 597
+[
+3](https://www.mql5.com/en/forum/471336 "Comments")
+
+[Kabelo Frans Mampa](https://www.mql5.com/en/users/kaaiblo)
+
+### Introduction
+
+Previously, we created an Expert Advisor to store economic data in our news calendar database. We also developed many classes to build a foundation for our expert to perform adequately. In this article, we will expand on these classes in our project to finally get to our goal of trading from economic data. Our next goal will be profitability which we will address in the next upcoming articles. For this article, we will add a new view to our database to display all unique events from the [MQL5 economic calendar](https://www.mql5.com/en/economic-calendar) to provide information about the different events. We will also add new inputs to the expert to filter economic data when trading to provide flexibility. You can check out the [previous article](https://www.mql5.com/en/articles/14912 "News Trading Made Easy (Part 2): Risk Management") in the News Trading Made Easy series where we created a risk management class to manage risk for trading and more useful information if you haven't already.
+
+  
+   
+
+**What can you expect?**
+
+Improved graphics that are concise, modern, and responsive for the current chart. The image below is a representation of these graphics in Light mode.
+
+")
+
+Sections: 1,2,3,4,5,6,7,8 and 9 will automatically be shown every time the expert is on a chart.
+
+Sections: 10, (11 & 12 & 13& 14 & 15 are a group) and 16 are optional and will update every new 1-minute candle (this is to improve performance when back-testing).
+
+Section
+
+- 10: Displays the terminal Date and time. The time text will be shown in red when a news event occurs while the chart is in light mode.
+- 11: Displays the current/next news event date and time. The text will be shown in red when the date and time are equal to the terminal time.
+- 12: Displays the name of the news event. The text color will change depending on the event's Importance, e.g. High Importance is shown in red.
+- 13: Displays the country name of the news event. The text color will change depending on the event's Importance and chart color mode e.g. Light mode.
+- 14: Displays the currency name of the news event. The text color will vary.
+- 15: Displays the news event's importance. The text color will vary.
+- 16: Displays the spread for the current symbol and the rating which is calculated with 2 weeks' worth of 1-minute candle spread data and categorized into groups of excellent, good, normal, bad, and terrible with different colors for each category with variation for dark mode and light mode.
+
+The image below is a representation of how dark mode is implemented.
+
+Section
+
+- 17: Displays the event time of all events which will or have occurred on the current terminal day.
+
+")
+
+**DISPLAY Inputs**
+
+- CHART COLOUR MODE: This option's purpose is to change between Dark or Light Mode.
+- DISPLAY NEWS INFO: This option's purpose is to show or not show sections (11 & 12 & 13& 14 & 15) on the chart.
+- DISPLAY EVENT OBJ: This option's purpose is to show or not show section 17 on the chart.
+- DISPLAY SPREAD RATING: This option's purpose is to show or not show section 16 on the chart.
+- DISPLAY DATE: This option's purpose is to show or not show section 10 on the chart.
+
+**DST SCHEDULE Inputs**
+
+- SELECT DST OPTION: This option's purpose is to allow the user/trader to select there custom DST schedule or allow the expert to automatically select the recommended DST schedule to correctly configure the event times when back-testing in the strategy tester.
+- SELECT CUSTOM DST: This option's purpose is to allow the user/trader to manually configure the DST schedule.
+
+**RISK MANAGEMENT Inputs**
+
+- SELECT RISK OPTION: This option's purpose is to allow the user/trader to select different Risk Management profiles e.g. MINIMUM LOTSIZE, MAXIMUM LOTSIZE etc.
+- RISK FLOOR: This option's purpose is to set a minimum risk for all risk profiles. Example if there is not enough money for a lot-size of 1 lot, but there is enough money for the minimum lot-size of 0.01 lot, then 0.01 will be used to open the trade instead of not opening any trades because there wasn't enough money. This is just a safety net for if the risk profiles were not configured appropriately.
+- MAX-RISK: This option's purpose is to open a trade with the percentage of free-margin in the account if there wasn't enough money for a normal trade to be opened. This option is only operational when RISK FLOOR is set to MAX-RISK.
+- RISK CEILING: This option's purpose is to set a lot-size cap/limit when the account is large enough to open the max lot for a specific symbol. The cap/limit varies from MAX LOTSIZE which means the maximum lot-size possible is the one set by the specific symbol, whereas MAX LOTSIZE(x2) will open two trades with the maximum lot-size depending on if the volume limit allows for this.
+- PERCENTAGE OF [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain percentage of the available Balance or Free-margin.
+- AMOUNT PER [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain value amount of the Balance or Free-margin e.g. if [BALANCE | FREE-MARGIN] is set to 1000 and EACH AMOUNT is set to 10, this means that for every 1000 in Balance or Free-margin currency value risk 10 currency value for each trade. So if your balance/free-margin is 1000 USD, then risk 10 USD for every trade.
+- LOTSIZE PER [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain lot-size for a Balance or Free-margin value e.g. if [BALANCE | FREE-MARGIN] is set to 1000 and EACH LOTS(VOLUME) is set to 0.1, this means that for every 1000 in Balance or Free-margin currency value risk 0.1 in lot-size for each trade. So if your balance/free-margin is 1000 USD, then risk 0.1 for every trade.
+- CUSTOM LOTSIZE: This option's purpose is to risk a predetermined lot-size for every trade opened.
+- PERCENTAGE OF MAX-RISK: This option's purpose is to risk a percentage of the Maximum risk volume for a symbol with the account's available Free-margin e.g. if the Maximum risk volume for AUDUSD with an account's Free-margin at 10,000 USD is 100 Lots then if we set PERCENTAGE OF MAX-RISK to 25% then the lot-size used will be 25% of 100 Lots which is 25 Lots.
+
+**NEWS SETTINGS Inputs**
+
+  
+
+News Settings consists of varies input options namely:
+
+1. CALENDAR IMPORTANCE
+2. EVENT FREQUENCY
+3. EVENT SECTOR
+4. EVENT TYPE
+5. EVENT CURRENCY
+
+These options are shown in the image below.
+
+- CALENDAR IMPORTANCE: This option's purpose is to filter the news data to a specified news Importance.
+
+- EVENT FREQUENCY: This option's purpose is to filter the news data based of its frequency of occurrence.
+
+- EVENT SECTOR: This option's purpose is to filter the news data based on the sector.
+
+- EVENT TYPE: This option's purpose is to filter the news data of its type, e.g. EVENT is typically used for Speeches and meetings, whereas INDICATOR is for interest rates, Employment data etc. and HOLIDAY is for News years and various other holidays.
+
+- EVENT CURRENCY: This option's purpose is to filter the news data based of the selected currency options available. SYMBOL CURRENCIES will consider all the currencies from SYMBOL MARGIN, SYMBOL BASE and SYMBOL PROFIT.
+
+**TRADE SETTINGS Inputs**
+
+- STOPLOSS[0=NONE]: This option's purpose is to set a fixed stoploss for all trades. When the stoploss is set to zero all trades will not have a stoploss value.
+- TAKEPROFIT[0=NONE]: This option's purpose is to set a fixed take-profit for all trades. When the take-profit is set to zero, all trades will not have a take-profit value.
+- PRE-ENTRY SEC: This option's purpose is to allow the user/trader to configure the number of seconds before a trade is open before the event time. So if the PRE-ENTRY SEC is set to 5 this means that 5 seconds before the event occurs is the timespan for trades to be opened before the event time. Ex. if the event time is 15:00pm then trades will be allowed from 5 seconds before the event at 14:59:45-14:59:59.
+- TRADING DAY OF WEEK: This option's purpose is to filter any business day of the week e.g. Monday, Tuesday etc.
+
+We will now dive into the code that will make our expert functional.
+
+### Symbol Properties Class
+
+**Added changes made from Part 2:**
+
+- Declaration of enumeration for spread rating
+
+```
+//Enumeration for Spread rating
+enum SpreadRating
+  {
+   SpreadRating_Terrible,//Terrible
+   SpreadRating_Bad,//Bad
+   SpreadRating_Normal,//Normal
+   SpreadRating_Good,//Good
+   SpreadRating_Excellent//Excellent
+  };
+```
+
+- Declaration of Boolean variable to configure Chart color mode
+
+```
+bool isLightMode;//Variable to configure Chart color mode
+```
+
+- Declaration of Boolean function to retrieve spread float
+
+```
+bool              SpreadFloat(string SYMBOL=NULL);//Retrieve Spread Float
+```
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Spread Float                                             |
+//+------------------------------------------------------------------+
+bool CSymbolProperties::SpreadFloat(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      return CSymbol.SpreadFloat();
+     }
+   Print("Unable to retrieve Symbol's Spread Float");
+   return false;//Retrieve false when failed.
+  }
+```
+
+- Declaration of Spread rating function to retrieve spread rating
+
+```
+SpreadRating      SpreadValue(string SYMBOL=NULL);//Retrieve Spread Rating
+```
+
+This function has to return an enumeration value from SpreadRating.
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Spread Rating                                            |
+//+------------------------------------------------------------------+
+SpreadRating CSymbolProperties::SpreadValue(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(SpreadFloat(SYMBOL))//Check if Symbol has a floating Spread
+        {
+
+         //Declarations
+         vector Spreads;
+         int SpreadArray[],SpreadAvg=0,SpreadMax=0,SpreadMin=0,
+                           SpreadUpper=0,SpreadLower=0,SpreadAvgUpper=0,
+                           SpreadAvgLower=0,SpreadMidUpper=0,SpreadMidLower=0;
+
+         //Get Spread data from CopySpread built-in function for 2 weeks using M1 timeframe.
+         if(CopySpread(GetSymbolName(),PERIOD_M1,iTime(GetSymbolName(),PERIOD_W1,2),
+                       iTime(GetSymbolName(),PERIOD_M1,0),SpreadArray)==-1)
+           {
+            Print("Error trying to retrieve spread values");
+            return SpreadRating_Normal;//Retrieve default value when failed.
+           }
+         else
+           {
+            Spreads.Assign(SpreadArray);//Assign spread array into Spreads vector variable
+
+            SpreadMax = int(Spreads.Max());//Assign max spread
+            SpreadMin = int(Spreads.Min());//Assign min spread
+            SpreadAvg = int(Spreads.Median());//Assign average spread
+
+            //Divide Spread into sectors based of different averages.
+            SpreadMidUpper = int((SpreadAvg+SpreadMax)/2);
+            SpreadMidLower = int((SpreadAvg+SpreadMin)/2);
+            SpreadAvgUpper = int((SpreadAvg+SpreadMidUpper)/2);
+            SpreadAvgLower = int((SpreadAvg+SpreadMidLower)/2);
+            SpreadUpper = int((SpreadMidUpper+SpreadMax)/2);
+            SpreadLower = int((SpreadMidLower+SpreadMin)/2);
+
+            int Spread = Spread(SYMBOL);//Assign Symbol's Spread
+
+            if(Spread<SpreadLower||Spread==SpreadMin)//Excellent
+              {
+               return SpreadRating_Excellent;
+              }
+            else
+               if(Spread>=SpreadLower&&Spread<SpreadAvgLower)//Good
+                 {
+                  return SpreadRating_Good;
+                 }
+               else
+                  if(Spread>=SpreadAvgLower&&Spread<=SpreadAvgUpper)//Normal
+                    {
+                     return SpreadRating_Normal;
+                    }
+                  else
+                     if(Spread>SpreadAvgUpper&&Spread<=SpreadUpper)//Bad
+                       {
+                        return SpreadRating_Bad;
+                       }
+                     else//Terrible
+                       {
+                        return SpreadRating_Terrible;
+                       }
+           }
+        }
+      else
+        {
+         return SpreadRating_Normal;//Retrieve default value when spread is fixed.
+        }
+     }
+   Print("Unable to retrieve Symbol's Spread Rating");
+   return SpreadRating_Normal;//Retrieve default value when failed.
+  }
+```
+
+We first set the symbol, then we check if the symbol has a floating spread before we perform simple calculations to rate the spread based on its averages. If the setting of the symbol failed or the symbol doesn't have a floating spread, we return SpreadRating\_Normal as a default value.
+
+```
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(SpreadFloat(SYMBOL))//Check if Symbol has a floating Spread
+        {
+```
+
+If we successfully set the symbol and the symbol has a floating spread, then we will declare a Spreads vector variable, and int variables to store spread values. After declaring our variables, we will use the CopySpread function to store the spread values into our SpreadArray variable from the 1-minute candle starting from 2 weeks back to the current 1-minute candle time. If the CopySpread function fails for some reason, we will return SpreadRating\_Normal as a default value.
+
+```
+ //Declarations
+         vector Spreads;
+         int SpreadArray[],SpreadAvg=0,SpreadMax=0,SpreadMin=0,
+                           SpreadUpper=0,SpreadLower=0,SpreadAvgUpper=0,
+                           SpreadAvgLower=0,SpreadMidUpper=0,SpreadMidLower=0;
+
+         //Get Spread data from CopySpread built-in function for 2 weeks using M1 timeframe.
+         if(CopySpread(GetSymbolName(),PERIOD_M1,iTime(GetSymbolName(),PERIOD_W1,2),
+                       iTime(GetSymbolName(),PERIOD_M1,0),SpreadArray)==-1)
+           {
+            Print("Error trying to retrieve spread values");
+            return SpreadRating_Normal;//Retrieve default value when failed.
+           }
+```
+
+Once CopySpread is successful, we will assign the Spreads vector the integer values from our SpreadArray. Then we need to get basic information from these array values, such as the maximum spread throughout the 2-week period as well as the minimum spread and the average spread, we will store these values into SpreadMax, SpreadMin and SpreadAvg accordingly. We now want to get different averages from these three previous values.
+
+For SpreadMidUpper variable we want the average between the SpreadAvg and SpreadMax, for SpreadMidLower variable we want the average between SpreadAvg and SpreadMin, for SpreadAvgUpper variable we want the average between SpreadAvg and SpreadMidUpper, for SpreadAvgLower variable we want the average between SpreadAvg and SpreadMidLower, for SpreadUpper variable we want the average between SpreadMidUpper and SpreadMax, for SpreadLower variable we want the average between SpreadMidLower and SpreadMin. We will also need the current symobl's spread to compare to classify the spread.
+
+```
+Spreads.Assign(SpreadArray);//Assign spread array into Spreads vector variable
+
+            SpreadMax = int(Spreads.Max());//Assign max spread
+            SpreadMin = int(Spreads.Min());//Assign min spread
+            SpreadAvg = int(Spreads.Median());//Assign average spread
+
+            //Divide Spread into sectors based of different averages.
+            SpreadMidUpper = int((SpreadAvg+SpreadMax)/2);
+            SpreadMidLower = int((SpreadAvg+SpreadMin)/2);
+            SpreadAvgUpper = int((SpreadAvg+SpreadMidUpper)/2);
+            SpreadAvgLower = int((SpreadAvg+SpreadMidLower)/2);
+            SpreadUpper = int((SpreadMidUpper+SpreadMax)/2);
+            SpreadLower = int((SpreadMidLower+SpreadMin)/2);
+
+            int Spread = Spread(SYMBOL);//Assign Symbol's Spread
+```
+
+> 
+
+We have 5 spread classifications namely:
+
+- Excellent: When the current spread is less than SpreadLower variable or equal to SpreadMin.
+- Good: When the current spread is more than or equal to SpreadLower variable and the current spread is less than SpreadAvgLower variable.
+- Normal: When the current spread is less than or equal to SpreadAvgLower variable and the current spread is less than or equal to SpreadAvgUpper variable.
+- Bad: When the current spread is more than SpreadAvgUpper and the current spread is less than or equal to SpreadUpper variable.
+- Terrible: When the current spread is more than SpreadUpper variable
+
+```
+            if(Spread<SpreadLower||Spread==SpreadMin)//Excellent
+              {
+               return SpreadRating_Excellent;
+              }
+            else
+               if(Spread>=SpreadLower&&Spread<SpreadAvgLower)//Good
+                 {
+                  return SpreadRating_Good;
+                 }
+               else
+                  if(Spread>=SpreadAvgLower&&Spread<=SpreadAvgUpper)//Normal
+                    {
+                     return SpreadRating_Normal;
+                    }
+                  else
+                     if(Spread>SpreadAvgUpper&&Spread<=SpreadUpper)//Bad
+                       {
+                        return SpreadRating_Bad;
+                       }
+                     else//Terrible
+                       {
+                        return SpreadRating_Terrible;
+                       }
+```
+
+- Declaration of function to retrieve spread color based of its rating
+
+```
+color             SpreadColor(string SYMBOL=NULL);//Retrieve Spread Color
+```
+
+In order to get the spread color for each spread enumeration value, we will consider using a switch statement as the enumeration values are constant. Colors for each rating are as shown:
+
+- Excellent: if in light mode then clrBlue
+
+> > 
+> >
+> >  else clrLightCyan
+> >
+> > 
+
+- Good: if in light mode then clrCornflowerBlue
+
+> >   
+> >  else clrLightGreen   
+> >  
+
+- Normal: if in light mode then clrBlack
+
+> >   
+> >   else clrWheat   
+> >  
+
+- Bad: clrOrange
+- Terrible: clrRed
+- Default:  if in light mode then clrBlack, else clrWheat
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Spread Color                                             |
+//+------------------------------------------------------------------+
+color CSymbolProperties::SpreadColor(string SYMBOL=NULL)
+  {
+   switch(SpreadValue(SYMBOL))//Get Spread Rating value
+     {
+      case SpreadRating_Excellent://Excellent Spread
+         return (isLightMode)?clrBlue:clrLightCyan;
+         break;
+      case SpreadRating_Good://Good Spread
+         return (isLightMode)?clrCornflowerBlue:clrLightGreen;
+         break;
+      case SpreadRating_Normal://Normal Spread
+         return (isLightMode)?clrBlack:clrWheat;
+         break;
+      case SpreadRating_Bad://Bad Spread
+         return clrOrange;
+         break;
+      case SpreadRating_Terrible://Terrible Spread
+         return clrRed;
+         break;
+      default://failed to be identified
+         return (isLightMode)?clrBlack:clrWheat;//Retrieve default color when failed.
+         break;
+     }
+  }
+```
+
+- Declaration of string function to retrieve spread's description
+
+```
+string            SpreadDesc(string SYMBOL=NULL);//Retrieve Spread Description
+```
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Spread Description                                       |
+//+------------------------------------------------------------------+
+string CSymbolProperties::SpreadDesc(string SYMBOL=NULL)
+  {
+   switch(SpreadValue(SYMBOL))//Get Spread Rating value
+     {
+      case SpreadRating_Excellent://Excellent Spread
+         return "Excellent";
+         break;
+      case SpreadRating_Good://Good Spread
+         return "Good";
+         break;
+      case SpreadRating_Normal://Normal Spread
+         return "Normal";
+         break;
+      case SpreadRating_Bad://Bad Spread
+         return "Bad";
+         break;
+      case SpreadRating_Terrible://Terrible Spread
+         return "Terrible";
+         break;
+      default://failed to be identified
+         return "Unknown";//Retrieve default value when failed.
+         break;
+     }
+  }
+```
+
+- Declaration of string function to retrieve symbol's description
+
+```
+string            Description(string SYMBOL=NULL);//Retrieve Symbol's Description
+```
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Description                                     |
+//+------------------------------------------------------------------+
+string CSymbolProperties::Description(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      return CSymbol.Description();
+     }
+   Print("Unable to retrieve Symbol's Description");
+   return "";//Retrieve an empty string when failed.
+  }
+```
+
+### Chart Properties Class
+
+This class has been restructured from Part 2. Chart properties class will now inherit from the chart class from MQL5 include classes. ChartProp structure will store all the chart properties that we will introduce changes to. Our public ChartRefresh function will call our ChartGet funtion that will initialize the chart properties, and then we will call the function ChartSet that will configure the chart with our chart property values from ChartGet.
+
+```
+#include "SymbolProperties.mqh"
+#include <Charts/Chart.mqh>
+CSymbolProperties CSymbol;//Symbol Properties object
+//+------------------------------------------------------------------+
+//|ChartProperties class                                             |
+//+------------------------------------------------------------------+
+class CChartProperties : public CChart
+  {
+private:
+//Structure for chart properties
+   struct ChartProp
+     {
+      ENUM_CHART_MODE mode;//Chart Mode
+      color          clrBackground;//Chart Background Color
+      color          clrForeground;//Chart Foreground Color
+      color          clrLineLast;//Chart Line Color
+      color          clrCandleBear;//Chart Bear Candle Color
+      color          clrBarDown;//Chart Down Candle Color
+      color          clrCandleBull;//Chart Bull Candle Color
+      color          clrBarUp;//Chart Up Candle Color
+      color          clrLineAsk;//Chart Ask Color
+      color          clrLineBid;//Chart Bid Color
+      color          clrChartLine;//Chart Line Color
+      color          clrStopLevels;//Chart Stop Level Color
+      color          clrVolumes;//Chart Volumes Color
+      bool           Foreground;//Chart Foreground Visibility
+      bool           ShowLineAsk;//Chart Ask Line Visibility
+      bool           ShowLineBid;//Chart Bid Line Visibility
+      bool           ShowPeriodSep;//Chart Period Separator Visibility
+      bool           ShowOHLC;//Chart Open-High-Low-Close Visibility
+      bool           ShowGrid;//Chart Grid Visibility
+      ENUM_CHART_VOLUME_MODE ShowVolumes;//Chart Volumes Visibility
+      bool           AutoScroll;//Chart Auto Scroll Option
+      bool           Shift;//Chart Shift Option
+      double         ShiftSize;//Chart Shift Size
+      bool           ShowObjectDescr;//Chart Object Descriptions
+      ulong          CHART_SHOW_TRADE_LEVELS;//Chart Trade Levels Visibility
+      ulong          CHART_SHOW_ONE_CLICK;//Chart One Click Trading Visibility
+      ulong          CHART_SHOW_TICKER;//Chart Ticker Visibility
+      ulong          CHART_DRAG_TRADE_LEVELS;//Chart Drag Trade levels
+      ENUM_CHART_POSITION Navigate;//Chart Navigate
+     };
+   ChartProp         DefaultChart,MyChart;//Used to store chart properties
+   void              ChartSet(ChartProp &Prop);//Apply Chart format
+   void              ChartGet();//Assign Chart property values
+public:
+                     CChartProperties();//Constructor
+                    ~CChartProperties(void);//Destructor
+                     //Configure the chart
+   void              ChartRefresh() {ChartGet();ChartSet(MyChart);}
+   string            GetChartPeriodName();//Retrieve Period name
+  };
+```
+
+In the constructor we assign the inherit variable m\_chart\_id the current chart ID.
+
+```
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CChartProperties::CChartProperties()
+  {
+   m_chart_id=ChartID();//Set chart id
+   ChartGet();//Get chart values
+   ChartSet(MyChart);//customize chart
+  }
+```
+
+For the function ChartGet we assign values to our variables DefaultChart and MyChart, where DefaultChart will store the current chart properties before we modify the chart and where MyChart will store our custom values.
+
+```
+//+------------------------------------------------------------------+
+//|Assign Chart property values                                      |
+//+------------------------------------------------------------------+
+void CChartProperties::ChartGet()
+  {
+   DefaultChart.mode = Mode();//assign chart mode
+   MyChart.mode = CHART_CANDLES;//assign custom chart mode
+   DefaultChart.clrBackground = ColorBackground();//assign Background color
+   MyChart.clrBackground = (isLightMode)?clrWhite:clrBlack;//assign custom Background color
+   DefaultChart.clrForeground = ColorForeground();//assign foreground color
+   MyChart.clrForeground = (isLightMode)?clrBlack:clrWhite;//assign custom foreground color
+   DefaultChart.clrLineLast = ColorLineLast();//assign Chart Line Color
+   MyChart.clrLineLast = clrWhite;//assign custom Chart Line Color
+   DefaultChart.clrCandleBear = ColorCandleBear();//assign Chart Bear Candle Color
+   MyChart.clrCandleBear = clrBlack;//assign custom Chart Bear Candle Color
+   DefaultChart.clrBarDown = ColorBarDown();//assign Chart Down Candle Color
+   MyChart.clrBarDown = (isLightMode)?clrBlack:CSymbol.Background();//assign custom Chart Down Candle Color
+   DefaultChart.clrCandleBull = ColorCandleBull();//assign Chart Bull Candle Color
+   MyChart.clrCandleBull = CSymbol.Background();//assign custom Chart Bull Candle Color
+   DefaultChart.clrBarUp = ColorBarUp();//assign Chart Up Candle Color
+   MyChart.clrBarUp = (isLightMode)?clrBlack:CSymbol.Background();//assign custom Chart Up Candle Color
+   DefaultChart.clrLineAsk = ColorLineAsk();//assign Chart Ask Color 
+   MyChart.clrLineAsk = (isLightMode)?clrBlack:clrWhite;//assign custom Chart Ask Color
+   DefaultChart.clrLineBid = ColorLineBid();//assign Chart Bid Color
+   MyChart.clrLineBid = (isLightMode)?clrBlack:CSymbol.Background();//assign custom Chart Bid Color
+   DefaultChart.clrChartLine = ColorChartLine();//assign Chart Line Color
+   MyChart.clrChartLine = (isLightMode)?clrBlack:clrWhite;//assign custom Chart Line Color
+   DefaultChart.clrStopLevels = ColorStopLevels();//assign Chart Stop Level Color
+   MyChart.clrStopLevels = clrRed;//assign custom Chart Stop Level Color
+   DefaultChart.clrVolumes = ColorVolumes();//assign Chart Volumes Color
+   MyChart.clrVolumes = clrGreen;//assign custom Chart Volumes Color
+   DefaultChart.Foreground = Foreground();//assign Chart Foreground Visibility
+   MyChart.Foreground = false;//assign custom Chart Foreground Visibility
+   DefaultChart.ShowLineAsk = ShowLineAsk();//assign Chart Ask Line Visibility
+   MyChart.ShowLineAsk = true;//assign custom Chart Ask Line Visibility
+   DefaultChart.ShowLineBid = ShowLineBid();//assign Chart Bid Line Visibility
+   MyChart.ShowLineBid = true;//assign custom Chart Bid Line Visibility
+   DefaultChart.ShowPeriodSep = ShowPeriodSep();//assign Chart Period Separator Visibility
+   MyChart.ShowPeriodSep = true;//assign custom Chart Period Separator Visibility
+   DefaultChart.ShowOHLC = ShowOHLC();//assign Chart Open-High-Low-Close Visibility
+   MyChart.ShowOHLC = false;//assign custom Chart Open-High-Low-Close Visibility
+   DefaultChart.ShowGrid = ShowGrid();//assign Chart Grid Visibility
+   MyChart.ShowGrid = false;//assign custom Chart Grid Visibility
+   DefaultChart.ShowVolumes = ShowVolumes();//assign Chart Volumes Visibility
+   MyChart.ShowVolumes = CHART_VOLUME_HIDE;//assign custom Chart Volumes Visibility
+   DefaultChart.AutoScroll = AutoScroll();//assign Chart Auto Scroll Option
+   MyChart.AutoScroll = true;//assign custom Chart Auto Scroll Option
+   DefaultChart.Shift = Shift();//assign Chart Shift Option
+   MyChart.Shift = true;//assign custom Chart Shift Option
+   DefaultChart.ShiftSize = ShiftSize();//assign Chart Shift Size
+   MyChart.ShiftSize = 15;//assign custom Chart Shift Size
+   DefaultChart.ShowObjectDescr = ShowObjectDescr();//assign Chart Object Descriptions
+   MyChart.ShowObjectDescr = false;//assign custom Chart Object Descriptions
+   DefaultChart.Navigate = CHART_END;//assign Chart Navigate
+   MyChart.Navigate = CHART_END;//assign custom Chart Navigate
+   //---assign Chart Trade Levels Visibility
+   DefaultChart.CHART_SHOW_TRADE_LEVELS = ChartGetInteger(ChartId(),CHART_SHOW_TRADE_LEVELS);
+   //---assign custom Chart Trade Levels Visibility
+   MyChart.CHART_SHOW_TRADE_LEVELS = ulong(true);
+   //---assign Chart One Click Trading Visibility
+   DefaultChart.CHART_SHOW_ONE_CLICK = ChartGetInteger(ChartId(),CHART_SHOW_ONE_CLICK);
+   //---assign custom Chart One Click Trading Visibility
+   MyChart.CHART_SHOW_ONE_CLICK = ulong(false);
+   //---assign Chart Ticker Visibility
+   DefaultChart.CHART_SHOW_TICKER = ChartGetInteger(ChartId(),CHART_SHOW_TICKER);
+   //---assign custom Chart Ticker Visibility
+   MyChart.CHART_SHOW_TICKER = ulong(false);
+   //---assign Chart Drag Trade levels
+   DefaultChart.CHART_DRAG_TRADE_LEVELS = ChartGetInteger(ChartId(),CHART_DRAG_TRADE_LEVELS);
+   //---assign custom Chart Drag Trade levels
+   MyChart.CHART_DRAG_TRADE_LEVELS = ulong(false);
+  }
+```
+
+Our ChartSet function will take our ChartProp structure as an argument to configure the current chart.
+
+```
+//+------------------------------------------------------------------+
+//|Apply Chart format                                                |
+//+------------------------------------------------------------------+
+void CChartProperties::ChartSet(ChartProp &Prop)
+  {
+   Mode(Prop.mode);//Set Chart Candle Mode
+   ColorBackground(Prop.clrBackground);//Set Chart Background Color
+   ColorForeground(Prop.clrForeground);//Set Chart Foreground Color
+   ColorLineLast(Prop.clrLineLast);//Set Chart Line Color
+   ColorCandleBear(Prop.clrCandleBear);//Set Chart Bear Candle Color
+   ColorBarDown(Prop.clrBarDown);//Set Chart Down Candle Color
+   ColorCandleBull(Prop.clrCandleBull);//Set Chart Bull Candle Color
+   ColorBarUp(Prop.clrBarUp);//Set Chart Up Candle Color
+   ColorLineAsk(Prop.clrLineAsk);//Set Chart Ask Color
+   ColorLineBid(Prop.clrLineBid);//Set Chart Bid Color
+   ColorChartLine(Prop.clrChartLine);//Set Chart Line Color
+   ColorStopLevels(Prop.clrStopLevels);//Set Chart Stop Level Color
+   ColorVolumes(Prop.clrVolumes);//Set Chart Volumes Color
+   Foreground(Prop.Foreground);//Set if Chart is in Foreground Visibility
+   ShowLineAsk(Prop.ShowLineAsk);//Set Chart Ask Line Visibility
+   ShowLineBid(Prop.ShowLineBid);//Set Chart Bid Line Visibility
+   ShowPeriodSep(Prop.ShowPeriodSep);//Set Chart Period Separator Visibility
+   ShowOHLC(Prop.ShowOHLC);//Set Chart Open-High-Low-Close Visibility
+   ShowGrid(Prop.ShowGrid);//Set Chart Grid Visibility
+   ShowVolumes(Prop.ShowVolumes);//Set Chart Volumes Visibility
+   AutoScroll(Prop.AutoScroll);//Set Chart Auto Scroll Option
+   Shift(Prop.Shift);//Set Chart Shift Option
+   ShiftSize(Prop.ShiftSize);//Set Chart Shift Size Value
+   ShowObjectDescr(Prop.ShowObjectDescr);//Set Chart Show Object Descriptions
+   ChartSetInteger(ChartId(),CHART_SHOW_TRADE_LEVELS,Prop.CHART_SHOW_TRADE_LEVELS);//Set Chart Trade Levels Visibility
+   ChartSetInteger(ChartId(),CHART_SHOW_ONE_CLICK,Prop.CHART_SHOW_ONE_CLICK);//Set Chart One Click Trading Visibility
+   ChartSetInteger(ChartId(),CHART_SHOW_TICKER,Prop.CHART_SHOW_TICKER);//Set Chart Ticker Visibility
+   ChartSetInteger(ChartId(),CHART_DRAG_TRADE_LEVELS,Prop.CHART_DRAG_TRADE_LEVELS);//Set Chart Drag Trade levels
+   Navigate(Prop.Navigate);//Set Chart Navigate
+  }
+```
+
+As for the function GetChartPeriodName we will retrieve the chart period name for the current chart using a switch statement.
+
+```
+//+------------------------------------------------------------------+
+//|Retrieve Period name                                              |
+//+------------------------------------------------------------------+
+string CChartProperties::GetChartPeriodName()
+  {
+   switch(ChartPeriod(ChartId()))//Get chart Period with chart id
+     {
+      case PERIOD_M1:
+         return("M1");
+      case PERIOD_M2:
+         return("M2");
+      case PERIOD_M3:
+         return("M3");
+      case PERIOD_M4:
+         return("M4");
+      case PERIOD_M5:
+         return("M5");
+      case PERIOD_M6:
+         return("M6");
+      case PERIOD_M10:
+         return("M10");
+      case PERIOD_M12:
+         return("M12");
+      case PERIOD_M15:
+         return("M15");
+      case PERIOD_M20:
+         return("M20");
+      case PERIOD_M30:
+         return("M30");
+      case PERIOD_H1:
+         return("H1");
+      case PERIOD_H2:
+         return("H2");
+      case PERIOD_H3:
+         return("H3");
+      case PERIOD_H4:
+         return("H4");
+      case PERIOD_H6:
+         return("H6");
+      case PERIOD_H8:
+         return("H8");
+      case PERIOD_H12:
+         return("H12");
+      case PERIOD_D1:
+         return("Daily");
+      case PERIOD_W1:
+         return("Weekly");
+      case PERIOD_MN1:
+         return("Monthly");
+     }
+   return("unknown period");
+  }
+```
+
+Our destructor will restore the previous chart configuration before we made any changes to the chart.
+
+```
+//+------------------------------------------------------------------+
+//|Destructor                                                        |
+//+------------------------------------------------------------------+
+CChartProperties::~CChartProperties()
+  {
+   ChartSet(DefaultChart);//restore chart default configuration
+   m_chart_id=-1;//reset chart id
+  }
+```
+
+### Object Properties Class
+
+In this class a few changes were made to all for custom object text color. In part 2 you could only use one object text color for all text objects. Our solution is to declare a color variable outside the class called TextObj\_color.
+
+```
+#include "ChartProperties.mqh"
+color TextObj_color;
+//+------------------------------------------------------------------+
+//|ObjectProperties class                                            |
+//+------------------------------------------------------------------+
+class CObjectProperties:public CChartProperties
+  {
+private:
+   //Simple  chart objects structure
+   struct ObjStruct
+     {
+      long           ChartId;
+      string         Name;
+     } Objects[];//ObjStruct variable array
+
+   //-- Add chart object to Objects array
+   void              AddObj(long chart_id,string name)
+     {
+      ArrayResize(Objects,Objects.Size()+1,Objects.Size()+2);
+      Objects[Objects.Size()-1].ChartId=chart_id;
+      Objects[Objects.Size()-1].Name=name;
+     }
+
+protected:
+   void              DeleteObj()
+     {
+      for(uint i=0;i<Objects.Size();i++)
+        {
+         ObjectDelete(Objects[i].ChartId,Objects[i].Name);
+        }
+     }
+
+public:
+                     CObjectProperties(void) {}//Class constructor
+
+   //-- Create Rectangle chart object
+   void              Square(long chart_ID,string name,int x_coord,int y_coord,int width,int height,ENUM_ANCHOR_POINT Anchor);
+
+   //-- Create text chart object
+   void              TextObj(long chartID,string name,string text,int x_coord,int y_coord,
+                             ENUM_BASE_CORNER Corner=CORNER_LEFT_UPPER,int fontsize=10);
+
+   //-- Create Event object
+   void               EventObj(long chartID,string name,string description,datetime eventdate);
+
+   //-- Class destructor removes all chart objects created previously
+                    ~CObjectProperties(void)
+     {
+      DeleteObj();
+     }
+  };
+```
+
+As we can see below the parameters for the Textobj function are many, to avoid making the parameters longer we will just use Textobj\_color to change the text object's color.
+
+```
+//+------------------------------------------------------------------+
+//|Create text chart object                                          |
+//+------------------------------------------------------------------+
+void CObjectProperties::TextObj(long chartID,string name,string text,int x_coord,int y_coord,
+                                ENUM_BASE_CORNER Corner=CORNER_LEFT_UPPER,int fontsize=10)
+  {
+   ObjectDelete(chartID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chartID,name,OBJ_LABEL,0,0,0))//Create object label
+     {
+      AddObj(chartID,name);//Add object to array
+      ObjectSetInteger(chartID,name,OBJPROP_XDISTANCE,x_coord);//Set x Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_YDISTANCE,y_coord);//Set y Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_CORNER,Corner);//Set object's corner anchor
+      ObjectSetString(chartID,name,OBJPROP_TEXT,text);//Set object's text
+      ObjectSetInteger(chartID,name,OBJPROP_COLOR,TextObj_color);//Set object's color
+      ObjectSetInteger(chartID,name,OBJPROP_FONTSIZE,fontsize);//Set object's font-size
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+```
+
+A small change was made to our function Square to allow for different background colors depending on the chart color mode.
+
+```
+//+------------------------------------------------------------------+
+//|Create Rectangle chart object                                     |
+//+------------------------------------------------------------------+
+void CObjectProperties::Square(long chart_ID,string name,int x_coord,int y_coord,int width,int height,ENUM_ANCHOR_POINT Anchor)
+  {
+   const int              sub_window=0;             // subwindow index
+   const int              x=x_coord;                // X coordinate
+   const int              y=y_coord;                // Y coordinate
+   const color            back_clr=(isLightMode)?clrWhite:clrBlack;// background color
+   const ENUM_BORDER_TYPE border=BORDER_SUNKEN;     // border type
+   const color            clr=clrRed;               // flat border color (Flat)
+   const ENUM_LINE_STYLE  style=STYLE_SOLID;        // flat border style
+   const int              line_width=0;             // flat border width
+   const bool             back=false;               // in the background
+   const bool             selection=false;          // highlight to move
+   const bool             hidden=true;              // hidden in the object list
+
+   ObjectDelete(chart_ID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chart_ID,name,OBJ_RECTANGLE_LABEL,sub_window,0,0))//create rectangle object label
+     {
+      AddObj(chart_ID,name);//Add object to array
+      ObjectSetInteger(chart_ID,name,OBJPROP_XDISTANCE,x);//Set x Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_YDISTANCE,y);//Set y Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_XSIZE,width);//Set object's width/x-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_YSIZE,height);//Set object's height/y-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_BGCOLOR,back_clr);//Set object's background color
+      ObjectSetInteger(chart_ID,name,OBJPROP_BORDER_TYPE,border);//Set object's border type
+      ObjectSetInteger(chart_ID,name,OBJPROP_ANCHOR,Anchor);//Set objects anchor point
+      ObjectSetInteger(chart_ID,name,OBJPROP_COLOR,clr);//Set object's color
+      ObjectSetInteger(chart_ID,name,OBJPROP_STYLE,style);//Set object's style
+      ObjectSetInteger(chart_ID,name,OBJPROP_WIDTH,line_width);//Set object's flat border width
+      ObjectSetInteger(chart_ID,name,OBJPROP_BACK,back);//Set if object is in foreground or not
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTABLE,selection);//Set if object is selectable/dragable
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTED,selection);//Set if object is Selected
+      ObjectSetInteger(chart_ID,name,OBJPROP_HIDDEN,hidden);//Set if object is hidden in object list
+      ChartRedraw(chart_ID);
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+```
+
+### CommonVariables Header File
+
+For trading purposes I decided to create a database in memory, this database needs a name and the name will take in consideration the broker's name, the current chart ID, and whether the expert is in the strategy tester or not.
+
+```
+#define NEWS_DATABASE_MEMORY           StringFormat("Calendar_%s_%d_%s.sqlite",broker,ChartID(),(MQLInfoInteger(MQL_TESTER)?"TESTER":"REAL"))
+```
+
+The enumeration Choice is for personalization and will be used for the expert's input, this will replace the Boolean datatype. The DayOfTheWeek enumeration will be used to select the trading day of the week without Saturday and Sunday. Whereas the Boolean function Answer will convert the Choice enumeration into a Boolean datatype.
+
+```
+enum Choice
+  {
+   Yes,//YES
+   No//NO
+  };
+
+enum DayOfTheWeek
+  {
+   Monday,//MONDAY
+   Tuesday,//TUESDAY
+   Wednesday,//WEDNESDAY
+   Thursday,//THURSDAY
+   Friday,//FRIDAY
+   AllDays//ALL DAYS
+  };
+
+//+------------------------------------------------------------------+
+//|Convert enumeration Choice into a boolean value                   |
+//+------------------------------------------------------------------+
+bool Answer(Choice choose)
+  {
+   return (choose==Yes)?true:false;
+  }
+```
+
+### 
+
+### Time Variables Class
+
+This class's purpose is to store candlestick's time data, this data will be used to check if a new candle has formed.
+
+```
+//+------------------------------------------------------------------+
+//|TimeVariables class                                               |
+//+------------------------------------------------------------------+
+class CTimeVariables
+  {
+private:
+   //---Array to store candlestick times
+   datetime          CandleTime[2000];
+public:
+                     CTimeVariables(void);
+   //---Set Array index time
+   void              SetTime(uint index,datetime time);
+   //---Get Array index time
+   datetime          GetTime(uint index);
+  };
+```
+
+In the constructor, we will set a default time for all the indexes within the CandleTime array.
+
+```
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CTimeVariables::CTimeVariables()
+  {
+   for(uint i=0; i<CandleTime.Size(); i++)
+     {
+      CandleTime[i]=D'1970.01.01';
+     }
+  }
+```
+
+In the function SetTime we have two parameters, one for the array index and the other for datetime. If the index argument is more than or equal to zero and less than the CandleTime size, then we will assign the array index with the time argument.
+
+```
+//+------------------------------------------------------------------+
+//|Set Array index time                                              |
+//+------------------------------------------------------------------+
+void CTimeVariables::SetTime(uint index,datetime time)
+  {
+   if(index>=0&&index<CandleTime.Size())
+     {
+      CandleTime[index] = time;
+     }
+  }
+```
+
+The function GetTime will accept one positive integer argument, to retrieve the datetime from the array index value from CandleTime if the index argument is valid.
+
+```
+//+------------------------------------------------------------------+
+//|Get Array index time                                              |
+//+------------------------------------------------------------------+
+datetime CTimeVariables::GetTime(uint index)
+  {
+   return (index>=0&&index<CandleTime.Size())?CandleTime[index]:datetime(0);
+  }
+```
+
+### 
+
+### Time Management Class
+
+We will declare DSTSchedule enumeration for the user/trader to select between Auto DST or Custom DST for the expert's input. MySchedule variable will be used to store the custom DST.
+
+```
+//-- Enumeration for DST schedule
+enum DSTSchedule
+  {
+   AutoDst_Selection,//AUTO DST
+   CustomDst_Selection//CUSTOM DST
+  } MyDST;
+
+DST_type MySchedule;//Variable for custom DST schedule
+```
+
+The function below will return the hour for a specific date in an integer datatype.
+
+```
+int               ReturnHour(datetime time);//Returns the Hour for a specific date
+```
+
+```
+//+------------------------------------------------------------------+
+//|Returns the Hour for a specific date                              |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnHour(datetime time)
+  {
+   return Time(time).hour;
+  }
+```
+
+The function below will return the minute for a specific date in an integer datatype. 
+
+```
+int               ReturnMinute(datetime time);//Returns the Minute for a specific date
+```
+
+```
+//+------------------------------------------------------------------+
+//|Returns the Minute for a specific date                            |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnMinute(datetime time)
+  {
+   return Time(time).min;
+  }
+```
+
+The function below will return the second for a specific date in an integer datatype. 
+
+```
+int               ReturnSecond(datetime time);//Returns the Second for s specific date
+```
+
+```
+//+------------------------------------------------------------------+
+//|Returns the Second for s specific date                            |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnSecond(datetime time)
+  {
+   return Time(time).sec;
+  }
+```
+
+The function below will return the MqlDateTime for the datetime argument.
+
+```
+//-- Will convert datetime to MqlDateTime
+   MqlDateTime       Time(datetime Timetoformat);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Will convert datetime to MqlDateTime                              |
+//+------------------------------------------------------------------+
+MqlDateTime CTimeManagement::Time(datetime Timetoformat)
+  {
+   TimeToStruct(Timetoformat,timeFormat);
+   return timeFormat;
+  }
+```
+
+The function below will return the datetime for the datetime argument time with modification to the hour, minute and second.
+
+```
+//-- Will return a datetime with changes to the hour,minute and second
+   datetime          Time(datetime time,int Hour,int Minute,int Second);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Will return a datetime with changes to the hour,minute and second |
+//+------------------------------------------------------------------+
+datetime CTimeManagement::Time(datetime time,int Hour,int Minute,int Second)
+  {
+   timeFormat=Time(time);
+   timeFormat.hour=Hour;
+   timeFormat.min=Minute;
+   timeFormat.sec=Second;
+   return StructToTime(timeFormat);
+  }
+```
+
+The function below will return the datetime for the datetime argument time with modification to the hour and minute.
+
+```
+//-- Will return a datetime with changes to the hour and minute
+   datetime          Time(datetime time,int Hour,int Minute);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Will return a datetime with changes to the hour and minute        |
+//+------------------------------------------------------------------+
+datetime CTimeManagement::Time(datetime time,int Hour,int Minute)
+  {
+   timeFormat=Time(time);
+   timeFormat.hour=Hour;
+   timeFormat.min=Minute;
+   return StructToTime(timeFormat);
+  }
+```
+
+The function below will return true if the TimeTradeServer time is within the BeginTime and EndTime arguments.
+
+```
+//-- Check current time is within a time range
+   bool              TimeIsInRange(datetime BeginTime,datetime EndTime);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Check current time is within a time range                         |
+//+------------------------------------------------------------------+
+bool CTimeManagement::TimeIsInRange(datetime BeginTime,datetime EndTime)
+  {
+   if(BeginTime<=TimeTradeServer()&&EndTime>=TimeTradeServer())
+     {
+      return true;
+     }
+   return false;
+  }
+```
+
+The function below will return true if the PreEvent datetime is less than or equal to TimeTradeServer and EventTime is more than TimeTradeServer.
+
+```
+//-- Check if current time is within preEvent time and Event time
+   bool              TimePreEvent(datetime PreEvent,datetime Event);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Check if current time is within preEvent time and Event time      |
+//+------------------------------------------------------------------+
+bool CTimeManagement::TimePreEvent(datetime PreEventTime,datetime EventTime)
+  {
+   if(PreEventTime<=TimeTradeServer()&&EventTime>TimeTradeServer())
+     {
+      return true;
+     }
+   return false;
+  }
+```
+
+The function below will return the MqlDateTime for the current time with modification to the hour and minute.
+
+```
+//-- Return MqlDateTime for current date time with custom hour and minute
+   MqlDateTime       Today(int Hour,int Minute);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Return MqlDateTime for current date time with custom hour and     |
+//|minute                                                            |
+//+------------------------------------------------------------------+
+MqlDateTime CTimeManagement::Today(int Hour,int Minute)
+  {
+   TimeTradeServer(today);
+   today.hour=Hour;
+   today.min=Minute;
+   return today;
+  }
+```
+
+The function below will return the MqlDateTime for the current time with modification to the hour, minute and second.
+
+```
+//-- Return MqlDateTime for current date time with custom hour, minute and second
+   MqlDateTime       Today(int Hour,int Minute,int Second);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Return MqlDateTime for current date time with custom hour, minute |
+//|and second                                                        |
+//+------------------------------------------------------------------+
+MqlDateTime CTimeManagement::Today(int Hour,int Minute,int Second)
+  {
+   TimeTradeServer(today);
+   today.hour=Hour;
+   today.min=Minute;
+   today.sec=Second;
+   return today;
+  }
+```
+
+The function below will return true if the current day is equal to the corresponding day of the week, or the enumeration DayOfTheWeek is equal to AllDays.
+
+```
+//-- Check current day of the week
+   bool              isDayOfTheWeek(DayOfTheWeek Day);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Check current day of the week                                     |
+//+------------------------------------------------------------------+
+bool CTimeManagement::isDayOfTheWeek(DayOfTheWeek Day)
+  {
+   switch(Day)
+     {
+      case  Monday://Monday
+         if(DayOfWeek(TimeTradeServer())==MONDAY)
+           {
+            return true;
+           }
+         break;
+      case Tuesday://Tuesday
+         if(DayOfWeek(TimeTradeServer())==TUESDAY)
+           {
+            return true;
+           }
+         break;
+      case Wednesday://Wednesday
+         if(DayOfWeek(TimeTradeServer())==WEDNESDAY)
+           {
+            return true;
+           }
+         break;
+      case Thursday://Thursday
+         if(DayOfWeek(TimeTradeServer())==THURSDAY)
+           {
+            return true;
+           }
+         break;
+      case Friday://Friday
+         if(DayOfWeek(TimeTradeServer())==FRIDAY)
+           {
+            return true;
+           }
+         break;
+      case AllDays://All days
+         return true;
+         break;
+      default://Unknown
+         break;
+     }
+   return false;
+  }
+```
+
+The function below will return the Day of Week for a specific date.
+
+```
+//-- Return enumeration Day of week for a certain date
+   ENUM_DAY_OF_WEEK  DayOfWeek(datetime time);
+```
+
+```
+//+------------------------------------------------------------------+
+//|Return enumeration Day of week for a certain date                 |
+//+------------------------------------------------------------------+
+ENUM_DAY_OF_WEEK CTimeManagement::DayOfWeek(datetime time)
+  {
+   return (ENUM_DAY_OF_WEEK)Time(time).day_of_week;
+  }
+```
+
+### Candle Properties Class
+
+A new function has been added to this class.
+
+```
+//+------------------------------------------------------------------+
+//|CandleProperties class                                            |
+//+------------------------------------------------------------------+
+class CCandleProperties : public CChartProperties
+  {
+private:
+   CTimeManagement   Time;//TimeManagement object
+   CTimeVariables    CTV;//Timevariables object
+public:
+   double            Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Open-Price
+   double            Close(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Close-Price
+   double            High(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle High-Price
+   double            Low(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Low-Price
+   bool              IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL);//Determine if one candle is larger than two others
+   bool              NewCandle(int index,ENUM_TIMEFRAMES period=PERIOD_CURRENT,string SYMBOL=NULL);//Check if a new candle is present
+  };
+```
+
+The function NewCandle will return true when a new candle has formed, and will then save the current candle's open time in the class Timevariables using the function SetTime. The previously saved time will be compared with the current candle's open time to check if the times are different, if the times are different, then we assume a new candle has formed.
+
+```
+//+------------------------------------------------------------------+
+//|Check if a new candle is present                                  |
+//+------------------------------------------------------------------+
+bool CCandleProperties::NewCandle(int index,ENUM_TIMEFRAMES period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   if(CTV.GetTime(index) == iTime(((SYMBOL==NULL)?Symbol():SYMBOL),period,0))
+     {
+      return false;//Candle time are equal no new candles have formed
+     }
+   else
+     {
+     //--- Candle time has changed set the new time
+      CTV.SetTime(index,iTime(((SYMBOL==NULL)?Symbol():SYMBOL),period,0));
+      return true;
+     }
+  }
+```
+
+### 
+
+### Sessions Class
+
+This class's purpose is to deal with session trading times. We won't make use of these trading sessions times in this article, but we will have a use for this class later on. This class will inherit from the TimeManagement class as this class will utilize the functions in TimeManagement.
+
+> 
+
+```
+#include "Timemanagement.mqh"
+//+------------------------------------------------------------------+
+//|Sessions Class                                                    |
+//+------------------------------------------------------------------+
+class CSessions:CTimeManagement
+  {
+public:
+                     CSessions(void) {}
+                    ~CSessions(void) {}
+   //--- Check if trading Session has began
+   bool              isSessionStart(int offsethour=0,int offsetmin=0);
+   //--- Check if trading Session has ended
+   bool              isSessionEnd(int offsethour=0,int offsetmin=45);
+   //--- Get Session End datetime
+   datetime          SessionEnd(int offsethour=0,int offsetmin=45);
+  };
+```
+
+The function below will check all valid trading Sessions for the current Symbol and Day Of Week, Once the earliest trading session is found we will add and offset to this time ex. if the earliest trading session is from 01:00-05:00 then our offset hour is 1 and the offset minute is 0, our trading session will start at 02:00-05:00. The purpose of knowing the starting session time is to avoid large spreads that usually occur at the beginning of the trading session. If our trading session is currently active, the function will return true.
+
+```
+//+------------------------------------------------------------------+
+//|Check if trading Session has started                              |
+//+------------------------------------------------------------------+
+bool CSessions::isSessionStart(int offsethour=0,int offsetmin=0)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateFrom[],DateTo[];
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateFrom Array size
+         ArrayResize(DateFrom,int(ArraySize(DateFrom))+1,int(ArraySize(DateFrom))+2);
+         //--- Assign the last array index datefrom value
+         DateFrom[int(ArraySize(DateFrom))-1] = datefrom;
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateFrom.Size()>0)
+     {
+      /* Adjust DateFrom index zero date as the first index date will be the earliest date
+       from the whole array, we add the offset to this date only*/
+      DateFrom[0] = TimePlusOffset(DateFrom[0],MinutesS(startoffsetmin));
+      DateFrom[0] = TimePlusOffset(DateFrom[0],HoursS(startoffsethour));
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateFrom.Size(); i++)
+        {
+         //--- Check if the current time is within the trading session
+         if(TimeIsInRange(DateFrom[i],DateTo[i]))
+           {
+            return true;
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return true;
+     }
+   return false;
+  }
+```
+
+The function below will return the true if the session has ended, on some brokers an hour before the trading session ends spreads are huge, so this function can help us avoid trading during those times.
+
+```
+//+------------------------------------------------------------------+
+//|Check if trading Session has ended                                |
+//+------------------------------------------------------------------+
+bool CSessions::isSessionEnd(int offsethour=0,int offsetmin=45)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateTo.Size()>0)
+     {
+      //--- Assign lastdate a default value
+      lastdate = DateTo[0];
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateTo.Size(); i++)
+        {
+         //--- Check for the latest date in the array
+         if(DateTo[i]>lastdate)
+           {
+            lastdate = DateTo[i];
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return false;
+     }
+   /* get the current time and modify the hour and minute time to the lastdate variable
+   and assign the new datetime to sessionend variable*/
+   sessionend = Today(ReturnHour(lastdate),ReturnMinute(lastdate));
+//--- Re-adjust the sessionend dates with the minute and hour offsets
+   sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+   sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+
+//--- Check if sessionend date is more than the current time
+   if(TimeTradeServer()<sessionend)
+     {
+      return false;
+     }
+   return true;
+  }
+```
+
+The function below will return the trading session ending date for the current day, there are some limitations to trading session times in MQL5, I've noticed that during a holiday some symbols can close a lot earlier than the trading session time would indicate so that is something to keep in mind.
+
+```
+//+------------------------------------------------------------------+
+//|Get Session End datetime                                          |
+//+------------------------------------------------------------------+
+datetime CSessions::SessionEnd(int offsethour=0,int offsetmin=45)
+  {
+//--- Declarations
+   datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+
+//--- Find all session times
+   for(int i=0; i<10; i++)
+     {
+      //--- Get the session dates for the current symbol and Day of week
+      if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+        {
+         //--- Check if the end date's hour is at midnight
+         if(CTV.ReturnHour(dateto)==00||CTV.ReturnHour(dateto)==24)
+           {
+            //--- Adjust the date to one minute before midnight
+            dateto = Time(TimeTradeServer(),23,59);
+           }
+         //--- Re-adjust DateTo Array size
+         ArrayResize(DateTo,int(ArraySize(DateTo))+1,int(ArraySize(DateTo))+2);
+         //--- Assign the last array index dateto value
+         DateTo[int(ArraySize(DateTo))-1] = dateto;
+        }
+     }
+
+//--- Check if there are session times
+   if(DateTo.Size()>0)
+     {
+      //--- Assign lastdate a default value
+      lastdate = DateTo[0];
+      //--- Iterate through the whole array
+      for(uint i=0; i<DateTo.Size(); i++)
+        {
+         //--- Check for the latest date in the array
+         if(DateTo[i]>lastdate)
+           {
+            lastdate = DateTo[i];
+           }
+        }
+     }
+   else
+     {
+      //--- If there are no trading session times
+      return 0;
+     }
+   /* get the current time and modify the hour and minute time to the lastdate variable
+   and assign the new datetime to sessionend variable*/
+   sessionend = Today(ReturnHour(lastdate),ReturnMinute(lastdate));
+//--- Re-adjust the sessionend dates with the minute and hour offsets
+   sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+   sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+//--- return sessionend date
+   return sessionend;
+  }
+```
+
+### News Class
+
+This class is the most crucial in the whole project and the largest, spanning over 1000 lines of code alone. From part 2 we made major improvements to this class and the code that interacts with the calendar database in the common folder. In this article we will create another database but this time, the database will be in memory.
+
+**Benefits of DBs in memory compared to storage**
+
+- Speed: In-memory databases store data directly in RAM, leading to significantly faster read and write operations. This is especially beneficial for applications requiring real-time data processing and analytics. Since RAM is much faster than disk storage, accessing data in an in-memory database is quicker. This reduces response times and improves overall performance.
+- Performance: The reduced latency and faster data access translate into higher throughput, meaning the database can handle more transactions per second. In-memory databases can process large volumes of data more efficiently, making them suitable for big data applications, analytics, and other intensive computing tasks.
+
+We will still use our DB in storage, we will collect the data from the DB in storage and transfer this data into our new DB in memory for a balanced performance when back-testing as only using the DB in storage will affect before drastically depending on your computer's specs.
+
+We will start off with the declarations outside the class for use in the expert's input. The DBMemoryConnection integer variable will hold the integer connection handle for our database in memory. Calendar\_Importance enumeration will be used to select different event importance in the expert's input parameter. Event\_Sector enumeration will be used to select different event sectors in the expert's input parameter. Event\_Frequency enumeration will be used to select different event frequencies for the expert's input parameter. Event\_Type enumeration will be used to select different event types for the expert's input parameter. Event\_Currency enumeration will be used to select different event currency options in the expert's input parameter. UpcomingNews Calendar structure variable will store the next economic event details for easy access in other class/files, we declared it outside the news class.
+
+```
+int       DBMemoryConnection;//In memory database handle
+
+//--- Enumeration for Calendar Importance
+enum Calendar_Importance
+  {
+   Calendar_Importance_None,//NONE
+   Calendar_Importance_Low,//LOW
+   Calendar_Importance_Moderate,//MODERATE
+   Calendar_Importance_High,//HIGH
+   Calendar_Importance_All//ALL
+  } myImportance;
+
+//--- Enumeration for Calendar Sector
+enum Event_Sector
+  {
+   Event_Sector_None,//NONE
+   Event_Sector_Market,//MARKET
+   Event_Sector_Gdp,//GDP
+   Event_Sector_Jobs,//JOBS
+   Event_Sector_Prices,//PRICES
+   Event_Sector_Money,//MONEY
+   Event_Sector_Trade,//TRADE
+   Event_Sector_Government,//GOVERNMENT
+   Event_Sector_Business,//BUSINESS
+   Event_Sector_Consumer,//CONSUMER
+   Event_Sector_Housing,//HOUSING
+   Event_Sector_Taxes,//TAXES
+   Event_Sector_Holidays,//HOLIDAYS
+   Event_Sector_ALL//ALL
+  } mySector;
+
+//--- Enumeration for Calendar Event Frequency
+enum Event_Frequency
+  {
+   Event_Frequency_None,//NONE
+   Event_Frequency_Week,//WEEK
+   Event_Frequency_Month,//MONTH
+   Event_Frequency_Quarter,//QUARTER
+   Event_Frequency_Year,//YEAR
+   Event_Frequency_Day,//DAY
+   Event_Frequency_ALL//ALL
+  } myFrequency;
+
+//--- Enumeration for Calendar Event type
+enum Event_Type
+  {
+   Event_Type_Event,//EVENT
+   Event_Type_Indicator,//INDICATOR
+   Event_Type_Holiday,//HOLIDAY
+   Event_Type_All//ALL
+  } myType;
+
+//--- Enumeration for Calendar Event Currency
+enum Event_Currency
+  {
+   Event_Currency_Symbol,//SYMBOL CURRENCIES
+   Event_Currency_Margin,//SYMBOL MARGIN
+   Event_Currency_Base,//SYMBOL BASE
+   Event_Currency_Profit,//SYMBOL PROFIT
+   Event_Currency_ALL,//ALL CURRENCIES
+   Event_Currency_NZD_NZ,//NZD -> NZ
+   Event_Currency_EUR_EU,//EUR -> EU
+   Event_Currency_JPY_JP,//JPY -> JP
+   Event_Currency_CAD_CA,//CAD -> CA
+   Event_Currency_AUD_AU,//AUD -> AU
+   Event_Currency_CNY_CN,//CNY -> CN
+   Event_Currency_EUR_IT,//EUR -> IT
+   Event_Currency_SGD_SG,//SGD -> SG
+   Event_Currency_EUR_DE,//EUR -> DE
+   Event_Currency_EUR_FR,//EUR -> FR
+   Event_Currency_BRL_BR,//BRL -> BR
+   Event_Currency_MXN_MX,//MXN -> MX
+   Event_Currency_ZAR_ZA,//ZAR -> ZA
+   Event_Currency_HKD_HK,//HKD -> HK
+   Event_Currency_INR_IN,//INR -> IN
+   Event_Currency_NOK_NO,//NOK -> NO
+   Event_Currency_USD_US,//USD -> US
+   Event_Currency_GBP_GB,//GBP -> GB
+   Event_Currency_CHF_CH,//CHF -> CH
+   Event_Currency_KRW_KR,//KRW -> KW
+   Event_Currency_EUR_ES,//EUR -> ES
+   Event_Currency_SEK_SE,//SEK -> SE
+   Event_Currency_ALL_WW//ALL -> WW
+  } myCurrency;
+
+//--- Structure variable to store Calendar next Event data
+Calendar UpcomingNews;
+```
+
+Additional functionality to the news class:
+
+- Expansion to the Enumeration CalendarComponents: EventInfo\_View was added to show event details in the calendar storage database, Currencies\_View was added to show all currencies available by the MQL5 economic calendar.
+- Structure Array CalendarContents has increased by size from 10 to 12 to accommodate the two new views EventInfo\_View and Currencies\_View.
+- Declaration of DBMemory variable of MQL5CalendarContents structure type to store DB properties.
+- Declaration of CalendarData structure and variables to store all data from the Calendar DB in the common folder.
+- Declaration of the function GetCalendar which will request all the filtered data from the calendar DB in the common folder and store this data into the CalendarData structure array Data this array data will be inserted into our new calendar DB in memory once it is created.
+- Declaration of the function GetAutoDST to retrieve the enumeration DST\_type from the table AutoDST in the Calendar DB in the common folder.
+- Declaration of the function Request\_Importance to retrieve the string request for the event importance based on the Calendar\_Importance enumeration.
+- Declaration of the function Request\_Frequency to retrieve the string request for the event frequency based on the Event\_Frequency enumeration.
+- Declaration of the function Request\_Sector to retrieve the string request for the event sector based on the Event\_Sector enumeration.
+- Declaration of the function Request\_Type to retrieve the string request for the event type based on the Event\_Type enumeration.
+- Declaration of the function Request\_Currency to retrieve the string request for the event currency based on the Event\_Currency enumeration.
+- Declaration of the function EconomicDetailsMemory will populate the NewsTime Calendar structure array with the events for a specific date.
+- Declaration of the function CreateEconomicDatabaseMemory will create the calendar database in memory.
+- Declaration of the function EconomicNextEvent will update UpcomingNews structure variable with the next event data.
+- Declaration of the function GetImpact will retrieve Upcoming Event Impact data.
+- Declaration of the function IMPORTANCE will convert the Importance string into Calendar Event Importance Enumeration.
+- Declaration of the function IMPORTANCE will convert Calendar\_Importance Enumeration into Calendar Event Importance Enumeration.
+- Declaration of the function GetImportance will convert Calendar Event Importance Enumeration into string Importance Rating.
+- Declaration of the function GetImportance\_color will retrieve color for each Calendar Event Importance Enumeration.
+- Declaration of the function SECTOR will convert Event\_Sector Enumeration into Calendar Event Sector Enumeration.
+- Declaration of the function FREQUENCY will convert Event\_Frequency Enumeration into Calendar Event Frequency Enumeration.
+- Declaration of the function TYPE will convert Event\_Type Enumeration into Calendar Event Type Enumeration.
+
+```
+//+------------------------------------------------------------------+
+//|News class                                                        |
+//+------------------------------------------------------------------+
+class CNews : private CCandleProperties
+  {
+   //Private Declarations Only accessable by this class/header file
+private:
+
+   //-- To keep track of what is in our database
+   enum CalendarComponents
+     {
+      AutoDST_Table,//AutoDST Table
+      CalendarAU_View,//View for DST_AU
+      CalendarNONE_View,//View for DST_NONE
+      CalendarUK_View,//View for DST_UK
+      CalendarUS_View,//View for DST_US
+      EventInfo_View,//View for Event Information
+      Currencies_View,//View for Currencies
+      Record_Table,// Record Table
+      TimeSchedule_Table,//TimeSchedule Table
+      MQL5Calendar_Table,//MQL5Calendar Table
+      AutoDST_Trigger,//Table Trigger for AutoDST
+      Record_Trigger//Table Trigger for Record
+     };
+
+   //-- structure to retrieve all the objects in the database
+   struct SQLiteMaster
+     {
+      string         type;//will store object's type
+      string         name;//will store object's name
+      string         tbl_name;//will store table name
+      int            rootpage;//will store rootpage
+      string         sql;//Will store the sql create statement
+     } DBContents[];//Array of type SQLiteMaster
+
+   //--  MQL5CalendarContents inherits from SQLiteMaster structure
+   struct MQL5CalendarContents:SQLiteMaster
+     {
+      CalendarComponents  Content;
+      string         insert;//Will store the sql insert statement
+     } CalendarContents[12],DBMemory;//Array to Store objects in our database
+
+   CTimeManagement   CTime;//TimeManagement Object declaration
+   CDaylightSavings_UK  Savings_UK;//DaylightSavings Object for the UK and EU
+   CDaylightSavings_US  Savings_US;//DaylightSavings Object for the US
+   CDaylightSavings_AU  Savings_AU;//DaylightSavings Object for the AU
+
+   bool              AutoDetectDST(DST_type &dstType);//Function will determine Broker DST
+   DST_type          DSTType;//variable of DST_type enumeration declared in the CommonVariables class/header file
+   bool              InsertIntoTables(int db,Calendar &Evalues[]);//Function for inserting Economic Data in to a database's table
+   void              CreateAutoDST(int db);//Function for creating and inserting Recommend DST for the Broker into a table
+   bool              CreateCalendarTable(int db,bool &tableExists);//Function for creating a table in a database
+   bool              CreateTimeTable(int db,bool &tableExists);//Function for creating a table in a database
+   void              CreateCalendarViews(int db);//Function for creating views in a database
+   void              CreateRecordTable(int db);//Creates a table to store the record of when last the Calendar database was updated/created
+   string            DropRequest;//Variable for dropping tables in the database
+
+   //-- Function for retrieving the MQL5CalendarContents structure for the enumartion type CalendarComponents
+   MQL5CalendarContents CalendarStruct(CalendarComponents Content)
+     {
+      MQL5CalendarContents Calendar;
+      for(uint i=0;i<CalendarContents.Size();i++)
+        {
+         if(CalendarContents[i].Content==Content)
+           {
+            return CalendarContents[i];
+           }
+        }
+      return Calendar;
+     }
+
+   //--- To Store Calendar DB Data
+   struct CalendarData
+     {
+      int            EventId;//Event Id
+      string         Country;//Event Country
+      string         EventName;//Event Name
+      string         EventType;//Event Type
+      string         EventImportance;//Event Importance
+      string         EventCurrency;//Event Currency
+      string         EventCode;//Event Code
+      string         EventSector;//Event Sector
+      string         EventForecast;//Event Forecast Value
+      string         EventPreval;//Event Previous Value
+      string         EventImpact;//Event Impact
+      string         EventFrequency;//Event Frequency
+      string         DST_UK;//DST UK
+      string         DST_US;//DST US
+      string         DST_AU;//DST AU
+      string         DST_NONE;//DST NONE
+     } DB_Data[],DB_Cal;//Structure variables
+
+   //--- Will Retrieve all relevant Calendar data for DB in Memory from DB in Storage
+   void              GetCalendar(CalendarData &Data[])
+     {
+      //--- Open calendar DB in Storage
+      int db=DatabaseOpen(NEWS_DATABASE_FILE, DATABASE_OPEN_READWRITE | DATABASE_OPEN_CREATE| DATABASE_OPEN_COMMON);
+      if(db==INVALID_HANDLE)//Checks if the database was able to be opened
+        {
+         //if opening the database failed
+         if(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))//Checks if the database Calendar exists in the common folder
+           {
+            return;//Returns true when the database was failed to be opened and the file doesn't exist in the common folder
+           }
+        }
+      //--- Get filtered calendar DB data
+      string SqlRequest = StringFormat("Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,"
+                                       "MQ.EventCode,MQ.EventSector,MQ.EventForecast,MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,"
+                                       "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+                                       "Inner Join %s TS on TS.ID=MQ.ID "
+                                       "Where %s and %s and %s and %s and %s;",
+                                       CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+                                       Request_Importance(myImportance),Request_Frequency(myFrequency),
+                                       Request_Sector(mySector),Request_Type(myType),Request_Currency(myCurrency));
+      //--- Process Sql request
+      int Request = DatabasePrepare(db,SqlRequest);
+      if(Request==INVALID_HANDLE)
+        {
+         //--- Print details if request failed.
+         Print("DB: ",NEWS_DATABASE_FILE, " request failed with code ", GetLastError());
+         Print("SQL");
+         Print(SqlRequest);
+        }
+      else
+        {
+         //--- Clear data from whole array
+         ArrayRemove(Data,0,WHOLE_ARRAY);
+         //--- create structure variable to get data from request
+         CalendarData data;
+         //Assigning values from the sql query into Data structure array
+         for(int i=0; DatabaseReadBind(Request,data); i++)
+           {
+            //--- Resize Data Array
+            ArrayResize(Data,i+1,i+2);
+            Data[i]  = data;
+           }
+        }
+      DatabaseFinalize(Request);//Finalize request
+      //--- Close Calendar database
+      DatabaseClose(db);
+     }
+
+   //--- Retrieve the AutoDST enumeration data from calendar DB in storage
+   DST_type          GetAutoDST()
+     {
+      string Sch_Dst;
+      //--- open the database 'Calendar' in the common folder
+      int db=DatabaseOpen(NEWS_DATABASE_FILE, DATABASE_OPEN_READONLY|DATABASE_OPEN_COMMON);
+
+      if(db==INVALID_HANDLE)//Checks if 'Calendar' failed to be opened
+        {
+         if(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))//Checks if 'Calendar' database exists
+           {
+            Print("Could not find Database!");
+            return DST_NONE;//return default value when failed.
+           }
+        }
+
+      //--- Sql query to get AutoDST value
+      string request_text="SELECT DST FROM 'AutoDST'";
+      //--- Process sql request
+      int request=DatabasePrepare(db,request_text);
+      if(request==INVALID_HANDLE)
+        {
+         Print("DB: ",NEWS_DATABASE_FILE, " request failed with code ", GetLastError());
+         DatabaseClose(db);//Close Database
+         return DST_NONE;//return default value when failed.
+        }
+
+      //--- Read Sql request output data
+      if(DatabaseRead(request))
+        {
+         //-- Store the first column data into string variable Sch_Dst
+         if(!DatabaseColumnText(request,0,Sch_Dst))
+           {
+            Print("DatabaseRead() failed with code ", GetLastError());
+            DatabaseFinalize(request);//Finalize request
+            DatabaseClose(db);//Closes the database 'Calendar'
+            return DST_NONE;//return default value when failed.
+           }
+        }
+      DatabaseFinalize(request);//Finalize request
+      DatabaseClose(db);//Closes the database 'Calendar'
+      return (Sch_Dst=="DST_UK")?DST_UK:(Sch_Dst=="DST_US")?DST_US:
+             (Sch_Dst=="DST_AU")?DST_AU:DST_NONE;//Returns the enumeration value for each corresponding string
+     }
+
+   //--- Retrieve Sql request string for calendar event Importance
+   string            Request_Importance(Calendar_Importance Importance)
+     {
+      //--- Constant request prefix string
+      const string constant="MQ.EventImportance";
+      //--- switch statement for Calendar_Importance enumeration
+      switch(Importance)
+        {
+         case Calendar_Importance_All://String Request for all event Importance
+            return constant+"<>'"+EnumToString(myImportance)+"'";
+            break;
+         default://String Request for any event Importance
+            return constant+"='"+EnumToString(IMPORTANCE(myImportance))+"'";
+            break;
+        }
+     }
+
+   //--- Retrieve Sql request string for calendar event Frequency
+   string            Request_Frequency(Event_Frequency Frequency)
+     {
+      //--- Constant request prefix string
+      const string constant="MQ.EventFrequency";
+      //--- switch statement for Event_Frequency enumeration
+      switch(Frequency)
+        {
+         case Event_Frequency_ALL://String Request for all event frequencies
+            return constant+"<>'"+EnumToString(myFrequency)+"'";
+            break;
+         default://String Request for any event frequency
+            return constant+"='"+EnumToString(FREQUENCY(myFrequency))+"'";
+            break;
+        }
+     }
+
+   //--- Retrieve Sql request string for calendar event Sector
+   string            Request_Sector(Event_Sector Sector)
+     {
+      //--- Constant request prefix string
+      const string constant="MQ.EventSector";
+      //--- switch statement for Event_Sector enumeration
+      switch(Sector)
+        {
+         case Event_Sector_ALL://String Request for all event sectors
+            return constant+"<>'"+EnumToString(mySector)+"'";
+            break;
+         default://String Request for any event sector
+            return constant+"='"+EnumToString(SECTOR(mySector))+"'";
+            break;
+        }
+     }
+
+   //--- Retrieve Sql request string for calendar event type
+   string            Request_Type(Event_Type Type)
+     {
+      //--- Constant request prefix string
+      const string constant="MQ.EventType";
+      //--- switch statement for Event_Type enumeration
+      switch(Type)
+        {
+         case Event_Type_All://String Request for all event types
+            return constant+"<>'"+EnumToString(myType)+"'";
+            break;
+         default://String request for any event type
+            return constant+"='"+EnumToString(TYPE(myType))+"'";
+            break;
+        }
+     }
+
+   //--- Retrieve Sql request string for calendar event Currency
+   string            Request_Currency(Event_Currency Currency)
+     {
+      //--- Constant request prefix string and request suffix
+      const string constant_prefix="(MQ.EventCurrency",constant_suffix="')";
+      //--- switch statement for Event_Currency enumeration
+      switch(Currency)
+        {
+         case Event_Currency_ALL://String Request for all currencies
+            return constant_prefix+"<>'"+EnumToString(myCurrency)+constant_suffix;
+            break;
+         case Event_Currency_Symbol://String Request for all symbol currencies
+            return constant_prefix+"='"+CSymbol.CurrencyBase()+"' or MQ.EventCurrency='"+
+                   CSymbol.CurrencyMargin()+"' or MQ.EventCurrency='"+CSymbol.CurrencyProfit()+constant_suffix;
+            break;
+         case Event_Currency_Margin://String Request for Margin currency
+            return constant_prefix+"='"+CSymbol.CurrencyMargin()+constant_suffix;
+            break;
+         case Event_Currency_Base://String Request for Base currency
+            return constant_prefix+"='"+CSymbol.CurrencyBase()+constant_suffix;
+            break;
+         case Event_Currency_Profit://String Request for Profit currency
+            return constant_prefix+"='"+CSymbol.CurrencyProfit()+constant_suffix;
+            break;
+         case Event_Currency_NZD_NZ://String Request for NZD currency
+            return constant_prefix+"='NZD' and MQ.EventCode='NZ"+constant_suffix;
+            break;
+         case Event_Currency_EUR_EU://String Request for EUR currency and EU code
+            return constant_prefix+"='EUR' and MQ.EventCode='EU"+constant_suffix;
+            break;
+         case Event_Currency_JPY_JP://String Request for JPY currency
+            return constant_prefix+"='JPY' and MQ.EventCode='JP"+constant_suffix;
+            break;
+         case Event_Currency_CAD_CA://String Request for CAD currency
+            return constant_prefix+"='CAD' and MQ.EventCode='CA"+constant_suffix;
+            break;
+         case Event_Currency_AUD_AU://String Request for AUD currency
+            return constant_prefix+"='AUD' and MQ.EventCode='AU"+constant_suffix;
+            break;
+         case Event_Currency_CNY_CN://String Request for CNY currency
+            return constant_prefix+"='CNY' and MQ.EventCode='CN"+constant_suffix;
+            break;
+         case Event_Currency_EUR_IT://String Request for EUR currency and IT code
+            return constant_prefix+"='EUR' and MQ.EventCode='IT"+constant_suffix;
+            break;
+         case Event_Currency_SGD_SG://String Request for SGD currency
+            return constant_prefix+"='SGD' and MQ.EventCode='SG"+constant_suffix;
+            break;
+         case Event_Currency_EUR_DE://String Request for EUR currency and DE code
+            return constant_prefix+"='EUR' and MQ.EventCode='DE"+constant_suffix;
+            break;
+         case Event_Currency_EUR_FR://String Request for EUR currency and FR code
+            return constant_prefix+"='EUR' and MQ.EventCode='FR"+constant_suffix;
+            break;
+         case Event_Currency_BRL_BR://String Request for BRL currency
+            return constant_prefix+"='BRL' and MQ.EventCode='BR"+constant_suffix;
+            break;
+         case Event_Currency_MXN_MX://String Request for MXN currency
+            return constant_prefix+"='MXN' and MQ.EventCode='MX"+constant_suffix;
+            break;
+         case Event_Currency_ZAR_ZA://String Request for ZAR currency
+            return constant_prefix+"='ZAR' and MQ.EventCode='ZA"+constant_suffix;
+            break;
+         case Event_Currency_HKD_HK://String Request for HKD currency
+            return constant_prefix+"='HKD' and MQ.EventCode='HK"+constant_suffix;
+            break;
+         case Event_Currency_INR_IN://String Request for INR currency
+            return constant_prefix+"='INR' and MQ.EventCode='IN"+constant_suffix;
+            break;
+         case Event_Currency_NOK_NO://String Request for NOK currency
+            return constant_prefix+"='NOK' and MQ.EventCode='NO"+constant_suffix;
+            break;
+         case Event_Currency_USD_US://String Request for USD currency
+            return constant_prefix+"='USD' and MQ.EventCode='US"+constant_suffix;
+            break;
+         case Event_Currency_GBP_GB://String Request for GBP currency
+            return constant_prefix+"='GBP' and MQ.EventCode='GB"+constant_suffix;
+            break;
+         case Event_Currency_CHF_CH://String Request for CHF currency
+            return constant_prefix+"='CHF' and MQ.EventCode='CH"+constant_suffix;
+            break;
+         case Event_Currency_KRW_KR://String Request for KRW currency
+            return constant_prefix+"='KRW' and MQ.EventCode='KR"+constant_suffix;
+            break;
+         case Event_Currency_EUR_ES://String Request for EUR currency and ES code
+            return constant_prefix+"='EUR' and MQ.EventCode='ES"+constant_suffix;
+            break;
+         case Event_Currency_SEK_SE://String Request for SEK currency
+            return constant_prefix+"='SEK' and MQ.EventCode='SE"+constant_suffix;
+            break;
+         case Event_Currency_ALL_WW://String Request for ALL currency
+            return constant_prefix+"='ALL' and MQ.EventCode='WW"+constant_suffix;
+            break;
+         default://String Request for no currencies
+            return constant_prefix+"='"+constant_suffix;
+            break;
+        }
+     }
+
+   //Public declarations accessable via a class's Object
+public:
+                     CNews(void);//Constructor
+                    ~CNews(void);//Destructor
+   void              CreateEconomicDatabase();//Creates the Calendar database for a specific Broker
+   datetime          GetLatestNewsDate();//Gets the latest/newest date in the Calendar database
+   void              EconomicDetails(Calendar &NewsTime[],datetime date_from=0,datetime date_to=0);//Gets values from the MQL5 economic Calendar
+   void              EconomicDetailsMemory(Calendar &NewsTime[],datetime date);//Gets values from the MQL5 DB Calendar in Memory
+   void              CreateEconomicDatabaseMemory();//Create calendar database in memory
+   void              EconomicNextEvent(datetime date=0);//Will update UpcomingNews structure variable with the next event data
+   bool              UpdateRecords();//Checks if the main Calendar database needs an update or not
+   ENUM_CALENDAR_EVENT_IMPACT GetImpact();//Will retrieve Upcoming Event Impact data
+
+   //--- Convert Importance string into Calendar Event Importance Enumeration
+   ENUM_CALENDAR_EVENT_IMPORTANCE IMPORTANCE(string Importance)
+     {
+      //--- Calendar Importance is High
+      if(Importance==EnumToString(CALENDAR_IMPORTANCE_HIGH))
+        {
+         return CALENDAR_IMPORTANCE_HIGH;
+        }
+      else
+         //--- Calendar Importance is Moderate
+         if(Importance==EnumToString(CALENDAR_IMPORTANCE_MODERATE))
+           {
+            return CALENDAR_IMPORTANCE_MODERATE;
+           }
+         else
+            //--- Calendar Importance is Low
+            if(Importance==EnumToString(CALENDAR_IMPORTANCE_LOW))
+              {
+               return CALENDAR_IMPORTANCE_LOW;
+              }
+            else
+               //--- Calendar Importance is None
+              {
+               return CALENDAR_IMPORTANCE_NONE;
+              }
+     }
+
+   //--- Convert Calendar_Importance Enumeration into Calendar Event Importance Enumeration
+   ENUM_CALENDAR_EVENT_IMPORTANCE IMPORTANCE(Calendar_Importance Importance)
+     {
+      //--- switch statement for Calendar_Importance enumeration
+      switch(Importance)
+        {
+         case Calendar_Importance_None://None
+            return CALENDAR_IMPORTANCE_NONE;
+            break;
+         case Calendar_Importance_Low://Low
+            return CALENDAR_IMPORTANCE_LOW;
+            break;
+         case Calendar_Importance_Moderate://Moderate
+            return CALENDAR_IMPORTANCE_MODERATE;
+            break;
+         case Calendar_Importance_High://High
+            return CALENDAR_IMPORTANCE_HIGH;
+            break;
+         default://None
+            return CALENDAR_IMPORTANCE_NONE;
+            break;
+        }
+     }
+
+   //--- Convert Calendar Event Importance Enumeration into string Importance Rating
+   string            GetImportance(ENUM_CALENDAR_EVENT_IMPORTANCE Importance)
+     {
+      //--- switch statement for ENUM_CALENDAR_EVENT_IMPORTANCE enumeration
+      switch(Importance)
+        {
+         case  CALENDAR_IMPORTANCE_HIGH://High
+            return "HIGH";
+            break;
+         case CALENDAR_IMPORTANCE_MODERATE://Moderate
+            return "MODERATE";
+            break;
+         case CALENDAR_IMPORTANCE_LOW://Low
+            return "LOW";
+            break;
+         default://None
+            return "NONE";
+            break;
+        }
+     }
+
+   //--- Retrieve color for each Calendar Event Importance Enumeration
+   color             GetImportance_color(ENUM_CALENDAR_EVENT_IMPORTANCE Importance)
+     {
+      //--- switch statement for ENUM_CALENDAR_EVENT_IMPORTANCE enumeration
+      switch(Importance)
+        {
+         case CALENDAR_IMPORTANCE_HIGH://High
+            return clrRed;
+            break;
+         case CALENDAR_IMPORTANCE_MODERATE://Moderate
+            return clrOrange;
+            break;
+         case CALENDAR_IMPORTANCE_LOW://Low
+            return (isLightMode)?clrBlue:clrLightBlue;
+            break;
+         default://None
+            return (isLightMode)?clrBlack:clrWheat;
+            break;
+        }
+     }
+
+   //--- Convert Event_Sector Enumeration into Calendar Event Sector Enumeration
+   ENUM_CALENDAR_EVENT_SECTOR SECTOR(Event_Sector Sector)
+     {
+      //--- switch statement for Event_Sector enumeration
+      switch(Sector)
+        {
+         case Event_Sector_None://NONE
+            return CALENDAR_SECTOR_NONE;
+            break;
+         case Event_Sector_Market://MARKET
+            return CALENDAR_SECTOR_MARKET;
+            break;
+         case Event_Sector_Gdp://GDP
+            return CALENDAR_SECTOR_GDP;
+            break;
+         case Event_Sector_Jobs://JOBS
+            return CALENDAR_SECTOR_JOBS;
+            break;
+         case Event_Sector_Prices://PRICES
+            return CALENDAR_SECTOR_PRICES;
+            break;
+         case Event_Sector_Money://MONEY
+            return CALENDAR_SECTOR_MONEY;
+            break;
+         case Event_Sector_Trade://TRADE
+            return CALENDAR_SECTOR_TRADE;
+            break;
+         case Event_Sector_Government://GOVERNMENT
+            return CALENDAR_SECTOR_GOVERNMENT;
+            break;
+         case Event_Sector_Business://BUSINESS
+            return CALENDAR_SECTOR_BUSINESS;
+            break;
+         case Event_Sector_Consumer://CONSUMER
+            return CALENDAR_SECTOR_CONSUMER;
+            break;
+         case Event_Sector_Housing://HOUSING
+            return CALENDAR_SECTOR_HOUSING;
+            break;
+         case Event_Sector_Taxes://TAXES
+            return CALENDAR_SECTOR_TAXES;
+            break;
+         case Event_Sector_Holidays://HOLIDAYS
+            return CALENDAR_SECTOR_HOLIDAYS;
+            break;
+         default://Unknown
+            return CALENDAR_SECTOR_NONE;
+            break;
+        }
+     }
+
+   //--- Convert Event_Frequency Enumeration into Calendar Event Frequency Enumeration
+   ENUM_CALENDAR_EVENT_FREQUENCY FREQUENCY(Event_Frequency Frequency)
+     {
+      //--- switch statement for Event_Frequency enumeration
+      switch(Frequency)
+        {
+         case  Event_Frequency_None://NONE
+            return CALENDAR_FREQUENCY_NONE;
+            break;
+         case Event_Frequency_Day://DAY
+            return CALENDAR_FREQUENCY_DAY;
+            break;
+         case Event_Frequency_Week://WEEK
+            return CALENDAR_FREQUENCY_WEEK;
+            break;
+         case Event_Frequency_Month://MONTH
+            return CALENDAR_FREQUENCY_MONTH;
+            break;
+         case Event_Frequency_Quarter://QUARTER
+            return CALENDAR_FREQUENCY_QUARTER;
+            break;
+         case Event_Frequency_Year://YEAR
+            return CALENDAR_FREQUENCY_YEAR;
+            break;
+         default://Unknown
+            return CALENDAR_FREQUENCY_NONE;
+            break;
+        }
+     }
+
+   //--- Convert Event_Type Enumeration into Calendar Event Type Enumeration
+   ENUM_CALENDAR_EVENT_TYPE TYPE(Event_Type Type)
+     {
+      //--- switch statement for Event_Type enumeration
+      switch(Type)
+        {
+         case Event_Type_Event://EVENT
+            return CALENDAR_TYPE_EVENT;
+            break;
+         case Event_Type_Indicator://INDICATOR
+            return CALENDAR_TYPE_INDICATOR;
+            break;
+         case Event_Type_Holiday://HOLIDAY
+            return CALENDAR_TYPE_HOLIDAY;
+            break;
+         default://Unknown
+            return CALENDAR_TYPE_EVENT;
+            break;
+        }
+     }
+  };
+```
+
+We will first go through the SQL statement in the function GetCalendar that will request all the data from the calendar DB in the common folder for our calendar DB in memory. In this request, we select all the columns in the MQL5Calendar table and the TimeSchedule table we join the tables where their IDs are the same. We then filter the data based on the enumerations selected by the trader/user in the expert's input parameters for news settings.
+
+```
+//--- Get filtered calendar DB data
+      string SqlRequest = StringFormat("Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,"
+                                       "MQ.EventCode,MQ.EventSector,MQ.EventForecast,MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,"
+                                       "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+                                       "Inner Join %s TS on TS.ID=MQ.ID "
+                                       "Where %s and %s and %s and %s and %s;",
+                                       CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+                                       Request_Importance(myImportance),Request_Frequency(myFrequency),
+                                       Request_Sector(mySector),Request_Type(myType),Request_Currency(myCurrency));
+```
+
+We will take a look at the SQL request for the following News Settings configuration on the EURUSD symbol.
+
+> 
+
+As shown below we can see when we select all for calendar importance, we purposely don't convert our Calendar\_Importance Enumeration variable myImportance because there isn't any event importance with the value 'Calendar\_Importance\_All' so we can easily select all the events where the EventImportance is not equal to 'Calendar\_Importance\_All'. The same can be said for all the News Settings input parameters that are selected to ALL.
+
+```
+case Calendar_Importance_All://String Request for all event Importance
+            return constant+"<>'"+EnumToString(myImportance)+"'";
+```
+
+```
+Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,MQ.EventCode,MQ.EventSector,
+MQ.EventForecast,MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from MQL5Calendar MQ
+Inner Join TimeSchedule TS on TS.ID=MQ.ID Where MQ.EventImportance<>'Calendar_Importance_All' and MQ.EventFrequency<>'Event_Frequency_ALL'
+and MQ.EventSector<>'Event_Sector_ALL' and MQ.EventType<>'Event_Type_All' and (MQ.EventCurrency='EUR' or MQ.EventCurrency='EUR' or 
+MQ.EventCurrency='USD');
+```
+
+We will take another look at one more SQL request from the function GetCalendar for the following News Settings configuration on the EURUSD symbol.
+
+> 
+
+As shown below when we select any other option other than all for calendar importance, we will convert our Calendar\_Importance Enumeration variable myImportance into the enumeration type ENUM\_CALENDAR\_EVENT\_IMPORTANCE, so the string can match the one stored in the MQL5Calendar table to correct get the event importance of a certain type.
+
+```
+default://String Request for any event Importance
+            return constant+"='"+EnumToString(IMPORTANCE(myImportance))+"'";
+```
+
+```
+Select MQ.EventId,MQ.Country,MQ.EventName,MQ.EventType,MQ.EventImportance,MQ.EventCurrency,MQ.EventCode,MQ.EventSector,MQ.EventForecast,
+MQ.EventPreValue,MQ.EventImpact,MQ.EventFrequency,TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from MQL5Calendar MQ Inner Join TimeSchedule TS 
+on TS.ID=MQ.ID Where MQ.EventImportance='CALENDAR_IMPORTANCE_HIGH' and MQ.EventFrequency='CALENDAR_FREQUENCY_MONTH' and 
+MQ.EventSector='CALENDAR_SECTOR_JOBS' and MQ.EventType='CALENDAR_TYPE_INDICATOR' and (MQ.EventCurrency<>'Event_Currency_ALL');
+```
+
+ In the news class constructor, we have to initialize the array indexes for the new views for our calendar DB in the common folder. For the Event Info view this is how we will initialize the array index below.
+
+```
+//--- initializing properties for the EventInfo view
+   CalendarContents[5].Content = EventInfo_View;
+   CalendarContents[5].name = "Event Info";
+   CalendarContents[5].sql = "CREATE VIEW IF NOT EXISTS 'Event Info' "
+                             "AS SELECT EVENTID as 'ID',COUNTRY as 'Country',EVENTNAME as 'Name',"
+                             "REPLACE(EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',REPLACE(EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',"
+                             "REPLACE(EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',EVENTCURRENCY as 'Currency' "
+                             "FROM MQL5Calendar GROUP BY \"Name\" ORDER BY \"Country\" Asc,"
+                             "CASE \"Importance\" WHEN 'HIGH' THEN 1 WHEN 'MODERATE' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END,\"Sector\" Desc;";
+   CalendarContents[5].tbl_name = "Event Info";
+   CalendarContents[5].type = "view";
+```
+
+Let's go through the SQL statement to create the view 'Event Info'. Firstly, we only create the view if it doesn't already exist, then we select the columns 'EVENTID' and rename it to 'ID', 'COUNTRY' and rename it to 'Country', 'EVENTNAME' and rename it to 'Name', 'EVENTTYPE' we replace the text 'CALENDAR\_TYPE\_' with an empty string and rename the column to 'Type', 'EVENTSECTOR' we replace the text 'CALENDAR\_SECTOR\_' with an empty string and rename the column to 'Sector', 'EVENTIMPORTANCE' we replace the text 'CALENDAR\_IMPORTANCE\_' with an empty string and rename the column 'Importance', 'EVENTCURRENCY' and rename it to 'Currency' from the MQL5Calendar table. We then group the query by the 'EVENTNAME' which is now 'Name' so the events with the same event name will not be shown in the view multiple times. We then give the query an order sequence, we first order the result by the 'Country' ascending so the country with the starting alphabet A like Australia will be shown first, we then order the result by the 'EVENTIMPORTANCE' which is now called 'Importance' so what I wanted to do is show the events with the highest importance, to do this we have to give the importance string/text values a ranking so in this case when Importance is 'HIGH' it gets first priority then 'MODERATE' gets second priority and 'LOW' gets third priority and finally any other value gets last priority. Furthermore, we then order the query result by the 'EVENTSECTOR' which is now named 'Sector' in descending order. Views sample will be shown below.
+
+```
+CREATE VIEW IF NOT EXISTS 'Event Info' AS SELECT MQ.EVENTID as 'ID',MQ.COUNTRY as 'Country',MQ.EVENTNAME as 'Name',REPLACE(MQ.EVENTTYPE,
+'CALENDAR_TYPE_','') as 'Type',REPLACE(MQ.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',REPLACE(MQ.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') 
+as 'Importance',MQ.EVENTCURRENCY as 'Currency' FROM MQL5Calendar MQ INNER JOIN TimeSchedule TS on TS.ID=MQ.ID GROUP BY "Name" ORDER BY 
+"Country" Asc,CASE "Importance" WHEN 'HIGH' THEN 1 WHEN 'MODERATE' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END,"Sector" Desc;
+```
+
+> 
+
+```
+ID       Country  Name                                          Type            Sector        Importance   Currency
+36030006 Australia  RBA Governor Lowe Speech                    EVENT           MONEY         HIGH         AUD 
+36030008 Australia  RBA Interest Rate Decision                  INDICATOR       MONEY         HIGH         AUD 
+36010029 Australia  PPI q/q                                     INDICATOR       PRICES        MODERATE     AUD 
+36030014 Australia  RBA Trimmed Mean CPI q/q                    INDICATOR       PRICES        MODERATE     AUD 
+36030009 Australia  RBA Weighted Median CPI q/q                 INDICATOR       PRICES        MODERATE     AUD 
+36010031 Australia  Wage Price Index q/q                        INDICATOR       PRICES        MODERATE     AUD 
+36030026 Australia  RBA Assistant Governor Boulton Speech       EVENT           MONEY         MODERATE     AUD 
+36030024 Australia  RBA Assistant Governor Bullock Speech       EVENT           MONEY         MODERATE     AUD 
+36030025 Australia  RBA Assistant Governor Ellis Speech         EVENT           MONEY         MODERATE     AUD 
+
+62 lines later...
+
+76020002 Brazil  BCB Interest Rate Decision                     INDICATOR       MONEY         HIGH         BRL 
+76020004 Brazil  BCB Inflation Report                           EVENT           PRICES        MODERATE     BRL 
+76050001 Brazil  FIPE CPI m/m                                   INDICATOR       PRICES        MODERATE     BRL 
+76010005 Brazil  Mid-Month CPI m/m                              INDICATOR       PRICES        MODERATE     BRL 
+76020001 Brazil  BCB Focus Market Report                        EVENT           MONEY         MODERATE     BRL 
+76020003 Brazil  BCB MPC (Copom) Minutes                        EVENT           MONEY         MODERATE     BRL 
+76020005 Brazil  BCB National Monetary Council Meeting          EVENT           MONEY         MODERATE     BRL 
+76010009 Brazil  Unemployment Rate 3-months                     INDICATOR       JOBS          MODERATE     BRL 
+76020010 Brazil  Nominal Budget Balance                         INDICATOR       GOVERNMENT    MODERATE     BRL 
+76020011 Brazil  Primary Budget balance                         INDICATOR       GOVERNMENT    MODERATE     BRL 
+76010014 Brazil  Services Volume m/m                            INDICATOR       BUSINESS      MODERATE     BRL 
+
+98 lines later...
+
+124040017 Canada  BoC Governor Macklem Speech                   EVENT           MONEY          HIGH         CAD 
+124040003 Canada  BoC Governor Poloz Speech                     EVENT           MONEY          HIGH         CAD 
+124040006 Canada  BoC Interest Rate Decision                    INDICATOR       MONEY          HIGH         CAD 
+124040009 Canada  BoC Monetary Policy Report Press Conference   EVENT           MONEY          HIGH         CAD 
+124010011 Canada  Employment Change                             INDICATOR       JOBS           HIGH         CAD 
+124010021 Canada  GDP m/m                                       INDICATOR       GDP            HIGH         CAD 
+124010008 Canada  Core Retail Sales m/m                         INDICATOR       CONSUMER       HIGH         CAD 
+124020001 Canada  Ivey PMI                                      INDICATOR       BUSINESS       HIGH         CAD 
+124010024 Canada  IPPI m/m                                      INDICATOR       PRICES         MODERATE     CAD 
+124010026 Canada  RMPI m/m                                      INDICATOR       PRICES         MODERATE     CAD 
+124040001 Canada  BoC Business Outlook Survey                   EVENT           MONEY          MODERATE     CAD
+```
+
+For our currencies view, we select the unique/Distinct EventCurrency and EventCode from the table MQL5Calendar.
+
+```
+//--- initializing properties for the Currencies view
+   CalendarContents[6].Content = Currencies_View;
+   CalendarContents[6].name = "Currencies";
+   CalendarContents[6].sql = "CREATE VIEW IF NOT EXISTS Currencies AS "
+                             "SELECT Distinct EventCurrency as 'Currency',EventCode as 'Code' FROM 'MQL5Calendar';";
+   CalendarContents[6].tbl_name = "Currencies";
+   CalendarContents[6].type = "view";
+```
+
+```
+SELECT * FROM 'Currencies';
+```
+
+```
+Currency  	Code
+NZD  		NZ
+EUR 		EU
+JPY  		JP
+CAD  		CA
+AUD  		AU
+CNY  		CN
+EUR  		IT
+SGD  		SG
+EUR  		DE
+EUR  		FR
+BRL  		BR
+MXN  		MX
+ZAR  		ZA
+HKD  		HK
+INR  		IN
+NOK  		NO
+USD  		US
+GBP  		GB
+CHF  		CH
+KRW  		KR
+EUR  		ES
+SEK  		SE
+ALL  		WW
+```
+
+Now we will initialize the properties for our table MQL5Calendar that will be in our DB in memory. This table will be one big table that is essentially a combination of the tables in our DB in storage, these tables are MQL5Calendar and TimeSchedule.
+
+```
+//-- initializing properties for the MQL5Calendar table for DB in System Memory
+   DBMemory.Content = MQL5Calendar_Table;
+   DBMemory.name = "MQL5Calendar";
+   DBMemory.sql = "CREATE TABLE IF NOT EXISTS MQL5Calendar(EVENTID  INT   NOT NULL,COUNTRY  TEXT   NOT NULL,"
+                  "EVENTNAME   TEXT   NOT NULL,EVENTTYPE   TEXT   NOT NULL,EVENTIMPORTANCE   TEXT   NOT NULL,"
+                  "EVENTCURRENCY  TEXT   NOT NULL,EVENTCODE   TEXT   NOT NULL,EVENTSECTOR TEXT   NOT NULL,"
+                  "EVENTFORECAST  TEXT   NOT NULL,EVENTPREVALUE  TEXT   NOT NULL,EVENTIMPACT TEXT   NOT NULL,"
+                  "EVENTFREQUENCY TEXT   NOT NULL,DST_UK   TEXT   NOT NULL,DST_US   TEXT   NOT NULL,"
+                  "DST_AU   TEXT   NOT NULL,DST_NONE   TEXT   NOT NULL)STRICT;";
+   DBMemory.tbl_name="MQL5Calendar";
+   DBMemory.type = "table";
+   DBMemory.insert = "INSERT INTO 'MQL5Calendar'(EVENTID,COUNTRY,EVENTNAME,EVENTTYPE,EVENTIMPORTANCE,EVENTCURRENCY,EVENTCODE,"
+                     "EVENTSECTOR,EVENTFORECAST,EVENTPREVALUE,EVENTIMPACT,EVENTFREQUENCY,DST_UK,DST_US,DST_AU,DST_NONE) "
+                     "VALUES (%d,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s');";
+```
+
+In our destructor we close the connection to the database in Memory, closing the connection to the database in memory will drop the whole database. So we only close the connection when we no longer need the database any longer.
+
+```
+//+------------------------------------------------------------------+
+//|Destructor                                                        |
+//+------------------------------------------------------------------+
+CNews::~CNews(void)
+  {
+   if(FileIsExist(NEWS_TEXT_FILE,FILE_COMMON))//Check if the news database open text file exists
+     {
+      FileDelete(NEWS_TEXT_FILE,FILE_COMMON);
+     }
+   DatabaseClose(DBMemoryConnection);//Close DB in memory
+  }
+```
+
+Previously in our function UpdateRecords we went through a sequence to check if we should update the calendar database in storage. The sequence went as follows:
+
+1. We would check if the Calendar database exists in the common folder, if the database doesn't exist we perform an update.
+2. We would check if all the database objects exist in the database and that their SQL statements are what we expect, if not, we perform an update.
+3. We would check if the date in the Records table is equal to the current date, if not, we perform an update.
+
+For this article, we will add one more step in the sequence. The purpose of this added step is to check if the news data in the view Calendar\_NONE is accurate. I've noticed that sometimes the news data from the MQL5 calendar can change over time and if we have stored the news that hasn't changed, we need to be able to check for inconsistences between what we have stored and what has been updated from the MQL5 calendar if anything.
+
+In the code below we retrieve the news data for the current day using the function EconomicDetails and store this data into the array TodayNews. Once the news data is within the TodayNews array we iterate through each news event in the array and check if there is a match in our view Calendar\_NONE, if we can't find a match, then we will perform an update. If all the news data has a match in the Calendar\_NONE view we don't perform any updates to the database in storage.
+
+```
+      Calendar TodaysNews[];
+      datetime Today = CTime.Time(TimeTradeServer(),0,0,0);
+      EconomicDetails(TodaysNews,Today,Today+CTime.DaysS());
+
+      for(uint i=0;i<TodaysNews.Size();i++)
+        {
+         request_text=StringFormat("SELECT ID FROM %s where Replace(Date,'.','-')=Replace('%s','.','-') and ID=%d;",
+                                   CalendarStruct(CalendarNONE_View).name,TodaysNews[i].EventDate,TodaysNews[i].EventId);
+         request=DatabasePrepare(db,request_text);//Creates a handle of a request, which can then be executed using DatabaseRead()
+         if(request==INVALID_HANDLE)//Checks if the request failed to be completed
+           {
+            Print("DB: ",NEWS_DATABASE_FILE, " request failed with code ", GetLastError());
+            DatabaseFinalize(request);
+            DatabaseClose(db);
+            return perform_update;
+           }
+         //PrintFormat(request_text);
+         if(!DatabaseRead(request))//Will be true if there are results from the sql query/request
+           {
+            DatabaseFinalize(request);
+            DatabaseClose(db);
+            return perform_update;
+           }
+         DatabaseFinalize(request);
+        }
+      DatabaseClose(db);//Closes the database
+      perform_update=false;
+      return perform_update;
+```
+
+The code below will be responsible for creating the database in memory. Firstly, we open the connection to the database, we then drop the table MQL5Calendar if it already exists, we then create the table MQL5Calendar. Once the table is created we get all the relevant data from the function GetCalendar, we then insert all the data retrieved from the function into our MQL5Calendar table in our database in memory. Furthermore, we clear the whole array DB\_Data, and set our DST schedule in the variable MySchedule. For trading outside the strategy tester the user/trader won't be able to manually change the DST schedule, this is to prevent configuring the wrong DST schedule as configuring the DST schedule is only necessary for the strategy tester only.
+
+```
+//+------------------------------------------------------------------+
+//|Create calendar database in memory                                |
+//+------------------------------------------------------------------+
+void CNews::CreateEconomicDatabaseMemory()
+  {
+//--- Open/create the database in memory
+   DBMemoryConnection=DatabaseOpen(NEWS_DATABASE_MEMORY,DATABASE_OPEN_MEMORY);
+   if(DBMemoryConnection==INVALID_HANDLE)//Checks if the database failed to open/create
+     {
+      Print("DB: ",NEWS_DATABASE_MEMORY, " open failed with code ", GetLastError());
+      return;//will terminate execution of the rest of the code below
+     }
+//--- Drop the table if it already exists
+   DatabaseExecute(DBMemoryConnection,StringFormat("Drop table IF EXISTS %s",DBMemory.name));
+//--- Attempt to create the table
+   if(!DatabaseExecute(DBMemoryConnection,DBMemory.sql))
+     {
+      Print("DB: create the Calendar table failed with code ", GetLastError());
+      return;
+     }
+//--- Check if the table exists
+   if(DatabaseTableExists(DBMemoryConnection,DBMemory.tbl_name))
+     {
+      //--- Get all news data and time from the database in storage
+      GetCalendar(DB_Data);
+      //--- Insert all the news data and times into the table
+      for(uint i=0;i<DB_Data.Size();i++)
+        {
+         string request_text=StringFormat(DBMemory.insert,DB_Data[i].EventId,DB_Data[i].Country,
+                                          DB_Data[i].EventName,DB_Data[i].EventType,DB_Data[i].EventImportance,
+                                          DB_Data[i].EventCurrency,DB_Data[i].EventCode,DB_Data[i].EventSector,
+                                          DB_Data[i].EventForecast,DB_Data[i].EventPreval,DB_Data[i].EventImpact,
+                                          DB_Data[i].EventFrequency,DB_Data[i].DST_UK,DB_Data[i].DST_US,
+                                          DB_Data[i].DST_AU,DB_Data[i].DST_NONE);
+
+         if(!DatabaseExecute(DBMemoryConnection, request_text))//Will attempt to run this sql request/query
+           {
+            //--- failed to run sql request/query
+            Print(GetLastError());
+            PrintFormat(request_text);
+            return;
+           }
+        }
+     }
+//--- Remove all data from the array
+   ArrayRemove(DB_Data,0,WHOLE_ARRAY);
+//--- Assign the DST schedule
+   MySchedule = (MQLInfoInteger(MQL_TESTER))?(MyDST==AutoDst_Selection)?GetAutoDST():MySchedule:DST_NONE;
+  }
+```
+
+Ok, now the following function called EconomicDetailsMemory retrieves all news events that take place on a specific date and then stores the news data in the array NewsTime, which is passed by reference.
+
+```
+//+------------------------------------------------------------------+
+//|Gets values from the MQL5 DB Calendar in Memory                   |
+//+------------------------------------------------------------------+
+void CNews::EconomicDetailsMemory(Calendar &NewsTime[],datetime date)
+  {
+//--- SQL query to retrieve news data for a certain date
+   string request_text=StringFormat("WITH MySubQuery AS (SELECT EventId as 'Id',Country,EventName as 'Name',EventType as 'Type'"
+                                    ",EventImportance as 'Importance',%s as 'CTime',EventCurrency as 'Currency',EventCode as 'Code',"
+                                    "EventSector as 'Sector',EventForecast as 'Forecast',EventPrevalue as 'Prevalue',EventImpact as'Impact',"
+                                    "EventFrequency as 'Freq',RANK() OVER (PARTITION BY %s Order BY CASE EventPrevalue WHEN 'None' "
+                                    "THEN 2 ELSE 1 END,CASE EventForecast WHEN 'None' THEN 2 ELSE 1 END,CASE EventImportance WHEN "
+                                    "'CALENDAR_IMPORTANCE_HIGH' THEN 1 WHEN 'CALENDAR_IMPORTANCE_MODERATE' THEN 2 WHEN 'CALENDAR_IMPORTANCE_LOW'"
+                                    " THEN 3 ELSE 4 END) Ranking FROM %s) SELECT Id,Country,Name,Type,Importance,CTime,Currency,Code,Sector,"
+                                    "Forecast,Prevalue,Impact,Freq FROM MySubQuery where Date(Replace(CTime,'.','-'))=Date(Replace('%s','.','-')) and "
+                                    "Ranking<2 Group by CTime;",EnumToString(MySchedule),EnumToString(MySchedule),DBMemory.name,
+                                    TimeToString(date));
+   int request=DatabasePrepare(DBMemoryConnection,request_text);//Creates a handle of a request, which can then be executed using DatabaseRead()
+   if(request==INVALID_HANDLE)//Checks if the request failed to be completed
+     {
+      Print("DB: ",NEWS_DATABASE_MEMORY, " request failed with code ", GetLastError());
+      PrintFormat(request_text);
+     }
+//--- Calendar structure variable
+   Calendar ReadDB_Data;
+//--- Remove any data in the array
+   ArrayRemove(NewsTime,0,WHOLE_ARRAY);
+   for(int i=0; DatabaseReadBind(request,ReadDB_Data); i++)//Will read all the results from the sql query/request
+     {
+      //--- Resize array NewsTime
+      ArrayResize(NewsTime,i+1,i+2);
+      //--- Assign calendar structure values into NewsTime array index
+      NewsTime[i]  = ReadDB_Data;
+     }
+//--- Removes a request created in DatabasePrepare()
+   DatabaseFinalize(request);
+  }
+```
+
+Lets break down the SQL query, as it is more complex than any of our past queries. So in this query we make use of a [WITH clause](https://www.sqlitetutor.com/with/ "SQLite tutor") and a [RANK() function](https://www.sqlitetutorial.net/sqlite-window-functions/sqlite-rank/ "https://www.sqlitetutorial.net/sqlite-window-functions/sqlite-rank/").
+
+**What is a WITH clause, and how does it work?**
+
+The WITH clause, also known as a Common Table Expression (CTE), is used to define temporary result sets that you can reference within a SELECT, INSERT, UPDATE, or DELETE statement. The WITH clause makes complex queries easier to understand and maintain by breaking them into simpler parts. It can also help improve performance by reusing the results of expensive subqueries. CTEs are temporary and only exist for the duration of the query. They do not create any permanent objects in the database.
+
+**What is a RANK() function, and how does it work?**
+
+The RANK() function is used to assign a unique rank to each row within a result set based on the values in one or more columns. The rows are ordered based on the specified criteria, and the rank is assigned accordingly. The RANK() function is part of the window functions in SQL, which means it operates over a window (or subset) of rows and can return multiple rows for each row in the input set. The RANK() function assigns a rank to each row based on the order specified in the ORDER BY clause within the window function's definition. If multiple rows have the same values in the columns specified for ordering, they are given the same rank, and the next rank is skipped by the number of identical ranks. PARTITION BY (optional) splits the result set into partitions, and the RANK() function is applied to each partition independently.
+
+In this WITH clause highlighted below we SELECT the EventId, Country, EventName, EventType, EventImportance, DST\_NONE(DST Schedule set by the user/tr

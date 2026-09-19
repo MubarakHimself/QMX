@@ -1,0 +1,499 @@
+---
+id: 20339
+source_url: https://www.mql5.com/en/articles/20339
+title: "Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System"
+author: ""
+author_url: 
+published: 2025-11-26T12:20Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Automating Trading Strategies in MQL5 (): Session-Based Opening Range Breakout (ORB) System"
+series_part: 42
+source: mql5
+language: en
+---
+
+# Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 26 November 2025 at 07:20
+
+30 268
+[
+3](https://www.mql5.com/en/forum/500775 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In our [previous article (Part 41)](https://www.mql5.com/en/articles/20323), we developed a [Candle Range Theory (CRT)](https://innercircletrader.net/tutorials/candle-range-theory-crt/ "https://innercircletrader.net/tutorials/candle-range-theory-crt/") trading system incorporating Accumulation, Manipulation, and Distribution ([AMD](https://innercircletrader.net/tutorials/ict-power-of-3/ "https://innercircletrader.net/tutorials/ict-power-of-3/")) phases in [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) that identified accumulation ranges on a specified timeframe, detected breaches with manipulation depth filtering, and confirmed reversals through bar closures for entry trades in the distribution phase. In Part 42, we develop a fully customizable Session-Based [Opening Range Breakout](https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout "https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout") (ORB) system.
+
+This system allows us to define the start time and duration of any session in minutes. It automatically captures the true high and low during that period on a chosen timeframe. It detects breakouts with optional multi-bar close confirmation to reduce false signals. The system executes trades only in the breakout direction. Stop-loss and take-profit levels can be dynamic (range-size based) or static. Trailing stops can be used after a profit threshold has been reached. Position limits are enforced per direction. We will cover the following topics:
+
+1. [Understanding the Opening Range Breakout (ORB) Strategy](https://www.mql5.com/en/articles/20339#understanding_the_opening_range_breakout_orb)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/20339#implementation_in_mql5)
+3. [Backtesting](https://www.mql5.com/en/articles/20339#backtesting)
+4. [Conclusion](https://www.mql5.com/en/articles/20339#conclusion)
+
+By the end, you’ll have an MQL5 program capable of trading clean opening range breakouts in any market session — London, New York, Asian, or even custom openings — ready for further customization. Let’s dive in!
+
+### Understanding the Opening Range Breakout (ORB) Strategy
+
+[The](https://www.mql5.com/en/articles/20339#understanding_the_opening_range_breakout_orb) [Opening Range Breakout (ORB)](https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout "https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout") is a classic intraday momentum strategy that capitalizes on the initial directional bias established at the start of a trading session. We define an "opening range" as the high and low formed during the first few minutes (typically 5–60 minutes) after the market opens, then wait for the price to break decisively above the range high (bullish breakout) or below the range low (bearish breakout) and enter in the direction of the break. The premise is simple but powerful: the opening range often represents the battle between buyers and sellers as the market digests overnight news and order flow, and a clean breakout signals that one side has won control, frequently leading to a sustained directional move. The system is generally easy. Have a look below at the different setups we could have.
+
+Our plan is to create a fully session-flexible ORB system that works on any instrument and any trading session (New York, London, Asian, or even custom openings).  We will allow users to set the exact start time. For example, 09:30 for the NYSE or 08:00 for London. Users will also be able to define the range duration in minutes. The system will automatically calculate the true high and low on the selected timeframe within that window. If needed, users can enable multiple bar-close confirmations to validate a breakout.
+
+The algorithm will execute only one trade per direction per session. We will offer two types of stop-loss and take-profit calculations: dynamic (based on the range size) and static, with customizable risk-reward ratios. Points-based trailing stops will also be available, activating after a minimum profit threshold is reached. In addition, the tool will provide rich chart visualization. This includes filled range rectangles, vertical markers for session start and end, persistent high/low levels, and entry arrows.
+
+Visualization is equally important in our case, as you might have noticed by now, for clarity. In brief, here is a visual representation of our objectives.
+
+### Implementation in MQL5
+
+To create the program in MQL5, open the [MetaEditor](https://www.metatrader5.com/en/automated-trading/metaeditor "https://www.metatrader5.com/en/automated-trading/metaeditor"), go to the Navigator, locate the Experts folder, click on the "New" tab, and follow the prompts to create the file. Once it is made, in the coding environment, we will need to declare some [input parameters](https://www.mql5.com/en/docs/basis/variables/inputvariables) and [global variables](https://www.mql5.com/en/docs/basis/variables/global) that we will use throughout the program.
+
+```
+//+------------------------------------------------------------------+
+//|                                ORB Opening Range Breakout EA.mq5 |
+//|                           Copyright 2025, Allan Munene Mutiiria. |
+//|                                   https://t.me/Forex_Algo_Trader |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, Allan Munene Mutiiria."
+#property link      "https://t.me/Forex_Algo_Trader"
+#property version   "1.00"
+
+#include <Trade\Trade.mqh>
+
+//+------------------------------------------------------------------+
+//| Enums                                                            |
+//+------------------------------------------------------------------+
+enum SLTP_Method {                                                // Define SL/TP method enum
+   Dynamic_Method = 0,                                            // Dynamic based on range size
+   Static_Method  = 1                                             // Static based on fixed points
+};
+
+enum TrailingTypeEnum {                                           // Define trailing type enum
+   Trailing_None   = 0,                                           // None
+   Trailing_Points = 1                                            // By Points
+};
+
+//+------------------------------------------------------------------+
+//| Input Parameters                                                 |
+//+------------------------------------------------------------------+
+input ENUM_TIMEFRAMES RangeTF = PERIOD_M5;                        // Timeframe for Opening Range Calculation
+input int RangeDurationMinutes = 30;                              // Duration of Opening Range in Minutes
+input string SessionStartTime = "09:00";                          // Session Start Time (HH:MM)
+input double TradeVolume = 0.01;                                  // Trade Volume Size
+input double RR_Ratio = 2.0;                                      // Risk to Reward Ratio
+input SLTP_Method SLTP_Approach = Dynamic_Method;                 // SL/TP Calculation Method
+input int SL_Points = 50;                                         // SL Points (for Static Method)
+input TrailingTypeEnum TrailingType = Trailing_None;              // Trailing Stop Type
+input double Trailing_Stop_Points = 20.0;                         // Trailing Stop in Points
+input double Min_Profit_To_Trail_Points = 30.0;                   // Min Profit to Start Trailing in Points
+input int UniqueID = 987654321;                                   // Unique Trade Identifier
+input int MaxPositionsDir = 1;                                     // Max Positions per Direction
+input bool UseBreakoutFilter = true;                              // Use Breakout Confirmation Filter
+input int ConfirmBars = 1;                                        // Bars to Confirm Breakout on Close (0 to disable)
+```
+
+We begin the implementation by including the trade library with "[#include](https://www.mql5.com/en/docs/basis/preprosessor/include) <Trade\Trade.mqh>", which supplies the CTrade class and functions necessary for order execution and position management. We then define two [enumerations](https://www.mql5.com/en/docs/basis/types/integer/enumeration) to organize user options clearly. The "SLTP\_Method" enum provides "Dynamic\_Method" for stop-loss and take-profit levels based on the actual opening range size and "Static\_Method" for fixed points-based calculations. Similarly, the "TrailingTypeEnum" enum offers "Trailing\_None" to disable trailing and "Trailing\_Points" to enable trailing by a user-defined number of points once a minimum profit threshold is reached.
+
+Next, we declare [input parameters](https://www.mql5.com/en/docs/basis/variables/inputvariables) that make the program highly configurable directly from the properties window. These include "RangeTF" to select the timeframe used for calculating the opening range high and low, "RangeDurationMinutes" to set how many minutes after session start constitute the opening range, "SessionStartTime" as a string in "HH:MM" format to define when each new session begins (e.g., "09:30" for NYSE open, "08:00" for London, etc.), "TradeVolume" for lot size, and the rest which are self explanatory. We added comments for clarity. This set of inputs ensures the system can be perfectly adapted to any market or session without code changes. The next thing we need is the [global variables](https://www.mql5.com/en/docs/basis/variables/global) definition.
+
+```
+//+------------------------------------------------------------------+
+//| Global Variables                                                 |
+//+------------------------------------------------------------------+
+CTrade obj_Trade;                                                 //--- Trade object
+datetime sessionStart = 0;                                        //--- Session start time
+datetime rangeEndTime = 0;                                        //--- Range end time
+double rangeHigh = 0.0;                                           //--- Range high
+double rangeLow = 0.0;                                            //--- Range low
+bool rangeDefined = false;                                        //--- Range defined flag
+bool breakoutHigh = false;                                        //--- Breakout high flag
+bool breakoutLow = false;                                         //--- Breakout low flag
+double breakoutPrice = 0.0;                                       //--- Breakout price
+string highLevelObj = "ORB_HighLevel";                            //--- High level object name
+string lowLevelObj = "ORB_LowLevel";                              //--- Low level object name
+string highTextObj = "ORB_High_Text";                             //--- High text object
+string lowTextObj = "ORB_Low_Text";                               //--- Low text object
+bool tradedLong = false;                                          //--- Traded long flag
+bool tradedShort = false;                                         //--- Traded short flag
+datetime lastConfirmTime = 0;                                     //--- Last confirm time
+```
+
+We continue by declaring a set of [global variables](https://www.mql5.com/en/docs/basis/variables/global) that maintain the program's state throughout each trading session and ensure proper tracking of the opening range breakout logic. We instantiate "obj\_Trade" from the [CTrade](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/ctrade) class to handle all order executions and position modifications. Timing variables include "sessionStart" to record the exact datetime when a new session begins and "rangeEndTime" to mark when the opening range period concludes. We track the opening range boundaries with "rangeHigh" (initialized to 0.0) and "rangeLow", while "rangeDefined" serves as a boolean flag indicating whether the current session's range has been fully established. The rest are straightforward. Once that is done, we need to initialize the system by just setting the magic number.
+
+```
+//+------------------------------------------------------------------+
+//| EA Start Function                                                |
+//+------------------------------------------------------------------+
+int OnInit() {
+   obj_Trade.SetExpertMagicNumber(UniqueID);                      //--- Set magic number
+   return(INIT_SUCCEEDED);                                        //--- Return success
+}
+```
+
+In the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler, which executes automatically when the program is first loaded or attached to a chart, we assign the user-defined "UniqueID" as the magic number to the "obj\_Trade" object by calling "obj\_Trade.SetExpertMagicNumber(UniqueID)". This ensures that every trade opened by the program carries this unique identifier, allowing precise filtering and management even when multiple programs or manual trades are active on the same account. We conclude by returning [INIT\_SUCCEEDED](https://www.mql5.com/en/docs/basis/function/events#enum_init_retcode), confirming to the platform that initialization completed without issues and the program is ready for operation. We will define some helper functions that we will use for visualization when we have the logic ready, as below.
+
+```
+//+------------------------------------------------------------------+
+//| Render Horizontal Level                                          |
+//+------------------------------------------------------------------+
+void RenderLevel(string objName, double levelVal, color levelClr, string levelDesc) {
+   ObjectDelete(ChartID(), objName);                               //--- Delete object
+   ObjectCreate(ChartID(), objName, OBJ_HLINE, 0, 0, levelVal);    //--- Create hline
+   ObjectSetInteger(ChartID(), objName, OBJPROP_COLOR, levelClr);  //--- Set color
+   ObjectSetInteger(ChartID(), objName, OBJPROP_STYLE, STYLE_DOT); //--- Set style
+   ObjectSetString(ChartID(), objName, OBJPROP_TOOLTIP, levelDesc); //--- Set tooltip
+   ChartRedraw(ChartID());                                         //--- Redraw chart
+}
+
+//+------------------------------------------------------------------+
+//| Render Vertical Line                                             |
+//+------------------------------------------------------------------+
+void RenderVLine(string objName, datetime timeVal, color lineClr, string desc) {
+   ObjectDelete(ChartID(), objName);                              //--- Delete object
+   ObjectCreate(ChartID(), objName, OBJ_VLINE, 0, timeVal, 0);    //--- Create vline
+   ObjectSetInteger(ChartID(), objName, OBJPROP_COLOR, lineClr);  //--- Set color
+   ObjectSetInteger(ChartID(), objName, OBJPROP_STYLE, STYLE_DOT); //--- Set style
+   ObjectSetInteger(ChartID(), objName, OBJPROP_WIDTH, 1);        //--- Set width
+   ObjectSetInteger(ChartID(), objName, OBJPROP_BACK, true);      //--- Set back
+   ObjectSetInteger(ChartID(), objName, OBJPROP_RAY, true);       //--- Set ray
+   ObjectSetInteger(ChartID(), objName, OBJPROP_HIDDEN, true);    //--- Set hidden
+   ObjectSetString(ChartID(), objName, OBJPROP_TOOLTIP, desc);    //--- Set tooltip
+   ChartRedraw(ChartID());                                        //--- Redraw chart
+}
+
+//+------------------------------------------------------------------+
+//| Render Text Label                                                |
+//+------------------------------------------------------------------+
+void RenderText(string objName, datetime timeVal, double priceVal, string textStr, color textClr, int anchorVal) {
+   ObjectDelete(ChartID(), objName);                              //--- Delete object
+   ObjectCreate(ChartID(), objName, OBJ_TEXT, 0, timeVal, priceVal); //--- Create text
+   ObjectSetString(ChartID(), objName, OBJPROP_TEXT, textStr);    //--- Set text
+   ObjectSetInteger(ChartID(), objName, OBJPROP_COLOR, textClr);  //--- Set color
+   ObjectSetInteger(ChartID(), objName, OBJPROP_ANCHOR, anchorVal); //--- Set anchor
+   ObjectSetInteger(ChartID(), objName, OBJPROP_FONTSIZE, 10);    //--- Set fontsize
+   ChartRedraw(ChartID());                                        //--- Redraw chart
+}
+
+//+------------------------------------------------------------------+
+//| Draw Entry Arrow                                                 |
+//+------------------------------------------------------------------+
+void DrawEntryArrow(datetime timeVal, double priceVal, bool isBuy) {
+   string markerName = "EntryMarker_" + IntegerToString(timeVal); //--- Marker name
+   ObjectCreate(ChartID(), markerName, OBJ_ARROW, 0, timeVal, priceVal); //--- Create arrow
+   int arrowCode = isBuy ? 233 : 234;                             //--- Arrow code
+   color arrowClr = isBuy ? clrBlue : clrRed;                     //--- Arrow color
+   int anchor = isBuy ? ANCHOR_BOTTOM : ANCHOR_TOP;               //--- Anchor
+   ObjectSetInteger(ChartID(), markerName, OBJPROP_ARROWCODE, arrowCode); //--- Set code
+   ObjectSetInteger(ChartID(), markerName, OBJPROP_COLOR, arrowClr); //--- Set color
+   ObjectSetInteger(ChartID(), markerName, OBJPROP_ANCHOR, anchor); //--- Set anchor
+   ChartRedraw(ChartID());                                        //--- Redraw chart
+}
+
+//+------------------------------------------------------------------+
+//| Count Active Positions by Type                                   |
+//+------------------------------------------------------------------+
+int ActivePositions(ENUM_POSITION_TYPE posType) {
+   int total = 0;                                                 //--- Init total
+   for (int pos = PositionsTotal() - 1; pos >= 0; pos--) {        //--- Iterate positions
+      if (PositionGetSymbol(pos) == _Symbol && PositionGetInteger(POSITION_MAGIC) == UniqueID && PositionGetInteger(POSITION_TYPE) == posType) { //--- Check position
+         total++;                                                    //--- Increment total
+      }
+   }
+   return total;                                                  //--- Return total
+}
+```
+
+Here, we create several helper functions to handle chart visualization and position management, ensuring the opening range and trade signals are clearly displayed while maintaining clean code organization. The "RenderLevel" function draws or updates persistent horizontal lines for the range high and low. It deletes any existing object with the given name, creates a new [OBJ\_HLINE](https://www.mql5.com/en/docs/constants/objectconstants/enum_object/obj_hline) at the specified price level, sets its color (green for high, red for low), applies a dotted style, adds a descriptive tooltip, and redraws the chart for immediate visibility.
+
+Similarly, the "RenderVLine" function places vertical lines to mark session start and range end times. It removes prior instances, creates an [OBJ\_VLINE](https://www.mql5.com/en/docs/constants/objectconstants/enum_object/obj_vline) at the given datetime, configures it with blue color, dotted style, width 1, background placement, rightward ray extension, hidden from object list, a tooltip showing the exact time, and triggers a chart redraw using the [ChartRedraw](https://www.mql5.com/en/docs/chart_operations/ChartRedraw) function. The "RenderText" function adds customizable text labels, such as start/end times or "ORB High"/"ORB Low" annotations. It clears existing text objects, creates an [OBJ\_TEXT](https://www.mql5.com/en/docs/constants/objectconstants/enum_object/obj_text) at the specified time and price coordinates, sets the text content, and other properties.
+
+For trade entries, we implement "DrawEntryArrow," which places a visual marker directly on the chart at the moment of execution. It generates a unique name using the current time, creates an [OBJ\_ARROW](https://www.mql5.com/en/docs/constants/objectconstants/enum_object/obj_arrow), selects [Wingdings](https://www.mql5.com/en/docs/constants/objectconstants/wingdings) symbol 233 (up arrow) for buys or 234 (down arrow) for sells, applies blue for long or red for short, anchors it correctly at the bottom or top, and redraws the chart. For the arrow codes, MQL5 has dedicated fonts as below, and you can switch to whichever you like.
+
+Finally, we define the "ActivePositions" function to safely count how many open positions exist for a specific type (buy or sell) that belong to this program. It loops backward through all positions, checks for a matching symbol, magic number via "UniqueID", and position type using [POSITION\_TYPE\_BUY](https://www.mql5.com/en/docs/constants/tradingconstants/positionproperties#enum_position_type) or "POSITION\_TYPE\_SELL", then returns the accurate count. With these, we can now begin the strategy implementation by first defining the ranges daily.
+
+```
+//+------------------------------------------------------------------+
+//| Tick Processing Function                                         |
+//+------------------------------------------------------------------+
+void OnTick() {
+   datetime currentTime = TimeCurrent();                          //--- Get current time
+   MqlDateTime timeStruct;                                        //--- Time structure
+   TimeToStruct(currentTime, timeStruct);                         //--- Convert to struct
+   // Determine if a new session has started
+   string currentTimeStr = StringFormat("%02d:%02d", timeStruct.hour, timeStruct.min); //--- Format time string
+   if (currentTimeStr == SessionStartTime && sessionStart != currentTime - (timeStruct.hour * 3600 + timeStruct.min * 60 + timeStruct.sec)) { //--- Check new session
+      sessionStart = currentTime - timeStruct.sec;                //--- Align to minute start
+      rangeEndTime = sessionStart + RangeDurationMinutes * 60;    //--- Calc end time
+      rangeHigh = 0.0;                                            //--- Reset high
+      rangeLow = DBL_MAX;                                         //--- Reset low
+      rangeDefined = false;                                       //--- Reset defined
+      breakoutHigh = false;                                       //--- Reset high breakout
+      breakoutLow = false;                                        //--- Reset low breakout
+      tradedLong = false;                                         //--- Reset long traded
+      tradedShort = false;                                        //--- Reset short traded
+      lastConfirmTime = 0;                                        //--- Reset confirm time
+      // Clean previous visuals for current levels
+      ObjectDelete(ChartID(), highLevelObj);                      //--- Delete high level
+      ObjectDelete(ChartID(), lowLevelObj);                       //--- Delete low level
+      ObjectDelete(ChartID(), highTextObj);                       //--- Delete high text
+      ObjectDelete(ChartID(), lowTextObj);                        //--- Delete low text
+   }
+   if (sessionStart == 0) return;                                 //--- Return if no session
+   double currBid = SymbolInfoDouble(_Symbol, SYMBOL_BID);        //--- Get bid
+   double currAsk = SymbolInfoDouble(_Symbol, SYMBOL_ASK);        //--- Get ask
+   // Define the opening range
+   if (currentTime < rangeEndTime) {                              //--- Check within range
+      rangeHigh = MathMax(rangeHigh, iHigh(_Symbol, RangeTF, 0)); //--- Update high
+      rangeLow = MathMin(rangeLow, iLow(_Symbol, RangeTF, 0));    //--- Update low
+   } else if (!rangeDefined) {                                    //--- Check not defined
+      rangeDefined = true;                                        //--- Set defined
+      // Draw the opening range rectangle
+      string rectObj = "ORB_Rectangle_" + IntegerToString(sessionStart); //--- Rect name
+      ObjectCreate(ChartID(), rectObj, OBJ_RECTANGLE, 0, sessionStart, rangeHigh, rangeEndTime, rangeLow); //--- Create rect
+      ObjectSetInteger(ChartID(), rectObj, OBJPROP_COLOR, clrLightBlue); //--- Set color
+      ObjectSetInteger(ChartID(), rectObj, OBJPROP_FILL, true);   //--- Set fill
+      ObjectSetInteger(ChartID(), rectObj, OBJPROP_BACK, true);   //--- Set back
+      ObjectSetInteger(ChartID(), rectObj, OBJPROP_STYLE, STYLE_SOLID); //--- Set style
+      ChartRedraw(ChartID());                                     //--- Redraw chart
+      // Add vertical lines for start and end
+      string startVLineObj = "ORB_StartVLine_" + IntegerToString(sessionStart); //--- Start vline name
+      RenderVLine(startVLineObj, sessionStart, clrBlue, "ORB Start at " + TimeToString(sessionStart, TIME_MINUTES)); //--- Render start vline
+      string endVLineObj = "ORB_EndVLine_" + IntegerToString(sessionStart); //--- End vline name
+      RenderVLine(endVLineObj, rangeEndTime, clrBlue, "ORB End at " + TimeToString(rangeEndTime, TIME_MINUTES)); //--- Render end vline
+      // Add time text labels for start and end
+      double textOffset = (rangeHigh - rangeLow) * 0.05;          //--- Calc offset
+      string startTimeTextObj = "ORB_StartTime_Text_" + IntegerToString(sessionStart); //--- Start text name
+      RenderText(startTimeTextObj, sessionStart, rangeLow - textOffset, TimeToString(sessionStart, TIME_MINUTES), clrBlue, ANCHOR_UPPER); //--- Render start text
+      string endTimeTextObj = "ORB_EndTime_Text_" + IntegerToString(sessionStart); //--- End text name
+      RenderText(endTimeTextObj, rangeEndTime, rangeLow - textOffset, TimeToString(rangeEndTime, TIME_MINUTES), clrBlue, ANCHOR_UPPER); //--- Render end text
+      // Render high and low levels
+      RenderLevel(highLevelObj, rangeHigh, clrGreen, "ORB High"); //--- Render high level
+      RenderLevel(lowLevelObj, rangeLow, clrRed, "ORB Low");      //--- Render low level
+      // Add text labels
+      RenderText(highTextObj, rangeEndTime, rangeHigh, "ORB High", clrGreen, ANCHOR_RIGHT_LOWER); //--- Render high text
+      RenderText(lowTextObj, rangeEndTime, rangeLow, "ORB Low", clrRed, ANCHOR_RIGHT_UPPER); //--- Render low text
+   } 
+}
+```
+
+In the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) event handler, we begin by capturing the server's current time with [TimeCurrent](https://www.mql5.com/en/docs/dateandtime/timecurrent) into "currentTime", converting it to an [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure via [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) to access individual components like hour and minute. We then format the current time as a "HH:MM" string using [StringFormat](https://www.mql5.com/en/docs/convert/stringformat) and store it in "currentTimeStr". This is how the structure looks.
+
+```
+struct MqlDateTime {
+   int year;           // Year
+   int mon;            // Month
+   int day;            // Day
+   int hour;           // Hour
+   int min;            // Minutes
+   int sec;            // Seconds
+   int day_of_week;    // Day of week (0-Sunday, 1-Monday, ... ,6-Saturday)
+   int day_of_year;    // Day number of the year (January 1st is assigned the number value of zero)
+};
+```
+
+Segregating into a structure helps us get the specific components with ease. To detect the exact start of a new trading session, we compare this string to the user-defined "SessionStartTime". The additional condition ensures we trigger only once per day by checking that "sessionStart" does not already match the current day aligned to that minute (subtracting seconds to normalize). When a new session begins, we align "sessionStart" precisely to the start of that minute by subtracting remaining seconds, calculate "rangeEndTime" by adding "RangeDurationMinutes" × 60 seconds, reset "rangeHigh" to 0.0 and "rangeLow" to the maximum double value for proper initial updates, clear all flags ("rangeDefined", "breakoutHigh", "breakoutLow", "tradedLong", "tradedShort", "lastConfirmTime"), and delete the persistent high/low level and text objects from the previous session to prepare a clean slate. If no active session has been detected yet ("sessionStart" == 0), we simply return to avoid unnecessary processing. Otherwise, we retrieve the current bid and ask prices using the [SymbolInfoDouble](https://www.mql5.com/en/docs/marketinformation/symbolinfodouble) function.
+
+During the opening range formation period (while "currentTime" < "rangeEndTime"), we continuously update the range boundaries by setting "rangeHigh" to the maximum of its current value or the latest bar's high on "RangeTF" at shift 0 via "iHigh", and "rangeLow" to the minimum of its current value or the latest bar's low via the [iLow](https://www.mql5.com/en/docs/series/ilow) function. Once the range period ends and the range hasn't been finalized yet ("!rangeDefined"), we set "rangeDefined" to true and proceed to visualize the completed opening range.
+
+We draw a filled light-blue rectangle spanning from "sessionStart" at "rangeHigh" to "rangeEndTime" at "rangeLow" using a unique name based on the session timestamp, with solid style and background placement. Vertical blue dotted lines are added at both start and end times via "RenderVLine" with descriptive tooltips. Time labels are placed just below the range using "RenderText" with a small offset calculated as 5% of the range size, anchored upward in blue. Finally, we render the persistent horizontal levels with "RenderLevel" (green for high, red for low) and their corresponding text labels anchored at the right side of the range end time, ensuring we always see the exact breakout levels even hours or days later. Upon compilation, we get the following outcome.
+
+With the ranges established, we just need to track them and their breakouts, and once we break from either range, we determine the direction and thus the type of breakout setup and open trades. Easy peasy. Here is the logic we use to achieve that.
+
+```
+if (!rangeDefined) return;                                     //--- Return if not defined
+// Detect breakout
+bool justBreached = false;                                     //--- Init just breached
+if (currAsk > rangeHigh && !breakoutHigh) {                    //--- Check high breakout
+   breakoutHigh = true;                                        //--- Set high breakout
+   justBreached = true;                                        //--- Set just breached
+   breakoutPrice = currAsk;                                    //--- Set breakout price
+} else if (currBid < rangeLow && !breakoutLow) {               //--- Check low breakout
+   breakoutLow = true;                                         //--- Set low breakout
+   justBreached = true;                                        //--- Set just breached
+   breakoutPrice = currBid;                                    //--- Set breakout price
+}
+if ((breakoutHigh || breakoutLow) && !(tradedLong || tradedShort)) { //--- Check breakout and not traded
+   // Confirm breakout with bar closures if enabled
+   bool confirmed = false;                                      //--- Init confirmed
+   if (ConfirmBars == 0) {                                      //--- Check no confirm
+      confirmed = true;                                         //--- Set confirmed
+   } else {                                                     //--- Else
+      datetime currConfirmTime = iTime(_Symbol, RangeTF, 0);    //--- Get confirm time
+      if (currConfirmTime != lastConfirmTime) {                 //--- Check new confirm
+         lastConfirmTime = currConfirmTime;                     //--- Update last confirm
+         int confirmCount = 0;                                  //--- Init count
+         for (int i = 1; i <= ConfirmBars; i++) {               //--- Iterate bars
+            double closePrice = iClose(_Symbol, RangeTF, i);    //--- Get close
+            if (breakoutHigh && closePrice > rangeHigh) confirmCount++; //--- Check high
+            if (breakoutLow && closePrice < rangeLow) confirmCount++; //--- Check low
+         }
+         if (confirmCount >= ConfirmBars) confirmed = true;     //--- Set confirmed
+      }
+   }
+   if (confirmed && UseBreakoutFilter) {                        //--- Check confirmed and filter
+      // Additional filter logic if needed, but for now assume confirmed
+   }
+   if (confirmed) {                                             //--- Check confirmed
+      double sl = 0.0, tp = 0.0;                                //--- Init SL TP
+      if (breakoutHigh && ActivePositions(POSITION_TYPE_BUY) < MaxPositionsDir && !tradedLong) { //--- Check long entry
+         if (SLTP_Approach == Dynamic_Method) {                  //--- Check dynamic
+            double rangeSize = rangeHigh - rangeLow;             //--- Calc range size
+            sl = NormalizeDouble(rangeLow, _Digits);             //--- Set SL
+            tp = NormalizeDouble(currAsk + rangeSize * RR_Ratio, _Digits); //--- Set TP
+         } else {                                                //--- Static
+            sl = NormalizeDouble(currAsk - SL_Points * _Point, _Digits); //--- Set SL
+            tp = NormalizeDouble(currAsk + (SL_Points * _Point) * RR_Ratio, _Digits); //--- Set TP
+         }
+         if (obj_Trade.Buy(TradeVolume, _Symbol, currAsk, sl, tp, "ORB Long Breakout")) { //--- Open buy
+            if (obj_Trade.ResultRetcode() == TRADE_RETCODE_DONE) { //--- Check success
+               Print("Long Breakout: Entry at ", DoubleToString(currAsk, _Digits), " SL at ", DoubleToString(sl, _Digits), " TP at ", DoubleToString(tp, _Digits)); //--- Log entry
+               DrawEntryArrow(currentTime, currBid, true);        //--- Draw arrow
+               tradedLong = true;                                 //--- Set long traded
+            }
+         }
+      } else if (breakoutLow && ActivePositions(POSITION_TYPE_SELL) < MaxPositionsDir && !tradedShort) { //--- Check short entry
+         if (SLTP_Approach == Dynamic_Method) {                  //--- Check dynamic
+            double rangeSize = rangeHigh - rangeLow;             //--- Calc range size
+            sl = NormalizeDouble(rangeHigh, _Digits);            //--- Set SL
+            tp = NormalizeDouble(currBid - rangeSize * RR_Ratio, _Digits); //--- Set TP
+         } else {                                                //--- Static
+            sl = NormalizeDouble(currBid + SL_Points * _Point, _Digits); //--- Set SL
+            tp = NormalizeDouble(currBid - (SL_Points * _Point) * RR_Ratio, _Digits); //--- Set TP
+         }
+         if (obj_Trade.Sell(TradeVolume, _Symbol, currBid, sl, tp, "ORB Short Breakout")) { //--- Open sell
+            if (obj_Trade.ResultRetcode() == TRADE_RETCODE_DONE) { //--- Check success
+               Print("Short Breakout: Entry at ", DoubleToString(currBid, _Digits), " SL at ", DoubleToString(sl, _Digits), " TP at ", DoubleToString(tp, _Digits)); //--- Log entry
+               DrawEntryArrow(currentTime, currAsk, false);       //--- Draw arrow
+               tradedShort = true;                                //--- Set short traded
+            }
+         }
+      }
+   }
+}
+```
+
+Once the opening range is fully defined, we immediately return if "rangeDefined" is still false, ensuring no breakout logic runs prematurely. We then monitor for a breakout: if the current ask price exceeds "rangeHigh" and "breakoutHigh" is not yet set, we mark a bullish breakout by setting "breakoutHigh" to true, record the exact breakout price in "breakoutPrice", and note that a fresh breach has occurred. We do the same thing for low breakout. When at least one breakout direction is active and neither a long nor short trade has been taken in this session ("!tradedLong && !tradedShort"), we proceed to the confirmation stage. If "ConfirmBars" is zero, the breakout is considered instantly confirmed. Otherwise, on each new bar of the range timeframe (detected by comparing [iTime](https://www.mql5.com/en/docs/series/itime) at shift 0 with "lastConfirmTime"), we count how many of the previous "ConfirmBars" bars closed decisively outside the range — above "rangeHigh" for bullish or below "rangeLow" for bearish. Only when the required number of confirming closes is reached do we set "confirmed" to true.
+
+We respect the "UseBreakoutFilter" input (though currently it simply passes the confirmation forward — room for future enhancements if you want to add more filters). Once confirmed, we calculate stop-loss and take-profit levels according to the chosen method. For a bullish breakout, if buy positions are below "MaxPositionsDir" and no long has been traded yet, we use dynamic mode to place stop-loss exactly at the range low (normalized) and take-profit at current ask plus the full range size multiplied by "RR\_Ratio". In static mode, we place a stop-loss at a fixed "SL\_Points" below the ask and take-profit the same distance times ratio above. We then execute the buy order via "obj\_Trade.Buy", and on success ([TRADE\_RETCODE\_DONE](https://www.mql5.com/en/docs/constants/errorswarnings/enum_trade_return_codes)), log the entry details to the Experts tab, draw a blue upward arrow at the entry using "DrawEntryArrow", and set "tradedLong" to true to lock out further longs this session. The bearish side mirrors this exactly. Upon compilation, we get the following outcome.
+
+From the image, we can see that we open trades once we have a breakout. We now just need to manage the open positions by applying a trailing stop once the market moves in our favour, if we want to.
+
+```
+//+------------------------------------------------------------------+
+//| Apply Points Trailing Stop                                       |
+//+------------------------------------------------------------------+
+void ApplyPointsTrailing() {
+   double point = _Point;                                         //--- Get point
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {              //--- Iterate positions
+      if (PositionGetTicket(i) > 0) {                             //--- Check ticket
+         if (PositionGetString(POSITION_SYMBOL) == _Symbol && PositionGetInteger(POSITION_MAGIC) == UniqueID) { //--- Check symbol magic
+            double sl = PositionGetDouble(POSITION_SL);              //--- Get SL
+            double tp = PositionGetDouble(POSITION_TP);              //--- Get TP
+            double openPrice = PositionGetDouble(POSITION_PRICE_OPEN); //--- Get open
+            ulong ticket = PositionGetInteger(POSITION_TICKET);      //--- Get ticket
+            if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) { //--- Check buy
+               double newSL = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID) - Trailing_Stop_Points * point, _Digits); //--- Calc new SL
+               if (newSL > sl && SymbolInfoDouble(_Symbol, SYMBOL_BID) - openPrice > Min_Profit_To_Trail_Points * point) { //--- Check conditions
+                  obj_Trade.PositionModify(ticket, newSL, tp);       //--- Modify position
+               }
+            } else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL) { //--- Check sell
+               double newSL = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK) + Trailing_Stop_Points * point, _Digits); //--- Calc new SL
+               if (newSL < sl && openPrice - SymbolInfoDouble(_Symbol, SYMBOL_ASK) > Min_Profit_To_Trail_Points * point) { //--- Check conditions
+                  obj_Trade.PositionModify(ticket, newSL, tp);       //--- Modify position
+               }
+            }
+         }
+      }
+   }
+}
+
+//--- Call the function per tick in the "OnTick" event handler
+
+if (TrailingType == Trailing_Points && PositionsTotal() > 0) { //--- Check trailing
+   ApplyPointsTrailing();                                      //--- Apply trailing
+}
+```
+
+Here, we implement the "ApplyPointsTrailing" function to dynamically trail the stop-loss when "Trailing\_Points" mode is selected, protecting profits as the market moves in our favor. The function begins by storing the symbol's point value in "point" using [\_Point](https://www.mql5.com/en/docs/predefined/_point). It then iterates backward through all open positions to safely handle any modifications without index conflicts. For each valid ticket, we verify that the position belongs to the current symbol and carries our "UniqueID" magic number. We retrieve the current stop-loss, take-profit, open price, and ticket number.
+
+For buy positions, we calculate a potential new stop-loss by subtracting "Trailing\_Stop\_Points" × point from the current bid (normalized to the symbol's digits). We only apply the modification if this new level is higher than the existing stop-loss (tightening it) and the unrealized profit exceeds "Min\_Profit\_To\_Trail\_Points" × point, ensuring we only trail after a meaningful buffer. The position is updated via "obj\_Trade.PositionModify" while preserving the original take-profit. The logic for sell positions mirrors this exactly. Finally, at the end of [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick), we check if trailing is enabled ("TrailingType == Trailing\_Points") and there are open positions. If so, we immediately invoke "ApplyPointsTrailing" on every tick, providing real-time profit protection without delay. Finally, we need to delete our visualization objects when we remove the program from the chart.
+
+```
+//+------------------------------------------------------------------+
+//| EA Stop Function                                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int code) {
+   ObjectDelete(ChartID(), highLevelObj);                         //--- Delete high level
+   ObjectDelete(ChartID(), lowLevelObj);                          //--- Delete low level
+   ObjectDelete(ChartID(), highTextObj);                          //--- Delete high text
+   ObjectDelete(ChartID(), lowTextObj);                           //--- Delete low text
+   // Clean dynamic objects
+   ObjectsDeleteAll(ChartID(), "ORB_Rectangle_", OBJ_RECTANGLE);  //--- Delete rectangles
+   ObjectsDeleteAll(ChartID(), "ORB_StartVLine_", OBJ_VLINE);     //--- Delete start vlines
+   ObjectsDeleteAll(ChartID(), "ORB_EndVLine_", OBJ_VLINE);       //--- Delete end vlines
+   ObjectsDeleteAll(ChartID(), "ORB_StartTime_Text_", OBJ_TEXT);  //--- Delete start texts
+   ObjectsDeleteAll(ChartID(), "ORB_EndTime_Text_", OBJ_TEXT);    //--- Delete end texts
+   ObjectsDeleteAll(ChartID(), "EntryMarker_", OBJ_ARROW);        //--- Delete entry markers
+}
+```
+
+In the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) function, which runs when the program is removed from the chart or the terminal shuts down, we first delete the four persistent objects by name: the high and low horizontal levels via "highLevelObj" and "lowLevelObj", and their text labels with "highTextObj" and "lowTextObj". We then use [ObjectsDeleteAll](https://www.mql5.com/en/docs/objects/objectdeleteall) to remove every dynamically created object from the current session and all previous ones. This complete cleanup prevents object accumulation across multiple sessions or chart reloads. Upon compilation, we get the following outcome when the trailing stop is enabled.
+
+From the visualization, we can see that we define the ranges, open positions, and manage them by applying trailing stops when needed, hence achieving our objectives. The thing that remains is backtesting the program, and that is handled in the next section.
+
+### Backtesting
+
+After thorough backtesting, we have the following results.
+
+Backtest graph:
+
+Backtest report:
+
+### Conclusion
+
+In conclusion, we’ve developed a session-based [Opening Range Breakout (ORB)](https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout "https://www.fluxcharts.com/articles/trading-strategies/common-strategies/opening-range-breakout") system in [MQL5](https://www.mql5.com/) that allows custom session start times and opening range durations in minutes, automatically determines the true high and low on a selected timeframe, detects breakouts with optional multi-bar close confirmation, and executes trades only in the breakout direction.
+
+Disclaimer: This article is for educational purposes only. Trading carries significant financial risks, and market volatility may result in losses. Thorough backtesting and careful risk management are crucial before deploying this program in live markets.
+
+With this session-based Opening Range Breakout strategy, you’re equipped to trade intraday breakout setups in any chosen market session, ready for further optimization in your trading journey. Happy trading!
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20339.zip "Download all attachments in the single ZIP archive")
+
+[ORB\_Opening\_Range\_Breakout\_EA.mq5](https://www.mql5.com/en/articles/download/20339/ORB_Opening_Range_Breakout_EA.mq5 "Download ORB_Opening_Range_Breakout_EA.mq5")
+(23.39 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[From Basic to Intermediate: Struct (I)](https://www.mql5.com/en/articles/15730)
+
+Today we will begin to study structures in a simpler, more practical, and comfortable way. Structures are among the foundations of programming, whether they are structured or not. I know many people think of structures as just collections of data, but I assure you that they are much more than just structures. And here we will begin to explore this new universe in the most didactic way.
+
+[MetaTrader 5 Machine Learning Blueprint (Part 6): Engineering a Production-Grade Caching System](https://www.mql5.com/en/articles/20302)
+
+Tired of watching progress bars instead of testing trading strategies? Traditional caching fails financial ML, leaving you with lost computations and frustrating restarts. We've engineered a sophisticated caching architecture that understands the unique challenges of financial data—temporal dependencies, complex data structures, and the constant threat of look-ahead bias. Our three-layer system delivers dramatic speed improvements while automatically invalidating stale results and preventing costly data leaks. Stop waiting for computations and start iterating at the pace the markets demand.
+
+[The MQL5 Standard Library Explorer (Part 4): Custom Signal Library](https://www.mql5.com/en/articles/20266)
+
+Today, we use the MQL5 Standard Library to build custom signal classes and let the MQL5 Wizard assemble a professional Expert Advisor for us. This approach simplifies development so that even beginner programmers can create robust EAs without in-depth coding knowledge, focusing instead on tuning inputs and optimizing performance. Join this discussion as we explore the process step by step.
+
+[Market Positioning Codex for VGT with Kendall's Tau and Distance Correlation](https://www.mql5.com/en/articles/20271)
+
+In this article, we look to explore how a complimentary indicator pairing can be used to analyze the recent 5-year history of Vanguard Information Technology Index Fund ETF. By considering two options of algorithms, Kendall’s Tau and Distance-Correlation, we look to select not just an ideal indicator pair for trading the VGT, but also suitable signal-pattern pairings of these two indicators.
+
+[
+
+Trade from your iPhone or Android device
+
+You only need an internet connection to use the new powerful MetaTrader 5 Web terminal
+
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=wtigumvtenarnsocpyfoqnanxrilnbxx&s=ec8c539e52b83881ff2d16eaff6913b25803952eb277cac55f670a102b2edc1f&uid=&ref=https://www.mql5.com/en/articles/20339&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6484728764184531368)

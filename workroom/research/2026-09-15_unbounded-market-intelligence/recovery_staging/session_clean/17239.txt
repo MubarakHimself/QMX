@@ -1,0 +1,537 @@
+---
+id: 17239
+source_url: https://www.mql5.com/en/articles/17239
+title: "Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy"
+author: ""
+author_url: 
+published: 2025-02-25T10:08Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Automating Trading Strategies in MQL5 (): Building an Expert Advisor for the Asian Breakout Strategy"
+series_part: 9
+source: mql5
+language: en
+---
+
+# Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 25 February 2025 at 05:08
+
+16 098
+[
+0](https://www.mql5.com/en/forum/482040 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In the previous article (Part 8), we explored a reversal trading strategy by building an Expert Advisor in [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) based on the [Butterfly harmonic pattern](https://fxtrendo.com/blog/1145/what-is-the-butterfly-pattern "https://fxtrendo.com/blog/1145/what-is-the-butterfly-pattern") using precise Fibonacci ratios. Now, in Part 9, we shift our focus to the [Asian Breakout Strategy](https://www.dolphintrader.com/asian-range-breakout-forex-strategy/ "https://www.dolphintrader.com/asian-range-breakout-forex-strategy/")—a method that identifies key session highs and lows to form breakout zones, employs a moving average for trend filtering, and integrates dynamic risk management.
+
+In this article, we will cover:
+
+1. [Strategy Blueprint](https://www.mql5.com/en/articles/17239#strategy_blueprint)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/17239#implementation_in_mql5)
+3. [Backtesting and Optimization](https://www.mql5.com/en/articles/17239#backtesting_and_optimization)
+4. [Conclusion](https://www.mql5.com/en/articles/17239#conclusion)
+
+By the end, you’ll have a fully functional Expert Advisor that automates the Asian Breakout Strategy, ready to be tested and refined for trading. Let’s dive in!
+
+### Strategy Blueprint
+
+To create the program, we will design an approach that leverages the key price range formed during the [Asian trading session](https://www.dolphintrader.com/asian-range-breakout-forex-strategy/ "https://www.dolphintrader.com/asian-range-breakout-forex-strategy/"). The first step will be to define the session box by capturing the highest high and the lowest low within a specific time window—typically between 23:00 and 03:00 [Greenwich Mean Time](https://en.wikipedia.org/wiki/Greenwich_Mean_Time "https://en.wikipedia.org/wiki/Greenwich_Mean_Time") (GMT). However, these times are fully customizable to suit your needs. This defined range represents the consolidation area from which we expect a breakout.
+
+Next, we will set breakout levels at the boundaries of this range. We will place a pending buy-stop order slightly above the top of the box if market conditions confirm a bullish trend—using a [moving average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma") (such as a 50-period MA) for trend confirmation. Conversely, if the trend is bearish, we will position a sell-stop order just below the bottom of the box. This dual setup will ensure that our Expert Advisor is ready to capture significant moves in either direction as soon as the price breaks out.
+
+Risk management is a critical component of our strategy. We will integrate stop-loss orders just outside the box boundaries to protect against false breakouts or reversals, while take-profit levels will be determined based on a predefined risk-to-reward ratio. Additionally, we will implement a time-based exit strategy that automatically closes any open trades if they remain active past a designated exit time, such as 13:00 [GMT](https://en.wikipedia.org/wiki/Greenwich_Mean_Time "https://en.wikipedia.org/wiki/Greenwich_Mean_Time"). Overall, our strategy combines precise session-based range detection, trend filtering, and robust risk management to build an Expert Advisor capable of capturing significant breakout moves in the market. In a nutshell, here is a visualization of the whole strategy that we want to implement.
+
+### Implementation in MQL5
+
+To create the program in MQL5, open the [MetaEditor](https://www.metatrader5.com/en/automated-trading/metaeditor "https://www.metatrader5.com/en/automated-trading/metaeditor"), go to the Navigator, locate the Indicators folder, click on the "New" tab, and follow the prompts to create the file. Once it is made, in the coding environment, we will need to declare some [global variables](https://www.mql5.com/en/docs/basis/variables/global) that we will use throughout the program.
+
+```
+//+------------------------------------------------------------------+
+//|                        Copyright 2025, Forex Algo-Trader, Allan. |
+//|                                 "https://t.me/Forex_Algo_Trader" |
+//+------------------------------------------------------------------+
+#property copyright "Forex Algo-Trader, Allan"
+#property link      "https://t.me/Forex_Algo_Trader"
+#property version   "1.00"
+#property description "This EA trades based on ASIAN BREAKOUT Strategy"
+#property strict
+
+#include <Trade\Trade.mqh>                              //--- Include trade library
+CTrade obj_Trade;                                          //--- Create global trade object
+
+//--- Global indicator handle for the moving average
+int maHandle = INVALID_HANDLE;                         //--- Global MA handle
+
+//==== Input parameters
+//--- Trade and indicator settings
+input double         LotSize              = 0.1;         //--- Trade lot size
+input double         BreakoutOffsetPips   = 10;          //--- Offset in pips for pending orders
+input ENUM_TIMEFRAMES BoxTimeframe         = PERIOD_M15;  //--- Timeframe for box calculation (15 or 30 minutes)
+input int            MA_Period            = 50;          //--- Moving average period for trend filter
+input ENUM_MA_METHOD MA_Method            = MODE_SMA;    //--- MA method (Simple Moving Average)
+input ENUM_APPLIED_PRICE MA_AppliedPrice   = PRICE_CLOSE; //--- Applied price for MA (Close price)
+input double         RiskToReward         = 1.3;         //--- Reward-to-risk multiplier (1:1.3)
+input int            MagicNumber          = 12345;       //--- Magic number (used for order identification)
+
+//--- Session timing settings (GMT) with minutes
+input int            SessionStartHour     = 23;          //--- Session start hour
+input int            SessionStartMinute   = 00;           //--- Session start minute
+input int            SessionEndHour       = 03;           //--- Session end hour
+input int            SessionEndMinute     = 00;           //--- Session end minute
+input int            TradeExitHour        = 13;          //--- Trade exit hour
+input int            TradeExitMinute      = 00;           //--- Trade exit minute
+
+//--- Global variables for storing session box data
+datetime lastBoxSessionEnd = 0;                        //--- Stores the session end time of the last computed box
+bool     boxCalculated     = false;                    //--- Flag: true if session box has been calculated
+bool     ordersPlaced      = false;                    //--- Flag: true if orders have been placed for the session
+double   BoxHigh           = 0.0;                        //--- Highest price during the session
+double   BoxLow            = 0.0;                        //--- Lowest price during the session
+//--- Variables to store the exact times when the session's high and low occurred
+datetime BoxHighTime       = 0;                          //--- Time when the highest price occurred
+datetime BoxLowTime        = 0;                          //--- Time when the lowest price occurred
+```
+
+Here, we include the trade library using "[#include](https://www.mql5.com/en/docs/basis/preprosessor/include) <Trade\Trade.mqh>" to access built-in trading functions and create a global trade object named "obj\_Trade". We define a global indicator handle "maHandle", initialize it to [INVALID\_HANDLE](https://www.mql5.com/en/docs/constants/namedconstants/otherconstants) and set up user inputs for trade and indicator settings—such as "LotSize", "BreakoutOffsetPips", and "BoxTimeframe" (which uses the [ENUM\_TIMEFRAMES](https://www.mql5.com/en/docs/constants/chartconstants/enum_timeframes) type)—as well as parameters for the moving average ("MA\_Period", "MA\_Method", "MA\_AppliedPrice") and risk management ("RiskToReward", "MagicNumber").
+
+Additionally, we allow users to specify session timing in hours and minutes (using inputs like "SessionStartHour", "SessionStartMinute", "SessionEndHour", "SessionEndMinute", "TradeExitHour", and "TradeExitMinute") and declare global variables to store the session box data ("BoxHigh", "BoxLow") and the exact times these extremes occurred ("BoxHighTime", "BoxLowTime"), along with flags ("boxCalculated" and "ordersPlaced") to control the program’s logic. Next, we go to the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler and initialize the handle.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit(){
+   //--- Set the magic number for all trade operations
+   obj_Trade.SetExpertMagicNumber(MagicNumber);           //--- Set magic number globally for trades
+   //--- Create the Moving Average handle with user-defined parameters
+   maHandle = iMA(_Symbol, 0, MA_Period, 0, MA_Method, MA_AppliedPrice); //--- Create MA handle
+   if(maHandle == INVALID_HANDLE){                     //--- Check if MA handle creation failed
+      Print("Failed to create MA handle.");           //--- Print error message
+      return(INIT_FAILED);                             //--- Terminate initialization if error occurs
+   }
+   return(INIT_SUCCEEDED);                            //--- Return successful initialization
+}
+```
+
+In the OnInit event handler, we set the trade object's magic number by calling the "obj\_Trade.SetExpertMagicNumber(MagicNumber)" method, ensuring that all trades are uniquely identified. Next, we create the [Moving Average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma") handle using the [iMA](https://www.mql5.com/en/docs/indicators/ima) function with our user-defined parameters ("MA\_Period", "MA\_Method", and "MA\_AppliedPrice"). We then verify whether the handle was successfully created by checking if "maHandle" equals [INVALID\_HANDLE](https://www.mql5.com/en/docs/constants/namedconstants/otherconstants); if it does, we print an error message and return [INIT\_FAILED](https://www.mql5.com/en/docs/basis/function/events#enum_init_retcode), otherwise, we return [INIT\_SUCCEEDED](https://www.mql5.com/en/docs/basis/function/events#enum_init_retcode) to signal successful initialization. Next, we need to release the created handle to save resources when the program is not in use.
+
+```
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason){
+   //--- Release the MA handle if valid
+   if(maHandle != INVALID_HANDLE)                     //--- Check if MA handle exists
+      IndicatorRelease(maHandle);                     //--- Release the MA handle
+   //--- Drawn objects remain on the chart for historical reference
+}
+```
+
+In the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) function, we check if the Moving Average handle "maHandle" is valid (i.e., not equal to INVALID\_HANDLE). If it is valid, we release the handle by calling the [IndicatorRelease](https://www.mql5.com/en/docs/series/indicatorrelease) function to free up resources. We can now graduate to the main event handler, [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick), where we will base our whole control logic.
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick(){
+   //--- Get the current server time (assumed GMT)
+   datetime currentTime = TimeCurrent();              //--- Retrieve current time
+   MqlDateTime dt;                                    //--- Declare a structure for time components
+   TimeToStruct(currentTime, dt);                     //--- Convert current time to structure
+   
+   //--- Check if the current time is at or past the session end (using hour and minute)
+   if(dt.hour > SessionEndHour || (dt.hour == SessionEndHour && dt.min >= SessionEndMinute)){
+      //--- Build the session end time using today's date and user-defined session end time
+      MqlDateTime sesEnd;                             //--- Declare a structure for session end time
+      sesEnd.year = dt.year;                          //--- Set year
+      sesEnd.mon  = dt.mon;                           //--- Set month
+      sesEnd.day  = dt.day;                           //--- Set day
+      sesEnd.hour = SessionEndHour;                   //--- Set session end hour
+      sesEnd.min  = SessionEndMinute;                 //--- Set session end minute
+      sesEnd.sec  = 0;                                //--- Set seconds to 0
+      datetime sessionEnd = StructToTime(sesEnd);       //--- Convert structure to datetime
+      
+      //--- Determine the session start time
+      datetime sessionStart;                          //--- Declare variable for session start time
+      //--- If session start is later than or equal to session end, assume overnight session
+      if(SessionStartHour > SessionEndHour || (SessionStartHour == SessionEndHour && SessionStartMinute >= SessionEndMinute)){
+         datetime prevDay = sessionEnd - 86400;       //--- Subtract 24 hours to get previous day
+         MqlDateTime dtPrev;                          //--- Declare structure for previous day time
+         TimeToStruct(prevDay, dtPrev);               //--- Convert previous day time to structure
+         dtPrev.hour = SessionStartHour;              //--- Set session start hour for previous day
+         dtPrev.min  = SessionStartMinute;            //--- Set session start minute for previous day
+         dtPrev.sec  = 0;                             //--- Set seconds to 0
+         sessionStart = StructToTime(dtPrev);         //--- Convert structure back to datetime
+      }
+      else{
+         //--- Otherwise, use today's date for session start
+         MqlDateTime temp;                           //--- Declare temporary structure
+         temp.year = sesEnd.year;                    //--- Set year from session end structure
+         temp.mon  = sesEnd.mon;                     //--- Set month from session end structure
+         temp.day  = sesEnd.day;                     //--- Set day from session end structure
+         temp.hour = SessionStartHour;               //--- Set session start hour
+         temp.min  = SessionStartMinute;             //--- Set session start minute
+         temp.sec  = 0;                              //--- Set seconds to 0
+         sessionStart = StructToTime(temp);          //--- Convert structure to datetime
+      }
+      
+      //--- Recalculate the session box only if this session hasn't been processed before
+      if(sessionEnd != lastBoxSessionEnd){
+         ComputeBox(sessionStart, sessionEnd);       //--- Compute session box using start and end times
+         lastBoxSessionEnd = sessionEnd;              //--- Update last processed session end time
+         boxCalculated   = true;                      //--- Set flag indicating the box has been calculated
+         ordersPlaced    = false;                     //--- Reset flag for order placement for the new session
+      }
+   }
+}
+```
+
+In the Expert tick function OnTick, we first call [TimeCurrent](https://www.mql5.com/en/docs/dateandtime/timecurrent) to retrieve the current server time and then convert it into a [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure using the [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) function so we can access its components. We compare the current hour and minute with the user-defined "SessionEndHour" and "SessionEndMinute"; if the current time is at or past the session end, we build a "sesEnd" structure and convert it to a datetime using [StructToTime](https://www.mql5.com/en/docs/dateandtime/structtotime).
+
+Based on whether the session start before or after the session end, we determine the proper "sessionStart" time (using today's date or adjusting for an overnight session), and if this "sessionEnd" is different from "lastBoxSessionEnd", we call the "ComputeBox" function to recalculate the session box while updating "lastBoxSessionEnd" and resetting our "boxCalculated" and "ordersPlaced" flags. We use a custom function to compute the box properties, and here is its code snippet.
+
+```
+//+------------------------------------------------------------------+
+//| Function: ComputeBox                                             |
+//| Purpose: Calculate the session's highest high and lowest low, and|
+//|          record the times these extremes occurred, using the     |
+//|          specified session start and end times.                  |
+//+------------------------------------------------------------------+
+void ComputeBox(datetime sessionStart, datetime sessionEnd){
+   int totalBars = Bars(_Symbol, BoxTimeframe);       //--- Get total number of bars on the specified timeframe
+   if(totalBars <= 0){
+      Print("No bars available on timeframe ", EnumToString(BoxTimeframe)); //--- Print error if no bars available
+      return;                                        //--- Exit if no bars are found
+   }
+     
+   MqlRates rates[];                                 //--- Declare an array to hold bar data
+   ArraySetAsSeries(rates, false);                   //--- Set array to non-series order (oldest first)
+   int copied = CopyRates(_Symbol, BoxTimeframe, 0, totalBars, rates); //--- Copy bar data into array
+   if(copied <= 0){
+      Print("Failed to copy rates for box calculation."); //--- Print error if copying fails
+      return;                                        //--- Exit if error occurs
+   }
+     
+   double highVal = -DBL_MAX;                        //--- Initialize high value to the lowest possible
+   double lowVal  = DBL_MAX;                         //--- Initialize low value to the highest possible
+   //--- Reset the times for the session extremes
+   BoxHighTime = 0;                                  //--- Reset stored high time
+   BoxLowTime  = 0;                                  //--- Reset stored low time
+   
+   //--- Loop through each bar within the session period to find the extremes
+   for(int i = 0; i < copied; i++){
+      if(rates[i].time >= sessionStart && rates[i].time <= sessionEnd){
+         if(rates[i].high > highVal){
+            highVal = rates[i].high;                //--- Update highest price
+            BoxHighTime = rates[i].time;            //--- Record time of highest price
+         }
+         if(rates[i].low < lowVal){
+            lowVal = rates[i].low;                  //--- Update lowest price
+            BoxLowTime = rates[i].time;             //--- Record time of lowest price
+         }
+      }
+   }
+   if(highVal == -DBL_MAX || lowVal == DBL_MAX){
+      Print("No valid bars found within the session time range."); //--- Print error if no valid bars found
+      return;                                        //--- Exit if invalid data
+   }
+   BoxHigh = highVal;                                //--- Store final highest price
+   BoxLow  = lowVal;                                 //--- Store final lowest price
+   Print("Session box computed: High = ", BoxHigh, " at ", TimeToString(BoxHighTime),
+         ", Low = ", BoxLow, " at ", TimeToString(BoxLowTime)); //--- Output computed session box data
+   
+   //--- Draw all session objects (rectangle, horizontal lines, and price labels)
+   DrawSessionObjects(sessionStart, sessionEnd);    //--- Call function to draw objects using computed values
+}
+```
+
+Here, we define a [void](https://www.mql5.com/en/docs/basis/types/void) "ComputeBox" function to calculate the session extremes. We begin by obtaining the total number of bars on the specified timeframe using the [Bars](https://www.mql5.com/en/docs/series/bars) function and then copy the bar data into a [MqlRates](https://www.mql5.com/en/docs/constants/structures/mqlrates) array using the [CopyRates](https://www.mql5.com/en/docs/series/copyrates) function. We initialize the variable "highVal" to [-DBL\_MAX](https://www.mql5.com/en/docs/constants/namedconstants/typeconstants) and "lowVal" to [DBL\_MAX](https://www.mql5.com/en/docs/constants/namedconstants/typeconstants) to ensure that any valid price will update these extremes. As we [loop](https://www.mql5.com/en/docs/basis/operators/for) through each bar that falls within the session period, if a bar's "high" exceeds "highVal", we update "highVal" and record that bar's time in "BoxHighTime"; similarly, if a bar's "low" is below "lowVal", we update "lowVal" and record the time in "BoxLowTime".
+
+If after processing the data "highVal" remains "-DBL\_MAX" or "lowVal" remains [DBL\_MAX](https://www.mql5.com/en/docs/constants/namedconstants/typeconstants), we print an error message indicating that no valid bars were found; otherwise, we assign "BoxHigh" and "BoxLow" with the computed values and use the [TimeToString](https://www.mql5.com/en/docs/convert/timetostring) function to print the recorded times in a readable format. Finally, we call the "DrawSessionObjects" function with the session start and end times to visually display the session box and related objects on the chart. The function's implementation is as below.
+
+```
+//+----------------------------------------------------------------------+
+//| Function: DrawSessionObjects                                         |
+//| Purpose: Draw a filled rectangle spanning from the session's high    |
+//|          point to its low point (using exact times), then draw       |
+//|          horizontal lines at the high and low (from sessionStart to  |
+//|          sessionEnd) with price labels at the right. Dynamic styling |
+//|          for font size and line width is based on the current chart  |
+//|          scale.                                                      |
+//+----------------------------------------------------------------------+
+void DrawSessionObjects(datetime sessionStart, datetime sessionEnd){
+   int chartScale = (int)ChartGetInteger(0, CHART_SCALE, 0); //--- Retrieve the chart scale (0 to 5)
+   int dynamicFontSize = 7 + chartScale * 1;        //--- Base 7, increase by 2 per scale level
+   int dynamicLineWidth = (int)MathRound(1 + (chartScale * 2.0 / 5)); //--- Linear interpolation
+   
+   //--- Create a unique session identifier using the session end time
+   string sessionID = "Sess_" + IntegerToString(lastBoxSessionEnd);
+   
+   //--- Draw the filled rectangle (box) using the recorded high/low times and prices
+   string rectName = "SessionRect_" + sessionID;       //--- Unique name for the rectangle
+   if(!ObjectCreate(0, rectName, OBJ_RECTANGLE, 0, BoxHighTime, BoxHigh, BoxLowTime, BoxLow))
+      Print("Failed to create rectangle: ", rectName); //--- Print error if creation fails
+   ObjectSetInteger(0, rectName, OBJPROP_COLOR, clrThistle); //--- Set rectangle color to blue
+   ObjectSetInteger(0, rectName, OBJPROP_FILL, true);       //--- Enable filling of the rectangle
+   ObjectSetInteger(0, rectName, OBJPROP_BACK, true);       //--- Draw rectangle in background
+   
+   //--- Draw the top horizontal line spanning from sessionStart to sessionEnd at the session high
+   string topLineName = "SessionTopLine_" + sessionID; //--- Unique name for the top line
+   if(!ObjectCreate(0, topLineName, OBJ_TREND, 0, sessionStart, BoxHigh, sessionEnd, BoxHigh))
+      Print("Failed to create top line: ", topLineName); //--- Print error if creation fails
+   ObjectSetInteger(0, topLineName, OBJPROP_COLOR, clrBlue); //--- Set line color to blue
+   ObjectSetInteger(0, topLineName, OBJPROP_WIDTH, dynamicLineWidth); //--- Set line width dynamically
+   ObjectSetInteger(0, topLineName, OBJPROP_RAY_RIGHT, false); //--- Do not extend line infinitely
+   
+   //--- Draw the bottom horizontal line spanning from sessionStart to sessionEnd at the session low
+   string bottomLineName = "SessionBottomLine_" + sessionID; //--- Unique name for the bottom line
+   if(!ObjectCreate(0, bottomLineName, OBJ_TREND, 0, sessionStart, BoxLow, sessionEnd, BoxLow))
+      Print("Failed to create bottom line: ", bottomLineName); //--- Print error if creation fails
+   ObjectSetInteger(0, bottomLineName, OBJPROP_COLOR, clrRed); //--- Set line color to blue
+   ObjectSetInteger(0, bottomLineName, OBJPROP_WIDTH, dynamicLineWidth); //--- Set line width dynamically
+   ObjectSetInteger(0, bottomLineName, OBJPROP_RAY_RIGHT, false); //--- Do not extend line infinitely
+   
+   //--- Create the top price label at the right edge of the top horizontal line
+   string topLabelName = "SessionTopLabel_" + sessionID; //--- Unique name for the top label
+   if(!ObjectCreate(0, topLabelName, OBJ_TEXT, 0, sessionEnd, BoxHigh))
+      Print("Failed to create top label: ", topLabelName); //--- Print error if creation fails
+   ObjectSetString(0, topLabelName, OBJPROP_TEXT," "+DoubleToString(BoxHigh, _Digits)); //--- Set label text to session high price
+   ObjectSetInteger(0, topLabelName, OBJPROP_COLOR, clrBlack); //--- Set label color to blue
+   ObjectSetInteger(0, topLabelName, OBJPROP_FONTSIZE, dynamicFontSize); //--- Set dynamic font size for label
+   ObjectSetInteger(0, topLabelName, OBJPROP_ANCHOR, ANCHOR_LEFT); //--- Anchor label to the left so text appears to right
+   
+   //--- Create the bottom price label at the right edge of the bottom horizontal line
+   string bottomLabelName = "SessionBottomLabel_" + sessionID; //--- Unique name for the bottom label
+   if(!ObjectCreate(0, bottomLabelName, OBJ_TEXT, 0, sessionEnd, BoxLow))
+      Print("Failed to create bottom label: ", bottomLabelName); //--- Print error if creation fails
+   ObjectSetString(0, bottomLabelName, OBJPROP_TEXT," "+DoubleToString(BoxLow, _Digits)); //--- Set label text to session low price
+   ObjectSetInteger(0, bottomLabelName, OBJPROP_COLOR, clrBlack); //--- Set label color to blue
+   ObjectSetInteger(0, bottomLabelName, OBJPROP_FONTSIZE, dynamicFontSize); //--- Set dynamic font size for label
+   ObjectSetInteger(0, bottomLabelName, OBJPROP_ANCHOR, ANCHOR_LEFT); //--- Anchor label to the left so text appears to right
+}
+```
+
+In the "DrawSessionObjects" function, we start by retrieving the current chart scale using the [ChartGetInteger](https://www.mql5.com/en/docs/chart_operations/chartgetinteger) function with [CHART\_SCALE](https://www.mql5.com/en/docs/constants/chartconstants/enum_chart_property#enum_chart_property_integer) (which returns a value from 0 to 5) and then compute dynamic styling parameters: a dynamic font size calculated as "7 + chartScale \* 1" (with a base size of 7 that increases by 1 per scale level) and a dynamic line width using [MathRound](https://www.mql5.com/en/docs/math/mathround) to interpolate linearly so that when the chart scale is 5, the width becomes 3. Next, we create a unique session identifier by converting "lastBoxSessionEnd" to a string prefixed with "Sess\_", which ensures that each session’s objects have distinct names. We then draw a filled rectangle using [ObjectCreate](https://www.mql5.com/en/docs/objects/objectcreate), passing type [OBJ\_RECTANGLE](https://www.mql5.com/en/docs/constants/objectconstants/enum_object) with the exact times and prices of the session's high ("BoxHighTime", "BoxHigh") and low ("BoxLowTime", "BoxLow"), setting its color to "clrThistle", enabling its fill with [OBJPROP\_FILL](https://www.mql5.com/en/docs/constants/objectconstants/enum_object_property#enum_object_property_integer), and placing it in the background with [OBJPROP\_BACK](https://www.mql5.com/en/docs/constants/objectconstants/enum_object_property#enum_object_property_integer).
+
+Following this, we draw two horizontal trend lines—one at the session high and one at the session low—spanning from "sessionStart" to "sessionEnd"; we set the top line's color to "[clrBlue](https://www.mql5.com/en/docs/constants/objectconstants/webcolors)" and the bottom line's color to "clrRed", and both lines use the dynamic line width and are not extended infinitely ("OBJPROP\_RAY\_RIGHT" is set to false). Finally, we create text objects for the top and bottom price labels at the right edge (at "sessionEnd"), setting their text to the session high and low (formatted with [DoubleToString](https://www.mql5.com/en/docs/convert/doubletostring) using the symbol's precision, [\_Digits](https://www.mql5.com/en/docs/predefined/_Digits)), with their color set to "clrBlack" and the dynamic font size applied, and we anchor them to the left so that the text appears to the right of the anchor. Upon compilation, we get the following outcome.
+
+From the image, we can see that we can identify the box, and plot it on the chart. So we can now proceed to opening the pending orders near the identified range boundaries. To achieve this, we use the following logic.
+
+```
+//--- Build the trade exit time using user-defined hour and minute for today
+MqlDateTime exitTimeStruct;                        //--- Declare a structure for exit time
+TimeToStruct(currentTime, exitTimeStruct);         //--- Use current time's date components
+exitTimeStruct.hour = TradeExitHour;               //--- Set trade exit hour
+exitTimeStruct.min  = TradeExitMinute;             //--- Set trade exit minute
+exitTimeStruct.sec  = 0;                           //--- Set seconds to 0
+datetime tradeExitTime = StructToTime(exitTimeStruct); //--- Convert exit time structure to datetime
+
+//--- If the session box is calculated, orders are not placed yet, and current time is before trade exit time, place orders
+if(boxCalculated && !ordersPlaced && currentTime < tradeExitTime){
+   double maBuffer[];                           //--- Declare array to hold MA values
+   ArraySetAsSeries(maBuffer, true);            //--- Set the array as series (newest first)
+   if(CopyBuffer(maHandle, 0, 0, 1, maBuffer) <= 0){  //--- Copy 1 value from the MA buffer
+      Print("Failed to copy MA buffer.");       //--- Print error if buffer copy fails
+      return;                                   //--- Exit the function if error occurs
+   }
+   double maValue = maBuffer[0];                 //--- Retrieve the current MA value
+   
+   double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID); //--- Get current bid price
+   bool bullish = (currentPrice > maValue);      //--- Determine bullish condition
+   bool bearish = (currentPrice < maValue);       //--- Determine bearish condition
+   
+   double offsetPrice = BreakoutOffsetPips * _Point; //--- Convert pips to price units
+   
+   //--- If bullish, place a Buy Stop order
+   if(bullish){
+      double entryPrice = BoxHigh + offsetPrice; //--- Set entry price just above the session high
+      double stopLoss   = BoxLow - offsetPrice;    //--- Set stop loss below the session low
+      double risk       = entryPrice - stopLoss;     //--- Calculate risk per unit
+      double takeProfit = entryPrice + risk * RiskToReward; //--- Calculate take profit using risk/reward ratio
+      if(obj_Trade.BuyStop(LotSize, entryPrice, _Symbol, stopLoss, takeProfit, ORDER_TIME_GTC, 0, "Asian Breakout EA")){
+         Print("Placed Buy Stop order at ", entryPrice); //--- Print order confirmation
+         ordersPlaced = true;                        //--- Set flag indicating an order has been placed
+      }
+      else{
+         Print("Buy Stop order failed: ", obj_Trade.ResultRetcodeDescription()); //--- Print error if order fails
+      }
+   }
+   //--- If bearish, place a Sell Stop order
+   else if(bearish){
+      double entryPrice = BoxLow - offsetPrice;  //--- Set entry price just below the session low
+      double stopLoss   = BoxHigh + offsetPrice;   //--- Set stop loss above the session high
+      double risk       = stopLoss - entryPrice;    //--- Calculate risk per unit
+      double takeProfit = entryPrice - risk * RiskToReward; //--- Calculate take profit using risk/reward ratio
+      if(obj_Trade.SellStop(LotSize, entryPrice, _Symbol, stopLoss, takeProfit, ORDER_TIME_GTC, 0, "Asian Breakout EA")){
+         Print("Placed Sell Stop order at ", entryPrice); //--- Print order confirmation
+         ordersPlaced = true;                       //--- Set flag indicating an order has been placed
+      }
+      else{
+         Print("Sell Stop order failed: ", obj_Trade.ResultRetcodeDescription()); //--- Print error if order fails
+      }
+   }
+}
+```
+
+Here, we build the trade exit time by declaring a [MqlDateTime](https://www.mql5.com/en/docs/constants/structures/mqldatetime) structure named "exitTimeStruct". We then use the [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) function to decompose the current time into its parts and assign the user-defined "TradeExitHour" and "TradeExitMinute" (with seconds set to 0) to "exitTimeStruct". Next, we convert this structure back to a datetime value by calling the [StructToTime](https://www.mql5.com/en/docs/dateandtime/structtotime) function, resulting in "tradeExitTime". After that, if the session box has been calculated, no orders have been placed, and the current time is before "tradeExitTime", we proceed to place orders.
+
+We declare an array "maBuffer" to hold [moving average](https://www.mql5.com/en/docs/indicators/ima) values and call the [ArraySetAsSeries](https://www.mql5.com/en/docs/array/arraysetasseries) function to ensure that the array is indexed with the newest data first. Then, we use the [CopyBuffer](https://www.mql5.com/en/docs/series/copybuffer) function to retrieve the latest value from the moving average indicator (using "maHandle") into "maBuffer". We compare this moving average value with the current bid price (obtained via the [SymbolInfoDouble](https://www.mql5.com/en/docs/marketinformation/symbolinfodouble) function) to determine whether the market is bullish or bearish. Based on this condition, we calculate the appropriate entry price, stop loss, and take profit using the "BreakoutOffsetPips" parameter, and then we place either a Buy Stop order using the "obj\_Trade.BuyStop" method or a Sell Stop order using the "obj\_Trade.SellStop" method.
+
+Finally, we print a confirmation message if the order is successfully placed or an error message if it fails, and we set the "ordersPlaced" flag accordingly. On running the program, we get the following result.
+
+From the function, we can see that once we have a breakout, we place the pending order concerning the direction of the moving average filter, with the stop orders as well. The only thing that remains is exiting the positions or deleting the pending orders once the trading time is not within the trading time.
+
+```
+//--- If current time is at or past trade exit time, close positions and cancel pending orders
+if(currentTime >= tradeExitTime){
+   CloseOpenPositions();                          //--- Close all open positions for this EA
+   CancelPendingOrders();                         //--- Cancel all pending orders for this EA
+   boxCalculated = false;                         //--- Reset session box calculated flag
+   ordersPlaced  = false;                         //--- Reset order placed flag
+}
+```
+
+Here, we check whether the current time has reached or surpassed the trade exit time. If it has, we call the "CloseOpenPositions" function to close all open positions associated with the EA, and then we call the "CancelPendingOrders" function to cancel any pending orders. After these functions execute, we reset the "boxCalculated" and "ordersPlaced" flags to false, preparing the program for a new session. The custom functions we use are as follows.
+
+```
+//+------------------------------------------------------------------+
+//| Function: CloseOpenPositions                                     |
+//| Purpose: Close all open positions with the set magic number      |
+//+------------------------------------------------------------------+
+void CloseOpenPositions(){
+   int totalPositions = PositionsTotal();           //--- Get total number of open positions
+   for(int i = totalPositions - 1; i >= 0; i--){      //--- Loop through positions in reverse order
+      ulong ticket = PositionGetTicket(i);           //--- Get ticket number for each position
+      if(PositionSelectByTicket(ticket)){            //--- Select position by ticket
+         if(PositionGetInteger(POSITION_MAGIC) == MagicNumber){ //--- Check if position belongs to this EA
+            if(!obj_Trade.PositionClose(ticket))        //--- Attempt to close position
+              Print("Failed to close position ", ticket, ": ", obj_Trade.ResultRetcodeDescription()); //--- Print error if closing fails
+            else
+              Print("Closed position ", ticket);    //--- Confirm position closed
+         }
+      }
+   }
+}
+  
+//+------------------------------------------------------------------+
+//| Function: CancelPendingOrders                                    |
+//| Purpose: Cancel all pending orders with the set magic number     |
+//+------------------------------------------------------------------+
+void CancelPendingOrders(){
+   int totalOrders = OrdersTotal();                 //--- Get total number of pending orders
+   for(int i = totalOrders - 1; i >= 0; i--){         //--- Loop through orders in reverse order
+      ulong ticket = OrderGetTicket(i);              //--- Get ticket number for each order
+      if(OrderSelect(ticket)){                       //--- Select order by ticket
+         int type = (int)OrderGetInteger(ORDER_TYPE); //--- Retrieve order type
+         if(OrderGetInteger(ORDER_MAGIC) == MagicNumber && //--- Check if order belongs to this EA
+            (type == ORDER_TYPE_BUY_STOP || type == ORDER_TYPE_SELL_STOP)){
+            if(!obj_Trade.OrderDelete(ticket))         //--- Attempt to delete pending order
+              Print("Failed to cancel pending order ", ticket); //--- Print error if deletion fails
+            else
+              Print("Canceled pending order ", ticket); //--- Confirm pending order canceled
+         }
+      }
+   }
+}
+```
+
+Here, in the function "CloseOpenPositions", we first retrieve the total number of open positions using the [PositionsTotal](https://www.mql5.com/en/docs/trading/positionstotal) function and then loop through each position in reverse order. For each position, we obtain its ticket number using [PositionGetTicket](https://www.mql5.com/en/docs/trading/positiongetticket) and select the position with [PositionSelectByTicket](https://www.mql5.com/en/docs/trading/positionselectbyticket). We then check if the position's [POSITION\_MAGIC](https://www.mql5.com/en/docs/constants/tradingconstants/positionproperties#enum_position_property_integer) value matches our user-defined "MagicNumber" to ensure it belongs to our EA; if it does, we attempt to close the position using the "obj\_Trade.PositionClose" function and print a confirmation message or an error message (using "obj\_Trade.ResultRetcodeDescription") based on the outcome.
+
+In the function "CancelPendingOrders", we first retrieve the total number of pending orders with the [OrdersTotal](https://www.mql5.com/en/docs/trading/orderstotal) function and loop through them in reverse order. For each order, we obtain its ticket using [OrderGetTicket](https://www.mql5.com/en/docs/trading/ordergetticket) and select it using [OrderSelect](https://www.mql5.com/en/docs/trading/orderselect). We then check if the order's [ORDER\_MAGIC](https://www.mql5.com/en/docs/constants/tradingconstants/orderproperties#enum_order_property_integer) matches our "MagicNumber" and if its type is either "ORDER\_TYPE\_BUY\_STOP" or [ORDER\_TYPE\_SELL\_STOP](https://www.mql5.com/en/docs/constants/tradingconstants/orderproperties#enum_order_type). If both conditions are met, we attempt to cancel the order using the "obj\_Trade.OrderDelete" function, printing either a success message or an error message based on whether the cancellation succeeds. Upon running the program, we get the following results.
+
+From the visualization, we can see that we identify the Asian session, plot it on the chart, place pending orders concerning the moving average direction, and cancel the orders or activated positions if they still exist once we surpass the trading time defined by the user, hence achieving our objective. The thing that remains is backtesting the program, and that is handled in the next section.
+
+### Backtesting and Optimization
+
+After thorough backtesting, for 1 year, 2023, using the default settings, we have the following results.
+
+Backtest graph:
+
+From the image, we can see that the graph is quite good, but we can help improve it by applying a trailing stop mechanism, and we achieved this using the following logic.
+
+```
+//+------------------------------------------------------------------+
+//|        FUNCTION TO APPLY TRAILING STOP                           |
+//+------------------------------------------------------------------+
+void applyTrailingSTOP(double slPoints, CTrade &trade_object,int magicNo=0){
+   double buySL = NormalizeDouble(SymbolInfoDouble(_Symbol,SYMBOL_BID)-slPoints,_Digits); //--- Calculate SL for buy positions
+   double sellSL = NormalizeDouble(SymbolInfoDouble(_Symbol,SYMBOL_ASK)+slPoints,_Digits); //--- Calculate SL for sell positions
+
+   for (int i = PositionsTotal() - 1; i >= 0; i--){ //--- Iterate through all open positions
+      ulong ticket = PositionGetTicket(i);          //--- Get position ticket
+      if (ticket > 0){                              //--- If ticket is valid
+         if (PositionGetString(POSITION_SYMBOL) == _Symbol &&
+            (magicNo == 0 || PositionGetInteger(POSITION_MAGIC) == magicNo)){ //--- Check symbol and magic number
+            if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY &&
+               buySL > PositionGetDouble(POSITION_PRICE_OPEN) &&
+               (buySL > PositionGetDouble(POSITION_SL) ||
+               PositionGetDouble(POSITION_SL) == 0)){ //--- Modify SL for buy position if conditions are met
+               trade_object.PositionModify(ticket,buySL,PositionGetDouble(POSITION_TP));
+            }
+            else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL &&
+               sellSL < PositionGetDouble(POSITION_PRICE_OPEN) &&
+               (sellSL < PositionGetDouble(POSITION_SL) ||
+               PositionGetDouble(POSITION_SL) == 0)){ //--- Modify SL for sell position if conditions are met
+               trade_object.PositionModify(ticket,sellSL,PositionGetDouble(POSITION_TP));
+            }
+         }
+      }
+   }
+}
+
+//---- CALL THE FUNCTION IN THE TICK EVENT HANDLER
+
+if (PositionsTotal() > 0){                       //--- If there are open positions
+   applyTrailingSTOP(30*_Point,obj_Trade,0);  //--- Apply a trailing stop
+}
+```
+
+Upon applying the function and testing, the new results are as below.
+
+Backtest graph:
+
+Backtest report:
+
+### Conclusion
+
+In conclusion, we have successfully developed an MQL5 Expert Advisor that automates the Asian Breakout Strategy with precision. By leveraging session-based range detection, trend filtering via a [moving average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma"), and dynamic risk management, we built a system that identifies key consolidation zones and executes breakout trades efficiently.
+
+Disclaimer: This article is for educational purposes only. Trading involves significant financial risk, and market conditions can be unpredictable. Although the strategy outlined provides a structured approach to breakout trading, it does not guarantee profitability. Comprehensive backtesting and proper risk management are essential before deploying this program in a live environment.
+
+By implementing these techniques, you can enhance your algorithmic trading capabilities, refine your technical analysis skills, and further advance your trading strategy. Best of luck on your trading journey!
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17239.zip "Download all attachments in the single ZIP archive")
+
+[Asian\_Breakout\_EA.mq5](https://www.mql5.com/en/articles/download/17239/asian_breakout_ea.mq5 "Download Asian_Breakout_EA.mq5")
+(49.79 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers](https://www.mql5.com/en/articles/17271)
+
+In this article, we implement automated trade entry using the MQL5 Economic Calendar by applying user-defined filters and time offsets to identify qualifying news events. We compare forecast and previous values to determine whether to open a BUY or SELL trade. Dynamic countdown timers display the remaining time until news release and reset automatically after a trade.
+
+[Anarchic Society Optimization (ASO) algorithm](https://www.mql5.com/en/articles/15511)
+
+In this article, we will get acquainted with the Anarchic Society Optimization (ASO) algorithm and discuss how an algorithm based on the irrational and adventurous behavior of participants in an anarchic society (an anomalous system of social interaction free from centralized power and various kinds of hierarchies) is able to explore the solution space and avoid the traps of local optimum. The article presents a unified ASO structure applicable to both continuous and discrete problems.
+
+[Price Action Analysis Toolkit Development (Part 15): Introducing Quarters Theory (I) — Quarters Drawer Script](https://www.mql5.com/en/articles/17250)
+
+Points of support and resistance are critical levels that signal potential trend reversals and continuations. Although identifying these levels can be challenging, once you pinpoint them, you’re well-prepared to navigate the market. For further assistance, check out the Quarters Drawer tool featured in this article, it will help you identify both primary and minor support and resistance levels.
+
+[MQL5 Wizard Techniques you should know (Part 55): SAC with Prioritized Experience Replay](https://www.mql5.com/en/articles/17254)
+
+Replay buffers in Reinforcement Learning are particularly important with off-policy algorithms like DQN or SAC. This then puts the spotlight on the sampling process of this memory-buffer. While default options with SAC, for instance, use random selection from this buffer, Prioritized Experience Replay buffers fine tune this by sampling from the buffer based on a TD-score. We review the importance of Reinforcement Learning, and, as always, examine just this hypothesis (not the cross-validation) in a wizard assembled Expert Advisor.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=hitdaewggfezicwpylmpkxmvarilfeyc&ssn=1788791488648815293&ssn_dr=0&ssn_sr=0&fv_date=1788791488&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F17239&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Automating%20Trading%20Strategies%20in%20MQL5%20(Part%209)%3A%20Building%20an%20Expert%20Advisor%20for%20the%20Asian%20Breakout%20Strategy%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887914885341725&fz_uniq=6425947987800374464&sv=2552)

@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_076_p00",
+  "section": "Examples",
+  "parent_shard": "examples_076",
+  "part_index": 0,
+  "part_count": 3,
+  "series_in_pack": [
+    "graphics in doeasy library"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 9442,
+      "title": "Graphics in DoEasy library (Part 73): Form object of a graphical element",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Form object of a graphical element",
+      "series_key": "graphics in doeasy library",
+      "series_part": 73,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9442.md"
+    },
+    {
+      "id": 9493,
+      "title": "Graphics in DoEasy library (Part 74): Basic graphical element powered by the CCanvas class",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Basic graphical element powered by the CCanvas class",
+      "series_key": "graphics in doeasy library",
+      "series_part": 74,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9493.md"
+    },
+    {
+      "id": 9515,
+      "title": "Graphics in DoEasy library (Part 75): Methods of handling primitives and text in the basic graphical element",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Methods of handling primitives and text in the basic graphical element",
+      "series_key": "graphics in doeasy library",
+      "series_part": 75,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9515.md"
+    },
+    {
+      "id": 9553,
+      "title": "Graphics in DoEasy library (Part 76): Form object and predefined color themes",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Form object and predefined color themes",
+      "series_key": "graphics in doeasy library",
+      "series_part": 76,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9553.md"
+    },
+    {
+      "id": 9575,
+      "title": "Graphics in DoEasy library (Part 77): Shadow object class",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Shadow object class",
+      "series_key": "graphics in doeasy library",
+      "series_part": 77,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9575.md"
+    },
+    {
+      "id": 9612,
+      "title": "Graphics in DoEasy library (Part 78): Animation principles in the library. Image slicing",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Animation principles in the library. Image slicing",
+      "series_key": "graphics in doeasy library",
+      "series_part": 78,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9612.md"
+    },
+    {
+      "id": 9652,
+      "title": "Graphics in DoEasy library (Part 79): \"Animation frame\" object class and its descendant objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): \"Animation frame\" object class and its descendant objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 79,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9652.md"
+    },
+    {
+      "id": 9689,
+      "title": "Graphics in DoEasy library (Part 80): \"Geometric animation frame\" object class",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): \"Geometric animation frame\" object class",
+      "series_key": "graphics in doeasy library",
+      "series_part": 80,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9689.md"
+    },
+    {
+      "id": 9751,
+      "title": "Graphics in DoEasy library (Part 81): Integrating graphics into library objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Integrating graphics into library objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 81,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9751.md"
+    },
+    {
+      "id": 9850,
+      "title": "Graphics in DoEasy library (Part 82): Library objects refactoring and collection of graphical objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Library objects refactoring and collection of graphical objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 82,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9850.md"
+    },
+    {
+      "id": 9902,
+      "title": "Graphics in DoEasy library (Part 83): Class of the abstract standard graphical object",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Class of the abstract standard graphical object",
+      "series_key": "graphics in doeasy library",
+      "series_part": 83,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9902.md"
+    },
+    {
+      "id": 9930,
+      "title": "Graphics in DoEasy library (Part 84): Descendant classes of the abstract standard graphical object",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Descendant classes of the abstract standard graphical object",
+      "series_key": "graphics in doeasy library",
+      "series_part": 84,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9930.md"
+    }
+  ]
+}

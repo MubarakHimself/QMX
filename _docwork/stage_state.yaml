@@ -321,3 +321,24 @@ change_mode:
     lint_docs_strict: "expected-blocked (ADR-0023 and SCN-0017 status: provisional per operator stamp)"
   review: "Independent consistency FAIL-with-amendments (_docwork/review-consistency-qml-research.md): 3 major + 2 minor. Desk fixes applied 2026-09-16; lint_docs re-clean."
   remaining: "Package proposed not accepted; GAP-0064/0073/0085/0061 deferred; cheap-veto A1-A5; next = bmad-create-epics-and-stories on FEAT-0047 first (see _docwork/qml-research-epics-handoff.md) — not this session"
+
+- date: '2026-09-19'
+  change: "Absorb the 2026-09-18/19 Workflows construction-kit spine (local AD-1..AD-31, candidate qmx-workflows-arch-2026-09-19-c) into docs/ — reuse existing applications; no sixth COMP; no new CT; OD-01 closed from transcript"
+  sources: [SRC-21, SRC-22, SRC-23]
+  provenance: "SRC-21 = architecture-QMX-2026-09-18/ (spine AD-1..AD-31 stage-c-reconciled + CHALLENGE-RECONCILIATION + OPERATOR-QUESTIONS OD-01 CLOSED + CONTRACTS/JOURNEYS). SRC-22 = rider workflows-construction-kit-2026-09-19.md. SRC-23 = Explore-Node-Editor-Architecture.md operator words. Inspect integration@270e992. Codex 85-ID catalog is specification oracles; AD-23..31 recheck skipped (GAP-0092). Route e change-mode Stage 9. Operator away; no BMAD epics prompt this session."
+  ledger: "DEC-0414..DEC-0444 = AD-1..AD-31 ratified; DEC-0445 umbrella; DEC-0446 preflight reuse; DEC-0447 cheap-veto A1-A6; DEC-0448 L36 named amendment (tags law); DEC-0449 DEC-0389 named amendment (DEC-0389 stays provisional, not superseded); DEC-0450 wiring @270e992; DEC-0451 dead-list honors. EXT-2246..EXT-2285. No live DEC superseded."
+  gaps: "GAP-0092..GAP-0100 minted deferred non-blocking. GAP-0081/0083/0058/0062 notes patched in place. Do not fill 0085/0063/0061. GAP-0094 note records pin-store / tombstone-mapping / CT-40 format-mint as unruled until FEAT-0051."
+  adr: "ADR-0024 written (new, status ratified, docs authority only); preflight verdict reuse — no new COMP, no new CT, no new depends_on edge; dated follow-ups on ADR-0020/0022/0023 (mill stays provisional)"
+  contracts: "CT-40/47/22/27/33/06/04 usage annotations only; no new contract id; ContributionHit three-class named amendment of DEC-0389; wiring honesty 270e992"
+  features: "FEAT-0051..FEAT-0057 minted (multi-pass, planned). First epic FEAT-0051 (ContributionHit concatenate + pin/tombstone)."
+  docs: "ADR-0024; SCN-0018..0022; qma-core/daemon/wire, qmb, qml, trading-node, qmf-risk/registry/data; constitution L36 (+ L7/L31); AGENTS; glossary; gap-report GAP-0092..0100; traceability; index; changelog 2026-09-19; overview/stack/dependencies notes; ADR-0020/0022/0023 follow-ups; every edited doc verified: 2026-09-19"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: "pass (pre-existing house-accepted warnings only)"
+    check_citations: "pass (house-accepted dead-DEC class only)"
+    lint_docs: clean
+    lint_docs_strict: "expected-blocked (ADR-0023 and SCN-0017 status: provisional per mill stamp)"
+  review: "Independent consistency FAIL-with-amendments (_docwork/review-consistency-workflows.md): 0 critical, 3 major, 7 minor. Desk fixes applied (ADR-0023 Consequences vs DEC-0449; unqualified AD-n collisions; SCN-0022 DEC-0431 vs DEC-0423; JobHandle cite; index counts; L36 QMN-only venue; CT-40 schema-honesty). Adversarial (_docwork/review-redteam-workflows.md) schema-hole blockers recorded as GAP-0094 notes — do not invent CT-52 or pin-store sqlite."
+  remaining: "Operator cheap-veto A1-A6; GAP-0092 Codex skip; first epic FEAT-0051 after the operator starts bmad-create-epics-and-stories in a later session — not this one. Implementation factory-pipeline-only."

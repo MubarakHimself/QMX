@@ -1,0 +1,84 @@
+{
+  "shard_id": "trading_systems_052",
+  "section": "Trading systems",
+  "n": 8,
+  "series_in_shard": [
+    "timeseries in doeasy library",
+    "trading with the mql5 economic calendar",
+    "visualizing deals on a chart"
+  ],
+  "articles": [
+    {
+      "id": 7821,
+      "title": "Timeseries in DoEasy library (part 42): Abstract indicator buffer object class",
+      "section": "Trading systems",
+      "series_title": "Timeseries in DoEasy library (): Abstract indicator buffer object class",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7821.md"
+    },
+    {
+      "id": 8207,
+      "title": "Timeseries in DoEasy library (part 47): Multi-period multi-symbol standard indicators",
+      "section": "Trading systems",
+      "series_title": "Timeseries in DoEasy library (): Multi-period multi-symbol standard indicators",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 47,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8207.md"
+    },
+    {
+      "id": 8464,
+      "title": "Timeseries in DoEasy library (part 53): Abstract base indicator class",
+      "section": "Trading systems",
+      "series_title": "Timeseries in DoEasy library (): Abstract base indicator class",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 53,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8464.md"
+    },
+    {
+      "id": 8508,
+      "title": "Timeseries in DoEasy library (part 54): Descendant classes of abstract base indicator",
+      "section": "Trading systems",
+      "series_title": "Timeseries in DoEasy library (): Descendant classes of abstract base indicator",
+      "series_key": "timeseries in doeasy library",
+      "series_part": 54,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8508.md"
+    },
+    {
+      "id": 22597,
+      "title": "Trading with the MQL5 Economic Calendar (Part 11): Modular Canvas News Dashboard",
+      "section": "Trading systems",
+      "series_title": "Trading with the MQL5 Economic Calendar (): Modular Canvas News Dashboard",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22597.md"
+    },
+    {
+      "id": 22608,
+      "title": "Trading with the MQL5 Economic Calendar (Part 12): SQLite Storage and Deduplication",
+      "section": "Trading systems",
+      "series_title": "Trading with the MQL5 Economic Calendar (): SQLite Storage and Deduplication",
+      "series_key": "trading with the mql5 economic calendar",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22608.md"
+    },
+    {
+      "id": 14903,
+      "title": "Visualizing deals on a chart (Part 1): Selecting a period for analysis",
+      "section": "Trading systems",
+      "series_title": "Visualizing deals on a chart (): Selecting a period for analysis",
+      "series_key": "visualizing deals on a chart",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14903.md"
+    },
+    {
+      "id": 14961,
+      "title": "Visualizing deals on a chart (Part 2): Data graphical display",
+      "section": "Trading systems",
+      "series_title": "Visualizing deals on a chart (): Data graphical display",
+      "series_key": "visualizing deals on a chart",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14961.md"
+    }
+  ]
+}

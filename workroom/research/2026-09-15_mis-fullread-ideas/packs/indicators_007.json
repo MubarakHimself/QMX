@@ -1,0 +1,88 @@
+{
+  "pack_id": "indicators_007",
+  "section": "Indicators",
+  "parent_shard": "indicators_007",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "feature engineering for ml",
+    "from static ma to adaptive filtering",
+    "gaussian processes in machine learning",
+    "introduction to mql5"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 23657,
+      "title": "Feature Engineering for ML (Part 12): Fractal Features in MQL5",
+      "section": "Indicators",
+      "series_title": "Feature Engineering for ML (): Fractal Features in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23657.md"
+    },
+    {
+      "id": 23659,
+      "title": "Feature Engineering for ML (Part 13): Trend-Scanning Features in Python",
+      "section": "Indicators",
+      "series_title": "Feature Engineering for ML (): Trend-Scanning Features in Python",
+      "series_key": "feature engineering for ml",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23659.md"
+    },
+    {
+      "id": 23660,
+      "title": "Feature Engineering for ML (Part 14): Trend-Scanning Features in MQL5",
+      "section": "Indicators",
+      "series_title": "Feature Engineering for ML (): Trend-Scanning Features in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23660.md"
+    },
+    {
+      "id": 22695,
+      "title": "From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5",
+      "section": "Indicators",
+      "series_title": "From Static MA to Adaptive Filtering (): Introducing SAMA with NLMS in MQL5",
+      "series_key": "from static ma to adaptive filtering",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22695.md"
+    },
+    {
+      "id": 23033,
+      "title": "From Static MA to Adaptive Filtering (Part 2): Implementing the SAMA_NLMS Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "From Static MA to Adaptive Filtering (): Implementing the SAMA_NLMS Indicator in MQL5",
+      "series_key": "from static ma to adaptive filtering",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23033.md"
+    },
+    {
+      "id": 19013,
+      "title": "Gaussian Processes in Machine Learning (Part 2): Implementing and Testing a Classification Model in MQL5",
+      "section": "Indicators",
+      "series_title": "Gaussian Processes in Machine Learning (): Implementing and Testing a Classification Model in MQL5",
+      "series_key": "gaussian processes in machine learning",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19013.md"
+    },
+    {
+      "id": 16956,
+      "title": "Introduction to MQL5 (Part 11): A Beginner's Guide to Working with Built-in Indicators in MQL5 (II)",
+      "section": "Indicators",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Working with Built-in Indicators in MQL5 (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16956.md"
+    },
+    {
+      "id": 21326,
+      "title": "Introduction to MQL5 (Part 42): Beginner Guide to File Handling in MQL5 (IV)",
+      "section": "Indicators",
+      "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (IV)",
+      "series_key": "introduction to mql5",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21326.md"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "article_id": 3886,
+  "title": "Using the Kalman Filter for price direction prediction",
+  "chars": 33206,
+  "heads": [
+    "# Using the Kalman Filter for price direction prediction",
+    "### Introduction",
+    "### 1. Kalman Filter Principle",
+    "#### 1.1. Extrapolation, Prediction of System Values",
+    "#### 1.2. Update of System Values",
+    "### 2. Practical Implementation of Kalman Filter",
+    "#### 2.1. Initialization of Input Data",
+    "#### 2.2. Price Movement Prediction",
+    "#### 2.3. Correction of the System State",
+    "### 3. Practical Demonstration of the Kalman Filter",
+    "### 4. Creating a Trading Signals Module for the MQL5 Wizard",
+    "### 5. Expert Advisor Testing",
+    "### Conclusion",
+    "### URL Links"
+  ],
+  "intro": "--- id: 3886 source_url: https://www.mql5.com/en/articles/3886 title: \"Using the Kalman Filter for price direction prediction\" author: \"\" author_url: published: 2017-12-13T08:19Z platform: \"MetaTrader 5\" section: \"Trading systems\" tags: [] series_title: \"\" series_part: source: mql5 language: en --- ![Using the Kalman Filter for price direction prediction](https://c.mql5.com/i/articles/overlay.png)\n\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5) \u2014 [Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems) | 13 December 2017 at 03:19\n\n[Dmitriy Gizlyk](https://www.mql5.com/en/users/dng)\n\nThe charts of currency and stock rates always contain price fluctuations, which differ in frequency and amplitude. Our task is to determine the main trends based on these short and long movements. Some traders draw trendlines on the chart, others use indicators. In both cases, our purpose is to separate the true price movement from noise caused by the influence of minor factors that have a short-term effect on the price. In this article I propose using the Kalman filter to separate the major movement from the market noise.",
+  "conclusion": "We have analyzed the principle of the Kalman filter and have created an indicator and an Expert Advisor on its basis. Testing has shown that this is a promising strategy and has helped reveal a number of bottlenecks that need to be addressed.\n\nPlease note that the article only provides general information and an example of creating an Expert Advisor, which in no way is a \"Holy Grail\" for use in real trading.\n\nI wish everyone a serious approach to trading and profitable trades!\n\n1. [Practical Evaluation of the Adaptive Market Following Method](https://www.mql5.com/en/articles/3456) 2. [Analysis of the Main Characteristics of Time Series](https://www.mql5.com/en/articles/292) 3. [AR Extrapolation of Price - Indicator for MetaTrader 5](https://www.mql5.com/en/code/129) 4. [MQL5 Wizard: How to Create a Module of Trading Signals](https://www.mql5.com/en/articles/226) 5. [Create Your Own Trading Robot in 6 Steps!](https://www.mql5.com/en/articles/367) 6. [MQL5 Wizard: New Version](https://www.mql5.com/en/articles/275)",
+  "claim_hits": [
+    "title: \"Using the Kalman Filter for price direction prediction\"",
+    "![Using the Kalman Filter for price direction prediction](https://c.mql5.com/i/articles/overlay.png)",
+    "![Dmitriy Gizlyk](https://c.mql5.com/avatar/2014/8/53E8CB77-1C48.png \"Dmitriy Gizlyk\")",
+    "The charts of currency and stock rates always contain price fluctuations, which differ in frequency and amplitude. Our task is to determine the main trends based on these short and long movements. Some traders draw trendlines on the chart, others use indicators. In both cases, our purpose is to separate the true price movement from noise caused by the influence of minor factors that have a short-term effect on the price. In this article I propose using the Kalman filter to separate the major mov",
+    "The idea of \u200b\u200busing digital filters in trading is not new. For example, I have already [described](https://www.mql5.com/en/articles/3456) the use of low-pass filters. But there is no limit to perfection, so let us consider one more strategy and compare results.",
+    "So, what is the Kalman filter and why is it interesting to us? Here is the definition of the filter from [Wikipedia](https://en.wikipedia.org/wiki/Kalman_filter \"https://en.wikipedia.org/wiki/Kalman_filter\"):",
+    "***Kalman filter*** is an algorithm that uses a series of measurements observed over time, containing statistical noise and other inaccuracies.",
+    "It means that the filter was originally designed to work with noisy data. Also, it is able to work with incomplete data. Another advantage is that it is designed for and applied in dynamic systems; our price chart belongs to such systems.",
+    "The first phase of the filter operation algorithm utilizes an underlying model of the process being analyzed. Based on this model, a one-step forward prediction is formed.",
+    "- x^k-1 is the previous state of the system (filter value at the previous step),",
+    "The second step of the filter algorithm starts with the measurement of the actual system state zk. The actually measured value of the system state is specified taking into account the true system state and the measurement error. In our case, the measurement error is the effects of noise on the dynamic system.",
+    "To this moment, we have two different values that represent the state of a single dynamic process. They include the extrapolated value of the dynamic system calculated at the first step, and the actual measured value. Each of these values with a certain degree of probability characterizes the true state of our process, which, therefore, is somewhere between these two value. So, our goal is to determine the confidence, i.e. the extent, to which this or that value is trusted. Iterations of the Kal",
+    "![Kalman gain](https://c.mql5.com/2/29/2.3_05.png \"Kalman gain\") (2.3)",
+    "Now, we use Kalman gain to update the system state value and the covariance matrix of the state vector estimate.",
+    "Now, we've got an idea of \u200b\u200bhow the Kalman filter works. Let's move on to its practical implementation. The above matrix representation of filter formulas allows receiving data from several sources. I suggest building a filter at the bar close prices and simplify the matrix representation to a discrete one.",
+    "As mentioned above, the basis of the Kalman filter is a dynamic process model, which is used to predict the next state of the process. The filter was initially intended for use with linear systems, in which the current state can be easily defined by applying a coefficient to the previous state. Our case is a little more difficult: our dynamic system is non-linear, and the ratio varies step by step. Moreover, we have no idea about the relationship between neighboring states of the system. The tas",
+    "Let's begin. First, we declare the CKalman class and required variables inside this class",
+    "CKalman(uint bars=6240, uint shift=0, string symbol=NULL, ENUM_TIMEFRAMES period=PERIOD_H1);"
+  ]
+}

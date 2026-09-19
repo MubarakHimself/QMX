@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_026_p01",
+  "section": "Trading",
+  "parent_shard": "trading_026",
+  "part_index": 1,
+  "part_count": 4,
+  "series_in_pack": [
+    "automating trading strategies in mql5"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 17618,
+      "title": "Automating Trading Strategies in MQL5 (Part 13): Building a Head and Shoulders Trading Algorithm",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Head and Shoulders Trading Algorithm",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17618.md"
+    },
+    {
+      "id": 17741,
+      "title": "Automating Trading Strategies in MQL5 (Part 14): Trade Layering Strategy with MACD-RSI Statistical Methods",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trade Layering Strategy with MACD-RSI Statistical Methods",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17741.md"
+    },
+    {
+      "id": 17865,
+      "title": "Automating Trading Strategies in MQL5 (Part 15): Price Action Harmonic Cypher Pattern with Visualization",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Price Action Harmonic Cypher Pattern with Visualization",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17865.md"
+    },
+    {
+      "id": 17876,
+      "title": "Automating Trading Strategies in MQL5 (Part 16): Midnight Range Breakout with Break of Structure (BoS) Price Action",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Midnight Range Breakout with Break of Structure (BoS) Price Action",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17876.md"
+    },
+    {
+      "id": 18038,
+      "title": "Automating Trading Strategies in MQL5 (Part 17): Mastering the Grid-Mart Scalping Strategy with a Dynamic Dashboard",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Mastering the Grid-Mart Scalping Strategy with a Dynamic Dashboard",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18038.md"
+    },
+    {
+      "id": 18269,
+      "title": "Automating Trading Strategies in MQL5 (Part 18): Envelopes Trend Bounce Scalping - Core Infrastructure and Signal Generation (Part I)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Envelopes Trend Bounce Scalping - Core Infrastructure and Signal Generation (Part I)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18269.md"
+    },
+    {
+      "id": 18298,
+      "title": "Automating Trading Strategies in MQL5 (Part 19): Envelopes Trend Bounce Scalping \u2014 Trade Execution and Risk Management (Part II)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Envelopes Trend Bounce Scalping \u2014 Trade Execution and Risk Management (Part II)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18298.md"
+    },
+    {
+      "id": 18604,
+      "title": "Automating Trading Strategies in MQL5 (Part 20): Multi-Symbol Strategy Using CCI and AO",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Multi-Symbol Strategy Using CCI and AO",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18604.md"
+    },
+    {
+      "id": 18660,
+      "title": "Automating Trading Strategies in MQL5 (Part 21): Enhancing Neural Network Trading with Adaptive Learning Rates",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Enhancing Neural Network Trading with Adaptive Learning Rates",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18660.md"
+    },
+    {
+      "id": 18720,
+      "title": "Automating Trading Strategies in MQL5 (Part 22): Creating a Zone Recovery System for Envelopes Trend Trading",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Zone Recovery System for Envelopes Trend Trading",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18720.md"
+    },
+    {
+      "id": 18778,
+      "title": "Automating Trading Strategies in MQL5 (Part 23): Zone Recovery with Trailing and Basket Logic",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Zone Recovery with Trailing and Basket Logic",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18778.md"
+    },
+    {
+      "id": 18867,
+      "title": "Automating Trading Strategies in MQL5 (Part 24): London Session Breakout System with Risk Management and Trailing Stops",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): London Session Breakout System with Risk Management and Trailing Stops",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18867.md"
+    }
+  ]
+}

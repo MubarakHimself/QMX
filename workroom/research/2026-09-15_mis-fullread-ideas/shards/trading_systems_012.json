@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_012",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16192,
+      "title": "Neural Networks in Trading: Contrastive Pattern Transformer (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16192.md"
+    },
+    {
+      "id": 16243,
+      "title": "Neural Networks in Trading: Node-Adaptive Graph Representation with NAFS",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16243.md"
+    },
+    {
+      "id": 16269,
+      "title": "Neural Networks in Trading: Directional Diffusion Models (DDM)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16269.md"
+    },
+    {
+      "id": 16280,
+      "title": "Reimagining Classic Strategies (Part XI): Moving Average Cross Over (II)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16280.md"
+    },
+    {
+      "id": 16306,
+      "title": "Neural Networks in Trading: Hyperbolic Latent Diffusion Model (HypDiff)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16306.md"
+    },
+    {
+      "id": 16323,
+      "title": "Neural Networks in Trading: Hyperbolic Latent Diffusion Model (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16323.md"
+    },
+    {
+      "id": 16360,
+      "title": "Neural Networks in Trading: Optimizing the Transformer for Time Series Forecasting (LSEAttention)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16360.md"
+    },
+    {
+      "id": 16388,
+      "title": "Neural Networks in Trading: Enhancing Transformer Efficiency by Reducing Sharpness (SAMformer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16388.md"
+    },
+    {
+      "id": 16439,
+      "title": "Neural Networks in Trading: A Parameter-Efficient Transformer with Segmented Attention (PSformer)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16439.md"
+    },
+    {
+      "id": 16473,
+      "title": "Non-linear regression models on the stock exchange",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16473.md"
+    },
+    {
+      "id": 16483,
+      "title": "Neural Networks in Trading: Parameter-Efficient Transformer with Segmented Attention (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16483.md"
+    },
+    {
+      "id": 16537,
+      "title": "Neural Networks in Trading: A Multi-Agent Self-Adaptive Model (MASA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16537.md"
+    }
+  ]
+}

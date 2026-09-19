@@ -1,0 +1,124 @@
+{
+  "pack_id": "expert_advisors_002",
+  "section": "Expert Advisors",
+  "parent_shard": "expert_advisors_002",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "data label for time series  mining",
+    "data label for time series mining",
+    "data science and machine learning",
+    "data science and ml"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15182,
+      "title": "Data Science and ML (Part 26): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): The Ultimate Battle in Time Series Forecasting \u2014 LSTM vs GRU Neural Networks",
+      "series_key": "data science and ml",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15182.md"
+    },
+    {
+      "id": 15259,
+      "title": "Data Science and ML (Part 27): Convolutional Neural Networks (CNNs) in MetaTrader 5 Trading Bots \u2014 Are They Worth It?",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): Convolutional Neural Networks (CNNs) in MetaTrader 5 Trading Bots \u2014 Are They Worth It?",
+      "series_key": "data science and ml",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15259.md"
+    },
+    {
+      "id": 17469,
+      "title": "Data Science and ML (Part 35): NumPy in MQL5 \u2013 The Art of Making Complex Algorithms with Less Code",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): NumPy in MQL5 \u2013 The Art of Making Complex Algorithms with Less Code",
+      "series_key": "data science and ml",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17469.md"
+    },
+    {
+      "id": 17886,
+      "title": "Data Science and ML (Part 38): AI Transfer Learning in Forex Markets",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): AI Transfer Learning in Forex Markets",
+      "series_key": "data science and ml",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17886.md"
+    },
+    {
+      "id": 17986,
+      "title": "Data Science and ML (Part 39): News + Artificial Intelligence, Would You Bet on it?",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): News + Artificial Intelligence, Would You Bet on it?",
+      "series_key": "data science and ml",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17986.md"
+    },
+    {
+      "id": 18078,
+      "title": "Data Science and ML (Part 40): Using Fibonacci Retracements in Machine Learning data",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): Using Fibonacci Retracements in Machine Learning data",
+      "series_key": "data science and ml",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18078.md"
+    },
+    {
+      "id": 18497,
+      "title": "Data Science and ML (Part 43): Hidden Patterns Detection in Indicators Data Using Latent Gaussian Mixture Models (LGMM)",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and ML (): Hidden Patterns Detection in Indicators Data Using Latent Gaussian Mixture Models (LGMM)",
+      "series_key": "data science and ml",
+      "series_part": 43,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18497.md"
+    },
+    {
+      "id": 11615,
+      "title": "Data Science and Machine Learning (Part 08): K-Means Clustering in plain MQL5",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and Machine Learning (): K-Means Clustering in plain MQL5",
+      "series_key": "data science and machine learning",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11615.md"
+    },
+    {
+      "id": 15114,
+      "title": "Data Science and Machine Learning (Part 25): Forex Timeseries Forecasting Using a Recurrent Neural Network (RNN)",
+      "section": "Expert Advisors",
+      "series_title": "Data Science and Machine Learning (): Forex Timeseries Forecasting Using a Recurrent Neural Network (RNN)",
+      "series_key": "data science and machine learning",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15114.md"
+    },
+    {
+      "id": 13225,
+      "title": "Data label for time series  mining(Part 1)\uff1aMake a dataset with trend markers through the EA operation chart",
+      "section": "Expert Advisors",
+      "series_title": "Data label for time series  mining()\uff1aMake a dataset with trend markers through the EA operation chart",
+      "series_key": "data label for time series  mining",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13225.md"
+    },
+    {
+      "id": 13255,
+      "title": "Data label for time series mining (Part 3)\uff1aExample for using label data",
+      "section": "Expert Advisors",
+      "series_title": "Data label for time series mining ()\uff1aExample for using label data",
+      "series_key": "data label for time series mining",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13255.md"
+    },
+    {
+      "id": 13254,
+      "title": "Data label for time series mining (Part 5)\uff1aApply and Test in EA Using Socket",
+      "section": "Expert Advisors",
+      "series_title": "Data label for time series mining ()\uff1aApply and Test in EA Using Socket",
+      "series_key": "data label for time series mining",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13254.md"
+    }
+  ]
+}

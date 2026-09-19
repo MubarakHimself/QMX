@@ -1,0 +1,118 @@
+{
+  "shard_id": "trading_systems_045",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [
+    "metatrader 5 machine learning blueprint"
+  ],
+  "articles": [
+    {
+      "id": 17520,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 1): Data Leakage and Timestamp Fixes",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Data Leakage and Timestamp Fixes",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17520.md"
+    },
+    {
+      "id": 19253,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 3): Trend-Scanning Labeling Method",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Trend-Scanning Labeling Method",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19253.md"
+    },
+    {
+      "id": 20302,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 6): Engineering a Production-Grade Caching System",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Engineering a Production-Grade Caching System",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20302.md"
+    },
+    {
+      "id": 20117,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 8): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Bayesian Hyperparameter Optimization with Purged Cross-Validation and Trial Pruning",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20117.md"
+    },
+    {
+      "id": 21823,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Integrating Bayesian HPO into the Production Pipeline",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21823.md"
+    },
+    {
+      "id": 21824,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 10): Bet Sizing for Financial Machine Learning",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Bet Sizing for Financial Machine Learning",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21824.md"
+    },
+    {
+      "id": 21915,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 11): Kelly Criterion, Prop Firm Integration, and CPCV Dynamic Backtesting",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Kelly Criterion, Prop Firm Integration, and CPCV Dynamic Backtesting",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21915.md"
+    },
+    {
+      "id": 21938,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 12): Probability Calibration for Financial Machine Learning",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Probability Calibration for Financial Machine Learning",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21938.md"
+    },
+    {
+      "id": 22372,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 14): Transaction Cost Modeling for Triple-Barrier Labels in MQL5",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Transaction Cost Modeling for Triple-Barrier Labels in MQL5",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22372.md"
+    },
+    {
+      "id": 22275,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 15): How to Calibrate Profit-Taking and Stop-Loss Targets from Synthetic Data",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): How to Calibrate Profit-Taking and Stop-Loss Targets from Synthetic Data",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22275.md"
+    },
+    {
+      "id": 22912,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 18): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Sequential Bootstrap, Corrected \u2014 Clone, Class Erasure, and the Comparison Toolkit",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22912.md"
+    },
+    {
+      "id": 23137,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 19): Bagging Regimes",
+      "section": "Trading systems",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Bagging Regimes",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23137.md"
+    }
+  ]
+}

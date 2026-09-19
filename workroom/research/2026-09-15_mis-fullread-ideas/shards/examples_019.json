@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_019",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2661,
+      "title": "How to quickly develop and debug a trading strategy in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2661.md"
+    },
+    {
+      "id": 2714,
+      "title": "Statistical distributions in the form of histograms without indicator buffers and arrays",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2714.md"
+    },
+    {
+      "id": 2717,
+      "title": "The 'Turtle Soup' trading system and its 'Turtle Soup Plus One' modification",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2717.md"
+    },
+    {
+      "id": 2720,
+      "title": "MQL5 Programming Basics: Files",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2720.md"
+    },
+    {
+      "id": 2723,
+      "title": "Graphical Interfaces X: Updates for Easy And Fast Library (Build 3)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2723.md"
+    },
+    {
+      "id": 2731,
+      "title": "LifeHack for Trader: A comparative report of several tests",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2731.md"
+    },
+    {
+      "id": 2739,
+      "title": "An Example of Developing a Spread Strategy for Moscow Exchange Futures",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2739.md"
+    },
+    {
+      "id": 2744,
+      "title": "MQL5 Programming Basics: Global Variables of the  MetaTrader 5 Terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2744.md"
+    },
+    {
+      "id": 2763,
+      "title": "Graphical Interfaces X: The Standard Chart Control (build 4)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2763.md"
+    },
+    {
+      "id": 2773,
+      "title": "Thomas DeMark's Sequential (TD SEQUENTIAL) using artificial intelligence",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2773.md"
+    },
+    {
+      "id": 2774,
+      "title": "Universal ZigZag",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2774.md"
+    },
+    {
+      "id": 2788,
+      "title": "Universal Oscillator with a GUI",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2788.md"
+    }
+  ]
+}

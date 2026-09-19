@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_025",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 22955,
+      "title": "Lazy-Loading Indicator Handles in MQL5: A Resource Manager Pattern for Multi-Timeframe EAs",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22955.md"
+    },
+    {
+      "id": 22962,
+      "title": "Implementing the Decorator Pattern in MQL5: Adding Logging, Timing, and Filtering to Any Indicator Non-Invasively",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22962.md"
+    },
+    {
+      "id": 22990,
+      "title": "Building an Object-Oriented Session VWAP Engine in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22990.md"
+    },
+    {
+      "id": 23149,
+      "title": "Digital Signal Processing for Traders: Building Ehlers' Filter Library in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23149.md"
+    },
+    {
+      "id": 23156,
+      "title": "Persistent Key-Value Store in MQL5: Using Flat Files as a Lightweight Database for EA State",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23156.md"
+    },
+    {
+      "id": 23199,
+      "title": "Building a Broker-Agnostic Symbol Resolution Layer in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23199.md"
+    },
+    {
+      "id": 23304,
+      "title": "Foundation Models for Trading (Part I): Porting Kronos to Native MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23304.md"
+    },
+    {
+      "id": 23315,
+      "title": "OrderSend retries and circuit breaker in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23315.md"
+    },
+    {
+      "id": 23320,
+      "title": "Strategy Configuration via External JSON Files in MQL5: Replacing Input Parameters with a Runtime Config Loader",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23320.md"
+    },
+    {
+      "id": 23322,
+      "title": "Exponentially Weighted Covariance Matrix in MQL5: Building an Adaptive Correlation Monitor for Multi-Symbol EAs",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23322.md"
+    },
+    {
+      "id": 23341,
+      "title": "Building an Object-Oriented Order Block Engine in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23341.md"
+    },
+    {
+      "id": 23355,
+      "title": "Adaptive Spread Monitoring and Order Gating in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23355.md"
+    }
+  ]
+}

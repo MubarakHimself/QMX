@@ -1,0 +1,119 @@
+{
+  "pack_id": "statistics_and_analysis_001",
+  "section": "Statistics and analysis",
+  "parent_shard": "statistics_and_analysis_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 5436,
+      "title": "Analyzing trading results using HTML reports",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5436.md"
+    },
+    {
+      "id": 5481,
+      "title": "Practical application of correlations in trading",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5481.md"
+    },
+    {
+      "id": 5517,
+      "title": "Selection and navigation utility in MQL5 and MQL4: Adding auto search for patterns and displaying detected symbols",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5517.md"
+    },
+    {
+      "id": 5614,
+      "title": "Selection and navigation utility in MQL5 and MQL4: Adding data to charts",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5614.md"
+    },
+    {
+      "id": 7782,
+      "title": "On Methods to Detect Overbought/Oversold Zones. Part I",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7782.md"
+    },
+    {
+      "id": 8038,
+      "title": "Probability theory and mathematical statistics with examples (part I): Fundamentals and elementary theory",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8038.md"
+    },
+    {
+      "id": 8136,
+      "title": "Price series discretization, random component and noise",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8136.md"
+    },
+    {
+      "id": 10475,
+      "title": "Tips from a professional programmer (Part III): Logging. Connecting to the Seq log collection and analysis system",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10475.md"
+    },
+    {
+      "id": 11858,
+      "title": "Matrix Utils, Extending the Matrices and Vector Standard Library Functionality",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11858.md"
+    },
+    {
+      "id": 14199,
+      "title": "Spurious Regressions in Python",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14199.md"
+    },
+    {
+      "id": 14412,
+      "title": "Non-stationary processes and spurious regression",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14412.md"
+    },
+    {
+      "id": 14813,
+      "title": "Two-sample Kolmogorov-Smirnov test as an indicator of time series non-stationarity",
+      "section": "Statistics and analysis",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14813.md"
+    }
+  ]
+}

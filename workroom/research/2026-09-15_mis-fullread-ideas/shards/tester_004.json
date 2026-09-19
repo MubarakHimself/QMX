@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_004",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 7038,
+      "title": "Exploring Seasonal Patterns of Financial Time Series with Boxplot",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7038.md"
+    },
+    {
+      "id": 7059,
+      "title": "Optimization management (Part II): Creating key objects and add-on logic",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7059.md"
+    },
+    {
+      "id": 7113,
+      "title": "Extract profit down to the last pip",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7113.md"
+    },
+    {
+      "id": 7463,
+      "title": "SQLite: Native handling of SQL databases in MQL5",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7463.md"
+    },
+    {
+      "id": 8226,
+      "title": "Custom symbols: Practical basics",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8226.md"
+    },
+    {
+      "id": 8311,
+      "title": "Brute force approach to pattern search",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8311.md"
+    },
+    {
+      "id": 8321,
+      "title": "Parallel Particle Swarm Optimization",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8321.md"
+    },
+    {
+      "id": 8642,
+      "title": "Gradient Boosting (CatBoost) in the development of trading systems. A naive approach",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8642.md"
+    },
+    {
+      "id": 8660,
+      "title": "Brute force approach to pattern search (Part II): Immersion",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8660.md"
+    },
+    {
+      "id": 8661,
+      "title": "Brute force approach to pattern search (Part III): New horizons",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8661.md"
+    },
+    {
+      "id": 8845,
+      "title": "Brute force approach to pattern search (Part IV): Minimal functionality",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8845.md"
+    },
+    {
+      "id": 9456,
+      "title": "Combinatorics and probability theory for trading (Part I): The basics",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9456.md"
+    }
+  ]
+}

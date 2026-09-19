@@ -1,0 +1,356 @@
+# Chaos theory in trading (Part 2): Diving deeper
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 3 February 2025 at 07:26
+3 761
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/480825 "Comments")
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+### Previous article summary
+[The first article](https://www.mql5.com/en/articles/15332) considered basic concepts of chaos theory and their application to the analysis of financial markets. We looked at key concepts, such as attractors, fractals, and the butterfly effect, and discussed how they reveal themselves in market dynamics. Particular attention was paid to the characteristics of chaotic systems in the context of finance and the concept of volatility.
+We also compared classical chaos theory with Bill Williams' approach, which allowed us to better understand the differences between the scientific and practical application of these concepts in trading. Lyapunov exponent as a tool for analyzing financial time series took a central stage in the article. We considered both its theoretical meaning and a practical implementation of its calculation in MQL5 language.
+The final part of the article was devoted to the statistical analysis of trend reversals and continuations using the Lyapunov exponent. Using the EURUSD pair on H1 timeframe as an example, we demonstrated how this analysis can be applied in practice and discussed the interpretation of the results obtained.
+The article laid the foundation for understanding chaos theory in the context of financial markets and presented practical tools for applying it to trading. In the second article, we will continue to deepen our understanding of this topic, focusing on more complex aspects and their practical applications.
+The first thing we will talk about is fractal dimension as a measure of market chaos.
+### 
+### Fractal dimension as a measure of market chaos
+Fractal dimension is a concept that plays an important role in chaos theory and the analysis of complex systems, including financial markets. It provides a quantitative measure of the complexity and self-similarity of an object or process, making it particularly useful for assessing the degree of randomness in market movements.
+In the context of financial markets, fractal dimension can be used to measure the "jaggedness" of price charts. A higher fractal dimension indicates a more complex, chaotic price structure, while a lower dimension may indicate smoother, predictable movement.
+There are several methods for calculating fractal dimension. One of the most popular ones is the box-counting method. This method involves covering the chart with a grid of cells of varying sizes and counting the number of cells needed to cover the chart at different scales.
+The equation for calculating the fractal dimension D using the method is as follows:
+D = -lim(ε→0) [log N(ε) / log(ε)]
+where N(ε) is the number of cells of size ε required to cover the object.
+Applying fractal dimension to financial market analysis can provide traders and analysts with additional insight into the nature of market movements. For example:
+- Identifying market modes: Changes in fractal dimension can indicate transitions between different market states such as trends, flat movements, or chaotic periods.
+- Volatility assessment: High fractal dimension often corresponds to periods of increased volatility.
+- Forecasting: Analyzing changes in fractal dimension over time can help in forecasting future market movements.
+- Optimizing trading strategies: Understanding the fractal structure of the market can help in developing and optimizing trading algorithms.
+Now let's look at the practical implementation of calculating the fractal dimension in the MQL5 language. We will develop an indicator that will calculate the fractal dimension of the price chart in real time in MQL5.
+The indicator uses the box-counting method to estimate the fractal dimension.
+```
+#property copyright "Copyright 2024, Evgeniy Shtenco"
+#property link      "https://www.mql5.com/en/users/koshtenko"
+#property version   "1.00"
+#property strict
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "Fractal Dimension"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrRed
+#property indicator_style1  STYLE_SOLID
+#property indicator_width1  1
+input int    InpBoxSizesCount = 5;    // Number of box sizes
+input int    InpMinBoxSize    = 2;    // Minimum box size
+input int    InpMaxBoxSize    = 100;  // Maximum box size
+input int    InpDataLength    = 1000; // Data length for calculation
+double FractalDimensionBuffer[];
+int OnInit()
+   SetIndexBuffer(0, FractalDimensionBuffer, INDICATOR_DATA);
+   IndicatorSetInteger(INDICATOR_DIGITS, 4);
+   IndicatorSetString(INDICATOR_SHORTNAME, "Fractal Dimension");
+   return(INIT_SUCCEEDED);
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Chaos theory in trading (Part 2): Diving deeper
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Previous article summary
+[The first article](https://www.mql5.com/en/articles/15332) considered basic concepts of chaos theory and their application to the analysis of financial markets. We looked at key concepts, such as attractors, fractals, and the butterfly effect, and discussed how they reveal themselves in market dynamics. Particular attention was paid to the characteristics of chaotic systems in the context of finance and the concept of volatility.
+### 
+### Fractal dimension as a measure of market chaos
+Fractal dimension is a concept that plays an important role in chaos theory and the analysis of complex systems, including financial markets. It provides a quantitative measure of the complexity and self-similarity of an object or process, making it particularly useful for assessing the degree of randomness in market movements.
+In the context of financial markets, fractal dimension can be used to measure the "jaggedness" of price charts. A higher fractal dimension indicates a more complex, chaotic price structure, while a lower dimension may indicate smoother, predictable movement.
+Applying fractal dimension to financial market analysis can provide traders and analysts with additional insight into the nature of market movements. For example:
+- Identifying market modes: Changes in fractal dimension can indicate transitions between different market states such as trends, flat movements, or chaotic periods.
+- Volatility assessment: High fractal dimension often corresponds to periods of increased volatility.
+- Forecasting: Analyzing changes in fractal dimension over time can help in forecasting future market movements.
+- Optimizing trading strategies: Understanding the fractal structure of the market can help in developing and optimizing trading algorithms.
+```
+#property copyright "Copyright 2024, Evgeniy Shtenco"
+#property link      "https://www.mql5.com/en/users/koshtenko"
+#property version   "1.00"
+#property strict
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "Fractal Dimension"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrRed
+#property indicator_style1  STYLE_SOLID
+#property indicator_width1  1
+
+input int    InpBoxSizesCount = 5;    // Number of box sizes
+double FractalDimensionBuffer[];
+int OnInit()
+   {
+      FractalDimensionBuffer[i] = CalculateFractalDimension(close, i);
+   }
+   
+double CalculateFractalDimension(const double &price[], int index)
+{
+   if(index < InpDataLength)
+Indicator operation algorithm:
+1. For each point on the chart, the indicator calculates the fractal dimension using data for the last InpDataLength candles.
+Changes in fractal dimension may signal a change in the market mode.
+![](https://c.mql5.com/2/116/Frac__1.jpg)
+### 
+### Recurrence analysis to uncover hidden patterns in price movements
+Recurrence analysis is a powerful method of non-linear time series analysis that can be effectively applied to study the dynamics of financial markets. This approach allows us to visualize and quantify recurring patterns in complex dynamic systems, which certainly include financial markets.
+1. Phase space reconstruction: Using the delay method, we transform the one-dimensional price time series into a multidimensional phase space.
+2. Determining the similarity threshold: We select a criterion, by which we will consider two states to be similar.
+3. Construction of the recurrence matrix: For each pair of time points, we determine whether the corresponding states are similar.
+4. Visualization: We display the recurrence matrix as a two-dimensional image, where similar states are indicated by dots.
+
+Recurrence diagrams allow us to identify different types of dynamics in a system:
+To quantify the structures in a recurrence diagram, various recurrence measures are used, such as the percentage of recurrence, the entropy of diagonal lines, the maximum length of a diagonal line, and others.
+Applying recurrence analysis to financial time series can help:
+### Recurrence analysis indicator in MQL5
+The indicator implements the recurrence analysis method for studying the dynamics of financial markets. It calculates three key measures of recurrence: recurrence level, determinism and laminarity.
+```
+#property copyright "Copyright 2024, Evgeniy Shtenco"
+#property link      "https://www.mql5.com/en/users/koshtenko"
+#property version   "1.00"
+#property strict
+#property indicator_separate_window
+#property indicator_buffers 3
+#property indicator_plots   3
+#property indicator_label1  "Recurrence Rate"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrBlue
+#property indicator_label2  "Determinism"
+#property indicator_type2   DRAW_LINE
+#property indicator_color2  clrRed
+#property indicator_label3  "Laminarity"
+#property indicator_type3   DRAW_LINE
+#property indicator_color3  clrGreen
+
+input int    InpEmbeddingDimension = 3;     // Embedding dimension
+input int    InpTimeDelay          = 1;     // Time delay
+input int    InpThreshold          = 10;    // Threshold (in points)
+input int    InpWindowSize         = 200;   // Window size
+   int windowStart = index - InpWindowSize + 1;
+   int matrixSize = InpWindowSize - (InpEmbeddingDimension - 1) * InpTimeDelay;
+   
+   int recurrenceCount = 0;
+   for(int i = 0; i < matrixSize; i++)
+   {
+      for(int j = 0; j < matrixSize; j++)
+      {
+         bool isRecurrent = IsRecurrent(price, price_total, windowStart + i, windowStart + j);
+   recurrenceRate = (double)recurrenceCount / (matrixSize * matrixSize);
+   determinism = (recurrenceCount > 0) ? (double)diagonalLines / recurrenceCount : 0;
+   laminarity = (recurrenceCount > 0) ? (double)verticalLines / recurrenceCount : 0;
+   return (distance <= InpThreshold * _Point);
+}
+```
+The indicator inputs include InpEmbeddingDimension (default 3), which defines the embedding dimension for the phase space reconstruction, InpTimeDelay (default 1) for the time delay during reconstruction, InpThreshold (default 10) for the state similarity threshold in points, and InpWindowSize (default 200) for setting the size of the analysis window.
+
+The indicator operating algorithm is based on the delay method for reconstructing the phase space from a one-dimensional time series of prices. For each point in the analysis window, its "recurrence" in relation to other points is calculated. Then, based on the obtained recurrent structure, three measures are calculated: Recurrence Rate, which determines the proportion of recurrence points in the total number of points, Determinism, which shows the proportion of recurrence points that form diagonal lines, and Laminarity, which estimates the proportion of recurrence points that form vertical lines.
+### 
+### Applying Takens' embedding theorem in volatility forecasting
+Takens' embedding theorem is a fundamental result in the theory of dynamical systems that has important implications for the analysis of time series, including financial data. This theorem states that a dynamic system can be reconstructed from observations of just one variable using the time-lag method.
+   - Estimation of local point density
+3. Volatility forecast:
+   - Using local density information to estimate future volatility
+Let us have a time series of close prices {p(t)}. We create m-dimensional vectors as follows:
+x(t) = [p(t), p(t+τ), p(t+2τ), ..., p(t+(m-1)τ)]
+where m is an embedding dimension and τ is a time delay.
+Volatility forecast
+![](https://c.mql5.com/2/116/232__1.jpg)
+To forecast volatility at t+h time point, we:
+- Find the k nearest neighbors for the current x(t) point in the reconstructed space
+σ̂(t+h) = (1/k) Σ σ(ti+h), where ti are the indices of the k nearest neighbors of x(t)
+The advantages of this approach:
+#property copyright "Copyright 2024, Evgeniy Shtenco"
+#property link      "https://www.mql5.com/en/users/koshtenko"
+#property version   "1.00"
+#property strict
+#property indicator_separate_window
+#property indicator_buffers 1
+#property indicator_plots   1
+#property indicator_label1  "Predicted Volatility"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrRed
+#property indicator_style1  STYLE_SOLID
+#property indicator_width1  1
+
+input int    InpEmbeddingDimension = 3;     // Embedding dimension
+double PredictedVolatilityBuffer[];
+int OnInit()
+      {
+         PredictedVolatilityBuffer[i] = PredictVolatility(close, i);
+      }
+   }
+double PredictVolatility(const double &price[], int index)
+{
+   int vectorSize = InpEmbeddingDimension;
+   
+   double sumVolatility = 0;
+   for(int i = 0; i < InpNeighbors; i++)
+   {
+      double futureReturn = (price[neighborIndex + InpForecastHorizon] - price[neighborIndex]) / price[neighborIndex];
+      sumVolatility += MathAbs(futureReturn);
+   return sumVolatility / InpNeighbors;
+}
+```
+### Methods for determining a time delay and an embedding dimension
+
+When reconstructing the phase space using Takens' theorem, it is critical to choose two key parameters correctly: the time delay (τ) and the embedding dimension (m). Incorrect selection of these parameters can lead to incorrect reconstruction and, as a consequence, to erroneous conclusions. Let's consider two main methods for determining these parameters.
+int FindOptimalLagACF(const double &price[], int maxLag, double threshold = 0.1)
+   int size = ArraySize(price);
+      
+      if(MathAbs(acf) <= threshold)
+         return lag;
+   }
+In this implementation, we first calculate the mean and variance of the time series. Then, for each lag from 1 to maxLag, we calculate the value of the autocorrelation function. Once the ACF value becomes less than or equal to a given threshold (default 0.1), we return this lag as the optimal time delay.
+ACF method has its pros and cons. On the one hand, it is easy to implement and intuitive. On the other hand, it does not take into account non-linear dependencies in the data, which can be a significant drawback when analyzing financial time series, which often exhibit non-linear behavior.
+### 
+### False nearest neighbors algorithm for determining optimal embedding dimension
+Once the optimal time delay has been determined, the next important step in the phase space reconstruction is the choice of an appropriate embedding dimension. One of the most popular methods for this purpose is the False Nearest Neighbors (FNN) algorithm.
+The idea of the FNN algorithm is to find such a minimum embedding dimension that the geometric structure of the attractor in the phase space will be correctly reproduced. The algorithm is based on the assumption that in a correctly reconstructed phase space, close points should remain close when moving to a higher-dimensional space.
+Let's look at the implementation of the FNN algorithm in the MQL5 language:
+bool IsFalseNeighbor(const double &price[], int index1, int index2, int dim, int delay, double threshold)
+{
+   double dist1 = 0, dist2 = 0;
+   
+   return (MathAbs(dist2 - dist1) / dist1 > threshold);
+}
+
+int FindOptimalEmbeddingDimension(const double &price[], int delay, int maxDim, double threshold = 0.1, double tolerance = 0.01)
+            totalNeighbors++;
+            if(IsFalseNeighbor(price, i, nearestNeighbor, dim, delay, threshold))
+               falseNeighbors++;
+         }
+The IsFalseNeighbor function determines whether two points are false neighbors. It calculates the distance between points in the current dimension and in the dimension that is greater by one. If the relative change in distance exceeds a given threshold, the points are considered false neighbors.
+The main function FindOptimalEmbeddingDimension iterates through dimensions from 1 to maxDim. For each dimension, we go through all points of the time series. For each point, we find the nearest neighbor in the current dimension. Then we check whether the found neighbor is false using the IsFalseNeighbor function. Count the total number of neighbors and the number of false neighbors. After this, calculate the proportion of false neighbors. If the proportion of false neighbors is less than the specified tolerance threshold, consider the current dimension to be optimal and return it.
+The algorithm has several important parameters. delay — a time delay previously determined by the ACF or MI method. maxDim - maximum embedding dimension to be considered. threshold — threshold for detecting false neighbors. tolerance — tolerance threshold for the proportion of false neighbors. The choice of these parameters can significantly affect the result, so it is important to experiment with different values and take into account the specifics of the data being analyzed.
+The FNN algorithm has a number of advantages. It takes into account the geometric structure of the data in phase space. The method is quite robust to noise in the data. It does not require any prior assumptions about the nature of the system being studied.
+### 
+### Implementing the forecast method based on chaos theory in MQL5
+Once we have determined the optimal parameters for reconstructing the phase space, we can begin implementing the chaos theory-based prediction method. This method is based on the idea that nearby states in phase space will have similar evolution in the near future.
+Let's look at the implementation of this method as an indicator for MetaTrader 5. The indicator will perform the following steps:
+1. Phase space reconstruction using the time delay method.
+```
+#property copyright "Copyright 2024, Evgeniy Shtenco"
+#property link      "https://www.mql5.com/en/users/koshtenko"
+#property version   "1.00"
+#property strict
+#property indicator_chart_window
+#property indicator_buffers 2
+#property indicator_plots   2
+#property indicator_label1  "Actual"
+#property indicator_type1   DRAW_LINE
+#property indicator_color1  clrBlue
+#property indicator_label2  "Predicted"
+#property indicator_type2   DRAW_LINE
+#property indicator_color2  clrRed
+
+input int    InpEmbeddingDimension = 3;     // Embedding dimension
+### 
+### Creating a concept EA
+We have reached the most interesting part. Below is the code for fully automated work based on chaos theory:
+#property copyright "Copyright 2024, Author"
+#property link      "https://www.example.com"
+#include <Arrays\ArrayObj.mqh>
+#include <Trade\Trade.mqh>
+CTrade Trade;
+int FindOptimalLagACF(int maxLag, double threshold = 0.1)
+{
+   int size = InpLookback;
+      
+      if(MathAbs(acf) <= threshold)
+         return lag;
+   }
+int FindOptimalEmbeddingDimension(int delay, int maxDim, double threshold = 0.1, double tolerance = 0.01)
+            totalNeighbors++;
+            if(IsFalseNeighbor(series, i, nearestNeighbor, dim, delay, threshold))
+               falseNeighbors++;
+         }
+
+bool IsFalseNeighbor(const double &price[], int index1, int index2, int dim, int delay, double threshold)
+   double dist1 = 0, dist2 = 0;
+   
+   return (MathAbs(dist2 - dist1) / dist1 > threshold);
+}
+This code is an EA for MetaTrader 5 that uses chaos theory concepts to forecast prices in financial markets. The EA implements the forecast method based on the nearest neighbor method in the reconstructed phase space.
+The EA has the following inputs:
+- Finds the distances between the current state of the system and all states in the lookback period.
+- Sorts states by increasing distance.
+- Computes a weighted average of future prices for InpNeighbors nearest neighbors, where the weight of each neighbor is inversely proportional to its distance from the current state.
+- Returns a weighted average as a price forecast.
+### Testing with auto-optimization
+Let's consider the work of our EA on several symbols. The first currency pair, EURUSD, period from 01.01.2016:
+### 
+### Next steps
+Further development of our chaos theory-based EA will require in-depth testing and optimization. Large-scale testing across different timeframes and financial instruments is needed to better understand its efficiency in different market conditions. The use of machine learning methods can help optimize the EA parameters increasing its adaptability to changing market realities.
+### Conclusion
+In this article, we looked at the application of chaos theory to the analysis and forecasting of financial markets. We studied key concepts such as phase space reconstruction, determining the optimal embedding dimension and time delay, and the nearest neighbor prediction method.
+In conclusion, while chaos theory is not the Holy Grail for market forecasting, it does represent a promising direction for further research and development in the fields of financial analysis and algorithmic trading. It is clear that combining chaos theory methods with other approaches, such as machine learning and big data analytics, can open up new possibilities.
+Translated from Russian by MetaQuotes Ltd.   
+Best VPS for traders
+Two-click launch from MetaTrader, minimum ping to broker, 15 USD/month
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/vps&a=wpjhvzsogglsviotmypjoyhhtuxlrzhi&s=aa6c5782a1658c2f617954d478dea9989a27ae26ecabc09d0ab1204277fdf8e3&uid=&ref=https://www.mql5.com/en/articles/15445&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6352374321846569174)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+In this article, we looked at the application of chaos theory to the analysis and forecasting of financial markets. We studied key concepts such as phase space reconstruction, determining the optimal embedding dimension and time delay, and the nearest neighbor prediction method.
+
+The EA we developed demonstrates the potential of using chaos theory in algorithmic trading. Testing results on various currency pairs show that the strategy is capable of generating profit, although with varying degrees of success on different instruments.
+
+However, it is important to note that applying chaos theory to finance comes with a number of challenges. Financial markets are extremely complex systems influenced by many factors, many of which are difficult or even impossible to take into account in a model. Moreover, the very nature of chaotic systems makes long-term forecasting fundamentally impossible - this is one of the main postulates of serious researchers.
+
+In conclusion, while chaos theory is not the Holy Grail for market forecasting, it does represent a promising direction for further research and development in the fields of financial analysis and algorithmic trading. It is clear that combining chaos theory methods with other approaches, such as machine learning and big data analytics, can open up new possibilities.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/15445>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/15445.zip "Download all attachments in the single ZIP archive")
+
+[ChaosTheory.zip](https://www.mql5.com/en/articles/download/15445/chaostheory.zip "Download ChaosTheory.zip")
+(59.06 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![From Basic to Intermediate: Variables (II)](https://c.mql5.com/2/85/Do_b8sico_ao_intermedixrio__Varipveis_II___LOGO.png)
+[From Basic to Intermediate: Variables (II)](https://www.mql5.com/en/articles/15302)
+
+Today we will look at how to work with static variables. This question often confuses many programmers, both beginners and those with some experience, because there are several recommendations that must be followed when using this mechanism. The materials presented here are intended for didactic purposes only. Under no circumstances should the application be viewed for any purpose other than to learn and master the concepts presented.
+
+![Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 2): Creating Synthetic Symbol for Testing](https://c.mql5.com/2/106/GANs_for_Synthetic_Data_in_Financial_Modeling_Part_2_LOGO.png)
+[Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 2): Creating Synthetic Symbol for Testing](https://www.mql5.com/en/articles/16428)
+
+In this article we are creating a synthetic symbol using a Generative Adversarial Network (GAN) involves generating realistic Financial data that mimics the behavior of actual market instruments, such as EURUSD. The GAN model learns patterns and volatility from historical market data and creates synthetic price data with similar characteristics.
+
+![Automating Trading Strategies in MQL5 (Part 5): Developing the Adaptive Crossover RSI Trading Suite Strategy](https://c.mql5.com/2/115/Automating_Trading_Strategies_in_MQL5_Part_5___LOGO.png)
+[Automating Trading Strategies in MQL5 (Part 5): Developing the Adaptive Crossover RSI Trading Suite Strategy](https://www.mql5.com/en/articles/17040)
+
+In this article, we develop the Adaptive Crossover RSI Trading Suite System, which uses 14- and 50-period moving average crossovers for signals, confirmed by a 14-period RSI filter. The system includes a trading day filter, signal arrows with annotations, and a real-time dashboard for monitoring. This approach ensures precision and adaptability in automated trading.
+
+![MQL5 Wizard Techniques you should know (Part 53): Market Facilitation Index](https://c.mql5.com/2/115/MQL5_Wizard_Techniques_you_should_know_Part_53_LOGO.png)
+[MQL5 Wizard Techniques you should know (Part 53): Market Facilitation Index](https://www.mql5.com/en/articles/17065)
+
+The Market Facilitation Index is another Bill Williams Indicator that is intended to measure the efficiency of price movement in tandem with volume. As always, we look at the various patterns of this indicator within the confines of a wizard assembly signal class, and present a variety of test reports and analyses for the various patterns.
+
+[![](https://www.mql5.com/ff/sh/rvgkjnsrvj1mzh89z2/01.png)
+
+Best VPS for traders
+Two-click launch from MetaTrader, minimum ping to broker, 15 USD/month
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/vps&a=wpjhvzsogglsviotmypjoyhhtuxlrzhi&s=aa6c5782a1658c2f617954d478dea9989a27ae26ecabc09d0ab1204277fdf8e3&uid=&ref=https://www.mql5.com/en/articles/15445&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6352374321846569174)

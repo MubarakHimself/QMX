@@ -1,0 +1,215 @@
+{
+  "package": "QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18",
+  "revision_date": "2026-09-18",
+  "status": "staged assignment; not implemented or ratified architecture",
+  "source_package": "QMX-GROK-FINAL-HANDOFF-2026-09-17.zip",
+  "stages": [
+    "optional browser reconnaissance",
+    "Grok Stage A",
+    "Codex Stage B",
+    "Grok Stage C",
+    "later Documentation Factory"
+  ],
+  "files": [
+    {
+      "path": "00-START-HERE.md",
+      "bytes": 3607,
+      "sha256": "f65e297a6d196d8d08e9258bfe8f56ca63f6e89b8fdbae74d74c5f31c8adfe96"
+    },
+    {
+      "path": "01-GROK-ARCHITECTURE-PROMPT.md",
+      "bytes": 36635,
+      "sha256": "3826e908c6f8be0abfa9eadb934b3d49be7014b52ae4312b4e32471f7c8465b1"
+    },
+    {
+      "path": "02-OPERATOR-INTENT-AND-SCOPE.md",
+      "bytes": 10331,
+      "sha256": "66d0a6b35eb34f0fb57b458f75954425140fcb79b88e6bbebb40fa6691c9a394"
+    },
+    {
+      "path": "03-EVIDENCE-BASELINE-AND-DELTA.md",
+      "bytes": 5064,
+      "sha256": "ae1217414d99e7e07c5223da896f2f16aab55ac4d902f1d23cba1fd5d2852a1c"
+    },
+    {
+      "path": "04-ARCHITECTURE-WORKSTREAMS.md",
+      "bytes": 13142,
+      "sha256": "77db07191a26e6e760589269b36f131a78f294d3e85e4b674a68b258876752e0"
+    },
+    {
+      "path": "05-JOURNEYS-AND-FAILURE-COVERAGE.md",
+      "bytes": 18415,
+      "sha256": "8a78fa701cbff1468d66bb473ade2f41adfdf4592386467cb6f4041880f2b1fc"
+    },
+    {
+      "path": "06-OPPORTUNITY-SEEDS.md",
+      "bytes": 17511,
+      "sha256": "fb4ce53b40f432f81d2370ac4ef24289a2da02a014adf8f0aa6bb68a8bebeae7"
+    },
+    {
+      "path": "07-COPILOT-SKILLS-AND-EVALUATION.md",
+      "bytes": 9270,
+      "sha256": "e99a111a3c5f1e17612a2f669cd2cd839167b84d0d94b40d51a0910311f5fa80"
+    },
+    {
+      "path": "08-REFERENCE-STUDY-PLAN.md",
+      "bytes": 8059,
+      "sha256": "1b9ac77ad82e74e46ba798098f0c7f715dfe4bc58562688d3864b9897087d9db"
+    },
+    {
+      "path": "09-OUTPUTS-AND-NEXT-STAGE.md",
+      "bytes": 4382,
+      "sha256": "0a361c2f95355f8e75961cc386d198a0bd7eb67b540ab632dd631d49a7882f75"
+    },
+    {
+      "path": "10-STAGED-PROCESS-AND-REVIEW-CONTRACT.md",
+      "bytes": 6670,
+      "sha256": "222c63974a32d78ff04d298cb01cfee2acef442df2ed92129490b5c7914d7bf2"
+    },
+    {
+      "path": "11-CODEX-BROWSER-RECON-LSE-AND-REFERENCE-JOURNEYS.md",
+      "bytes": 6053,
+      "sha256": "3be9f785f55d25880e731d30e77740d2755830ac5cdbfb81baef040c12ab615a"
+    },
+    {
+      "path": "12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md",
+      "bytes": 12004,
+      "sha256": "556a2811d1026f39f0f28427bfd5c8700fb94f1e3d41cbc9c05d3b6c74e7032e"
+    },
+    {
+      "path": "13-GROK-RESUME-AND-RECONCILE.md",
+      "bytes": 4414,
+      "sha256": "9ed6d44f242e2c933b2674c20379bb8d749053d68fea436ca7d88e3b3d2e1636"
+    },
+    {
+      "path": "14-REFERENCE-AND-TESTING-ADDENDUM.md",
+      "bytes": 4981,
+      "sha256": "728dd21cc052035caee0e9f8008ee2de1bb63c20fb42e12acbb00200c9d525a1"
+    },
+    {
+      "path": "CODEX-BROWSER-LAUNCH.txt",
+      "bytes": 546,
+      "sha256": "480b89aafaacc5af44c914c7b67169aa249d459b1c00b84ebd182bc659c25b64"
+    },
+    {
+      "path": "CODEX-CHALLENGE-LAUNCH.txt",
+      "bytes": 621,
+      "sha256": "02414212dd67a7a1c6f8576168095e0c0cf9a43d9a1f5ce0326bb8864494eb3d"
+    },
+    {
+      "path": "LAUNCH-PROMPT.txt",
+      "bytes": 1504,
+      "sha256": "ba0cb4cd1b81b6e7b079ef4669c37c4712c7190f401adc3a3d530b0edd1cb3f9"
+    },
+    {
+      "path": "REVISION-NOTES.md",
+      "bytes": 1647,
+      "sha256": "53fe0b28fb972c77853fb4977349ce5b4af1d350bfec0b4784bca54607383888"
+    },
+    {
+      "path": "evidence/PREVIOUS-PACKAGE-MANIFEST.json",
+      "bytes": 5907,
+      "sha256": "085914a8d02029f9a7e40c435679fac81f14fc94016f72d9af86392ca858f725"
+    },
+    {
+      "path": "evidence/PROVENANCE.md",
+      "bytes": 2780,
+      "sha256": "3c76d0e0e4e3f89a35400bdff98223f2772ff63e6d3e44bf8ace437c01510a79"
+    },
+    {
+      "path": "evidence/SOURCE-SELECTION.json",
+      "bytes": 3569,
+      "sha256": "4368d60a4ce385eb9b6d16bf1c4c0f5ba8de2d8376b503aaecab99fcfeb6696c"
+    },
+    {
+      "path": "evidence/audit/CAPABILITY-AND-COUPLING-MATRIX.md",
+      "bytes": 14680,
+      "sha256": "924fa310013ab9c051122c9490d67f7eaf7b82ae4775e9bc846de05a4511ab63"
+    },
+    {
+      "path": "evidence/audit/EVIDENCE-MANIFEST.md",
+      "bytes": 10443,
+      "sha256": "c90c33325259b101b390fb9e427a4504e2382b2dec3c7bdbc2afb47ee007e3f0"
+    },
+    {
+      "path": "evidence/audit/INTENT-AND-AUTHORITY-LEDGER.md",
+      "bytes": 10442,
+      "sha256": "7204ac46d2c281642bccfc57eb8a63189753af22be40c197063be85e48a757b8"
+    },
+    {
+      "path": "evidence/audit/RECON-RETURN.md",
+      "bytes": 23090,
+      "sha256": "acddaabf019f5957450d23b37906d56ca5171ea3cc1371dd23c4d50d94697fe4"
+    },
+    {
+      "path": "evidence/audit/SCENARIO-TRACES-AND-RISKS.md",
+      "bytes": 17692,
+      "sha256": "d11aaeef62ad7a9ab1dbcbe2bbd4f190ca79bcfcdf47cc0fa4937c440ebe175c"
+    },
+    {
+      "path": "evidence/audit/diagnostics/ADVERSARIAL-REVIEW.md",
+      "bytes": 5351,
+      "sha256": "11589d756f13e45f87e94574350fc96d90f16e4db6068f23d3199e62d054764c"
+    },
+    {
+      "path": "evidence/audit/diagnostics/FRAMEWORK-PROBE.md",
+      "bytes": 7846,
+      "sha256": "f45d7f0dc18bb9846819dee4ae1c62de17854480117746d816bfc384cb5678f9"
+    },
+    {
+      "path": "evidence/audit/diagnostics/SESSIONS-WORKFLOWS-RESEARCH.md",
+      "bytes": 9139,
+      "sha256": "104a6e06c872721350d06c172d764aa40f3de1548d6f51c24c62a02b46b3d768"
+    },
+    {
+      "path": "evidence/audit/diagnostics/TRANSCRIPT-LEDGER-DRAFT.md",
+      "bytes": 14974,
+      "sha256": "fc0a40939687fb66e4177b449c07bdc6da4d3d1f0ca348484d965dd51d608060"
+    },
+    {
+      "path": "evidence/codex-audit-instructions.md",
+      "bytes": 37996,
+      "sha256": "994ceec59dc5102b799e40749952158d55029fcdc4461eb88aefcae40732cae6"
+    },
+    {
+      "path": "evidence/earlier-session-snapshot.md",
+      "bytes": 227340,
+      "sha256": "aecc0cb41e3b15dd2965071cdab28cf56919f84d6dae012782155876a08a521b"
+    },
+    {
+      "path": "evidence/images/image-001.png",
+      "bytes": 1450738,
+      "sha256": "55521c6fe716a521b21308d390ab225af992b4fa27e3fe2afb3d86ed39a9911e"
+    },
+    {
+      "path": "evidence/images/image-002.png",
+      "bytes": 179566,
+      "sha256": "c4cbd8b55d12e3e959dfd8e052fa808a8c4f83a8cb23f2f81d31fc875a82ef41"
+    },
+    {
+      "path": "evidence/original-workflows-architecture-prompt.md",
+      "bytes": 11186,
+      "sha256": "32283a8d35bf841da6e8e5ce58cb7ed4037c8bcd5ff00e5682bf5fb1fd423e83"
+    },
+    {
+      "path": "evidence/review-delta.md",
+      "bytes": 15073,
+      "sha256": "d3df2dd91934acdc126bdc9edf6b8db9a2b3fba8e62617aef929df1745bc1ba5"
+    },
+    {
+      "path": "reference-images/README.md",
+      "bytes": 825,
+      "sha256": "6c42e3af9daf9ce10705c905647f9a259a0b748ded8ee20afd9ae0651e7c26d5"
+    },
+    {
+      "path": "reference-images/qmx-terminal-inspiration.png",
+      "bytes": 2351506,
+      "sha256": "e3e40eb432a25c8368194f0bef4034145b294f0293e73c0f838c556705abc927"
+    },
+    {
+      "path": "reference-images/taskade-workspace-reference.png",
+      "bytes": 179566,
+      "sha256": "c4cbd8b55d12e3e959dfd8e052fa808a8c4f83a8cb23f2f81d31fc875a82ef41"
+    }
+  ]
+}

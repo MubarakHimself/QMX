@@ -1,0 +1,711 @@
+---
+id: 19459
+source_url: https://www.mql5.com/en/articles/19459
+title: "Developing a Volatility Based Breakout System"
+author: ""
+author_url: 
+published: 2025-09-22T11:00Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Developing a Volatility Based Breakout System
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 22 September 2025 at 07:00
+
+[IMG]
+11 707
+[[IMG]
+0](https://www.mql5.com/en/forum/495960 "Comments")
+
+[IMG]
+
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+
+### Introduction
+
+Many traditional breakout systems face challenges such as frequent false signals, where price briefly breaches a support or resistance level only to reverse back into the range. These false breakouts often occur in low-volatility environments or during market noise, leading to stop-loss hits, reduced profitability, and trader frustration. Without accounting for changing market conditions, static breakout strategies can struggle to adapt, making them unreliable in varying market phases.
+
+A volatility-based breakout system addresses this issue by incorporating volatility filters, such as the Average True Range (ATR), to measure market strength and adjust breakout conditions dynamically. By requiring price to move beyond both the range boundary and a volatility threshold, the system helps distinguish genuine breakouts from market noise. This ensures trades are entered only when there is sufficient momentum, improving accuracy, risk management, and the overall consistency of results.
+
+### Planning And Logic
+
+Buy Breakout Uncleared Volatility:
+
+[IMG]
+
+Buy Breakout Cleared Volatility:
+
+[IMG]
+
+Sell Breakout Uncleared Volatility:
+
+[IMG]
+
+Sell Breakout Cleared Volatility:
+
+[IMG]
+
+[IMG]
+
+[IMG]
+
+[IMG]
+
+### **Breakout Decision Logic**
+
+  
+
+### Getting Started
+
+```
+//+------------------------------------------------------------------+
+//|                                          Volatility Breakout.mq5 |
+//|                        GIT under Copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+//+------------------------------------------------------------------+
+#property copyright "GIT under Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+```
+
+As usual, we start by including the necessary MQL5 trading libraries: #include <Trade\Trade.mqh> and #include <Trade\PositionInfo.mqh>. The first provides access to the CTrade class, which enables the EA to execute, modify, and close trade orders, while the second provides the CPositionInfo class, allowing the EA to retrieve detailed information about active positions such as order type, lot size, stop loss, and take profit levels.
+
+```
+//+------------------------------------------------------------------+
+//|                         Input Parameters                         |
+//+------------------------------------------------------------------+
+input group "--------------- Range Settings ---------------"
+input int RangeStartTime = 600;          // Range start time (minutes from midnight)
+input int RangeDuration = 120;           // Range duration in minutes
+input int RangeCloseTime = 1200;         // Range close time (minutes from midnight)
+
+input group "--------------- Trading Settings ---------------"
+input double RiskPerTrade = 1.0;         // Risk percentage per trade
+input double StopLossMultiplier = 1.5;   // Stop loss multiplier (range-based)
+input double TakeProfitMultiplier = 2.0; // Take profit multiplier (range-based)
+input bool UseTrailingStop = true;       // Enable trailing stops
+input int BreakEvenAtPips = 250;         // Move to breakeven at this profit (pips)
+input int TrailStartAtPips = 500;        // Start trailing at this profit (pips)
+input int TrailStepPips = 100;           // Trail by this many pips
+
+input group "--------------- Volatility Settings ---------------"
+input int ATRPeriod = 14;                // ATR period for volatility calculation
+input double ATRMultiplier = 2.0;        // ATR multiplier for volatility stops
+```
+
+Here we define the input parameters that a trader can customize when using the Expert Advisor. The first group, Range Settings, specifies the time window for building a price range: RangeStartTime marks when the range begins (in minutes from midnight), RangeDuration determines how long the range lasts, and RangeCloseTime defines when the session closes. These settings allow the EA to structure its breakout logic around specific market hours, which is especially useful for targeting active trading sessions.
+
+The second and third groups configure the system’s trading and volatility rules. Trading Settings control risk and trade management, such as RiskPerTrade for position sizing, multipliers for stop loss and take profit based on the range size, and trailing stop logic (BreakEvenAtPips, TrailStartAtPips, and TrailStepPips). Meanwhile, Volatility Settings use the ATR (Average True Range) indicator with a user-defined ATRPeriod and ATRMultiplier to calculate volatility-based stop levels. This ensures breakout trades adapt dynamically to changing market conditions, reducing the chance of false signals.
+
+```
+//+------------------------------------------------------------------+
+//| Global Variables                                                 |
+//+------------------------------------------------------------------+
+long ExpertMagicNumber = 20250908;
+CTrade TradeManager;
+CPositionInfo PositionInfo;
+MqlTick CurrentTick;
+
+// Range structure
+struct TradingSession {
+   datetime SessionStart;
+   datetime SessionEnd;
+   datetime SessionClose;
+   double SessionHigh;
+   double SessionLow;
+   bool IsActive;
+   bool HighBreakoutTriggered;
+   bool LowBreakoutTriggered;
+   datetime LastCalculationDate;
+   
+   TradingSession() : SessionStart(0), SessionEnd(0), SessionClose(0), SessionHigh(0), 
+                     SessionLow(DBL_MAX), IsActive(false), HighBreakoutTriggered(false), 
+                     LowBreakoutTriggered(false), LastCalculationDate(0) {};
+};
+
+TradingSession CurrentSession;
+
+// Volatility stops
+double UpperVolatilityStop = 0.0;
+double LowerVolatilityStop = 0.0;
+int ATRHandle = INVALID_HANDLE;
+```
+
+This section of the code declares the global variables that will be used throughout the Expert Advisor. The ExpertMagicNumber uniquely identifies trades opened by this EA so they can be distinguished from manual trades or other EAs. The CTrade TradeManager object is responsible for executing and managing trades, while CPositionInfo PositionInfo retrieves details about open positions. The MqlTick CurrentTick variable holds the most recent price quote (bid, ask, and time), ensuring that trading logic is always based on live market data.
+
+The trading session structure organizes key session-related information, such as start and end times, the highest and lowest prices during the session, and flags to track whether a breakout has already occurred. An instance of this structure, CurrentSession, is declared to hold session data for the current trading day. In addition, variables for volatility management are set up: UpperVolatilityStop and LowerVolatilityStop mark dynamic thresholds based on ATR, while ATRHandle stores the indicator handle needed to access ATR values. Together, these variables provide the foundation for breakout detection and trade execution.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   // Validate input parameters
+   if(RiskPerTrade <= 0 || RiskPerTrade > 5) {
+      Alert("Risk per trade must be between 0.1 and 5.0");
+      return INIT_PARAMETERS_INCORRECT;
+   }
+   
+   // Initialize ATR indicator
+   ATRHandle = iATR(_Symbol, _Period, ATRPeriod);
+   if(ATRHandle == INVALID_HANDLE) {
+      Alert("Failed to create ATR indicator");
+      return INIT_FAILED;
+   }
+   
+   TradeManager.SetExpertMagicNumber(ExpertMagicNumber);
+   
+   // Calculate initial session
+   CalculateTradingSession();
+   
+   return INIT_SUCCEEDED;
+}
+```
+
+The OnInit() function is executed when the Expert Advisor starts, and it prepares the system for trading. First, it validates the input parameters to ensure the risk setting is within an acceptable range; otherwise, the EA will stop with an error. It then initializes the ATR indicator by creating a handle for volatility calculations, and if this fails, the EA terminates. Next, the TradeManager is assigned the unique ExpertMagicNumber so trades can be tracked correctly, and finally, the EA calls CalculateTradingSession() to set up the initial trading session before returning a success status.
+
+```
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Clean up indicators
+   if(ATRHandle != INVALID_HANDLE) {
+      IndicatorRelease(ATRHandle);
+   }
+   
+   // Delete all graphical objects
+   ObjectsDeleteAll(0, -1, -1);
+}
+```
+
+The OnDeinit() function runs when the EA is removed or stopped. It releases the ATR indicator to free resources and clears all graphical objects from the chart to ensure no leftover drawings remain.
+
+```
+//+------------------------------------------------------------------+
+//| Check if we need to calculate a new session for the day          |
+//+------------------------------------------------------------------+
+void CheckForNewSession()
+{
+   MqlDateTime currentTime;
+   TimeToStruct(CurrentTick.time, currentTime);
+   
+   MqlDateTime lastCalcTime;
+   TimeToStruct(CurrentSession.LastCalculationDate, lastCalcTime);
+   
+   // Check if we're in a new day or if session hasn't been calculated yet
+   if (currentTime.day != lastCalcTime.day || 
+       currentTime.mon != lastCalcTime.mon || 
+       currentTime.year != lastCalcTime.year ||
+       CurrentSession.LastCalculationDate == 0) {
+      CalculateTradingSession();
+   }
+}
+```
+
+The CheckForNewSession() function ensures that a fresh trading session is calculated at the start of each new day. It converts the current tick time and the last session calculation time into date structures, then compares the day, month, and year. If the current date differs from the last recorded session date, or if no session has been set yet, it calls CalculateTradingSession() to reset and prepare a new session.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate trading session for the day                            |
+//+------------------------------------------------------------------+
+void CalculateTradingSession()
+{
+   // Reset session variables
+   CurrentSession.SessionStart = 0;
+   CurrentSession.SessionEnd = 0;
+   CurrentSession.SessionClose = 0;
+   CurrentSession.SessionHigh = 0;
+   CurrentSession.SessionLow = DBL_MAX;
+   CurrentSession.IsActive = false;
+   CurrentSession.HighBreakoutTriggered = false;
+   CurrentSession.LowBreakoutTriggered = false;
+   
+   // Calculate session times
+   int timeCycle = 86400; // Seconds in a day
+   CurrentSession.SessionStart = (CurrentTick.time - (CurrentTick.time % timeCycle)) + RangeStartTime * 60;
+   
+   // Adjust for weekends
+   for(int i = 0; i < 8; i++) {
+      MqlDateTime tmp;
+      TimeToStruct(CurrentSession.SessionStart, tmp);
+      int dayOfWeek = tmp.day_of_week;
+      if(CurrentTick.time >= CurrentSession.SessionStart || dayOfWeek == 0 || dayOfWeek == 6) {
+         CurrentSession.SessionStart += timeCycle;
+      }
+   }
+
+   // Calculate session end time
+   CurrentSession.SessionEnd = CurrentSession.SessionStart + (RangeDuration * 60);
+   for(int i = 0; i < 2; i++) {
+      MqlDateTime tmp;
+      TimeToStruct(CurrentSession.SessionEnd, tmp);
+      int dayOfWeek = tmp.day_of_week;
+      if(dayOfWeek == 0 || dayOfWeek == 6) {
+         CurrentSession.SessionEnd += timeCycle;
+      }
+   }
+   
+   // Calculate session close time
+   CurrentSession.SessionClose = (CurrentSession.SessionEnd - (CurrentSession.SessionEnd % timeCycle)) + RangeCloseTime * 60;
+   for(int i = 0; i < 3; i++) {
+      MqlDateTime tmp;
+      TimeToStruct(CurrentSession.SessionClose, tmp);
+      int dayOfWeek = tmp.day_of_week;
+      if(CurrentSession.SessionClose <= CurrentSession.SessionEnd || dayOfWeek == 0 || dayOfWeek == 6) {
+         CurrentSession.SessionClose += timeCycle;
+      }
+   }
+   
+   // Set last calculation date
+   CurrentSession.LastCalculationDate = CurrentTick.time;
+   
+   // Draw session objects
+   DrawSessionObjects();
+}
+```
+
+The CalculateTradingSession() function sets up the daily trading session by resetting all session-related variables and calculating the correct start, end, and close times based on user inputs. It ensures that sessions are aligned to daily cycles while skipping weekends, so trading only happens on valid market days. The function also resets breakout flags, updates the session’s calculation date, and calls DrawSessionObjects() to visually display session boundaries and levels on the chart.
+
+```
+//+------------------------------------------------------------------+
+//| Update trading session with current price data                   |
+//+------------------------------------------------------------------+
+void UpdateTradingSession()
+{
+   if(CurrentTick.time >= CurrentSession.SessionStart && CurrentTick.time < CurrentSession.SessionEnd) {
+      CurrentSession.IsActive = true;
+      
+      // Update session high
+      if(CurrentTick.ask > CurrentSession.SessionHigh) {
+         CurrentSession.SessionHigh = CurrentTick.ask;
+      }
+      
+      // Update session low
+      if(CurrentTick.bid < CurrentSession.SessionLow) {
+         CurrentSession.SessionLow = CurrentTick.bid;
+      }
+      
+      // Draw session on chart
+      DrawSessionObjects();
+   }
+}
+```
+
+The UpdateTradingSession() function continuously updates the current session’s data as new price ticks arrive. It activates the session when the current time is within the session period, then tracks the highest ask and lowest bid prices to update the session high and low. Finally, it calls DrawSessionObjects() to reflect these updated levels visually on the chart.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate volatility stops using ATR                             |
+//+------------------------------------------------------------------+
+void CalculateVolatilityStops()
+{
+   double atrValue[1];
+   if(CopyBuffer(ATRHandle, 0, 0, 1, atrValue) <= 0) {
+      Print("Failed to get ATR value");
+      return;
+   }
+   
+   // Validate ATR value to prevent "inf" errors
+   if(atrValue[0] <= 0 || !MathIsValidNumber(atrValue[0]) || atrValue[0] > 1000) {
+      Print("Invalid ATR value: ", atrValue[0], ", using default");
+      atrValue[0] = 10 * SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   }
+   
+   // Calculate volatility stops
+   UpperVolatilityStop = CurrentSession.SessionHigh + (atrValue[0] * ATRMultiplier);
+   LowerVolatilityStop = CurrentSession.SessionLow - (atrValue[0] * ATRMultiplier);
+   
+   // Draw volatility stops on chart
+   DrawVolatilityStops();
+}
+```
+
+The CalculateVolatilityStops() function computes dynamic upper and lower stop levels based on market volatility using the ATR indicator. It first retrieves the latest ATR value, validates it to avoid errors, and defaults to a safe value if necessary. The function then calculates the upper and lower volatility stops by adding or subtracting the ATR (scaled by ATRMultiplier) from the session high and low, and calls DrawVolatilityStops() to display these levels on the chart.
+
+```
+//+------------------------------------------------------------------+
+//| Check for breakouts and execute trades                           |
+//+------------------------------------------------------------------+
+void CheckForBreakouts()
+{
+   // Only check after session formation period
+   if(CurrentTick.time < CurrentSession.SessionEnd || !CurrentSession.IsActive) {
+      return;
+   }
+   
+   // Check for high breakout
+   if(!CurrentSession.HighBreakoutTriggered && CurrentTick.ask >= CurrentSession.SessionHigh) {
+      CurrentSession.HighBreakoutTriggered = true;
+      
+      // Check if price has cleared volatility stop
+      if(CurrentTick.ask >= UpperVolatilityStop) {
+         // Regular breakout - execute buy
+         ExecuteTrade(ORDER_TYPE_BUY, "Session High Breakout");
+      } else {
+         // False breakout - execute sell (fade)
+         ExecuteTrade(ORDER_TYPE_SELL, "False Breakout - Fade High");
+      }
+   }
+   
+   // Check for low breakout
+   if(!CurrentSession.LowBreakoutTriggered && CurrentTick.bid <= CurrentSession.SessionLow) {
+      CurrentSession.LowBreakoutTriggered = true;
+      
+      // Check if price has cleared volatility stop
+      if(CurrentTick.bid <= LowerVolatilityStop) {
+         // Regular breakout - execute sell
+         ExecuteTrade(ORDER_TYPE_SELL, "Session Low Breakout");
+      } else {
+         // False breakout - execute buy (fade)
+         ExecuteTrade(ORDER_TYPE_BUY, "False Breakout - Fade Low");
+      }
+   }
+}
+```
+
+Here, the CheckForBreakouts() function monitors price action to identify potential breakout opportunities once the session has formed and is active. It checks if the price crosses the session high or low and ensures each breakout is only triggered once per session. Trades are executed based on whether the price exceeds the corresponding volatility stop: a confirmed breakout triggers a trade in the breakout direction, while a false breakout-where price does not clear the volatility threshold-triggers a fade trade in the opposite direction.
+
+```
+//+------------------------------------------------------------------+
+//| Execute trade with proper risk management                        |
+//+------------------------------------------------------------------+
+void ExecuteTrade(ENUM_ORDER_TYPE orderType, string comment)
+{
+   // Calculate position size based on risk
+   double lotSize = CalculatePositionSize();
+   if(lotSize <= 0) {
+      Print("Failed to calculate position size");
+      return;
+   }
+   
+   // Calculate stop loss and take profit
+   double stopLoss = 0.0;
+   double takeProfit = 0.0;
+   CalculateStopLevels(orderType, stopLoss, takeProfit);
+   
+   // Validate stop levels
+   if(!ValidateStopLevels(orderType, stopLoss, takeProfit)) {
+      Print("Invalid stop levels - trade not executed");
+      return;
+   }
+   
+   // Execute trade
+   if(orderType == ORDER_TYPE_BUY) {
+      TradeManager.Buy(lotSize, _Symbol, CurrentTick.ask, stopLoss, takeProfit, comment);
+   } else {
+      TradeManager.Sell(lotSize, _Symbol, CurrentTick.bid, stopLoss, takeProfit, comment);
+   }
+   
+   // Check result
+   if(TradeManager.ResultRetcode() != TRADE_RETCODE_DONE) {
+      Print("Trade execution failed: ", TradeManager.ResultRetcodeDescription());
+   }
+}
+```
+
+The ExecuteTrade() function handles opening a trade with proper risk management. It first calculates the position size using CalculatePositionSize(), then determines the appropriate stop loss and take profit levels via CalculateStopLevels(). After validating these levels with ValidateStopLevels(), the function executes a buy or sell order using the TradeManager object and logs an error message if the trade fails.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate position size based on risk percentage                 |
+//+------------------------------------------------------------------+
+double CalculatePositionSize()
+{
+   double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   
+   if(accountBalance <= 0 || tickSize <= 0 || tickValue <= 0 || point <= 0) {
+      return 0.0;
+   }
+   
+   // Get ATR value for stop loss distance
+   double atrValue[1];
+   if(CopyBuffer(ATRHandle, 0, 0, 1, atrValue) <= 0) {
+      return 0.0;
+   }
+   
+   // Validate ATR value
+   if(atrValue[0] <= 0 || !MathIsValidNumber(atrValue[0])) {
+      return 0.0;
+   }
+   
+   // Calculate stop distance in points
+   double stopDistance = atrValue[0] * StopLossMultiplier / point;
+   
+   // Calculate risk amount
+   double riskAmount = accountBalance * (RiskPerTrade / 100.0);
+   
+   // Calculate position size
+   double lotStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   double lotSize = (riskAmount / (stopDistance * tickValue)) * tickSize;
+   
+   // Normalize lot size
+   lotSize = MathFloor(lotSize / lotStep) * lotStep;
+   
+   // Apply min/max limits
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+   lotSize = MathMax(minLot, MathMin(maxLot, lotSize));
+   
+   return lotSize;
+}
+```
+
+This function determines the appropriate trade volume based on the account balance, user-defined risk percentage, and current market conditions. It retrieves symbol-specific details like tick size, tick value, and point size, then calculates the stop distance using the ATR indicator scaled by StopLossMultiplier. Using the calculated risk amount, it computes a lot size, normalizes it to the broker’s allowed step, and ensures it falls within the minimum and maximum volume limits before returning the final position size.
+
+```
+//+------------------------------------------------------------------+
+//| Calculate stop loss and take profit levels                       |
+//+------------------------------------------------------------------+
+void CalculateStopLevels(ENUM_ORDER_TYPE orderType, double &stopLoss, double &takeProfit)
+{
+   // Use range-based stops
+   double rangeSize = CurrentSession.SessionHigh - CurrentSession.SessionLow;
+   
+   if(orderType == ORDER_TYPE_BUY) {
+      stopLoss = CurrentTick.bid - (rangeSize * StopLossMultiplier / 100.0);
+      takeProfit = CurrentTick.ask + (rangeSize * TakeProfitMultiplier / 100.0);
+   } else {
+      stopLoss = CurrentTick.ask + (rangeSize * StopLossMultiplier / 100.0);
+      takeProfit = CurrentTick.bid - (rangeSize * TakeProfitMultiplier / 100.0);
+   }
+   
+   // Normalize prices
+   stopLoss = NormalizeDouble(stopLoss, _Digits);
+   takeProfit = NormalizeDouble(takeProfit, _Digits);
+}
+
+//+------------------------------------------------------------------+
+//| Validate stop loss and take profit levels                        |
+//+------------------------------------------------------------------+
+bool ValidateStopLevels(ENUM_ORDER_TYPE orderType, double stopLoss, double takeProfit)
+{
+   // Check if stop levels are valid
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   double minStopDistance = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * point;
+   
+   if(orderType == ORDER_TYPE_BUY) {
+      if(CurrentTick.ask - stopLoss < minStopDistance) {
+         Print("Stop loss too close for buy order");
+         return false;
+      }
+      if(takeProfit - CurrentTick.ask < minStopDistance) {
+         Print("Take profit too close for buy order");
+         return false;
+      }
+   } else {
+      if(stopLoss - CurrentTick.bid < minStopDistance) {
+         Print("Stop loss too close for sell order");
+         return false;
+      }
+      if(CurrentTick.bid - takeProfit < minStopDistance) {
+         Print("Take profit too close for sell order");
+         return false;
+      }
+   }
+   
+   return true;
+}
+```
+
+The CalculateStopLevels() function determines the stop loss and take profit levels for a trade based on the current session’s range. For buy orders, the stop loss is set below the current bid and the take profit above the current ask, scaled by user-defined multipliers; for sell orders, the logic is reversed. Both levels are normalized to the instrument’s decimal precision to ensure accuracy in execution.
+
+The ValidateStopLevels() function ensures that the calculated stop loss and take profit levels comply with the broker’s minimum distance requirements. It checks that the distance between the entry price and stops is greater than the SYMBOL\_TRADE\_STOPS\_LEVEL multiplied by the point size, preventing invalid or too-tight orders. If the stops are too close, the function returns false and prints an error message, ensuring only valid trades are executed.
+
+```
+//+------------------------------------------------------------------+
+//| Manage trailing stops for open positions                         |
+//+------------------------------------------------------------------+
+void ManageTrailingStops()
+{
+   for(int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong ticket = PositionGetTicket(i);
+      
+      if(PositionSelectByTicket(ticket) && 
+         PositionGetString(POSITION_SYMBOL) == _Symbol && 
+         PositionGetInteger(POSITION_MAGIC) == ExpertMagicNumber) {
+         
+         ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+         double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         double currentStop = PositionGetDouble(POSITION_SL);
+         double currentProfit = PositionGetDouble(POSITION_PROFIT);
+         double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+         
+         // Calculate profit in pips
+         double profitInPips = 0;
+         if(positionType == POSITION_TYPE_BUY) {
+            profitInPips = (CurrentTick.bid - openPrice) / point;
+         } else {
+            profitInPips = (openPrice - CurrentTick.ask) / point;
+         }
+         
+         // Check if we should move to breakeven
+         if(profitInPips >= BreakEvenAtPips && currentStop != openPrice) {
+            if(positionType == POSITION_TYPE_BUY) {
+               TradeManager.PositionModify(ticket, openPrice, PositionGetDouble(POSITION_TP));
+            } else {
+               TradeManager.PositionModify(ticket, openPrice, PositionGetDouble(POSITION_TP));
+            }
+         }
+         
+         // Check if we should start trailing
+         if(profitInPips >= TrailStartAtPips) {
+            double newStop = 0;
+            
+            if(positionType == POSITION_TYPE_BUY) {
+               newStop = CurrentTick.bid - (TrailStepPips * point);
+               
+               // Only move stop if it's higher than current
+               if(newStop > currentStop || currentStop == 0) {
+                  TradeManager.PositionModify(ticket, newStop, PositionGetDouble(POSITION_TP));
+               }
+            } else {
+               newStop = CurrentTick.ask + (TrailStepPips * point);
+               
+               // Only move stop if it's lower than current
+               if(newStop < currentStop || currentStop == 0) {
+                  TradeManager.PositionModify(ticket, newStop, PositionGetDouble(POSITION_TP));
+               }
+            }
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Draw session objects on chart                                    |
+//+------------------------------------------------------------------+
+void DrawSessionObjects()
+{
+   // Draw session high
+   ObjectDelete(0, "SessionHigh");
+   ObjectCreate(0, "SessionHigh", OBJ_HLINE, 0, 0, CurrentSession.SessionHigh);
+   ObjectSetInteger(0, "SessionHigh", OBJPROP_COLOR, clrBlue);
+   ObjectSetInteger(0, "SessionHigh", OBJPROP_STYLE, STYLE_DASH);
+   ObjectSetInteger(0, "SessionHigh", OBJPROP_WIDTH, 2);
+   
+   // Draw session low
+   ObjectDelete(0, "SessionLow");
+   ObjectCreate(0, "SessionLow", OBJ_HLINE, 0, 0, CurrentSession.SessionLow);
+   ObjectSetInteger(0, "SessionLow", OBJPROP_COLOR, clrBlue);
+   ObjectSetInteger(0, "SessionLow", OBJPROP_STYLE, STYLE_DASH);
+   ObjectSetInteger(0, "SessionLow", OBJPROP_WIDTH, 2);
+   
+   // Draw session start time
+   ObjectDelete(0, "SessionStart");
+   ObjectCreate(0, "SessionStart", OBJ_VLINE, 0, CurrentSession.SessionStart, 0);
+   ObjectSetInteger(0, "SessionStart", OBJPROP_COLOR, clrBlue);
+   ObjectSetInteger(0, "SessionStart", OBJPROP_WIDTH, 2);
+   
+   // Draw session end time
+   ObjectDelete(0, "SessionEnd");
+   ObjectCreate(0, "SessionEnd", OBJ_VLINE, 0, CurrentSession.SessionEnd, 0);
+   ObjectSetInteger(0, "SessionEnd", OBJPROP_COLOR, clrRed);
+   ObjectSetInteger(0, "SessionEnd", OBJPROP_WIDTH, 2);
+   
+   // Draw session close time
+   ObjectDelete(0, "SessionClose");
+   ObjectCreate(0, "SessionClose", OBJ_VLINE, 0, CurrentSession.SessionClose, 0);
+   ObjectSetInteger(0, "SessionClose", OBJPROP_COLOR, clrDarkRed);
+   ObjectSetInteger(0, "SessionClose", OBJPROP_WIDTH, 2);
+}
+
+//+------------------------------------------------------------------+
+//| Draw volatility stops on chart                                   |
+//+------------------------------------------------------------------+
+void DrawVolatilityStops()
+{
+   // Draw upper volatility stop
+   ObjectDelete(0, "VolatilityStopUpper");
+   ObjectCreate(0, "VolatilityStopUpper", OBJ_HLINE, 0, 0, UpperVolatilityStop);
+   ObjectSetInteger(0, "VolatilityStopUpper", OBJPROP_COLOR, clrGreen);
+   ObjectSetInteger(0, "VolatilityStopUpper", OBJPROP_STYLE, STYLE_DOT);
+   ObjectSetInteger(0, "VolatilityStopUpper", OBJPROP_WIDTH, 1);
+   
+   // Draw lower volatility stop
+   ObjectDelete(0, "VolatilityStopLower");
+   ObjectCreate(0, "VolatilityStopLower", OBJ_HLINE, 0, 0, LowerVolatilityStop);
+   ObjectSetInteger(0, "VolatilityStopLower", OBJPROP_COLOR, clrRed);
+   ObjectSetInteger(0, "VolatilityStopLower", OBJPROP_STYLE, STYLE_DOT);
+   ObjectSetInteger(0, "VolatilityStopLower", OBJPROP_WIDTH, 1);
+}
+```
+
+The ManageTrailingStops() function ensures that active trades are dynamically managed as they move into profit. It loops through all positions, filters for those belonging to the EA by symbol and magic number, and then calculates the profit in pips. Based on conditions, it can move the stop loss to breakeven once a certain profit threshold is reached or apply a trailing stop to lock in profits as the trade moves further in the trader’s favor. This helps reduce risk and protect profits without requiring manual intervention.
+
+The DrawSessionObjects() function visually represents the current trading session on the chart. It creates horizontal lines for the session high and low, and vertical lines for the start, end, and close of the session, each with distinct colors and styles. This makes it easy for traders to visually confirm session boundaries and key levels directly on their chart.
+
+Finally, the DrawVolatilityStops() function plots the calculated volatility-based stop levels on the chart. A green dotted line represents the upper volatility stop, while a red dotted line represents the lower one. These lines provide clear visual reference points for breakout validation and false breakout detection, enhancing decision-making by aligning price action with volatility dynamics.
+
+### **Backtest Results**
+
+The back-testing was evaluated on the 1H timeframe accross roughly a 2-month testing window (07 July 2025 to 08 September 2025), with the following settings:
+
+[IMG]
+
+[IMG]
+
+[IMG]
+
+### Conclusion
+
+In summary, we developed a Volatility Based Breakout System by combining session range detection, volatility analysis using ATR, and structured trade management. The system begins by identifying daily trading sessions, tracking session highs and lows, and calculating volatility stops to distinguish between genuine and false breakouts. It then incorporates breakout detection logic, executes trades with dynamic stop loss and take profit placement, and applies robust risk management through position sizing, breakeven adjustments, and trailing stops. Visual elements such as session markers and volatility stop lines were also integrated to provide clarity on trading conditions directly on the chart.
+
+In conclusion, this system helps traders avoid common pitfalls of traditional breakout strategies, such as entering trades on false moves without considering market volatility. By leveraging ATR-based volatility stops, it ensures trades align with actual market dynamics rather than arbitrary levels. The addition of automated risk controls and chart visualization further enhances decision-making, providing traders with a disciplined, transparent, and more reliable breakout trading framework that can adapt to varying market conditions.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/19459.zip "Download all attachments in the single ZIP archive")
+
+[Volatility\_Breakout.mq5](https://www.mql5.com/en/articles/download/19459/Volatility_Breakout.mq5 "Download Volatility_Breakout.mq5")
+(20.93 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Developing Trading Strategies with the Parafrac and Parafrac V2 Oscillators: Single Entry Performance Insights](https://www.mql5.com/en/articles/19439)
+
+This article introduces the ParaFrac Oscillator and its V2 model as trading tools. It outlines three trading strategies developed using these indicators. Each strategy was tested and optimized to identify their strengths and weaknesses. Comparative analysis highlighted the performance differences between the original and V2 models.
+
+[IMG]
+[Simplifying Databases in MQL5 (Part 2): Using metaprogramming to create entities](https://www.mql5.com/en/articles/19594)
+
+We explored the advanced use of #define for metaprogramming in MQL5, creating entities that represent tables and column metadata (type, primary key, auto-increment, nullability, etc.). We centralized these definitions in TickORM.mqh, automating the generation of metadata classes and paving the way for efficient data manipulation by the ORM, without having to write SQL manually.
+
+[IMG]
+[Building AI-Powered Trading Systems in MQL5 (Part 2): Developing a ChatGPT-Integrated Program with User Interface](https://www.mql5.com/en/articles/19567)
+
+In this article, we develop a ChatGPT-integrated program in MQL5 with a user interface, leveraging the JSON parsing framework from Part 1 to send prompts to OpenAI’s API and display responses on a MetaTrader 5 chart. We implement a dashboard with an input field, submit button, and response display, handling API communication and text wrapping for user interaction.
+
+[IMG]
+[Price Action Analysis Toolkit Development (Part 41): Building a Statistical Price-Level EA in MQL5](https://www.mql5.com/en/articles/19589)
+
+Statistics has always been at the heart of financial analysis. By definition, statistics is the discipline that collects, analyzes, interprets, and presents data in meaningful ways. Now imagine applying that same framework to candlesticks—compressing raw price action into measurable insights. How helpful would it be to know, for a specific period of time, the central tendency, spread, and distribution of market behavior? In this article, we introduce exactly that approach, showing how statistical methods can transform candlestick data into clear, actionable signals.
+
+[What's wrong with regular VPS?
+Here are the 8 most common problems that algorithmic traders may encounter
+Read
+
+[IMG]](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/450486&a=drhremihlwuaqyvgpzfddbtmgciejpba&s=c37d25bcceb93ed153b814e6ba4d4839461a9b2d68dd82b95b142be06d310f3f&uid=&ref=https://www.mql5.com/en/articles/19459&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5124470414897721766)

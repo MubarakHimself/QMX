@@ -1,0 +1,40 @@
+{
+  "pack_id": "trading_systems_047_p06",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_047",
+  "part_index": 6,
+  "part_count": 7,
+  "series_in_pack": [
+    "neural networks made easy"
+  ],
+  "n": 3,
+  "articles": [
+    {
+      "id": 15117,
+      "title": "Neural Networks Made Easy (Part 95): Reducing Memory Consumption in Transformer Models",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Reducing Memory Consumption in Transformer Models",
+      "series_key": "neural networks made easy",
+      "series_part": 95,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15117.md"
+    },
+    {
+      "id": 15156,
+      "title": "Neural Networks Made Easy (Part 96): Multi-Scale Feature Extraction (MSFformer)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Multi-Scale Feature Extraction (MSFformer)",
+      "series_key": "neural networks made easy",
+      "series_part": 96,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15156.md"
+    },
+    {
+      "id": 15171,
+      "title": "Neural Networks Made Easy (Part 97): Training Models With MSFformer",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Training Models With MSFformer",
+      "series_key": "neural networks made easy",
+      "series_part": 97,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15171.md"
+    }
+  ]
+}

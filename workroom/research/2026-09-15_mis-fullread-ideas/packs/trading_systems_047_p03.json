@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_047_p03",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_047",
+  "part_index": 3,
+  "part_count": 7,
+  "series_in_pack": [
+    "neural networks made easy"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 13290,
+      "title": "Neural networks made easy (Part 57): Stochastic Marginal Actor-Critic (SMAC)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Stochastic Marginal Actor-Critic (SMAC)",
+      "series_key": "neural networks made easy",
+      "series_part": 57,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13290.md"
+    },
+    {
+      "id": 13347,
+      "title": "Neural networks made easy (Part 58): Decision Transformer (DT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Decision Transformer (DT)",
+      "series_key": "neural networks made easy",
+      "series_part": 58,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13347.md"
+    },
+    {
+      "id": 13596,
+      "title": "Neural networks made easy (Part 60): Online Decision Transformer (ODT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Online Decision Transformer (ODT)",
+      "series_key": "neural networks made easy",
+      "series_part": 60,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13596.md"
+    },
+    {
+      "id": 13639,
+      "title": "Neural networks made easy (Part 61): Optimism issue in offline reinforcement learning",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Optimism issue in offline reinforcement learning",
+      "series_key": "neural networks made easy",
+      "series_part": 61,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13639.md"
+    },
+    {
+      "id": 13674,
+      "title": "Neural networks made easy (Part 62): Using Decision Transformer in hierarchical models",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Using Decision Transformer in hierarchical models",
+      "series_key": "neural networks made easy",
+      "series_part": 62,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13674.md"
+    },
+    {
+      "id": 13712,
+      "title": "Neural networks made easy (Part 63): Unsupervised Pretraining for Decision Transformer (PDT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Unsupervised Pretraining for Decision Transformer (PDT)",
+      "series_key": "neural networks made easy",
+      "series_part": 63,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13712.md"
+    },
+    {
+      "id": 13742,
+      "title": "Neural networks made easy (Part 64): ConserWeightive Behavioral Cloning (CWBC) method",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): ConserWeightive Behavioral Cloning (CWBC) method",
+      "series_key": "neural networks made easy",
+      "series_part": 64,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13742.md"
+    },
+    {
+      "id": 13779,
+      "title": "Neural networks made easy (Part 65): Distance Weighted Supervised Learning (DWSL)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Distance Weighted Supervised Learning (DWSL)",
+      "series_key": "neural networks made easy",
+      "series_part": 65,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13779.md"
+    },
+    {
+      "id": 13819,
+      "title": "Neural networks made easy (Part 66): Exploration problems in offline learning",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Exploration problems in offline learning",
+      "series_key": "neural networks made easy",
+      "series_part": 66,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13819.md"
+    },
+    {
+      "id": 13854,
+      "title": "Neural networks made easy (Part 67): Using past experience to solve new tasks",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Using past experience to solve new tasks",
+      "series_key": "neural networks made easy",
+      "series_part": 67,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13854.md"
+    },
+    {
+      "id": 13912,
+      "title": "Neural networks made easy (Part 68): Offline Preference-guided Policy Optimization",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Offline Preference-guided Policy Optimization",
+      "series_key": "neural networks made easy",
+      "series_part": 68,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13912.md"
+    },
+    {
+      "id": 13954,
+      "title": "Neural networks made easy (Part 69): Density-based support constraint for the behavioral policy (SPOT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Density-based support constraint for the behavioral policy (SPOT)",
+      "series_key": "neural networks made easy",
+      "series_part": 69,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13954.md"
+    }
+  ]
+}

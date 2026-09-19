@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_032",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 11126,
+      "title": "CCI indicator. Upgrade and new features",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11126.md"
+    },
+    {
+      "id": 11233,
+      "title": "Complex indicators made easy using objects",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11233.md"
+    },
+    {
+      "id": 11348,
+      "title": "DIY technical indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11348.md"
+    },
+    {
+      "id": 11350,
+      "title": "Elastic net regression using coordinate descent in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11350.md"
+    },
+    {
+      "id": 11373,
+      "title": "Developing a quality factor for Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11373.md"
+    },
+    {
+      "id": 11386,
+      "title": "Population optimization algorithms: Particle swarm (PSO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11386.md"
+    },
+    {
+      "id": 11602,
+      "title": "Population optimization algorithms: Ant Colony Optimization (ACO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11602.md"
+    },
+    {
+      "id": 11627,
+      "title": "Adaptive indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11627.md"
+    },
+    {
+      "id": 11736,
+      "title": "Population optimization algorithms: Artificial Bee Colony (ABC)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11736.md"
+    },
+    {
+      "id": 11782,
+      "title": "Non-linear indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11782.md"
+    },
+    {
+      "id": 11785,
+      "title": "Population optimization algorithms: Grey Wolf Optimizer (GWO)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11785.md"
+    },
+    {
+      "id": 11786,
+      "title": "Population optimization algorithms: Cuckoo Optimization Algorithm (COA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11786.md"
+    }
+  ]
+}

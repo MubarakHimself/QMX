@@ -1,0 +1,127 @@
+{
+  "shard_id": "examples_090",
+  "section": "Examples",
+  "n": 13,
+  "series_in_shard": [
+    "reimagining classic strategies"
+  ],
+  "articles": [
+    {
+      "id": 16569,
+      "title": "Reimagining Classic Strategies (Part 12): EURUSD Breakout Strategy",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): EURUSD Breakout Strategy",
+      "series_key": "reimagining classic strategies",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16569.md"
+    },
+    {
+      "id": 16758,
+      "title": "Reimagining Classic Strategies (Part 13): Minimizing The Lag in Moving Average Cross-Overs",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Minimizing The Lag in Moving Average Cross-Overs",
+      "series_key": "reimagining classic strategies",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16758.md"
+    },
+    {
+      "id": 18525,
+      "title": "Reimagining Classic Strategies (Part 13): Taking Our Crossover Strategy to New Dimensions (Part 2)",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Taking Our Crossover Strategy to New Dimensions ()",
+      "series_key": "reimagining classic strategies",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18525.md"
+    },
+    {
+      "id": 17756,
+      "title": "Reimagining Classic Strategies (Part 14): High Probability Setups",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): High Probability Setups",
+      "series_key": "reimagining classic strategies",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17756.md"
+    },
+    {
+      "id": 18847,
+      "title": "Reimagining Classic Strategies (Part 14): Multiple Strategy Analysis",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Multiple Strategy Analysis",
+      "series_key": "reimagining classic strategies",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18847.md"
+    },
+    {
+      "id": 19130,
+      "title": "Reimagining Classic Strategies (Part 15): Daily Breakout Trading Strategy",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Daily Breakout Trading Strategy",
+      "series_key": "reimagining classic strategies",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19130.md"
+    },
+    {
+      "id": 19418,
+      "title": "Reimagining Classic Strategies (Part 16): Double Bollinger Band Breakouts",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Double Bollinger Band Breakouts",
+      "series_key": "reimagining classic strategies",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19418.md"
+    },
+    {
+      "id": 20090,
+      "title": "Reimagining Classic Strategies (Part 17): Modelling Technical Indicators",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Modelling Technical Indicators",
+      "series_key": "reimagining classic strategies",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20090.md"
+    },
+    {
+      "id": 20223,
+      "title": "Reimagining Classic Strategies (Part 18): Searching For Candlestick Patterns",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Searching For Candlestick Patterns",
+      "series_key": "reimagining classic strategies",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20223.md"
+    },
+    {
+      "id": 20488,
+      "title": "Reimagining Classic Strategies (Part 19): Deep Dive Into Moving Average Crossovers",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Deep Dive Into Moving Average Crossovers",
+      "series_key": "reimagining classic strategies",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20488.md"
+    },
+    {
+      "id": 20530,
+      "title": "Reimagining Classic Strategies (Part 20): Modern Stochastic Oscillators",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Modern Stochastic Oscillators",
+      "series_key": "reimagining classic strategies",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20530.md"
+    },
+    {
+      "id": 20933,
+      "title": "Reimagining Classic Strategies (Part 21): Bollinger Bands And RSI Ensemble Strategy Discovery",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Bollinger Bands And RSI Ensemble Strategy Discovery",
+      "series_key": "reimagining classic strategies",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20933.md"
+    },
+    {
+      "id": 23197,
+      "title": "Reimagining Classic Strategies (Part 22): Ensemble Mean Reverting Strategy",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Ensemble Mean Reverting Strategy",
+      "series_key": "reimagining classic strategies",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23197.md"
+    }
+  ]
+}

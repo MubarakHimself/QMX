@@ -1,0 +1,778 @@
+---
+id: 17271
+source_url: https://www.mql5.com/en/articles/17271
+title: "Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers"
+author: ""
+author_url: 
+published: 2025-02-25T10:19Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Trading with the MQL5 Economic Calendar (): Automating Trade Entry with News Event Analysis and Countdown Timers"
+series_part: 6
+source: mql5
+language: en
+---
+
+# Trading with the MQL5 Economic Calendar (Part 6): Automating Trade Entry with News Event Analysis and Countdown Timers
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 25 February 2025 at 05:19
+
+5 675
+[
+3](https://www.mql5.com/en/forum/482043 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In this article, we take the next step in our MQL5 Economic Calendar series by automating trade entries based on real-time news analysis. Building on our [previous dashboard enhancements (Part 5)](https://www.mql5.com/en/articles/16404), we now integrate trading logic that scans news events using user-defined filters and time offsets, compares forecast and prior values, and automatically executes BUY or SELL orders depending on market expectations. We also implement dynamic countdown timers that display the remaining time until news release and reset the system after execution, ensuring our trading strategy remains responsive to changing conditions. We structure the article via the following topics:
+
+1. Understanding the Trading Logic Requirements
+2. Implementing the Trading Logic in MQL5
+3. Creating and Managing Countdown Timers
+4. Testing the Trading Logic
+5. Conclusion
+
+Let's dive in and explore how these components come together to automate trade entry with precision and reliability.
+
+### Understanding the Trading Logic Requirements
+
+For our automated trading system, the first step will be identifying which news events are suitable candidates for a trade. We will define a candidate event as one that falls within a specific time window—determined by user-defined offset inputs—relative to its scheduled release. We will then include inputs for trading modes, such as trade before the news release. In "trade before" mode, for instance, an event will qualify only if the current time is between the event's scheduled release time minus the offset (e.g., 5 minutes) and the event’s actual release time. Thus, we will trade 5 minutes before the actual release.
+
+Filtering is critical to ensure that we only consider relevant news. Our system will thus use several filters: a currency filter to focus on selected currency pairs, an impact filter to limit events to those of a chosen significance level, and a time filter that restricts events to those within a predefined overall range. The user selects this from the dashboard. This layered filtering will help to minimize noise and ensure that only the most pertinent news events are processed.
+
+Once an event passes the filtering criteria, the trading logic then will compare key data points from the news event—specifically, the forecast value versus the previous value. If both values are available and nonzero, and if the forecast is higher than the previous value, the system will open a BUY order; if the forecast is lower, it will open a SELL order. If either value is missing or they are equal, the event will be skipped. This decision process will allow the EA to translate raw news data into clear trading signals, automating the entry of trades with precision. The decision-making process here and the trade direction are entirely dependent on the user, but for the sake of the article and demonstration, we will use the above blueprint.
+
+To visualize the processes, we will use debug prints and also create buttons and labels on the chart, just above the dashboard, to display the news being traded and the time remaining before their release. Here is a complete blueprint.
+
+### Implementing the Trading Logic in MQL5
+
+To implement the trading logic in [MQL5](https://www.mql5.com/), we will have to include the trading files that contain the trading methods and define some inputs that will allow user control of the system and [global variables](https://www.mql5.com/en/docs/basis/variables/global) that we will reuse throughout the program. To achieve this, on the global scope, we define them.
+
+```
+#include <Trade\Trade.mqh> // Trading library for order execution
+CTrade trade;             // Global trade object
+
+//================== Trade Settings ==================//
+// Trade mode options:
+enum ETradeMode {
+   TRADE_BEFORE,     // Trade before the news event occurs
+   TRADE_AFTER,      // Trade after the news event occurs
+   NO_TRADE,         // Do not trade
+   PAUSE_TRADING     // Pause trading activity (no trades until resumed)
+};
+input ETradeMode tradeMode      = TRADE_BEFORE; // Choose the trade mode
+
+// Trade offset inputs:
+input int        tradeOffsetHours   = 12;         // Offset hours (e.g., 12 hours)
+input int        tradeOffsetMinutes = 5;          // Offset minutes (e.g., 5 minutes before)
+input int        tradeOffsetSeconds = 0;          // Offset seconds
+input double     tradeLotSize       = 0.01;       // Lot size for the trade
+
+//================== Global Trade Control ==================//
+// Once a trade is executed for one news event, no further trades occur.
+bool tradeExecuted = false;
+// Store the traded event’s scheduled news time for the post–trade countdown.
+datetime tradedNewsTime = 0;
+// Global array to store event IDs that have already triggered a trade.
+int triggeredNewsEvents[];
+```
+
+On the global scope, we include the "Trade\Trade.mqh" library using [#include](https://www.mql5.com/en/docs/basis/preprosessor/include) to enable order execution and declare a global "CTrade" object named "trade" for processing trades. We define an [enumerated](https://www.mql5.com/en/book/basis/builtin_types/enums) type "ETradeMode" with options "TRADE\_BEFORE", "TRADE\_AFTER", "NO\_TRADE", and "PAUSE\_TRADING", and use the input variable "tradeMode" (defaulting to "TRADE\_BEFORE" which we will use for the program) to determine when trades should be opened relative to news events. Additionally, we set up "input" variables "tradeOffsetHours", "tradeOffsetMinutes", "tradeOffsetSeconds", and "tradeLotSize" to specify the timing offset and trade size, while [global variables](https://www.mql5.com/en/docs/basis/variables/global) "tradeExecuted" (a boolean), "tradedNewsTime" (a [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime)), and the array "triggeredNewsEvents" (an int array) help us manage trade control and prevent re-trading of the same news event. We can then incorporate the trading logic into a function.
+
+```
+//--- Function to scan for news events and execute trades based on selected criteria
+//--- It handles both pre-trade candidate selection and post-trade countdown updates
+void CheckForNewsTrade() {
+   //--- Log the call to CheckForNewsTrade with the current server time
+   Print("CheckForNewsTrade called at: ", TimeToString(TimeTradeServer(), TIME_SECONDS));
+   
+   //--- If trading is disabled (either NO_TRADE or PAUSE_TRADING), remove countdown objects and exit
+   if(tradeMode == NO_TRADE || tradeMode == PAUSE_TRADING) {
+      //--- Check if a countdown object exists on the chart
+      if(ObjectFind(0, "NewsCountdown") >= 0) {
+         //--- Delete the countdown object from the chart
+         ObjectDelete(0, "NewsCountdown");
+         //--- Log that the trading is disabled and the countdown has been removed
+         Print("Trading disabled. Countdown removed.");
+      }
+      //--- Exit the function since trading is not allowed
+      return;
+   }
+   //--- Begin pre-trade candidate selection section
+   
+   //--- Define the lower bound of the event time range based on the user-defined start time offset
+   datetime lowerBound = currentTime - PeriodSeconds(start_time);
+   //--- Define the upper bound of the event time range based on the user-defined end time offset
+   datetime upperBound = currentTime + PeriodSeconds(end_time);
+   //--- Log the overall event time range for debugging purposes
+   Print("Event time range: ", TimeToString(lowerBound, TIME_SECONDS), " to ", TimeToString(upperBound, TIME_SECONDS));
+   
+   //--- Retrieve historical calendar values (news events) within the defined time range
+   MqlCalendarValue values[];
+   int totalValues = CalendarValueHistory(values, lowerBound, upperBound, NULL, NULL);
+   //--- Log the total number of events found in the specified time range
+   Print("Total events found: ", totalValues);
+   //--- If no events are found, delete any existing countdown and exit the function
+   if(totalValues <= 0) {
+      if(ObjectFind(0, "NewsCountdown") >= 0)
+         ObjectDelete(0, "NewsCountdown");
+      return;
+   }
+}
+```
+
+Here, we define the "CheckForNewsTrade" function, which scans for news events and executes trades based on our selected criteria. We begin by logging its call with the [Print](https://www.mql5.com/en/docs/common/print) function, displaying the current server time obtained via the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function. We then check if trading is disabled by comparing the "tradeMode" variable to the "NO\_TRADE" or "PAUSE\_TRADING" modes; if so, we use the [ObjectFind](https://www.mql5.com/en/docs/objects/ObjectFind) function to determine if a countdown object named "NewsCountdown" exists, and if found, deletes it using [ObjectDelete](https://www.mql5.com/en/docs/objects/objectdelete) before exiting the function.
+
+Next, the function calculates the overall event time range by setting "lowerBound" to the current time minus the number of seconds from the "start\_time" input (converted via the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) function) and "upperBound" to the current time plus the seconds from the "end\_time" input. This overall time range is then logged using [Print](https://www.mql5.com/en/docs/common/print). Finally, the function calls [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) to retrieve all news events within the defined time range; if no events are found, it cleans up any existing countdown object and exits, thereby preparing the system for subsequent candidate event selection and trade execution.
+
+```
+//--- Initialize candidate event variables for trade selection
+datetime candidateEventTime = 0;
+string candidateEventName = "";
+string candidateTradeSide = "";
+int candidateEventID = -1;
+
+//--- Loop through all retrieved events to evaluate each candidate for trading
+for(int i = 0; i < totalValues; i++) {
+   //--- Declare an event structure to hold event details
+   MqlCalendarEvent event;
+   //--- Attempt to populate the event structure by its ID; if it fails, skip to the next event
+   if(!CalendarEventById(values[i].event_id, event))
+      continue;
+   
+   //----- Apply Filters -----
+   
+   //--- If currency filtering is enabled, check if the event's currency matches the selected filters
+   if(enableCurrencyFilter) {
+      //--- Declare a country structure to hold country details
+      MqlCalendarCountry country;
+      //--- Populate the country structure based on the event's country ID
+      CalendarCountryById(event.country_id, country);
+      //--- Initialize a flag to determine if there is a matching currency
+      bool currencyMatch = false;
+      //--- Loop through each selected currency filter
+      for(int k = 0; k < ArraySize(curr_filter_selected); k++) {
+         //--- Check if the event's country currency matches the current filter selection
+         if(country.currency == curr_filter_selected[k]) {
+            //--- Set flag to true if a match is found and break out of the loop
+            currencyMatch = true;
+            break;
+         }
+      }
+      //--- If no matching currency is found, log the skip and continue to the next event
+      if(!currencyMatch) {
+         Print("Event ", event.name, " skipped due to currency filter.");
+         continue;
+      }
+   }
+   
+   //--- If importance filtering is enabled, check if the event's impact matches the selected filters
+   if(enableImportanceFilter) {
+      //--- Initialize a flag to determine if the event's impact matches any filter selection
+      bool impactMatch = false;
+      //--- Loop through each selected impact filter option
+      for(int k = 0; k < ArraySize(imp_filter_selected); k++) {
+         //--- Check if the event's importance matches the current filter selection
+         if(event.importance == imp_filter_selected[k]) {
+            //--- Set flag to true if a match is found and break out of the loop
+            impactMatch = true;
+            break;
+         }
+      }
+      //--- If no matching impact is found, log the skip and continue to the next event
+      if(!impactMatch) {
+         Print("Event ", event.name, " skipped due to impact filter.");
+         continue;
+      }
+   }
+   
+   //--- If time filtering is enabled and the event time exceeds the upper bound, skip the event
+   if(enableTimeFilter && values[i].time > upperBound) {
+      Print("Event ", event.name, " skipped due to time filter.");
+      continue;
+   }
+   
+   //--- Check if the event has already triggered a trade by comparing its ID to recorded events
+   bool alreadyTriggered = false;
+   //--- Loop through the list of already triggered news events
+   for(int j = 0; j < ArraySize(triggeredNewsEvents); j++) {
+      //--- If the event ID matches one that has been triggered, mark it and break out of the loop
+      if(triggeredNewsEvents[j] == values[i].event_id) {
+         alreadyTriggered = true;
+         break;
+      }
+   }
+   //--- If the event has already triggered a trade, log the skip and continue to the next event
+   if(alreadyTriggered) {
+      Print("Event ", event.name, " already triggered a trade. Skipping.");
+      continue;
+   }
+```
+
+Here, we initialize candidate event variables using a [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variable ("candidateEventTime"), two "string" variables ("candidateEventName" and "candidateTradeSide"), and an "int" variable ("candidateEventID") set to -1. Then, we [loop](https://www.mql5.com/en/docs/basis/operators/for) through each event retrieved by the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function (stored in an array of [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structures) and use the [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid) function to populate a [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) structure with the event’s details.
+
+Next, we apply our filters: if currency filtering is enabled, we retrieve the event’s corresponding [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) structure via [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid) and check if its "currency" field matches any entry in the "curr\_filter\_selected" array; if not, we log a message and skip the event. Similarly, if importance filtering is enabled, we iterate through the "imp\_filter\_selected" array to ensure the event's "importance" matches one of the selected levels, logging and skipping if it doesn’t.
+
+Finally, we check if the event has already triggered a trade by comparing its event ID with those stored in the "triggeredNewsEvents" array; if it has, we log and skip it. This loop ensures that only events meeting all criteria—currency, impact, time range, and uniqueness—are considered candidates for trade execution. If all pass and we have events, we can proceed to filter the event via the timeframe as allowed by the user.
+
+```
+//--- For TRADE_BEFORE mode, check if the current time is within the valid window (event time minus offset to event time)
+if(tradeMode == TRADE_BEFORE) {
+   if(currentTime >= (values[i].time - offsetSeconds) && currentTime < values[i].time) {
+      //--- Retrieve the forecast and previous values for the event
+      MqlCalendarValue calValue;
+      //--- If unable to retrieve calendar values, log the error and skip this event
+      if(!CalendarValueById(values[i].id, calValue)) {
+         Print("Error retrieving calendar value for event: ", event.name);
+         continue;
+      }
+      //--- Get the forecast value from the calendar data
+      double forecast = calValue.GetForecastValue();
+      //--- Get the previous value from the calendar data
+      double previous = calValue.GetPreviousValue();
+      //--- If either forecast or previous is zero, log the skip and continue to the next event
+      if(forecast == 0.0 || previous == 0.0) {
+         Print("Skipping event ", event.name, " because forecast or previous value is empty.");
+         continue;
+      }
+      //--- If forecast equals previous, log the skip and continue to the next event
+      if(forecast == previous) {
+         Print("Skipping event ", event.name, " because forecast equals previous.");
+         continue;
+      }
+      //--- If this candidate event is earlier than any previously found candidate, record its details
+      if(candidateEventTime == 0 || values[i].time < candidateEventTime) {
+         candidateEventTime = values[i].time;
+         candidateEventName = event.name;
+         candidateEventID = (int)values[i].event_id;
+         candidateTradeSide = (forecast > previous) ? "BUY" : "SELL";
+         //--- Log the candidate event details including its time and trade side
+         Print("Candidate event: ", event.name, " with event time: ", TimeToString(values[i].time, TIME_SECONDS), " Side: ", candidateTradeSide);
+      }
+   }
+}
+```
+
+Here, we evaluate candidate news events when operating in "TRADE\_BEFORE" mode. We check if the current time, obtained via the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function, falls within the valid trading window, which extends from the event's scheduled time minus the user-defined offset ("offsetSeconds") up to the exact event time, as defined below.
+
+```
+//--- Get the current trading server time
+datetime currentTime = TimeTradeServer();
+//--- Calculate the offset in seconds based on trade offset hours, minutes, and seconds
+int offsetSeconds = tradeOffsetHours * 3600 + tradeOffsetMinutes * 60 + tradeOffsetSeconds;
+```
+
+If the condition is met, we retrieve the event’s forecast and previous values using the [CalendarValueById](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) function to populate a [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure. If the retrieval fails, we log an error message and skip the event. We then extract the forecast and previous values using the "GetForecastValue" and "GetPreviousValue" methods, respectively. If either value is zero, or if they are equal, we log a message and move to the next event to ensure we only process events with meaningful data.
+
+If the event qualifies and occurs earlier than any previously identified candidate, we update our candidate variables: "candidateEventTime" stores the event time, "candidateEventName" holds the event's name, "candidateEventID" records the event ID, and "candidateTradeSide" determines whether the trade is a "BUY" (if the forecast is greater than the previous value) or a "SELL" (if the forecast is lower). Finally, we log the details of the selected candidate event, ensuring that we track the earliest valid event for trade execution. We can then select the event for trade execution.
+
+```
+//--- If a candidate event has been selected and the trade mode is TRADE_BEFORE, attempt to execute the trade
+if(tradeMode == TRADE_BEFORE && candidateEventTime > 0) {
+   //--- Calculate the target time to start trading by subtracting the offset from the candidate event time
+   datetime targetTime = candidateEventTime - offsetSeconds;
+   //--- Log the candidate target time for debugging purposes
+   Print("Candidate target time: ", TimeToString(targetTime, TIME_SECONDS));
+   //--- Check if the current time falls within the trading window (target time to candidate event time)
+   if(currentTime >= targetTime && currentTime < candidateEventTime) {
+      //--- Loop through events again to get detailed information for the candidate event
+      for(int i = 0; i < totalValues; i++) {
+         //--- Identify the candidate event by matching its time
+         if(values[i].time == candidateEventTime) {
+            //--- Declare an event structure to store event details
+            MqlCalendarEvent event;
+   
+         }
+      }
+   }
+}
+```
+
+We check if a candidate event has been selected and the trade mode is "TRADE\_BEFORE" by verifying that "candidateEventTime" is greater than zero. We then calculate the "targetTime" by subtracting the user-defined offset ("offsetSeconds") from the candidate event's scheduled time, and log this target time for debugging using the [Print](https://www.mql5.com/en/docs/common/print) function. Next, we determine if the current time falls within the valid trading window—between the "targetTime" and the candidate event's time—and if so, we loop through the array of events to identify the candidate event by matching its time, so that we can then proceed with retrieving further details and executing the trade.
+
+```
+//--- Attempt to retrieve the event details; if it fails, skip to the next event
+if(!CalendarEventById(values[i].event_id, event))
+   continue;
+//--- If the current time is past the event time, log the skip and continue
+if(currentTime >= values[i].time) {
+   Print("Skipping candidate ", event.name, " because current time is past event time.");
+   continue;
+}
+//--- Retrieve detailed calendar values for the candidate event
+MqlCalendarValue calValue;
+//--- If retrieval fails, log the error and skip the candidate
+if(!CalendarValueById(values[i].id, calValue)) {
+   Print("Error retrieving calendar value for candidate event: ", event.name);
+   continue;
+}
+//--- Get the forecast value for the candidate event
+double forecast = calValue.GetForecastValue();
+//--- Get the previous value for the candidate event
+double previous = calValue.GetPreviousValue();
+//--- If forecast or previous is zero, or if they are equal, log the skip and continue
+if(forecast == 0.0 || previous == 0.0 || forecast == previous) {
+   Print("Skipping candidate ", event.name, " due to invalid forecast/previous values.");
+   continue;
+}
+//--- Construct a news information string for the candidate event
+string newsInfo = "Trading on news: " + event.name +
+                  " (Time: " + TimeToString(values[i].time, TIME_SECONDS)+")";
+//--- Log the news trading information
+Print(newsInfo);
+//--- Create a label on the chart to display the news trading information
+createLabel1("NewsTradeInfo", 355, 22, newsInfo, clrBlue, 11);
+```
+
+Before we open trades, we attempt to retrieve detailed information for the candidate event using the [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid) function to populate a [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) structure; if this retrieval fails, we immediately skip to the next event. We then check whether the current time (obtained via [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver)) is already past the candidate event’s scheduled time—if so, we log a message and skip processing that event.
+
+Next, we retrieve the detailed calendar values for the event using [CalendarValueById](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) to populate a [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure, then extract the "forecast" and "previous" values using the "GetForecastValue" and "GetPreviousValue" methods, respectively; if either value is zero or if both are equal, we log the reason and skip the candidate event. Finally, we construct a string containing key news information and log it, while also displaying this information on the chart using the "createLabel1" function. The function's code snippet is as below.
+
+```
+//--- Function to create a label on the chart with specified properties
+bool createLabel1(string objName, int x, int y, string text, color txtColor, int fontSize) {
+   //--- Attempt to create the label object; if it fails, log the error and return false
+   if(!ObjectCreate(0, objName, OBJ_LABEL, 0, 0, 0)) {
+      //--- Print error message with the label name and the error code
+      Print("Error creating label ", objName, " : ", GetLastError());
+      //--- Return false to indicate label creation failure
+      return false;
+   }
+   //--- Set the horizontal distance (X coordinate) for the label
+   ObjectSetInteger(0, objName, OBJPROP_XDISTANCE, x);
+   //--- Set the vertical distance (Y coordinate) for the label
+   ObjectSetInteger(0, objName, OBJPROP_YDISTANCE, y);
+   //--- Set the text that will appear on the label
+   ObjectSetString(0, objName, OBJPROP_TEXT, text);
+   //--- Set the color of the label's text
+   ObjectSetInteger(0, objName, OBJPROP_COLOR, txtColor);
+   //--- Set the font size for the label text
+   ObjectSetInteger(0, objName, OBJPROP_FONTSIZE, fontSize);
+   //--- Set the font style to "Arial Bold" for the label text
+   ObjectSetString(0, objName, OBJPROP_FONT, "Arial Bold");
+   //--- Set the label's anchor corner to the top left of the chart
+   ObjectSetInteger(0, objName, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+   //--- Redraw the chart to reflect the new label
+   ChartRedraw();
+   //--- Return true indicating that the label was created successfully
+   return true;
+}
+```
+
+This function's logic is not new and we don't need to explain much on it since we already did it when creating the dashboard. So we just move on to opening trades based on the received values.
+
+```
+//--- Initialize a flag to store the result of the trade execution
+bool tradeResult = false;
+//--- If the candidate trade side is BUY, attempt to execute a buy order
+if(candidateTradeSide == "BUY") {
+   tradeResult = trade.Buy(tradeLotSize, _Symbol, 0, 0, 0, event.name);
+} 
+//--- Otherwise, if the candidate trade side is SELL, attempt to execute a sell order
+else if(candidateTradeSide == "SELL") {
+   tradeResult = trade.Sell(tradeLotSize, _Symbol, 0, 0, 0, event.name);
+}
+//--- If the trade was executed successfully, update the triggered events and trade flags
+if(tradeResult) {
+   Print("Trade executed for candidate event: ", event.name, " Side: ", candidateTradeSide);
+   int size = ArraySize(triggeredNewsEvents);
+   ArrayResize(triggeredNewsEvents, size + 1);
+   triggeredNewsEvents[size] = (int)values[i].event_id;
+   tradeExecuted = true;
+   tradedNewsTime = values[i].time;
+} else {
+   //--- If trade execution failed, log the error message with the error code
+   Print("Trade execution failed for candidate event: ", event.name, " Error: ", GetLastError());
+}
+//--- Break out of the loop after processing the candidate event
+break;
+```
+
+First, we initialize a boolean flag "tradeResult" to store the outcome of our trade attempt. Then, we check the "candidateTradeSide"—if it is "BUY", we call the "trade.Buy" function with the specified "tradeLotSize", symbol ([\_Symbol](https://www.mql5.com/en/docs/predefined/_symbol)), and use the event's name as a comment, for uniqueness and easier identification; if "candidateTradeSide" is "SELL", we similarly call "trade.Sell". If the trade executes successfully (i.e. "tradeResult" is true), we log the execution details, update our "triggeredNewsEvents" array by resizing it using the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function, and appending the event ID, set "tradeExecuted" to true, and record the event’s scheduled time in "tradedNewsTime"; otherwise, we log an error message using "GetLastError", and then break out of the loop to prevent processing any further candidate events. Here is an example of a trade opened on events range.
+
+After the trade is opened, we just now need to initialize the event countdown logic, and this is handled in the next section.
+
+### Creating and Managing Countdown Timers
+
+To create and manage the countdown timers, we will need some helper functions to create the button that will hold the time, as well as update the label when needed.
+
+```
+//--- Function to create a button on the chart with specified properties
+bool createButton1(string objName, int x, int y, int width, int height, 
+                   string text, color txtColor, int fontSize, color bgColor, color borderColor) {
+   //--- Attempt to create the button object; if it fails, log the error and return false
+   if(!ObjectCreate(0, objName, OBJ_BUTTON, 0, 0, 0)) {
+      //--- Print error message with the button name and the error code
+      Print("Error creating button ", objName, " : ", GetLastError());
+      //--- Return false to indicate button creation failure
+      return false;
+   }
+   //--- Set the horizontal distance (X coordinate) for the button
+   ObjectSetInteger(0, objName, OBJPROP_XDISTANCE, x);
+   //--- Set the vertical distance (Y coordinate) for the button
+   ObjectSetInteger(0, objName, OBJPROP_YDISTANCE, y);
+   //--- Set the width of the button
+   ObjectSetInteger(0, objName, OBJPROP_XSIZE, width);
+   //--- Set the height of the button
+   ObjectSetInteger(0, objName, OBJPROP_YSIZE, height);
+   //--- Set the text that will appear on the button
+   ObjectSetString(0, objName, OBJPROP_TEXT, text);
+   //--- Set the color of the button's text
+   ObjectSetInteger(0, objName, OBJPROP_COLOR, txtColor);
+   //--- Set the font size for the button text
+   ObjectSetInteger(0, objName, OBJPROP_FONTSIZE, fontSize);
+   //--- Set the font style to "Arial Bold" for the button text
+   ObjectSetString(0, objName, OBJPROP_FONT, "Arial Bold");
+   //--- Set the background color of the button
+   ObjectSetInteger(0, objName, OBJPROP_BGCOLOR, bgColor);
+   //--- Set the border color of the button
+   ObjectSetInteger(0, objName, OBJPROP_BORDER_COLOR, borderColor);
+   //--- Set the button's anchor corner to the top left of the chart
+   ObjectSetInteger(0, objName, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+   //--- Enable the background display for the button
+   ObjectSetInteger(0, objName, OBJPROP_BACK, true);
+   //--- Redraw the chart to reflect the new button
+   ChartRedraw();
+   //--- Return true indicating that the button was created successfully
+   return true;
+}
+//--- Function to update the text of an existing label
+bool updateLabel1(string objName, string text) {
+   //--- Check if the label exists on the chart; if not, log the error and return false
+   if(ObjectFind(0, objName) < 0) {
+      //--- Print error message indicating that the label was not found
+      Print("updateLabel1: Object ", objName, " not found.");
+      //--- Return false because the label does not exist
+      return false;
+   }
+   //--- Update the label's text property with the new text
+   ObjectSetString(0, objName, OBJPROP_TEXT, text);
+   //--- Redraw the chart to update the label display
+   ChartRedraw();
+   //--- Return true indicating that the label was updated successfully
+   return true;
+}
+
+//--- Function to update the text of an existing label
+bool updateLabel1(string objName, string text) {
+   //--- Check if the label exists on the chart; if not, log the error and return false
+   if(ObjectFind(0, objName) < 0) {
+      //--- Print error message indicating that the label was not found
+      Print("updateLabel1: Object ", objName, " not found.");
+      //--- Return false because the label does not exist
+      return false;
+   }
+   //--- Update the label's text property with the new text
+   ObjectSetString(0, objName, OBJPROP_TEXT, text);
+   //--- Redraw the chart to update the label display
+   ChartRedraw();
+   //--- Return true indicating that the label was updated successfully
+   return true;
+}
+```
+
+Here, we just create the helper functions that will enable us to create the timer button as well as the update function to update the label. We don't need to explain the functions since we had already detailed their logic in similar functions in earlier parts of the series. So we just go straight to implementing them.
+
+```
+//--- Begin handling the post-trade countdown scenario
+if(tradeExecuted) {
+   //--- If the current time is before the traded news time, display the countdown until news release
+   if(currentTime < tradedNewsTime) {
+      //--- Calculate the remaining seconds until the traded news time
+      int remainingSeconds = (int)(tradedNewsTime - currentTime);
+      //--- Calculate hours from the remaining seconds
+      int hrs = remainingSeconds / 3600;
+      //--- Calculate minutes from the remaining seconds
+      int mins = (remainingSeconds % 3600) / 60;
+      //--- Calculate seconds remainder
+      int secs = remainingSeconds % 60;
+      //--- Construct the countdown text string
+      string countdownText = "News in: " + IntegerToString(hrs) + "h " +
+                             IntegerToString(mins) + "m " +
+                             IntegerToString(secs) + "s";
+      //--- If the countdown object does not exist, create it with a blue background
+      if(ObjectFind(0, "NewsCountdown") < 0) {
+         createButton1("NewsCountdown", 50, 17, 300, 30, countdownText, clrWhite, 12, clrBlue, clrBlack);
+         //--- Log that the post-trade countdown was created
+         Print("Post-trade countdown created: ", countdownText);
+      } else {
+         //--- If the countdown object exists, update its text
+         updateLabel1("NewsCountdown", countdownText);
+         //--- Log that the post-trade countdown was updated
+         Print("Post-trade countdown updated: ", countdownText);
+      }
+   } else {
+      //--- If current time is past the traded news time, calculate elapsed time since trade
+      int elapsed = (int)(currentTime - tradedNewsTime);
+      //--- If less than 15 seconds have elapsed, show a reset countdown
+      if(elapsed < 15) {
+         //--- Calculate the remaining delay for reset
+         int remainingDelay = 15 - elapsed;
+         //--- Construct the reset countdown text
+         string countdownText = "News Released, resetting in: " + IntegerToString(remainingDelay) + "s";
+         //--- If the countdown object does not exist, create it with a red background
+         if(ObjectFind(0, "NewsCountdown") < 0) {
+            createButton1("NewsCountdown", 50, 17, 300, 30, countdownText, clrWhite, 12, clrRed, clrBlack);
+            //--- Set the background color property explicitly to red
+            ObjectSetInteger(0,"NewsCountdown",OBJPROP_BGCOLOR,clrRed);
+            //--- Log that the post-trade reset countdown was created
+            Print("Post-trade reset countdown created: ", countdownText);
+         } else {
+            //--- If the countdown object exists, update its text and background color
+            updateLabel1("NewsCountdown", countdownText);
+            ObjectSetInteger(0,"NewsCountdown",OBJPROP_BGCOLOR,clrRed);
+            //--- Log that the post-trade reset countdown was updated
+            Print("Post-trade reset countdown updated: ", countdownText);
+         }
+      } else {
+         //--- If 15 seconds have elapsed since traded news time, log the reset action
+         Print("News Released. Resetting trade status after 15 seconds.");
+         
+         //--- If the countdown object exists, delete it from the chart
+         if(ObjectFind(0, "NewsCountdown") >= 0)
+            ObjectDelete(0, "NewsCountdown");
+         //--- Reset the tradeExecuted flag to allow new trades
+         tradeExecuted = false;
+      }
+   }
+   //--- Exit the function as post-trade processing is complete
+   return;
+}
+```
+
+Here, we handle the post‐trade countdown scenario in detail. Once a trade is executed, we first use the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function to obtain the current server time and compare it with "tradedNewsTime", which stores the candidate event’s scheduled release time. If the current time is still before "tradedNewsTime", we calculate the remaining seconds and convert that into hours, minutes, and seconds, constructing a countdown string formatted as "News in: \_\_h \_\_m \_\_s" using the [IntegerToString](https://www.mql5.com/en/docs/convert/IntegerToString) function.
+
+We then check for the existence of the "NewsCountdown" object via [ObjectFind](https://www.mql5.com/en/docs/objects/ObjectFind) and either create it (using our custom "createButton1" function) at X=50, Y=17 with a width of 300 and a height of 30 and a blue background, or update it (using "updateLabel1") if it already exists. However, if the current time has passed "tradedNewsTime", we calculate the elapsed time; if this elapsed time is less than 15 seconds, we display a reset message in the countdown object—"News Released, resetting in: XXs"—and explicitly set its background color to red with the [ObjectSetInteger](https://www.mql5.com/en/docs/objects/ObjectSetInteger) function.
+
+Once the 15‑second reset period is over, we delete the "NewsCountdown" object and reset the "tradeExecuted" flag to allow new trades, ensuring our system dynamically responds to changes in news timing and maintains controlled trade execution. Also, we need to show the countdown if we have the trade and not yet been released. We achieve that via the following logic.
+
+```
+if(currentTime >= targetTime && currentTime < candidateEventTime) {
+
+        //---
+
+}
+else {
+   //--- If current time is before the candidate event window, show a pre-trade countdown
+   int remainingSeconds = (int)(candidateEventTime - currentTime);
+   int hrs = remainingSeconds / 3600;
+   int mins = (remainingSeconds % 3600) / 60;
+   int secs = remainingSeconds % 60;
+   //--- Construct the pre-trade countdown text
+   string countdownText = "News in: " + IntegerToString(hrs) + "h " +
+                          IntegerToString(mins) + "m " +
+                          IntegerToString(secs) + "s";
+   //--- If the countdown object does not exist, create it with specified dimensions and blue background
+   if(ObjectFind(0, "NewsCountdown") < 0) {
+      createButton1("NewsCountdown", 50, 17, 300, 30, countdownText, clrWhite, 12, clrBlue, clrBlack);
+      //--- Log that the pre-trade countdown was created
+      Print("Pre-trade countdown created: ", countdownText);
+   } else {
+      //--- If the countdown object exists, update its text
+      updateLabel1("NewsCountdown", countdownText);
+      //--- Log that the pre-trade countdown was updated
+      Print("Pre-trade countdown updated: ", countdownText);
+   }
+}
+```
+
+If the current time does not fall within the candidate event's trading window—that is, if the current time is not greater than or equal to "targetTime" (calculated as the candidate event's scheduled time minus the offset) and still not less than the candidate event's scheduled time, we assume that the current time is still before the trading window, so we calculate the remaining time until the candidate event by subtracting the current time from the candidate event's scheduled time, then convert this difference into hours, minutes, and seconds.
+
+Using [IntegerToString](https://www.mql5.com/en/docs/convert/IntegerToString), we construct a countdown text string in the format "News in: \_\_h \_\_m \_\_s". We then use the [ObjectFind](https://www.mql5.com/en/docs/objects/ObjectFind) function to check if the "NewsCountdown" object already exists; if it does not, we create it using the "createButton1" function with the specified dimensions (X=50, Y=17, width=300, height=30) and a blue background, logging that the pre‑trade countdown was created, otherwise, we update its text via "updateLabel1" and log the update. Finally, if no event is selected after the analysis, we just delete our objects.
+
+```
+//--- If no candidate event is selected, delete any existing countdown and trade info objects
+if(ObjectFind(0, "NewsCountdown") >= 0) {
+   ObjectDelete(0, "NewsCountdown");
+   ObjectDelete(0, "NewsTradeInfo");
+   //--- Log that the pre-trade countdown was deleted
+   Print("Pre-trade countdown deleted.");
+}
+```
+
+If no candidate event is selected—that is, if no event meets the criteria for trade execution—we check for the existence of the "NewsCountdown" object using the [ObjectFind](https://www.mql5.com/en/docs/objects/ObjectFind) function. If found, we remove both the "NewsCountdown" and "NewsTradeInfo" objects from the chart by calling the [ObjectDelete](https://www.mql5.com/en/docs/objects/objectdelete) function, ensuring that no outdated countdown or trade information remains displayed.
+
+However, the user may terminate the program explicitly, which means that we still need to clean off our chart in the instance of that situation. So we can define a function to handle the clean-up easily.
+
+```
+//--- Function to delete trade-related objects from the chart and redraw the chart
+void deleteTradeObjects(){
+   //--- Delete the countdown object from the chart
+   ObjectDelete(0, "NewsCountdown");
+   //--- Delete the news trade information label from the chart
+   ObjectDelete(0, "NewsTradeInfo");
+   //--- Redraw the chart to reflect the deletion of objects
+   ChartRedraw();
+}
+```
+
+After defining the function, we just call it on the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) event handler, where we also destroy the existing dashboard, ensuring total clean-up, as highlighted in yellow below.
+
+```
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason){
+//---
+
+   destroy_Dashboard();
+   deleteTradeObjects();
+}
+```
+
+One thing that remains is to keep track of the updated filter information when the user clicks the dashboard so that we can stay with up-to-date information. So that means that we will have to track the events on the [OnChartEvent](https://www.mql5.com/en/docs/event_handlers/onchartevent) event handler. We create a function to easily implement that.
+
+```
+//--- Function to log active filter selections in the Experts log
+void UpdateFilterInfo() {
+   //--- Initialize the filter information string with the prefix "Filters: "
+   string filterInfo = "Filters: ";
+   //--- Check if the currency filter is enabled
+   if(enableCurrencyFilter) {
+      //--- Append the currency filter label to the string
+      filterInfo += "Currency: ";
+      //--- Loop through each selected currency filter option
+      for(int i = 0; i < ArraySize(curr_filter_selected); i++) {
+         //--- Append the current currency filter value
+         filterInfo += curr_filter_selected[i];
+         //--- If not the last element, add a comma separator
+         if(i < ArraySize(curr_filter_selected) - 1)
+            filterInfo += ",";
+      }
+      //--- Append a semicolon to separate this filter's information
+      filterInfo += "; ";
+   } else {
+      //--- Indicate that the currency filter is turned off
+      filterInfo += "Currency: Off; ";
+   }
+   //--- Check if the importance filter is enabled
+   if(enableImportanceFilter) {
+      //--- Append the impact filter label to the string
+      filterInfo += "Impact: ";
+      //--- Loop through each selected impact filter option
+      for(int i = 0; i < ArraySize(imp_filter_selected); i++) {
+         //--- Append the string representation of the current importance filter value
+         filterInfo += EnumToString(imp_filter_selected[i]);
+         //--- If not the last element, add a comma separator
+         if(i < ArraySize(imp_filter_selected) - 1)
+            filterInfo += ",";
+      }
+      //--- Append a semicolon to separate this filter's information
+      filterInfo += "; ";
+   } else {
+      //--- Indicate that the impact filter is turned off
+      filterInfo += "Impact: Off; ";
+   }
+   //--- Check if the time filter is enabled
+   if(enableTimeFilter) {
+      //--- Append the time filter information with the upper limit
+      filterInfo += "Time: Up to " + EnumToString(end_time);
+   } else {
+      //--- Indicate that the time filter is turned off
+      filterInfo += "Time: Off";
+   }
+   //--- Print the complete filter information to the Experts log
+   Print("Filter Info: ", filterInfo);
+}
+```
+
+We create a void function called "UpdateFilterInfo". First, we initialize a string with the prefix "Filters: " and then check if the currency filter is enabled—if so, we append "Currency: " and loop through the "curr\_filter\_selected" array using "ArraySize", adding each currency (with commas between them) and ending with a semicolon; if disabled, we simply note "Currency: Off; ". Next, we perform a similar process for the impact filter: if enabled, we append "Impact: " and iterate over "imp\_filter\_selected", converting each selected impact level to a string with [EnumToString](https://www.mql5.com/en/docs/convert/enumtostring) before appending them, or state "Impact: Off; " if not enabled.
+
+Finally, we address the time filter by appending "Time: Up to " along with the string representation of the "end\_time" input (again using "[EnumToString](https://www.mql5.com/en/docs/convert/enumtostring)"), or "Time: Off" if disabled. Once all segments are concatenated, we output the complete filter information to the Experts log using the [Print](https://www.mql5.com/en/docs/common/print) function, thereby giving us a clear, real-time snapshot of the filters in effect for troubleshooting and verification. We then call the functions on the [OnChartEvent](https://www.mql5.com/en/docs/event_handlers/onchartevent) event handler, as well as [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick).
+
+```
+//+------------------------------------------------------------------+
+//|    OnChartEvent handler function                                 |
+//+------------------------------------------------------------------+
+void  OnChartEvent(
+   const int       id,       // event ID  
+   const long&     lparam,   // long type event parameter 
+   const double&   dparam,   // double type event parameter 
+   const string&   sparam    // string type event parameter 
+){
+      
+   if (id == CHARTEVENT_OBJECT_CLICK){ //--- Check if the event is a click on an object
+      UpdateFilterInfo();
+      CheckForNewsTrade();
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick(){
+//---
+UpdateFilterInfo();
+CheckForNewsTrade();
+   if (isDashboardUpdate){
+      update_dashboard_values(curr_filter_selected,imp_filter_selected);
+   }
+   
+}
+```
+
+Upon running the program, we have the following outcome.
+
+From the image, we can see that we can open trades based on user-selected settings, and when the news is traded, we create the countdown timer and label to show and update the information, and then log the updates, hence achieving our objective. The only thing that remains is testing our logic, and that is handled in the next section.
+
+### Testing the Trading Logic
+
+As for the backtesting, we waited for live trading news events, and upon the testing, the outcome was as illustrated in the video below.
+
+YouTube
+
+Tap to unmute
+
+Video unavailable
+
+Video unavailable
+
+This video is no longer available because the uploader has closed their YouTube account.
+
+  
+
+### Conclusion
+
+In conclusion, we have successfully integrated automated trade entry into our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) system by using user-defined filters, precise time offsets, and dynamic countdown timers. Our solution scans for news events compares forecast and previous values, and automatically executes BUY or SELL orders based on clear calendar signals.
+
+However, further advancements are needed to refine the system for real-world trading conditions. We encourage continued development and testing—particularly in enhancing risk management and fine-tuning filter criteria—to ensure optimal performance. Happy trading!
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17271.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_6.mq5](https://www.mql5.com/en/articles/download/17271/mql5_news_calendar_part_6.mq5 "Download MQL5_NEWS_CALENDAR_PART_6.mq5")
+(167.54 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Price Action Analysis Toolkit Development (Part 15): Introducing Quarters Theory (I) — Quarters Drawer Script](https://www.mql5.com/en/articles/17250)
+
+Points of support and resistance are critical levels that signal potential trend reversals and continuations. Although identifying these levels can be challenging, once you pinpoint them, you’re well-prepared to navigate the market. For further assistance, check out the Quarters Drawer tool featured in this article, it will help you identify both primary and minor support and resistance levels.
+
+[Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy](https://www.mql5.com/en/articles/17239)
+
+In this article, we build an Expert Advisor in MQL5 for the Asian Breakout Strategy by calculating the session's high and low and applying trend filtering with a moving average. We implement dynamic object styling, user-defined time inputs, and robust risk management. Finally, we demonstrate backtesting and optimization techniques to refine the program.
+
+[From Basic to Intermediate: Operators](https://www.mql5.com/en/articles/15305)
+
+In this article we will look at the main operators. Although the topic is simple to understand, there are certain points that are of great importance when it comes to including mathematical expressions in the code format. Without an adequate understanding of these details, programmers with little or no experience eventually give up trying to create their own solutions.
+
+[Anarchic Society Optimization (ASO) algorithm](https://www.mql5.com/en/articles/15511)
+
+In this article, we will get acquainted with the Anarchic Society Optimization (ASO) algorithm and discuss how an algorithm based on the irrational and adventurous behavior of participants in an anarchic society (an anomalous system of social interaction free from centralized power and various kinds of hierarchies) is able to explore the solution space and avoid the traps of local optimum. The article presents a unified ASO structure applicable to both continuous and discrete problems.
+
+[
+
+Meet our new site metatrader.com
+
+Real-time market data, expert analysis, interactive charts, trading insights, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&uid=&ref=https://www.mql5.com/en/articles/17271&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6423377256600190073)

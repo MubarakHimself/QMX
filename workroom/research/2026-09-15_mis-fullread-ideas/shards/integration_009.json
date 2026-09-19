@@ -1,0 +1,100 @@
+{
+  "shard_id": "integration_009",
+  "section": "Integration",
+  "n": 10,
+  "series_in_shard": [
+    "introduction to mql5"
+  ],
+  "articles": [
+    {
+      "id": 20280,
+      "title": "Introduction to MQL5 (Part 28): Mastering API and WebRequest Function in MQL5 (II)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20280.md"
+    },
+    {
+      "id": 20375,
+      "title": "Introduction to MQL5 (Part 29): Mastering API and WebRequest Function in MQL5 (III)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (III)",
+      "series_key": "introduction to mql5",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20375.md"
+    },
+    {
+      "id": 20425,
+      "title": "Introduction to MQL5 (Part 30): Mastering API and WebRequest Function in MQL5 (IV)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (IV)",
+      "series_key": "introduction to mql5",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20425.md"
+    },
+    {
+      "id": 20546,
+      "title": "Introduction to MQL5 (Part 31): Mastering API and WebRequest Function in MQL5 (V)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (V)",
+      "series_key": "introduction to mql5",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20546.md"
+    },
+    {
+      "id": 20700,
+      "title": "Introduction to MQL5 (Part 33): Mastering API and WebRequest Function in MQL5 (VII)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (VII)",
+      "series_key": "introduction to mql5",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20700.md"
+    },
+    {
+      "id": 20802,
+      "title": "Introduction to MQL5 (Part 34): Mastering API and WebRequest Function in MQL5 (VIII)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (VIII)",
+      "series_key": "introduction to mql5",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20802.md"
+    },
+    {
+      "id": 20859,
+      "title": "Introduction to MQL5 (Part 35): Mastering API and WebRequest Function in MQL5 (IX)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (IX)",
+      "series_key": "introduction to mql5",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20859.md"
+    },
+    {
+      "id": 20938,
+      "title": "Introduction to MQL5 (Part 36): Mastering API and WebRequest Function in MQL5 (X)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (X)",
+      "series_key": "introduction to mql5",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20938.md"
+    },
+    {
+      "id": 20978,
+      "title": "Introduction to MQL5 (Part 37): Mastering API and WebRequest Function in MQL5 (XI)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (XI)",
+      "series_key": "introduction to mql5",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20978.md"
+    },
+    {
+      "id": 21061,
+      "title": "Introduction to MQL5 (Part 38): Mastering API and WebRequest Function in MQL5 (XII)",
+      "section": "Integration",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5 (XII)",
+      "series_key": "introduction to mql5",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21061.md"
+    }
+  ]
+}

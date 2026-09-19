@@ -1,0 +1,204 @@
+4: title: "Monochronic Trading (Part 1): How to Detect Broker Timezone and DST in MQL5"
+11: series_title: "Monochronic Trading (): How to Detect Broker Timezone and DST in MQL5"
+20: # Monochronic Trading (Part 1): How to Detect Broker Timezone and DST in MQL5
+25: | 20 July 2026 at 06:20
+36: ### Introduction
+40: This insight led me to the work of anthropologist [Edward Twitchell Hall Jr.](https://en.wikipedia.org/wiki/Edward_T._Hall "https://en.wikipedia.org/wiki/Edward_T._Hall") and his concept of monochronic time, the idea that certain cultures view time as linear, scheduled, and compartmentalized. In monochronic cultures, people focus on one task at a time and organize their lives around fixed schedule
+42: ### Why Broker Time and DST Matter
+46: Before we build any expert advisors or start optimization, we must define a few prerequisites. For accurate Strategy Tester simulations when using session times like NYSE, you must know the broker's time zone and DST schedule.
+50: When live trading, the expert advisor relies on the broker's server time. If the broker observes Daylight Saving Time (DST), that server time shifts by an hour relative to GMT/UTC. For example, a broker base time at UTC+2 would move to UTC+3 once DST is active. This creates a problem in the Strategy Tester because the TimeGMT() function doesn't actually return GMT time, the function returns the br
+52: Even once we know the broker's time zone, DST introduces a second problem when session start times shift relative to the broker's time. For example, if the Tokyo session (TSE) starts at 2:00 AM broker time (UTC+2) when the broker's DST is inactive, it will start at 1:00 AM broker time (UTC+3) once DST is active. If the EA doesn't account for this shift, it will miss the first hour of the Tokyo ses
+54: ### NFP-Based DST Detection
+56: You can ask the broker or research which DST schedule they use. We will rather create a script to determine this for us as brokers don't always tell you which DST schedule they follow or any at all. My previous method was accurate before 2025, but irregular NFP dates caused by the US government shutdown invalidated it because the method relied on those dates. My new solution will still make use of
+67: NFP (Non-Farm Payrolls) releases often cause predictable volatility spikes in EURUSD at times published in the MQL5 Economic Calendar. All of the NFP dates for a given year are retrieved, and we check to verify if all the M15 volatility patterns match the respective dates, if not, the broker most certainly utilizes a DST schedule, and we cross-reference this mismatching pattern with other DST sche
+69: #### DST Calendar Generation
+71: ```
+73: ```
+75: ```
+78: ```
+82: Given a specific year, month, weekday (0 = Sunday ... 6 = Saturday), and an occurrence number nth, the function finds which calendar day of the month this day represents, and writes it into day\_out variable.
+86: - 2nd Sunday of March, returns 9 (if March 9 is the second Sunday)
+87: - 1st Monday of September, returns 1
+88: - Last Sunday of October (nth = -1), returns 26
+90: ```
+91: GetEUDSTDates(int year, datetime &start, datetime &end)
+92: GetUSDSTDates(int year, datetime &start, datetime &end)
+93: GetAUDSTDates(int year, datetime &start, datetime &end)
+94: ```
+96: These are the three functions that translate real-world DST rules into datetime values as represented in the table below.
+98: | Region | DST Start | DST End |
+99: | --- | --- | --- |
+100: | EU | Last Sunday of March at 01:00 | Last Sunday of October |
+101: | US | 2nd Sunday of March at 07:00 | 1st Sunday of November at 06:00 |
+102: | AU | 1st Sunday of October at 16:00 | 1st Sunday of April (the following year ahead) at 16:00 |
+104: #### DST Range Evaluation
+106: ```
+107: IsInDSTRange(datetime date, datetime start, datetime end, bool southernHemisphere = false)
+108: ```
+110: ```
+113: ```
+115: IsInDSTRange function determines whether a given date is within a DST period where the hemisphere determines how we check due to Australia's DST schedule overlapping into the next year.
+117: #### Volatility Detection
+119: ```
+121: ```
+125: ```
+127: ```
+129: ```
+132: ```
+134: Compares the target candle against the candles one hour before and one hour after. If the center candle is larger/taller than both neighbors, the NFP spike is confirmed at that time.
+136: #### EURUSD Discovery
+138: ```
+140: ```
+142: ```
+147: ```
+155: #### Economic Calendar Integration
+157: ```
+159: ```
+161: Retrieves historical NFP releases from the MQL5 Economic Calendar for a specific year and assigns these values into the dates array.
+163: #### DST Detection Algorithm
+165: ```
+166: string DetectBrokerDST(int year_increment = 0)
+167: ```
+173: Step 3: For each NFP date, check whether the EURUSD M15 candle at that time shows a volatility spike. Track when the pattern flips, if NFP was consistently volatile at datetime X, then suddenly stops being volatile, the broker shifted their clock (DST transition happened).
+175: Step 4: Compare the detected shift window against calculated EU, US, and AU DST transition dates. Whichever region's transition falls within the window is your broker's DST rule.
+177: #### Output and Configuration
+179: ```
+181: ```
+183: Once the DST type is known, the function reads the current offset between TimeTradeServer() and TimeGMT(). It then checks whether DST is active, recalculates the base UTC offset, and prints the EA-ready broker offset and DST rule.
+185: ```
+188: ```
+192: #### Design Decisions
+200: The Economic Calendar API (CalendarValueHistory) returns no data inside the tester, so the script exits the tester with a clear explanation.
+202: Why TimeTradeServer() instead of TimeCurrent()?  
+203: TimeCurrent() only updates when a new tick arrives, making it unreliable on weekends or illiquid instruments/symbols. TimeTradeServer() pulls the server's current time regardless of market activity.
+205: ### Optimizer Project Design
+211: #### Common Directory
+213: ```
+215: ```
+219: #### Indicators Directory
+225: | Path | Filename | Purpose |
+226: | --- | --- | --- |
+227: | MQL5/Experts/MonochronicOptimizer1/Indicators/ | Indicator.mqh | abstract base class |
+228: | MQL5/Experts/MonochronicOptimizer1/Indicators/AMAs/ | AMAIndicator.mqh | five-AMA generation + pairwise signals |
+229: | MQL5/Experts/MonochronicOptimizer1/Indicators/AMAs/TimeFrame/ | AMA.mqh | single timeframe wrapper |
+230: | MQL5/Experts/MonochronicOptimizer1/Indicators/AMAs/Group/ | GroupSelector.mqh | multi-timeframe aggregator |
+232: ```
+234: ```
+236: This file establishes the abstract base class CIndicatorBase from which all indicators inherit, to standardize how all indicators are initialized, refreshed and released.
+238: ```
+240: ```
+242: The CAMAIndicator inherits from CIndicatorBase and manages five Adaptive Moving Averages (AMAs) to produce advanced signals from ten pairwise comparisons between these AMAs to generate a consensus multi layered trend signal based on a majority vote.
+244: ```
+246: ```
+250: #### Strategies Directory
+256: | Path | Filename | Purpose |
+257: | --- | --- | --- |
+258: | MQL5/Experts/MonochronicOptimizer1/Strategies/ | Strategy.mqh | base class + enums |
+259: | MQL5/Experts/MonochronicOptimizer1/Strategies/SubSet/ | StrategySelector.mqh | strategy selection |
+260: | MQL5/Experts/MonochronicOptimizer1/Strategies/SubSet/AMAs/ | AMAStrategy.mqh | trade direction assignments |
+262: ```
+264: ```
+268: ```
+270: ```
+282: - SET 1: Pure Trend Following
+283: - SET 2: Trend with Weak Counter-Trading
+284: - SET 3: Mean Reverting Extremes
+285: - SET 4: Pure Counter-Trend / Mean Reversion
+286: - SET 5: Strict Trend Confirmation Filter
+287: - SET 6: Conservative Trend Continuation
+288: - SET 7: Conservative Pullback Execution
+289: - SET 8: Swing Exhaustion Trading
+290: - SET 9: Aggressive Swing Reversal
+292: #### Time Directory
+298: | Path | Filename | Purpose |
+299: | --- | --- | --- |
+300: | MQL5/Experts/MonochronicOptimizer1/Time/ | TimeProperties.mqh | timehub class + STimeData + timeframe group |
+301: | MQL5/Experts/MonochronicOptimizer1/Time/Quarters/ | TimeQuarters.mqh | EQuarter enum |
+302: | MQL5/Experts/MonochronicOptimizer1/Time/Months/ | TimeMonths.mqh | EMonthOfYear enum |
+303: | MQL5/Experts/MonochronicOptimizer1/Time/Weeks/ | TimeWeeks.mqh | EWeekOfMonth + EWeeksOfMonth enums |
+304: | MQL5/Experts/MonochronicOptimizer1/Time/Days/ | TimeDays.mqh | ETradingDay enum |
+305: | MQL5/Experts/MonochronicOptimizer1/Time/Hours/ | TimeHours.mqh | EHourOfDay + ESessionHourOffset enums |
+306: | MQL5/Experts/MonochronicOptimizer1/Time/Minutes/ | TimeMinutes.mqh | EMinuteOfHour enum 00/15/30/45 marks |
+307: | MQL5/Experts/MonochronicOptimizer1/Time/Seconds/ | TimeSeconds.mqh | ESecondOfMinute enum |
+308: | MQL5/Experts/MonochronicOptimizer1/Time/Sessions/ | TimeSessions.mqh | broker session window management |
+309: | MQL5/Experts/MonochronicOptimizer1/Time/Sessions/ | IntradaySession.mqh | OPEN/MID/CLOSE session classifier |
+310: | MQL5/Experts/MonochronicOptimizer1/Time/DSTConverter/ | SessionTimeConverter.mqh | DST-aware broker/session time conversion |
+312: ```
+313: MQL5/Experts/MonochronicOptimizer1/Time/DSTConverter/SessionTimeConverter.mqh
+314: ```
+316: This file handles DST-aware time zone conversion between a trading session's local time and the broker's server time.
+318: ```
+330: ```
+332: SSessionTimezone struct holds metadata for a session as shown above for London session.
+334: The supported EU DST Sessions are shown below:
+338: ```
+340: ```
+342: CTimeProperties provides the calendar matching logic and utilizes other supporting functions to aid with calendar matching. The Timeframe group is declared and set here for the indicators to use. In this class we create a time data structure to work with all the calendar characteristics.
+344: ```
+362: ```
+366: In order to perform calendar matching we need to retrieve the current time into the STimeData structure.
+368: ```
+379: ```
+383: | Assignment | Explanation |
+384: | --- | --- |
+385: | time\_data.month = (EMonthOfYear)dt.mon | Casting of the 1-12 month number into the matching EMonthOfYear enum value. |
+386: | time\_data.quarter = (EQuarter) ((dt.mon)-1)/3) | Integer division maps months to quarters, where months:   - 1-3 equals 0 (Q1) - 4-6 equals 1 (Q2) - 7-9 equals 2 (Q3) - 10-12 equals 3 (Q4) |
+387: | time\_data.weeks = (EWeeksOfTheMonth)MathMin(MathFloor((dt.day -1)/7.0),3) | This groups the day of month into one of four weeks, each with a length of 7 days, where days:   - 1-7 equals 0 (Weeks 1) - 8-14 equals 1 (Weeks 2) - 15-21 equals 2 (Weeks 3) - 22-28 equals 3 (Weeks 4)  The MathMin(..., 3
+388: | time\_data.week = (EWeekOfMonth)MathMin(MathFloor((dt.day - 1)/14.0),1) | days 1-14 equals 0 (Week 1), days 15+ equals 1 (Week 2) |
+390: The IsCalendarMatch function is responsible for the calendar filtration by checking the current calendar and the input calendar configuration to find a match, hour data is not included during this check because a separate function CIntradaySession::IsSessionHourMatch() is solely responsible for checking the trading hour.
+392: ```
+393: MQL5/Experts/MonochronicOptimizer1/Time/Sessions/IntradaySession.mqh
+394: ```
+396: IntradaySession takes into account market type and session time zones to configure intraday sessions from open, mid to close. This is useful when we want to trade the opening hour of London session instead of the whole session or if we would like to trade the last hour of the closing period of a session. Different financial markets follow different trading schedules, for example the forex market t
+398: Here are the different intraday session configurations for the Equity market:
+402: Once we have configured the desired market intraday session, we need to know if we are in the correct session window with the hour and minute offset within that session to open a trade. IsSessionHourMatch function takes on the responsibility to match current session window with hour and minute offset to the input settings.
+404: The IsSessionHourMatch function verifies:
+406: - session type
+407: - hour offset
+408: - 15-minute mark
+409: - DST-adjusted broker time
+411: ### Global Trading Sessions and Market Rhythms Trading sessions
+413: Financial markets run in sessions based on different time-zones, and each session has its own pace.
+415: | Session | Major Market | Time(GMT) |
+416: | --- | --- | --- |
+417: | US | New York | ~1pm-10pm |
+418: | Asian | Tokyo | Midnight-9am |
+419: | European | London | ~8am-5pm |
+421: Session-specific activity in certain instruments can create recurring trading opportunities. Example:
+423: USD/JPY is most active in Asian session and New York sessions, while EUR/USD peaks during European and New York sessions. Gold is notably volatile during New York and London sessions especially in the session overlap. Equity indices see higher concentration of moves at local market open/close time, U.S. indices see big swings right at 9:30 ET open and near the 4:00 ET close. Whereas commodities li
+425: **Quarter-Hour Marks and Scheduled Events**
+427: Why are sub-hour intervals – the 00, 15, 30, and 45-minute marks important?
+429: Because many events and market mechanisms align on clock-time. In practice, major economic releases and fixings tend to occur on the hour or half-hour. For example, U.S. employment reports, CPI, Fed minutes and most U.S. data drop at :30 or on the hour, while European indicators often come right on the hour (:00).
+431: Intraday stock-market patterns show these quarter-hour effects. On a typical trading day, volume and volatility surge at the 9:30 ET open and remain elevated for the first several minutes. In the minutes following the open, one often sees the initial flurry (~9:31–9:45) followed by a retracement or consolidation. For example, it is common for price to pull back around 9:45 ET (15 minutes after ope
+433: ### Conclusion
+435: In this first part of the series, we introduced the concept of monochronic trading—pairing a trading strategy with specific market time windows rather than treating time as a passive background variable. Before any meaningful time-based optimization can begin, however, an Expert Advisor must first understand the broker's time zone and daylight saving schedule. We addressed this problem by developi
+437: We also introduced the overall architecture of the Monochronic Optimizer framework and the role of its main modules. Rather than optimizing every possible parameter through brute force, the framework is designed to evaluate how market sessions, calendar events, and scheduled time intervals influence the performance of different trading strategies.
+445: | # | File | Description |
+446: | --- | --- | --- |
+447: | 1 | Common/Utilities.mqh | Shared utilities for logging, validation, and resource management. |
+448: | 2 | Indicators/Indicator.mqh | Abstract base class for all indicators. |
+449: | 3 | Indicators/AMAs/AMAIndicator.mqh | Generates five AMA-based trend signals. |
+450: | 4 | Indicators/AMAs/TimeFrame/AMA.mqh | Single-timeframe AMA wrapper. |
+451: | 5 | Indicators/AMAs/Group/GroupSelector.mqh | Aggregates signals across multiple timeframes. |
+452: | 6 | Strategies/Strategy.mqh | Base strategy framework and shared definitions. |
+453: | 7 | Strategies/SubSet/AMAs/AMAStrategy.mqh | Implements the nine AMA trading strategies. |
+454: | 8 | Strategies/SubSet/StrategySelector.mqh | Selects the active trading strategy. |
+455: | 9 | Symbol/SymbolProperties.mqh | Symbol, price, and lot-size helper functions. |
+456: | 10 | Time/TimeProperties.mqh | Calendar filtering and timeframe management. |
+457: | 11 | Time/DSTConverter/SessionTimeConverter.mqh | DST-aware conversion between broker and session time. |
+458: | 12 | Time/Sessions/IntradaySession.mqh | Classifies session phases and validates trading windows. |
+459: | 13 | Time/Sessions/TimeSessions.mqh | Reads broker trading sessions and market hours. |
+460: | 14 | Time/Months/TimeMonths.mqh | Month-based trading filters. |
+461: | 15 | Time/Quarters/TimeQuarters.mqh | Quarter-based trading filters. |
+462: | 16 | Time/Weeks/TimeWeeks.mqh | Week-of-month trading filters. |
+463: | 17 | Time/Days/TimeDays.mqh | Day-of-week trading filters. |
+464: | 18 | Time/Hours/TimeHours.mqh | Hour-of-day and session-hour filters. |
+465: | 19 | Time/Minutes/TimeMinutes.mqh | Quarter-hour (00/15/30/45) filters. |
+466: | 20 | Time/Seconds/TimeSeconds.mqh | Second-of-minute definitions. |
+467: | 21 | Trade/TradeProp.mqh | Main trade execution controller. |
+468: | 22 | Trade/Handles/TradeHandler.mqh | Manages open positions and trailing logic. |
+469: | 23 | Trade/Parameters/TradeParameters.mqh | Calculates trade parameters and magic number. |
+470: | 24 | Trade/Risk/RiskManagement.mqh | Position sizing and risk management. |
+471: | 25 | MonochronicOptimizer1.mq5 | Main Expert Advisor entry point. |
+498: [Building an Interactive AnchorFlow Volume Profile Indicator (MTF) in MQL5](https://www.mql5.com/en/articles/23391)
+500: We implement an interactive, anchored multi-timeframe volume profile in MQL5 for MetaTrader 5. The indicator draws the current-timeframe profile on the main chart and a higher timeframe profile in a subwindow, both aligned by a draggable anchor and the visible range. You will learn keyboard-driven bin editing (E/S double-click), robust timeframe validation, viewport-aware updates, and object resto

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_040",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 14815,
+      "title": "SP500 Trading Strategy in MQL5 For Beginners",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14815.md"
+    },
+    {
+      "id": 14841,
+      "title": "Comet Tail Algorithm (CTA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14841.md"
+    },
+    {
+      "id": 14855,
+      "title": "Reimagining Classic Strategies: Crude Oil",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14855.md"
+    },
+    {
+      "id": 14862,
+      "title": "How to develop any type of Trailing Stop and connect it to an EA",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14862.md"
+    },
+    {
+      "id": 14865,
+      "title": "A feature selection algorithm using energy based learning in pure MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14865.md"
+    },
+    {
+      "id": 14878,
+      "title": "\u0421ode Lock Algorithm (CLA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14878.md"
+    },
+    {
+      "id": 14936,
+      "title": "Gain An Edge Over Any Market (Part II): Forecasting Technical Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14936.md"
+    },
+    {
+      "id": 14964,
+      "title": "Price Driven CGI Model: Theoretical Foundation",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14964.md"
+    },
+    {
+      "id": 14975,
+      "title": "Bill Williams Strategy with and without other indicators and predictions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14975.md"
+    },
+    {
+      "id": 15004,
+      "title": "Artificial Cooperative Search (ACS) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15004.md"
+    },
+    {
+      "id": 15014,
+      "title": "Most notable Artificial Cooperative Search algorithm modifications (ACSm)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15014.md"
+    },
+    {
+      "id": 15026,
+      "title": "How to view deals directly on the chart without weltering in trading history",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15026.md"
+    }
+  ]
+}

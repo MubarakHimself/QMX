@@ -1,0 +1,113 @@
+4: title: "Using the MQL5 Economic Calendar for News Filtering (Part 2): Stop Management Positions During News Releases"
+11: series_title: "Using the MQL5 Economic Calendar for News Filtering (): Stop Management Positions During News Releases"
+20: # Using the MQL5 Economic Calendar for News Filtering (Part 2): Stop Management Positions During News Releases
+25: | 16 March 2026 at 09:42
+36: ### Introduction
+38: In [Part 1](https://www.mql5.com/en/articles/21235) we introduced a news-filter that blocks new trade entries during high‑impact events. That layer reduces entry exposure to abnormal volatility, but does not address the remaining issue: trades opened before the news window still experience widened spreads, transient spikes, and temporary distortions that can trigger SL/TP levels prematurely. Closi
+40: This article addresses that specific engineering problem: how to add a controlled, reversible stop‑management layer that temporarily suspends stop‑loss and take‑profit levels for already open positions during the restricted news window and then restores them deterministically afterwards. The success criteria are explicit: actions must occur once per news window (no repeated modifications), origina
+42: ### 
+44: ### Solution, objective, and principles
+46: The objective of Part 2 is strictly defined to temporarily suspend stop-loss and take-profit levels during the restricted news window and restore them safely once the window ends.
+54: - If price has not crossed the original stored stop-loss or take-profit level, the stop is restored exactly at its original value.
+55: - If price has already moved beyond the original stop-loss level, the stop is restored at the nearest valid level just in front of the current price.
+56: - The same logic is applied to take-profit levels.
+60: - no invalid stop placement,
+61: - no broker rejection due to crossed price levels,
+62: - no restoration of logically impossible values, and
+63: - preservation of original trade structure whenever technically feasible.
+71: - Multiple open trades across symbols,
+72: - broker minimum stop-distance constraints, and
+73: - price already beyond the original stop or target at restoration time.
+77: - Safely store original SL/TP values before removal,
+78: - track which trades are currently in a suspended state,
+79: - avoid repeated or unnecessary modification attempts, and
+80: - restore stops only once per event cycle.
+86: The solution introduced in this article adds a stop-management layer that activates only when the restricted news window is active.
+90: 1. Detect active news window [from part 1]
+98: This structure allows the trading strategy to regain full control immediately after the news window ends without permanently altering the trade's intended structure.
+106: 3. Not a volatility prediction system: this mechanism does not predict market reaction or direction. It simply mitigates premature stop-outs caused by abnormal spreads or transient spikes.
+112: ### 
+114: ### Implementation
+122: - Identify upcoming news events [part 1 of the article already covers this and part 2 will make use of it], and
+123: - check if the current time falls within the news window [read about news windows in part 1].
+127: - Loop through open positions,
+128: - save original SL/TP in an in-memory array,
+129: - remove SL/TP, and
+130: - mark trade as suspended.
+134: - Prevent duplicate modifications, and
+135: - maintain suspension state until restore time.
+139: - For each suspended trade, if the price has not crossed the original SL/TP, restore the exact values, but if price has crossed the original SL/TP, restore at the nearest valid level in front of the price, and
+140: - clear suspension state.
+154: When the news window begins, multiple trades may already be open with different tickets, different stop-loss levels, and different take-profit levels. Each trade must remember its own original configuration. We therefore introduce a state container that will
+156: - store the ticket number,
+157: - store the original stop-loss, and
+158: - store the original take-profit.
+168: ```
+180: ```
+186: ```
+187: SavedStops savedStops[];     // Each element of this array represents one suspended trade
+188: ```
+194: - repeated stop removals,
+195: - duplicate restoration attempts, and
+196: - unnecessary position modification.
+200: ```
+202: ```
+212: ```
+218: #property copyright "soloharbinger"
+219: #property link      "https://www.mql5.com/en/users/soloharbinger"
+220: #property version   "1.00"
+222: #include <Trade/Trade.mqh>
+248: ```
+256: - iterate through open positions,
+257: - store original SL/TP values,
+258: - remove SL/TP from the broker, and
+259: - mark the system as suspended.
+267: ```
+273: ```
+277: ```
+289:         ArrayResize(savedStops, 0); // Clear previous list
+301:                 savedStops[idx].sl = PositionGetDouble(POSITION_SL);
+302:                 savedStops[idx].tp = PositionGetDouble(POSITION_TP);
+314:         for(int k = 0; k < ArraySize(savedStops); k++)
+323: ```
+329: When the news window ends, we must restore stops safely. But restoration is not simply
+350: ```
+396: ```
+402: - Restores original SL/TP if still valid,
+403: - adjusts to nearest level if price already crossed, and
+404: - respects broker minimum stop-distance.
+406: ### 
+408: ### Integration section—Part 2 added to Part 1
+414: 3. Attach the SuspendStops() and RestoreStops() functions.
+421: ```
+422: input bool   SuspendStopsDuringNews = false;         // Temporarily remove and later restore SL/TP during the news window
+423: ```
+425: ```
+431: input bool   RestrictNewTradesDuringNews = true;                 // Block new trades during news window
+442: input int CacheReloadHours = 6;                                      // How often to reload calendar cache (hours)
+443: ```
+447: ```
+449: MqlCalendarValue TodayEvents[];    // Calendar cache
+464: ```
+474: Part 1 currently uses *bool isNews,* a close-trade latch, and a reset when news ends. This works for closing trades, but part 2 introduces something more advanced: we now need to detect exactly when the news window starts and exactly when it ends. This is because stop removal must happen once when the news window begins and once when the news window ends.
+488: ```
+497:       // Track previous state of the news window
+505:          if(currentNewsState) // News window has just started
+540: ```
+542: We removed the *tradesClosedForThisNewsWindow* latch variable, eliminated the per-tick close check, and replaced it with a state transition model, one execution per window start or window end.
+546: When the news window starts, it optionally closes trades and optionally removes SL/TP. When the news window ends, simply restore SL/TP.
+556: Example of Print statement output during the news window operation
+560: - At the beginning of your entry logic or trade processing logic, call
+562: ```
+565: ```
+567: - Create a magic number so that all implementations will only affect trades taken by this EA.
+569: ```
+572: //--- in SuspendStops and CloseAllTradesForSymbol, filter by magic:
+576: ```
+578: - This implementation is designed for single-symbol EAs. It will not work correctly for multi-symbol EAs [trading multiple symbols at once], as stop restoration relies on the chart's current symbol.
+580: ### 
+582: ### Conclusion
+584: We closed the engineering gap between “blocking new entries” and “safely managing existing positions” around news. The delivered design is deterministic and integration‑ready: a per‑ticket SavedStops container to persist original SL/TP in memory, a suspension flag and state‑transition model that ensures one‑time execution at news window start/end, SuspendStops() to remove SL/TP once, and RestoreSt
+586: Practical constraints are explicit: use a magic number to limit scope, expect single‑symbol operation as implemented, and accept temporary exposure during the suspension window. This layer is not a volatility predictor — it is a narrowly scoped, rule‑based mitigation that prevents false stop‑outs caused by spreads and spikes while keeping the EA's statistical integrity intact. In the next part we 
+588: Below is an image showing print statements of a news window in action.
+609: This article develops a practical MQL5 indicator that identifies Hidden Smash Day bars by strict numeric criteria and optional confirmation on the following session. We cover detection routines, buffer registration, and plot configuration to place arrows at valid bars. The approach delivers stable, non-repainting signals for historical testing and real-time monitoring.

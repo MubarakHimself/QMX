@@ -1,0 +1,1558 @@
+---
+id: 23546
+source_url: https://www.mql5.com/en/articles/23546
+title: "MQL5 Bootstrap (III): Simplified Functions for Working with News"
+author: ""
+author_url: 
+published: 2026-08-20T15:05Z
+platform: "MetaTrader 5"
+section: "Tester"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# MQL5 Bootstrap (III): Simplified Functions for Working with News
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+| 20 August 2026 at 11:05
+
+1 779
+[
+0](https://www.mql5.com/en/forum/514937 "Comments")
+
+[Omega J Msigwa](https://www.mql5.com/en/users/omegajoctan)
+
+**Contents**
+
+- [Introduction](https://www.mql5.com/en/articles/23546#introduction)
+- [Understanding the news offered in MQL5](https://www.mql5.com/en/articles/23546#understanding_the_news_offered_in_mql5)
+- [Getting built-in news](https://www.mql5.com/en/articles/23546#getting_built_in_news)
+- [Checking if news exists](https://www.mql5.com/en/articles/23546#checking_if_news_exists)
+- [Getting the next news release](https://www.mql5.com/en/articles/23546#getting_the_next_news_release)
+- [Getting the previous news release](https://www.mql5.com/en/articles/23546#getting_a_previous_news_release)
+- [Exporting news to a CSV file](https://www.mql5.com/en/articles/23546#exporting_news_to_a_csv_file)
+- [Using news from a CSV file](https://www.mql5.com/en/articles/23546#using_news_from_a_csv_file)
+- [Backtesting news-based programs in the strategy tester](https://www.mql5.com/en/articles/23546#backtesting_news_based_programs_in_the_strategy)
+- [Working with news from a database](https://www.mql5.com/en/articles/23546#working_with_news_from_a_database)
+- [Conclusion](https://www.mql5.com/en/articles/23546#final_thoughts)
+
+### Introduction
+
+When it comes to forex trading, news plays a key role in moving the markets. High-impact economic events such as interest rate decisions, inflation reports, employment figures, and GDP releases can cause significant market volatility in just a few seconds. While some traders might find this window to be the right time to trade, many avoid or adapt their strategies based on the expected impact of upcoming releases.
+
+While MetaTrader5 provides a powerful built-in economic calendar API that you can access using the MQL5 programming language, making it work properly in all scenarios could be tricky.
+
+For example, detecting news ahead.
+
+```
+//+------------------------------------------------------------------+
+//|  Checking if there are news of a specified impact on the current |
+//|  symbol 15 minutes=900sec from the current time.                 |
+//+------------------------------------------------------------------+ 
+bool IsThereNewsForTheSymbol(ENUM_CALENDAR_EVENT_IMPORTANCE importance, uint seconds=900)
+ {
+   MqlCalendarValue values[]; //https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue
+
+   ResetLastError();
+   int all_news  = CalendarValueHistory(values,TimeCurrent(), TimeCurrent()+seconds, NULL, NULL); //All news from the current time to some time in the future
+   
+   if (all_news <= 0) //if CalendarValue History returns a value less than zero it is an indicator that there is either an error or there are no news
+     {
+       if (GetLastError()>0) //we check if there was an error
+        {
+          printf("Failed to get the news for Symbol=%s Err=%d",Symbol(),GetLastError());
+          return false;
+        } 
+       else //if there was no error then there are no news for this symbol available since not all symbols have news
+        {
+          printf("No news available for all symbols");
+          return false;
+        }
+     }
+
+   for (int i=0; i<all_news; i++) //we loop through all the news
+     {
+       MqlCalendarEvent event;
+       CalendarEventById(values[i].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+             
+       MqlCalendarCountry country; //The country where the currency pair originates
+       CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+       
+       if (StringFind(Symbol(), country.currency)>-1) //We want to ensure that we filter news that has nothing to do with the base and the quote currency for the current symbol pair
+         {
+          if (event.importance==importance) //filter the news by importance
+            { 
+              if ((long)MathAbs(TimeCurrent()-values[i].time)<=seconds) //filter the news by time | do not trade 15 minutes before or after the news | NB: the difference in time when subtracted gives out seconds
+               { 
+                 Comment(StringFormat("<--------- News Alert ------------>\n\nEST %d Mins remaining\nCurrency %s Time[%s]\nname[%s]\nsector[%s]\nimportance[%s]\nactual value[%.3f]\nforecast value[%.3f]\nprevious value[%.3f]",(long)MathAbs(TimeCurrent()-values[i].time)/60,country.currency,TimeToString(values[i].time,TIME_DATE|TIME_MINUTES),event.name, EnumToString(event.sector), EnumToString(event.importance),values[i].GetActualValue(),values[i].GetForecastValue(),values[i].GetPreviousValue()));
+                 return true; //There is a high impact new(s) coming shortly
+               }
+            }
+         }
+     }
+   return false;
+ }
+```
+
+*While it's not that complicated, it seems like a lot of work for such a simple task, not to mention, it may not work in the strategy tester.*
+
+If you need historical news or alternative detection logic beyond the function above, you may end up rewriting the same code for similar tasks. In this article, we are going to introduce classes and methods for collecting and working with news simply and efficiently, helping you save a lot of valuable development time and headaches.
+
+### Understanding the News Offered in MQL5
+
+It is important to understand the [three structures](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) used by the MetaTrader5 economic calendar API, as we will be building a custom structure for the news shortly.
+
+Think of them as three pieces of information that work together to describe a news event.
+
+**01: MqlCalendarCountry**
+
+This structure contains information about the country associated with an economic event. It includes details such as the country's name, currency, and currency symbol.
+
+For example, if the event is the U.S Non-Farm Payrolls, the country structure would contain information about the United States and its currency (USD).
+
+Members of this structure include:
+
+- id – A unique identifier for the country.
+- name – The country's name, such as United States or Japan.
+- code – The two-letter country code, such as US or JP.
+- currency – The country's currency code, such as USD, EUR, or JPY.
+- currency\_symbol – The currency symbol, such as $ or ¥.
+- url\_name – The country name used in the mql5.com website URL.
+
+**02: MqlCalendarEvent**
+
+This structure describes the economic event itself. It contains information about what the event is, where it belongs, and how important it is. For example, an event could be Consumer Price Index (CPI), Gross Domestic Product (GDP), or an Interest Rate Decision with parameters such as:
+
+- id – A unique identifier for the event.
+- name – The name of the economic event.
+- country\_id – The identifier of a country associated with the event.
+- [importance](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_importance) – Event's importance (Low, Medium, or High).
+- [frequency](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_frequency) – How often the event is released (monthly, quarterly, yearly, etc.).
+- [sector](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_sector) – The part of the economy the event belongs to, such as Trading, Government, consumption, etc.
+- [time\_mode](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_timemode) – Specifies how the event release time is provided (exact time, all-day, no time, etc.)
+- [unit](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#enum_calendar_event_unit) – The unit used to measure the reported value, such as percent or currency.
+- digits – The number of decimal places used when displaying values.
+- source\_url – The website where the data is officially published.
+- event\_code – A short code that uniquely identifies the event.
+
+**03: MqlCalendarValue**
+
+While MqlCalendarEvent describes what the event is, MqlCalendarValue stores the results of a particular release. For example, the U.S Consumer Price Index (CPI) is released every month. The event remains the same, but every month has its own set of values.
+
+This structure contains.
+
+- time – The date and time when the news was released.
+- period – The reporting period the data refers to.
+- actual\_value – The value that was actually reported.
+- forecast\_value – The value economists expected before the release.
+- prev\_value – The value reported in the previous release.
+- revised\_prev\_value – The corrected previous value if it was revised later.
+- revision – The revision number for that release.
+- impact\_type – The expected effect of the news on the currency.
+
+The structure also provides several helper functions, such as HasActualValue() and GetActualValue(), for checking whether a value exists before reading it.
+
+**Simply put**
+
+1. *MqlCalendarCountry represents a country a news  event and its values belongs to.*
+2. *MqlCalendarEvent represents an economic event being announced.*
+3. *MqlCalendarValue shows the results of a particular news release.*
+
+**A Universal News Structure**
+
+As we've just seen above, the three news structures represent more of the same thing (news); let's define a unified structure that wraps all attributes of news in one place.
+
+```
+//+------------------------------------------------------------------+
+//|            A custom news structure.                              |
+//+------------------------------------------------------------------+
+struct NewsStructure
+  {
+   //--- MqlCalendarCountry
+   ulong                               country_id;                    // country ID (ISO 3166-1)
+   string                              country_name;                  // country text name (in the current terminal encoding)
+   string                              country_code;                  // country code name (ISO 3166-1 alpha-2)
+   string                              country_currency;              // country currency code
+   string                              country_currency_symbol;       // country currency symbol
+   string                              url_name;                      // country name used in the mql5.com website URL
+
+   //--- MqlCalendarEvent
+
+   ulong                               event_id;                    // event ID
+   ENUM_CALENDAR_EVENT_TYPE            event_type;                  // event type from the ENUM_CALENDAR_EVENT_TYPE enumeration
+   ENUM_CALENDAR_EVENT_SECTOR          event_sector;                // sector an event is related to
+   ENUM_CALENDAR_EVENT_FREQUENCY       event_frequency;             // event frequency
+   ENUM_CALENDAR_EVENT_TIMEMODE        event_time_mode;             // event time mode
+   ENUM_CALENDAR_EVENT_UNIT            event_unit;                  // economic indicator value's unit of measure
+   ENUM_CALENDAR_EVENT_IMPORTANCE      event_importance;            // event importance
+   ENUM_CALENDAR_EVENT_MULTIPLIER      event_multiplier;            // economic indicator value multiplier
+   uint                                event_digits;                // number of decimal places
+   string                              event_source_url;            // URL of a source where an event is published
+   string                              event_code;                  // event code
+   string                              event_name;                  // event text name in the terminal language (in the current terminal encoding)
+
+   //--- MqlCalendarValue
+
+   ulong                               value_id;              // value ID
+   datetime                            value_time;            // event date and time
+   datetime                            value_period;          // event reporting period
+   int                                 value_revision;        // revision of the published indicator relative to the reporting period
+   long                                actual_value;          // actual value multiplied by 10^6 or LONG_MIN if the value is not set
+   long                                prev_value;            // previous value multiplied by 10^6 or LONG_MIN if the value is not set
+   long                                revised_prev_value;    // revised previous value multiplied by 10^6 or LONG_MIN if the value is not set
+   long                                forecast_value;        // forecast value multiplied by 10^6 or LONG_MIN if the value is not set
+   ENUM_CALENDAR_EVENT_IMPACT          value_impact_type;     // potential impact on the currency rate
+
+   //--- functions checking the values
+
+   bool              HasActualValue(void) const   { return actual_value       != LONG_MIN; }
+   bool              HasPreviousValue(void) const { return prev_value         != LONG_MIN; }
+   bool              HasRevisedValue(void) const  { return revised_prev_value != LONG_MIN; }
+   bool              HasForecastValue(void) const { return forecast_value     != LONG_MIN; }
+
+   //--- functions receiving the values
+
+   double            GetActualValue(void) const
+     {
+      return HasActualValue() ? actual_value / 1000000.0 : EMPTY_VALUE;
+     }
+
+   double            GetPreviousValue(void) const
+     {
+      return HasPreviousValue() ? prev_value / 1000000.0 : EMPTY_VALUE;
+     }
+
+   double            GetRevisedValue(void) const
+     {
+      return HasRevisedValue() ? revised_prev_value / 1000000.0 : EMPTY_VALUE;
+     }
+
+   double            GetForecastValue(void) const
+     { return        HasForecastValue() ? forecast_value / 1000000.0 : EMPTY_VALUE; }
+}
+```
+
+With a tiny difference in definition, such as starting with **event\_**  to represent attributes of an event and **value\_**for distinct attributes of a value, it becomes more convenient to refer to all attributes of a news that separate structures.
+
+### Getting Built-in News
+
+At the core of a class **CNewsBuiltinProvider**, the function **Get()** is responsible for retrieving news from the terminal using specific filters (**starting and ending dates**, the **currency**, and a **country code**).
+
+```
+//+------------------------------------------------------------------+
+//| Retrieves economic news from the built-in MetaTrader 5 Economic  |
+//| Calendar within the specified time range.                        |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   from         - Start of the search period.                     |
+//|   to           - End of the search period.                       |
+//|   results[]    - Output array receiving the retrieved news.      |
+//|   currency     - Currency filter (e.g. "USD"). NULL retrieves    |
+//|                  news for all currencies.                        |
+//|   country_code - Country filter (ISO 3166-1 alpha-2, e.g. "US"). |
+//|                  NULL retrieves news for all countries.          |
+//|                                                                  |
+//| Returns:                                                         |
+//|   Number of news records retrieved, or -1 if the request fails.  |
+//+------------------------------------------------------------------+
+int CNewsBuiltinProvider::Get(datetime from, datetime to, NewsStructure &results[], string currency=NULL, string country_code=NULL)
+  {
+
+   MqlCalendarValue values[];
+   MqlCalendarEvent event;
+   MqlCalendarCountry country;
+
+   int total = CalendarValueHistory(values, from, to, country_code, currency);
+   if(total<0)
+     {
+      printf("Failed to get news from %s to %s. Error = %d", TimeToString(from), TimeToString(to), GetLastError());
+      return -1;
+     }
+
+   ArrayResize(results, total);
+
+//---
+
+   for(int i=0; i<total; i++)
+     {
+      MqlCalendarEvent event;
+      CalendarEventById(values[i].event_id, event); //Here among all the news we select one after the other by its id https://www.mql5.com/en/docs/calendar/calendareventbyid
+
+      MqlCalendarCountry country; //The couhtry where the currency pair originates
+      CalendarCountryById(event.country_id, country); //https://www.mql5.com/en/docs/calendar/calendarcountrybyid
+      
+      //---
+
+      results[i].CountryAssign(country);
+      results[i].EventAssign(event);
+      results[i].ValueAssign(values[i]);
+     }
+
+   return total;
+  }
+```
+
+For example, obtaining news for the last 24-hours on the USD currency.
+
+```
+#include <Bootstrap\News\provider_builtin.mqh>
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//---
+   NewsStructure news[];
+
+   datetime now = TimeCurrent();
+   datetime start = now - 24 * 60 * 60; //One day prior
+   string currency = "USD";
+
+   int t_news = CNewsBuiltinProvider::Get(start, now, news, currency);
+
+   printf("Available news %d on %s from %s to %s", t_news, currency, TimeToString(start), TimeToString(now));
+   for(int i = 0; i < t_news; i++)
+     {
+      NewsStructure n = news[i];
+      printf("%s | %s | %s | %s | %s", TimeToString(n.value_time, TIME_DATE | TIME_SECONDS), EnumToString(n.event_importance), n.country_currency, n.country_name, n.event_name);
+     }
+  }
+```
+
+Results:
+
+```
+JP      0       10:59:53.064    News Testing (EURUSD,M15)       Available news 32 on USD from 2026.07.16 23:59 to 2026.07.17 23:59
+FH      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+RS      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+DR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+CM      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+FQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+MP      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+PK      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+PE      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+II      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+EI      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+NP      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+PQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+NN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+DO      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+NJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+HK      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+KJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+JQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+CM      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+ED      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+IG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+CI      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+GN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+QN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+FJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+GG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+QR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+FR      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+NG      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+JJ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+EQ      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+JN      0       10:59:53.064    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+```
+
+### Checking if News Exists
+
+In many trading scenarios, it is useful to have a simple function that checks whether any news exists within a specified date range.
+
+```
+//+------------------------------------------------------------------+
+//| Checks whether one or more economic news events exist within the |
+//| specified time range. Optionally filters the results by event    |
+//| importance, currency, and country.                               |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   from         - Start of the search period.                     |
+//|   to           - End of the search period.                       |
+//|   importance   - Event importance filter. Use -1 to match any    |
+//|                  importance level.                               |
+//|   currency     - Currency filter (e.g. "USD"). NULL searches     |
+//|                  all currencies.                                 |
+//|   country_code - Country filter (ISO 3166-1 alpha-2, e.g. "US"). |
+//|                  NULL searches all countries.                    |
+//|                                                                  |
+//| Returns:                                                         |
+//|   true if at least one matching event exists; otherwise false.   |
+//+------------------------------------------------------------------+
+bool CNewsBuiltinProvider::Exists(datetime from, datetime to, int importance=-1, string currency=NULL, string country_code=NULL)
+  {
+//---
+
+   NewsStructure candidates[];
+   int total = Get(from, to, candidates, currency, country_code);
+
+   if(total <= 0)
+      return false;
+
+   if(importance==-1)
+      return true;
+
+// Check for the requested importance
+   ENUM_CALENDAR_EVENT_IMPORTANCE imp = (ENUM_CALENDAR_EVENT_IMPORTANCE)importance;
+
+   for(int i=0; i<total; i++)
+     {
+      if(candidates[i].event_importance == imp)
+         return true;
+     }
+
+   return false;
+  }
+```
+
+For the sake of detecting specific news types, this method takes the importance parameter, allowing users to specify the importance of news to look for.
+
+Example usage.
+
+```
+   datetime now = TimeCurrent();
+   datetime start = now - 24*60*60; //One day prior
+   string currency = "USD";
+
+   bool exists = CNewsBuiltinProvider::Exists(start, now, currency, CALENDAR_IMPORTANCE_HIGH);
+   printf("High impact News exists on %s: %s", currency, exists ? "true" : "false");
+
+   exists = CNewsBuiltinProvider::Exists(start, now, currency, CALENDAR_IMPORTANCE_MODERATE);
+   printf("Moderate impact News exists on %s: %s", currency, exists ? "true" : "false");
+```
+
+Results:
+
+```
+DN      0       12:51:46.500    News Testing (EURUSD,M15)       High impact News exists on USD: false
+NO      0       12:51:46.500    News Testing (EURUSD,M15)       Moderate impact News exists on USD: true
+```
+
+### Getting the Next News Release
+
+Sometimes you only need to know the next scheduled news release. The Next() function simplifies this task by retrieving all news events between a specified time (or the current time by default) and a look-ahead window, then returning the first event in the results.
+
+Since the news is retrieved in chronological order, the first element always represents the next upcoming news release.
+
+```
+//+------------------------------------------------------------------+
+//| Returns the next economic news event occurring after the current |
+//| terminal time.                                                   |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   out               - Receives the next matching news event.     |
+//|   currency          - Currency filter (e.g. "USD"). NULL         |
+//|                       searches all currencies.                   |
+//|   from              - The initial date for news lookup.          |
+//|   lookahead_seconds - Maximum number of seconds to search ahead. |
+//|                       Default is 900 seconds (15 minutes).       |
+//|   country_code      - Country filter (ISO 3166-1 alpha-2,        |
+//|                       e.g. "US"). NULL searches all countries.   |
+//|                                                                  |
+//| Returns:                                                         |
+//|   true if a matching news event is found; otherwise false.       |
+//+------------------------------------------------------------------+
+bool CNewsBuiltinProvider::Next(NewsStructure &out,
+                                string currency,
+                                const datetime from,
+                                const uint lookahead_seconds=900,
+                                string country_code=NULL)
+  {
+   datetime now = from;
+   datetime max_time = now + lookahead_seconds;
+
+//---
+
+   NewsStructure candidates[];
+
+   int total = Get(candidates, now+1, max_time, currency, country_code);
+   if(total > 0)
+     {
+      out = candidates[0]; // ascending order — first is nearest
+      return true;
+     }
+
+   return false;
+  }
+```
+
+*The parameter lookahead\_seconds is crucial for controlling the search window; I recommend avoiding looking too far in the future to make a function call quick.*
+
+### Getting a Previous News Release
+
+Similarly, the **Previous()** function retrieves the most recent news event before a specified time (or the current time by default). It searches backwards within a configurable look-back window and returns the last event found.
+
+Since retrieved news is sorted in chronological order, the last element in the results corresponds to the most recent news release before the specified time.
+
+```
+//+------------------------------------------------------------------+
+//| Returns the most recent economic news event before the specified |
+//| time.                                                            |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   out              - Receives the most recent matching news      |
+//|                      event.                                      |
+//|   currency         - Currency filter (e.g. "USD"). NULL          |
+//|                      searches all currencies.                    |
+//|   from             - The reference time to search backwards      |
+//|                      from.                                       |
+//|   lookback_seconds - Maximum number of seconds to search         |
+//|                      backwards. Default is 900 seconds           |
+//|                      (15 minutes).                               |
+//|   country_code     - Country filter (ISO 3166-1 alpha-2,         |
+//|                      e.g. "US"). NULL searches all countries.    |
+//|                                                                  |
+//| Returns:                                                         |
+//|   true if a matching news event is found; otherwise false.       |
+//+------------------------------------------------------------------+
+bool CNewsBuiltinProvider::Previous(NewsStructure &out,
+                                    string currency,
+                                    const datetime from,
+                                    const uint lookback_seconds=900,
+                                    string country_code=NULL)
+  {
+   datetime start = from - (datetime)lookback_seconds;
+
+   NewsStructure candidates[];
+
+   int total = Get(candidates, start, from - 1, currency, country_code);
+   if(total <= 0)
+      return false;
+
+// Events are sorted in ascending order by time.
+   out = candidates[total - 1];
+   return true;
+  }
+```
+
+*The parameter lookback\_seconds is crucial for controlling the search window; I recommend avoiding looking too far in the past to make a function call quick.*
+
+### Exporting News to a CSV File
+
+Let us introduce a class to help us work with news from a CSV file source, starting with a function for exporting it to a CSV file.  
+
+```
+//+------------------------------------------------------------------+
+//| Exports an array of news records to a CSV file.                  |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   results[]     - Array of news records to export.               |
+//|   filename      - Name of the destination CSV file.              |
+//|   common_folder - If true, the file is created in the terminal's |
+//|                  common files folder; otherwise it is created in |
+//|                  the current terminal's Files directory.         |
+//|                                                                  |
+//| Notes:                                                           |
+//|   - The first row of the CSV contains the column headers.        |
+//|   - Each NewsStructure is written as a single CSV record.        |
+//|   - Records with an unexpected number of fields are skipped.     |
+//+------------------------------------------------------------------+
+void CNewsCSVProvider::Export(NewsStructure &results[], const string filename, bool common_folder=false)
+  {
+   CFile f = CFileIO::open(filename, "w", CP_UTF8, common_folder);
+
+//---
+
+   string csv_header = results[0].HeaderLine();
+
+   string parsed_line[];
+   ParseCSVLine(csv_header, parsed_line);
+
+   uint header_size = parsed_line.Size();
+
+   CSVWriter csv_writer(f);
+   csv_writer.writeRow(parsed_line);
+
+//---
+
+   for(uint i=0; i<results.Size(); i++)
+     {
+      string row = results[i].ToCSVLine();
+      ParseCSVLine(row, parsed_line);
+      
+      if(header_size != parsed_line.Size())
+        {
+         DebugBreak();
+         continue;
+        }
+      csv_writer.writeRow(parsed_line);
+     }
+
+   f.close();
+  }
+```
+
+To export news to CSV, values must be escaped so commas inside fields are not interpreted as column separators. The ParseCSVLine() function handles this.
+
+Example usage:
+
+```
+#include <Bootstrap\News\provider_csv.mqh>
+//+------------------------------------------------------------------+
+input datetime START_TIME=D'01.01.2026';
+input datetime END_TIME=D'01.06.2026';
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+ 
+void OnStart()
+  {
+//---
+   
+   NewsStructure historical_news[];
+   int t_news = CNewsBuiltinProvider::Get(START_TIME, END_TIME, historical_news);
+   
+   if (t_news>0)
+      CNewsCSVProvider::Export(historical_news, "news.csv");
+  }
+```
+
+Results:
+
+### Using News from a CSV File
+
+Reading and parsing a CSV file every time we need to retrieve news is inefficient. Instead, the CSV file should be read for the first time only, and the results should be kept in memory for later use.
+
+All functions in the class, such as Get(), Exists(), Next(), and Previous(), operate by reading the news cache (array) rather than re-reading the CSV file over again. This significantly improves performance by eliminating unnecessary file I/O while providing fast access to the news data.
+
+To enforce this behavior, the CSV file is loaded inside the class constructor, ensuring that the internal cache is populated before any news retrieval function can be called.
+
+```
+//+------------------------------------------------------------------+
+//| Constructs a CSV news provider by loading economic news records  |
+//| from a CSV file into an in-memory cache.                         |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   csv_filename - Name of the CSV file containing the exported    |
+//|                  news records.                                   |
+//|   common       - If true, the CSV file is loaded from the        |
+//|                  terminal's common files folder; otherwise it is |
+//|                  loaded from the current terminal's Files        |
+//|                  directory.                                      |
+//|   delimiter    - Field separator used in the CSV file. The       |
+//|                  default delimiter is a comma (",").             |
+//|                                                                  |
+//+------------------------------------------------------------------+
+CNewsCSVProvider::CNewsCSVProvider(const string csv_filename, bool common=false, const string delimiter=","):
+   m_csv_filename(csv_filename),
+   m_csv_source(true)
+  {
+   CFile f = CFileIO::open(csv_filename, "r", CP_UTF8, common);
+   CSVReader csv_reader(f, delimiter);
+
+   NewsStructure news_st;
+
+   int buff = 1000, read=0;
+   bool header_skipped = false;
+
+   ArrayResize(this.m_news_cache, buff);
+
+   string line = "";
+   string csv_row[];
+
+//---
+
+   while(csv_reader.readRow(csv_row))
+     {
+      if(!header_skipped)
+        {
+         header_skipped = true;
+         continue;
+        }
+
+      //---
+
+      if(!FromCSVLine(csv_row, news_st))
+         continue;
+
+      this.m_news_cache[read] = news_st;
+      read++;
+
+      //--- optimized array resizing
+
+      if(read >= (int)this.m_news_cache.Size())
+         ArrayResize(this.m_news_cache, this.m_news_cache.Size()+buff);
+     }
+   
+   printf("%d news loaded from %s",read, csv_filename);
+   
+   ArrayResize(this.m_news_cache, read);
+  }
+```
+
+After reading all rows from a CSV file, the values are assigned to an array called m\_news\_cache.
+
+At the class declaration, it inherits the parent class called CNewsBaseCache.
+
+```
+class CNewsCSVProvider: public CNewsBaseCache
+```
+
+This parent utility class is made for a single purpose only — reading news from the array m\_news\_cache[].
+
+```
+class CNewsBaseCache
+  {
+protected:
+   NewsStructure     m_news_cache[];
+
+public:
+                     CNewsBaseCache();
+                    ~CNewsBaseCache(void);
+
+   void              AssignCache(NewsStructure &src[]);
+
+   int               Get(datetime from, datetime to, NewsStructure &results[], string currency=NULL, string country_code=NULL);
+   bool              Exists(datetime from, datetime to, int importance=-1, string currency=NULL, string country_code=NULL);
+
+   bool              Next(NewsStructure &out, const uint lookahead_seconds=900, string currency=NULL, string country_code=NULL);
+   bool              Next(datetime from, NewsStructure &out, const uint lookahead_seconds=900, string currency=NULL, string country_code=NULL);
+
+   bool              Previous(NewsStructure &out, const uint lookback_seconds=900, string currency=NULL, string country_code=NULL);
+   bool              Previous(datetime from, NewsStructure &out, const uint lookback_seconds=900, string currency=NULL, string country_code=NULL);
+  };
+```
+
+This simple class is universal as *it can even be used for built-in news*; it is a plug-and-play module that takes a larger array of news and uses it as a source for subsequent function calls.
+
+It powers the class CNewsCSVProvider,  similarly to how we obtained news using a built-in calendar source. Below is how you can rely on news from a CSV file.
+
+```
+#include <Bootstrap\News\provider_csv.mqh>
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+ 
+void OnStart()
+  {
+//---
+   datetime now = TimeCurrent();
+   datetime start = now - 24*60*60; //One day prior
+   string currency = "USD";
+   
+   NewsStructure news[];
+   
+   CNewsCSVProvider csv_news("news.csv");
+   
+   int t_news = csv_news.Get(start, now, news, currency);
+
+   printf("Available news %d on %s from %s to %s", t_news, currency, TimeToString(start), TimeToString(now));
+   for(int i=0; i<t_news; i++)
+     {
+      NewsStructure n = news[i];
+      printf("%s | %s | %s | %s | %s", TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), EnumToString(n.event_importance), n.country_currency, n.country_name, n.event_name);
+     }
+   
+   bool exists = csv_news.Exists(start, now, CALENDAR_IMPORTANCE_HIGH, currency);
+   printf("High impact News exists on %s: %s", currency, exists ? "true" : "false");
+   
+   exists = csv_news.Exists(start, now, CALENDAR_IMPORTANCE_MODERATE, currency);
+   printf("Moderate impact News exists on %s: %s", currency, exists ? "true" : "false");
+
+//--- 
+  }
+```
+
+Results:
+
+```
+MF      0       17:00:56.065    News Testing (EURUSD,M15)       7484 news loaded from news.csv
+CM      0       17:00:56.069    News Testing (EURUSD,M15)       Available news 32 on USD from 2026.07.16 23:59 to 2026.07.17 23:59
+GM      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+CL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+IO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+RN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+GD      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+PG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+MH      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+EK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+DD      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+PK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+OS      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+EO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+OK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+IJ      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+GE      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+MI      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+RO      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+CL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+JN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+PG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+DJ      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+JN      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+FS      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+LK      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+GG      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+FR      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+DL      0       17:00:56.069    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+OG      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+OE      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+KO      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+HS      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+KM      0       17:00:56.070    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+JK      0       17:00:56.074    News Testing (EURUSD,M15)       High impact News exists on USD: false
+QP      0       17:00:56.077    News Testing (EURUSD,M15)       Moderate impact News exists on USD: true
+```
+
+### Backtesting News-based Programs in the Strategy Tester
+
+One limitation of the built-in Economic Calendar is that its functions aren't working in the strategy tester, i.e., they throw errors during backtesting. Functions such as CalendarValueHistory(), CalendarValueLast(), and other calendar-related APIs rely on live calendar data provided by the terminal. As a result, these functions either fail or return no data when executed inside the strategy tester or optimization.
+
+This presents a challenge when developing Expert Advisors (EAs) that depend on economic news. While the trading logic can be tested, any functionality that relies on the Economic Calendar cannot, making it impossible to accurately evaluate news-based strategies during historical simulations.
+
+A common solution is to export the required economic calendar data to a CSV file while the program is running on a live or demo account. During backtesting, the Expert Advisor can then load the same data from the CSV file instead of querying the built-in calendar. This allows the program to behave consistently in both live trading and the Strategy Tester while using identical news data.
+
+Example EA:
+
+```
+#define NEWS_CSV "news.csv"
+#property tester_file NEWS_CSV
+//+------------------------------------------------------------------+
+#include <Bootstrap\News\provider_csv.mqh>
+CNewsCSVProvider csv_news(NEWS_CSV);
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+   ObjectsDeleteAll(0);
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+   ObjectsDeleteAll(0);
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+    
+    NewsStructure n;
+    if (csv_news.Next(n))
+      {
+         string info = StringFormat("%s | %s | %s | %s | %s", 
+                              TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), 
+                              EnumToString(n.event_importance), 
+                              n.country_currency, 
+                              n.country_name, 
+                              n.event_name);
+            
+         DisplayLabel("time", TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), 20);
+         DisplayLabel("importance", EnumToString(n.event_importance),40);
+         DisplayLabel("currency", n.country_currency, 70);
+         DisplayLabel("c name", n.country_name, 100);
+         DisplayLabel("event name", n.event_name, 130);
+      }
+    else
+      {
+       Comment("");
+      }
+  }
+//+------------------------------------------------------------------+
+//| Displays or updates a text label on the chart.                   |
+//+------------------------------------------------------------------+
+void DisplayLabel(const string name,
+                  const string text,
+                  const int y=20,
+                  const int x=10,
+                  const color clr=clrOrange,
+                  const int font_size=15,
+                  const string font="Arial")
+{
+   if(ObjectFind(0, name) < 0)
+   {
+      ObjectCreate(0, name, OBJ_LABEL, 0, 0, 0);
+
+      ObjectSetInteger(0, name, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+      ObjectSetInteger(0, name, OBJPROP_XDISTANCE, x);
+      ObjectSetInteger(0, name, OBJPROP_YDISTANCE, y);
+      ObjectSetInteger(0, name, OBJPROP_COLOR, clr);
+      ObjectSetInteger(0, name, OBJPROP_FONTSIZE, font_size);
+      ObjectSetString(0, name, OBJPROP_FONT, font);
+   }
+
+   ObjectSetString(0, name, OBJPROP_TEXT, text);
+   ChartRedraw();
+}
+```
+
+Results:
+
+*A simple function call was enough to get news up and running in the strategy tester.*
+
+### Working with News From a Database
+
+A database provides a more structured and scalable way to store economic calendar data. *It is a great alternative to using a CSV file as a primary source of news data.*
+
+Instead of searching through a flat file, news can be retrieved using SQL queries that filter records by time range, currency, country, or any other available field. This makes it possible to efficiently work with years of historical news while keeping memory usage under control.
+
+Starting with the function for exporting news to a database:
+
+```
+//+------------------------------------------------------------------+
+//| Exports an array of news records to an SQLite database.          |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   results[]     - Array of news records to export.               |
+//|   filename      - Name of the SQLite database file. If the file  |
+//|                   does not exist, it is created automatically.   |
+//|   common_folder - If true, the database is created in the        |
+//|                   terminal's common files folder; otherwise it   |
+//|                   is created in the current terminal's Files     |
+//|                   directory.                                     |
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CNewsSQLiteProvider  ::Export(NewsStructure &results[], string filename, bool common_folder=false)
+  {
+   int total = ArraySize(results);
+   if(total == 0)
+     {
+      printf("Export: nothing to export, results[] is empty");
+      return;
+     }
+
+   CSqlite3 db(false);
+   if(!db.connect(filename, common_folder))
+      return;
+
+//--- collect distinct currencies present in results[]
+
+   string currencies[];
+   for(int i=0; i<total; i++)
+     {
+      string cur = results[i].country_currency;
+      bool found = false;
+      for(int c=0; c<ArraySize(currencies); c++)
+         if(currencies[c] == cur)
+           {
+            found = true;
+            break;
+           }
+
+      if(!found)
+        {
+         int n = ArraySize(currencies);
+         ArrayResize(currencies, n+1);
+         currencies[n] = cur;
+        }
+     }
+
+//---
+
+   if(!db.begin())
+     {
+      printf("Failed to begin transaction. Error = %d", GetLastError());
+      db.close();
+      return;
+     }
+
+   string insert_cols =
+      "country_id,"
+      "country_name,"
+      "country_code,"
+      "country_currency,"
+      "country_currency_symbol,"
+      "url_name,"
+      "event_id,"
+      "event_type,"
+      "event_sector,"
+      "event_frequency,"
+      "event_time_mode,"
+      "event_unit,"
+      "event_importance,"
+      "event_multiplier,"
+      "event_digits,"
+      "event_source_url,"
+      "event_code,"
+      "event_name,"
+      "value_id,"
+      "value_time,"
+      "value_period,"
+      "value_revision,"
+      "actual_value,"
+      "prev_value,"
+      "revised_prev_value,"
+      "forecast_value,"
+      "value_impact_type";
+
+   string placeholders = "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?"; // 27 placeholders
+
+   for(int c=0; c<ArraySize(currencies); c++)
+     {
+      string cur   = currencies[c];
+      cur = CurrenyToTableName(cur);
+
+      //--- Builtin economic calendar
+
+      if(!createNewsTable(cur, db))  //--- Create a table for each currency
+         continue;
+
+      //---
+
+      string insert_sql = StringFormat("INSERT OR IGNORE INTO %s (%s) VALUES (%s)",cur, insert_cols, placeholders);
+
+      int stmt = DatabasePrepare(db.get_handle(), insert_sql);
+      if(stmt == INVALID_HANDLE)
+        {
+         printf("Failed to prepare insert for %s. Error = %d", cur, GetLastError());
+         db.rollback();
+         db.close();
+         return;
+        }
+
+      for(int i=0; i<total; i++)
+        {
+         if(results[i].country_currency != cur)
+            continue;
+
+         if(!bindNewsRow(stmt, results[i]))
+           {
+            printf("Bind failed for %s row, event_id=%I64u. Error = %d",
+                   cur, results[i].event_id, GetLastError());
+            continue;
+           }
+
+         DatabaseRead(stmt);   // executes the bound insert
+         DatabaseReset(stmt);  // clears bindings for the next row's reuse of this statement
+        }
+
+      DatabaseFinalize(stmt);
+     }
+
+   if(!db.commit())
+      DebugBreak();
+   db.close();
+
+   printf("Exported %d news records across %d currency tables to %s", total, ArraySize(currencies), filename);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CNewsSQLiteProvider  ::Export(datetime from, datetime to, string currency=NULL, string country_code=NULL)
+  {
+   NewsStructure news_found[];
+   int f = CNewsBuiltinProvider::Get(news_found, from, to, currency, country_code);
+//---
+   if(f>0)
+      this.Export(news_found, m_db_filename, m_common_folder);
+  }
+```
+
+Since databases are table-based to make news storage more convenient, we store news from each currency in a separate table.
+
+After receiving an array of NewsStructure objects, the function loops through it, extracting unique currencies whose information will be assigned to individual tables in a database.
+
+```
+   string currencies[];
+   for(int i=0; i<total; i++)
+     {
+      string cur = results[i].country_currency;
+      bool found = false;
+      for(int c=0; c<ArraySize(currencies); c++)
+         if(currencies[c] == cur)
+           {
+            found = true;
+            break;
+           }
+
+      if(!found)
+        {
+         int n = ArraySize(currencies);
+         ArrayResize(currencies, n+1);
+         currencies[n] = cur;
+        }
+     }
+```
+
+Example: exporting news across all currencies to a database.
+
+```
+#include <Bootstrap\News\provider_sqlite.mqh>
+CNewsSQLiteProvider sql_provider("news.sqlite");
+//+------------------------------------------------------------------+
+input datetime START_TIME=D'01.01.2026';
+input datetime END_TIME=D'01.06.2026';
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+//---
+   sql_provider.Export(START_TIME, END_TIME);
+}
+```
+
+Results:
+
+```
+2026.07.20 14:25:44.793 News Testing (EURUSD,M15)       Exported 5751 news records across 19 currency tables to news.sqlite
+```
+
+Just like the built-in and CSV class providers, the SQLite provider class exposes the same high-level interface through methods such as Get(), Exists(), Next(), and Previous(). This means the underlying data source can be changed with little or no modification to the rest of the application, making it easy to switch between live calendar data, CSV files, and a local database depending on the use case.
+
+At the core of CNewsSQLiteProvider  is the most common Get() method; unlike in previous implementations, this time it queries information from a SQLite database.
+
+```
+//+------------------------------------------------------------------+
+//| Retrieves economic news records from the SQLite database within  |
+//| the specified time range.                                        |
+//|                                                                  |
+//| Parameters:                                                      |
+//|   results[]    - Output array receiving the matching news        |
+//|                  records.                                        |
+//|   from         - Start of the search period.                     |
+//|   to           - End of the search period.                       |
+//|   currency     - Currency whose table should be queried          |
+//|                  (e.g. "USD").                                   |
+//|   country_code - Optional country filter (ISO 3166-1 alpha-2,    |
+//|                  e.g. "US"). NULL retrieves news for all         |
+//|                  countries within the selected currency.         |
+//|                                                                  |
+//| Returns:                                                         |
+//|   The number of news records retrieved. Returns 0 if no matching |
+//|   records are found or if the query cannot be executed.          |
+//|                                                                  |
+//| Notes:                                                           |
+//|   - News records are returned in ascending order of              |
+//|     publication time.                                            |
+//|   - The currency is internally mapped to its corresponding       |
+//|     database table name before the query is executed.            |
+//|   - The output array is automatically resized to fit the         |
+//|     retrieved records.                                           |
+//+------------------------------------------------------------------+
+int CNewsSQLiteProvider  ::Get(NewsStructure &results[],
+                               datetime from,
+                               datetime to,
+                               string currency,
+                               string country_code=NULL)
+  {
+   ArrayResize(results,0);
+
+   if(m_db.get_handle()==INVALID_HANDLE)
+     {
+      printf("Invalid database handle. Error=%d",GetLastError());
+      return 0;
+     }
+
+//---
+
+   currency = CurrenyToTableName(currency);
+
+//---
+
+   string sql;
+   if(country_code==NULL || country_code=="")
+     {
+      sql = StringFormat(
+               "SELECT * FROM %s "
+               "WHERE value_time>=? AND value_time<=? "
+               "ORDER BY value_time ASC",
+               currency);
+     }
+   else
+     {
+      sql = StringFormat(
+               "SELECT * FROM %s "
+               "WHERE value_time>=? AND value_time<=? "
+               "AND country_code=? "
+               "ORDER BY value_time ASC",
+               currency);
+     }
+
+   int stmt = DatabasePrepare(m_db.get_handle(),sql);
+
+   if(stmt==INVALID_HANDLE)
+     {
+      PrintFormat("Failed to prepare query. Error=%d",GetLastError());
+      return 0;
+     }
+
+//---
+
+   int p=0;
+   DatabaseBind(stmt,p++,(long)from);
+   DatabaseBind(stmt,p++,(long)to);
+
+   if(country_code!=NULL && country_code!="")
+      DatabaseBind(stmt,p++,country_code);
+
+//---
+
+   uint ARRAY_BUFF = 1000;
+   ArrayResize(results, ARRAY_BUFF);
+
+//---
+
+   int count=0;
+   while(DatabaseRead(stmt))
+     {
+      NewsStructure n;
+      int c=0;
+
+      long long_val;
+      DatabaseColumnLong(stmt,c++,long_val);
+      n.country_id = long_val;
+
+      DatabaseColumnText(stmt,c++,n.country_name);
+      DatabaseColumnText(stmt,c++,n.country_code);
+      DatabaseColumnText(stmt,c++,n.country_currency);
+      DatabaseColumnText(stmt,c++,n.country_currency_symbol);
+      DatabaseColumnText(stmt,c++,n.url_name);
+
+      DatabaseColumnLong(stmt,c++,long_val);
+      n.event_id = long_val;
+
+      string text;
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventTypeNames, EventTypeValues, n.event_type);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventSectorNames, EventSectorValues, n.event_sector);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventFrequencyNames, EventFrequencyValues, n.event_frequency);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventTimeModeNames, EventTimeModeValues, n.event_time_mode);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventUnitNames, EventUnitValues, n.event_unit);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventImportanceNames, EventImportanceValues, n.event_importance);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventMultiplierNames, EventMultiplierValues, n.event_multiplier);
+
+      int int_val = 0;
+      DatabaseColumnInteger(stmt,c++, int_val);
+      n.event_digits = int_val;
+
+      DatabaseColumnText(stmt,c++,n.event_source_url);
+      DatabaseColumnText(stmt,c++,n.event_code);
+      DatabaseColumnText(stmt,c++,n.event_name);
+
+      DatabaseColumnLong(stmt,c++,long_val);
+      n.value_id = long_val;
+
+      DatabaseColumnLong(stmt,c++, long_val);
+      n.value_time = (datetime)long_val;
+
+      DatabaseColumnLong(stmt,c++, long_val);
+      n.value_period = (datetime)long_val;
+
+      DatabaseColumnInteger(stmt,c++,n.value_revision);
+
+      DatabaseColumnLong(stmt,c++,n.actual_value);
+      DatabaseColumnLong(stmt,c++,n.prev_value);
+      DatabaseColumnLong(stmt,c++,n.revised_prev_value);
+      DatabaseColumnLong(stmt,c++,n.forecast_value);
+
+      DatabaseColumnText(stmt,c++,text);
+      StringToEnum(text, EventImpactNames, EventImpactValues, n.value_impact_type);
+
+      uint curr_size = results.Size();
+      if(count>=(int)curr_size)
+         ArrayResize(results, curr_size+ARRAY_BUFF);
+
+      results[count++]=n;
+     }
+
+   ArrayResize(results, count); //Final resize
+   DatabaseFinalize(stmt);
+   return count;
+  }
+```
+
+We can try requesting the same information as we did in previous examples and see if we can get a similar outcome:
+
+```
+#include <Bootstrap\News\provider_sqlite.mqh>
+CNewsSQLiteProvider sql_provider("news.sqlite");
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+ 
+void OnStart()
+  {
+//---
+
+   start = D'17.07.2026';
+   now = start+24*60*60;
+   
+   int t_news = sql_provider.Get(news, start, now, currency);
+
+   printf("Available news %d on %s from %s to %s", t_news, currency, TimeToString(start), TimeToString(now));
+   for(int i=0; i<t_news; i++)
+     {
+      NewsStructure n = news[i];
+      printf("%s | %s | %s | %s | %s", TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), EnumToString(n.event_importance), n.country_currency, n.country_name, n.event_name);
+     }
+   
+   bool exists = sql_provider.Exists(start, now, currency, CALENDAR_IMPORTANCE_HIGH);
+   printf("High impact News exists on %s: %s", currency, exists ? "true" : "false");
+   
+   exists = sql_provider.Exists(start, now, currency, CALENDAR_IMPORTANCE_MODERATE);
+   printf("Moderate impact News exists on %s: %s", currency, exists ? "true" : "false");
+  }
+```
+
+Results:
+
+```
+JD      0       14:44:08.011    News Testing (EURUSD,M15)       Available news 32 on USD from 2026.07.17 00:00 to 2026.07.18 00:00
+PD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 02:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Governor Jefferson Speech
+DG      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts
+FF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Building Permits
+QQ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Housing Starts m/m
+DM      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Building Permits m/m
+KL      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Import Price Index m/m
+FO      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index y/y
+FR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Export Price Index m/m
+GM      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Export Price Index y/y
+KD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 15:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Import Price Index excl. Petroleum m/m
+LD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production m/m
+JD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Capacity Utilization Rate
+HS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Fed Manufacturing Production m/m
+RS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 16:15:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Fed Industrial Production y/y
+HN      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Sentiment
+NF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Consumer Expectations
+MF      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | Michigan Current Conditions
+LE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan Inflation Expectations
+QQ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 17:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Michigan 5-Year Inflation Expectations
+KP      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Oil Rig Count
+GS      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 20:00:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | Baker Hughes US Total Rig Count
+EE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Copper Non-Commercial Net Positions
+IJ      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Silver Non-Commercial Net Positions
+OR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Gold Non-Commercial Net Positions
+PO      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Crude Oil Non-Commercial Net Positions
+MK      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC S&P 500 Non-Commercial Net Positions
+CE      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Aluminium Non-Commercial Net Positions
+DN      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Corn Non-Commercial Net Positions
+DR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Natural Gas Non-Commercial Net Positions
+LG      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Soybeans Non-Commercial Net Positions
+OD      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_LOW | USD | United States | CFTC Wheat Non-Commercial Net Positions
+HR      0       14:44:08.011    News Testing (EURUSD,M15)       2026.07.17 22:30:00 | CALENDAR_IMPORTANCE_MODERATE | USD | United States | CFTC Nasdaq 100 Non-Commercial Net Positions
+ML      0       14:44:08.011    News Testing (EURUSD,M15)       High impact News exists on USD: false
+JI      0       14:44:08.012    News Testing (EURUSD,M15)       Moderate impact News exists on USD: true
+```
+
+*We got the same information as in previous runs, cheers!*
+
+The great thing about obtaining information from a database is that the current implementation works even on the strategy tester without having to adjust the code. Database operations are relatively slow. In live trading, a few milliseconds are usually negligible, but in simulations even ~100 ms per call can significantly increase total test time.
+
+To speed things up, let's use the CNewsBaseCache for the same thing as we did in a class for working with news from a CSV file. This time we are going to read all news from a database and keep such information in an array for later reference.
+
+```
+class CNewsSQLiteProvider
+  {
+protected:
+
+   string            m_db_filename;
+   CSqlite3          m_db;
+   bool              m_common_folder;
+
+   CNewsBaseCache    cache_layer;
+   bool              m_cache_mode;
+
+   struct CurrencyCache
+     {
+      string         currency;
+      NewsStructure  news[];
+     };
+
+   CurrencyCache     m_currencies_cache[];
+
+   int               SQLiteGet(NewsStructure &results[], datetime from, datetime to, string currency, string country_code=NULL);
+   int               SQLiteGet(NewsStructure &results[], const string sql);
+   bool              SQLiteExists(datetime from, datetime to, string currency, int importance=-1, string country_code=NULL);
+
+   bool              SQLiteNext(NewsStructure &out, string currency, uint lookahead_seconds=900, string country_code=NULL);
+   bool              SQLiteNext(NewsStructure &out, string currency, datetime from, uint lookahead_seconds=900, string country_code=NULL);
+
+   bool              SQLitePrevious(NewsStructure &out, string currency, uint lookback_seconds=900, string country_code=NULL);
+   bool              SQLitePrevious(NewsStructure &out, string currency, datetime from, uint lookback_seconds=900, string country_code=NULL);
+
+   int               FindCache(const string currency);
+   int               EnsureCurrencyLoaded(const string currency);
+   
+public:
+                     CNewsSQLiteProvider(string db_filename, bool cache_mode, bool common=false);
+                    ~CNewsSQLiteProvider(void);
+
+   static void       Export(NewsStructure &results[], string filename, bool common_folder=false);
+   void              Export(datetime from, datetime to, string currency, string country_code=NULL);
+
+   int               Get(NewsStructure &results[], datetime from, datetime to, string currency, string country_code=NULL);
+   bool              Exists(datetime from, datetime to, string currency, int importance=-1, string country_code=NULL)
+     {
+      if(m_cache_mode)
+         return this.cache_layer.Exists(from, to, currency, importance, country_code);
+
+      return this.SQLiteExists(from, to, currency, importance, country_code);
+     }
+
+   bool              Next(NewsStructure &out, string currency, uint lookahead_seconds=900, string country_code=NULL)
+     {
+      if(m_cache_mode)
+         return this.cache_layer.Next(out, currency, lookahead_seconds, country_code);
+
+      return this.SQLiteNext(out, currency, lookahead_seconds, country_code);
+     }
+
+   bool              Next(NewsStructure &out, string currency, datetime from, uint lookahead_seconds=900, string country_code=NULL)
+     {
+      if(m_cache_mode)
+         return this.cache_layer.Next(out, currency, from, lookahead_seconds, country_code);
+
+      return this.SQLiteNext(out, currency, from, lookahead_seconds, country_code);
+     }
+
+   bool              Previous(NewsStructure &out, string currency, uint lookback_seconds=900, string country_code=NULL)
+     {
+      if(m_cache_mode)
+         return this.cache_layer.Next(out, currency, lookback_seconds, country_code);
+
+      return this.SQLitePrevious(out, currency, lookback_seconds, country_code);
+     }
+
+   bool              Previous(NewsStructure &out, string currency, datetime from, uint lookback_seconds=900, string country_code=NULL)
+     {
+      if(m_cache_mode)
+         return this.cache_layer.Next(out, currency, from, lookback_seconds, country_code);
+
+      return this.SQLitePrevious(out, currency, from, lookback_seconds, country_code);
+     }
+```
+
+When a user sets cache\_mode to true in the class constructor, the method Get()  chooses whether to use information stored in the array or to search for it in the database if it doesn't exist (first-time function call). This approach reduces database querying as we collect all rows from the database the moment a given currency pair doesn't exist in memory; after that, we use information available inside**m\_currencies\_cache[].**
+
+Below is how you can deploy news from a database source for strategy testing purposes.
+
+```
+#define NEWS_DB "news.sqlite"
+#define is_tester bool(MQLInfoInteger(MQL_TESTER))
+
+#property tester_file NEWS_DB
+//+------------------------------------------------------------------+
+#include <Bootstrap\News\provider_sqlite.mqh>
+CNewsSQLiteProvider sql_news(NEWS_DB, is_tester);
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+   ObjectsDeleteAll(0);
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+   ObjectsDeleteAll(0);
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+    
+    NewsStructure n;
+    
+    bool n_found = sql_news.Next(n, "USD");
+    
+    if (n_found)
+      {
+         string info = StringFormat("%s | %s | %s | %s | %s", 
+                              TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), 
+                              EnumToString(n.event_importance), 
+                              n.country_currency, 
+                              n.country_name, 
+                              n.event_name);
+            
+         DisplayLabel("time", TimeToString(n.value_time, TIME_DATE|TIME_SECONDS), 20);
+         DisplayLabel("importance", EnumToString(n.event_importance),40);
+         DisplayLabel("currency", n.country_currency, 70);
+         DisplayLabel("c name", n.country_name, 100);
+         DisplayLabel("event name", n.event_name, 130);
+      }
+    else
+      {
+       Comment("");
+      }
+  }
+```
+
+### Final Thoughts
+
+In this article, we built a flexible framework for working with economic news in MQL5. From exploring the built-in Economic Calendar functions provided by MetaTrader 5 to introducing a unified news structure that simplifies working with countries, events, and published values through a single data type.
+
+To make the framework suitable for both live trading and historical testing, we implemented multiple news providers that expose the same interface while retrieving data from different sources. The built-in provider allows direct access to the Economic Calendar during live trading, the CSV provider makes it possible to backtest news-based strategies using previously exported data, and the SQLite provider offers an efficient, scalable solution for storing and querying large collections of historical news.
+
+By designing each provider around the same set of methods in different classes, switching between data sources requires little or no change to the rest of your application. This abstraction keeps trading strategies clean while making the news source interchangeable depending on the environment.
+
+With this foundation in place, you can now build Expert Advisors that react to economic events, filter trades around high-impact news, or perform reliable historical testing using the same programming interface.
+
+For contributions, check out this GitHub repository: [https://github.com/MegaJoctan/MQL5-Bootstrap](https://github.com/MegaJoctan/MQL5-Bootstrap "https://github.com/MegaJoctan/MQL5-Bootstrap")
+
+**Attachments Table**
+
+| Filename | Description & Usage |
+| --- | --- |
+| Experts\Bootstrap\News Testing EA.mq5 | An expert advisor for testing news in the strategy tester. |
+| Scripts\Bootstrap\News Testing.mq5 | A script that executes all examples as discussed above. |
+| Include\Bootstrap\csv.mqh | A library with functions responsible for reading and writing information to CSV file formats. |
+| Include\Bootstrap\fileIO.mqh | Resembles Python's file IO operations, [read more.](https://www.mql5.com/en/articles/20695) |
+| Include\Bootstrap\SQLite3.mqh | A Python-like library for working with SQLite databases, [read more.](https://www.mql5.com/en/articles/18640) |
+| Include\Bootstrap\News\provide\_builtin.mqh | A library containing a static class for working with news offered by the MetaTrader5 terminal. |
+| Include\Bootstrap\News\provide\_csv.mqh | A library containing a class for working with news obtained from a CSV file. |
+| Include\Bootstrap\News\provide\_sqlite.mqh | A library containing a class for working with news from a SQLite database. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23546.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/23546/MQL5.zip "Download MQL5.zip")
+(29.5 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Fast Integration of a Large Language Model with MetaTrader 5 (Part II): Fine-Tuning on Real Data, Backtesting, and Live Trading by the Model](https://www.mql5.com/en/articles/20329)
+
+The article describes the process of fine-tuning a language model for trading based on real historical data from MetaTrader 5. The base model, which has only theoretical knowledge of technical analysis, is trained on a thousand examples of the real behavior of currency pairs (EURUSD, GBPUSD, USDCHF, USDCAD) over 180 days. After being trained using Ollama, the model begins to understand the specific characteristics of each instrument.
+
+[Self Optimizing Expert Advisors in MQL5 (Part 18): Time Lagged Independent Components Analysis](https://www.mql5.com/en/articles/23405)
+
+We evaluate blind source separation for market noise control using FastICA applied to SMA-filtered, time-lagged OHLC features. The study compares classical and surrogate targets, measures accuracy across lags, tunes KNN models, and inspects residual structure with clustering. Models are exported to ONNX and integrated into an MQL5 Expert Advisor for testing. The result is a reproducible pipeline from data extraction to deployment.
+
+[Neural Networks in Trading: Probabilistic Time Series Forecasting (Encoder)](https://www.mql5.com/en/articles/18766)
+
+We invite you to explore a new approach that combines classical methods and modern neural networks for time series analysis. The article provides a detailed explanation of the architecture and operating principles of the K²VAE model.
+
+[Differential Search Algorithm (DSA)](https://www.mql5.com/en/articles/20346)
+
+The article discusses the Differential Search Algorithm (DSA), which simulates the migration of a superorganism in search of optimal living conditions. The algorithm uses a Gamma distribution to generate a pseudo-stable random walk and offers four strategies for selecting the direction of movement, along with three coordinate mutation mechanisms. How will this method perform?
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F117%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dorder.expert%26utm_content%3Dorder.freelance%26utm_campaign%3D0622.MQL5.com.Internal&a=tunpwtbhegzufrqocbwiszessdutnobs&s=d9e7484e15300021b4066b1df77a94a1352f9e7c326d5113006bb4f6476bafeb&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=sejdcbpatfdtiiwinpmsikzlgqgnpgrc&ssn=1788776756207210393&ssn_dr=0&ssn_sr=0&fv_date=1788776756&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23546&back_ref=https%3A%2F%2Fwww.google.com%2F&title=MQL5%20Bootstrap%20(III)%3A%20Simplified%20Functions%20for%20Working%20with%20News%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877675608911318&fz_uniq=6453503690517644084&sv=2552)

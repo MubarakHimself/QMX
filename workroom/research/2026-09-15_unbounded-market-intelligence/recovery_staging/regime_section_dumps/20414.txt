@@ -1,0 +1,188 @@
+# Adaptive Smart Money Architecture (ASMA): Merging SMC Logic With Market Sentiment for Dynamic Strategy Switching
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 10 December 2025 at 07:18
+7 666
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+16](https://www.mql5.com/en/forum/501643 "Comments")
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+### Table of contents:
+1. [Introduction](https://www.mql5.com/en/articles/20414#introduction)
+2. [Strategy Overview](https://www.mql5.com/en/articles/20414#strategy_overview_market_sentiment_driven_smc)
+3. [Getting Started](https://www.mql5.com/en/articles/20414#getting_started)
+4. [Backtest Results](https://www.mql5.com/en/articles/20414#back_test_results)
+5. [Conclusion](https://www.mql5.com/en/articles/20414#conclusion)
+### Introduction
+Over the last phases of development, we successfully combined Order Blocks (OB), Fair Value Gaps (FVG), and Break of Structure (BOS) into one unified [Smart Money Concepts](https://www.mql5.com/en/articles/16340) engine—a powerful framework capable of reading institutional price action with precision. Building on that foundation, we also designed a [custom market sentiment indicator](https://www.mql5.com/en/articles/19422) that interprets trend strength, volatility posture, and momentum alignment to classify the market into bullish, bearish, or neutral states. These two advancements now give us the perfect opportunity to merge structural price action with real-time sentiment into a single adaptive trading system.
+This next stage focuses on creating an intelligent EA that dynamically switches strategies based on what the market is currently doing. Instead of relying on a fixed pattern, the EA will leverage our sentiment indicator to determine the dominant regime and activate the appropriate OB, BOS, or FVG strategy accordingly. In bullish conditions it may favor BOS continuation setups; during reversals it may prioritize OB-based rejections; and in compression environments it may shift to FVG mean-reversion logic. By blending structural logic with sentiment-driven adaptability, we move closer to building a trading system that reacts, evolves, and positions itself exactly the way a top-tier institutional trader would.
+### 
+### Strategy Overview: Market Sentiment-Driven SMC Trading System
+This intelligent trading system integrates three core Smart Money Concept (SMC) strategies—Order Blocks (OB), Fair Value Gaps (FVG), and Break of Structure (BOS)—with real-time market sentiment analysis to create an adaptive, context-aware trading algorithm. The system operates on a multi-timeframe framework, analyzing price action across higher timeframes (H4), medium timeframes (H1), and lower timeframes (M30) to determine overall market bias and sentiment. Based on calculated sentiment readings ranging from Strong Bullish to Strong Bearish, Risk-On to Risk-Off, and Neutral conditions, the EA dynamically selects and prioritizes the most appropriate SMC strategy, ensuring that trading decisions align with prevailing market conditions rather than applying a one-size-fits-all approach.
+Neutral Market Sentiment + Order Blocks Strategy
+During neutral market conditions—characterized by price consolidation near moving averages and the absence of clear higher timeframe bias—the system activates the Order Blocks (OB) strategy as its primary trading method. Neutral sentiment typically indicates range-bound markets where price oscillates between established support and resistance levels without strong directional momentum. In this environment, Order Blocks become highly effective as they identify areas where institutional orders were previously placed, creating natural reaction zones. The EA specifically looks for bullish OBs (bear candle followed by strong bull candle) and bearish OBs (bull candle followed by strong bear candle) that demonstrate significant order flow imbalance. When price retraces to these identified OB zones, the system executes trades with the expectation of mean reversion, capitalizing on the market's tendency to respect previous order accumulation areas during consolidation phases.
+Trending (Bullish/Bearish) Market Sentiment + Break of Structure Strategy
+When the system detects Strong Bullish or Strong Bearish sentiment—indicating clear directional trends confirmed across multiple timeframes—it prioritizes the Break of Structure (BOS) strategy to capitalize on momentum continuation. In trending markets characterized by higher highs and higher lows (bullish) or lower highs and lower lows (bearish), BOS identifies key swing points where market structure has been broken, signaling potential acceleration in the prevailing direction. The EA monitors for price breaking above recent swing highs in bullish trends or below recent swing lows in bearish trends, interpreting these breaks as liquidity runs that often precede sustained directional moves. This strategy aligns perfectly with trending conditions, as it focuses on entering in the direction of the established trend following structural confirmation, avoiding counter-trend trades that would have a lower probability of success during strong directional moves.
+Risk-On/Risk-Off Sentiment + Fair Value Gaps Strategy
+During Risk-On or Risk-Off market environments—characterized by breakouts from established ranges combined with higher timeframe bias—the system employs the Fair Value Gaps (FVG) strategy. These conditions typically occur when price has been consolidating but suddenly experiences momentum expansion, creating gaps between consecutive candles where minimal trading occurred. The EA identifies these imbalance zones where buying or selling pressure created significant price voids, anticipating that price will eventually return to "fair value" within these gaps. The system specifically trades at the 50% equilibrium level of these gaps, providing optimal risk-reward entry points during volatile breakout periods. This approach capitalizes on the market's tendency to fill price inefficiencies while respecting the overall directional bias, making it ideal for transitional market phases where momentum is building but the trend may not yet be fully established.
+### Getting Started
+```
+//+------------------------------------------------------------------+
+//|                                                     SMC_Sent.mq5 |
+//|                        GIT under Copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+//+------------------------------------------------------------------+
+#property copyright "GIT under Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "2.00"
+#property description "Intelligent SMC EA with Market Sentiment-Based Strategy Switching"
+#property copyright "Based on MARKSENT and SMCALL"
+#include <Trade/Trade.mqh>
+#include <Trade/PositionInfo.mqh>
+#include <Arrays/ArrayObj.mqh>
+// Market Sentiment Component (from MARKSENT)
+input group "=== Market Sentiment Settings ==="
+input ENUM_TIMEFRAMES HigherTF = PERIOD_H4;
+input ENUM_TIMEFRAMES LowerTF1 = PERIOD_H1;
+input ENUM_TIMEFRAMES LowerTF2 = PERIOD_M30;
+input int MAPeriod = 200;
+input int SwingLookback = 5;
+input double ATRThreshold = 0.002;
+input group "=== Trading Settings ==="
+input double LotSize = 0.02;
+input double StopLoss = 500;
+input double TakeProfit = 1500;
+input long MagicNumber = 76543;
+input bool EnableTrading = true;
+input bool DrawAllObjects = true; // Draw all trading objects
+input group "=== Strategy Selection ==="
+input bool UseSentimentFilter = true; // Use sentiment to choose strategies
+input bool AllowBOS = true;           // Allow Break of Structure strategy
+input bool AllowOB = true;            // Allow Order Blocks strategy  
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Adaptive Smart Money Architecture (ASMA): Merging SMC Logic With Market Sentiment for Dynamic Strategy Switching
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Table of contents:
+1. [Introduction](https://www.mql5.com/en/articles/20414#introduction)
+3. [Getting Started](https://www.mql5.com/en/articles/20414#getting_started)
+4. [Backtest Results](https://www.mql5.com/en/articles/20414#back_test_results)
+5. [Conclusion](https://www.mql5.com/en/articles/20414#conclusion)
+### Introduction
+Over the last phases of development, we successfully combined Order Blocks (OB), Fair Value Gaps (FVG), and Break of Structure (BOS) into one unified [Smart Money Concepts](https://www.mql5.com/en/articles/16340) engine—a powerful framework capable of reading institutional price action with precision. Building on that foundation, we also designed a [custom market sentiment indicator](https://www.mql5.com/en/articles/19422) that interprets trend strength, volatility posture, and momentum alignment to classify the market into bullish, bearish, or neutral states. These two advancements now give us the perfect opportunity to merge structural price action with real-time sentiment into a single adaptive trading system.
+### 
+### Strategy Overview: Market Sentiment-Driven SMC Trading System
+This intelligent trading system integrates three core Smart Money Concept (SMC) strategies—Order Blocks (OB), Fair Value Gaps (FVG), and Break of Structure (BOS)—with real-time market sentiment analysis to create an adaptive, context-aware trading algorithm. The system operates on a multi-timeframe framework, analyzing price action across higher timeframes (H4), medium timeframes (H1), and lower timeframes (M30) to determine overall market bias and sentiment. Based on calculated sentiment readings ranging from Strong Bullish to Strong Bearish, Risk-On to Risk-Off, and Neutral conditions, the EA dynamically selects and prioritizes the most appropriate SMC strategy, ensuring that trading decisions align with prevailing market conditions rather than applying a one-size-fits-all approach.
+Trending (Bullish/Bearish) Market Sentiment + Break of Structure Strategy
+When the system detects Strong Bullish or Strong Bearish sentiment—indicating clear directional trends confirmed across multiple timeframes—it prioritizes the Break of Structure (BOS) strategy to capitalize on momentum continuation. In trending markets characterized by higher highs and higher lows (bullish) or lower highs and lower lows (bearish), BOS identifies key swing points where market structure has been broken, signaling potential acceleration in the prevailing direction. The EA monitors for price breaking above recent swing highs in bullish trends or below recent swing lows in bearish trends, interpreting these breaks as liquidity runs that often precede sustained directional moves. This strategy aligns perfectly with trending conditions, as it focuses on entering in the direction of the established trend following structural confirmation, avoiding counter-trend trades that would have a lower probability of success during strong directional moves.
+### Getting Started
+```
+//+------------------------------------------------------------------+
+#property copyright "GIT under Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "2.00"
+#property description "Intelligent SMC EA with Market Sentiment-Based Strategy Switching"
+#property copyright "Based on MARKSENT and SMCALL"
+
+#include <Trade/Trade.mqh>
+#include <Trade/PositionInfo.mqh>
+#include <Arrays/ArrayObj.mqh>
+// Market Sentiment Component (from MARKSENT)
+input int SwingLookback = 5;
+input double ATRThreshold = 0.002;
+input group "=== Trading Settings ==="
+We begin by including the necessary MQL5 libraries for order execution, position information, and array management, forming the foundation for both the trading operations and data storage required by the EA. The first section defines all inputs for the Market Sentiment Component, which reads and processes data across multiple timeframes (H4, H1, M30) using tools such as a 200-period moving average, swing lookbacks, and ATR thresholds. These parameters belong to the custom sentiment engine (MARKSENT), and they allow the EA to classify the market environment into states such as bullish, bearish, risk-on, risk-off, or neutral. By analyzing these different timeframes together, the EA builds a robust understanding of the market’s current direction and volatility characteristics.
+In the next section, we define the Trading Settings and Strategy Selection, which give the EA flexibility in how it operates. Inputs such as lot size, stop loss, take profit, magic number, and object-drawing controls determine how orders are executed and visualized. More importantly, the Strategy Selection block allows the user to enable or disable responses to market sentiment and selectively activate BOS, OB, and FVG logic. This means the EA can be configured to trade exclusively based on sentiment, exclusively based on SMC patterns, or operate as a hybrid model that intelligently switches strategies depending on the sentiment state detected by the indicator. Combined with customizable visual parameters, this section ensures both functionality and clarity on the chart.
+    // Update sentiment text for display
+    switch(currentSentiment)
+    {
+        case 1: currentSentimentText = "Bullish"; break;
+{
+    if(!UseSentimentFilter) 
+        currentStrategy = "ALL"; // Use all strategies if no filter
+    // Strategy assignment based on market conditions
+    switch(sentiment)
+        case 1:  // Strong Bullish
+    trade.SetExpertMagicNumber(MagicNumber);
+    bool result = trade.PositionOpen(_Symbol, type, LotSize, price, sl, tp, 
+       "SMC_" + strategy + "_Sent:" + currentSentimentText);
+    
+    if(result)
+        long ticket = trade.ResultOrder();
+    double deviation = MathAbs(price - maValue) / maValue;
+    if(price > maValue && deviation > ATRThreshold) return 1;   // Bullish bias
+    else if(price < maValue && deviation > ATRThreshold) return -1; // Bearish bias
+    else return 0; // Neutral/no bias
+}
+    // Bullish structure: Higher highs AND higher lows
+    return (iHigh(_Symbol, tf, swingHighIndex) > iHigh(_Symbol, tf, swingHighIndex + lookback) &&
+            iLow(_Symbol, tf, swingLowIndex) > iLow(_Symbol, tf, swingLowIndex + lookback));
+    // Bearish structure: Lower highs AND lower lows
+    return (iHigh(_Symbol, tf, swingHighIndex) < iHigh(_Symbol, tf, swingHighIndex + lookback) &&
+            iLow(_Symbol, tf, swingLowIndex) < iLow(_Symbol, tf, swingLowIndex + lookback));
+    double swingHigh = iHigh(_Symbol, tf, swingHighIndex);
+    double swingLow = iLow(_Symbol, tf, swingLowIndex);
+    double price = iClose(_Symbol, tf, 0);
+
+### **Back Test Results**
+The following backtesting was evaluated on the H1 timeframe across roughly a 2-month testing window (01 October 2025 to 01 December 2025), with the following settings:
+![](https://c.mql5.com/2/185/SMC_sent_Inps.png)
+### Conclusion
+In summary, we developed an intelligent SMC trading EA by integrating three core Smart Money Concept strategies—Order Blocks, Fair Value Gaps, and Break of Structure—with real-time multi-timeframe market sentiment analysis. We created a dynamic system that automatically selects the most appropriate strategy based on prevailing market conditions: Order Blocks for neutral/ranging markets, Break of Structure for strong trending environments, and Fair Value Gaps for transitional breakout scenarios. The EA features comprehensive visual drawing with trade-based object management, where graphical elements are drawn only from their origin to trade execution time and automatically cleaned up when trades close, ensuring a clutter-free chart. We also enhanced the Break of Structure to clearly show the direction of structural breaks, making market movements immediately visible to traders.
+In conclusion, this sophisticated EA implementation provides traders with a context-aware, adaptive trading system that significantly enhances decision-making by aligning SMC strategies with real-time market conditions. By eliminating the guesswork of strategy selection and automating trade execution within proper market contexts, traders can maintain discipline while capitalizing on high-probability setups. The comprehensive visual feedback system helps traders understand market dynamics in real-time, while the automatic cleanup ensures optimal chart clarity for ongoing analysis. This integrated approach increases trading efficiency and provides an educational framework for understanding how different SMC strategies perform under various market conditions, ultimately helping traders develop better market intuition and improved risk management practices.
+**Attached files** |
+We continue our look at how MetaTrader can be used outside its forex trading ‘comfort-zone’ by looking at another tradable asset in the form of the FXI ETF. Unlike in the last article where we tried to do ‘too-much’ by delving into not just indicator selection, but also considering indicator pattern combinations, for this article we will swim slightly upstream by focusing more on indicator selection. Our end product for this is intended as a form of pipeline that can help recommend indicators for various assets, provided we have a reasonable amount of their price history.
+![Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance](https://c.mql5.com/2/185/20514-overcoming-the-limitation-of-logo.png)
+[Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance](https://www.mql5.com/en/articles/20514)
+Self-supervised learning is a powerful paradigm of statistical learning that searches for supervisory signals generated from the observations themselves. This approach reframes challenging unsupervised learning problems into more familiar supervised ones. This technology has overlooked applications for our objective as a community of algorithmic traders. Our discussion, therefore, aims to give the reader an approachable bridge into the open research area of self-supervised learning and offers practical applications that provide robust and reliable statistical models of financial markets without overfitting to small datasets.
+Best VPS for traders
+Two-click launch from MetaTrader, minimum ping to broker, 15 USD/month
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/vps&a=wpjhvzsogglsviotmypjoyhhtuxlrzhi&s=aa6c5782a1658c2f617954d478dea9989a27ae26ecabc09d0ab1204277fdf8e3&uid=&ref=https://www.mql5.com/en/articles/20414&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6419929119415996769)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+In summary, we developed an intelligent SMC trading EA by integrating three core Smart Money Concept strategies—Order Blocks, Fair Value Gaps, and Break of Structure—with real-time multi-timeframe market sentiment analysis. We created a dynamic system that automatically selects the most appropriate strategy based on prevailing market conditions: Order Blocks for neutral/ranging markets, Break of Structure for strong trending environments, and Fair Value Gaps for transitional breakout scenarios. The EA features comprehensive visual drawing with trade-based object management, where graphical elements are drawn only from their origin to trade execution time and automatically cleaned up when trades close, ensuring a clutter-free chart. We also enhanced the Break of Structure to clearly show the direction of structural breaks, making market movements immediately visible to traders.
+
+In conclusion, this sophisticated EA implementation provides traders with a context-aware, adaptive trading system that significantly enhances decision-making by aligning SMC strategies with real-time market conditions. By eliminating the guesswork of strategy selection and automating trade execution within proper market contexts, traders can maintain discipline while capitalizing on high-probability setups. The comprehensive visual feedback system helps traders understand market dynamics in real-time, while the automatic cleanup ensures optimal chart clarity for ongoing analysis. This integrated approach increases trading efficiency and provides an educational framework for understanding how different SMC strategies perform under various market conditions, ultimately helping traders develop better market intuition and improved risk management practices.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20414.zip "Download all attachments in the single ZIP archive")
+
+[SMC\_Sent.mq5](https://www.mql5.com/en/articles/download/20414/SMC_Sent.mq5 "Download SMC_Sent.mq5")
+(109.63 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Codex Pipelines: From Python to MQL5 for Indicator Selection — A Multi-Quarter Analysis of the FXI ETF](https://c.mql5.com/2/185/20550-codex-pipelines-from-python-logo.png)
+[Codex Pipelines: From Python to MQL5 for Indicator Selection — A Multi-Quarter Analysis of the FXI ETF](https://www.mql5.com/en/articles/20550)
+
+We continue our look at how MetaTrader can be used outside its forex trading ‘comfort-zone’ by looking at another tradable asset in the form of the FXI ETF. Unlike in the last article where we tried to do ‘too-much’ by delving into not just indicator selection, but also considering indicator pattern combinations, for this article we will swim slightly upstream by focusing more on indicator selection. Our end product for this is intended as a form of pipeline that can help recommend indicators for various assets, provided we have a reasonable amount of their price history.
+
+![Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance](https://c.mql5.com/2/185/20514-overcoming-the-limitation-of-logo.png)
+[Overcoming The Limitation of Machine Learning (Part 9): Correlation-Based Feature Learning in Self-Supervised Finance](https://www.mql5.com/en/articles/20514)
+
+Self-supervised learning is a powerful paradigm of statistical learning that searches for supervisory signals generated from the observations themselves. This approach reframes challenging unsupervised learning problems into more familiar supervised ones. This technology has overlooked applications for our objective as a community of algorithmic traders. Our discussion, therefore, aims to give the reader an approachable bridge into the open research area of self-supervised learning and offers practical applications that provide robust and reliable statistical models of financial markets without overfitting to small datasets.
+
+![Automated Risk Management for Passing Prop Firm Challenges](https://c.mql5.com/2/185/19655-automated-risk-management-for-logo.png)
+[Automated Risk Management for Passing Prop Firm Challenges](https://www.mql5.com/en/articles/19655)
+
+This article explains the design of a prop-firm Expert Advisor for GOLD, featuring breakout filters, multi-timeframe analysis, robust risk management, and strict drawdown protection. The EA helps traders pass prop-firm challenges by avoiding rule breaches and stabilizing trade execution under volatile market conditions.
+
+![Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (I)](https://c.mql5.com/2/122/Developing_a_Multicurrency_Advisor_Part_24___LOGO.png)
+[Developing a multi-currency Expert Advisor (Part 24): Adding a new strategy (I)](https://www.mql5.com/en/articles/17277)
+
+In this article, we will look at how to connect a new strategy to the auto optimization system we have created. Let's see what kind of EAs we need to create and whether it will be possible to do without changing the EA library files or minimize the necessary changes.
+
+[![](https://www.mql5.com/ff/sh/rvgkjnsrvj1mzh89z2/01.png)
+
+Best VPS for traders
+Two-click launch from MetaTrader, minimum ping to broker, 15 USD/month
+Learn more](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/vps&a=wpjhvzsogglsviotmypjoyhhtuxlrzhi&s=aa6c5782a1658c2f617954d478dea9989a27ae26ecabc09d0ab1204277fdf8e3&uid=&ref=https://www.mql5.com/en/articles/20414&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6419929119415996769)

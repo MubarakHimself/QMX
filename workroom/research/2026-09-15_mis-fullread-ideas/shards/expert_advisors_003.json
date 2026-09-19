@@ -1,0 +1,112 @@
+{
+  "shard_id": "expert_advisors_003",
+  "section": "Expert Advisors",
+  "n": 11,
+  "series_in_shard": [
+    "data label for timeseries mining",
+    "engineering a self-healing expert advisor in mql5",
+    "experiments with neural networks",
+    "introduction to mql5"
+  ],
+  "articles": [
+    {
+      "id": 13253,
+      "title": "Data label for timeseries mining (Part 2)\uff1aMake datasets with trend markers using Python",
+      "section": "Expert Advisors",
+      "series_title": "Data label for timeseries mining ()\uff1aMake datasets with trend markers using Python",
+      "series_key": "data label for timeseries mining",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13253.md"
+    },
+    {
+      "id": 22532,
+      "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 1): Persistent Trade State Architecture",
+      "section": "Expert Advisors",
+      "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Persistent Trade State Architecture",
+      "series_key": "engineering a self-healing expert advisor in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22532.md"
+    },
+    {
+      "id": 22613,
+      "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 2): Restart-Safe Virtual Trade Protection",
+      "section": "Expert Advisors",
+      "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Restart-Safe Virtual Trade Protection",
+      "series_key": "engineering a self-healing expert advisor in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22613.md"
+    },
+    {
+      "id": 22614,
+      "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 3): Restart-Aware Breakeven and Trailing Systems",
+      "section": "Expert Advisors",
+      "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Restart-Aware Breakeven and Trailing Systems",
+      "series_key": "engineering a self-healing expert advisor in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22614.md"
+    },
+    {
+      "id": 22615,
+      "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 4): Trade-State Reconciliation and Safe Mode Recovery",
+      "section": "Expert Advisors",
+      "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Trade-State Reconciliation and Safe Mode Recovery",
+      "series_key": "engineering a self-healing expert advisor in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22615.md"
+    },
+    {
+      "id": 22616,
+      "title": "Engineering a Self-Healing Expert Advisor in MQL5 (Part 5): Real-Time Recovery Dashboard (Final Part)",
+      "section": "Expert Advisors",
+      "series_title": "Engineering a Self-Healing Expert Advisor in MQL5 (): Real-Time Recovery Dashboard (Final Part)",
+      "series_key": "engineering a self-healing expert advisor in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22616.md"
+    },
+    {
+      "id": 11949,
+      "title": "Experiments with neural networks (Part 3): Practical application",
+      "section": "Expert Advisors",
+      "series_title": "Experiments with neural networks (): Practical application",
+      "series_key": "experiments with neural networks",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11949.md"
+    },
+    {
+      "id": 14099,
+      "title": "Introduction to MQL5 (Part 3): Mastering the Core Elements of MQL5",
+      "section": "Expert Advisors",
+      "series_title": "Introduction to MQL5 (): Mastering the Core Elements of MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14099.md"
+    },
+    {
+      "id": 14232,
+      "title": "Introduction to MQL5 (Part 4): Mastering Structures, Classes, and Time Functions",
+      "section": "Expert Advisors",
+      "series_title": "Introduction to MQL5 (): Mastering Structures, Classes, and Time Functions",
+      "series_key": "introduction to mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14232.md"
+    },
+    {
+      "id": 17296,
+      "title": "Introduction to MQL5 (Part 13): A Beginner's Guide to Building Custom Indicators (II)",
+      "section": "Expert Advisors",
+      "series_title": "Introduction to MQL5 (): A Beginner's Guide to Building Custom Indicators (II)",
+      "series_key": "introduction to mql5",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17296.md"
+    },
+    {
+      "id": 21160,
+      "title": "Introduction to MQL5 (Part 39): Beginner Guide to File Handling in MQL5 (I)",
+      "section": "Expert Advisors",
+      "series_title": "Introduction to MQL5 (): Beginner Guide to File Handling in MQL5 (I)",
+      "series_key": "introduction to mql5",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21160.md"
+    }
+  ]
+}

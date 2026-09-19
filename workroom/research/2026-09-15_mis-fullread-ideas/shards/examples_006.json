@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_006",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1393,
+      "title": "Synchronization of Expert Advisors, Scripts and Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1393.md"
+    },
+    {
+      "id": 1399,
+      "title": "Events in \u041ceta\u0422rader 4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1399.md"
+    },
+    {
+      "id": 1402,
+      "title": "Requirements Applicable to Articles Offered for Publishing at MQL4.com",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1402.md"
+    },
+    {
+      "id": 1407,
+      "title": "Free-of-Holes Charts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1407.md"
+    },
+    {
+      "id": 1410,
+      "title": "MQL4  as a Trader's Tool, or The Advanced Technical Analysis",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1410.md"
+    },
+    {
+      "id": 1411,
+      "title": "Multiple Null Bar Re-Count in Some Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1411.md"
+    },
+    {
+      "id": 1412,
+      "title": "Error 146 (\"Trade context busy\") and How to Deal with It",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1412.md"
+    },
+    {
+      "id": 1414,
+      "title": "How to Use Crashlogs to Debug Your Own DLLs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1414.md"
+    },
+    {
+      "id": 1415,
+      "title": "Secrets of MetaTrader 4 Client Terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1415.md"
+    },
+    {
+      "id": 1416,
+      "title": "Secrets of MetaTrader 4 Client Terminal: Alerting System",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1416.md"
+    },
+    {
+      "id": 1422,
+      "title": "Secrets of the MetaTrader 4 Client Terminal: Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1422.md"
+    },
+    {
+      "id": 1427,
+      "title": "Breakpoints in Tester: It's Possible!",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1427.md"
+    }
+  ]
+}

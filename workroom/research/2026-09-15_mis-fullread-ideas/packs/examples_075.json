@@ -1,0 +1,94 @@
+{
+  "pack_id": "examples_075",
+  "section": "Examples",
+  "parent_shard": "examples_075",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "formulating dynamic multi-pair ea"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 15378,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 1): Currency Correlation and Inverse Correlation",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Currency Correlation and Inverse Correlation",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15378.md"
+    },
+    {
+      "id": 18037,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 3): Mean Reversion and Momentum Strategies",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Mean Reversion and Momentum Strategies",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18037.md"
+    },
+    {
+      "id": 18165,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 4): Volatility and Risk Adjustment",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Volatility and Risk Adjustment",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18165.md"
+    },
+    {
+      "id": 19989,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 5): Scalping vs Swing Trading Approaches",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Scalping vs Swing Trading Approaches",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19989.md"
+    },
+    {
+      "id": 20371,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 6): Adaptive Spread Sensitivity for High-Frequency Symbol Switching",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Adaptive Spread Sensitivity for High-Frequency Symbol Switching",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20371.md"
+    },
+    {
+      "id": 21460,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 7): Cross-Pair Correlation Mapping for Real-Time Trade Filtering",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Cross-Pair Correlation Mapping for Real-Time Trade Filtering",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21460.md"
+    },
+    {
+      "id": 21976,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 8): Time-of-Day Capital Rotation Approach",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Time-of-Day Capital Rotation Approach",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21976.md"
+    },
+    {
+      "id": 22772,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 9): Market Microstructure Execution Noise Filtering",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Market Microstructure Execution Noise Filtering",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22772.md"
+    },
+    {
+      "id": 23597,
+      "title": "Formulating Dynamic Multi-Pair EA (Part 10): Asymmetric Stop-Loss Logic Based on Pair-Specific Volatility Signatures",
+      "section": "Examples",
+      "series_title": "Formulating Dynamic Multi-Pair EA (): Asymmetric Stop-Loss Logic Based on Pair-Specific Volatility Signatures",
+      "series_key": "formulating dynamic multi-pair ea",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23597.md"
+    }
+  ]
+}

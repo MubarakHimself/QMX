@@ -1,0 +1,52 @@
+{
+  "id": 8818,
+  "title": "Prices in DoEasy library (part 59): Object to store data of one tick",
+  "author_guess": "Artyom Trishkin",
+  "chars": 51770,
+  "n_paras": 99,
+  "headings": [
+    "# Prices in DoEasy library (part 59): Object to store data of one tick",
+    "### Table of contents",
+    "### Concept",
+    "### Preparing data",
+    "### Tick data object class",
+    "### Testing tick data object",
+    "### What's next?"
+  ],
+  "intro": [
+    "# Prices in DoEasy library (part 59): Object to store data of one tick",
+    "[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n—\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 2 February 2021 at 06:53",
+    "6 793\n[\n1](https://www.mql5.com/en/forum/361846 \"Comments\")",
+    "[Artyom Trishkin](https://www.mql5.com/en/users/artmedia70)",
+    "- [Concept](https://www.mql5.com/en/articles/8818#concept)\n- [Preparing data](https://www.mql5.com/en/articles/8818#preparing_data)\n- [Tick data object class](https://www.mql5.com/en/articles/8818#tick_data_object_class)\n- [Testing tick data object](https://www.mql5.com/en/articles/8818#testing_tick_data_object)\n- [What's next?](https://www.mql5.com/en/articles/8818#what_s_next)",
+    "From this article on, start development of library functionality to work with tick data.",
+    "The concept of storage and use of tick data will be similar to [the concept of storage of timeseries data](https://www.mql5.com/en/articles/7594) where the minimal data unit is the bar. Bar objects are stored in the lists which belong to corresponding timeframes which in their turn are stored in the lists which belong to symbols.",
+    "In the concept of tick data storage, the minimal unit of data volume shall be values of price structure on one tick. Such values are described with the use of a structure for storing the last prices by symbol [MqlTick](https://www.mql5.com/en/docs/constants/structures/mqltick). An object to store such values will possess additional properties: spread - the difference of Ask and Bid prices and the symbol the data of which one tick are described by the object."
+  ],
+  "keyword_hits": [
+    "In the concept of tick data storage, the minimal unit of data volume shall be values of price structure on one tick. Such values are described with the use of a structure for storing the last prices by symbol [MqlTick](https://www.mql5.com/en/docs/constants/structures/mqltick). An object to store such values will possess additional properties: spread - the difference of Ask and Bid prices and the symbol the data of which one tick are described by the object.",
+    "//--- CTick\n   MSG_TICK_TEXT_TICK,                                // Tick\n   MSG_TICK_TIME_MSC,                                 // Time of the last update of prices in milliseconds\n   MSG_TICK_TIME,                                     // Time of the last update of prices\n   MSG_TICK_VOLUME,                                   // Volume for the current Last price\n   MSG_TICK_FLAGS,                                    // Flags\n   MSG_TICK_VOLUME_REAL,                              // Volume for the current Last price with greater accuracy\n   MSG_TICK_SPREAD,                                   // Spread\n   MSG_LIB_TEXT_TICK_CHANGED_DATA,                    // Changed data on tick:\n   MSG_LIB_TEXT_TICK_FLAG_BID,                        // Bid price change\n   MSG_LIB_TEXT_TICK_FLAG_ASK,                        // Ask price change\n   MSG_LIB_TEXT_TICK_FLAG_LAST,                       // Last deal price change\n   MSG_LIB_TEXT_TICK_FLAG_VOLUME,                     // Volume change",
+    "//--- CTick\n   {\"Tick\"},\n   {\"Last price update time in milliseconds\"},\n   {\"Last price update time\"},\n   {\"Volume for the current Last price\"},\n   {\"Flags\"},\n   {\"Volume for the current \\\"Last\\\" price with increased accuracy\"},\n   {\"Spread\"},\n   {\"Changed data on a tick:\"},\n   {\"Bid price change\"},\n   {\"Ask price change\"},\n   {\"Last price change\"},\n   {\"Volume change\"},",
+    "//--- Return tick’s (1) Bid, (2) Ask, (3) Last price, (4) volume with greater accuracy, (5) spread of the tick\n//--- size of the (9) candle upper, (10) lower wick\n   double            Bid(void)                                          const { return this.GetProperty(TICK_PROP_BID);                      }\n   double            Ask(void)                                          const { return this.GetProperty(TICK_PROP_ASK);                      }\n   double            Last(void)                                         const { return this.GetProperty(TICK_PROP_LAST);                     }\n   double            VolumeReal(void)                                   const { return this.GetProperty(TICK_PROP_VOLUME_REAL);              }\n   double            Spread(void)                                       const { return this.GetProperty(TICK_PROP_SPREAD);                   }",
+    "- TICK\\_FLAG\\_BID — tick changed Bid price\n- TICK\\_FLAG\\_ASK — tick changed Ask price\n- TICK\\_FLAG\\_LAST — tick changed Last trade price\n- TICK\\_FLAG\\_VOLUME — tick changed volume\n- TICK\\_FLAG\\_BUY — tick resulted from Buy trade\n- TICK\\_FLAG\\_SELL — tick resulted from Sell trade",
+    "In the method described, first the flag of flag presence within the variable is checked. Depending on whether such change is available or not the resulted text string shall be added with newline character + flag description or an empty string. After checking all flags, finally we have the compiled string which contains descriptions of the flags present in the variable. If several flags are available, the description of each flag will start from a new line in the journal.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[Using spreadsheets to build trading strategies](https://www.mql5.com/en/articles/8699)",
+    "The article describes the basic principles and methods that allow you to analyze any strategy using spreadsheets (Excel, Calc, Google). The obtained results are compared with MetaTrader 5 tester.",
+    "In conclusion of the topic of working with timeseries organise storage, search and sort of data stored in indicator buffers which will allow to further perform the analysis based on values of the indicators to be created on the library basis in programs. The general concept of all collection classes of the library allows to easily find necessary data in the corresponding collection. Respectively, the same will be possible in the class created today."
+  ],
+  "tail": [
+    "[MQL5.zip](https://www.mql5.com/en/articles/download/8818/mql5.zip \"Download MQL5.zip\")\n(3872.72 KB)",
+    "**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[Neural networks made easy (Part 8): Attention mechanisms](https://www.mql5.com/en/articles/8765)",
+    "In previous articles, we have already tested various options for organizing neural networks. We also considered convolutional networks borrowed from image processing algorithms. In this article, I suggest considering Attention Mechanisms, the appearance of which gave impetus to the development of language models.",
+    "[Using spreadsheets to build trading strategies](https://www.mql5.com/en/articles/8699)",
+    "The article describes the basic principles and methods that allow you to analyze any strategy using spreadsheets (Excel, Calc, Google). The obtained results are compared with MetaTrader 5 tester.",
+    "[Developing a self-adapting algorithm (Part I): Finding a basic pattern](https://www.mql5.com/en/articles/8616)",
+    "In the upcoming series of articles, I will demonstrate the development of self-adapting algorithms considering most market factors, as well as show how to systematize these situations, describe them in logic and take them into account in your trading activity. I will start with a very simple algorithm that will gradually acquire theory and evolve into a very complex project.",
+    "[Timeseries in DoEasy library (part 58): Timeseries of indicator buffer data](https://www.mql5.com/en/articles/8787)",
+    "In conclusion of the topic of working with timeseries organise storage, search and sort of data stored in indicator buffers which will allow to further perform the analysis based on values of the indicators to be created on the library basis in programs. The general concept of all collection classes of the library allows to easily find necessary data in the corresponding collection. Respectively, the same will be possible in the class created today.",
+    "Boost your trading experience\nRead our book \"MQL5 Programming for Traders\"\nBegin](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/book%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.algobook%26utm_content=visit.page%26utm_campaign=algobook.promo.04.2024&a=heclgjpfbvfghpmyaciuaesdtswflupo&s=4255fbe1b8cbc4d1b40afbaebf4235e5ace8b5103cba60d996897a03d588556f&uid=&ref=https://www.mql5.com/en/articles/8818&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6439689499440735685)"
+  ]
+}

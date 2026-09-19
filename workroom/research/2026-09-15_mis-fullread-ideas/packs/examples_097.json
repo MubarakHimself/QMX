@@ -1,0 +1,129 @@
+{
+  "pack_id": "examples_097",
+  "section": "Examples",
+  "parent_shard": "examples_097",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "trading options without options",
+    "understand and efficiently use opencl api by recreating built-in support as dll on linux",
+    "understanding programming paradigms",
+    "universal expert advisor: a custom trailing stop",
+    "universal expert advisor: accessing symbol properties",
+    "universal expert advisor: cunindicator and use of pending orders",
+    "universal expert advisor: custom strategies and auxiliary trade classes",
+    "universal expert advisor: integration with standard metatrader modules of signals",
+    "universal expert advisor: pending orders and hedging support"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18363,
+      "title": "Trading Options Without Options (Part 2): Use in Real Trading",
+      "section": "Examples",
+      "series_title": "Trading Options Without Options (): Use in Real Trading",
+      "series_key": "trading options without options",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18363.md"
+    },
+    {
+      "id": 19704,
+      "title": "Trading Options Without Options (Part 4): More Complex Option Strategies",
+      "section": "Examples",
+      "series_title": "Trading Options Without Options (): More Complex Option Strategies",
+      "series_key": "trading options without options",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19704.md"
+    },
+    {
+      "id": 12108,
+      "title": "Understand and efficiently use OpenCL API by recreating built-in support as DLL on Linux (Part 1): Motivation and validation",
+      "section": "Examples",
+      "series_title": "Understand and efficiently use OpenCL API by recreating built-in support as DLL on Linux (): Motivation and validation",
+      "series_key": "understand and efficiently use opencl api by recreating built-in support as dll on linux",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12108.md"
+    },
+    {
+      "id": 12387,
+      "title": "Understand and Efficiently use OpenCL API by Recreating built-in support as DLL on Linux (Part 2): OpenCL Simple DLL implementation",
+      "section": "Examples",
+      "series_title": "Understand and Efficiently use OpenCL API by Recreating built-in support as DLL on Linux (): OpenCL Simple DLL implementation",
+      "series_key": "understand and efficiently use opencl api by recreating built-in support as dll on linux",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12387.md"
+    },
+    {
+      "id": 13771,
+      "title": "Understanding Programming Paradigms (Part 1): A Procedural Approach to Developing a Price Action Expert Advisor",
+      "section": "Examples",
+      "series_title": "Understanding Programming Paradigms (): A Procedural Approach to Developing a Price Action Expert Advisor",
+      "series_key": "understanding programming paradigms",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13771.md"
+    },
+    {
+      "id": 14161,
+      "title": "Understanding Programming Paradigms (Part 2): An Object-Oriented Approach to Developing a Price Action Expert Advisor",
+      "section": "Examples",
+      "series_title": "Understanding Programming Paradigms (): An Object-Oriented Approach to Developing a Price Action Expert Advisor",
+      "series_key": "understanding programming paradigms",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14161.md"
+    },
+    {
+      "id": 2411,
+      "title": "Universal Expert Advisor: A Custom Trailing Stop (Part 6)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: A Custom Trailing Stop ()",
+      "series_key": "universal expert advisor: a custom trailing stop",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2411.md"
+    },
+    {
+      "id": 3270,
+      "title": "Universal Expert Advisor: Accessing Symbol Properties (Part 8)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Accessing Symbol Properties ()",
+      "series_key": "universal expert advisor: accessing symbol properties",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3270.md"
+    },
+    {
+      "id": 2653,
+      "title": "Universal Expert Advisor: CUnIndicator and Use of Pending Orders (Part 9)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: CUnIndicator and Use of Pending Orders ()",
+      "series_key": "universal expert advisor: cunindicator and use of pending orders",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2653.md"
+    },
+    {
+      "id": 2170,
+      "title": "Universal Expert Advisor: Custom Strategies and Auxiliary Trade Classes (Part 3)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Custom Strategies and Auxiliary Trade Classes ()",
+      "series_key": "universal expert advisor: custom strategies and auxiliary trade classes",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2170.md"
+    },
+    {
+      "id": 2540,
+      "title": "Universal Expert Advisor: Integration with Standard MetaTrader Modules of Signals (Part 7)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Integration with Standard MetaTrader Modules of Signals ()",
+      "series_key": "universal expert advisor: integration with standard metatrader modules of signals",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2540.md"
+    },
+    {
+      "id": 2404,
+      "title": "Universal Expert Advisor: Pending Orders and Hedging Support (Part 5)",
+      "section": "Examples",
+      "series_title": "Universal Expert Advisor: Pending Orders and Hedging Support ()",
+      "series_key": "universal expert advisor: pending orders and hedging support",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2404.md"
+    }
+  ]
+}

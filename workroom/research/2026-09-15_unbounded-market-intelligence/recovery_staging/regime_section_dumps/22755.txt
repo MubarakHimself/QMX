@@ -1,0 +1,243 @@
+# Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 28 August 2026 at 04:17
+1 855
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+0](https://www.mql5.com/en/forum/515283 "Comments")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22755#introduction)
+2. [The Bollinger Band Primary Model](https://www.mql5.com/en/articles/22755#the_bollinger_band_primary_model)
+3. [Feature Engineering — the Bandwidth Dimension](https://www.mql5.com/en/articles/22755#feature_engineering_the_bandwidth_dimension)
+4. [The Two-Stage Pipeline](https://www.mql5.com/en/articles/22755#the_two_stage_pipeline)
+5. [Training the Secondary Model](https://www.mql5.com/en/articles/22755#training_the_secondary_model)
+6. [From Probability to Position: Bet Sizing](https://www.mql5.com/en/articles/22755#from_probability_to_position_bet_sizing)
+7. [MQL5 Deployment Architecture](https://www.mql5.com/en/articles/22755#mql5_deployment_architecture)
+8. [Results](https://www.mql5.com/en/articles/22755#results)
+9. [Conclusion](https://www.mql5.com/en/articles/22755#conclusion)
+10. [Attached Files](https://www.mql5.com/en/articles/22755#attached_files)
+### Introduction
+A Bollinger Band mean-reversion strategy fires when price touches the upper or lower band and assumes price will return to the moving average. The assumption holds in ranging markets. It fails in trending markets, and the failure is not random: it is systematic. When ADX is above 25 and bandwidth is expanding, the band touch is more likely to be the start of a breakout than a reversion opportunity. The primary model cannot know this because it applies the same rule in all regimes. The consequence is a predictable cluster of losses at the precise moments when a trend is establishing itself.
+The meta-labeling framework, introduced by Marcos López de Prado in Chapter 3 of *Advances in Financial Machine Learning*, addresses this class of problem directly. It separates two questions that the primary model conflates: in which direction should we trade, and should we trade at all? The primary model answers the first question. A secondary binary classifier answers the second. When the secondary model outputs a probability, it also determines position size. High-confidence cases receive full allocation; marginal cases receive a fraction. Bet sizing uses the same probability-to-signal mapping developed in [Part 10 of the Machine Learning Blueprint for MetaTrader 5 series](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning").
+This article is the third in the *Meta-Labeling the Classics* series. [Part 1](https://www.mql5.com/en/articles/22274 "Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades") applied the framework to RSI, which is a momentum oscillator with a uniform [0, 100] scale. [Part 2](https://www.mql5.com/en/articles/18864) did the same for ADX, which is a trend-strength indicator. Bollinger Bands add a dimension that RSI lacks: bandwidth. It measures whether the current market environment is consistent with the signal's mean‑reversion assumption. That self-diagnostic property makes Bollinger Bands a more tractable candidate for meta-labeling — and means the secondary model's feature engineering is qualitatively different from the RSI case.
+The implementation follows the two-stage *ModelDevelopmentPipeline* workflow established in [Blueprint Part 9](https://www.mql5.com/en/articles/21823 "Integrating Bayesian HPO into the Production Pipeline"). It reuses *BollingerStrategy* and adds *create\_bollinger\_features* for Bollinger-specific features. Deployment uses the two‑EA file‑bus architecture adapted for ONNX inference.
+Figure 1. Three-panel illustration of Bollinger Band signal quality by regime
+- Panel (a): Synthetic price with 20-period Bollinger Bands. Buy signals (▲) appear at lower-band touches; sell signals (▼) appear at upper-band touches. The shaded region marks the trending phase where most sell signals produce losses rather than mean reversion.
+- Panel (b): ADX(14) over the same period. ADX rises above 25 during the trending phase and falls when the market returns to a ranging state.
+- Panel (c): Synthetic win rates by ADX quartile. Both buy and sell signals degrade monotonically as ADX rises; signals in the highest-ADX quartile fall well below the 50% random baseline. The meta-labeler's job is to suppress these low-quality signals at inference time.
+### The Bollinger Band Primary Model
+The primary model in this pipeline is *BollingerStrategy*, defined in *afml.strategies.trading\_strategies*. It produces a signal series over the full bar history: *+1* when close falls at or below the lower band, *-1* when close rises at or above the upper band, and *0* otherwise. The bands are computed using a 20-period simple moving average with a two-standard-deviation envelope — the conventional default, and the configuration most widely tested in the literature.
+```
+class BollingerStrategy(BaseStrategy):
+    def generate_signals(self, data: pd.DataFrame) -> pd.Series:
+        close = data["close"]
+        upper_band, _, lower_band = talib.BBANDS(
+            close, timeperiod=self.window,
+            nbdevup=self.std, nbdevdn=self.std
+        signals = pd.Series(0, index=data.index, dtype="int8", name="signal")
+        signals[close >= upper_band] = -1   # sell — price at or above upper band
+        signals[close <= lower_band] = 1    # buy  — price at or below lower band
+        return signals
+```
+Signal generation is crossover-based, filtered through *get\_entries()* from *afml.strategies.signal\_processing*. That function converts the raw signal series into a sparse entry timestamp series, eliminating redundant signals that appear on consecutive bars without an intervening exit. The entry timestamps become the event index for triple-barrier labeling.
+Triple-barrier labeling in the primary stage assigns *{-1, 0, +1}* labels. Labels of *0* indicate that neither the profit-taking nor stop-loss barrier was touched before the time barrier expired. In the meta-labeling stage, *LearnedStrategy.generate\_signals()* maps these *0* labels to *+1*, because the primary model's only role in Stage 2 is to supply a directional side; the secondary model decides whether to act on that side, not the primary model's confidence in the vertical barrier outcome.
+The profit target, stop-loss, and time-barrier parameters for the primary stage are expressed as multiples of a 20-period exponentially weighted moving standard deviation, following the volatility-targeting convention established in [Blueprint Part 2](https://www.mql5.com/en/articles/18864 "Labeling Financial Data for Machine Learning"). A profit target of 1× and stop-loss of 2× means the strategy is asymmetric: it allows losses to run to double the size of its wins, which is consistent with a mean-reversion approach where entries are high-frequency but exits are disciplined.
+### Feature Engineering — the Bandwidth Dimension
+The secondary model needs to predict whether a given band touch will be profitable. Its feature set must capture the factors that determine whether the mean-reversion assumption holds: market regime, band-specific signal quality, momentum context, and volatility level. The *create\_bollinger\_features* function in *afml.strategies.bollinger\_features* assembles them into a twelve-column matrix whose column order matches the MQL5 feature contract exactly.
+The two most distinctive features in this set are *BBP* (Bollinger Percent B, or %B) and *BBB* (Bollinger Bandwidth). Both are computed directly from the band envelope rather than via a library helper. The positional argument order of third-party band functions can change across versions, and such changes may silently alter feature values. *BBP* measures where the current close sits within the band envelope, normalized to [0, 1]: a value below 0 means price has penetrated the lower band; a value above 1 means price has penetrated the upper band. *BBB* is the normalized bandwidth, defined as *(upper - lower) / middle*. High *BBB* indicates a volatile, potentially trending environment; low *BBB* indicates a quiet ranging market where mean reversion is more plausible.
+Three derived features extend the bandwidth signal over time. *bb\_bw\_mom* is the 3-period percentage change in *BBB*, capturing whether bandwidth is accelerating. *bb\_bw\_regime* is a binary flag set when *BBB* exceeds its 75th percentile. The threshold is fit on the training window and is not recomputed on data that includes the test period, to avoid leaking future volatility. *is\_widening\_bb* is a 0/1 flag marking whether bandwidth rose on the current bar. Of these, *bb\_bw\_regime* is the feature that most consistently separates high-quality from low-quality signals in the secondary model.
+```
+def create_bollinger_features(df: pd.DataFrame,
+                              window: int = 20,
+                              std: float = 2.0,
+                              bw_threshold: float = None) -> pd.DataFrame:
+    f = pd.DataFrame(index=df.index)
+    close = df["close"]
+    # 1. Band position and bandwidth computed explicitly, so the output is
+    #    identical across pandas_ta builds (positional args are not portable).
+    mid = close.rolling(window).mean()
+    sd = close.rolling(window).std(ddof=0)
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+![Patrick Murimi Njoroge](https://c.mql5.com/avatar/2025/8/68acbcc2-2b8d.jpg "Patrick Murimi Njoroge")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/22755#introduction)
+7. [MQL5 Deployment Architecture](https://www.mql5.com/en/articles/22755#mql5_deployment_architecture)
+8. [Results](https://www.mql5.com/en/articles/22755#results)
+9. [Conclusion](https://www.mql5.com/en/articles/22755#conclusion)
+10. [Attached Files](https://www.mql5.com/en/articles/22755#attached_files)
+### Introduction
+A Bollinger Band mean-reversion strategy fires when price touches the upper or lower band and assumes price will return to the moving average. The assumption holds in ranging markets. It fails in trending markets, and the failure is not random: it is systematic. When ADX is above 25 and bandwidth is expanding, the band touch is more likely to be the start of a breakout than a reversion opportunity. The primary model cannot know this because it applies the same rule in all regimes. The consequence is a predictable cluster of losses at the precise moments when a trend is establishing itself.
+The meta-labeling framework, introduced by Marcos López de Prado in Chapter 3 of *Advances in Financial Machine Learning*, addresses this class of problem directly. It separates two questions that the primary model conflates: in which direction should we trade, and should we trade at all? The primary model answers the first question. A secondary binary classifier answers the second. When the secondary model outputs a probability, it also determines position size. High-confidence cases receive full allocation; marginal cases receive a fraction. Bet sizing uses the same probability-to-signal mapping developed in [Part 10 of the Machine Learning Blueprint for MetaTrader 5 series](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning").
+This article is the third in the *Meta-Labeling the Classics* series. [Part 1](https://www.mql5.com/en/articles/22274 "Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades") applied the framework to RSI, which is a momentum oscillator with a uniform [0, 100] scale. [Part 2](https://www.mql5.com/en/articles/18864) did the same for ADX, which is a trend-strength indicator. Bollinger Bands add a dimension that RSI lacks: bandwidth. It measures whether the current market environment is consistent with the signal's mean‑reversion assumption. That self-diagnostic property makes Bollinger Bands a more tractable candidate for meta-labeling — and means the secondary model's feature engineering is qualitatively different from the RSI case.
+The implementation follows the two-stage *ModelDevelopmentPipeline* workflow established in [Blueprint Part 9](https://www.mql5.com/en/articles/21823 "Integrating Bayesian HPO into the Production Pipeline"). It reuses *BollingerStrategy* and adds *create\_bollinger\_features* for Bollinger-specific features. Deployment uses the two‑EA file‑bus architecture adapted for ONNX inference.
+- Panel (a): Synthetic price with 20-period Bollinger Bands. Buy signals (▲) appear at lower-band touches; sell signals (▼) appear at upper-band touches. The shaded region marks the trending phase where most sell signals produce losses rather than mean reversion.
+- Panel (b): ADX(14) over the same period. ADX rises above 25 during the trending phase and falls when the market returns to a ranging state.
+- Panel (c): Synthetic win rates by ADX quartile. Both buy and sell signals degrade monotonically as ADX rises; signals in the highest-ADX quartile fall well below the 50% random baseline. The meta-labeler's job is to suppress these low-quality signals at inference time.
+
+### The Bollinger Band Primary Model
+The primary model in this pipeline is *BollingerStrategy*, defined in *afml.strategies.trading\_strategies*. It produces a signal series over the full bar history: *+1* when close falls at or below the lower band, *-1* when close rises at or above the upper band, and *0* otherwise. The bands are computed using a 20-period simple moving average with a two-standard-deviation envelope — the conventional default, and the configuration most widely tested in the literature.
+### Feature Engineering — the Bandwidth Dimension
+The secondary model needs to predict whether a given band touch will be profitable. Its feature set must capture the factors that determine whether the mean-reversion assumption holds: market regime, band-specific signal quality, momentum context, and volatility level. The *create\_bollinger\_features* function in *afml.strategies.bollinger\_features* assembles them into a twelve-column matrix whose column order matches the MQL5 feature contract exactly.
+The two most distinctive features in this set are *BBP* (Bollinger Percent B, or %B) and *BBB* (Bollinger Bandwidth). Both are computed directly from the band envelope rather than via a library helper. The positional argument order of third-party band functions can change across versions, and such changes may silently alter feature values. *BBP* measures where the current close sits within the band envelope, normalized to [0, 1]: a value below 0 means price has penetrated the lower band; a value above 1 means price has penetrated the upper band. *BBB* is the normalized bandwidth, defined as *(upper - lower) / middle*. High *BBB* indicates a volatile, potentially trending environment; low *BBB* indicates a quiet ranging market where mean reversion is more plausible.
+Three derived features extend the bandwidth signal over time. *bb\_bw\_mom* is the 3-period percentage change in *BBB*, capturing whether bandwidth is accelerating. *bb\_bw\_regime* is a binary flag set when *BBB* exceeds its 75th percentile. The threshold is fit on the training window and is not recomputed on data that includes the test period, to avoid leaking future volatility. *is\_widening\_bb* is a 0/1 flag marking whether bandwidth rose on the current bar. Of these, *bb\_bw\_regime* is the feature that most consistently separates high-quality from low-quality signals in the secondary model.
+```
+                              std: float = 2.0,
+                              bw_threshold: float = None) -> pd.DataFrame:
+    f = pd.DataFrame(index=df.index)
+    close = df["close"]
+    # 2. Bandwidth dynamics. The regime threshold is either a fixed constant
+    #    fit on the training window (production, exported to MQL5) or a causal
+    #    expanding quantile. It is never a quantile over the full series.
+    f["bb_bw_mom"] = bbb.pct_change(3)
+    if bw_threshold is None:
+        bw_threshold = bbb.expanding(min_periods=window).quantile(0.75)
+    f["bb_bw_regime"] = (bbb > bw_threshold).astype("int8")
+    f["is_widening_bb"] = (bbb.diff() > 0).astype("int8")
+    # 3. Trend strength. Select ADX components by name, not by position.
+    adx = df.ta.adx()
+    f["ADX_14"] = adx["ADX_14"]
+    f["DMP_14"] = adx["DMP_14"]
+    f["DMN_14"] = adx["DMN_14"]
+
+    # 4. Momentum, volatility, direction memory, cost.
+    f["RSI_14"] = df.ta.rsi()
+    f["H1_vol"] = get_period_vol(close, lookback=window, hours=1)
+    FEATURE_ORDER = ["BBP", "BBB", "bb_bw_mom", "bb_bw_regime", "is_widening_bb",
+                     "ADX_14", "DMP_14", "DMN_14", "RSI_14", "H1_vol",
+                     "prev_signal", "spread"]
+    return f[FEATURE_ORDER].shift().dropna()
+The final *.shift()* call is not optional. Features computed at bar *t* would include price and volatility information from bar *t* itself. The primary signal fires on bar *t*, so the model can only act on information available at the close of bar *t-1*. Shifting by one bar enforces this constraint. All downstream steps — label alignment, cross-validation, ONNX export — operate on this lagged feature matrix.
+The secondary model also receives rolling meta-features computed from the primary model's recent performance. Examples include rolling accuracy over the previous 20 predictions and confidence drift (change in mean probability over the same window). These features are generated automatically by *ModelDevelopmentPipeline* when it detects that it is running in secondary mode (*is\_primary=False*). They allow the secondary model to down-weight signals during periods when the primary model has been consistently wrong.
+### The Two-Stage Pipeline
+The pipeline inherits the structure introduced in [Blueprint Part 9](https://www.mql5.com/en/articles/21823 "Integrating Bayesian HPO into the Production Pipeline"). Stage 1 trains the primary directional model; Stage 2 trains the secondary filter. The bridge between them is *LearnedStrategy*, which wraps the fitted primary pipeline so it can be used as a signal generator at label-generation time in Stage 2.
+- Stage 1: *BollingerStrategy* generates primary signals; *create\_bollinger\_features* produces the feature matrix; a gradient-boosted primary model is trained with PurgedKFold CV to predict side ∈ {-1, +1}.
+- LearnedStrategy bridge: *LearnedStrategy.from\_pipeline()* wraps the fitted primary pipeline so that *generate\_signals()* calls *best\_model.predict()*. The preprocessor inside *best\_model* handles column alignment automatically.
+- Stage 2: The same feature function is used, augmented with rolling meta-features. The secondary GBM is trained to predict binary labels {0, 1}: should this signal be acted on? Its output probabilities are then passed to *bet\_size\_probability*.
+# ── Stage 1: primary directional model ───────────────────────────────────────
+primary_pipeline = ModelDevelopmentPipeline(
+    strategy=BollingerStrategy(window=20, std=2.0),
+# ── Bridge: wrap the fitted model as a strategy ──────────────────────────────
+learned = LearnedStrategy.from_pipeline(primary_pipeline)
+# ── Stage 2: secondary meta-labeling model ───────────────────────────────────
+secondary_pipeline = ModelDevelopmentPipeline(
+    strategy=learned,                 # calls generate_signals() for side
+
+### Training the Secondary Model
+The secondary model faces a class imbalance problem that the primary model does not. In the primary stage, the label distribution across {-1, 0, +1} is roughly uniform. In the secondary stage, the label is binary: {0 = skip, 1 = take}.
+    "n_jobs": -1,
+    "random_state": 42,
+}
+```
+- Bollinger / regime features (blue): *bb\_bw\_regime*, *BBB*, *BBP*, *bb\_bw\_mom*, *is\_widening\_bb*, and *prev\_signal* collectively account for the largest share of impurity reduction. This confirms that the bandwidth dimension is the primary discriminant between high-quality and low-quality band touches.
+- Trend and context features (grey): *ADX\_14*, *DMP\_14*, *DMN\_14*, *RSI\_14*, *H1\_vol*, and *spread* contribute materially but rank below the band-specific features.
+The dominance of *bb\_bw\_regime* over *ADX\_14* is worth noting. Both features attempt to identify trending regimes, but they use different information. ADX captures directional momentum; bandwidth captures volatility expansion. Neither is sufficient alone; together they allow the secondary model to distinguish a genuinely trending market (high ADX, expanding bandwidth) from a volatility spike in a ranging market (high bandwidth, low ADX) — a distinction that has different implications for mean-reversion trade quality.
+### From Probability to Position: Bet Sizing
+The secondary model outputs a probability *P(y=1 | x)* for each entry point. That probability is the input to *bet\_size\_probability*, which maps it to a signed position size in [-1, 1] using the procedure developed in [Blueprint Part 10](https://www.mql5.com/en/articles/21824 "Bet Sizing for Financial Machine Learning"): compute a z-score via the normal percent-point function, pass through the normal CDF, and rescale to [-1, 1]. Concurrency correction and step discretization prevent micro-adjustments and cap total exposure during periods of dense signal generation.
+# meta_probs: secondary model output, shape (n_events,)
+meta_probs = secondary_pipeline.best_model.predict_proba(X_new)[:, 1]
+sides = events.loc[X_new.index, "side"]   # primary direction, +1 or -1
+### MQL5 Deployment Architecture
+The MQL5 deployment uses the same two-EA signal-bus architecture introduced in [Part 1](https://www.mql5.com/en/articles/22274 "Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades"). The producer EA, *BBMetaLabelingEA*, computes features from bar data, runs the ONNX meta-labeler, and writes the output to a CSV signal file in *Common\Files\*. The consumer EA, *BetSizingEA\_BBMetaLabel*, polls a shared global variable for new signals, reads the CSV, and translates the meta-probability into a position adjustment.
+- Producer EA (BBMetaLabelingEA): On each new bar, *ComputeFeatures()* populates a fixed-length *float[]* array in the order matching the Python training pipeline's *FEATURE\_ORDER*. *RunInference()* calls *OnnxRun()* and reads *output\_data[0][1]* as *meta\_prob*. *WriteSignal()* appends one row to the CSV and increments *GV\_SIGNAL\_COUNT*.
+- Consumer EA (BetSizingEA\_BBMetaLabel): On each tick, *OnTick()* compares the current *GV\_SIGNAL\_COUNT* against its cached value. On change, *ReadSignal()* parses the latest CSV row. If *meta\_prob* exceeds *inp\_threshold* (default 0.55), *BetSizeProbability()* computes the position size; *AdjustPosition()* executes via *CTrade*.
+#### Feature Computation in MQL5
+The feature order in *ComputeFeatures()* must match *FEATURE\_ORDER* in the Python training script exactly. A mismatch of any single column produces silent, incorrect predictions — the ONNX graph has no column names, only positional indices. The canonical order for this pipeline is defined in *BBMetaLabelingEA.mq5* as a compile-time constant:
+#define FEATURE_COUNT 12
+
+//--- Feature index constants — must match Python FEATURE_ORDER exactly
+   F_IS_WIDE     = 4,   // Bandwidth widening flag (0/1)
+   F_ADX         = 5,   // ADX(14)
+   F_DMP         = 6,   // DM+(14)
+   F_DMN         = 7,   // DM-(14)
+Each feature is computed from existing indicator handles initialized in *OnInit()*. The bandwidth regime flag requires a threshold value derived from the training data, which must be saved at training time and embedded as a compile-time constant or loaded from a separate configuration file in *Common\Files\*. The default threshold (the 75th percentile of *BBB* over the training window) is exported by the Python pipeline alongside the ONNX model, so that the MQL5 flag matches the *bw\_threshold* the model was trained on.
+#### ONNX Inference Pattern
+The scaler is embedded in the ONNX graph by *skl2onnx*'s pipeline conversion. *OnnxRun()* receives raw, unscaled feature values; the graph's first operation normalizes them internally. The input tensor is *float* (32-bit), not *double*: every feature must be explicitly cast with *(float)* before being written to *input\_data[0][i]*.
+   out_prob = (double)output_data[0][1];   // P(class = 1) = P(take signal)
+   return(true);
+  }
+#### Signal Bus and Position Adjustment
+The CSV signal file follows the naming convention from the architecture established in Part 1: *<SYMBOL>\_<BarType>\_<Timeframe>\_signals.csv*. For a time-bar EA on EUR/USD H1, that is *EURUSD\_time\_H1\_signals.csv*. Both EAs open this file with *FILE\_READ | FILE\_CSV | FILE\_COMMON*, which resolves the path relative to the MetaTrader 5 terminal's shared *Common\Files\* directory and makes it accessible to the Python pipeline as well.
+In MQL5, *BetSizeProbability()* replicates the Python transform: *z = Φ⁻¹(meta prob)*, then *signal = 2Φ(z) - 1*, and rounds to the configured step. Both step size and acceptance threshold are input parameters.
+### Results
+Figure 5 shows an illustrative outcome of applying the meta-labeling filter. These results are generated from synthetic data and are included to demonstrate the pipeline's structure rather than to make empirical claims about EUR/USD performance.
+The trade-off between precision and coverage is the central operational question in meta-labeling. A higher threshold (eg, 0.65 instead of 0.55) increases precision but reduces coverage. Fewer accepted signals reduce both expected P&L and the sample size for inference. Step-discretized bet sizing mitigates this by allocating smaller positions to borderline signals.
+### Conclusion
+Bollinger Band mean-reversion signals are not uniformly low quality in trending markets — they are systematically low quality there in a way that a secondary model can learn to detect. The bandwidth dimension is the key: *bb\_bw\_regime* and *BBB* together provide a diagnostic that the primary signal generator cannot self-apply, and the secondary model can use this information to filter out the predictable failure cluster without discarding the high-quality ranging-market signals.
+Three implementation details determine whether this pipeline works correctly in practice. First, the *.shift()* call in *create\_bollinger\_features* is mandatory; omitting it introduces look-ahead bias that inflates cross-validation scores but produces losses in live trading. Second, *is\_primary=False* must be set explicitly in the secondary pipeline; without it, the rolling meta-features are not generated and the secondary model trains on a smaller, less informative feature set. Third, the bandwidth quantile threshold used in *bb\_bw\_regime* must be computed on the training window alone; computing it on the full dataset makes it a look-ahead feature, even though it appears static.
+
+The next article in this series applies the same framework to MACD divergence signals, which present a different challenge: the primary signal is rare and the secondary model must learn to distinguish genuine momentum shifts from noise within an already sparse signal set.
+### Attached Files
+|  | File | Module / Location | Role in this article |
+| --- | --- | --- | --- |
+| 1. | *bollinger\_features.py* | *afml.strategies* | Implements *create\_bollinger\_features()*. Produces the 12-feature matrix used by both the primary and secondary pipelines. The final *.shift().dropna()* prevents look-ahead bias. |
+| 2. | *trading\_strategies.py* | *afml.strategies* | Contains *BollingerStrategy*. Generates primary signals using TA-Lib *BBANDS*: *+1* at lower-band touch, *-1* at upper-band touch. |
+| 3. | *learned\_strategy.py* | *afml.strategies* | Implements *LearnedStrategy*. Wraps the fitted primary pipeline so *generate\_signals()* can be called at Stage 2 label-generation time. |
+We build a rolling price channel by fitting the 0.1, 0.5 and 0.9 conditional quantile lines via IRLS with pinball loss, packaged as a reusable class and two MetaTrader 5 indicators. We verify in-sample coverage, examine quantile crossing, and compare the channel width with ATR, Bollinger and regression widths on matched horizons. Tests in the Strategy Tester show the edges are descriptive, while the normalized width works as a volatility/regime feature.
+![Larry Williams Market Secrets (Part 16): Detecting and Trading the Oops Gap Reversal Pattern](https://c.mql5.com/2/243/21741-larry-williams-market-secrets-logo.png)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Bollinger Band mean-reversion signals are not uniformly low quality in trending markets — they are systematically low quality there in a way that a secondary model can learn to detect. The bandwidth dimension is the key: *bb\_bw\_regime* and *BBB* together provide a diagnostic that the primary signal generator cannot self-apply, and the secondary model can use this information to filter out the predictable failure cluster without discarding the high-quality ranging-market signals.
+
+Three implementation details determine whether this pipeline works correctly in practice. First, the *.shift()* call in *create\_bollinger\_features* is mandatory; omitting it introduces look-ahead bias that inflates cross-validation scores but produces losses in live trading. Second, *is\_primary=False* must be set explicitly in the secondary pipeline; without it, the rolling meta-features are not generated and the secondary model trains on a smaller, less informative feature set. Third, the bandwidth quantile threshold used in *bb\_bw\_regime* must be computed on the training window alone; computing it on the full dataset makes it a look-ahead feature, even though it appears static.
+
+The next article in this series applies the same framework to MACD divergence signals, which present a different challenge: the primary signal is rare and the secondary model must learn to distinguish genuine momentum shifts from noise within an already sparse signal set.
+
+### Attached Files
+
+|  | File | Module / Location | Role in this article |
+| --- | --- | --- | --- |
+| 1. | *bollinger\_features.py* | *afml.strategies* | Implements *create\_bollinger\_features()*. Produces the 12-feature matrix used by both the primary and secondary pipelines. The final *.shift().dropna()* prevents look-ahead bias. |
+| 2. | *trading\_strategies.py* | *afml.strategies* | Contains *BollingerStrategy*. Generates primary signals using TA-Lib *BBANDS*: *+1* at lower-band touch, *-1* at upper-band touch. |
+| 3. | *learned\_strategy.py* | *afml.strategies* | Implements *LearnedStrategy*. Wraps the fitted primary pipeline so *generate\_signals()* can be called at Stage 2 label-generation time. |
+| 4. | *BBMetaLabelingEA.mq5* | *Experts\MetaLabeling\* | Producer EA. Computes 12 features from indicator handles, runs ONNX inference, and writes signals to *EURUSD\_time\_H1\_signals.csv*. |
+| 5. | *BetSizingEA\_BBMetaLabel.mq5* | *Experts\MetaLabeling\* | Consumer EA. Polls *GV\_SIGNAL\_COUNT*, reads the CSV signal bus, applies *BetSizeProbability()*, and adjusts positions via *CTrade*. |
+| 6. | *model\_development.py* | *afml.production* | Central pipeline. The *is\_primary=False* flag activates meta-labeling mode: side predictions from *LearnedStrategy*, rolling meta-features, and {0, 1} label generation. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22755.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/22755/MQL5.zip "Download MQL5.zip")
+(22.64 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![From Novice to Expert: Candlestick Momentum Confirmation for Classic Crossover Strategies](https://c.mql5.com/2/245/23620-from-novice-to-expert-candlestick-logo.png)
+[From Novice to Expert: Candlestick Momentum Confirmation for Classic Crossover Strategies](https://www.mql5.com/en/articles/23620)
+
+In this article, we refine a moving average crossover strategy with a momentum candle filter and an immediate retracement bar confirmation. When both conditions are met, a pending stop order is placed using a pivot-based stop loss and a 2R take profit. The complete MQL5 Expert Advisor code, finite-state-machine logic, and chart annotations are detailed.
+
+![Implementing a Daily Loss Limit and Drawdown Circuit Breaker in MQL5](https://c.mql5.com/2/244/23732-implementing-a-daily-loss-limit-logo.png)
+[Implementing a Daily Loss Limit and Drawdown Circuit Breaker in MQL5](https://www.mql5.com/en/articles/23732)
+
+This article presents a circuit breaker for MQL5 that monitors combined daily P&L (realized plus floating) on every tick and compares it to a configured loss limit. On breach, it closes positions, cancels pending orders, and activates a HALTED state that blocks further order submission in the EA until server‑time midnight. The package provides a chart dashboard, a demo Expert Advisor, a verification script, and notes on extending the halt signal across EAs.
+
+![Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares](https://c.mql5.com/2/246/23719-distribution-free-price-channels-logo.png)
+[Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares](https://www.mql5.com/en/articles/23719)
+
+We build a rolling price channel by fitting the 0.1, 0.5 and 0.9 conditional quantile lines via IRLS with pinball loss, packaged as a reusable class and two MetaTrader 5 indicators. We verify in-sample coverage, examine quantile crossing, and compare the channel width with ATR, Bollinger and regression widths on matched horizons. Tests in the Strategy Tester show the edges are descriptive, while the normalized width works as a volatility/regime feature.
+
+![Larry Williams Market Secrets (Part 16): Detecting and Trading the Oops Gap Reversal Pattern](https://c.mql5.com/2/243/21741-larry-williams-market-secrets-logo.png)
+[Larry Williams Market Secrets (Part 16): Detecting and Trading the Oops Gap Reversal Pattern](https://www.mql5.com/en/articles/21741)
+
+Learn how to build an MQL5 Expert Advisor that detects and trades Larry Williams’ Oops Gap Reversal pattern using objective gap rules and later-bar confirmation. The EA tracks setup expiration, prepares stop-loss and take-profit levels, supports manual or risk-based position sizing, executes market orders, and is evaluated through historical testing.
+
+[![](https://www.mql5.com/ff/sh/jup0jccfs9655z9z2/01.png)
+
+Learn to create your own robots
+Read our book "MQL5 Programming for Traders"
+Begin](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/book%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.algobook%26utm_content=visit.page%26utm_campaign=algobook.promo.04.2024&a=rsxjstxkzbrlgjjrxaglpezpvrjflnvw&s=7224440013c3dbc50ba9cc078cd015fabca36df446b8e75028d6b30234663872&uid=&ref=https://www.mql5.com/en/articles/22755&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6343012624581134363)

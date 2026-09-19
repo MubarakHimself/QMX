@@ -1,0 +1,40 @@
+path,why-relevant,confidence,type,in-repo-only
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-15_unbounded-market-intelligence\OPERATING_LINE.md,Session operating truth for this recovery run (MIS consumers; SQS=Spread Quality Sensor; V1 labelers; regime_classifier_v1 design story; physics not the centre),high,operating-note,yes
+C:\Users\Mubarak\Desktop\QMX\docs\glossary.md,Ratified definitions: MIS eight-labeler catalog (DEC-0262); signal snapshot; shadow-lane seam; SQS + SQS baseline; candidate labeler; session_handover_buffer (not literal changeover),high,ratified-glossary,yes
+C:\Users\Mubarak\Desktop\QMX\docs\changelog.md,DEC-0262 veto-round: eight labelers named; Kronos/HMM/BOCPD/MS-GARCH unauthorized; MIS training last node epic; GAP-0051 catalog note,high,ratified-changelog,yes
+C:\Users\Mubarak\Desktop\QMX\docs\gap-report.md,GAP-0051 MIS training/shadow deferred; GAP-0043 SQS V1 ratio formula; GAP-0042 protection windows incl. session_handover_buffer; DEC-0073 dead Snapshot Quality reading of SQS,high,ratified-gaps,yes
+C:\Users\Mubarak\Desktop\QMX\docs\components\trading-node.md,TN-19 MIS seam: compute-once signal snapshot; Book door+KSA only; shadow_composition_fp; SQS inside snapshot only; no trained model in V1,high,ratified-component,yes
+C:\Users\Mubarak\Desktop\QMX\docs\decisions\ADR-0019-trading-node.md,MIS training last epic; labeler catalog restated; recovered candidates unauthorized,high,ratified-adr,yes
+C:\Users\Mubarak\Desktop\QMX\docs\constitution.md,L23 SQS=Spread Quality Sensor distinct from news,high,ratified-constitution,yes
+C:\Users\Mubarak\Desktop\QMX\docs\AGENTS.md,Ratified node content pointer; GAP-0051 deferred; DEC-0262 placement/MIS catalog,high,ratified-agents,yes
+C:\Users\Mubarak\Desktop\QMX\docs\contracts\ct-31-control-window.yaml,News / daily_dead_zone / session_handover_buffer window kinds (calendar changeover analogue),high,ratified-contract,yes
+C:\Users\Mubarak\Desktop\QMX\docs\registry\variables.yaml,session_handover_buffer_width/anchor; SQS-related registry rows referenced by risk/node,high,ratified-registry,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\08-mis-ml-regime-models.md,Prior-art survey: five regime families; look-ahead trap; LightGBM footprint; shadow promotion_state; MarketView draft; risk-filter not alpha,high,research-prior-art,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-09_mql5-mis-regime-notes.md,MQL5 method notes: regime/vol/chop/BOCPD/HMM/GARCH/Hurst/entropy; MIS vs SQS vs bot placement; candidate primitives,high,research-mql5-miner-a,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-09_mql5-mis-scalp-notes.md,MQL5 scalp/microstructure: spread sensors; session boxes; news windows; exec_ok; SQS-block vs MIS-label split,high,research-mql5-miner-b,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-09_mis-scalping-ideation.md,Synthesis of ratified MIS vs GitBook recovered fields vs idea families; Epic 26/30 split; class-vocabulary conflicts,high,research-ideation,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\09-experimentation-search-overfitting.md,Overfitting arithmetic; Optuna/arch SPA; relevant to regime search discipline not MIS runtime,medium,research-adjacent,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\10-macro-micro-analysis-data.md,Macro/micro inputs; spread as highest-value micro metric; two-timestamp PIT rule for MIS-adjacent features,medium,research-adjacent,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\00-qmf-synthesis-module-map.md,Maps qmf.mis MarketView; causality filtered/predicted only; synthesizes file 08,medium,research-synthesis,yes
+C:\Users\Mubarak\Desktop\QMX\archive\recovery\trading-node-delta\trading-node-delta.md,Delta register: MIS-Live/Archive; SQS Spread Quality Sensor K-38; protection funnel; R-08 snapshot_quality_score anti-pattern; C-01 consumer conflict,high,archive-recovery,yes
+C:\Users\Mubarak\Desktop\QMX\archive\recovery\trading-node-delta\recovery-lineage-addendum.md,SQS formula candidate historical_avg/live; reject snapshot-quality aggregate as SQS,high,archive-recovery,yes
+C:\Users\Mubarak\Desktop\QMX\archive\recovery\trading-node-delta\restart-handoff.md,Restart constraints: MIS informs; SQS=Spread Quality Sensor; open MIS-consumer question,high,archive-recovery,yes
+C:\Users\Mubarak\Desktop\QMX\archive\recovery\trading-node-delta\work\gitbook-baseline.md,Recovered CT-MIS-01 field inventory: spread_state normal|elevated|extreme; optional regime trend|range|chaos,high,archive-gitbook-baseline,yes
+C:\Users\Mubarak\Desktop\QMX\archive\recovery\trading-node-delta\work\bmad-supplement.md,BMAD story notes on regime_classifier_v1 degradation and snapshot_quality_score_v1 (semantic drift),medium,archive-bmad-supplement,yes
+C:\Users\Mubarak\Desktop\QMX\archive\trading-node.txt,Operator dictation: MIS training last; Kronos/shadow; SQS; MIS assembler never existed,medium,archive-transcript,yes
+C:\Users\Mubarak\Desktop\QMX\tracker\trading-node-notes.md,Cross-session ledger: SQS V1 ratio adopted; MIS senses→KSA; MIS models last epic; Kronos unauthorized; MIS assembler dead name,high,tracker,yes
+C:\Users\Mubarak\Desktop\QMX\tracker\map.md,Early MIS as ML ensembler; Kronos+BOCPD candidates; SQS candidate formula note (superseded by later rulings),medium,tracker,yes
+C:\Users\Mubarak\Desktop\QMX\_docwork\gaps.yaml,GAP-0051 catalog_note with eight labelers verbatim,high,docwork-gap,yes
+C:\Users\Mubarak\Desktop\QMX\_docwork\extractions.yaml,EXT for DEC-0262 MIS catalog and training script shape,high,docwork-extraction,yes
+C:\Users\Mubarak\Desktop\QMX\_docwork\ledger.yaml,DEC-0262 ledger statement on labeler catalog and placements,high,docwork-ledger,yes
+C:\Users\Mubarak\Desktop\QMX\_docwork\analysis\cross-source-reconciliation.md,MIS node-owned not qmf-mis; SQS vs snapshot-quality correction,high,docwork-analysis,yes
+C:\Users\Mubarak\Desktop\QMX\_docwork\harvest\SRC-02-extractions.yaml,Harvest: SQS vocabulary; Kronos/BOCPD; book-specific MIS models open question,medium,docwork-harvest,yes
+C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\epics.md,Epic 26 rule-based+fitted+shadow; Epic 30 design/train/shadow/recertify regime_classifier_v1 (family unchosen in epics text),high,planning-epics,yes
+C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19\trading-node-corpus-brief.md,CT-MIS-01 recovered payload restated from gitbook baseline,medium,planning-corpus-brief,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-15_unbounded-market-intelligence\09_CORPUS_INVENTORY.csv,Local MQL5 inventory row for Lyapunov article 15332 (corpus title only; not QMX design),low,corpus-inventory-hit,yes
+C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-15_unbounded-market-intelligence\tools\index_corpus.py,Search keyword list includes Ising/Lyapunov/econophysics (tool intent only; not recovered design),low,tool-keyword-list,yes
+ABSENT-IN-REPO: Ising,No hits for \bIsing\b as design content under QMX (only future search keyword in index_corpus.py),high,absence,yes
+ABSENT-IN-REPO: physics_multiplier,No hits for physics_multiplier anywhere under QMX,high,absence,yes
+ABSENT-IN-REPO: Lyapunov (as QMX design),Only MQL5 article title in 09_CORPUS_INVENTORY.csv and search keyword; no QMX labeler/model using Lyapunov,high,absence,yes
+ABSENT-IN-REPO: literal changeover,No token changeover as MIS/regime term; closest ratified term is session_handover_buffer / BOCPD break,high,absence,yes
+ABSENT-IN-REPO: lightgbm-multiclass quiet|normal|elevated|stressed (outside OPERATING_LINE),Claim appears only in OPERATING_LINE.md; ratified docs still say regime_classifier_v1 has no ratified family; no other in-repo path found,medium,absence-vs-operating-claim,yes

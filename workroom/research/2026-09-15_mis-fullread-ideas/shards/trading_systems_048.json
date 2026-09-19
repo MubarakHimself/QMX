@@ -1,0 +1,57 @@
+{
+  "shard_id": "trading_systems_048",
+  "section": "Trading systems",
+  "n": 5,
+  "series_in_shard": [
+    "neural networks are easy",
+    "news trading made easy",
+    "overcoming the limitation of machine learning"
+  ],
+  "articles": [
+    {
+      "id": 13551,
+      "title": "Neural networks are easy (Part 59): Dichotomy of Control (DoC)",
+      "section": "Trading systems",
+      "series_title": "Neural networks are easy (): Dichotomy of Control (DoC)",
+      "series_key": "neural networks are easy",
+      "series_part": 59,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13551.md"
+    },
+    {
+      "id": 15878,
+      "title": "News Trading Made Easy (Part 4): Performance Enhancement",
+      "section": "Trading systems",
+      "series_title": "News Trading Made Easy (): Performance Enhancement",
+      "series_key": "news trading made easy",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15878.md"
+    },
+    {
+      "id": 16169,
+      "title": "News Trading Made Easy (Part 5): Performing Trades (II)",
+      "section": "Trading systems",
+      "series_title": "News Trading Made Easy (): Performing Trades (II)",
+      "series_key": "news trading made easy",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16169.md"
+    },
+    {
+      "id": 16170,
+      "title": "News Trading Made Easy (Part 6): Performing Trades (III)",
+      "section": "Trading systems",
+      "series_title": "News Trading Made Easy (): Performing Trades (III)",
+      "series_key": "news trading made easy",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16170.md"
+    },
+    {
+      "id": 20317,
+      "title": "Overcoming The Limitation of Machine Learning (Part 8): Nonparametric Strategy Selection",
+      "section": "Trading systems",
+      "series_title": "Overcoming The Limitation of Machine Learning (): Nonparametric Strategy Selection",
+      "series_key": "overcoming the limitation of machine learning",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20317.md"
+    }
+  ]
+}

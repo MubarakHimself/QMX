@@ -1063,3 +1063,187 @@ features:
     size: multi-pass
     status: planned
     notes: "May trail FEAT-0047; not required for slice 0. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0051
+    name: "ContributionHit concatenate + pin/tombstone"
+    scope: >-
+      In: extend federated discovery with ContributionHit from live
+      published_contributions() (DEC-0415, DEC-0449); pin tuple
+      (qualified_id, package_version, availability_revision); invoke
+      revalidates pin; missing/disabled/uninstalled yields typed
+      unavailable or tombstone, never silent resolve to another version
+      (DEC-0415, DEC-0443); DTO owner COMP-QMA-WIRE additive CT-40
+      family; no new CT number; no new COMP (DEC-0414, DEC-0446);
+      hypotheses stay off the facade; occupancy none. Out: fp1 for
+      contributions; registry kind for contributions; hit_class strats;
+      qml_candidate; chrome (GAP-0081). Done means UI/agent search can
+      cite ContributionHit with honest pin/tombstone behaviour;
+      implementation authorization still arrives only through the
+      factory pipeline.
+    decisions: [DEC-0415, DEC-0449, DEC-0414, DEC-0446]
+    components: [COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0050
+        reason: "ContributionHit extends the federated Knowledge+Artifact discovery DTO FEAT-0050 lands; do not fork a second facade (DEC-0415, DEC-0449)"
+      - id: FEAT-0041
+        reason: "the hit DTO rides the additive CT-40 wire family FEAT-0041 lands (DEC-0415, DEC-0446)"
+      - id: FEAT-0046
+        reason: "pack contributes expand to ContributionHit at enable; desk packs FEAT-0046 lands are the contribution publishers (DEC-0415, DEC-0443)"
+    size: multi-pass
+    status: planned
+    notes: "First epic after this documentation-factory pass. Do not launch from the YAML mint alone. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0052
+    name: "Operation descriptor + InvocationEnvelope + GrantRecord"
+    scope: >-
+      In: every public operation publishes a versioned descriptor
+      (DEC-0416); every public call carries InvocationEnvelope with
+      effect-specific idempotency (DEC-0437); host grants structured
+      GrantRecords (immutable after mint); manifests request, host
+      grants; transport never bypasses the envelope; no new COMP or CT
+      (DEC-0446). Out: untyped execute(anything); widening grants on
+      upgrade; new CT number. Done means descriptors and envelopes are
+      specified on wire/core; implementation authorization still arrives
+      only through the factory pipeline.
+    decisions: [DEC-0416, DEC-0437, DEC-0446]
+    components: [COMP-QMA-CORE, COMP-QMA-WIRE]
+    blocked_by:
+      - id: FEAT-0041
+        reason: "InvocationEnvelope and GrantRecord ride COMP-QMA-WIRE / CT-40 family FEAT-0041 lands (DEC-0416, DEC-0437)"
+      - id: FEAT-0040
+        reason: "operation descriptors and permission requests extend COMP-QMA-CORE ontology/ports FEAT-0040 lands (DEC-0416)"
+    size: multi-pass
+    status: planned
+    notes: "Cheap-veto A3 covers full field catalogue. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0053
+    name: "product_session + CAS + grant intersection"
+    scope: >-
+      In: product_session journal projection with psess: ids distinct
+      from QMA Session sess: (DEC-0421); ProductSessionProfile
+      authoring|app-use immutable at create; granted_ops store grant_ids
+      not bare op strings; select/grant mutations bump context_revision
+      under CAS (DEC-0442); copilot tool availability is intersection of
+      published ContributionHits, host grants, product_session
+      GrantRecords, and health (DEC-0422); app-use may mint change-request
+      only — cannot edit package source or elevate grants; tab change
+      writes nothing. Out: tab-owned context; app-use applying
+      implementation edits; new store class. Done means psess: CAS and
+      grant intersection are specified; implementation authorization
+      still arrives only through the factory pipeline.
+    decisions: [DEC-0421, DEC-0442, DEC-0422, DEC-0446]
+    components: [COMP-QMA-DAEMON, COMP-QMA-WIRE, COMP-QMA-CORE]
+    blocked_by:
+      - id: FEAT-0052
+        reason: "product_session.granted_ops references GrantRecords FEAT-0052 lands; CAS commands assume InvocationEnvelope identity (DEC-0421, DEC-0437, DEC-0442)"
+      - id: FEAT-0042
+        reason: "product_session is a journal-projected daemon record beside existing QMA projections FEAT-0042 lands; not a new store class (DEC-0421, DEC-0429)"
+    size: multi-pass
+    status: planned
+    notes: "Feeds from GAP-0093. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0054
+    name: "Graph Template DAG validator"
+    scope: >-
+      In: validate_graph_template_topology refuses self-loops and any
+      directed cycle (DEC-0419); Graph Template is authored versioned
+      stateless DAG with compile identity (qualified_id, version)
+      (DEC-0417); Task Graph is one Mission execution projection with
+      edges from,to,mapping (DEC-0420); Stage 0 graph is none of these
+      (DEC-0411 honored). Out: template cycles; fingerprinting templates
+      onto the Artifact rail; Board layout as a durable row. Done means
+      registration refuses illegal topologies; implementation
+      authorization still arrives only through the factory pipeline.
+    decisions: [DEC-0419, DEC-0417, DEC-0420, DEC-0446]
+    components: [COMP-QMA-DAEMON, COMP-QMA-CORE]
+    blocked_by:
+      - id: FEAT-0042
+        reason: "Graph Template registration and Mission Compiler live on the daemon/core procedure runtime FEAT-0042 lands (DEC-0420)"
+      - id: FEAT-0037
+        reason: "reusable procedures / Graph Templates surface FEAT-0037 lands is the topology this validator gates (DEC-0417, DEC-0419)"
+    size: multi-pass
+    status: planned
+    notes: "Closes hole under DEC-0312. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0055
+    name: "Task Graph edges + outbox + JobHandle parent vocab"
+    scope: >-
+      In: persist task_graph_state including edges and AD-26 outbox in
+      daemon sqlite (DEC-0420, DEC-0429, DEC-0439); completing
+      predecessor and making successors ready is one transaction plus
+      outbox; JobHandle reuses QMA AD-17 vocab exactly — never succeeded
+      or awaiting_approval on a handle (DEC-0439); join algebra per
+      mapping edges; no second scheduler. Out: guessed join results; a
+      second job dialect; dropping edges. Done means durable edges and
+      outbox recovery are specified; implementation authorization still
+      arrives only through the factory pipeline.
+    decisions: [DEC-0420, DEC-0439, DEC-0429, DEC-0446]
+    components: [COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0054
+        reason: "durable Task Graph edges assume Graph Template DAG validity FEAT-0054 lands (DEC-0419, DEC-0420)"
+      - id: FEAT-0042
+        reason: "task_graph_state and outbox extend the existing daemon sqlite projections FEAT-0042 lands (DEC-0429, DEC-0439)"
+      - id: FEAT-0044
+        reason: "JobHandle parent vocabulary and environment_lease occupancy law FEAT-0044 lands must stay exact (DEC-0439)"
+      - id: FEAT-0033
+        reason: "coordinated QMB door occupancy and ExperimentSpec lineage FEAT-0033 lands remain distinct from Task Graph control-flow edges (DEC-0420)"
+    size: multi-pass
+    status: planned
+    notes: "Feeds from GAP-0095. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0056
+    name: "Four proofs as thin fixtures (Book regression; ATC simulate; recipe-def; app-use change-request; pack export)"
+    scope: >-
+      In: thin fixtures proving (1) Book/BMS default path regression and
+      dummy Book INVALID_INPUT (DEC-0424, DEC-0448); (2) ATC simulate with
+      zero Book keys and complete PolicyPair (DEC-0436); (3)
+      RecipeDefinition identity distinct from release fp1 (DEC-0444);
+      (4) app-use change-request staging without self-apply (DEC-0421,
+      DEC-0442); (5) pack export scanner oracle and pin/invoke honesty
+      (DEC-0443). Out: inventing harness-engineering product surface;
+      filling GAP-0081 chrome; claiming e2e adoption. Done means the
+      fixtures are specified for factory stories; implementation
+      authorization still arrives only through the factory pipeline.
+    decisions: [DEC-0424, DEC-0436, DEC-0444, DEC-0421, DEC-0442, DEC-0443, DEC-0448]
+    components: [COMP-QMF-RISK, COMP-QMB, COMP-QML, COMP-QMN, COMP-QMA-DAEMON, COMP-QMA-WIRE]
+    blocked_by:
+      - id: FEAT-0051
+        reason: "pack pin/invoke and ContributionHit tombstone behaviour FEAT-0051 lands are required for honest export/invoke fixtures (DEC-0443)"
+      - id: FEAT-0052
+        reason: "ATC/app-use fixtures invoke through Operation descriptors and GrantRecords FEAT-0052 lands (DEC-0416, DEC-0437)"
+      - id: FEAT-0053
+        reason: "app-use change-request completeness rides product_session CAS FEAT-0053 lands (DEC-0421, DEC-0442)"
+      - id: FEAT-0054
+        reason: "workflow-shaped ATC authoring fixtures assume DAG-valid Graph Templates FEAT-0054 lands (DEC-0419)"
+      - id: FEAT-0055
+        reason: "durable procedure steps and outbox FEAT-0055 lands back multi-step proof journeys (DEC-0439)"
+      - id: FEAT-0029
+        reason: "Book/BMS and risk contract surfaces FEAT-0029 lands are the default composition under regression (DEC-0424, DEC-0448)"
+      - id: FEAT-0031
+        reason: "QMN seat/fencing after paper+L17 FEAT-0031 lands is required for ATC live-path honesty even when this feature stays at simulate (DEC-0436, DEC-0438)"
+    size: multi-pass
+    status: planned
+    notes: "Feeds from GAP-0097. Implementation authorization factory-pipeline-only."
+
+  - id: FEAT-0057
+    name: "Safety fixtures (stream cancel+cutover; outbox restart; UNKNOWN blocks handover; stale predecessor refused; grant refuses other instance)"
+    scope: >-
+      In: at least two of: stream cancel+cutover with refcount (DEC-0441);
+      outbox crash recovery idempotent replay (DEC-0439); UNKNOWN blocks
+      handover / unknown-blocked terminal for attempt (DEC-0438);
+      stale predecessor restart refused (DEC-0438); grant refuses wrong
+      instance_id / config_revision (DEC-0437, DEC-0443). Out: inventing
+      readiness-dashboard chrome (GAP-0100); mutmut as architecture proof.
+      Done means safety fixtures are specified; implementation
+      authorization still arrives only through the factory pipeline.
+    decisions: [DEC-0438, DEC-0439, DEC-0441, DEC-0437, DEC-0443]
+    components: [COMP-QMN, COMP-QMA-DAEMON, COMP-QMB, COMP-QMA-WIRE]
+    blocked_by:
+      - id: FEAT-0055
+        reason: "outbox restart and JobHandle unknown/lease behaviour FEAT-0055 lands are prerequisites for durable safety fixtures (DEC-0439)"
+      - id: FEAT-0056
+        reason: "safety fixtures trail the four thin proof fixtures FEAT-0056 lands so failure modes are checked against the same envelopes (DEC-0437, DEC-0438)"
+    size: multi-pass
+    status: planned
+    notes: "Implementation authorization factory-pipeline-only."

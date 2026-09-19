@@ -1,0 +1,21 @@
+Read 12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md and the attached
+CODEX-CHALLENGE-HANDOFF.md plus ARCHITECTURE-CANDIDATE-MANIFEST.json.
+Perform the independent two-pass scenario and architecture challenge.
+Derive requirements-based cases BEFORE reading the proposed design,
+then test it against BDD-style behaviours, state/failure sequences,
+cross-app and cross-library interactions.
+
+Use CIS and as many useful subagents as available. No arbitrary
+case-count ceiling; report coverage and holes rather than cosmetic volume.
+
+Preserve the pinned candidate hashes and current repository.
+Do not implement or ratify the design. Return the challenge package
+for Grok (CODEX-CHALLENGE-RETURN.md and the files listed in section 7
+of 12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md).
+
+Treat mutmut as a test-strength principle, not a required run on the
+shared worktree. Windows mutation runs need WSL and a disposable copy.
+
+Candidate ID: qmx-workflows-arch-2026-09-18-a
+Implementation baseline: 270e992995c2378ca63cf6343254ef8140a8c97e
+Docs baseline: b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3

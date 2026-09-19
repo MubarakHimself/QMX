@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_009",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 14360,
+      "title": "Propensity score in causal inference",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14360.md"
+    },
+    {
+      "id": 14548,
+      "title": "Time series clustering in causal inference",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14548.md"
+    },
+    {
+      "id": 14703,
+      "title": "Overcoming ONNX Integration Challenges",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14703.md"
+    },
+    {
+      "id": 14846,
+      "title": "Statistical Arbitrage with predictions",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14846.md"
+    },
+    {
+      "id": 15160,
+      "title": "Reimagining Classic Strategies in Python: MA Crossovers",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15160.md"
+    },
+    {
+      "id": 15217,
+      "title": "Neural Networks in Trading: Piecewise Linear Representation of Time Series",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15217.md"
+    },
+    {
+      "id": 15255,
+      "title": "Neural Networks in Trading: Dual-Attention-Based Trend Prediction Model",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15255.md"
+    },
+    {
+      "id": 15290,
+      "title": "Neural Networks in Trading: Spatio-Temporal Neural Network (STNN)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15290.md"
+    },
+    {
+      "id": 15352,
+      "title": "Neural Networks in Trading: Reducing Memory Consumption with Adam-mini Optimization",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15352.md"
+    },
+    {
+      "id": 15356,
+      "title": "Creating a Dynamic Multi-Symbol, Multi-Period Relative Strength Indicator (RSI) Indicator Dashboard in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15356.md"
+    },
+    {
+      "id": 15392,
+      "title": "Neural Networks in Trading: Lightweight Models for Time Series Forecasting",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15392.md"
+    },
+    {
+      "id": 15451,
+      "title": "Neural Networks in Trading: Using Language Models for Time Series Forecasting",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15451.md"
+    }
+  ]
+}

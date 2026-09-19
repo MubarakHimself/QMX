@@ -1,0 +1,1048 @@
+---
+id: 719
+source_url: https://www.mql5.com/en/articles/719
+title: "Building an Automatic News Trader"
+author: ""
+author_url: 
+published: 2013-08-02T13:38Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# Building an Automatic News Trader
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 2 August 2013 at 09:38
+
+24 060
+[
+11](https://www.mql5.com/en/forum/13248 "Comments")
+
+[Deleted]
+
+### Introduction
+
+As [Investopedia](http://www.investopedia.com/terms/n/news-trader.asp "http://www.investopedia.com/terms/n/news-trader.asp") states, a news trader is "a trader or investor who makes trading or investing decisions based on news announcements". Indeed, economic reports such as a country's GDP, consumer confidence indexes and employment data of countries, amongst others, often produce significant movements in the currency markets. Have you ever attended a U.S. Non-Farm Payrolls release? If so, you already know that these reports may determine currencies' recent future and act as catalysts for trends reversals.
+
+Figure 1. [Newspapers B&W](https://www.flickr.com/photos/62693815@N03/6276688407/ "http://www.flickr.com/photos/62693815@N03/6276688407/"). Image distributed under a Creative Commons License on Flickr
+
+### 1. Let's Program Our EA
+
+**1.1. The Trading System's Idea**
+
+The idea behind this system is what we have discussed above. This sounds great, but how can we implement that proven fact in the programming world? Mainly we are relying on two MQL5 aspects. On the one hand, we are using Momentum indicator to measure the impact of the given set of news in a currency pair. On the other hand, we will work with MQL5 file functions to store our favorite news calendar in the filesystem. The chosen file format is CSV. We are going to program this robot under the object-oriented paradigm, of course, with the conceptual approach discussed in [Another MQL5 OOP class](https://www.mql5.com/en/articles/703). Our object-oriented design will load the CSV into the computer's memory so that the EA can make decisions based on such information.
+
+**1.2. The Robot's OOP Skeleton**
+
+From now on we are conceiving our EAs from the point of view of
+concepts, as if they were living creatures. We are now OOP people, [do you remember?](https://www.mql5.com/en/articles/703)
+Thanks to this vision we can compose our Expert Advisor of several
+parts such as a brain, something that we call evolution, a set of
+indicators and a set of news. I will clarify all this below.
+
+```
+//+---------------------------------------------------------------------+
+//|                                               ExpertNewsWatcher.mq5 |
+//|                    Copyright © 2013, laplacianlab, Jordi Bassagañas | 
+//+---------------------------------------------------------------------+
+
+#property copyright     "Copyright © 2013, laplacianlab. Jordi Bassagañas"
+#property link          "https://www.mql5.com/en/articles"
+#property version       "1.00"
+#property tester_file   "news_watcher.csv"  
+
+#include <..\Experts\NewsWatcher\CNewsWatcher.mqh>
+
+input ENUM_TIMEFRAMES   Period=PERIOD_M1;
+input int               StopLoss=400;
+input int               TakeProfit=600;
+input double            LotSize=0.01;
+input string            CsvFile="news_watcher.csv";
+ 
+MqlTick tick;
+CNewsWatcher* NW = new CNewsWatcher(StopLoss,TakeProfit,LotSize,CsvFile);
+
+int OnInit(void)
+  {
+   NW.Init();
+   NW.GetTechIndicators().GetMomentum().SetHandler(Symbol(), Period, 13, PRICE_CLOSE);
+   return(0);
+  }
+
+void OnDeinit(const int reason)
+  {
+   delete(NW);
+  }
+
+void OnTick()
+  {
+   SymbolInfoTick(_Symbol, tick);              
+   NW.GetTechIndicators().GetMomentum().UpdateBuffer(2);
+   NW.OnTick(tick.ask,tick.bid);
+  }
+//+------------------------------------------------------------------+
+```
+
+**CNewsWatcher** is the EA's main class. Let's have a look at the code.
+
+```
+//+---------------------------------------------------------------------+
+//|                                                    CNewsWatcher.mqh |
+//|                                  Copyright © 2013, Jordi Bassagañas |
+//+---------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+#include <Mine\Enums.mqh>
+#include <..\Experts\NewsWatcher\CBrain.mqh>
+#include <..\Experts\NewsWatcher\CEvolution.mqh>
+#include <..\Experts\NewsWatcher\CTechIndicators.mqh>
+//+---------------------------------------------------------------------+
+//| CNewsWatcher Class                                                  |
+//+---------------------------------------------------------------------+
+class CNewsWatcher
+  {
+protected:
+   //--- Custom types
+   CBrain               *m_brain;
+   CEvolution           *m_evolution;
+   CTechIndicators      *m_techIndicators; 
+   //--- MQL5 types
+   CTrade               *m_trade;
+   CPositionInfo        *m_positionInfo;
+public:
+   //--- Constructor and destructor methods
+                        CNewsWatcher(int stop_loss,int take_profit,double lot_size,string csv_file);
+                        ~CNewsWatcher(void);
+   //--- Getter methods
+   CBrain               *GetBrain(void);
+   CEvolution           *GetEvolution(void);
+   CTechIndicators      *GetTechIndicators(void);
+   CTrade               *GetTrade(void);
+   CPositionInfo        *GetPositionInfo(void);
+   //--- CNewsWatcher methods
+   bool                 Init();
+   void                 Deinit(void);
+   void                 OnTick(double ask,double bid);
+  };
+//+------------------------------------------------------------------+
+//| Constructor                                                      |
+//+------------------------------------------------------------------+
+CNewsWatcher::CNewsWatcher(int stop_loss,int take_profit,double lot_size, string csv_file)
+  {
+   m_brain=new CBrain(stop_loss,take_profit,lot_size,csv_file);
+   m_evolution=new CEvolution(DO_NOTHING);
+   m_techIndicators=new CTechIndicators;
+   m_trade=new CTrade();
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CNewsWatcher::~CNewsWatcher(void)
+  {
+   Deinit();
+  }
+//+------------------------------------------------------------------+
+//| GetBrain                                                         |
+//+------------------------------------------------------------------+
+CBrain *CNewsWatcher::GetBrain(void)
+  {
+   return m_brain;
+  }
+//+------------------------------------------------------------------+
+//| GetEvolution                                                     |
+//+------------------------------------------------------------------+
+CEvolution *CNewsWatcher::GetEvolution(void)
+  {
+   return m_evolution;
+  }
+//+------------------------------------------------------------------+
+//| GetTechIndicators                                                |
+//+------------------------------------------------------------------+
+CTechIndicators *CNewsWatcher::GetTechIndicators(void)
+  {
+   return m_techIndicators;
+  }  
+//+------------------------------------------------------------------+
+//| GetTrade                                                         |
+//+------------------------------------------------------------------+
+CTrade *CNewsWatcher::GetTrade(void)
+  {
+   return m_trade;
+  }
+//+------------------------------------------------------------------+
+//| GetPositionInfo                                                  |
+//+------------------------------------------------------------------+
+CPositionInfo *CNewsWatcher::GetPositionInfo(void)
+  {
+   return m_positionInfo;
+  }
+//+------------------------------------------------------------------------+
+//| CNewsWatcher OnTick                                                    |
+//| Checks momentum's turbulences around the time of the news release      |
+//+------------------------------------------------------------------------+
+void CNewsWatcher::OnTick(double ask,double bid)
+  {
+//--- are there some news to process?  
+   if(GetBrain().GetNewsContainer().GetCurrentIndex() < GetBrain().GetNewsContainer().GetTotal())
+   {     
+      double momentumBuffer[];
+      
+      GetTechIndicators().GetMomentum().GetBuffer(momentumBuffer, 2);
+      
+      //--- Number of seconds before the news releases. GMT +- timeWindow is the real time from which the robot starts 
+      //--- listening to the market. For instance, if there is a news release programmed at 13:00 GMT you can set TimeWindow 
+      //--- to 900 seconds so that the EA starts listening to the market fifteen minutes before that news release. 
+      int timeWindow=600;
+      
+      CNew *currentNew = GetBrain().GetNewsContainer().GetCurrentNew();      
+      int indexCurrentNew = GetBrain().GetNewsContainer().GetCurrentIndex();
+            
+      if(TimeGMT() >= currentNew.GetTimeRelease() + timeWindow)
+      {
+         GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         return;
+      }
+      
+      //--- is there any open position?
+      if(!m_positionInfo.Select(_Symbol))
+      {
+         //--- if there is no open position, we try to open one
+         bool timeHasCome = TimeGMT() >= currentNew.GetTimeRelease() - timeWindow && TimeGMT() <= currentNew.GetTimeRelease() + timeWindow;
+             
+         if(timeHasCome && momentumBuffer[0] > 100.10)
+         {
+            GetEvolution().SetStatus(SELL);
+            GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         }
+         else if(timeHasCome && momentumBuffer[0] < 99.90)
+         {
+            GetEvolution().SetStatus(BUY);
+            GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         }
+      }
+      //--- if there is an open position, we let it work the mathematical expectation
+      else 
+      {
+         GetEvolution().SetStatus(DO_NOTHING);         
+      }  
+      
+      double tp;
+      double sl; 
+
+      switch(GetEvolution().GetStatus())
+      {      
+         case BUY:
+            tp = ask + m_brain.GetTakeProfit() * _Point;
+            sl = bid - m_brain.GetStopLoss() * _Point;
+            GetTrade().PositionOpen(_Symbol,ORDER_TYPE_BUY,m_brain.GetSize(),ask,sl,tp);
+            break;
+
+         case SELL:
+            sl = ask + m_brain.GetStopLoss() * _Point;
+            tp = bid - m_brain.GetTakeProfit() * _Point;
+            GetTrade().PositionOpen(_Symbol,ORDER_TYPE_SELL,m_brain.GetSize(),bid,sl,tp);
+            break;
+
+         case DO_NOTHING:
+            // Nothing...
+            break;
+      }
+   }   
+//--- we exit when all the container's news have been processed
+   else return;
+  }
+//+------------------------------------------------------------------+
+//| CNewsWatcher initialization                                      |
+//+------------------------------------------------------------------+
+bool CNewsWatcher::Init(void)
+  {
+// Initialization logic here...
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| CNewsWatcher deinitialization                                    |
+//+------------------------------------------------------------------+
+void CNewsWatcher::Deinit(void)
+  {
+   delete(m_brain);
+   delete(m_evolution);
+   delete(m_techIndicators);
+   delete(m_trade);
+   Print("CNewsWatcher deinitialization performed!");
+   Print("Thank you for using this EA.");
+  }
+//+------------------------------------------------------------------+
+```
+
+For now, do not worry if you do not see things very clear, it is normal. First, you have to study all the parts of this Expert Advisor to understand how everything works. I recommend you first read superficially this article and then make a second and third deeper readings. Anyway, I will try to explain at this time some key parts of **CNewsWatcher**.
+
+The EA's most important part is of course the method **OnTick** where you will see that **CNewsWatcher** uses an OO news container to work. This piece, which can be seen as a real-world newspaper, contains the news that the EA user wants to trade.
+
+Note that we retrieve the news container like this:
+
+```
+GetBrain().GetNewsContainer();
+```
+
+And we retrieve the current news to be processed this way:
+
+```
+CNew *currentNew = GetBrain().GetNewsContainer().GetCurrentNew();  
+```
+
+This is done through **CBrain**. Remember that **CBrain** is an important central point in our object-oriented design containing those things needed so that the EA can properly operate, it is something like a read-only memory (ROM).
+
+```
+//+------------------------------------------------------------------+
+//|                                                       CBrain.mqh |
+//|                               Copyright © 2013, Jordi Bassagañas |
+//+------------------------------------------------------------------+
+#include <..\Experts\NewsWatcher\CNewsContainer.mqh>
+//+------------------------------------------------------------------+
+//| CBrain Class                                                     |
+//+------------------------------------------------------------------+
+class CBrain
+  {
+protected:
+   double               m_size;                 // The size of the positions
+   int                  m_stopLoss;             // Stop loss
+   int                  m_takeProfit;           // Take profit
+   CNewsContainer       *m_news_container;      // The news container
+
+public:
+   //--- Constructor and destructor methods
+                        CBrain(int stopLoss,int takeProfit,double size,string csv);
+                        ~CBrain(void);
+   //--- Getter methods
+   double               GetSize(void);
+   int                  GetStopLoss(void);
+   int                  GetTakeProfit(void);
+   CNewsContainer       *GetNewsContainer(void);
+   //--- Setter methods
+   void                 SetSize(double size);
+   void                 SetStopLoss(int stopLoss);
+   void                 SetTakeProfit(int takeProfit);
+   //--- CBrain specific methods
+   bool                 Init();
+   void                 Deinit(void);
+  };
+//+------------------------------------------------------------------+
+//| Constructor                                                      |
+//+------------------------------------------------------------------+
+CBrain::CBrain(int stopLoss,int takeProfit,double size,string csv)
+  {
+   m_size=size;
+   m_stopLoss=stopLoss;
+   m_takeProfit=takeProfit;
+   m_news_container=new CNewsContainer(csv);   
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CBrain::~CBrain(void)
+  {
+   Deinit();
+  }
+//+------------------------------------------------------------------+
+//| GetSize                                                          |
+//+------------------------------------------------------------------+
+double CBrain::GetSize(void)
+  {
+   return m_size;
+  }
+//+------------------------------------------------------------------+
+//| GetStopLoss                                                      |
+//+------------------------------------------------------------------+
+int CBrain::GetStopLoss(void)
+  {
+   return m_stopLoss;
+  }
+//+------------------------------------------------------------------+
+//| GetTakeProfit                                                    |
+//+------------------------------------------------------------------+
+int CBrain::GetTakeProfit(void)
+  {
+   return m_takeProfit;
+  }
+//+------------------------------------------------------------------+
+//| GetNewsContainer                                                 |
+//+------------------------------------------------------------------+
+CNewsContainer *CBrain::GetNewsContainer(void)
+  {
+   return m_news_container;
+  }
+//+------------------------------------------------------------------+
+//| SetSize                                                          |
+//+------------------------------------------------------------------+
+void CBrain::SetSize(double size)
+  {
+   m_size=size;
+  }
+//+------------------------------------------------------------------+
+//| SetStopLoss                                                      |
+//+------------------------------------------------------------------+
+void CBrain::SetStopLoss(int stopLoss)
+  {
+   m_stopLoss=stopLoss;
+  }
+//+------------------------------------------------------------------+
+//| SetTakeProfit                                                    |
+//+------------------------------------------------------------------+
+void CBrain::SetTakeProfit(int takeProfit)
+  {
+   m_takeProfit=takeProfit;
+  }
+//+------------------------------------------------------------------+
+//| CBrain initialization                                            |
+//+------------------------------------------------------------------+
+bool CBrain::Init(void)
+  {
+// Initialization logic here...
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| CBrain deinitialization                                          |
+//+------------------------------------------------------------------+
+void CBrain::Deinit(void)
+  {
+   delete(m_news_container);
+   Print("CBrain deinitialization performed!");
+  }
+//+------------------------------------------------------------------+
+```
+
+**CNewsWatcher** is basically reading one by one the news stored in the container (the newspaper). If at that time there is a strong acceleration in the price then it places an order in the market.
+
+Regarding the purchasing or selling of lots the robot is programmed in a reactive way. Let's say, when a strong upward movement occurs, the EA assumes that the price will retract and therefore sells. Similarly, when there is a strong downward movement the robot places a long position in the market thinking that the price will retrace in short. This can be improved, of course, in this article there is no space enough to develop a highly efficient automatic news trader, as said before, the goal is to give you the technical basics in order for you to continue advancing in your own developments.
+
+### Figure 2. [Robot on the Taff](https://www.flickr.com/photos/johngreenaway/3356358479/ "http://www.flickr.com/photos/johngreenaway/3356358479/"). Image distributed under a Creative Commons License on Flickr
+
+### 
+
+**1.3. An Object-Oriented Container for Technical Indicators**
+
+Once again, as we have decided to address our apps from the perspective of concepts, it is interesting to program our own object-oriented wrappers for technical indicators to adhere the new paradigm. Thus this piece of the puzzle fits much better with everything. Let's say that in this part of our development we take advantage to build something like an object-oriented framework in order for us to work more comfortably with that MQL5 stuff not very OO out of the box.   
+  
+At this point, it is interesting to note that there is the [MQL5 Standard Library](https://www.mql5.com/en/docs/standardlibrary). This library is designed to facilitate writing programs (indicators, scripts, experts) to end users, providing convenient access to most of MQL5 internal functions. In fact, in today's exercise we are using some Standard Library's functionality because, as it's been said, it is much more comfortable from the point of view of OO programming. A clear example is the news container that I'll explain a little later, we will use MQL5 class **CArrayObj** there to store in the computer's RAM our custom object-oriented news of complex type.
+
+Please, take a look at the official documentation entitled [Standard Library](https://www.mql5.com/en/docs/standardlibrary) to learn more about this topic and note that the Standard Library already comes with some classes to work with indicators. This article discusses the need to work with object-oriented material through some simple examples for teaching purposes.
+
+**1.3.1. CTechIndicators, the Technical Indicators' Container**
+
+```
+//+------------------------------------------------------------------+
+//|                                              CTechIndicators.mqh |
+//|                               Copyright © 2013, Jordi Bassagañas |
+//+------------------------------------------------------------------+
+#include <..\Experts\NewsWatcher\CMomentum.mqh>
+//+------------------------------------------------------------------+
+//| CTechIndicators Class                                            |
+//+------------------------------------------------------------------+
+class CTechIndicators
+  {
+protected:
+   CMomentum               *m_momentum;
+                  
+public:
+   //--- Constructor and destructor methods
+                           CTechIndicators(void);
+                           ~CTechIndicators(void);
+   //--- Getter methods
+   CMomentum               *GetMomentum(void);
+   //--- CTechIndicators specific methods
+   bool                 Init();
+   void                 Deinit(void);
+  };
+//+------------------------------------------------------------------+
+//| Constructor                                                      |
+//+------------------------------------------------------------------+   
+CTechIndicators::CTechIndicators(void)
+  {
+   m_momentum = new CMomentum; 
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+               
+CTechIndicators::~CTechIndicators(void)
+  {
+   Deinit();
+  }
+//+------------------------------------------------------------------+
+//| GetMomentum                                                      |
+//+------------------------------------------------------------------+        
+CMomentum* CTechIndicators::GetMomentum(void)
+  {
+   return m_momentum;
+  }
+//+------------------------------------------------------------------+
+//| CTechIndicators initialization                                   |
+//+------------------------------------------------------------------+
+bool CTechIndicators::Init(void)
+  {
+// Initialization logic here...
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| CTechIndicators deinitialization                                 |
+//+------------------------------------------------------------------+
+void CTechIndicators::Deinit(void)
+  {
+   delete(m_momentum);
+   Print("CTechIndicators deinitialization performed!");
+  }
+//+------------------------------------------------------------------+
+```
+
+**1.3.2. CMomentum, an Object-Oriented Wrapper for iMomentum**
+
+```
+//+------------------------------------------------------------------+
+//|                                                    CMomentum.mqh |
+//|                               Copyright © 2013, Jordi Bassagañas |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| CMomentum Class                                                  |
+//+------------------------------------------------------------------+
+
+class CMomentum
+  {
+protected:   
+   int m_handler;
+   double m_buffer[];
+               
+public:
+   //--- Constructor and destructor methods
+                           CMomentum(void);
+                           ~CMomentum(void);
+   //--- Getter methods
+   int                     GetHandler(void);
+   void                    GetBuffer(double &buffer[], int ammount);
+   //--- Setter methods
+   bool                    SetHandler(string symbol,ENUM_TIMEFRAMES period,int mom_period,ENUM_APPLIED_PRICE mom_applied_price);
+   bool                    UpdateBuffer(int ammount);
+  };
+//+------------------------------------------------------------------+
+//| Constructor                                                      |
+//+------------------------------------------------------------------+   
+CMomentum::CMomentum(void)
+  {
+   ArraySetAsSeries(m_buffer, true);   
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+               
+CMomentum::~CMomentum(void)
+  {
+   IndicatorRelease(m_handler);
+   ArrayFree(m_buffer);
+  }
+//+------------------------------------------------------------------+
+//| GetHandler                                                       |
+//+------------------------------------------------------------------+        
+int CMomentum::GetHandler(void)
+  {
+   return m_handler;
+  }
+//+------------------------------------------------------------------+
+//| GetBuffer                                                        |
+//+------------------------------------------------------------------+
+void CMomentum::GetBuffer(double &buffer[], int ammount)
+  {
+   ArrayCopy(buffer, m_buffer, 0, 0, ammount);
+  }
+//+------------------------------------------------------------------+
+//| SetHandler                                                       |
+//+------------------------------------------------------------------+      
+bool CMomentum::SetHandler(string symbol,ENUM_TIMEFRAMES period,int mom_period,ENUM_APPLIED_PRICE mom_applied_price)
+  {   
+   if((m_handler=iMomentum(symbol,period,mom_period,mom_applied_price))==INVALID_HANDLE)
+   {
+      printf("Error creating Momentum indicator");
+      return false;
+   }
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| UpdateBuffer                                                     |
+//+------------------------------------------------------------------+   
+bool CMomentum::UpdateBuffer(int ammount)
+  {   
+   if(CopyBuffer(m_handler, 0, 0, ammount, m_buffer) < 0)
+   { 
+      Alert("Error copying Momentum buffers, error: " , GetLastError());
+      return false;
+   }
+   return true;
+  }
+//+------------------------------------------------------------------+
+```
+
+**1.4. An Object-Oriented Container for the News**
+
+The news in abstract is a fundamental piece with which our EA has to deal with. We can think in this key piece as if it was a newspaper in order to conclude that it is a good idea encapsulating it in an object-oriented container of news. Put simply, this OO container, named **CNewsContainer**, is the newspaper. And of course if we can imagine a newspaper with news we also have to model the concept of the news which in our domain of things is named **CNew**. This is our custom object-oriented type representing real world's news.
+
+**1.4.1. CNewsContainer, the News' Container**
+
+```
+//+------------------------------------------------------------------+
+//|                                               CNewsContainer.mqh |
+//|                               Copyright © 2013, Jordi Bassagañas |
+//+------------------------------------------------------------------+
+#include <Files\FileTxt.mqh>
+#include <Arrays\ArrayObj.mqh>
+#include <..\Experts\NewsWatcher\CNew.mqh>
+//+------------------------------------------------------------------+
+//| CNewsContainer Class                                             |
+//+------------------------------------------------------------------+
+class CNewsContainer
+  {
+protected:
+   string               m_csv;                  // The name of the csv file
+   CFileTxt             m_fileTxt;              // MQL5 file functionality
+   int                  m_currentIndex;         // The index of the next news to be processed in the container
+   int                  m_total;                // The total number of news to be processed
+   CArrayObj            *m_news;                // News list in the computer's memory, loaded from the csv file
+
+public:
+   //--- Constructor and destructor methods
+                        CNewsContainer(string csv);
+                        ~CNewsContainer(void);
+   //--- Getter methods
+   int                  GetCurrentIndex(void);
+   int                  GetTotal(void);
+   CNew                 *GetCurrentNew();
+   CArrayObj            *GetNews(void);
+   //--- Setter methods
+   void                 SetCurrentIndex(int index);
+   void                 SetTotal(int total);
+   void                 SetNews(void);
+   //--- CNewsContainer methods
+   bool                 Init();
+   void                 Deinit(void);
+  };
+//+------------------------------------------------------------------+
+//| Constuctor                                                       |
+//+------------------------------------------------------------------+
+CNewsContainer::CNewsContainer(string csv)
+  {
+   m_csv=csv;
+   m_news=new CArrayObj;
+   SetNews();
+   }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CNewsContainer::~CNewsContainer(void)
+  {
+   Deinit();
+  }
+//+------------------------------------------------------------------+
+//| GetCurrentIndex                                                  |
+//+------------------------------------------------------------------+
+int CNewsContainer::GetCurrentIndex(void)
+  {   
+   return m_currentIndex;
+  }
+//+------------------------------------------------------------------+
+//| GetTotal                                                         |
+//+------------------------------------------------------------------+
+int CNewsContainer::GetTotal(void)
+  {   
+   return m_total;
+  }
+//+------------------------------------------------------------------+
+//| GetNews                                                          |
+//+------------------------------------------------------------------+
+CArrayObj *CNewsContainer::GetNews(void)
+  {   
+   return m_news;
+  }
+//+------------------------------------------------------------------+
+//| GetCurrentNew                                                    |
+//+------------------------------------------------------------------+
+CNew *CNewsContainer::GetCurrentNew(void)
+  {   
+   return m_news.At(m_currentIndex);
+  }
+//+------------------------------------------------------------------+
+//| SetCurrentIndex                                                  |
+//+------------------------------------------------------------------+
+void CNewsContainer::SetCurrentIndex(int index)
+  {
+   m_currentIndex=index;
+  }
+//+------------------------------------------------------------------+
+//| SetTotal                                                         |
+//+------------------------------------------------------------------+
+void CNewsContainer::SetTotal(int total)
+  {
+   m_total=total;
+  }
+//+------------------------------------------------------------------+
+//| SetNews                                                          |
+//+------------------------------------------------------------------+
+void CNewsContainer::SetNews(void)
+  {
+   //--- let's first init some vars!
+   SetCurrentIndex(0);
+   string sep= ";";
+   ushort u_sep;
+   string substrings[];   
+   u_sep=StringGetCharacter(sep,0);   
+   //--- then open and process the CSV file
+   int file_handle=m_fileTxt.Open(m_csv, FILE_READ|FILE_CSV);
+   if(file_handle!=INVALID_HANDLE)
+   {
+      while(!FileIsEnding(file_handle))
+      {               
+         string line = FileReadString(file_handle);         
+         int k = StringSplit(line,u_sep,substrings);         
+         CNew *current = new CNew(substrings[0],(datetime)substrings[1],substrings[2]);         
+         m_news.Add(current);
+      }
+      FileClose(file_handle);
+      //--- and finally refine and count the news
+      m_news.Delete(0); // --- here we delete the CSV's header!
+      SetTotal(m_news.Total());
+   }
+   else
+   {
+      Print("Failed to open the file ",m_csv);
+      Print("Error code ",GetLastError());
+   }   
+  }
+//+------------------------------------------------------------------+
+//| CNewsContainer initialization                                    |
+//+------------------------------------------------------------------+
+bool CNewsContainer::Init(void)
+  {
+// Initialization logic here...
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| CNewsContainer deinitialization                                  |
+//+------------------------------------------------------------------+
+void CNewsContainer::Deinit(void)
+  {
+   m_news.DeleteRange(0, m_total-1);
+   delete(m_news);
+   Print("CNewsContainer deinitialization performed!");
+  }
+//+------------------------------------------------------------------+
+```
+
+**SetNews** is the most important method of **CNewsContainer**. This method reads the CSV file and loads it into the computer's RAM in the form of objects of type **CNew**. By the way, I still have not said, CSV files must be stored in **data\_folder\MQL5\FILES\**. Please take a look at [File Functions](https://www.mql5.com/en/docs/files) for a deeper understanding of the functions used in **SetNews**.
+
+**1.4.2. CNew, the News Themselves**
+
+```
+//+------------------------------------------------------------------+
+//|                                                         CNew.mqh |
+//|                               Copyright © 2013, Jordi Bassagañas |
+//+------------------------------------------------------------------+
+#include <Object.mqh>
+//+------------------------------------------------------------------+
+//| CNew Class                                                       |
+//+------------------------------------------------------------------+
+class CNew : public CObject
+  {
+protected:
+   string            m_country;           // The country's name
+   datetime          m_time_release;      // The date and time of the news
+   string            m_name;              // The name of the news
+   
+public:
+   //--- Constructor and destructor methods
+                     CNew(string country,datetime time_release,string name);
+                    ~CNew(void);
+   //--- Getter methods
+   string            GetCountry(void);
+   datetime          GetTimeRelease(void);
+   string            GetName(void);
+   //--- Setter methods
+   void              SetCountry(string country);
+   void              SetTimeRelease(datetime time_release);
+   void              SetName(string name);
+   //--- CNew specific methods
+   bool              Init();
+   void              Deinit(void);
+  };
+//+------------------------------------------------------------------+
+//| Constuctor                                                       |
+//+------------------------------------------------------------------+
+CNew::CNew(string country,datetime time_release,string name)
+  {
+   m_country=country;
+   m_time_release=time_release;
+   m_name=name;
+  }
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CNew::~CNew(void)
+  {
+   Deinit();
+  }
+//+------------------------------------------------------------------+
+//| GetCountry                                                       |
+//+------------------------------------------------------------------+
+string CNew::GetCountry(void)
+  {
+   return m_country;
+  }  
+//+------------------------------------------------------------------+
+//| GetTimeRelease                                                   |
+//+------------------------------------------------------------------+
+datetime CNew::GetTimeRelease(void)
+  {
+   return m_time_release;
+  }
+//+------------------------------------------------------------------+
+//| GetName                                                          |
+//+------------------------------------------------------------------+
+string CNew::GetName(void)
+  {
+   return m_name;
+  }
+//+------------------------------------------------------------------+
+//| SetCountry                                                       |
+//+------------------------------------------------------------------+
+void CNew::SetCountry(string country)
+  {
+   m_country=country;
+  }
+//+------------------------------------------------------------------+
+//| SetTimeRelease                                                   |
+//+------------------------------------------------------------------+
+void CNew::SetTimeRelease(datetime timeRelease)
+  {
+   m_time_release=timeRelease;
+  }
+//+------------------------------------------------------------------+
+//| SetName                                                          |
+//+------------------------------------------------------------------+
+void CNew::SetName(string name)
+  {
+   m_name=name;
+  }
+//+------------------------------------------------------------------+
+//| CNew initialization                                              |
+//+------------------------------------------------------------------+
+bool CNew::Init(void)
+  {
+//--- initialization logic here...
+   return true;
+  }
+//+------------------------------------------------------------------+
+//| CNew deinitialization                                            |
+//+------------------------------------------------------------------+
+void CNew::Deinit(void)
+  {
+//--- deinitialization logic here...
+   Print("CNew deinitialization performed!");
+  }
+//+------------------------------------------------------------------+
+```
+
+### 2. Backtesting ExpertNewsWatcher.mq5
+
+**2.1. Attachments**
+
+**ExpertNewsWatcher** is composed of the following files:
+
+- Enums.mqh
+- CBrain.mqh
+- CEvolution.mqh
+- CMomentum.mqh
+- CNew.mqh
+- CNewsContainer.mqh
+- CNewsWatcher.mqh
+- CTechIndicators.mqh
+- ExpertNewsWatcher.mq5
+- news\_watcher.txt
+
+**2.2. Installation instructions**
+
+First of all, you have to create **MQL5\Include\Mine** folder to store your custom stuff, then please copy **Enums.mqh** file there. Right after that, you must create **MQL5\Experts\NewsWatcher** folder and copy the files below:
+
+- CBrain.mqh
+- CEvolution.mqh
+- CMomentum.mqh
+- CNew.mqh
+- CNewsContainer.mqh
+- CNewsWatcher.mqh
+- CTechIndicators.mqh
+- ExpertNewsWatcher.mq5
+
+**Very important note!** Finally, please take **news\_watcher.txt**,rename it to **news\_watcher.csv** and put it in **data\_folder\MQL5\FILES\**. At the time of the publication of this document, MQL5 form submission does not allow sending .csv files, but it does allow sending .txt files.
+
+Do not forget to compile. From this point, you can backtest **ExpertNewsWatcher** as you would any other Expert Advisor.
+
+**2.3. Backtest results**
+
+**ExpertNewsWatcher** has been run with these initial input parameters.
+
+- Period = 1 Minute
+- StopLoss = 400
+- TakeProfit = 600
+- LotSize = 0.01
+- CsvFile = news\_watcher.csv
+
+I initially used the following dummy data containing a set of fictitious news spaced in time to see how the robot behaved in a controlled environment. This is because those periods satisfy the established preconditions, that is, at those times the momentum is large enough to trigger the buy or sell actions. You can take this sheet of entries to test whatever you consider.
+
+Some dummy data to store in **news\_watcher.csv**:
+
+```
+Country;Time;Event
+USD;2013.06.03 17:19:00;A. Momentum equals 100.47
+USD;2013.06.13 17:09:00;B. Momentum equals 100.40
+USD;2013.06.21 18:52:00;C. Momentum equals 100.19
+USD;2013.07.01 17:32:00;D. Momentum equals 100.18 
+USD;2013.07.08 15:17:00;E. Momentum equals 100.18
+USD;2013.07.16 10:00:00;F. Momentum equals 99.81
+USD;2013.07.24 09:30:00;G. Momentum equals 100.25
+```
+
+**Figure 3. Results obtained with dummy data**
+
+The above graph containing fictitious news will help you to understand how this robot might behave in a real environment. Please take the following real data taken from [DailyFX](https://www.dailyfx.com/ "http://www.dailyfx.com/"), place it in **news\_watcher.csv** and run **ExpertNewsWatcher** again.
+
+Some real data to store in **news\_watcher.csv**:
+
+```
+Country;Time;Event
+USD;2013.07.15 12:00:00;USD Fed's Tarullo Speaks on Banking Regulation in Washington 
+USD;2013.07.15 12:30:00;USD Advance Retail Sales (JUN) and others
+USD;2013.07.15 14:00:00;USD USD Business Inventories (MAY)
+USD;2013.07.15 21:00:00;USD EIA Gasoline and Diesel Fuel Update
+USD;2013.07.16 12:30:00;USD Several Consumer Price Indexes 
+USD;2013.07.16 13:00:00;USD USD Net Long-term TIC Flows (MAY) & USD Total Net TIC Flows (MAY)
+USD;2013.07.16 13:15:00;USD Industrial Production (JUN) and others
+USD;2013.07.16 14:00:00;USD NAHB Housing Market Index (JUL)
+USD;2013.07.16 18:15:00;USD Fed's George Speaks on Economic Conditions and Agriculture
+USD;2013.07.22 12:30:00;USD Chicago Fed Nat Activity Index (JUN)
+USD;2013.07.22 14:00:00;USD Existing Home Sales (MoM) (JUN) & Existing Home Sales (JUN)
+USD;2013.07.22 21:00:00;USD EIA Gasoline and Diesel Fuel Update
+USD;2013.07.23 13:00:00;USD House Price Index (MoM) (MAY)
+USD;2013.07.23 14:00:00;USD Richmond Fed Manufacturing Index (JUL)
+USD;2013.07.24 11:00:00;USD MBA Mortgage Applications (JUL 19)
+USD;2013.07.24 12:58:00;USD Markit US PMI Preliminary (JUL)
+USD;2013.07.24 14:00:00;USD USD New Home Sales (MoM) (JUN) & USD New Home Sales (JUN)
+USD;2013.07.24 14:30:00;USD USD DOE U.S. Crude Oil Inventories (JUL 19) and others
+```
+
+**Figure 4. Results obtained with real data**
+
+This simple news processor can only respond to a single piece of news that takes place in a certain time. It is for this reason that a specific time, for instance, 2013.07.15 12:30:00, may contain several news. If several important news are happening at a given time, please write a single entry in the CSV file.
+
+With that said, observe that the EA only puts three operations in the market when working with real data. This is because in real life some news will overlap, unlike the previous set of fictitious news spaced in time. Our robot is scheduled to first close the first operation that came from the series, ignoring an incoming piece of news when there is already an open position.
+
+```
+       double momentumBuffer[];
+      
+      GetTechIndicators().GetMomentum().GetBuffer(momentumBuffer, 2);
+      
+      //--- Number of seconds before the news releases. GMT +- timeWindow is the real time from which the robot starts 
+      //--- listening to the market. For instance, if there is a news release programmed at 13:00 GMT you can set TimeWindow 
+      //--- to 900 seconds so that the EA starts listening to the market fifteen minutes before that news release. 
+      int timeWindow=600;
+      
+      CNew *currentNew = GetBrain().GetNewsContainer().GetCurrentNew();      
+      int indexCurrentNew = GetBrain().GetNewsContainer().GetCurrentIndex();
+            
+      if(TimeGMT() >= currentNew.GetTimeRelease() + timeWindow)
+      {
+         GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         return;
+      }
+      
+      //--- is there any open position?
+      if(!m_positionInfo.Select(_Symbol))
+      {
+         //--- if there is no open position, we try to open one
+         bool timeHasCome = TimeGMT() >= currentNew.GetTimeRelease() - timeWindow && TimeGMT() <= currentNew.GetTimeRelease() + timeWindow;
+             
+         if(timeHasCome && momentumBuffer[0] > 100.10)
+         {
+            GetEvolution().SetStatus(SELL);
+            GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         }
+         else if(timeHasCome && momentumBuffer[0] < 99.90)
+         {
+            GetEvolution().SetStatus(BUY);
+            GetBrain().GetNewsContainer().SetCurrentIndex(indexCurrentNew+1);
+         }
+      }
+      //--- if there is an open position, we let it work the mathematical expectation
+      else 
+      {
+         GetEvolution().SetStatus(DO_NOTHING);         
+      }  
+```
+
+### Conclusion
+
+This has been the continuation of [Another MQL5 OOP class](https://www.mql5.com/en/articles/703) article, which showed you how to build a simple OO EA from scratch and gave you some tips on object-oriented programming. Following the same line, this text has given you the necessary tools to help you build your own news traders. We have covered the implementation of object-oriented containers and object-oriented wrappers in order for us to comfortably work with our OO designs. We have also discussed MQL5 Standard Library and MQL5 functions to work with the file system.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/719.zip "Download all attachments in the single ZIP archive")
+
+[cbrain\_\_2.mqh](https://www.mql5.com/en/articles/download/719/cbrain__2.mqh "Download cbrain__2.mqh")
+(4.82 KB)
+
+[cevolution\_\_2.mqh](https://www.mql5.com/en/articles/download/719/cevolution__2.mqh "Download cevolution__2.mqh")
+(2.07 KB)
+
+[cmomentum.mqh](https://www.mql5.com/en/articles/download/719/cmomentum.mqh "Download cmomentum.mqh")
+(3.35 KB)
+
+[cnew.mqh](https://www.mql5.com/en/articles/download/719/cnew.mqh "Download cnew.mqh")
+(4.32 KB)
+
+[ctechindicators.mqh](https://www.mql5.com/en/articles/download/719/ctechindicators.mqh "Download ctechindicators.mqh")
+(2.57 KB)
+
+[enums\_\_2.mqh](https://www.mql5.com/en/articles/download/719/enums__2.mqh "Download enums__2.mqh")
+(0.92 KB)
+
+[news\_watcher.txt](https://www.mql5.com/en/articles/download/719/news_watcher.txt "Download news_watcher.txt")
+(1.27 KB)
+
+[cnewscontainer.mqh](https://www.mql5.com/en/articles/download/719/cnewscontainer.mqh "Download cnewscontainer.mqh")
+(5.95 KB)
+
+[cnewswatcher.mqh](https://www.mql5.com/en/articles/download/719/cnewswatcher.mqh "Download cnewswatcher.mqh")
+(7.61 KB)
+
+[expertnewswatcher.mq5](https://www.mql5.com/en/articles/download/719/expertnewswatcher.mq5 "Download expertnewswatcher.mq5")
+(1.3 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Simple Methods of Forecasting Directions of the Japanese Candlesticks](https://www.mql5.com/en/articles/1374)
+
+Knowing the direction of the price movement is sufficient for getting positive results from trading operations. Some information on the possible direction of the price can be obtained from the Japanese candlesticks. This article deals with a few simple approaches to forecasting the direction of the Japanese candlesticks.
+
+[How Reliable is Night Trading?](https://www.mql5.com/en/articles/1373)
+
+The article covers the peculiarities of night flat trading on cross currency pairs. It explains where you can expect profits and why great losses are not unlikely. The article also features an example of the Expert Advisor developed for night trading and talks about the practical application of this strategy.
+
+[Trading Signal Generator Based on a Custom Indicator](https://www.mql5.com/en/articles/691)
+
+How to create a trading signal generator based on a custom indicator? How to create a custom indicator? How to get access to custom indicator data? Why do we need the IS\_PATTERN\_USAGE(0) structure and model 0?
+
+[MQL5 Cookbook: Writing the History of Deals to a File and Creating Balance Charts for Each Symbol in Excel](https://www.mql5.com/en/articles/651)
+
+When communicating in various forums, I often used examples of my test results displayed as screenshots of Microsoft Excel charts. I have many times been asked to explain how such charts can be created. Finally, I now have some time to explain it all in this article.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F523%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dchoose.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&a=fyznzyduwsltgnhlftytumasbfgbwlqw&s=91bc0eca8f132d3df7d14cdb1baebac753aef179403d60dc83856af55a4d6769&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=imygsdgakolwuywnmrmhjadwnrjihwms&ssn=1788807704188834901&ssn_dr=0&ssn_sr=0&fv_date=1788807704&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F719&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Building%20an%20Automatic%20News%20Trader%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880770423699965&fz_uniq=6364057427460652056&sv=2552)

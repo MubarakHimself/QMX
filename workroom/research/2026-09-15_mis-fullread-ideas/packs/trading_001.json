@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_001",
+  "section": "Trading",
+  "parent_shard": "trading_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1208,
+      "title": "Liquid Chart",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1208.md"
+    },
+    {
+      "id": 1284,
+      "title": "Principles of Exchange Pricing through the Example of Moscow Exchange's Derivatives Market",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1284.md"
+    },
+    {
+      "id": 1367,
+      "title": "Money Management Revisited",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1367.md"
+    },
+    {
+      "id": 1374,
+      "title": "Simple Methods of Forecasting Directions of the Japanese Candlesticks",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1374.md"
+    },
+    {
+      "id": 1383,
+      "title": "Advanced Analysis of a Trading Account",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1383.md"
+    },
+    {
+      "id": 1400,
+      "title": "How we developed the MetaTrader Signals service and Social Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1400.md"
+    },
+    {
+      "id": 1404,
+      "title": "Orders Management - It's Simple",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1404.md"
+    },
+    {
+      "id": 1405,
+      "title": "Information Storage and View",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1405.md"
+    },
+    {
+      "id": 1406,
+      "title": "Expert System 'Commentator'. Practical Use of Embedded Indicators in an MQL4 Program",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1406.md"
+    },
+    {
+      "id": 1418,
+      "title": "Ten Basic Errors of a Newcomer in Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1418.md"
+    },
+    {
+      "id": 1428,
+      "title": "Trading Tactics on Forex",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1428.md"
+    },
+    {
+      "id": 1437,
+      "title": "Individual Psychology of a Trader",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1437.md"
+    }
+  ]
+}

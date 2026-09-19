@@ -1,0 +1,239 @@
+# MQL5 Cookbook: Developing a Multi-Symbol Volatility Indicator in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 6 January 2014 at 05:34
+14 604
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+8](https://www.mql5.com/en/forum/16981 "Comments")
+[Anatoli Kazharski](https://www.mql5.com/en/users/tol64)
+### Introduction
+In this article, we will consider the development of a multi-symbol volatility indicator. The development of multi-symbol indicators may present some difficulties for novice MQL5 developers which this article helps to clarify. The major issues arising in the course of development of a multi-symbol indicator have to do with the synchronization of other symbols' data with respect to the current symbol, the lack of some indicator data and the identification of the beginning of 'true' bars of a given time frame. All of these issues will be closely considered in the article.
+We will get values of the **Average True Range** (ATR) indicator already calculated for each symbol based on the handle. For illustrative purposes, there will be six symbols whose names can be set in the external parameters of the indicator. The names entered will be checked for being correct. Should a certain symbol specified in the parameters not be available in the general list, no calculations will be made for it. All the available symbols will be added to the **Market Watch** window, unless they are already available there.
+In the previous article entitled "[MQL5 Cookbook: Indicator Subwindow Controls - Scrollbar](https://www.mql5.com/en/articles/751 "The article \"MQL5 Cookbook: Indicator Subwindow Controls - Scrollbar\"")" we already talked about the canvas on which you can print text and even draw. This time, we are not going to draw on the canvas but we will use it to display messages about the current program processes to let the user know what is happening at a given point of time.
+### Development of the Indicator
+Let's begin the development of the program. Using the **MQL5 Wizard**, create a custom indicator template. After a few modifications, you should get the source code as shown below:
+```
+//+------------------------------------------------------------------+
+//|                                               MultiSymbolATR.mq5 |
+//|                        Copyright 2010, MetaQuotes Software Corp. |
+//|                                              http://www.mql5.com |
+//+------------------------------------------------------------------+
+//--- Indicator properties
+#property copyright "Copyright 2010, MetaQuotes Software Corp."
+#property link      "http://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window // Indicator is in a separate subwindow
+#property indicator_minimum 0       // Minimum value of the indicator
+#property indicator_buffers 6       // Number of buffers for indicator calculation
+#property indicator_plots   6       // Number of plotting series
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+//--- Initialization completed successfully
+   return(INIT_SUCCEEDED);
+//+------------------------------------------------------------------+
+//| Deinitialization                                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int      rates_total,     // Size of input time series
+                const int      prev_calculated, // Bars processed at the previous call
+                const datetime &time[],         // Opening time
+                const double   &open[],         // Open prices
+                const double   &high[],         // High prices
+                const double   &low[],          // Low prices
+                const double   &close[],        // Close prices
+                const long     &tick_volume[],  // Tick volumes
+                const long     &volume[],       // Real volumes
+                const int      &spread[])       // Spread
+//--- Return the size of the data array of the current symbol
+   return(rates_total);
+//+------------------------------------------------------------------+
+//| Timer function                                                   |
+//+------------------------------------------------------------------+
+void OnTimer()
+//+------------------------------------------------------------------+
+```
+To implement our idea, we will further fill this template with whatever is required. The need for a timer will be explained later on in the article. Let's add constants at the beginning, right after the specific indicator properties:
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# MQL5 Cookbook: Developing a Multi-Symbol Volatility Indicator in MQL5
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Introduction
+In this article, we will consider the development of a multi-symbol volatility indicator. The development of multi-symbol indicators may present some difficulties for novice MQL5 developers which this article helps to clarify. The major issues arising in the course of development of a multi-symbol indicator have to do with the synchronization of other symbols' data with respect to the current symbol, the lack of some indicator data and the identification of the beginning of 'true' bars of a given time frame. All of these issues will be closely considered in the article.
+We will get values of the **Average True Range** (ATR) indicator already calculated for each symbol based on the handle. For illustrative purposes, there will be six symbols whose names can be set in the external parameters of the indicator. The names entered will be checked for being correct. Should a certain symbol specified in the parameters not be available in the general list, no calculations will be made for it. All the available symbols will be added to the **Market Watch** window, unless they are already available there.
+In the previous article entitled "[MQL5 Cookbook: Indicator Subwindow Controls - Scrollbar](https://www.mql5.com/en/articles/751 "The article \"MQL5 Cookbook: Indicator Subwindow Controls - Scrollbar\"")" we already talked about the canvas on which you can print text and even draw. This time, we are not going to draw on the canvas but we will use it to display messages about the current program processes to let the user know what is happening at a given point of time.
+### Development of the Indicator
+Let's begin the development of the program. Using the **MQL5 Wizard**, create a custom indicator template. After a few modifications, you should get the source code as shown below:
+//|                                               MultiSymbolATR.mq5 |
+//|                        Copyright 2010, MetaQuotes Software Corp. |
+//|                                              http://www.mql5.com |
+//--- Indicator properties
+#property copyright "Copyright 2010, MetaQuotes Software Corp."
+#property link      "http://www.mql5.com"
+#property version   "1.00"
+#property indicator_separate_window // Indicator is in a separate subwindow
+#property indicator_minimum 0       // Minimum value of the indicator
+#property indicator_buffers 6       // Number of buffers for indicator calculation
+#property indicator_plots   6       // Number of plotting series
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//--- Constants 
+#define RESET           0 // Returning the indicator recalculation command to the terminal
+#define LEVELS_COUNT    6 // Number of levels
+#define SYMBOLS_COUNT   6 // Number of symbols
+```
+
+//--- Include the class for working with the canvas
+#include <Canvas\Canvas.mqh>
+In the external parameters, we will specify the [iATR](https://www.mql5.com/en/docs/indicators/iatr "Average True Range Indicator") averaging period, names of symbols whose volatility should be displayed and horizontal level values. Symbols are numbered starting from 2 as the first symbol is considered to be the one to whose chart the indicator is attached.
+struct buffers {double data[];};
+buffers           atr_buffers[SYMBOLS_COUNT];
+//--- Structure of time arrays for data preparation
+struct temp_time {datetime time[];};
+temp_time         tmp_symbol_time[SYMBOLS_COUNT];
+//--- Structure of arrays of the ATR indicator values for data preparation
+struct temp_atr {double value[];};
+temp_atr          tmp_atr_values[SYMBOLS_COUNT];
+//--- For the purpose of storing and checking the time of the first bar in the terminal
+datetime          series_first_date[SYMBOLS_COUNT];
+int               subwindow_center_y      =0;                        // Vertical center of the subwindow
+string            subwindow_shortname     ="MS_ATR";                 // Short name of the indicator
+string            prefix                  =subwindow_shortname+"_";  // Prefix for objects
+//--- Canvas properties
+Let's have a closer look at the custom functions used in the above code. In the **CheckInputParameters**() function, we check external parameters for correctness. In our case, we only check one parameter - **ATR** indicator period. I have set the restriction value of **500**. That is, if you set the period value higher than the value specified, the indicator will cease its operation and print the message about the reason of the program termination to the log and the chart comment. The **CheckInputParameters**() function code is provided below.
+   for(int s=0; s<SYMBOLS_COUNT; s++)
+      ArrayInitialize(atr_buffers[s].data,EMPTY_VALUE);
+  }
+//+------------------------------------------------------------------+
+  {
+   symbol_names[0]=AddSymbolToMarketWatch(_Symbol);
+   symbol_names[1]=AddSymbolToMarketWatch(Symbol02);
+   symbol_names[2]=AddSymbolToMarketWatch(Symbol03);
+   symbol_names[3]=AddSymbolToMarketWatch(Symbol04);
+   symbol_names[4]=AddSymbolToMarketWatch(Symbol05);
+   symbol_names[5]=AddSymbolToMarketWatch(Symbol06);
+
+In the **InitSymbolNames()** function, we use another custom function - **AddSymbolToMarketWatch()**. It receives the symbol name and if this symbol is available in the general list, it will be added to the **Market Watch** window and the function will return the string with the symbol name. If that symbol is not available, the function will return the "EMPTY" string and no actions will further be performed for this element in the array of symbols when running checks in other functions.
+```
+string AddSymbolToMarketWatch(string symbol)
+   int      total=0; // Number of symbols
+**GetIndicatorHandles()** is another function called at the indicator initialization. It attempts to get the **ATR**  indicator handles for each symbol specified. If the handle has not been obtained for some symbol, the function will return false but this will not be processed in any way in [OnInit()](https://www.mql5.com/en/docs/basis/function/events#oninit "Event handling functions: OnInit") as the handle availability will be checked in other parts of the program.
+            //--- Get it
+            symbol_handles[s]=iATR(symbol_names[s],Period(),IndicatorPeriod);
+            //--- If the handle could not be obtained, try again next time
+            if(symbol_handles[s]==INVALID_HANDLE)
+   for(int s=0; s<SYMBOLS_COUNT; s++)
+      SetIndexBuffer(s,atr_buffers[s].data,INDICATOR_DATA);
+//--- Set labels for the current symbol
+      PlotIndexSetString(s,PLOT_LABEL,"ATR ("+IntegerToString(s)+", "+symbol_names[s]+")");
+//--- Set the plotting type: lines
+      ArrayResize(tmp_symbol_time[s].time,OC_rates_total);
+      ArrayResize(tmp_atr_values[s].value,OC_rates_total);
+     }
+  }
+      ArrayInitialize(tmp_symbol_time[s].time,NULL);
+      ArrayInitialize(tmp_atr_values[s].value,EMPTY_VALUE);
+      ArrayInitialize(atr_buffers[s].data,EMPTY_VALUE);
+
+In addition, we will identify the first 'true' bar for each symbol. This concise term has been coined to make it more convenient later on. Here is what it means. All the time frames in MetaTrader 5 are built from minute data. But if, for example, daily data on the server are available from 1993, whereas minute data are only available from 2000, then if we select, say, hourly chart time frame, bars will be built starting from the date where minute data becomes available, i.e. from year 2000. Everything prior to 2000 will either be represented by daily data or the data nearest to the current time frame. Therefore, to avoid confusion you should not display indicator data for data that are not related to the current time frame. This is the reason why we are going to identify the first 'true' bar of the current time frame and mark it with a vertical line of the same color as that of the indicator buffer of the symbol.
+Identification of 'true' bars is also important when developing Expert Advisors because if parameters are optimized for a certain time frame, data from other time frames would in that case be inappropriate.
+      timeframe= Period();
+   switch(timeframe)
+     {
+      case PERIOD_M1  : str="M1";  break;
+- The first loop will prepare data based on the principle of "getting the value by all means" to avoid gaps in indicator series. The idea behind it is simple: a given number of attempts will be made in case of failure to get the value. In this loop, time values of the symbols and volatility indicator (**ATR**) values will be saved to separate arrays.
+- In the second main loop, when filling indicator buffers, time arrays of other symbols will be required for comparison with the time of the current symbol and synchronization of all plotting series.
+//--- Array for copying indicator values
+   double atr_values[];
+//--- If within the area of the current time frame bars
+   if(time[bar_index]>=limit_time[symbol_number])
+        {
+         if(CopyBuffer(symbol_handles[symbol_number],0,time[bar_index],1,atr_values)==1)
+           {
+            tmp_atr_values[symbol_number].value[bar_index]=atr_values[0];
+            break;
+           }
+   else
+      tmp_atr_values[symbol_number].value[bar_index]=EMPTY_VALUE;
+  }
+```
+      if(symbol_names[s]==empty_symbol)
+         ArrayInitialize(atr_buffers[s].data,EMPTY_VALUE);
+      else
+      //--- If the value obtained is not empty
+      if(tmp_atr_values[symbol_number].value[bar_index]!=EMPTY_VALUE)
+         check_value=true;
+         atr_buffers[symbol_number].data[bar_index]=tmp_atr_values[symbol_number].value[bar_index];
+        }
+     }
+   if(!check_value)
+      atr_buffers[symbol_number].data[bar_index]=EMPTY_VALUE;
+
+![Fig. 3. Multi-symbol ATR indicator on a 20-minute time frame](https://c.mql5.com/2/6/ru-en_03.png "Fig. 3. Multi-symbol ATR indicator on a 20-minute time frame")
+Fig. 3. Multi-symbol ATR indicator on a 20-minute time frame
+The beginning of 'true' bars is marked in the chart with the vertical lines. The screenshot below shows that true bars for **NZDUSD** (yellow line) start from 2000 (MetaQuotes-Demo server), while for all other currency pairs true bars appear in early 1999, which is why only one line is displayed (all of them are on the same date). We can also notice that period separators have a smaller interval prior to 1999 and if you analyze the time of the bars, you will be able to see that these are daily bars.
+### Conclusion
+The article can be finished here. The source code described is attached to the article and is available for download. In one of the future articles, we will try to implement a trading system that would analyze volatility and see what comes out of it.
+[multisymbolatr.mq5](https://www.mql5.com/en/articles/download/752/multisymbolatr.mq5 "Download multisymbolatr.mq5")
+(47.42 KB)
+Updated MQL4 has the new format for storing historical data and provides the appropriate MqlRates structure for convenient storage of Time, Open, Low, High, Close and Volume values. For many years, traders have developed their MQL4 applications that collect and store their data in HST files for generating offline charts. We can assure you that all previously compiled EX4 files will work in the new MetaTrader 4 terminal the same way as before.
+![Creating a Multi-Currency Multi-System Expert Advisor](https://c.mql5.com/2/0/MultiCurrency_Expert_Advisor_MQL5.png)
+MetaTrader 5 for iOS and Android
+Fully featured platform for any devices and web browsers
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=ddonqpipxfqlnsvzlwuowsuwlejpyjxk&s=9daba65b69f40afc3c35f95b1f84ef5824d68c47f29ce96a6dc5b164a2727baa&uid=&ref=https://www.mql5.com/en/articles/752&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6397199761643568037)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+The article can be finished here. The source code described is attached to the article and is available for download. In one of the future articles, we will try to implement a trading system that would analyze volatility and see what comes out of it.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/752>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/752.zip "Download all attachments in the single ZIP archive")
+
+[multisymbolatr.mq5](https://www.mql5.com/en/articles/download/752/multisymbolatr.mq5 "Download multisymbolatr.mq5")
+(47.42 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Creating Non-Lagging Digital Filters](https://c.mql5.com/2/0/gmomentum-test-logo-200x200-7398.png)
+[Creating Non-Lagging Digital Filters](https://www.mql5.com/en/articles/812)
+
+The article describes one of the approaches to determining a useful signal (trend) in stream data. Small filtering (smoothing) tests applied to market quotes demonstrate the potential for creating non-lagging digital filters (indicators) that are not redrawn on the last bars.
+
+![Indicator for Kagi Charting](https://c.mql5.com/2/0/LOGO.png)
+[Indicator for Kagi Charting](https://www.mql5.com/en/articles/772)
+
+The article proposes Kagi chart indicator with various charting options and additional functions. Also, indicator charting principle and its MQL5 implementation features are considered. The most popular cases of its implementation in trading are displayed - Yin/Yang exchange strategy, pushing away from the trend line and consistently increasing "shoulders"/decreasing "waists".
+
+![Offline Charts in the New MQL4](https://c.mql5.com/2/13/1137_68.png)
+[Offline Charts in the New MQL4](https://www.mql5.com/en/articles/1387)
+
+Updated MQL4 has the new format for storing historical data and provides the appropriate MqlRates structure for convenient storage of Time, Open, Low, High, Close and Volume values. For many years, traders have developed their MQL4 applications that collect and store their data in HST files for generating offline charts. We can assure you that all previously compiled EX4 files will work in the new MetaTrader 4 terminal the same way as before.
+
+![Creating a Multi-Currency Multi-System Expert Advisor](https://c.mql5.com/2/0/MultiCurrency_Expert_Advisor_MQL5.png)
+[Creating a Multi-Currency Multi-System Expert Advisor](https://www.mql5.com/en/articles/770)
+
+The article introduces a structure for an Expert Advisor that trades multiple symbols and uses several trading systems simultaneously. If you already identified the optimal input parameters for all your EAs and got good backtesting results for each of them separately, ask yourself what results you would get if testing all EAs simultaneously, with all your strategies put together.
+
+[![](https://www.mql5.com/ff/sh/5z040u47jcv59943z2/6c76c03a8b37e08b8655a1a085770b7a.jpg)
+
+MetaTrader 5 for iOS and Android
+
+Fully featured platform for any devices and web browsers
+
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=ddonqpipxfqlnsvzlwuowsuwlejpyjxk&s=9daba65b69f40afc3c35f95b1f84ef5824d68c47f29ce96a6dc5b164a2727baa&uid=&ref=https://www.mql5.com/en/articles/752&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6397199761643568037)

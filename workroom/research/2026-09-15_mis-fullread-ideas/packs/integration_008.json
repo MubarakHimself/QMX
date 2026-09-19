@@ -1,0 +1,78 @@
+{
+  "pack_id": "integration_008",
+  "section": "Integration",
+  "parent_shard": "integration_008",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+    "feature engineering for ml",
+    "implementing practical modules from other languages in mql5"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 13334,
+      "title": "Developing an MQTT client for MetaTrader 5: a TDD approach \u2014 Part 2",
+      "section": "Integration",
+      "series_title": "Developing an MQTT client for MetaTrader 5: a TDD approach \u2014",
+      "series_key": "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13334.md"
+    },
+    {
+      "id": 13388,
+      "title": "Developing an MQTT client for MetaTrader 5: a TDD approach \u2014 Part 3",
+      "section": "Integration",
+      "series_title": "Developing an MQTT client for MetaTrader 5: a TDD approach \u2014",
+      "series_key": "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13388.md"
+    },
+    {
+      "id": 13651,
+      "title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014 Part 4",
+      "section": "Integration",
+      "series_title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014",
+      "series_key": "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13651.md"
+    },
+    {
+      "id": 13998,
+      "title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014 Part 5",
+      "section": "Integration",
+      "series_title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014",
+      "series_key": "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13998.md"
+    },
+    {
+      "id": 14391,
+      "title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014 Part 6",
+      "section": "Integration",
+      "series_title": "Developing an MQTT client for Metatrader 5: a TDD approach \u2014",
+      "series_key": "developing an mqtt client for metatrader 5: a tdd approach \u2014",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14391.md"
+    },
+    {
+      "id": 22014,
+      "title": "Feature Engineering for ML (Part 1): Fractional Differentiation \u2014 Stationarity Without Memory Loss",
+      "section": "Integration",
+      "series_title": "Feature Engineering for ML (): Fractional Differentiation \u2014 Stationarity Without Memory Loss",
+      "series_key": "feature engineering for ml",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22014.md"
+    },
+    {
+      "id": 18728,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 02): Building the REQUESTS Library, Inspired by Python",
+      "section": "Integration",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): Building the REQUESTS Library, Inspired by Python",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18728.md"
+    }
+  ]
+}

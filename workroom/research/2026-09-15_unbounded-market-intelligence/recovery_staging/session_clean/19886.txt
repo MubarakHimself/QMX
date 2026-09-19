@@ -1,0 +1,716 @@
+---
+id: 19886
+source_url: https://www.mql5.com/en/articles/19886
+title: "Introduction to MQL5 (Part 23): Automating Opening Range Breakout Strategy"
+author: ""
+author_url: 
+published: 2025-10-14T11:43Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Introduction to MQL5 (): Automating Opening Range Breakout Strategy"
+series_part: 23
+source: mql5
+language: en
+---
+
+# Introduction to MQL5 (Part 23): Automating Opening Range Breakout Strategy
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 14 October 2025 at 07:43
+
+20 906
+[
+6](https://www.mql5.com/en/forum/497562 "Comments")
+
+[Israel Pelumi Abioye](https://www.mql5.com/en/users/13467913)
+
+### Introduction
+
+Welcome back to Part 23 of the Introduction to MQL5 series! I'll walk you through automating the Opening Range Breakout (ORB) approach with MQL5 in this article. The objective is to teach you MQL5 in a project-based, beginner-friendly manner, not to promise profits or endorse a trading strategy. Working on actual examples like these will help you develop your MQL5 skills in a useful way while giving you practical experience with ideas like recognizing breakout ranges, executing automated orders, and managing trades programmatically.
+
+This article will explain the Opening Range Breakout (ORB) strategy and show you how to use MQL5 to automate it. You'll learn how to set trade conditions, record the opening range, and configure your Expert Advisor to make trades automatically in response to breakouts. To make sure that entries only take place during the specified market window, we'll also look at how to employ time-based logic to regulate when trades are permitted to execute. By the end, you will know exactly how to use MetaTrader 5 to turn this classic trading strategy into a fully automated trading system.
+
+### **Opening Range Breakout (ORB)**
+
+The opening range breakout strategy tracks the high and low for a brief window of time immediately following the market's opening. The opening range is made up of that high and low. After that, you can look for the price to break either below or above the range low. Potential bullish momentum is indicated by a breakout above the high, while possible bearish momentum is indicated by a breakout below the low. The idea is that the directional bias for the remainder of the day is frequently established by the volatility of the early session.
+
+The first five, fifteen, thirty, or sixty minutes of the session are typical opening range lengths. Shorter ranges provide more signals but also more noise, capturing extremely early volatility. Although they generate fewer signals and are smoother, longer ranges are frequently of greater quality. Choose a range that corresponds to the asset and trading period.  You might use the first 15 or 30 minutes for intraday equities strategies.
+
+The price closing above the starting range high for a long entry or below the opening range low for a short entry is a straightforward breakout rule. Some traders need more confirmation, such as a candle closure plus a little pips buffer to prevent noise-induced false breakouts. Others watch for a retest, in which the price breaks out, moves back to the range border, and then moves back toward the breakout. Select and backtest the confirmation rule that best suits your level of risk tolerance. Breakouts can be implemented by putting stop orders at the range border and allowing the market to activate them, or by entering the market immediately upon the first confirmed breakout.
+
+Analogy
+
+Consider a scenario in which the market opens at precisely 9:30 a.m. The M15 candle that begins to form at that moment is then your main focus. You take note of the candle's high and low prices after it closes, and this becomes your opening range.
+
+After then, you wait patiently while switching to a shorter time range, like the 5-minute chart. A potential bullish breakout (price heading upward) is indicated if the price subsequently breaks above the high of that 15-minute candle. A potential bearish breakthrough (price heading lower) is indicated if the price falls below the low.
+
+In simple terms, you are setting boundaries during the first fifteen minutes after the market opens and then keeping an eye out for your Opening Range Breakout (ORB), which occurs when the price breaks those parameters.
+
+### **How the EA Works**
+
+Before beginning the programmatic implementation, you have to first understand the Expert Advisor's (EA) operation by following its detailed procedure. The first step is to determine that the market opens at 9:30 a.m. (server time). The first 15-minute candle that forms at precisely 9:30 will then be carefully awaited by the EA. The EA will identify the opening range by marking and drawing lines on the candle's high and low prices once it closes.
+
+The EA will then copy the relevant price data and begin searching for breakout indications. To start a buy trade, it watches for a bullish candle to close above the high of the original range. The SL is set at the low price of the range, and the take profit is determined by the user's specified risk-to-reward ratio (RRR).
+
+The program then searches for a bearish candle that closes below the same 15-minute candle's low to initiate a sell transaction. The TP will once more adhere to the user-defined RRR while the SL is at its highest. The number of locations the EA should open at once is another option available to the user. The EA should stop trading after the range breakthrough, which is the day's first breakout indication.
+
+### **Identifying the Market Start Time**
+
+The next step is to determine the market opening time once we have a thorough understanding of how the EA operates. As an illustration, suppose the market opens at 9:30 server time. We require the EA to automatically detect that particular time at all times. If your EA is running on a VPS and you don't want to manually update the date every day, you need a way to isolate just the time portion because time values in MQL5 are very accurate since they include the year, month, day, hour, minute, and second. In this manner, the program can automatically identify the day, month, and year of every new trading session.
+
+The difficulty arises from the fact that, although the underlying date varies, the same hour and minute recur daily. A complete datetime value will only match once before failing on consecutive days if you merely compare it to a set number. The EA must distinguish between the time and date components to deal with this. This allows it to determine whether the current bar or tick, regardless of the day, month, or year, matches the market's start time.
+
+Example:
+
+```
+string open_time_string = "9:30";
+datetime open_time;
+
+ulong chart_id = ChartID();
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+
+   ObjectsDeleteAll(chart_id);
+
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+
+   open_time = StringToTime(open_time_string);
+
+   Comment("OPEN TIME: ",open_time);
+
+   ObjectCreate(chart_id,"OPEN TIME",OBJ_VLINE,0,open_time,0);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_STYLE,STYLE_DASH);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_WIDTH,2);
+
+  }
+```
+
+Output:
+
+Explanation:
+
+The market start time is first stored as a simple string in the line string open\_time\_string = "9:30"; for example. This is merely a representation of the opening time that is readable by humans that you would like the EA to recognize. This time will thereafter be stored in a format that MQL5 can use for computations and charting in the variable datetime open\_time;.
+
+The program converts the string into a valid datetime value. Even though datetime in MQL5 contains the full date and time, when a string like this is used, the time is automatically set to 9:30 on the current day. This ensures that without explicitly updating the date, the EA can calculate the opening time each day.
+
+Next, it draws a vertical line on the chart at the exact time the market opens. This vertical line acts as a visual marker for the start of the opening range.
+
+### **Identifying the First 15-Minute Candle High and Low**
+
+Copying the candle data for the first 15-minute candle that forms at precisely 9:30 server time is the next step. Because they establish the day's opening range, these two prices are significant. This candle's low indicates the level for a bearish breakout, and its high indicates the level at which a bullish breakout would be verified. We establish the reference range that the EA will utilize to decide trade entry throughout the AM session by determining these two crucial points.
+
+Because it establishes the limit for possible price fluctuations, capturing the opening range is essential. Following the initial phase of consolidation, you can use these levels to determine if the market is going upward or downward. These values will act as the benchmark in the EA; a buy signal may be generated if the price rises above the high, and a sell signal may be triggered if it falls below the low. This makes sure that only when the market exhibits a distinct breakout from the opening range are trades made.
+
+Example:
+
+```
+string open_time_string = "9:30";
+datetime open_time;
+
+string open_time_bar_close_string = "9:45";
+datetime open_time_bar_close;
+
+ulong chart_id = ChartID();
+
+double m15_high[];
+double m15_low[];
+double m15_close[];
+double m15_open[];
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+
+   ObjectsDeleteAll(chart_id);
+
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+
+   open_time = StringToTime(open_time_string);
+
+   Comment("OPEN TIME: ",open_time);
+
+   ObjectCreate(chart_id,"OPEN TIME",OBJ_VLINE,0,open_time,0);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_STYLE,STYLE_DASH);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_WIDTH,2);
+
+   open_time_bar_close = StringToTime(open_time_bar_close_string);
+
+   if(TimeCurrent() >= open_time_bar_close)
+     {
+
+      CopyHigh(_Symbol,PERIOD_M15,open_time,1,m15_high);
+      CopyLow(_Symbol,PERIOD_M15,open_time,1,m15_low);
+      CopyClose(_Symbol,PERIOD_M15,open_time,1,m15_close);
+      CopyOpen(_Symbol,PERIOD_M15,open_time,1,m15_open);
+
+      ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+      ObjectSetInteger(chart_id,"High",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"High",OBJPROP_WIDTH,2);
+
+      ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_WIDTH,2);
+
+     }
+
+  }
+```
+
+Output:
+
+Explanation:
+
+This part determines the whole formation time of the first 15-minute candle, extracts its important pricing information, and transforms its closure time from a string so that it may be used in computations. The program then waits to verify the completion of the candle and securely extracts its high, low, open, and close values when the server time reaches or surpasses this closing time.
+
+The Opening Range Breakout approach depends on these recovered values. The program will use the high and low prices, which delineate the opening range, to keep an eye out for breakout circumstances on shorter time frames. For viewing purposes, lines are also added on the chart at these high and low levels. Before making any trades, this helps you make sure the EA is tracking the right levels and lets you see the opening range clearly.
+
+The program displays a vertical line to mark the exact market opening hour each day because open time is a single variable. It then waits for the M15 candle to fully close before using its high and low values to guarantee correct data and prevent "array out of range" problems.
+
+### **Using 5-Minute Charts to Detect Opening Range Breakouts**
+
+After the initial high and low have been determined, the next thing is for the program to check the M5 timeframe for breakouts above or below the range. A bullish closing above the M15 high indicates a possible buy, and a bearish closing below the low indicates a possible sell. Timely and accurate trade entries are made possible by this reduced period analysis.
+
+Example:
+
+```
+double m5_high[];
+double m5_low[];
+double m5_close[];
+double m5_open[];
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+
+   ArraySetAsSeries(m5_high,true);
+   ArraySetAsSeries(m5_low,true);
+   ArraySetAsSeries(m5_close,true);
+   ArraySetAsSeries(m5_open,true);
+
+//---
+   return(INIT_SUCCEEDED);
+  }
+```
+
+```
+if(TimeCurrent() >= open_time_bar_close)
+  {
+
+   CopyHigh(_Symbol,PERIOD_M15,open_time,1,m15_high);
+   CopyLow(_Symbol,PERIOD_M15,open_time,1,m15_low);
+   CopyClose(_Symbol,PERIOD_M15,open_time,1,m15_close);
+   CopyOpen(_Symbol,PERIOD_M15,open_time,1,m15_open);
+
+   ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+   ObjectSetInteger(chart_id,"High",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"High",OBJPROP_WIDTH,2);
+
+   ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+   ObjectSetInteger(chart_id,"Low",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"Low",OBJPROP_WIDTH,2);
+
+  }
+
+CopyHigh(_Symbol,PERIOD_M5,1,5,m5_high);
+CopyLow(_Symbol,PERIOD_M5,1,5,m5_low);
+CopyClose(_Symbol,PERIOD_M5,1,5,m5_close);
+CopyOpen(_Symbol,PERIOD_M5,1,5,m5_open);
+
+if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0])
+  {
+
+//BUY
+
+  }
+
+if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0])
+  {
+
+//SELL
+
+  }
+```
+
+Explanation:
+
+Four arrays are declared in this section of the program. The high, low, close, and open prices of candles on the M5 timeframe are stored in these arrays. The most recent candle is represented by index 0, and earlier candles are represented by higher indices. Each array contains a sequence of price data that may be retrieved by index.
+
+All of these arrays are set as time series using the ArraySetAsSeries() function inside the initialization code. By doing this, the most current data is guaranteed to show up at index 0, with older data following in ascending order. Because it is consistent with the way MetaTrader 5 arranges chart data, which places the most recent bar at the beginning of the series, setting the arrays in this manner is crucial.
+
+These programs extract the high, low, open, and close prices as well as the most recent 5-minute candle data from the chart. According to the criteria, starting with the candle that forms before the current one, the EA should gather data for the previous five completed 5-minute candles. The EA may then track price movement and identify whether a breakout takes place above or below the range of the first 15-minute candle by storing this data in arrays for later analysis.
+
+Following the closing of the first fifteen-minute candle, this logic looks for breakthrough conditions. If the most recent lower time frame candle closed above the high of the fifteen-minute opening range, and the prior five-minute candle was still below that high, then the first criterion indicates a bullish breakout. This attests to the price's upward breakout. When the most recent five-minute candle falls below the 15-minute range's low, after the previous candle was above it, the second criterion identifies a bearish breakout. This indicates a possible sell opportunity by validating a downward breakdown.
+
+By examining the orientation of the candle, the reasoning provides an additional degree of assurance. To generate a buy signal, the program makes sure that the most recent candle is bullish, meaning it finished higher than it opened, and breaks and closes above the range high. This helps eliminate false breakouts caused by temporary price increases. Likewise, when a sell signal is generated, the program verifies that the candle is bearish, meaning it closed lower than it opened, and closes below the range low. This ensures that the breakout has real momentum before a trade is initiated.
+
+You'll notice that the reasoning is different from the more well-known open-based method in that it refers to the closing of the previous candle rather than the open of the current one. This close-based check has the advantage of verifying that the price actually passed the opening range between two completed candles. A true breakout was shown by the most recent candle closing above the range when the prior one was below it.
+
+On the other hand, when gaps or abrupt price increases occur, depending just on the candle's open can be deceptive. The condition may fail even though the price has actually moved beyond the range if the candle opens above it due to a sudden spike, or it may produce a misleading signal if the open was brought on by an unusual tick. These problems are avoided by using the previous close, which also offers a more accurate way to identify real breakouts, particularly in erratic markets.
+
+### **Trade Execution**
+
+The next step is to make the program execute trades based on the breakout logic we created. Once the EA detects a valid breakout above or below the 15-minute range, it should automatically open a buy or sell position, respectively.
+
+Example:
+
+```
+#include <Trade/Trade.mqh>
+CTrade trade;
+int MagicNumber = 533930;  // Unique Number
+input double RRR= 2; // RRR
+input double lot_size = 0.2;
+```
+
+```
+double ask_price;
+double take_profit;
+datetime lastTradeBarTime = 0;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+
+   ArraySetAsSeries(m5_high,true);
+   ArraySetAsSeries(m5_low,true);
+   ArraySetAsSeries(m5_close,true);
+   ArraySetAsSeries(m5_open,true);
+
+   trade.SetExpertMagicNumber(MagicNumber);
+
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+
+   ObjectsDeleteAll(chart_id);
+  }
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+   open_time = StringToTime(open_time_string);
+
+   Comment("OPEN TIME: ",open_time);
+
+   ObjectCreate(chart_id,"OPEN TIME",OBJ_VLINE,0,open_time,0);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_STYLE,STYLE_DASH);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_WIDTH,2);
+
+   open_time_bar_close = StringToTime(open_time_bar_close_string);
+
+   if(TimeCurrent() >= open_time_bar_close)
+     {
+
+      CopyHigh(_Symbol,PERIOD_M15,open_time,1,m15_high);
+      CopyLow(_Symbol,PERIOD_M15,open_time,1,m15_low);
+      CopyClose(_Symbol,PERIOD_M15,open_time,1,m15_close);
+      CopyOpen(_Symbol,PERIOD_M15,open_time,1,m15_open);
+
+      ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+      ObjectSetInteger(chart_id,"High",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"High",OBJPROP_WIDTH,2);
+
+      ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_WIDTH,2);
+     }
+
+   CopyHigh(_Symbol,PERIOD_M5,1,5,m5_high);
+   CopyLow(_Symbol,PERIOD_M5,1,5,m5_low);
+   CopyClose(_Symbol,PERIOD_M5,1,5,m5_close);
+   CopyOpen(_Symbol,PERIOD_M5,1,5,m5_open);
+
+   datetime currentBarTime = iTime(_Symbol, PERIOD_M5, 0);
+   ask_price = SymbolInfoDouble(_Symbol,SYMBOL_ASK);
+
+   if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime)
+     {
+
+      //BUY
+      take_profit = MathAbs(ask_price + ((ask_price - m15_low[0]) * RRR));
+      trade.Buy(lot_size,_Symbol,ask_price,m15_low[0],take_profit);
+      lastTradeBarTime = currentBarTime;
+
+     }
+
+   if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime)
+     {
+
+      //SELL
+      take_profit = MathAbs(ask_price - ((m15_high[0] - ask_price) * RRR));
+      trade.Sell(lot_size,_Symbol,ask_price,m15_high[0],take_profit);
+      lastTradeBarTime = currentBarTime;
+     }
+  }
+```
+
+Explanation:
+
+The software can use the built-in trading routines for opening, changing, and closing orders by importing the trading library. All actions pertaining to trade are then handled by a trade object. A MagicNumber is a special identifying number that each Expert Advisor uses to identify and control its own trades, even when several automated systems are operating on the same account.
+
+User-defined parameters are lot\_size and RRR (Risk-Reward Ratio). Lot\_size regulates the transaction volume, and RRR establishes the number of times the take profit should exceed the stop loss. By recording the current ask price, computed take profit, and the time of the most recent transaction to avoid multiple entries on the same candle, the variables ask\_price, take\_profit, and lastTradeBarTime aid in managing trade execution.
+
+To guarantee that the EA's unique identification number is included in each deal it opens, a command is utilized. While one variable records the most recent market ask price, another collects the current candle's opening time. Nevertheless, it becomes problematic when the EA makes several breakout trades in a single session, which can be risky in an erratic market. Risk exposure is increased by making multiple breakout trades because the stop loss is typically far from the entry point. The EA should ideally be set up to execute only the first legitimate breakout trade of the day to reduce risk and prevent overtrading.
+
+To accomplish this, we must change the program so that it looks for the first breakout and then stops accepting trades for the remainder of the session after completing that trade. By doing this, the EA is guaranteed to maintain discipline and concentrate solely on the first breakout opportunity rather than responding to each potential false move that may arise later in the day.
+
+Example:
+
+```
+int open_to_current;
+bool isBreakout = false;
+```
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+
+   open_time = StringToTime(open_time_string);
+
+   ObjectCreate(chart_id,"OPEN TIME",OBJ_VLINE,0,open_time,0);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_COLOR,clrBlue);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_STYLE,STYLE_DASH);
+   ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_WIDTH,2);
+
+   open_time_bar_close = StringToTime(open_time_bar_close_string);
+
+   if(TimeCurrent() >= open_time_bar_close)
+     {
+
+      CopyHigh(_Symbol,PERIOD_M15,open_time,1,m15_high);
+      CopyLow(_Symbol,PERIOD_M15,open_time,1,m15_low);
+      CopyClose(_Symbol,PERIOD_M15,open_time,1,m15_close);
+      CopyOpen(_Symbol,PERIOD_M15,open_time,1,m15_open);
+
+      ObjectCreate(chart_id,"High",OBJ_TREND,0,open_time,m15_high[0],TimeCurrent(),m15_high[0]);
+      ObjectSetInteger(chart_id,"High",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"High",OBJPROP_WIDTH,2);
+
+      ObjectCreate(chart_id,"Low",OBJ_TREND,0,open_time,m15_low[0],TimeCurrent(),m15_low[0]);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_COLOR,clrBlue);
+      ObjectSetInteger(chart_id,"Low",OBJPROP_WIDTH,2);
+
+      open_to_current = Bars(_Symbol,PERIOD_M5,open_time_bar_close,TimeCurrent());
+
+      CopyHigh(_Symbol,PERIOD_M5,1,open_to_current,m5_high);
+      CopyLow(_Symbol,PERIOD_M5,1,open_to_current,m5_low);
+      CopyClose(_Symbol,PERIOD_M5,1,open_to_current,m5_close);
+      CopyOpen(_Symbol,PERIOD_M5,1,open_to_current,m5_open);
+
+     }
+
+   datetime currentBarTime = iTime(_Symbol, PERIOD_M5, 0);
+   ask_price = SymbolInfoDouble(_Symbol,SYMBOL_ASK);
+
+   if(TimeCurrent() >= open_time_bar_close && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+     {
+
+      //BUY
+      take_profit = MathAbs(ask_price + ((ask_price - m15_low[0]) * RRR));
+      trade.Buy(lot_size,_Symbol,ask_price,m15_low[0],take_profit);
+      lastTradeBarTime = currentBarTime;
+
+     }
+
+   if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+     {
+
+      //SELL
+      take_profit = MathAbs(ask_price - ((m15_high[0] - ask_price) * RRR));
+      trade.Sell(lot_size,_Symbol,ask_price,m15_high[0],take_profit);
+      lastTradeBarTime = currentBarTime;
+
+     }
+
+   if(TimeCurrent() >= open_time_bar_close)
+     {
+      for(int i = 0; i < open_to_current; i++)
+        {
+         if(i + 1  < open_to_current)
+           {
+            if((m5_close[i] > m15_high[0] && m5_close[i + 1] < m15_high[0]) || (m5_close[i] < m15_low[0] && m5_close[i + 1] > m15_low[0]))
+              {
+               isBreakout = true;
+               break;
+              }
+           }
+        }
+     }
+
+   if(TimeCurrent() < open_time)
+     {
+      isBreakout = false;
+     }
+
+   Comment(isBreakout);
+
+  }
+```
+
+Output:
+
+Explanation:
+
+Two new variables were added, one to determine the number of candles that have formed since the end of the fifteen-minute bar and another to monitor the occurrence of a breakout. The program continuously checks candle data up to the current time using a dynamic variable to detect breakouts.
+
+To let the EA execute only one deal every session, the isBreakout variable acts as a flag. When it is first set to false, the system is free to execute a breakout trade. When a legitimate breakout is identified, either bullish or bearish, the code within the loop sets isBreakout to true, which stops any further trades from being made. This aids in upholding the guideline that the EA should only carry out one breakout every day.
+
+All available candle data from the end of the opening range to the present is now gathered by the program using a dynamic variable. This enhancement increases the accuracy and efficiency of breakout detection by enabling it to continuously monitor new candles as they form.
+
+Finally, the section if(TimeCurrent() < open\_time) resets isBreakout to false before the new trading day starts, so the EA will be ready to detect and trade the next day’s breakout.
+
+You may want to allow the software to open numerous positions during a single breakout, as it is only intended to execute one breakout trade every day. Multiple entries is a common term used to describe this idea. When a breakout happens, the EA can open a user-specified number of trades at once rather than simply one.
+
+Example:
+
+```
+#include <Trade/Trade.mqh>
+CTrade trade;
+int MagicNumber = 533930;  // Unique Number
+input double RRR= 2; // RRR
+input double lot_size = 0.2;
+input int pos_num = 2; // Number of Positions to Open
+```
+
+```
+if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+  {
+
+//BUY
+   take_profit = MathAbs(ask_price + ((ask_price - m15_low[0]) * RRR));
+
+   for(int i = 0; i < pos_num; i++)  // open 3 trades
+     {
+      trade.Buy(lot_size,_Symbol,ask_price,m15_low[0],take_profit);
+     }
+   lastTradeBarTime = currentBarTime;
+  }
+
+if(TimeCurrent() >= open_time_bar_close && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+  {
+
+//SELL
+   take_profit = MathAbs(ask_price - ((m15_high[0] - ask_price) * RRR));
+
+   for(int i = 0; i < pos_num; i++)  // open 3 trades
+     {
+      trade.Sell(lot_size,_Symbol,ask_price,m15_high[0],take_profit);
+     }
+
+   lastTradeBarTime = currentBarTime;
+  }
+
+if(TimeCurrent() >= open_time_bar_close)
+  {
+   for(int i = 0; i < open_to_current; i++)
+     {
+      if(i + 1  < open_to_current)
+        {
+         if((m5_close[i] > m15_high[0] && m5_close[i + 1] < m15_high[0]) || (m5_close[i] < m15_low[0] && m5_close[i + 1] > m15_low[0]))
+           {
+            isBreakout = true;
+            break;
+           }
+        }
+     }
+  }
+```
+
+Explanation:
+
+To allow traders to select how many positions the program should open upon a valid breakout, a user-defined input has been added. Before the EA is launched, this value can be changed in the input settings. For example, when a breakout condition is recognized, the EA will automatically open two distinct positions if the number is set to 2.
+
+The program uses a loop to open several trades according to the user-specified number. Depending on the input value, the loop repeats, opening a new trade with the identical entry criteria, stop loss, and take profit parameters each time. For instance, after a legitimate breakout is confirmed, the software will execute two trades in a row if the number is set to 2.
+
+Additionally, we want to confirm that the EA can only take trades before 15:00 server time. By doing this, trading discipline is preserved, and the system is kept from making transactions during periods of lower activity, when volatility and liquidity may have decreased. The EA should cease making any more trades when the clock strikes fifteen o'clock. Furthermore, the EA ought to immediately close any open transactions that are still active at that moment. This keeps the approach consistent and lowers needless risk exposure by guaranteeing that every trading activity is finished inside the active session.
+
+ Example:
+
+```
+open_time = StringToTime(open_time_string);
+close_time = StringToTime(close_time_string);
+```
+
+```
+ObjectCreate(chart_id,"OPEN TIME",OBJ_VLINE,0,open_time,0);
+ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_COLOR,clrBlue);
+ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_STYLE,STYLE_DASH);
+ObjectSetInteger(chart_id,"OPEN TIME",OBJPROP_WIDTH,2);
+
+ObjectCreate(chart_id,"CLOSE TIME",OBJ_VLINE,0,close_time,0);
+ObjectSetInteger(chart_id,"CLOSE TIME",OBJPROP_COLOR,clrRed);
+ObjectSetInteger(chart_id,"CLOSE TIME",OBJPROP_STYLE,STYLE_DASH);
+ObjectSetInteger(chart_id,"CLOSE TIME",OBJPROP_WIDTH,2);
+```
+
+```
+if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] > m15_high[0] && m5_close[1] < m15_high[0] && m5_close[0] > m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+  {
+
+//BUY
+   take_profit = MathAbs(ask_price + ((ask_price - m15_low[0]) * RRR));
+
+   for(int i = 0; i < pos_num; i++)  // open 3 trades
+     {
+      trade.Buy(lot_size,_Symbol,ask_price,m15_low[0],take_profit);
+     }
+   lastTradeBarTime = currentBarTime;
+  }
+
+if(TimeCurrent() >= open_time_bar_close && TimeCurrent() <= close_time && m5_close[0] < m15_low[0] && m5_close[1] > m15_low[0] && m5_close[0] < m5_open[0] && currentBarTime != lastTradeBarTime && isBreakout == false)
+  {
+
+//SELL
+   take_profit = MathAbs(ask_price - ((m15_high[0] - ask_price) * RRR));
+
+   for(int i = 0; i < pos_num; i++)  // open 3 trades
+     {
+      trade.Sell(lot_size,_Symbol,ask_price,m15_high[0],take_profit);
+     }
+
+   lastTradeBarTime = currentBarTime;
+  }
+
+if(TimeCurrent() >= open_time_bar_close)
+  {
+   for(int i = 0; i < open_to_current; i++)
+     {
+      if(i + 1  < open_to_current)
+        {
+         if((m5_close[i] > m15_high[0] && m5_close[i + 1] < m15_high[0]) || (m5_close[i] < m15_low[0] && m5_close[i + 1] > m15_low[0]))
+           {
+            isBreakout = true;
+            break;
+           }
+        }
+     }
+  }
+
+if(TimeCurrent() < open_time)
+  {
+   isBreakout = false;
+  }
+
+// Comment(isBreakout);
+
+for(int i = 0; i < PositionsTotal(); i++)
+  {
+   ulong ticket = PositionGetTicket(i);
+
+   if(PositionGetInteger(POSITION_MAGIC) == MagicNumber  && PositionGetString(POSITION_SYMBOL) == ChartSymbol(chart_id))
+     {
+
+      if(TimeCurrent() >= close_time)
+        {
+         // Close the position
+         trade.PositionClose(ticket);
+        }
+     }
+  }
+```
+
+Output:
+
+Explanation:
+
+The desired trading cutoff time, which indicates when the EA should cease accepting new trades, is first defined by the program as a text value. After that, it generates a variable to hold this time appropriately that the system can comprehend and utilize for execution-based time comparisons. The application then transforms the given closing time text into a real-time value that it can identify and contrast with the market time at that moment. Additionally, a vertical red dashed line is added to the display to visually represent the precise moment at which trading should cease. This makes it simple for traders to see the cutoff point for trade execution on the chart.
+
+The requirement makes sure the EA can only make new trades before the designated cutoff time. The program automatically stops opening new positions when the current time exceeds the specified limit, preventing any trade from being made outside the permitted trading period. Lastly, all the active trades are scanned by the portion that looks for open positions. By comparing the distinct identifying number and symbol, it confirms that every position is owned by this EA. The EA automatically closes all active trades when the current time hits or surpasses the designated cutoff.
+
+Note:
+
+*This article's strategy is entirely project-based and intended to teach readers MQL5 through real-world, hands-on application. It is not a guaranteed method for making profits in live trading.*
+
+### **Conclusion**
+
+We looked at automating the Opening Range Breakout (ORB) method with MQL5 in this article. We created an EA that recognizes breakouts between several timeframes and automatically makes trades in accordance with preset guidelines. Additionally, we designed a specific trading window to stop deals after 15:00 server time and implemented trade limitations to limit the number of entries per breakout. To ensure disciplined execution and efficient risk management, the EA also terminates all open positions after the trading period. Building more sophisticated and dependable automated trading systems is made possible by this methodical approach.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/19886.zip "Download all attachments in the single ZIP archive")
+
+[Project\_15\_0RB.mq5](https://www.mql5.com/en/articles/download/19886/Project_15_0RB.mq5 "Download Project_15_0RB.mq5")
+(6.1 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Risk Management (Part 1): Fundamentals for Building a Risk Management Class](https://www.mql5.com/en/articles/16820)
+
+In this article, we'll cover the basics of risk management in trading and learn how to create your first functions for calculating the appropriate lot size for a trade, as well as a stop-loss. Additionally, we will go into detail about how these features work, explaining each step. Our goal is to provide a clear understanding of how to apply these concepts in automated trading. Finally, we will put everything into practice by creating a simple script with an include file.
+
+[MQL5 Wizard Techniques you should know (Part 83): Using Patterns of Stochastic Oscillator and the FrAMA — Behavioral Archetypes](https://www.mql5.com/en/articles/19857)
+
+The Stochastic Oscillator and the Fractal Adaptive Moving Average are another indicator pairing that could be used for their ability to compliment each other within an MQL5 Expert Advisor. We look at the Stochastic for its ability to pinpoint momentum shifts, while the FrAMA is used to provide confirmation of the prevailing trends. In exploring this indicator pairing, as always, we use the MQL5 wizard to build and test out their potential.
+
+[Self Optimizing Expert Advisors in MQL5 (Part 15): Linear System Identification](https://www.mql5.com/en/articles/19891)
+
+Trading strategies may be challenging to improve because we often don’t fully understand what the strategy is doing wrong. In this discussion, we introduce linear system identification, a branch of control theory. Linear feedback systems can learn from data to identify a system’s errors and guide its behavior toward intended outcomes. While these methods may not provide fully interpretable explanations, they are far more valuable than having no control system at all. Let’s explore linear system identification and observe how it may help us as algorithmic traders to maintain control over our trading applications.
+
+[Price Action Analysis Toolkit Development (Part 45): Creating a Dynamic Level-Analysis Panel in MQL5](https://www.mql5.com/en/articles/19842)
+
+In this article, we explore a powerful MQL5 tool that let's you test any price level you desire with just one click. Simply enter your chosen level and press analyze, the EA instantly scans historical data, highlights every touch and breakout on the chart, and displays statistics in a clean, organized dashboard. You'll see exactly how often price respected or broke through your level, and whether it behaved more like support or resistance. Continue reading to explore the detailed procedure.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=dfvalryvxtuzrftbksnkpqzgaiiugsuy&ssn=1788788174025335041&ssn_dr=1&ssn_sr=0&fv_date=1788788174&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F19886&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Introduction%20to%20MQL5%20(Part%2023)%3A%20Automating%20Opening%20Range%20Breakout%20Strategy%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178878817500337158&fz_uniq=6456209691712827342&sv=2552)

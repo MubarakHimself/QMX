@@ -1,0 +1,421 @@
+---
+id: 18754
+source_url: https://www.mql5.com/en/articles/18754
+title: "From Novice to Expert: Animated News Headline Using MQL5 (VI) — Pending Order Strategy for News Trading"
+author: ""
+author_url: 
+published: 2025-07-18T14:16Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# From Novice to Expert: Animated News Headline Using MQL5 (VI) — Pending Order Strategy for News Trading
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 18 July 2025 at 10:16
+
+4 272
+[
+0](https://www.mql5.com/en/forum/491352 "Comments")
+
+[Clemence Benjamin](https://www.mql5.com/en/users/billionaire2024)
+
+### Contents:
+
+- [Introduction](https://www.mql5.com/en/articles/18754#contents)
+- [Strategy Overview for Pending Orders Integration](https://www.mql5.com/en/articles/18754#strategy_overview_for_pending_orders_integration)
+- [Implementation](https://www.mql5.com/en/articles/18754#implementation)
+- [Testing](https://www.mql5.com/en/articles/18754#testing)
+- [Conclusion](https://www.mql5.com/en/articles/18754#conclusion)
+- [Key Lessons](https://www.mql5.com/en/articles/18754#key_lessons)
+- [Attachments](https://www.mql5.com/en/articles/18754#attachments)
+
+### Introduction
+
+The integration of alerts in the previous version of our Expert Advisor was a significant step forward, transforming it into a valuable tool for manual news traders. However, a key limitation still remains: the EA has yet to automate trade executions. Today, our goal is to address that gap by integrating the CTrade class to enable automatic trading based on news events.
+
+The prior versions of our project already offered several advantages, each new feature designed to solve a specific problem and enhance the EA’s practical value. Here’s a quick summary of some of those benefits:
+
+- Convenient Access to News Calendar: Users can view upcoming economic events directly on the chart without disrupting their trading or analysis workflow.
+- Real-Time Economic News Headlines: We integrated Alpha Vantage as our news source, providing up-to-date headlines to keep traders informed.
+- Inbuilt Indicator Insights: Using the MQL5 API, we were able to fetch technical indicator data and display tailored insights in dedicated chart lanes.
+- Artificial Intelligence Insights: We connected local AI models to generate market insights, adding a sophisticated analytical dimension, though this introduced some slowdown affecting the scrolling speed across lanes.
+
+With these strong foundations in place, we’re now ready to tackle the next challenge: turning news signals into actual trade executions automatically within the EA.
+
+### Strategy Overview for Pending Orders Integration
+
+Every Expert Advisor (EA) ultimately stands or falls on the logic that governs when and how it trades. Our News Headline EA project so far has focused on a powerful visual experience and alert system for economic events. We’ve built event lanes, news tickers, and even AI-driven insights that scroll across the chart. However, all of these tools, while useful, still leave the trader in charge of executing trades manually. The next logical evolution is to transform this EA into an autonomous trading engine that not only informs but acts decisively when opportunities arise.
+
+We’re preparing to integrate pending-order trading logic to capture the volatility often unleashed by high-impact economic news. This planning stage is crucial because, without a robust blueprint, implementation can easily become messy or error-prone.
+
+The Need for Trade Logic in Expert Advisors
+
+A purely informational EA—however visually impressive—remains passive. To automate trading, an EA needs clear rules for:
+
+1. Timing: When to enter trades.
+2. Direction: Whether to go long or short—or remain neutral.
+3. Order Type: Whether to place market orders, limit orders, or stop orders.
+4. Risk Controls: How to define stop-loss and take-profit levels.
+5. Cleanup Logic: How to remove or modify orders when circumstances change.
+
+In our case, we’re intentionally choosing time-based conditions for executing trades. This is particularly suited to news trading because the timing of news releases is known in advance. Unlike setups that rely purely on chart patterns or indicator signals, this approach uses the scheduled news calendar as the primary trigger for trading activity.
+
+Market Observations Behind the Strategy
+
+Over months of observation and testing, a consistent market behavior has emerged: markets often contract in volatility a few minutes before major economic releases. Liquidity can thin out slightly as traders and institutions wait on the sidelines for fresh information. Then, as the news hits, prices frequently surge or plunge in a rapid spike, driven by both human traders and algorithmic systems reacting to the new data.
+
+This sharp post-news movement can be:
+
+1. A breakout higher if the news surprises to the upside.
+2. A breakdown lower if the news shocks the market negatively.
+
+This volatility surge creates fertile ground for pending-order strategies designed to catch whichever side of the market breaks out.
+
+The Pending Orders Blueprint
+
+Our approach to trading the news will rely on two pending stop orders:
+
+1. A Buy Stop, placed above the recent market price, to catch bullish breakouts.
+2. A Sell Stop, placed below the market price, to catch bearish breakdowns.
+
+We intend to place these orders a specific number of minutes before the scheduled news release (as defined by our input InpOrderMinutesBefore). This gives the EA time to prepare the orders while minimizing exposure to false market noise.
+
+The logic is elegant:
+
+*If the news is impactful enough to spark a decisive price movement, one of these pending orders should be triggered, allowing us to ride the momentum in that direction. As soon as one order is filled, the opposite order is deleted to avoid being trapped in a reversal.*
+
+Without the delete step, both orders could be triggered in rapid succession—a phenomenon known as a “whipsaw” or “hit-and-run price action.” This can result in both trades closing at a loss, defeating the purpose of the strategy.
+
+Risk Management in News Trading
+
+News trading carries unique risks. Unlike traditional setups that evolve gradually, economic news can cause a currency pair to jump dozens of pips in milliseconds. Spreads widen, slippage occurs, and prices gap.
+
+In our planned EA, risk management will not be an afterthought—it’s a core design principle.
+
+We’re building several layers of protection into the strategy:
+
+1. Fixed Stop-Loss and Take-Profit distances
+
+We expose InpStopLossPips and InpTakeProfitPips as inputs. This allows precise control over how far price can move against us before we cut losses, and how far we aim to let profits run. For example, a 10-pip stop and a 20-pip take profit creates a controlled 2:1 reward-to-risk profile.
+
+2. Spread and tick-size compensation
+
+Before placing orders, we calculate the current spread and incorporate it into the pending order’s offset. This prevents the spread from “accidentally” triggering our orders on mere bid-ask fluctuations, preserving the integrity of our intended entry levels.
+
+3. Dynamic pip calculations
+
+Pairs like USDJPY have different pip conventions (0.01) compared to EURUSD (0.0001). Our EA reads the symbol’s tick size and digits, ensuring that our SL, TP, and pending levels are calculated correctly for each instrument.
+
+4. Cleanup of untriggered orders
+
+Once one trade triggers, the EA instantly deletes the opposite order. This prevents dual exposure during chaotic spikes.
+
+All of these measures are designed to ensure that our EA trades with the discipline of a seasoned human trader—without panic or impulse. In volatile conditions like None Farm Payroll (NFP) Fridays, these protections are crucial.
+
+Understanding the Role of CTrade
+
+Central to our plan is the CTrade class, a high-level wrapper around MQL5’s lower-level trading functions. Without CTrade, we’d be forced to manually build every MqlTradeRequest and MqlTradeResult structure, handle retcodes, and manage dozens of error scenarios. CTrade takes care of:
+
+- Packaging orders with proper structure.
+- Checking symbol permissions and margin requirements.
+- Handling slippage via deviation settings.
+- Tracking ticket numbers for later modifications or deletions.
+- Logging and error handling.
+
+In practice, instead of writing pages of request logic, we’ll simply call:
+
+```
+trade.BuyStop(volume, price, symbol, stoploss, takeprofit);
+trade.SellStop(volume, price, symbol, stoploss, takeprofit);
+trade.OrderDelete(ticket);
+```
+
+It’s faster, cleaner, and dramatically reduces the risk of bugs.
+
+Our Integration Blueprint
+
+Putting it all together, our pending orders integration will follow this conceptual flow:
+
+1. Scan economic calendar to identify the next high-impact event.
+
+2. Calculate time difference between now and the event.
+
+3. Place pending orders a defined number of minutes before news time:
+
+- Compute the reference price from the nearest M1 open.
+- Add or subtract pip offsets, adjusting for spread.
+- Calculate stop-loss and take-profit prices.
+
+4. Use CTrade methods to send Buy Stop and Sell Stop orders.
+
+5. Monitor open positions:
+
+- As soon as one order triggers, delete the sibling order.
+
+6. Handle risk management:
+
+- Apply fixed SL/TP distances.
+- Ensure pending orders are canceled if no longer needed.
+
+This design ensures that we’ll be ready for lightning-fast moves while keeping exposure and risk under control.
+
+In summary, I’ve presented the entire development process in detail, highlighting each step involved in integrating the news-driven trading logic into our EA. To complement this explanation, I’ve also included a flow diagram that visually maps out the development stages and the key decisions to be taken along the way. This provides a comprehensive overview for anyone looking to understand both the technical and practical aspects of implementing such a strategy in MQL5.
+
+Development processes flow diagram
+
+The concepts above lay the groundwork for the next stage: actual MQL5 implementation. In the coming phase, we’ll translate this plan into code, wiring up the CTrade logic, integrating it into our timer loop, and thoroughly testing how the EA behaves around live news events.
+
+This is where our News Headline EA transforms from a purely informational tool into a powerful autonomous trading system, able to react in milliseconds and seize opportunities that no manual trader could capture as swiftly.
+
+### Implementation
+
+This stage focuses on the practical integration process, providing a detailed code breakdown and explanations to ensure clear understanding. Here, we introduce the CTrade class, which we incorporate by including its header file at the top of our EA code, as shown in the highlighted snippet below. Take your time to go through each code snippet and its accompanying explanation to gain an in-depth understanding of how the integration works and how the different components connect within the EA.
+
+1. Trade Setup and Configuration
+
+Right after our standard chart‐drawing canvases and AI‐insights variables, we declare a single CTrade trade; object along with a handful of globals: ordersPlaced, nextEventTime, and two ticket identifiers (ticketBuyStop, ticketSellStop). This block lives alongside our inputs for volume, pip offsets, stop‐loss/take‐profit in pips, and the “minutes before” setting. By centralizing these under the “ORDER EXECUTION INPUTS” and creating one CTrade instance, we leverage the MQL5 Trade library’s high‑level methods while keeping all parameters customizable from the EA’s Inputs dialog.
+
+```
+#include <Trade/Trade.mqh>
+//…
+CTrade trade;
+bool   ordersPlaced    = false;
+datetime nextEventTime = 0;
+ulong  ticketBuyStop   = 0;
+ulong  ticketSellStop  = 0;
+//--- ORDER EXECUTION INPUTS ---
+input int    InpOrderMinutesBefore  = 3;    
+input double InpOrderVolume         = 0.10; 
+input double InpStopOffsetPips      = 5.0;  
+input double InpStopLossPips        = 20.0; 
+input double InpTakeProfitPips      = 40.0;
+```
+
+2. Identifying the Next News Event
+
+In ReloadEvents(), after fetching and sorting today’s high/medium/low‑impact events, we compute nextEventTime by finding the earliest timestamp among only those importance tiers the user has enabled for trading. Setting ordersPlaced = false and zeroing both ticket variables whenever the event list refreshes guarantees that each new news release cycle starts with a clean slate—no lingering flags or orphaned pending orders.
+
+```
+void ReloadEvents()
+{
+  // … calendar fetching and sorting …
+
+  // pick next event only from enabled levels
+  datetime th = INT_MAX;
+  if(InpTradeHigh && ArraySize(highArr)>0) th = MathMin(th, highArr[0].time);
+  if(InpTradeMed  && ArraySize(medArr)>0)  th = MathMin(th, medArr[0].time);
+  if(InpTradeLow  && ArraySize(lowArr)>0)  th = MathMin(th, lowArr[0].time);
+  nextEventTime = (th==INT_MAX ? 0 : th);
+
+  // reset order flags
+  ordersPlaced   = false;
+  ticketBuyStop  = ticketSellStop = 0;
+}
+```
+
+3. Timing the Pending‑Order Window
+
+Inside OnTimer(), we compare the current server time (now) against *nextEventTime – InpOrderMinutesBefore\*60*. As soon as the clock enters that window—and only once per event, thanks to our ordersPlaced guard—we proceed to build two pending stops (buy and sell). This separation of “when to trade” from “how to trade” keeps our timing logic clean and prevents repeated re‑entry.
+
+```
+void OnTimer()
+{
+  datetime now       = TimeTradeServer();
+  datetime placeTime = nextEventTime - InpOrderMinutesBefore*60;
+
+  if(!ordersPlaced && nextEventTime>now && now>=placeTime)
+  {
+    // … compute prices and place orders …
+    ordersPlaced = true;
+  }
+
+  // … rest of drawing, alerts, AI, etc. …
+}
+```
+
+4. Calculating Pip‑Accurate Prices and Placing Orders
+
+To compute price levels that respect each symbol’s tick size, we fetch *SYMBOL\_POINT* and derive one “pip” as ten points—even on JPY crosses. We then find the exact M1 candle open at the target timestamp via *iBarShift + iOpen*. Offsets for entry, stop‑loss and take‑profit are all multiplied by pip and added or subtracted from the candle open. Before sending orders, each raw price is passed through *NormalizeDouble(..., SYMBOL\_DIGITS)* to satisfy the broker’s precision requirements. Finally, we call *trade.SetExpertMagicNumber()* and trade.BuyStop(...) / *trade.SellStop(...)*. Under the hood, the CTrade class handles the *OrderSend()* call, result checking, and error reporting, so our EA code remains concise.
+
+```
+// inside the placement block in OnTimer()
+double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+double pip   = point * 10.0;
+
+// find the bar open at target time
+int idx = iBarShift(_Symbol, PERIOD_M1, placeTime, false);
+if(idx >= 0)
+{
+  double baseOpen = iOpen(_Symbol, PERIOD_M1, idx);
+  double ask      = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+  double bid      = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+  double spreadPips = (ask - bid) / pip;
+
+  double offsetP = (spreadPips + InpStopOffsetPips) * pip;
+  double slP     = InpStopLossPips   * pip;
+  double tpP     = InpTakeProfitPips * pip;
+
+  double rawBuy  = baseOpen + offsetP;
+  double rawSell = baseOpen - offsetP;
+  double rawBsl  = rawBuy  - slP;
+  double rawBtp  = rawBuy  + tpP;
+  double rawSsl  = rawSell + slP;
+  double rawStp  = rawSell - tpP;
+
+  int d = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+  double buyPrice  = NormalizeDouble(rawBuy,  d);
+  double sellPrice = NormalizeDouble(rawSell, d);
+  double buySL     = NormalizeDouble(rawBsl,  d);
+  double buyTP     = NormalizeDouble(rawBtp,  d);
+  double sellSL    = NormalizeDouble(rawSsl,  d);
+  double sellTP    = NormalizeDouble(rawStp,  d);
+
+  trade.SetExpertMagicNumber(123456);
+  trade.SetDeviationInPoints(10);
+
+  ticketBuyStop  = trade.BuyStop (InpOrderVolume, buyPrice,  _Symbol, buySL,  buyTP) ? trade.ResultOrder() : 0;
+  ticketSellStop = trade.SellStop(InpOrderVolume, sellPrice, _Symbol, sellSL, sellTP) ? trade.ResultOrder() : 0;
+}
+```
+
+5. Cleaning Up Untriggered Orders
+
+Immediately after pending orders are placed, the EA continues to poll *PositionSelect(\_Symbol)*. When one of our stops converts into a live position, we detect the executed side via *PositionGetInteger(POSITION\_TYPE)* and then call *trade.OrderDelete()* on the opposite ticket. Splitting this into two separate statements (one to delete the order, one to reset the ticket ID to zero) makes the logic crystal clear—CTrade again abstracts the low‑level protocol, ensuring our cleanup is reliable.
+
+```
+// later in OnTimer()
+if(ordersPlaced && PositionSelect(_Symbol))
+{
+  long ptype = PositionGetInteger(POSITION_TYPE);
+  if(ptype==POSITION_TYPE_BUY && ticketSellStop>0)
+  {
+    trade.OrderDelete(ticketSellStop);
+    ticketSellStop = 0;
+  }
+  if(ptype==POSITION_TYPE_SELL && ticketBuyStop>0)
+  {
+    trade.OrderDelete(ticketBuyStop);
+    ticketBuyStop = 0;
+  }
+}
+```
+
+Putting It All Together
+
+By layering these sections—inputs and globals, event selection, timing, pip‑correct price calculation, CTrade‑powered pending‑order placement, and automated cleanup—we’ve turned a primarily display‑focused EA into a full news‑driven autopilot. The Trade.mqh header supplies all of the plumbing (order formatting, send/modify/delete, ticket/result storage), letting our EA concentrate on the “what” (trade settings and event timing) rather than the “how” (building raw MqlTradeRequest structures). For your convenience, the complete, integrated EA source is provided at the end of this article, with every piece stitched together, ready to compile and load into MetaTrader 5.
+
+### Testing
+
+Early test result:
+
+```
+2025.07.15 13:45:02.348  News Headline_EA (USDJPY.0,M1) CTrade::OrderSend: sell stop 0.10 USDJPY.0 at 147.922 sl: 148.128 tp: 147.522 [invalid price]
+2025.07.15 13:49:02.373  News Headline_EA (USDJPY.0,M1) CTrade::OrderSend: buy stop 0.10 USDJPY.0 at 147.951 sl: 147.740 tp: 148.351 [invalid price]
+2025.07.15 13:49:02.374  News Headline_EA (USDJPY.0,M1) CTrade::OrderSend: sell stop 0.10 USDJPY.0 at 147.929 sl: 148.140 tp: 147.529 [invalid price]
+```
+
+In our early testing phase, the EA encountered several “invalid price” errors when trying to place pending Buy Stop and Sell Stop orders—evident from log entries such as CTrade::OrderSend: sell stop 0.10 USDJPY.0 at 147.922 sl: 148.128 tp: 147.522 [invalid price]. These errors stemmed from two key oversights in the initial implementation: first, the EA did not adequately handle symbol-specific pip and tick sizes, and second, it attempted to calculate prices based on real-time bid/ask quotes, which fluctuate rapidly and can violate broker constraints like minimum stop level distances. To address this, we revised the logic to reference the open price of the most recent completed M1 candle a few minutes before the news event. This provided a more stable and compliant anchor for calculating pending entry prices.
+
+Additionally, we dynamically retrieved the symbol’s pip size using *SymbolInfoDouble(SYMBOL\_POINT)* and calculated pip values using tick size scaling—ensuring consistency for instruments like USDJPY, which typically use 3 digits after the decimal (0.001), compared to 5-digit instruments like EURUSD (0.00010). All calculated prices were also normalized using *NormalizeDouble*(price, digits) to match the symbol’s precision. This dual refinement—stable reference price and correct price formatting—ensured that all pending orders now fall within valid ranges, resolved the invalid price errors entirely, and made the EA safe and adaptable across any currency pair.
+
+Final Testing
+
+During my testing, I focused on an upcoming high-impact event: the GBP BoE Governor Bailey Speech, which appeared in the EA’s calendar display as a “red news” package. At the time of capturing test images, the EA correctly displayed a “5 minutes remaining” countdown for this event. Knowing that our logic is set to place pending orders 3 minutes before a scheduled release, I deliberately waited another 2 minutes to see whether the EA would initiate the trade setup as expected.
+
+Alert window notifying an upcoming event in 5 min period
+
+The default configuration places orders exactly 3 minutes prior to the event time. However, practical testing of such a news-trading EA presents unique challenges, especially because the MetaTrader 5 Strategy Tester is not fully suitable for simulating live economic calendar events. The strategy tester works by replaying market ticks but it has no knowledge of real-time calendar data, nor does it support asynchronous HTTP requests in the same way as during live operation. This means we can’t “fast-forward” to news releases in the tester or validate the EA’s full pipeline—from fetching news headlines to placing trades—under genuine time conditions.
+
+Testing the EA for pending order placement
+
+To overcome this limitation, one practical testing technique is to adjust the input parameter defining how many minutes before the news event pending orders are placed. For example, suppose there’s a real news event scheduled 50 minutes away and you want to avoid waiting nearly an hour. Instead, you can temporarily set the pending order lead time from the default 3 minutes to, say, 45 minutes. This way, you can test whether the EA triggers its order placement logic promptly, without a long waiting period. If it successfully places orders when using this modified time offset, it gives you confidence that the EA’s automation logic will also operate correctly closer to the event in live scenarios.
+
+During my test, I experimented with a stop-loss and take-profit of 20 pips, but I found this a bit large for my taste and trading account size. For many retail traders, a 10-pip stop may be a more conservative and practical choice, depending on account balance and risk tolerance. Ultimately, the EA is flexible enough to let you tailor your stop-loss and take-profit levels to suit your individual risk management strategy.
+
+### Conclusion
+
+From what started as a simple news and events display system, we have now advanced to a sophisticated news trading and display solution, built around a robust pending-order strategy. Through this journey, we’ve experienced firsthand the remarkable flexibility of MQL5, which seamlessly integrates with external systems—ranging from artificial intelligence engines, news APIs, to the platform’s powerful inbuilt analytical tools. This process has been nothing short of amazing, revealing the virtually endless possibilities that MQL5 offers for algorithmic trading.
+
+Our EA has evolved into an almost complete news-trading masterpiece, combining real-time on-chart displays, automated trading logic, and disciplined risk management. Thanks to customizable presets, traders can fine-tune settings to discover their optimal configurations and they can deploy the EA on a Virtual Private Server (VPS), letting it operate as a reliable news-trading companion around the clock.
+
+In this current version, we conducted our testing without setting the News API key and without connecting to the AI server. This deliberate choice allowed us to focus entirely on perfecting the trading logic, ensuring stability and avoiding performance overload during tests. Even without these integrations active, we observed a smooth and reliable flow of news event handling and trade placement.
+
+For those interested in expanding the EA further, I’ve attached the necessary files for setting up a local AI model. For a deeper dive into that configuration, please revisit the [article](https://www.mql5.com/en/articles/18685) where we detailed the steps.
+
+While the EA is already feature-rich, there remains ample room for additional enhancements. If time and opportunity allow, we plan to publish future versions with even more advanced capabilities.
+
+I warmly invite your feedback, comments, and testing results. Together, we can refine this tool further and continue exploring the frontiers of news-based algorithmic trading.
+
+  
+
+### Key Lessons
+
+| Lesson | Description |
+| --- | --- |
+| Event Handling with OnTimer | Using the OnTimer() function enables your Expert Advisor to perform actions on a fixed schedule, such as checking news times, updating graphics, or managing trades without relying on new ticks. |
+| Using CTrade for Order Management | The CTrade class simplifies placing, modifying, and closing orders without writing low-level trade request code, ensuring more stable and maintainable trading logic. |
+| Dynamic Array Management | Working with arrays in MQL5, such as resizing and sorting them, is critical for managing lists of events, price data, or other dynamic datasets. |
+| String Handling & Parsing | Parsing JSON or text responses, trimming strings, and handling substrings is essential when integrating web APIs or building custom user messages in your EA. |
+| Risk Management Principles | Properly calculating lot sizes, stop-loss, and take-profit distances is fundamental for preserving account health and reducing exposure to unpredictable price spikes during news events. |
+| WebRequest Integration | MQL5 allows sending HTTP/HTTPS requests to external servers, enabling features like fetching news headlines or AI predictions, which adds powerful external data to trading strategies. |
+| Graphical Canvas Drawing | CCanvas and similar classes let you draw custom visuals on charts, from scrolling text to graphics, making it possible to build advanced UI overlays directly in MetaTrader 5 charts. |
+| Symbol-Specific Precision | Each symbol may have different point and pip sizes or decimal digits. Always adjust calculations like price offsets and SL/TP to match the symbol’s precision to avoid order errors. |
+| Magic Numbers | Magic numbers uniquely identify orders from a specific EA, allowing safe management of positions and avoiding conflicts with other EAs or manual trades. |
+| Debugging and Logging | Using Print(), Alert(), and logging mechanisms helps track down bugs and observe EA behavior during development and live trading. |
+
+### Attachments
+
+| Filename | Version | Description |
+| --- | --- | --- |
+| News Headline EA.mq5 | 1.10 | MetaTrader 5 Expert Advisor combining economic calendar events, Alpha Vantage news headlines, technical indicator insights, AI-driven market insights, alerts, push notifications, and automatic news-trading execution with dynamic pip handling. |
+| download\_model.py |  | Python script that downloads and saves a machine learning model required for generating AI market insights. Ensures the AI component of the EA has the necessary model file available locally for predictions. |
+| serve\_insights.py |  | Python web service that runs locally to accept HTTP POST requests from the EA and respond with AI-generated market insights. Acts as the AI backend for real-time insight lane data in the EA. |
+
+[Back to contents](https://www.mql5.com/en/articles/18754#para0)
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/18754.zip "Download all attachments in the single ZIP archive")
+
+[News\_Headline\_EA.mq5](https://www.mql5.com/en/articles/download/18754/news_headline_ea.mq5 "Download News_Headline_EA.mq5")
+(44.18 KB)
+
+[download\_model.py](https://www.mql5.com/en/articles/download/18754/download_model.py "Download download_model.py")
+(0.28 KB)
+
+[serve\_insights.py](https://www.mql5.com/en/articles/download/18754/serve_insights.py "Download serve_insights.py")
+(1.77 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Price Action Analysis Toolkit Development (Part 32): Python Candlestick Recognition Engine (II) — Detection Using Ta-Lib](https://www.mql5.com/en/articles/18824)
+
+In this article, we’ve transitioned from manually coding candlestick‑pattern detection in Python to leveraging TA‑Lib, a library that recognizes over sixty distinct patterns. These formations offer valuable insights into potential market reversals and trend continuations. Follow along to learn more.
+
+[Self Optimizing Expert Advisors in MQL5 (Part 9): Double Moving Average Crossover](https://www.mql5.com/en/articles/18793)
+
+This article outlines the design of a double moving average crossover strategy that uses signals from a higher timeframe (D1) to guide entries on a lower timeframe (M15), with stop-loss levels calculated from an intermediate risk timeframe (H4). It introduces system constants, custom enumerations, and logic for trend-following and mean-reverting modes, while emphasizing modularity and future optimization using a genetic algorithm. The approach allows for flexible entry and exit conditions, aiming to reduce signal lag and improve trade timing by aligning lower-timeframe entries with higher-timeframe trends.
+
+[Data Science and ML (Part 46): Stock Markets Forecasting Using N-BEATS in Python](https://www.mql5.com/en/articles/18242)
+
+N-BEATS is a revolutionary deep learning model designed for time series forecasting. It was released to surpass classical models for time series forecasting such as ARIMA, PROPHET, VAR, etc. In this article, we are going to discuss this model and use it in predicting the stock market.
+
+[MQL5 Wizard Techniques you should know (Part 75): Using Awesome Oscillator and the Envelopes](https://www.mql5.com/en/articles/18842)
+
+The Awesome Oscillator by Bill Williams and the Envelopes Channel are a pairing that could be used complimentarily within an MQL5 Expert Advisor. We use the Awesome Oscillator for its ability to spot trends, while the envelopes channel is incorporated to define our support/resistance levels. In exploring this indicator pairing, we use the MQL5 wizard to build and test any potential these two may possess.
+
+[
+
+How AI helps create robots for MetaTrader 5
+Learn from our book "Neural Networks in Algo Trading with MQL5"
+Read](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/18754&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6456057903273620707)

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_014",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1683,
+      "title": "How to Secure Your Expert Advisor While Trading on the Moscow Exchange",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1683.md"
+    },
+    {
+      "id": 1699,
+      "title": "Drawing Dial Gauges Using the CCanvas Class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1699.md"
+    },
+    {
+      "id": 1742,
+      "title": "Drawing Resistance and Support Levels Using MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1742.md"
+    },
+    {
+      "id": 1747,
+      "title": "Trading Ideas Based on Prices Direction and Movement Speed",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1747.md"
+    },
+    {
+      "id": 1771,
+      "title": "Price Action. Automating the Inside Bar Trading Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1771.md"
+    },
+    {
+      "id": 1793,
+      "title": "MQL5 Cookbook: Implementing Your Own Depth of Market",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1793.md"
+    },
+    {
+      "id": 1844,
+      "title": "Indicator for Spindles Charting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1844.md"
+    },
+    {
+      "id": 1862,
+      "title": "MQL5 Cookbook - Programming moving channels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1862.md"
+    },
+    {
+      "id": 1863,
+      "title": "MQL5 Cookbook - Trading signals of moving channels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1863.md"
+    },
+    {
+      "id": 1867,
+      "title": "Using Layouts and Containers for GUI Controls: The CBox Class",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1867.md"
+    },
+    {
+      "id": 1903,
+      "title": "Managing the MetaTrader Terminal via DLL",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1903.md"
+    },
+    {
+      "id": 1946,
+      "title": "Price Action. Automating the Engulfing Pattern Trading Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1946.md"
+    }
+  ]
+}

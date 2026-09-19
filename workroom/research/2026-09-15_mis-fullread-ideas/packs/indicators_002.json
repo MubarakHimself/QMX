@@ -1,0 +1,119 @@
+{
+  "pack_id": "indicators_002",
+  "section": "Indicators",
+  "parent_shard": "indicators_002",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16931,
+      "title": "Redefining MQL5 and MetaTrader 5 Indicators",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16931.md"
+    },
+    {
+      "id": 17252,
+      "title": "How can century-old functions update your trading strategies?",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17252.md"
+    },
+    {
+      "id": 17595,
+      "title": "Triangular and Sawtooth Waves: Analytical Tools for Traders",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17595.md"
+    },
+    {
+      "id": 18661,
+      "title": "Analyzing Price Time Gaps in MQL5 (Part II): Creating a Heat Map of Liquidity Distribution Over Time",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18661.md"
+    },
+    {
+      "id": 18681,
+      "title": "MQL5 Custom Symbols: Creating a 3D Bars Symbol",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18681.md"
+    },
+    {
+      "id": 18785,
+      "title": "Quantum Neural Network in MQL5 (Part II): Training a Neural Network with Backpropagation on ALGLIB Markov Matrices",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18785.md"
+    },
+    {
+      "id": 19100,
+      "title": "Parafrac Oscillator: Combination of Parabolic and Fractal Indicator",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19100.md"
+    },
+    {
+      "id": 19354,
+      "title": "The Parafrac V2 Oscillator: Integrating Parabolic SAR with Average True Range",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19354.md"
+    },
+    {
+      "id": 19683,
+      "title": "Forecasting a Conditional Distribution Using MLP",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19683.md"
+    },
+    {
+      "id": 19918,
+      "title": "From Novice to Expert: Parameter Control Utility",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19918.md"
+    },
+    {
+      "id": 20239,
+      "title": "Mastering Kagi Charts in MQL5 (Part I): Creating the Indicator",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20239.md"
+    },
+    {
+      "id": 20330,
+      "title": "Market Heat Map Indicator Based on Prime-Number Density",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20330.md"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_043_p04",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_043",
+  "part_index": 4,
+  "part_count": 6,
+  "series_in_pack": [
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18842,
+      "title": "MQL5 Wizard Techniques you should know (Part 75): Using Awesome Oscillator and the Envelopes",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Awesome Oscillator and the Envelopes",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 75,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18842.md"
+    },
+    {
+      "id": 19220,
+      "title": "MQL5 Wizard Techniques you should know (Part 79): Using Gator Oscillator and Accumulation/Distribution Oscillator with Supervised Learning",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Gator Oscillator and Accumulation/Distribution Oscillator with Supervised Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 79,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19220.md"
+    },
+    {
+      "id": 19627,
+      "title": "MQL5 Wizard Techniques you should know (Part 80): Using Patterns of Ichimoku and the ADX-Wilder with TD3 Reinforcement Learning",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of Ichimoku and the ADX-Wilder with TD3 Reinforcement Learning",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 80,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19627.md"
+    },
+    {
+      "id": 19857,
+      "title": "MQL5 Wizard Techniques you should know (Part 83):  Using Patterns of Stochastic Oscillator and the FrAMA \u2014 Behavioral Archetypes",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know ():  Using Patterns of Stochastic Oscillator and the FrAMA \u2014 Behavioral Archetypes",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 83,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19857.md"
+    },
+    {
+      "id": 19890,
+      "title": "MQL5 Wizard Techniques you should know (Part 84): Using Patterns of Stochastic Oscillator and the FrAMA - Conclusion",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Patterns of Stochastic Oscillator and the FrAMA - Conclusion",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 84,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19890.md"
+    },
+    {
+      "id": 22136,
+      "title": "MQL5 Wizard Techniques You should know (Part 86): Speeding Up Data Access with a Sparse Table for a Custom Trailing Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques You should know (): Speeding Up Data Access with a Sparse Table for a Custom Trailing Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 86,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22136.md"
+    },
+    {
+      "id": 22338,
+      "title": "MQL5 Wizard Techniques you should know (Part 87): Volatility-Scaled Money Management with Monotonic Queue in MQL5",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Volatility-Scaled Money Management with Monotonic Queue in MQL5",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 87,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22338.md"
+    },
+    {
+      "id": 22389,
+      "title": "MQL5 Wizard Techniques you should know (Part 88): Using Blooms Filter with a Custom Trailing Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Blooms Filter with a Custom Trailing Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 88,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22389.md"
+    },
+    {
+      "id": 22499,
+      "title": "MQL5 Wizard Techniques you should know (Part 89): Using Bitwise Vectorization with Perceptron Classifiers",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Bitwise Vectorization with Perceptron Classifiers",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 89,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22499.md"
+    },
+    {
+      "id": 22558,
+      "title": "MQL5 Wizard Techniques you should know (Part 90): Fenwick Tree Money Management with 1D CNN in MQL5",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Fenwick Tree Money Management with 1D CNN in MQL5",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 90,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22558.md"
+    },
+    {
+      "id": 22609,
+      "title": "MQL5 Wizard Techniques you should know (Part 91): Using Skip Lists and a Hopfield Network in a Custom Trailing Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using Skip Lists and a Hopfield Network in a Custom Trailing Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 91,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22609.md"
+    },
+    {
+      "id": 22775,
+      "title": "MQL5 Wizard Techniques you should know (Part 92): Using B-Tree Indexing and a Bayesian NN in a Custom Signal Class",
+      "section": "Trading systems",
+      "series_title": "MQL5 Wizard Techniques you should know (): Using B-Tree Indexing and a Bayesian NN in a Custom Signal Class",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 92,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22775.md"
+    }
+  ]
+}

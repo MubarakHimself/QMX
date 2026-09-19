@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_073_p01",
+  "section": "Examples",
+  "parent_shard": "examples_073",
+  "part_index": 1,
+  "part_count": 3,
+  "series_in_pack": [
+    "doeasy. controls"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 11260,
+      "title": "DoEasy. Controls (Part 13): Optimizing interaction of WinForms objects with the mouse, starting the development of the TabControl WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Optimizing interaction of WinForms objects with the mouse, starting the development of the TabControl WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11260.md"
+    },
+    {
+      "id": 11288,
+      "title": "DoEasy. Controls (Part 14): New algorithm for naming graphical elements. Continuing work on the TabControl WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): New algorithm for naming graphical elements. Continuing work on the TabControl WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11288.md"
+    },
+    {
+      "id": 11316,
+      "title": "DoEasy. Controls (Part 15): TabControl WinForms object \u2014 several rows of tab headers, tab handling methods",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): TabControl WinForms object \u2014 several rows of tab headers, tab handling methods",
+      "series_key": "doeasy. controls",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11316.md"
+    },
+    {
+      "id": 11356,
+      "title": "DoEasy. Controls (Part 16): TabControl WinForms object \u2014 several rows of tab headers, stretching headers to fit the container",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): TabControl WinForms object \u2014 several rows of tab headers, stretching headers to fit the container",
+      "series_key": "doeasy. controls",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11356.md"
+    },
+    {
+      "id": 11408,
+      "title": "DoEasy. Controls (Part 17): Cropping invisible object parts, auxiliary arrow buttons WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Cropping invisible object parts, auxiliary arrow buttons WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11408.md"
+    },
+    {
+      "id": 11454,
+      "title": "DoEasy. Controls (Part 18): Functionality for scrolling tabs in TabControl",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Functionality for scrolling tabs in TabControl",
+      "series_key": "doeasy. controls",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11454.md"
+    },
+    {
+      "id": 11490,
+      "title": "DoEasy. Controls (Part 19): Scrolling tabs in TabControl, WinForms object events",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Scrolling tabs in TabControl, WinForms object events",
+      "series_key": "doeasy. controls",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11490.md"
+    },
+    {
+      "id": 11524,
+      "title": "DoEasy. Controls (Part 20): SplitContainer WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11524.md"
+    },
+    {
+      "id": 11564,
+      "title": "DoEasy. Controls (Part 21): SplitContainer control. Panel separator",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer control. Panel separator",
+      "series_key": "doeasy. controls",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11564.md"
+    },
+    {
+      "id": 11601,
+      "title": "DoEasy. Controls (Part 22): SplitContainer. Changing the properties of the created object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer. Changing the properties of the created object",
+      "series_key": "doeasy. controls",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11601.md"
+    },
+    {
+      "id": 11634,
+      "title": "DoEasy. Controls (Part 23): Improving TabControl and SplitContainer WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Improving TabControl and SplitContainer WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11634.md"
+    },
+    {
+      "id": 11661,
+      "title": "DoEasy. Controls (Part 24): Hint auxiliary WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Hint auxiliary WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11661.md"
+    }
+  ]
+}

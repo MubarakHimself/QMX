@@ -1,0 +1,22 @@
+{
+  "pack_id": "examples_090_p01",
+  "section": "Examples",
+  "parent_shard": "examples_090",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "reimagining classic strategies"
+  ],
+  "n": 1,
+  "articles": [
+    {
+      "id": 23197,
+      "title": "Reimagining Classic Strategies (Part 22): Ensemble Mean Reverting Strategy",
+      "section": "Examples",
+      "series_title": "Reimagining Classic Strategies (): Ensemble Mean Reverting Strategy",
+      "series_key": "reimagining classic strategies",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23197.md"
+    }
+  ]
+}

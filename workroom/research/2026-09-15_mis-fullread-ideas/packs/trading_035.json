@@ -1,0 +1,69 @@
+{
+  "pack_id": "trading_035",
+  "section": "Trading",
+  "parent_shard": "trading_035",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "how to create a simple multi-currency expert advisor using mql5",
+    "how to create an interactive mql5 dashboard/panel using the controls class",
+    "implementing practical modules from other languages in mql5"
+  ],
+  "n": 6,
+  "articles": [
+    {
+      "id": 16084,
+      "title": "How to Create an Interactive MQL5 Dashboard/Panel Using the Controls Class (Part 1): Setting Up the Panel",
+      "section": "Trading",
+      "series_title": "How to Create an Interactive MQL5 Dashboard/Panel Using the Controls Class (): Setting Up the Panel",
+      "series_key": "how to create an interactive mql5 dashboard/panel using the controls class",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16084.md"
+    },
+    {
+      "id": 16146,
+      "title": "How to Create an Interactive MQL5 Dashboard/Panel Using the Controls Class (Part 2): Adding Button Responsiveness",
+      "section": "Trading",
+      "series_title": "How to Create an Interactive MQL5 Dashboard/Panel Using the Controls Class (): Adding Button Responsiveness",
+      "series_key": "how to create an interactive mql5 dashboard/panel using the controls class",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16146.md"
+    },
+    {
+      "id": 13705,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session",
+      "section": "Trading",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Added symbols prefixes and/or suffixes and Trading Time Session",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13705.md"
+    },
+    {
+      "id": 13770,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 4): Triangular moving average \u2014 Indicator Signals",
+      "section": "Trading",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (): Triangular moving average \u2014 Indicator Signals",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13770.md"
+    },
+    {
+      "id": 13861,
+      "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 5):  Bollinger Bands On Keltner Channel \u2014 Indicators Signal",
+      "section": "Trading",
+      "series_title": "How to create a simple Multi-Currency Expert Advisor using MQL5 ():  Bollinger Bands On Keltner Channel \u2014 Indicators Signal",
+      "series_key": "how to create a simple multi-currency expert advisor using mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13861.md"
+    },
+    {
+      "id": 20458,
+      "title": "Implementing Practical Modules from Other Languages in MQL5 (Part 05): The Logging module from Python, Log Like a Pro",
+      "section": "Trading",
+      "series_title": "Implementing Practical Modules from Other Languages in MQL5 (): The Logging module from Python, Log Like a Pro",
+      "series_key": "implementing practical modules from other languages in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20458.md"
+    }
+  ]
+}

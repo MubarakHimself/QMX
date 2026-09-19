@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_022",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 19899,
+      "title": "Crystal Structure Algorithm (CryStAl)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19899.md"
+    },
+    {
+      "id": 20005,
+      "title": "From Novice to Expert: Forex Market Periods",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20005.md"
+    },
+    {
+      "id": 20018,
+      "title": "Mathematical Models in Grid Strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20018.md"
+    },
+    {
+      "id": 20037,
+      "title": "From Novice to Expert: Time Filtered Trading",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20037.md"
+    },
+    {
+      "id": 20052,
+      "title": "Elite Crystal Evolution Algorithm (CEO-inspired): Theory",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20052.md"
+    },
+    {
+      "id": 20071,
+      "title": "A Team of AI Agents with Profit-Based Rotation: The Evolution of a Living Trading System in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20071.md"
+    },
+    {
+      "id": 20122,
+      "title": "A Reinforcement Learning System for Algorithmic Trading in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20122.md"
+    },
+    {
+      "id": 20278,
+      "title": "Trends and Traditions: Using Rademacher Functions in Trading",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20278.md"
+    },
+    {
+      "id": 20479,
+      "title": "Dendritic Cell Algorithm (DCA)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20479.md"
+    },
+    {
+      "id": 20535,
+      "title": "Combining LLM, CatBoost, and Quantum Computing into a Unified Trading System",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20535.md"
+    },
+    {
+      "id": 20550,
+      "title": "Codex Pipelines: From Python to MQL5 for Indicator Selection \u2014 A Multi-Quarter Analysis of the FXI ETF",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20550.md"
+    },
+    {
+      "id": 21299,
+      "title": "Beyond GARCH (Part IV): Partition Analysis in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21299.md"
+    }
+  ]
+}

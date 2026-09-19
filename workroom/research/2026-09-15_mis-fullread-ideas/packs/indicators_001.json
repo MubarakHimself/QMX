@@ -1,0 +1,119 @@
+{
+  "pack_id": "indicators_001",
+  "section": "Indicators",
+  "parent_shard": "indicators_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 5913,
+      "title": "How to visualize multicurrency trading history based on HTML and CSV reports",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5913.md"
+    },
+    {
+      "id": 8860,
+      "title": "CCI indicator. Three transformation steps",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8860.md"
+    },
+    {
+      "id": 9801,
+      "title": "Improved candlestick pattern recognition illustrated by the example of Doji",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9801.md"
+    },
+    {
+      "id": 10770,
+      "title": "Indicators with on-chart interactive controls",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10770.md"
+    },
+    {
+      "id": 10963,
+      "title": "Creating a ticker tape panel: Improved version",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10963.md"
+    },
+    {
+      "id": 11078,
+      "title": "Mountain or Iceberg charts",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11078.md"
+    },
+    {
+      "id": 13578,
+      "title": "Creating multi-symbol, multi-period indicators",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13578.md"
+    },
+    {
+      "id": 14035,
+      "title": "Forex spread trading using seasonality",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14035.md"
+    },
+    {
+      "id": 15042,
+      "title": "Elements of correlation analysis in MQL5: Pearson chi-square test of independence and correlation ratio",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15042.md"
+    },
+    {
+      "id": 15223,
+      "title": "Econometric tools for forecasting volatility: GARCH model",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15223.md"
+    },
+    {
+      "id": 16614,
+      "title": "Mastering File Operations in MQL5: From Basic I/O to Building a Custom CSV Reader",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16614.md"
+    },
+    {
+      "id": 16741,
+      "title": "Analyzing binary code of prices on the exchange (Part I): A new look at technical analysis",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16741.md"
+    }
+  ]
+}

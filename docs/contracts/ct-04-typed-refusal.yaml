@@ -6,7 +6,7 @@ owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0109, DEC-0103, DEC-0112, DEC-0136, DEC-0137, DEC-0138]
+decisions: [DEC-0109, DEC-0103, DEC-0112, DEC-0136, DEC-0137, DEC-0138, DEC-0424, DEC-0436]
 gaps: []
 purpose: >-
   Carry every public QMF failure as a typed, machine-readable value returned across a package
@@ -23,6 +23,7 @@ invariants:
   - "A transient-venue-failure refusal is the venue path's retry vehicle: a venue-supplied retryAfter becomes the refusal's after-condition, and category alone never implies retryability — the unmapped venue-error default is transient venue failure, not-retryable, outcome UNKNOWN, plus an alarm (DEC-0137, DEC-0138)."
   - "A missing, expired, or rejected venue credential is an unavailable-dependency refusal carrying the secret reference id, never the secret value; refusal context, logs, health reports, and metrics carry the reference id only (DEC-0136)."
   - "An invocation of an undeclared venue capability, and a close-scope the adapter does not natively support, are unsupported-capability refusals, never emulated at a wider scope (DEC-0138, DEC-0137)."
+  - "WORKFLOWS USAGE (2026-09-19): a dummy Book / BMS / bot (CT-22 / CT-27 / CT-33 minted solely to satisfy a required field, or whose policy is identity / no-op / unlimited / pass-through, or that uses sentinel fps), and an incomplete ATC PolicyPair, are `invalid input` at compile, register, validate, simulate, and seat (DEC-0424, DEC-0436)."
 schema:
   type: >-
     TypedRefusal — a frozen dataclass value type (AD-3 public-value-type convention) returned, never

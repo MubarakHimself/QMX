@@ -1,0 +1,269 @@
+4: title: "MetaTrader 5 and the MQL5 Economic Calendar: How to Turn News into a Reproducible Trading System"
+20: # MetaTrader 5 and the MQL5 Economic Calendar: How to Turn News into a Reproducible Trading System
+25: | 8 May 2026 at 10:32
+36: ### Introduction
+40: A news trader's workflow looks like this: Quickly open the news calendar in your web browser and check for any changes in events → Quickly evaluate upcoming events and decide what and how to trade → Go to the MetaTrader 5 terminal – either place pending orders or sit at the terminal and wait for the news release to make a decision. In this scenario, the trader often experiences a loss of context, 
+42: Do you want news trading to work like an engineering problem — with clear rules, repeatable results, and automated testing? The purpose of this article is to demonstrate the working architecture of a news layer for MetaTrader 5: a single data source, proper use of the calendar API, a filtering and caching mechanism, export of historical events to a resource for the tester, and automatic switching 
+48: ### Manual news trading is obsolete.
+62: ### Built-in economic calendar in MetaTrader 5: A single source of information
+64: To algorithmize news trading — and therefore make historical testing possible — use our company's unique product — an economic calendar built into MetaTrader 5 with access to news via the MQL5 API. This is what will transform your news trading from an improvisation into a verifiable algorithmic process. Both current events in real time and historical events are available for offline testing.
+68: What makes the calendar built into MetaTrader 5 unique:
+70: | Parameter |  |
+71: | --- | --- |
+72: | Access speed | <100 ms — after loading news into the terminal |
+73: | Integration | Native — at the terminal core level + MQL-API |
+74: | Test | Fully supported - after downloading news to the terminal (access in the tester via files, resources, or SQLite) |
+75: | Reliability | High |
+79: ### MetaTrader 5 economic calendar functions: An MQL5 API overview
+81: The transition from manual to algorithmic analysis begins with understanding the data architecture. In MQL5, the economic calendar is not just a table, but a structured database accessible through a native API. We will explore how to correctly query events, the difference between Event and Value, and why time synchronization is essential for a successful strategy.
+83: The core of the MQL5 calendar consists of several key functions, each one solving its own task. It is important to understand that there is no universal function that provides all Economic Calendar data at once. A combined approach is required.
+85: - *CalendarValueHistory* — main tool for initial loading. Allows getting an array of event values for a specified time interval. This is the "heavy artillery" used during the initialization of the EA to fill the cache with historical data or data for the week ahead.
+86: - *CalendarValueLast* — main function for EAs working in real time. Returns only changed or new values since the last request (via the *change\_id* mechanism). This allows saving traffic and server resources by not requesting the entire data array at each tick.
+87: - *CalendarEventByCountry* — get descriptions of all events in the country. Returns a list of event descriptions for a specific country specified by code according to ISO 3166-1 alpha-2. Necessary for building filters (for example, show only events for "US" (USA), "RU" (Russia), "CA" (Canada), etc.)
+88: - *CalendarEventByCurrency* — get descriptions of all events by currency. Returns a list of event descriptions for a specific currency specified by code ("USD", "EUR", etc.).
+89: - *CalendarCountryById* — get country properties by 'id'.
+90: - *CalendarEventById* — get event properties by 'id'.
+91: - *CalendarValueById* — get a specific value by 'id'.
+93: ### Data structures: What does the calendar MQL5 API return?
+95: All economic calendar API functions return either an array of structures or a variable with a single structure. Let us list the structures and their fields in full.
+97: Event descriptions - used in the *CalendarEventById*, *CalendarEventByCountry* and *CalendarEventByCurrency* functions:
+99: ```
+103:    ENUM_CALENDAR_EVENT_TYPE            type;                  // event type from the ENUM_CALENDAR_EVENT_TYPE enumeration
+104:    ENUM_CALENDAR_EVENT_SECTOR          sector;                // sector an event is related to
+105:    ENUM_CALENDAR_EVENT_FREQUENCY       frequency;             // event frequency (periodicity)
+106:    ENUM_CALENDAR_EVENT_TIMEMODE        time_mode;             // event time mode
+108:    ENUM_CALENDAR_EVENT_UNIT            unit;                  // economic indicator value's unit of measure
+109:    ENUM_CALENDAR_EVENT_IMPORTANCE      importance;            // event importance
+110:    ENUM_CALENDAR_EVENT_MULTIPLIER      multiplier;            // economic indicator value multiplier
+116: ```
+118: Country descriptions — used in the *CalendarCountryById* and *CalendarCountries* functions:
+120: ```
+130: ```
+132: Event values - used in the *CalendarValueById*, *CalendarValueHistoryByEvent*, *CalendarValueHistory*, *CalendarValueLastByEvent* and *CalendarValueLast* functions.
+134: ```
+146:    ENUM_CALENDAR_EVENT_IMPACT          impact_type;           // potential impact on the currency rate
+158: ```
+162: Note that the *MqlCalendarValue* structure provides methods for checking and getting values from the actual actual\_value, forecast\_value, prev\_value and revised\_prev\_value fields. The listed fields may not have values - for example, the actual\_value field may be empty because the news item has not yet been released. The best way to get values is to do the check and get the values using the m
+170: The *MqlCalendarCountry* structure is linked with *MqlCalendarEvent* via a country ID. The relationship form is "one-to-many" (1..\*).
+172: The *MqlCalendarEvent* structure is linked with *MqlCalendarValue* via an event ID. The relationship form is "one-to-many" (1..\*).
+174: ### 
+176: ### 
+178: ### News release time and server time
+180: All functions for working with the economic calendar use the *TimeTradeServer*() trade server time. This means that the time in the MqlCalendarValue structure and the time inputs in the *CalendarValueHistoryByEvent*() and *CalendarValueHistory*() functions are set in a trade server timezone, rather than a user's local time.
+182: No conversion is required: *MqlCalendarValue*::*period* event time can be directly compared with the time obtained when calling the *TimeCurrent*() or *TimeTradeServer*() functions. In the tester, the *TimeTradeServer*() function returns a model time identical to the time in the historical data. The logic for working with time windows ("30 minutes before the news") works the same in real time and 
+186: ```
+188: //| Get calendar values for the current day                          |
+192: //--- define the period boundaries in server time
+202:   if(CalendarValueHistory(values, day_start, day_end, NULL, "USD"))
+210:       if(CalendarEventById(values[i].event_id, event))
+213:         if(CalendarCountryById(event.country_id, country))
+249:       Print("❌ CalendarValueHistory: No Events");
+253:       Print("❌ Error CalendarValueHistory: ", error);
+258: ```
+260: The function displays a list of events for the USD currency for the current day and the contents of the main fields of the structures retrieved via the calendar's MQL API. The full script code is contained in the GetTodayEvents-S.mq5 attached to the article.
+262: The function operation results can be seen in the Toolbox\Experts tab of the MetaTrader 5 terminal. We see that two events were received for USD. At the time of the request, these events had not yet occurred (the news had not been released). Therefore, the *MqlCalendarValue*::*actual\_value* field does not contain a value — the *HasActualValue*() function returns 'false'.
+264: For these event types, the *MqlCalendarValue*::*forecast\_value* field checked by the *HasForecastValue*() is absent (contains no value). For other events, all four fields (prev\_value, actual\_value, forecast\_value and revised\_prev\_value) may be missing.
+290: First, we obtain an array of values for all events in a given time range with the "USD" currency filter. In a loop, we go through the array of values and request the event description by the *MqlCalendarValue*::*event\_id* event ID using the *CalendarEventById*() function. Then we request a country description by ID *MqlCalendarEvent*::*country\_id* using the *CalendarCountryById*() function.
+292: If the *CalendarValueHistory*() function returns 'false', but GetLastError() returns zero (no error), this indicates that there are no events with requested settings.
+294: ### Error handling and limits when working with the calendar
+296: Working with remote data always carries the risk of connection interruptions or access restrictions. Calendar functions return false or 0 on failure. To understand the reason, it is necessary to use *GetLastError*(). The documentation highlights a separate group of errors for the calendar module.
+300: - ERR\_CALENDAR\_TIMEOUT (code 5200) — server response waiting time has expired. Network failure or server overload. Solution: Repeat the request after a pause of 5...10 seconds.
+301: - ERR\_CALENDAR\_NO\_DATA (code 5201) — calendar data has not yet been loaded. The calendar is initialized asynchronously. Solution: Wait 1...2 seconds and repeat.
+302: - ERR\_CALENDAR\_INVALID\_DATE (code 5202) — invalid date range. Code error (for example, the start date is greater than the end date). Solution: Correct the logic, repeating the request is useless.
+303: - ERR\_CALENDAR\_INVALID\_COUNTRY (code 5203) — unknown country/currency code. Error in request parameters. Solution: Check the code (for example, "US" instead of "USA").
+304: - ERR\_CALENDAR\_TOO\_MANY\_REQUESTS (code 5204) — request limit exceeded. Critical error. Solution: Increase the interval between requests.
+308: The servers, to which the MetaTrader 5 terminal connects, protect the infrastructure from overload. If the EA calls *CalendarValueHistory*() on every tick or in a loop without delays, the server returns the error 5204 and temporarily blocks access to the calendar for your terminal. Best practice: load data once at startup in *OnInit*() for the required period.
+310: For real-time updates, use *CalendarValueLast*() while storing the returned *change\_id* variable — this allows receiving only changes, rather than the entire data array. Update the data on a timer in *OnTimer*() at intervals of no more than 5–10 minutes.
+312: Let's look at some examples of solutions to problems that may arise when loading a calendar:
+314: When you start the terminal (cold start) and the EA, the calendar is not ready immediately. Data is loaded from the server in the background. If we call the *CalendarValueHistory*() function in the very first line of OnInit(), you will most likely get error 5201 — no data. It is necessary to implement a readiness polling mechanism with an exponential or fixed timeout.
+316: Practical example — calendar data loading function with error handling:
+318: ```
+320: //| Calendar loading function                                        |
+322: bool LoadCalendar(MqlCalendarValue& values[], const datetime from, const datetime to, const string country_code = NULL, const string currency = NULL, const int max_retries = 5)
+330:     if(CalendarValueHistory(values, from, to, country_code, currency))
+344:     Print("❌ Critical Calendar Error: ", error);
+348:   Print("❌ Failed to load calendar after ", max_retries, " attempts.");
+352: ```
+358: To avoid limits and ensure maximum reaction speed, in *OnTimer*(), we should use the *change\_id* mechanism. At startup, load the full history of events and remember the last *change\_id*. In the timer, request only new data using the *CalendarValueLast*() function. The server will return only what has changed (or 'false' if there are no changes), without wasting resources on transmitting old data
+360: Practical example — calendar data update function with error handling:
+362: ```
+375:   if(!CalendarValueLast(last_change_id, updates,
+380:     // 0 = SUCCESS/NO_NEW_DATA, 5402 = ERR_CALENDAR_NO_CHANGES
+382:       Print("🔴️ CalendarValueLast error: ", err);
+398: void SyncCache(const MqlCalendarValue &updates[])
+401:   int cache_sz = ArraySize(calendar_cache);
+408:       if(calendar_cache[c].id == updates[u].id)
+417:       ArrayResize(calendar_cache, cache_sz + 1);
+425: ```
+429: Incremental updating of events occurs through the event handler from the OnTimer() timer. The calendar API CalendarValueLast() function is called — if new events appear, they update the appropriate elements in the previously loaded *MqlCalendarValue* structure array and output data to the terminal journal. If such an event is not found in the loaded array, it is added to the array.
+431: The full script code is contained in CalendarEventMonitor-EA.mq5, attached to the article.
+433: ### Filtering Events: From general to specific
+437: The economic calendar publishes 60-90 events daily. It is like listening to a constant stream of hundreds of minor indicators, holidays, and official speeches that have no immediate impact on the market. Trading on each of them is a surefire way to overtrading and losing your deposit. The task of a news algorithmic trader is to leave 3-5 events that really move the market.
+439: Filtering in algorithmic news trading is equivalent to increasing the signal-to-noise ratio to a level suitable for automated decision making. In the MQL5 calendar API, this process is implemented as a multi-level sieve system the *MqlCalendarEvent* and *MqlCalendarValue* structure arrays pass through.
+443: The market reacts not to the news release itself, but to the deviation of the actual data from the forecast and the level of macroeconomic influence. Low impact events (*MqlCalendarValue*::*impact\_type* < 3) are often ignored by trading algorithms and market makers.
+447: - False triggers of the strategy on secondary statistics;
+448: - Trading during periods of wide spread without volatility;
+449: - Overloading the EA's logic with unnecessary checks.
+451: The goal of filtering is to reduce the data flow by 90%, leaving only high-impact events (*ENUM\_CALENDAR\_EVENT\_IMPORTANCE*::*CALENDAR\_IMPORTANCE\_HIGH*) for the target currency selected by the trader in a given time window.
+463: An important feature of the news MQL5-API — *MqlCalendarValue* structure does not contain *currency\_id* and *country\_id* fields. It only stores *event\_id*, time, indicator values and influence type. How does this affect filtration?
+465: Currency filtering is performed at the API request level. When you call *CalendarValueHistory*(..., NULL, "USD"), the terminal itself discards everything except USD. The array you receive is already filtered by currency. Therefore, there is no need to check *currency\_id* in real time — it is enough to filter by time, importance and forecast presence/significance.
+475: MQL5-API uses the *ENUM\_CALENDAR\_EVENT\_IMPORTANCE* enumeration for setting the importance degree:
+477: ```
+480:    CALENDAR_IMPORTANCE_NONE,      // importance level is not set
+481:    CALENDAR_IMPORTANCE_LOW,       // low importance
+482:    CALENDAR_IMPORTANCE_MODERATE,  // medium importance
+483:    CALENDAR_IMPORTANCE_HIGH       // high importance
+485: ```
+491: Even among events of high importance there are exceptions. For example, an ECB or IMF speech may be marked as important, but it is algorithmically more difficult to process than the publication of specific figures. Therefore, we need sorting by event code: *MqlCalendarEvent*::*event\_code* field contains a unique ID (for example, "NONFARM", "CPI", "GDP"). We select only events with economic figure
+503: The final stage is checking relevance. We do not need news that will come out in a month now. The news that came out yesterday has already been processed by the market. Therefore, an event is considered active if *TimeCurrent*() falls within the interval: the specified time before the news release and the specified time after the release. Typically, the following settings are used: 15–30 minutes b
+507: ### MQL5 binary resources: Moving events to offline testing for efficient caching
+511: If the EA in the tester calls the *CalendarValueHistory*() function, it gets an error and an empty array. To test the strategy, we need to embed historical news data into the .ex5 executable file. For this we use the option with MQL5 binary resources. Why this particular option? This is the fastest way to access structured data - access speed is limited only by the performance of the computer's fi
+513: Let's look at how to transform the *MqlCalendarValue*[] array into a compact binary file and how to embed it into the code so that the tester reads data from RAM at lightning speed. The first step is to create an exporter script that will download the current data from the calendar and save it to a binary file.
+517: The full script code is in the ExportCalendarForTester.mq5 file attached to the article.
+527: ```
+533: input ENUM_CALENDAR_EVENT_IMPORTANCE  InpMinImportance  = CALENDAR_IMPORTANCE_HIGH;
+534: input string                          InpOutputFile     = "calendar_test_res.bin";
+536: ```
+540: ```
+563: //--- load calendar values with the CURRENCY FILTER (if specified)
+571:       if(LoadCalendar(raw_values, InpDateFrom, InpDateTo, "", currencies[i]))
+578:           if(CalendarEventById(raw_values[k].event_id, event))
+581:             if(event.type != CALENDAR_TYPE_INDICATOR)
+618:           Print("⚠ LoadCalendar Info: No Events for ", currencies[i]);
+620:           Print("❌ LoadCalendar Error: ", error, " for ", currencies[i]);
+625: ```
+629: - The *values\_size*[] array stores the number of filtered events for each currency code specified in the inputs.
+630: - The zero value of MQL5 *datetime* type corresponds to the date of 1970.01.01 00:00:00.
+631: - Additional filtering occurs by event type. Only *ENUM\_CALENDAR\_EVENT\_TYPE*::*CALENDAR\_TYPE\_INDICATOR* type events are sorted — these are economic events (not speeches, but numbers). All other pieces of news are cut off. This is done by validation at the very beginning of filtering:
+633: ```
+635: if(event.type != CALENDAR_TYPE_INDICATOR)
+637: ```
+649: 13:59:43.724      🟨 Min Importance = CALENDAR\_IMPORTANCE\_HIGH  
+653: 13:59:45.513    ✅ Saved: USD\_calendar\_test\_res.bin   Size: 1153152 bytes  (9009 events)
+655: Time of obtaining the array of filtered values (*MqlCalendarValue* structures): 1.80 sec (0.20 ms / per filtration).
+665: 14:03:08.724      🟨 Min Importance = CALENDAR\_IMPORTANCE\_HIGH  
+671: 14:03:11.406    ✅ Saved: USD\_calendar\_test\_res.bin   Size: 1153152 bytes  (9009 events)  
+672: 14:03:11.407    ✅ Saved: EUR\_calendar\_test\_res.bin   Size: 141056 bytes  (1102 events)  
+673: 14:03:11.408    ✅ Saved: JPY\_calendar\_test\_res.bin   Size: 119936 bytes  (937 events)
+675: Time of obtaining the array of filtered values (*MqlCalendarValue* structures): 2.68 sec (0.24 ms / per filtration).
+685: 14:07:22.203      🟨 Min Importance = CALENDAR\_IMPORTANCE\_HIGH  
+689: 14:07:22.291    ✅ Saved: USD\_calendar\_test\_res.bin   Size: 60544 bytes  (473 events)
+691: Time of obtaining the array of filtered values (*MqlCalendarValue* structures): 0.09 sec (0.18 ms / per filtration).
+700: The *SaveToBinary* function saves filtered events to a binary file. The number of files is equal to the number of currency codes specified in the inputs - each currency is exported to its own binary file. The file name begins with the currency code prefix. For example, "USD\_calendar\_test\_res.bin". This way we get a one-to-one correspondence between the currency code and the list of events for i
+702: ```
+706: void SaveToBinary(MqlCalendarValue &values[], const int &vls_size[], const string filename, const string &currencies[])
+730:     Print("✅ Saved: ", currencies[i] + "_" + filename, "   Size: ", vls_size[i] * sizeof(MqlCalendarValue), " bytes", "  (", vls_size[i], " events)");
+735: ```
+740: 14:28:42.078    ✅ Saved: USD\_calendar\_test\_res.bin   Size: 58240 bytes  (455 events)  
+741: 14:28:42.079    ✅ Saved: EUR\_calendar\_test\_res.bin   Size: 7680 bytes  (60 events)
+745: After launching the ExportCalendarForTester.mq5 script in MQL5/Files/, the USD\_calendar\_test\_res.bin and EUR\_calendar\_test\_res.bin files appear. Now they need to be "embedded" into the EA. At the beginning of the EA file (after the #property directives), add one (if you are using a file for one currency) or several lines of the following type:
+747: ```
+749: #resource "\\Files\\USD_calendar_test_res.bin" as MqlCalendarValue USD_res_calendar_data[]
+750: #resource "\\Files\\EUR_calendar_test_res.bin" as MqlCalendarValue EUR_res_calendar_data[]
+751: ```
+758: > - 'USD\_calendar\_test\_res.bin' as 'const MqlCalendarValue USD\_res\_calendar\_data[455]'
+759: > - 'EUR\_calendar\_test\_res.bin' as 'const MqlCalendarValue EUR\_res\_calendar\_data[60]'
+761: When starting the EA, the structures of events saved during the export stage are stored in the *USD\_res\_calendar\_data*[] and *EUR\_res\_calendar\_data*[] arrays.
+767: ```
+797:       Print("❌ ERROR: Failed to load calendar from resource");
+809:       Print("❌ ERROR: Failed to load calendar from API - ", error);
+819: ```
+825: ```
+844: ```
+850: - MQL\_TESTER — flag of the launched program running in the tester;
+851: - MQL\_OPTIMIZATION — flag of the launched program during optimization;
+852: - MQL\_VISUAL\_MODE — flag of the launched program in visual testing mode.
+854: If at least one of these flags is active, then we load the list of events from the resource. Otherwise, we load the list of events in the usual way from the server via the calendar API.
+861: ### Validating the data transformation chain: Events → Binary File → Compile to Resource → Get events from resource
+869: 16:48:22.527    EURUSD,M5: testing of Experts\ImportCalendarValidation-EA.ex5 from 2026.01.01 00:00 to 2026.03.07 00:00 started with inputs:  
+881: 16:48:22.546   Impact:            CALENDAR\_IMPACT\_POSITIVE  
+891: 16:48:22.546   Impact:            CALENDAR\_IMPACT\_NEGATIVE  
+901: 16:48:22.553   Impact:            CALENDAR\_IMPACT\_POSITIVE  
+910: 16:48:22.553   Impact:            CALENDAR\_IMPACT\_POSITIVE  
+922: 16:48:22.553   Impact:           CALENDAR\_IMPACT\_NA  
+931: 16:48:22.553   Impact:           CALENDAR\_IMPACT\_POSITIVE  
+942: 16:48:22.555   Impact:           CALENDAR\_IMPACT\_NA  
+950: 16:48:22.555   Impact:           CALENDAR\_IMPACT\_NA  
+969: 17:27:25.258    Impact:            CALENDAR\_IMPACT\_POSITIVE  
+979: 17:27:25.258    Impact:            CALENDAR\_IMPACT\_NEGATIVE  
+989: 17:27:25.288    Impact:            CALENDAR\_IMPACT\_POSITIVE  
+998: 17:27:25.288    Impact:            CALENDAR\_IMPACT\_POSITIVE  
+1011: 17:27:25.301    Impact:            CALENDAR\_IMPACT\_NA  
+1020: 17:27:25.301    Impact:            CALENDAR\_IMPACT\_POSITIVE  
+1031: 17:27:25.303    Impact:            CALENDAR\_IMPACT\_NA  
+1039: 17:27:25.303    Impact:            CALENDAR\_IMPACT\_NA  
+1047: ### Analysis of typical mistakes and false expectations
+1049: Let's look at the six most common mistakes developers make when integrating the MQL5 economic calendar. Each of them has been tested in real life and could cost someone their lost deposit.
+1055: If news with HIGH importance is released and the actual outcome differs significantly from the forecast, the price is guaranteed to move in the direction of the deviation. Simply buy if actual > forecast for the base currency.  
+1059: The economic calendar is a data source, not a trading signal generator. It tells you what happened, but not how the market will react. Why might the price go against "obvious" logic?
+1061: - The market priced in expectations days before publication. At the very moment the news is released, "selling the news" occurs.
+1062: - Strong inflation data during a period of central bank policy tightening can strengthen the currency, but during a period of easing, it can trigger a sell-off due to fears of overheating.
+1063: - The news may be good, but if the previous value is revised downwards, the overall signal becomes ambiguous.
+1064: - The simultaneous release of data for multiple currencies creates crossover effects that cannot be interpreted linearly.
+1066: The correct approach is to use the calendar as a volatility filter, not as an entry trigger:
+1068: ```
+1079: ```
+1081: Golden rule: The calendar answers the question "When to expect increased volatility?", not "Which direction to trade?"
+1087: The importance == CALENDAR\_IMPORTANCE\_HIGH field means that the event is guaranteed to move the market by 50+ pips. We can trade all such news using the same algorithm.
+1091: Specific values in the *ENUM\_CALENDAR\_EVENT\_IMPORTANCE* enumeration is a subjective assessment by the calendar editors, not a quantitative metric of market impact. For example, let's take two events labeled HIGH, but with different market significance.
+1097: ```
+1114: if(event.importance == CALENDAR_IMPORTANCE_HIGH && IsGoodEvent(event.event_code))
+1118: ```
+1124: 3. "Used TimeLocal() instead of TimeTradeServer()
+1128: Event time in the *MqlCalendarValue*::*time* structure is specified in my local time zone (or UTC), so I can compare it with TimeLocal() or TimeGMT().
+1132: All economic calendar functions return the time in the trade server's time zone (TimeTradeServer()). This is an architectural decision that eliminates the need for manual conversion, but requires discipline from the developer.
+1134: The consequences of this error are serious - if your server is in the EET time zone (UTC+2) and you use TimeLocal() (e.g. MSK, UTC+3), you will be checking events with a 1 hour offset. The EA may miss the news or, conversely, react to it after the fact.
+1138: ```
+1150: ```
+1164: According to the documentation, the numeric fields of the *MqlCalendarValue* structure store values multiplied by one million or the LONG\_MIN constant if no value is specified. What happens if we ignore the check:
+1166: ```
+1172: ```
+1174: The right approach is to use the built-in methods of the *MqlCalendarValue* structure to safely obtain values:
+1176: ```
+1190: ```
+1196: 5. "Call Calendar API functions in OnTick()"
+1200: To always have up-to-date data, I will call CalendarValueHistory() on every tick. This ensures that the EA does not miss any breaking news".  
+1204: The calendar functions operate via a remote server to which MetaTrader 5 connects, and have strict request rate limits. Calling OnTick() (which can fire dozens of times per second) will cause problems:
+1206: - Error 5204 (ERR\_CALENDAR\_TOO\_MANY\_REQUESTS) — temporary blocking of access to the calendar.
+1207: - Execution delays - a network request in the trading cycle increases slippage.
+1208: - Excessive traffic - downloading the same data repeatedly.
+1212: ```
+1222:   datetime from = TimeCurrent() - 7 * 86400;
+1223:   datetime to = TimeCurrent() + 30 * 86400;
+1225:   if(CalendarValueHistory(calendar_cache, from, to, "USD"))
+1243:   if(CalendarValueLast(last_change_id, updates, "USD") > 0)
+1260: ```
+1270: I have updated the calendar\_test\_res.bin resource file in the Files folder, now the tester will automatically see the new events. There is no need to recompile the EA.  
+1278: - The tester log does not include events added to the resource after the last compilation.
+1279: - The strategy "does not see" important news, although it is in the file.
+1280: - The test results are different from expectations, although the code is logically correct.
+1284: ```
+1286: #resource "\\Files\\USD_calendar_test_res.bin" as MqlCalendarValue USD_res_calendar_data[]
+1288: //--- after USD_calendar_test_res.bin update:
+1293: ```
+1303: ### Conclusion
+1305: The economic calendar in the MetaTrader 5 terminal is a powerful tool. But like any tool, it requires understanding the context, discipline in use, and consideration of the platform limitations.
+1309: - understanding the calendar API (Event vs Value, MqlCalendarEvent/MqlCalendarValue structures, server time);
+1310: - safe loading and updating methods (CalendarValueHistory for initial loading, CalendarValueLast + change\_id for incremental updates);
+1311: - handling typical errors and observing request limits;
+1312: - multi-level filtering by currency, importance, event code and time windows to reduce noise and leave 3-5 significant events;
+1313: - a mechanism for exporting filtered data to a binary resource and automatic switching of the data source "real time" ↔ "strategy tester", ensuring identical behavior in real time and in backtesting.
+1321: Recommended resources for an in-depth study of the MetaTrader 5 Calendar API functions and their use in news trading:
+1323: - Documentation — [Economic calendar functions](https://www.mql5.com/en/docs/calendar);
+1324: - Article [Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar](https://www.mql5.com/en/articles/16223);
+1325: - Article [Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis](https://www.mql5.com/en/articles/17603);
+1326: - Article [Trading with the MQL5 Economic Calendar (Part 8): Optimizing News-Driven Backtesting with Smart Event Filtering and Targeted Logs](https://www.mql5.com/en/articles/17603);
+1327: - Article [MQL5 Cookbook – Economic Calendar](https://www.mql5.com/en/articles/9874).
+1331: | File Name | Description |
+1332: | --- | --- |
+1333: | CalendarEventMonitor-EA.mq5 | Test script code for testing the calendar data update function |
+1334: | ExportCalendarForTester-S.mq5 | The code of a test script for checking the export of events with specified filters to a binary file |
+1335: | GetTodayEvents-S.mq5 | The code of a test script for checking the retrieval of events for the current day |
+1336: | ImportCalendarValidation-EA.mq5 | The code of a test EA for checking the news retrieval in the strategy tester from a resource |
+1337: | ImportTesterLog.txt | Results of a single run of the ImportCalendarValidation-EA.mq5 EA in the tester in visual mode |
+1338: | LoadLiveLog.txt | Results of Live loading of events in the ImportCalendarValidation-EA.mq5 EA |
+1350: [CalendarEventMonitor-EA.mq5](https://www.mql5.com/en/articles/download/22196/CalendarEventMonitor-EA.mq5 "Download CalendarEventMonitor-EA.mq5")
+1353: [ExportCalendarForTester-S.mq5](https://www.mql5.com/en/articles/download/22196/ExportCalendarForTester-S.mq5 "Download ExportCalendarForTester-S.mq5")
+1362: [ImportCalendarValidation-EA.mq5](https://www.mql5.com/en/articles/download/22196/ImportCalendarValidation-EA.mq5 "Download ImportCalendarValidation-EA.mq5")
+1375: The article replaces hardcoded cost assumptions in triple-barrier labeling with measured inputs. An MQL5 script captures spread distribution, swap rates, and symbol metadata from your broker, and a Python model converts them into a broker-calibrated min ret you can pass to get events. Labels then reflect the actual round-trip friction for your instrument and holding period.
+1387: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%

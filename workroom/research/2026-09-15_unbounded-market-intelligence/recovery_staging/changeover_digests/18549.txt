@@ -1,0 +1,106 @@
+META: {"id": "18549", "source_url": "https://www.mql5.com/en/articles/18549", "title": "Data Science and ML (Part 45): Forex Time series forecasting using PROPHET by Facebook Model", "author": "", "published": "2025-07-01T08:49Z", "section": "Integration", "series_title": "Data Science and ML (): Forex Time series forecasting using PROPHET by Facebook Model", "series_part": "45"}
+
+title: "Data Science and ML (Part 45): Forex Time series forecasting using PROPHET by Facebook Model"
+series_title: "Data Science and ML (): Forex Time series forecasting using PROPHET by Facebook Model"
+# Data Science and ML (Part 45): Forex Time series forecasting using PROPHET by Facebook Model
+- [Understanding the Prophet model](https://www.mql5.com/en/articles/18549#understanding_the_prophet_model)
+- [Implementing the Prophet model in Python](https://www.mql5.com/en/articles/18549#implementing_the_prophet_model_in_python)
+- [Adding holidays to the Prophet model](https://www.mql5.com/en/articles/18549#adding_holidays_to_the_prophet_model)
+- [Making the MetaTrader 5 trading robot based on the Prophet model](https://www.mql5.com/en/articles/18549#making-mt5-bot-based-on-prophet)
+### What is a Prophet Model?
+The [Prophet model](https://facebook.github.io/prophet/ "https://facebook.github.io/prophet/") is an open-source time series forecasting tool developed by Meta (formerly Facebook). It's designed to provide accurate and user-friendly forecasts for business and analytical purposes, particularly for time series data with strong seasonality and trends.
+This model was introduced by Facebook (S. J. Taylor & Benjamin Letham, 2018), originally for forecasting daily data with weekly and yearly seasonality, plus holiday effects. It was later extended to cover more types of seasonal data. It works best with time series that have strong seasonality and several seasons of historical data.
+- **Trend.** The trend shows the tendency of the data to increase or decrease over a long period, and it filters out the seasonal variations.
+- **Seasonality.** Seasonality is the variations that occur over a short period and is not prominent enough to be called a "trend".
+In this article, we are going to understand and implement this model given forex data and see how it can help us beat the market but, firstly, let's take a moment to understand this model in detail.
+### Understanding the Prophet Model
+The trend component   allows for **changepoints** which are automatically selected if not manually specified. These **changepoints represents locations in the time when the trend can shift** (e.g., sudden growth or decline).
+You can also optionally use **logistic growth model** instead of a linear one, which introduces a capacity (cap) parameter to model saturation effects. *This is useful when growth slows down after reaching a certain natural limit.*
+Holiday effects   are incorporated as **dummy variables** (one-hot encoded), which allows the model to adjust its forecast around special dates that have historically caused deviations in behaviour. Such as, economic news or public holidays.
+The entire model is estimated using a **Bayesian framework**, which enables automatic selection of the changepoints and other model parameters.
+Although this basic decompositional additive model looks simple, the calculation of the terms within this formula is hugely mathematical, so if you don't have a clue about what you are doing, this model can result in making wrong forecasts.
+This is the default model used by Prophet. It assumes that the trend in the data follows a linear trajectory but may change at specific points in time (called changepoints). This model is suitable for data with steady growth or decline patterns, possibly with abrupt shifts.
+This model is appropriate for data that shows saturating growth, i.e., it grows rapidly at first, but slows down as it approaches a maximum capacity or limit. This kind of pattern is often seen in real-world systems with natural or business-imposed limits (like user adoption in a saturated market).
+### Implementing the Prophet Model in Python
+Using the EURUSD data from the hourly chart, let us attempt to detect the trend, seasonality, and forecast future values using this model.
+The first thing you have to do is install all the dependencies from **requirements.txt** file — *attached at the end of this article*
+The Prophet model relies heavily on **the datetime** or **date stamp** feature. This **feature is a must for this model to work.**
+After receiving the data (rates) from MetaTrader 5, we convert it into a Pandas-DataFrame object. Then, we convert the time column, which contains time in seconds, into a datetime format.
+The Prophet model is a [univariate type of model](https://en.wikipedia.org/wiki/Univariate_(statistics) "https://en.wikipedia.org/wiki/Univariate_(statistics)") which requires two features only to operate from a Pandas-DataFrame, i.e., **the datetime feature** named "**ds"** (date stamp) and **the target variable** marked "**y**" in the dataframe.
+For now, let's create a simple dataset from the one received from MetaTrader 5 with two features (time and volatility). This is the data we are going to deploy later to the Prophet model.
+Unlike other time series forecasting models such as ARIMA and VAR (discussed previously), which require the target variable to be a stationary variable, the Prophet model is not restricted to this condition. It can work with non-stationary data as well, but all machine learning models tend to perform well with stationary variables as they are easy for models to learn from due to their nature (they have constant mean, variance, and standard deviation).
+Optionally, we can create X and y features for assessing the impact of time features on the volatility happening in the market.
+As you can see from the subplots, the hour, day of week, year, and week of year all have an impact on the volatility occurring on every hour of the chart. Knowing this gives us the confidence to proceed using this data for the Prophet model.
+After training the model, we often want to test its effectiveness on the out-of-sample data — the information the model hasn't seen before. Unlike other models, the Prophet model has a slightly different way of returning the forecasts.
+Instead of returning a vector containing the predictions, this model returns an entire DataFrame containing various features representing predictions and the state of the model.
+The following table contains the meaning of some of the columns (features) returned by the **predict** method.
+What we need the most is **yhat**, **yhat\_lower**, **yhat\_upper**, **trend**, seasonality patterns (**daily**, **weekly**, **yearly**), **holidays** (if included), and error bounds for components (**\*\_lower** and **\*\_upper**) columns.
+Let's plot actual and forecasts from the testing sample, alongside the actual values from the training sample.
+The values in black represent the training sample, the ones in red are the actual values from the testing sample, and the ones in blue are the predictions made by the model for the testing sample.
+It is hard to understand the effectiveness of the model by just looking at this plot. Let's create small plots representing actual and forecasts from the testing sample.
+According to what we are seeing on the image above, the Prophet model does get some predictions right, and it doesn't seem to do well with outliers in the data.
+Optionally, we can look further into the predictions by analysing the actual values against the predictions made by the model in the first week of January (from January 1st to January 8th).
+It looks a lot better. However, while the model seems to understand some patterns, its forecasts (predictions) aren't that close to the actual values, something we often strive to achieve when using [regression models](https://en.wikipedia.org/wiki/Regression_analysis "https://en.wikipedia.org/wiki/Regression_analysis").
+What I'm interested in is the MAPE (Mean Absolute Percentage Error) metric; The value of approximately 0.6 means that, on average, the forecasts made by the model are off by 60% from the actual values. Simply put, the model made terrible predictions and it is error prone.
+### Adding Holidays to the Prophet Model
+The Prophet model is built to understand the fact that in any data, there could be events that cause unusual changes in a time series data; these are what we call "holidays".
+These days don't follow an irregular seasonal pattern, but they repeat, often yearly, quarterly, daily, etc.
+In financial (trading) data, we can consider the economic news as holidays, as they cause this scenario described. In doing so, we may help our model address its current issue — failing to capture these extreme values.
+As seen in  **Figure 01**  which has the Prophet model's formula, by adding holidays *if there are any,*  makes the model complete as holidays are one of the major building blocks of the formula.
+After collecting the news inside the function **SaveNews**, the data obtained is stored in a CSV file in the "Common path" (folder).
+Since we collected the news on every row worth of data in our MQL5 script, we end up with some rows in the news column with the name "**(null)**" which indicates there were no news at the time, **we have to filter these rows**.
+Similary to how we structured the previous data for this model to having two columns — **ds**  and **y**, we have to ensure the holidays dataset has two columns as well — **ds** and **holiday.** **The holiday column is for keeping the name of the new(s).**
+Alongside these features, the holidays dataframe can have two optional columns (**lower\_window** and **upper\_window**). These columns tell the model about the impact of each holiday before and after it occurs.
+We know that **every holiday** in a real world doesn't have the impact on that particular date it occurs, it often **has an impact before and after its occurrence(s)**.
+The **lower\_window** column tells how much the holiday impacted the time series data before it occurred, while the **upper\_window** column tells how much the holiday impacted the time series after the time it ocurred.
+- For the **lower\_window** column, its values can be less than or equal to zero (<=0), the default value is zero, indicating the holiday doesn't impact any previous value in a timeseries. A value of -1 indicates a certain holiday affects the previous single value of the timeseries before it occurred, etc,.
+- For the **upper\_window** column, its values can be greater than or equal to zero (>=0), the default value is zero, indicating the holiday doesn't impact any values in a timeseries after its occurrence. A value of 1 indicates a certain holiday affects the next single value in the time series after it occurred, etc,.
+Finally, we give our Prophet model the holidays Dataframe and the training data we prepared previously.
+We can test the predictions made by the trained model with holidays by plot the predicted values alongside the actual values as we did prior.
+Unlike in the predictions made by the model without news (holidays) in  **Figure 05** which seems static, the predictions made by this new model with news (holidays) seems to capture some of the fluctuations the prior model was missing.
+The MAPE metric shows that there is about a 10% improvement in predictions made by the model. The previous model made approximately 60% errors, while this one made around 55% errors. This improvement can also be seen in the r2\_score.
+The model that makes 55% errors is still not good, an ideal model has to make atleast less than 50% errors (< 50%), we can still do something about the holidays (news) to improve this model.
+In this example, we implemented the **lower\_window** and **upper\_window** values as -1 and 1, respectively, meaning the news affects the volatility in the market one bar before and after they were released. While this improved the model, I doubt whether it is ideal or not.
+We know that different news could have different impact horizons and strengths, so putting these constant values for all news is fundamentally wrong. Also, we used all news, even the news with lower importance, which we often ignore as traders because such news happen very often and it is hard to measure and observe their impact on the chart.
+To fix these two issues, you have to set the **lower\_window** and **upper\_window** values dynamically according to the news type and their observable impact **historically**.
+Given there are tens of thousands of unique news types, and you have to be sure of the impact values implemented, this approach is very difficult to implement but  **it is the ideal way**. *So, do the homework :).*
+For now, the obvious thing we can do is filter some news so that we can remain with news of higher and moderate importance.
+Looks great, after extracting the time and name columns into the holidays Dataframe, we add the **lower\_window** and **upper\_window** values.
+After training the model, below is the plot showing actual values from both training and testing sample in black and red respectively, and the predictions from the testing sample in blue color.
+The model improved once more, making approximately 50% errors according to the MAPE metric. We can now use this regression model to make predictions.
+You might have noticed that we imported the news separately from a CSV file, while we used it alongside the training data imported directly from MetaTrader 5.
+The Prophet model aligns (syncs) the dates from the "holidays" DataFrame with the dates in the main training data, as long as the timestamps in the "holidays" DataFrame fall within the training/future prediction period.
+Despite this model being capable of syncing the dates, you have to explicitly ensure that both datasets have the same starting dates to get the best out of the two datasets.
+*I had to go back and modify the process of getting price information from MetaTrader 5 inside **main.ipynb,** start and end dates now match the ones used inside **OHLC + News.mq5** script file.*
+To create a trading robot based on the Prophet model, we have to be able to use it to make real-time predictions on the target variable (volatility in this case) first.
+To achieve this, we need a pipeline for obtaining the recent information from the market (symbols), including the latest news updates all at once. In the training script **main.ipynb,** we collected data from MetaTrader 5 using MetaTrader 5-Python package but, this package doesn't offer a way to get news so, we definitely need to use MQL5 for this process.
+The idea is to exchange data between the Python script (trading robot) and an Expert Advisor (EA) in MQL5.
+- An EA (**Data for Prophet.mq5**) attached to the MetaTrader 5 chart periodically saves the data (News and OHLC values) from MetaTrader 5 to a CSV file in the common folder.
+- This file is then read by the Python script (**Prophet-trading-bot.py)** for training the Prophet model periodically.
+- After training, the model is then used for making predictions that are then used for making trading decisions inside the same Python script.
+To ensure that we are working with the right file, the date and current hour (in UTC Time) are used in naming the CSV file.
+This Expert advisor collects news and other values and saves them to a CSV file on every minute by default, according to the [OnTimer function](https://www.mql5.com/en/docs/event_handlers/ontimer).
+Inside a Python script, we load the CSV file from the common folder the same way, and import the data.
+We prepare the volatility column and extract the news names for the training data and the holidays data, respectively.
+At the end of the function **prophet\_vol\_pred**, we train the model with the received information and return a single predicted value, which represents the predicted volatility the model thinks is going to happen in the next bar on the market.
+Similarly to other machine learning models used in time series forecasting, we have to update them very often to ensure they are equipped with the recent information which is relevant to future forecasts (predictions). This is the main reason to why we retrain the model before making any new predictions.
+The above function gets the predicted volatility from the Prophet model and uses it for setting stoploss and takeprofit targets in our trades. Before opening a random trade, it checks if a position (trade) of the same type doesn't exist before opening one.
+Two opposite trades were opened in MetaTrader 5 with stop loss and take profit values which is the volatility predicted by the model.
+### Conclusion
+While some articles, posts, and tutorials online claim that the Prophet model is good for time series forecasting, I think it is one of the worst models we have discussed in this article series.
+It might be good in forecasting some simple time series problems like predicting the demand of some business which depends on the weather, holidays or, some kind of seasonal patterns but, financial markets are much complex than that, as seen in the figures (05, 06, 07, 08, 09) illustrating actual and predicted values on the testing samples. The Prophet model fails to get the majority of the predictions near the actual values.
+I understand that there are certain things you can do to improve it, but I would suggest using it on simple problems for now.
+- No cross validation or hyperparameter tuning ability as you have to control trend, seasonality, and changepoints yourself.
+- [https://facebook.github.io/prophet/](https://facebook.github.io/prophet/ "https://facebook.github.io/prophet/")
+- [https://otexts.com/fpp3/prophet.html](https://otexts.com/fpp3/prophet.html "https://otexts.com/fpp3/prophet.html")
+- [https://www.geeksforgeeks.org/time-series-analysis-using-facebook-prophet/](https://www.geeksforgeeks.org/data-science/time-series-analysis-using-facebook-prophet/ "https://www.geeksforgeeks.org/time-series-analysis-using-facebook-prophet/")
+- [https://www.kaggle.com/code/omegajoctan/time-series-forecasting-with-prophet/edit](https://www.kaggle.com/code/omegajoctan/time-series-forecasting-with-prophet/edit "https://www.kaggle.com/code/omegajoctan/time-series-forecasting-with-prophet/edit")
+[Attachments.zip](https://www.mql5.com/en/articles/download/18549/attachments.zip "Download Attachments.zip")
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+In the second part of the article, we will continue developing a modified version of the AOS (Atomic Orbital Search) algorithm focusing on specific operators to improve its efficiency and adaptability. After analyzing the fundamentals and mechanics of the algorithm, we will discuss ideas for improving its performance and the ability to analyze complex solution spaces, proposing new approaches to extend its functionality as an optimization tool.
+[From Novice to Expert: Animated News Headline Using MQL5 (III) — Indicator Insights](https://www.mql5.com/en/articles/18528)
+In this article, we’ll advance the News Headline EA by introducing a dedicated indicator insights lane—a compact, on-chart display of key technical signals generated from popular indicators such as RSI, MACD, Stochastic, and CCI. This approach eliminates the need for multiple indicator subwindows on the MetaTrader 5 terminal, keeping your workspace clean and efficient. By leveraging the MQL5 API to access indicator data in the background, we can process and visualize market insights in real-time using custom logic. Join us as we explore how to manipulate indicator data in MQL5 to create an intelligent and space-saving scrolling insights system, all within a single horizontal lane on your trading chart.
+[Automating Trading Strategies in MQL5 (Part 21): Enhancing Neural Network Trading with Adaptive Learning Rates](https://www.mql5.com/en/articles/18660)
+In this article, we enhance a neural network trading strategy in MQL5 with an adaptive learning rate to boost accuracy. We design and implement this mechanism, then test its performance. The article concludes with optimization insights for algorithmic trading.
+Using simple examples, we will examine the principles of calculating moving averages, as well as learn about the ways to optimize indicator calculations, including moving averages.

@@ -1,0 +1,64 @@
+{
+  "shard_id": "tester_015",
+  "section": "Tester",
+  "n": 6,
+  "series_in_shard": [
+    "developing a replay system"
+  ],
+  "articles": [
+    {
+      "id": 11328,
+      "title": "Developing a Replay System (Part 26): Expert Advisor project \u2014 C_Terminal class",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Terminal class",
+      "series_key": "developing a replay system",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11328.md"
+    },
+    {
+      "id": 11337,
+      "title": "Developing a Replay System (Part 27): Expert Advisor project \u2014 C_Mouse class (I)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Mouse class (I)",
+      "series_key": "developing a replay system",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11337.md"
+    },
+    {
+      "id": 11349,
+      "title": "Developing a Replay System (Part 28): Expert Advisor project \u2014 C_Mouse class (II)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Mouse class (II)",
+      "series_key": "developing a replay system",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11349.md"
+    },
+    {
+      "id": 11355,
+      "title": "Developing a Replay System (Part 29): Expert Advisor project \u2014 C_Mouse class (III)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Mouse class (III)",
+      "series_key": "developing a replay system",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11355.md"
+    },
+    {
+      "id": 11372,
+      "title": "Developing a Replay System (Part 30): Expert Advisor project \u2014 C_Mouse class (IV)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Mouse class (IV)",
+      "series_key": "developing a replay system",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11372.md"
+    },
+    {
+      "id": 11378,
+      "title": "Developing a Replay System (Part 31): Expert Advisor project \u2014 C_Mouse class (V)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System (): Expert Advisor project \u2014 C_Mouse class (V)",
+      "series_key": "developing a replay system",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11378.md"
+    }
+  ]
+}

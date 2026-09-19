@@ -1,0 +1,86 @@
+{
+  "pack_id": "trading_systems_037",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_037",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "engineering trading discipline into code",
+    "experiments with neural networks"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 21493,
+      "title": "Engineering Trading Discipline into Code (Part 3): Enforcing Symbol-Level Trading Boundaries with a Whitelist System in MQL5",
+      "section": "Trading systems",
+      "series_title": "Engineering Trading Discipline into Code (): Enforcing Symbol-Level Trading Boundaries with a Whitelist System in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21493.md"
+    },
+    {
+      "id": 21515,
+      "title": "Engineering Trading Discipline into Code (Part 4): Enforcing Trading Hours and News Disabling in MQL5",
+      "section": "Trading systems",
+      "series_title": "Engineering Trading Discipline into Code (): Enforcing Trading Hours and News Disabling in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21515.md"
+    },
+    {
+      "id": 22833,
+      "title": "Engineering Trading Discipline into Code (Part 7): Automating Equity Protection Through Governance Logic",
+      "section": "Trading systems",
+      "series_title": "Engineering Trading Discipline into Code (): Automating Equity Protection Through Governance Logic",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22833.md"
+    },
+    {
+      "id": 23100,
+      "title": "Engineering Trading Discipline into Code (Part 8): Building a Setup Confirmation and Trade Authorization Layer in MQL5",
+      "section": "Trading systems",
+      "series_title": "Engineering Trading Discipline into Code (): Building a Setup Confirmation and Trade Authorization Layer in MQL5",
+      "series_key": "engineering trading discipline into code",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23100.md"
+    },
+    {
+      "id": 12202,
+      "title": "Experiments with neural networks (Part 4): Templates",
+      "section": "Trading systems",
+      "series_title": "Experiments with neural networks (): Templates",
+      "series_key": "experiments with neural networks",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12202.md"
+    },
+    {
+      "id": 12459,
+      "title": "Experiments with neural networks (Part 5): Normalizing inputs for passing to a neural network",
+      "section": "Trading systems",
+      "series_title": "Experiments with neural networks (): Normalizing inputs for passing to a neural network",
+      "series_key": "experiments with neural networks",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12459.md"
+    },
+    {
+      "id": 12515,
+      "title": "Experiments with neural networks (Part 6): Perceptron as a self-sufficient tool for price forecast",
+      "section": "Trading systems",
+      "series_title": "Experiments with neural networks (): Perceptron as a self-sufficient tool for price forecast",
+      "series_key": "experiments with neural networks",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12515.md"
+    },
+    {
+      "id": 13598,
+      "title": "Experiments with neural networks (Part 7): Passing indicators",
+      "section": "Trading systems",
+      "series_title": "Experiments with neural networks (): Passing indicators",
+      "series_key": "experiments with neural networks",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13598.md"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_061",
+  "section": "Examples",
+  "parent_shard": "examples_061",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 21720,
+      "title": "RiskGate: Centralized Risk Management for Multiple EAs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21720.md"
+    },
+    {
+      "id": 21732,
+      "title": "Code, Tears, and Algo Forge",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21732.md"
+    },
+    {
+      "id": 21742,
+      "title": "Automating Market Entropy Indicator: Trading System Based on Information Theory",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21742.md"
+    },
+    {
+      "id": 21743,
+      "title": "Developing Market Entropy Indicator: Trading System Based on Information Theory",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21743.md"
+    },
+    {
+      "id": 21759,
+      "title": "From Novice to Expert: Adaptive Risk Management for Liquidity Strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21759.md"
+    },
+    {
+      "id": 21817,
+      "title": "From Novice to Expert: Automating Base-Candle Geometry for Liquidity Zones in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21817.md"
+    },
+    {
+      "id": 22009,
+      "title": "Algorithmic Trading Without the Routine: Quick Trade Analysis in MetaTrader 5 with SQLite",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22009.md"
+    },
+    {
+      "id": 22140,
+      "title": "Building a Dynamic STF Liquidity Sweep Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22140.md"
+    },
+    {
+      "id": 22184,
+      "title": "Graph Theory: Heuristic Search Algorithm (A-Star) Applied in Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22184.md"
+    },
+    {
+      "id": 22196,
+      "title": "MetaTrader 5 and the MQL5 Economic Calendar: How to Turn News into a Reproducible Trading System",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22196.md"
+    },
+    {
+      "id": 22224,
+      "title": "How to implement AutoARIMA forecasting in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22224.md"
+    },
+    {
+      "id": 22249,
+      "title": "Building the Market Structure Sentinel Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22249.md"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "pack_id": "trading_039_p01",
+  "section": "Trading",
+  "parent_shard": "trading_039",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "mql5 trading tools"
+  ],
+  "n": 5,
+  "articles": [
+    {
+      "id": 21275,
+      "title": "MQL5 Trading Tools (Part 19): Building an Interactive Tools Palette for Chart Drawing",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Building an Interactive Tools Palette for Chart Drawing",
+      "series_key": "mql5 trading tools",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21275.md"
+    },
+    {
+      "id": 21315,
+      "title": "MQL5 Trading Tools (Part 22): Graphing the Histogram and Probability Mass Function (PMF) of the Binomial Distribution",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Graphing the Histogram and Probability Mass Function (PMF) of the Binomial Distribution",
+      "series_key": "mql5 trading tools",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21315.md"
+    },
+    {
+      "id": 22193,
+      "title": "MQL5 Trading Tools (Part 30): Class-Based Tool Palette Sidebar",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Class-Based Tool Palette Sidebar",
+      "series_key": "mql5 trading tools",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22193.md"
+    },
+    {
+      "id": 22214,
+      "title": "MQL5 Trading Tools (Part 31): Creating an Interactive Tools Palette in MQL5",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Creating an Interactive Tools Palette in MQL5",
+      "series_key": "mql5 trading tools",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22214.md"
+    },
+    {
+      "id": 22233,
+      "title": "MQL5 Trading Tools (Part 32): Crosshair, Magnifier, and Measure Mode",
+      "section": "Trading",
+      "series_title": "MQL5 Trading Tools (): Crosshair, Magnifier, and Measure Mode",
+      "series_key": "mql5 trading tools",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22233.md"
+    }
+  ]
+}

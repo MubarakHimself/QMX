@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_011",
+  "section": "Trading",
+  "parent_shard": "trading_011",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 10993,
+      "title": "Learn how to design a trading system by Accumulation/Distribution (AD)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10993.md"
+    },
+    {
+      "id": 11037,
+      "title": "Learn how to design a trading system by MFI",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11037.md"
+    },
+    {
+      "id": 11050,
+      "title": "Learn how to design a trading system by Volumes",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11050.md"
+    },
+    {
+      "id": 11081,
+      "title": "Learn how to design a trading system by Ichimoku",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11081.md"
+    },
+    {
+      "id": 11142,
+      "title": "Learn how to design a trading system by Williams PR",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11142.md"
+    },
+    {
+      "id": 11185,
+      "title": "Learn how to design a trading system by Standard Deviation",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11185.md"
+    },
+    {
+      "id": 11242,
+      "title": "Learn how to design a trading system by Chaikin Oscillator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11242.md"
+    },
+    {
+      "id": 11269,
+      "title": "Learn how to design a trading system by Force Index",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11269.md"
+    },
+    {
+      "id": 11297,
+      "title": "Learn how to design a trading system by Bear's Power",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11297.md"
+    },
+    {
+      "id": 11327,
+      "title": "Learn how to design a trading system by Bull's Power",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11327.md"
+    },
+    {
+      "id": 11341,
+      "title": "Learn how to design a trading system by VIDYA",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11341.md"
+    },
+    {
+      "id": 11394,
+      "title": "Learn how to design a trading system by DeMarker",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11394.md"
+    }
+  ]
+}

@@ -1,0 +1,2672 @@
+---
+id: 14912
+source_url: https://www.mql5.com/en/articles/14912
+title: "News Trading Made Easy (Part 2): Risk Management"
+author: ""
+author_url: 
+published: 2024-06-04T14:54Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "News Trading Made Easy (): Risk Management"
+series_part: 2
+source: mql5
+language: en
+---
+
+# News Trading Made Easy (Part 2): Risk Management
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 4 June 2024 at 10:54
+
+6 786
+[
+6](https://www.mql5.com/en/forum/468090 "Comments")
+
+[Kabelo Frans Mampa](https://www.mql5.com/en/users/kaaiblo)
+
+## Introduction
+
+A quick refresher for [the previous article](https://www.mql5.com/en/articles/14324 "News Trading Made Easy (Part 1): Creating a Database") in the News Trading Made Easy series. In part 1, we went through the concept of DST(Daylight Savings Time) and the various versions for different countries that essentially change their time zones by an hour ahead and behind during a financial year. This will change trading schedules for the related brokers using DST. The reasons for creating a database and the benefits were addressed. A database was created to store the news events from the [MQL5 Economic Calendar](https://www.mql5.com/en/economic-calendar "MQL5 Economic Calendar") with subsequent changes to the event time data to reflect the broker's DST schedule for accurate back-testing in the future. In the project files, an SQL script results in an Excel format was provided for all the unique events accessible through the MQL5 Calendar for all the different countries.
+
+However, in this article, we will make a few changes to our previous code in part 1. Firstly by implementing inheritance to the existing code and upcoming new code, the previous news/calendar database will get a revamp into something more useable and practical. Additionally, we will tackle risk management and create different risk profiles to choose from for users with different risk appetites or preferences.
+
+## Inheritance
+
+### What is Inheritance?
+
+[Inheritance](https://www.programiz.com/cpp-programming/inheritance "https://www.programiz.com/cpp-programming/inheritance") is a fundamental concept in object-oriented programming (OOP) that allows a new class (called a subclass or derived class) to inherit properties and behaviors (fields and methods) from an existing class (called a superclass or base class). This mechanism provides a way to create a new class by extending or modifying the behavior of an existing class, promoting code reuse and the creation of a more logical and hierarchical class structure.
+
+### What is the purpose of Inheritance?
+
+Inheritance enables the reuse of existing code. By inheriting from a base class, a subclass can leverage existing methods and fields without having to rewrite them. This reduces redundancy and makes the code more maintainable.  Inheritance helps in organizing code into a hierarchical structure, which is easier to understand and manage. Classes can be grouped based on shared attributes and behaviors, leading to a clear and logical organization of the codebase. Inheritance is closely related to polymorphism, which allows objects of different classes to be treated as objects of a common superclass. This is particularly useful for implementing flexible and extensible code. For instance, a function can operate on objects of different classes as long as they inherit from the same base class, allowing for dynamic method binding and more generalized code.
+
+Inheritance allows for extending the functionality of existing classes. Subclasses can add new methods and fields or override existing ones to introduce specific behaviors without modifying the original class. This promotes the open/closed principle, where classes are open for extension but closed for modification. Inheritance supports encapsulation by allowing a subclass to access the protected and public members of a superclass while keeping the implementation details private. This ensures a clear separation between the interface and implementation, enhancing modularity and reducing the risk of unintended interactions.
+
+### What are Access Modifiers?
+
+Access modifiers are keywords in object-oriented programming languages that set the accessibility of classes, methods/functions, and other members. They control the visibility and accessibility of these elements from different parts of the code, thus enforcing encapsulation and protecting the integrity of the data.
+
+Types of Access Modifiers
+
+- Public
+- Private
+- Protected
+
+1. **Public**
+
+Purpose: To make a class, function, or variable available for use in other classes or programs.
+
+2. **Private**
+
+Purpose: To restrict access to members of a class, thus protecting the integrity of the data.
+
+3. **Protected**
+
+Purpose: To allow subclasses to inherit and access the members while still restricting access from class's objects.
+
+### Inheritance Example related to MQL5
+
+We will first create a [UML class diagram](https://www.visual-paradigm.com/guide/uml-unified-modeling-language/uml-class-diagram-tutorial/ "UML Class Diagram tutorial") for the example to visualize the classes and their relationships and attributes.
+
+Classes UnitedStates and Switzerland have singular Inheritance from class NewsData:
+
+```
+class NewsData
+  {
+private://Properties are only accessible from this class
+   string            Country;//Private variable
+   struct EventDetails//Private structure
+     {
+      int            EventID;
+      string         EventName;
+      datetime       EventDate;
+     };
+protected:
+   //-- Protected Array Only accessible from this class and its children
+   EventDetails      News[];
+   //-- Proctected virtual void Function(to be expanded on via child classes)
+   virtual void      SetNews();
+   //-- Protected Function Only accessible from this class and its children
+   void              SetCountry(string myCountry) {Country=myCountry;}
+public:
+   void              GetNews()//Public function to display 'News' array details
+     {
+      PrintFormat("+---------- %s ----------+",Country);
+      for(uint i=0;i<News.Size();i++)
+        {
+         Print("ID: ",News[i].EventID," Name: ",News[i].EventName," Date: ",News[i].EventDate);
+        }
+     }
+                     NewsData(void) {}//Class constructor
+                    ~NewsData(void) {ArrayFree(News);}//Class destructor
+  };
+
+//+------------------------------------------------------------------+
+//|(Subclass/Child) for 'NewsData'                                   |
+//+------------------------------------------------------------------+
+class UnitedStates:private NewsData
+//private inheritance from NewsData,
+//'UnitedStates' class's objects and children
+//will not have access to 'NewsData' class's properties
+  {
+private:
+   virtual void      SetNews()//private Function only Accessible in 'UnitedStates' class
+     {
+      ArrayResize(News,News.Size()+1,News.Size()+2);
+      News[News.Size()-1].EventID = 1;
+      News[News.Size()-1].EventName = "NFP(Non-Farm Payrolls)";
+      News[News.Size()-1].EventDate = D'2024.01.03 14:00:00';
+     }
+public:
+   void              myNews()//public Function accessible via class's object
+     {
+      SetCountry("United States");//Calling function from 'NewsData'
+      GetNews();//Calling Function from private inherited class 'NewsData'
+     }
+                     UnitedStates(void) {SetNews();}//Class constructor
+  };
+
+//+------------------------------------------------------------------+
+//|(Subclass/Child) for 'NewsData'                                   |
+//+------------------------------------------------------------------+
+class Switzerland: public NewsData
+//public inheritance from NewsData
+  {
+public:
+   virtual void      SetNews()//Public Function to set News data
+     {
+      ArrayResize(News,News.Size()+1,News.Size()+2);//Adjusting News structure array's size
+      News[News.Size()-1].EventID = 0;//Setting event id to '0'
+      News[News.Size()-1].EventName = "Interest Rate Decision";//Assigning event name
+      News[News.Size()-1].EventDate = D'2024.01.06 10:00:00';//Assigning event date
+     }
+                     Switzerland(void) {SetCountry("Switerland"); SetNews();}//Class construct
+  };
+```
+
+In this Example:
+
+The (Parent/Base/Super) class would be NewsData and any private declarations will be only accessible by this class. The private declarations will be inaccessible to the class's objects and children. Whilst the protected declarations will be accessible to both the class and its children. Whereas all public declarations will be accessible to the class, its children and objects.  
+
+Accessibility Table For NewsData:
+
+| Class's Properties | Class | Children | Objects |
+| --- | --- | --- | --- |
+| Variable: Country(Private) | ✔ | ✘ | ✘ |
+| Structure: EventDetails(Private) | ✔ | ✘ | ✘ |
+| Variable: News(Protected) | ✔ | ✔ | ✘ |
+| Function: SetNews(Protected) | ✔ | ✔ | ✘ |
+| Function: SetCountry(Protected) | ✔ | ✔ | ✘ |
+| Function: GetNews(Public) | ✔ | ✔ | ✔ |
+| Constructor: NewsData(Public) | ✔ | ✘ | ✘ |
+| Destructor: ~NewsData(Public) | ✔ | ✘ | ✘ |
+
+```
+class NewsData
+  {
+private://Properties are only accessible from this class
+   string            Country;//Private variable
+   struct EventDetails//Private structure
+     {
+      int            EventID;
+      string         EventName;
+      datetime       EventDate;
+     };
+protected:
+   //-- Protected Array Only accessible from this class and its children
+   EventDetails      News[];
+   //-- Proctected virtual void Function(to be expanded on via child classes)
+   virtual void      SetNews();
+   //-- Protected Function Only accessible from this class and its children
+   void              SetCountry(string myCountry) {Country=myCountry;}
+public:
+   void              GetNews()//Public function to display 'News' array details
+     {
+      PrintFormat("+---------- %s ----------+",Country);
+      for(uint i=0;i<News.Size();i++)
+        {
+         Print("ID: ",News[i].EventID," Name: ",News[i].EventName," Date: ",News[i].EventDate);
+        }
+     }
+                     NewsData(void) {}//Class constructor
+                    ~NewsData(void) {ArrayFree(News);}//Class destructor
+  };
+```
+
+Visible Properties from the NewsData Object:
+
+           
+
+Result from GetNews function in NewsData:
+
+Inheritance is Implemented with the both the remaining classes:
+
+In the (Child/Sub/Derived) class  UnitedStates, it inherits the parent(NewsData) class privately.   
+Meaning that the sub(UnitedStates) class can access the protected and public properties from the parent(NewsData) class, but the children for the UnitedStates class and its objects will not have access to any properties of the parent(NewsData) class. If the inheritance [Access Modifier](https://www.geeksforgeeks.org/access-modifiers-in-c/ "www.geeksforgeeks.org/access-modifiers-in-c/") was protective the UnitedStates class's children would have access to both the parent(NewsData) class's protective and public properties, but the sub(UnitedStates) class's objects would not have any access to the parent class's properties.
+
+Accessibility Table For UnitedStates:
+
+| Class's Properties | Class | Children | Objects |
+| --- | --- | --- | --- |
+| Inheritance(Private) Variable: Country(Private) | ✘ | ✘ | ✘ |
+| Inheritance(Private) Structure: EventDetails(Private) | ✘ | ✘ | ✘ |
+| Inheritance(Private) Variable: News(Protected) | ✔ | ✘ | ✘ |
+| Inheritance(Private) Function: SetNews(Protected) | ✔ | ✘ | ✘ |
+| Inheritance(Private) Function: SetCountry(Protected) | ✔ | ✘ | ✘ |
+| Inheritance(Private) Function: GetNews(Public) | ✔ | ✘ | ✘ |
+| Inheritance(Private) Constructor: NewsData(Public) | ✘ | ✘ | ✘ |
+| Inheritance(Private) Destructor: ~NewsData(Public) | ✘ | ✘ | ✘ |
+| Function: SetNews(Private) | ✔ | ✘ | ✘ |
+| Function: myNews(Public) | ✔ | ✔ | ✔ |
+| Constructor: UnitedStates(Public) | ✔ | ✘ | ✘ |
+
+```
+class UnitedStates:private NewsData
+//private inheritance from NewsData,
+//'UnitedStates' class's objects and children
+//will not have access to 'NewsData' class's properties
+  {
+private:
+   virtual void      SetNews()//private Function only Accessible in 'UnitedStates' class
+     {
+      ArrayResize(News,News.Size()+1,News.Size()+2);
+      News[News.Size()-1].EventID = 1;
+      News[News.Size()-1].EventName = "NFP(Non-Farm Payrolls)";
+      News[News.Size()-1].EventDate = D'2024.01.03 14:00:00';
+     }
+public:
+   void              myNews()//public Function accessible via class's object
+     {
+      SetCountry("United States");//Calling function from 'NewsData'
+      GetNews();//Calling Function from private inherited class 'NewsData'
+     }
+                     UnitedStates(void) {SetNews();}//Class constructor
+  };
+```
+
+Visible Properties from the UnitedStates Object:
+
+        
+
+A compile error arises from attempting to access GetNews function which is privately inherited from NewsData, this prevents the UnitedStates object from access to the function.
+
+In the (Child/Sub/Derived) class Switzerland.
+
+The inheritance access modifier is public. This provides the sub(Switzerland) class's children access to the parent(NewsData) class's public and protective properties, whereas the Switzerland class's objects only have access to the public properties of all related classes.
+
+Accessibility Table for Switzerland:
+
+| Class's Properties | Class | Children | Objects |
+| --- | --- | --- | --- |
+| Inheritance(Public) Variable: Country(Private) | ✘ | ✘ | ✘ |
+| Inheritance(Public) Structure: EventDetails(Private) | ✘ | ✘ | ✘ |
+| Inheritance(Public) Variable: News(Protected) | ✔ | ✔ | ✘ |
+| Inheritance(Public) Function: SetNews(Protected) | ✔ | ✔ | ✘ |
+| Inheritance(Public) Function: SetCountry(Protected) | ✔ | ✔ | ✘ |
+| Inheritance(Public) Function: GetNews(Public) | ✔ | ✔ | ✔ |
+| Inheritance(Public) Constructor: NewsData(Public) | ✘ | ✘ | ✘ |
+| Inheritance(Public) Destructor: ~NewsData(Public) | ✘ | ✘ | ✘ |
+| Function: SetNews(Public) | ✔ | ✔ | ✔ |
+| Constructor: Switzerland(Public) | ✔ | ✘ | ✘ |
+
+```
+class Switzerland: public NewsData
+//public inheritance from NewsData
+  {
+public:
+   virtual void      SetNews()//Public Function to set News data
+     {
+      ArrayResize(News,News.Size()+1,News.Size()+2);//Adjusting News structure array's size
+      News[News.Size()-1].EventID = 0;//Setting event id to '0'
+      News[News.Size()-1].EventName = "Interest Rate Decision";//Assigning event name
+      News[News.Size()-1].EventDate = D'2024.01.06 10:00:00';//Assigning event date
+     }
+                     Switzerland(void) {SetCountry("Switerland"); SetNews();}//Class construct
+  };
+```
+
+Visible Properties from the Switzerland Object:
+
+Results:
+
+## Daylight Savings Classes
+
+### In News Trading Made Easy (Part 1):
+
+UML Class Diagram
+
+ Part 1")
+
+Project files:
+
+In the previous code we had three classes for Daylight Savings namely:
+
+- CDaylightSavings\_AU
+- CDaylightSavings\_UK
+- CDaylightSavings\_US
+
+### In Part 2:
+
+UML Class Diagram
+
+ Part 2")
+
+Project files:
+
+We will have the following classes for Daylight Savings namely:
+
+- CDaylightSavings
+- CDaylightSavings\_AU
+- CDaylightSavings\_UK
+- CDaylightSavings\_US
+
+### Why create another Daylight savings class?
+
+In the previous classes' code there was a lot of repetition among the classes, which essentially was the same code written over again for different values in a list. Instead of this repetition occurring amongst similar classes, we will put all the commonalities in one separate class and inherit the common features into the different daylight savings classes.
+
+### What are virtual Functions?
+
+In object-oriented programming (OOP), a [virtual function](https://www.geeksforgeeks.org/virtual-function-cpp/ "https://www.geeksforgeeks.org/virtual-function-cpp/") is a member function in a base class that you can override in a derived class. When a function is declared as virtual, it enables polymorphism, allowing the derived class to provide a specific implementation of the function that can be called through a base class pointer or reference.
+
+Purpose?
+
+- Polymorphism: Virtual functions allow for dynamic (runtime) polymorphism. This means that the method that gets executed is determined at runtime based on the actual type of the object being referenced, rather than the type of the reference or pointer.
+- Flexibility: They enable more flexible and reusable code by allowing derived classes to modify or extend the base class behavior.
+- Decoupling: Virtual functions help in decoupling the code by separating the interface from the implementation, making it easier to change the implementation without affecting the code that uses the base class interface.
+
+### CDaylightSavings Class
+
+In this class all commonalities of the previous codes are put into one class and we will declare a few virtual functions to initialize the different lists for the respective Daylight Savings schedule.
+
+CDaylightSavings class has a singular Inheritance from CObject class.
+
+CDaylightSavings class has Inclusions from classes:
+
+- CArrayObj
+- CTimeManagement
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+
+#include <Object.mqh>
+
+#include <Arrays\ArrayObj.mqh>
+#include "../TimeManagement.mqh"
+
+//+------------------------------------------------------------------+
+//|DaylightSavings class                                             |
+//+------------------------------------------------------------------+
+class CDaylightSavings: public CObject
+  {
+
+protected:
+   CTimeManagement   Time;
+                     CDaylightSavings(datetime startdate,datetime enddate);
+   CObject           *List() { return savings;}//Gets the list of Daylightsavings time
+   datetime          StartDate;
+   datetime          EndDate;
+   CArrayObj         *savings;
+   CArrayObj         *getSavings;
+   CDaylightSavings      *dayLight;
+   virtual void      SetDaylightSavings_UK();//Initialize UK Daylight Savings Dates into List
+   virtual void      SetDaylightSavings_US();//Initialize US Daylight Savings Dates into List
+   virtual void      SetDaylightSavings_AU();//Initialize AU Daylight Savings Dates into List
+
+public:
+                     CDaylightSavings(void);
+                    ~CDaylightSavings(void);
+   bool              isDaylightSavings(datetime Date);//This function checks if a given date falls within Daylight Savings Time.
+   bool              DaylightSavings(int Year,datetime &startDate,datetime &endDate);//Check if DaylightSavings Dates are available for a certain Year
+   string            adjustDaylightSavings(datetime EventDate);//Will adjust the date's timezone depending on DaylightSavings
+  };
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CDaylightSavings::CDaylightSavings(void)
+  {
+  }
+
+//+------------------------------------------------------------------+
+//|Initialize variables                                              |
+//+------------------------------------------------------------------+
+CDaylightSavings::CDaylightSavings(datetime startdate,datetime enddate)
+  {
+   StartDate = startdate;//Assign class's global variable StartDate value from parameter variable startdate
+   EndDate = enddate;//Assign class's global variable EndDate value from parameter variable enddate
+  }
+
+//+------------------------------------------------------------------+
+//|checks if a given date falls within Daylight Savings Time         |
+//+------------------------------------------------------------------+
+bool CDaylightSavings::isDaylightSavings(datetime Date)
+  {
+// Initialize a list to store daylight savings periods.
+   getSavings = List();
+// Iterate through all the periods in the list.
+   for(int i=0; i<getSavings.Total(); i++)
+     {
+      // Access the current daylight savings period.
+      dayLight = getSavings.At(i);
+      // Check if the given date is within the current daylight savings period.
+      if(Time.DateIsInRange(dayLight.StartDate,dayLight.EndDate,Date))
+        {
+         // If yes, return true indicating it is daylight savings time.
+         return true;
+        }
+     }
+// If no period matches, return false indicating it is not daylight savings time.
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//|Check if DaylightSavings Dates are available for a certain Year   |
+//+------------------------------------------------------------------+
+bool CDaylightSavings::DaylightSavings(int Year,datetime &startDate,datetime &endDate)
+  {
+// Initialize a list to store daylight savings periods.
+   getSavings = List();
+   bool startDateDetected=false,endDateDetected=false;
+// Iterate through all the periods in the list.
+   for(int i=0; i<getSavings.Total(); i++)
+     {
+      dayLight = getSavings.At(i);
+      if(Year==Time.ReturnYear(dayLight.StartDate))//Check if a certain year's date is available within the DaylightSavings start dates in the List
+        {
+         startDate = dayLight.StartDate;
+         startDateDetected = true;
+        }
+      if(Year==Time.ReturnYear(dayLight.EndDate))//Check if a certain year's date is available within the DaylightSavings end dates in the List
+        {
+         endDate = dayLight.EndDate;
+         endDateDetected = true;
+        }
+      if(startDateDetected&&endDateDetected)//Check if both DaylightSavings start and end dates are found for a certain Year
+        {
+         return true;
+        }
+     }
+
+   startDate = D'1970.01.01 00:00:00';//Set a default start date if no DaylightSaving date is found
+   endDate = D'1970.01.01 00:00:00';//Set a default end date if no DaylightSaving date is found
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//|Will adjust the date's timezone depending on DaylightSavings      |
+//+------------------------------------------------------------------+
+string CDaylightSavings::adjustDaylightSavings(datetime EventDate)
+  {
+   if(isDaylightSavings(TimeTradeServer()))//Check if the current tradeserver time is already within the DaylightSavings Period
+     {
+      if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+        {
+         return TimeToString(EventDate);//normal event time
+        }
+      else
+        {
+         return TimeToString((datetime)(EventDate-Time.HoursS()));//event time minus an hour for DST
+        }
+     }
+   else
+     {
+      if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+        {
+         return TimeToString((datetime)(Time.HoursS()+EventDate));//event time plus an hour for DST
+        }
+      else
+        {
+         return TimeToString(EventDate);//normal event time
+        }
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|Destructor                                                        |
+//+------------------------------------------------------------------+
+CDaylightSavings::~CDaylightSavings(void)
+  {
+   delete savings;//Delete CArrayObj Pointer
+   delete dayLight;//Delete CDaylightSavings Pointer
+   delete getSavings;//Delete CArrayObj Pointer
+  }
+//+------------------------------------------------------------------+
+```
+
+### CDaylightSavings\_AU Class
+
+In this class we expand upon the virtual void SetDaylightSavings\_AU and proceed to add the Daylight Savings Schedule for Australia.
+
+Australian Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/australia "https://www.timeanddate.com/time/change/australia").
+
+CDaylightSavings\_AU class has multilevel Inheritance from classes:
+
+- CDaylightSavings
+- CObject
+
+CDaylightSavings\_AU class has hierarchical Inheritance from classes:
+
+- CDaylightSavings
+- CArrayObj
+- CTimeManagement
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+
+#include "DaylightSavings.mqh"
+
+//+------------------------------------------------------------------+
+//|DaylightSavings_AU class                                          |
+//+------------------------------------------------------------------+
+class CDaylightSavings_AU: public CDaylightSavings
+  {
+
+public:
+
+                     CDaylightSavings_AU(void);
+  };
+
+//+------------------------------------------------------------------+
+//|Set Daylight Savings Schedule for Australia                       |
+//+------------------------------------------------------------------+
+void CDaylightSavings::SetDaylightSavings_AU()
+  {
+   savings = new CArrayObj();
+//Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+   savings.Add(new CDaylightSavings(D'2006.10.29 03:00:00',D'2007.03.25 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2007.10.28 03:00:00',D'2008.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2008.10.05 03:00:00',D'2009.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2009.10.04 03:00:00',D'2010.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2010.10.03 03:00:00',D'2011.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2011.10.02 03:00:00',D'2012.04.01 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2012.10.07 03:00:00',D'2013.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2013.10.06 03:00:00',D'2014.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2014.10.05 03:00:00',D'2015.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2015.10.04 03:00:00',D'2016.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2016.10.02 03:00:00',D'2017.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2017.10.01 03:00:00',D'2018.04.01 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2018.10.07 03:00:00',D'2019.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2019.10.06 03:00:00',D'2020.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2020.10.04 03:00:00',D'2021.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2021.10.03 03:00:00',D'2022.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2022.10.02 03:00:00',D'2023.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2023.10.01 03:00:00',D'2024.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2024.10.06 03:00:00',D'2025.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2025.10.05 03:00:00',D'2026.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2026.10.04 03:00:00',D'2027.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2027.10.03 03:00:00',D'2028.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings(D'2028.10.01 03:00:00',D'2029.04.01 02:00:00'));
+  }
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CDaylightSavings_AU::CDaylightSavings_AU(void)
+  {
+   SetDaylightSavings_AU();
+  }
+//+------------------------------------------------------------------+
+```
+
+### CDaylightSavings\_UK Class
+
+In this class we expand upon the virtual void SetDaylightSavings\_UK and proceed to add the Daylight Savings Schedule for Europe.
+
+United Kingdom Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/uk "https://www.timeanddate.com/time/change/uk").
+
+CDaylightSavings\_UK class has multilevel Inheritance from classes:
+
+- CDaylightSavings
+- CObject
+
+CDaylightSavings\_UK class has hierarchical Inheritance from classes:
+
+- CDaylightSavings
+- CArrayObj
+- CTimeManagement
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+
+#include "DaylightSavings.mqh"
+
+//+------------------------------------------------------------------+
+//|DaylightSavings_UK class                                          |
+//+------------------------------------------------------------------+
+class CDaylightSavings_UK: public CDaylightSavings
+  {
+
+public:
+
+                     CDaylightSavings_UK(void);
+  };
+
+//+------------------------------------------------------------------+
+//|Set Daylight Savings Schedule for Europe                          |
+//+------------------------------------------------------------------+
+void CDaylightSavings::SetDaylightSavings_UK()
+  {
+   savings = new CArrayObj();
+//Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+   savings.Add(new CDaylightSavings(D'2007.03.25 02:00:00',D'2007.10.28 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2008.03.30 02:00:00',D'2008.10.26 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2009.03.29 02:00:00',D'2009.10.25 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2010.03.28 02:00:00',D'2010.10.31 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2011.03.27 02:00:00',D'2011.10.30 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2012.03.25 02:00:00',D'2012.10.28 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2013.03.31 02:00:00',D'2013.10.27 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2014.03.30 02:00:00',D'2014.10.26 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2015.03.29 02:00:00',D'2015.10.25 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2016.03.27 02:00:00',D'2016.10.30 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2017.03.26 02:00:00',D'2017.10.29 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2018.03.25 02:00:00',D'2018.10.28 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2019.03.31 02:00:00',D'2019.10.27 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2020.03.29 02:00:00',D'2020.10.25 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2021.03.28 02:00:00',D'2021.10.31 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2022.03.27 02:00:00',D'2022.10.30 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2023.03.26 02:00:00',D'2023.10.29 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2024.03.31 02:00:00',D'2024.10.27 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2025.03.30 02:00:00',D'2025.10.26 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2026.03.29 02:00:00',D'2026.10.25 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2027.03.28 02:00:00',D'2027.10.31 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2028.03.26 02:00:00',D'2028.10.29 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2029.03.25 02:00:00',D'2029.10.28 01:00:00'));
+  }
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CDaylightSavings_UK::CDaylightSavings_UK(void)
+  {
+   SetDaylightSavings_UK();
+  }
+//+------------------------------------------------------------------+
+```
+
+### CDaylightSavings\_US Class
+
+In this class we expand upon the virtual void SetDaylightSavings\_US and proceed to add the Daylight Savings Schedule for United States.
+
+United States Daylight Savings Time dates were [found here](https://www.timeanddate.com/time/change/usa "https://www.timeanddate.com/time/change/usa").
+
+CDaylightSavings\_US class has multilevel Inheritance from classes:
+
+- CDaylightSavings
+- CObject
+
+CDaylightSavings\_US class has hierarchical Inheritance from classes:
+
+- CDaylightSavings
+- CArrayObj
+- CTimeManagement
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+
+#include "DaylightSavings.mqh"
+
+//+------------------------------------------------------------------+
+//|DaylightSavings_US Class                                          |
+//+------------------------------------------------------------------+
+class CDaylightSavings_US: public CDaylightSavings
+  {
+
+public:
+
+                     CDaylightSavings_US(void);
+  };
+
+//+------------------------------------------------------------------+
+//|Set Daylight Savings Schedule for the United States               |
+//+------------------------------------------------------------------+
+void CDaylightSavings::SetDaylightSavings_US()
+  {
+   savings = new CArrayObj();
+//Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+   savings.Add(new CDaylightSavings(D'2007.03.11 03:00:00',D'2007.11.04 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2008.03.09 03:00:00',D'2008.11.02 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2009.03.08 03:00:00',D'2009.11.01 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2010.03.14 03:00:00',D'2010.11.07 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2011.03.13 03:00:00',D'2011.11.06 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2012.03.11 03:00:00',D'2012.11.04 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2013.03.10 03:00:00',D'2013.11.03 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2014.03.09 03:00:00',D'2014.11.02 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2015.03.08 03:00:00',D'2015.11.01 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2016.03.13 03:00:00',D'2016.11.06 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2017.03.12 03:00:00',D'2017.11.05 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2018.03.11 03:00:00',D'2018.11.04 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2019.03.10 03:00:00',D'2019.11.03 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2020.03.08 03:00:00',D'2020.11.01 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2021.03.14 03:00:00',D'2021.11.07 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2022.03.13 03:00:00',D'2022.11.06 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2023.03.12 03:00:00',D'2023.11.05 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2024.03.10 03:00:00',D'2024.11.03 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2025.03.09 03:00:00',D'2025.11.02 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2026.03.08 03:00:00',D'2026.11.01 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2027.03.14 03:00:00',D'2027.11.07 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2028.03.12 03:00:00',D'2028.11.05 01:00:00'));
+   savings.Add(new CDaylightSavings(D'2029.03.11 03:00:00',D'2029.11.04 01:00:00'));
+  }
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CDaylightSavings_US::CDaylightSavings_US(void)
+  {
+   SetDaylightSavings_US();
+  }
+//+------------------------------------------------------------------+
+```
+
+  
+
+## Symbol Properties Class
+
+In this class we will set a symbol in which we would like to retrieve data from. This class will provide an easy and quick method for us to get symbol properties within other classes and therefore removing redundance in our code.
+
+We will select a combination of properties to retrieve the list could be expanded upon but for not the list goes as follows:
+
+- Ask Price
+- Bid Price
+- Contract Size
+- Minimum Volume
+- Maximum Volume
+- Volume Step
+- Volume Limit
+- Spread
+- Stops Level
+- Freeze Level
+- Symbol's Time
+- Symbol's Normalized Price
+- Symbol's Digits
+- Symbol's Point
+- Symbol's Trade Mode
+- Sum of Symbol's Orders' Volume
+- Sum of Symbol's Positions' Volume
+- Symbol's Currency Base
+- Symbol's Currency Profit
+- Symbol's Currency Margin
+- Symbol's Custom status
+- Symbol's Background color
+
+CSymbolProperties class has inclusion from class CSymbolInfo.
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include <Trade/SymbolInfo.mqh>
+//+------------------------------------------------------------------+
+//|SymbolProperties class                                            |
+//+------------------------------------------------------------------+
+class CSymbolProperties
+  {
+private:
+   double            ASK;//Store Ask Price
+   double            BID;//Store Bid Price
+   double            LOTSMIN;//Store Minimum Lotsize
+   double            LOTSMAX;//Store Maximum Lotsize
+   double            LOTSSTEP;//Store Lotsize Step
+   double            LOTSLIMIT;//Store Lotsize Limit(Maximum sum of Volume)
+   long              SPREAD;//Store Spread value
+   long              STOPLEVEL;//Store Stop level
+   long              FREEZELEVEL;//Store Freeze level
+   long              TIME;//Store time
+   long              DIGITS;//Store Digits
+   double            POINT;//Store Point
+   double            ORDERSVOLUME;//Store Orders volume
+   double            POSITIONSVOLUME;//Store Positions volume
+   long              CUSTOM;//Store if Symbol is Custom
+   long              BACKGROUND_CLR;//Store Symbol's background color
+
+protected:
+   CSymbolInfo       CSymbol;//Creating class CSymbolInfo's Object
+   bool              SetSymbolName(string SYMBOL)
+     {
+      //-- If Symbol's name was successfully set.
+      if(!CSymbol.Name((SYMBOL==NULL)?Symbol():SYMBOL))
+        {
+         Print("Invalid Symbol: ",SYMBOL);
+         return false;
+        }
+      return true;
+     }
+
+   //-- Retrieve Symbol's name
+   string            GetSymbolName()
+     {
+      return CSymbol.Name();
+     }
+
+public:
+                     CSymbolProperties(void);//Constructor
+   double            Ask(string SYMBOL=NULL);//Retrieve Ask Price
+   double            Bid(string SYMBOL=NULL);//Retrieve Bid Price
+   double            ContractSize(string SYMBOL=NULL);//Retrieve Contract Size
+   double            LotsMin(string SYMBOL=NULL);//Retrieve Min Volume
+   double            LotsMax(string SYMBOL=NULL);//Retrieve Max Volume
+   double            LotsStep(string SYMBOL=NULL);//Retrieve Volume Step
+   double            LotsLimit(string SYMBOL=NULL);//Retrieve Volume Limit
+   int               Spread(string SYMBOL=NULL);//Retrieve Spread
+   int               StopLevel(string SYMBOL=NULL);//Retrieve Stop Level
+   int               FreezeLevel(string SYMBOL=NULL);//Retrieve Freeze Level
+   datetime          Time(string SYMBOL=NULL);//Retrieve Symbol's Time
+   //-- Normalize Price
+   double            NormalizePrice(const double price,string SYMBOL=NULL);
+   int               Digits(string SYMBOL=NULL);//Retrieve Symbol's Digits
+   double            Point(string SYMBOL=NULL);//Retrieve Symbol's Point
+   ENUM_SYMBOL_TRADE_MODE TradeMode(string SYMBOL=NULL);//Retrieve Symbol's Trade Mode
+   double            OrdersVolume(string SYMBOL=NULL);//Retrieve Symbol's Orders Volume
+   double            PositionsVolume(string SYMBOL=NULL);//Retrieve Symbol's Positions Volume
+   string            CurrencyBase(string SYMBOL=NULL);//Retrieve Symbol's Currency Base
+   string            CurrencyProfit(string SYMBOL=NULL);//Retrieve Symbol's Currency Profit
+   string            CurrencyMargin(string SYMBOL=NULL);//Retrieve Symbol's Currency Margin
+   bool              Custom(string SYMBOL=NULL);//Retrieve Symbol's Custom status
+   color             SymbolBackground(string SYMBOL=NULL,bool allow_black=false);//Retrieve Symbol's Background color
+  };
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+//Initializing Variables
+CSymbolProperties::CSymbolProperties(void):ASK(0.0),BID(0.0),
+   LOTSMIN(0.0),LOTSMAX(0.0),
+   LOTSSTEP(0.0),LOTSLIMIT(0.0),DIGITS(0),
+   SPREAD(0),STOPLEVEL(0),ORDERSVOLUME(0.0),
+   FREEZELEVEL(0),TIME(0),POINT(0.0),POSITIONSVOLUME(0.0),
+   CUSTOM(0),BACKGROUND_CLR(0)
+  {
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Ask Price                                                |
+//+------------------------------------------------------------------+
+double CSymbolProperties::Ask(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_ASK,ASK))
+        {
+         return ASK;
+        }
+     }
+   Print("Unable to retrieve Symbol's Ask Price");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Bid Price                                                |
+//+------------------------------------------------------------------+
+double CSymbolProperties::Bid(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_BID,BID))
+        {
+         return BID;
+        }
+     }
+   Print("Unable to retrieve Symbol's Bid Price");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Contract Size                                            |
+//+------------------------------------------------------------------+
+double CSymbolProperties::ContractSize(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.ContractSize();
+        }
+     }
+   Print("Unable to retrieve Symbol's Contract size");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Min Volume                                               |
+//+------------------------------------------------------------------+
+double CSymbolProperties::LotsMin(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_MIN,LOTSMIN))
+        {
+         return LOTSMIN;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsMin");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Max Volume                                               |
+//+------------------------------------------------------------------+
+double CSymbolProperties::LotsMax(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_MAX,LOTSMAX))
+        {
+         return LOTSMAX;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsMax");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Volume Step                                              |
+//+------------------------------------------------------------------+
+double CSymbolProperties::LotsStep(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_STEP,LOTSSTEP))
+        {
+         return LOTSSTEP;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsStep");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Volume Limit                                             |
+//+------------------------------------------------------------------+
+double CSymbolProperties::LotsLimit(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_LIMIT,LOTSLIMIT))
+        {
+         return LOTSLIMIT;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsLimit");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Spread                                                   |
+//+------------------------------------------------------------------+
+int CSymbolProperties::Spread(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_SPREAD,SPREAD))
+        {
+         return int(SPREAD);
+        }
+     }
+   Print("Unable to retrieve Symbol's Spread");
+   return 0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Stop Level                                               |
+//+------------------------------------------------------------------+
+int CSymbolProperties::StopLevel(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TRADE_STOPS_LEVEL,STOPLEVEL))
+        {
+         return int(STOPLEVEL);
+        }
+     }
+   Print("Unable to retrieve Symbol's StopLevel");
+   return 0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Freeze Level                                             |
+//+------------------------------------------------------------------+
+int CSymbolProperties::FreezeLevel(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TRADE_FREEZE_LEVEL,FREEZELEVEL))
+        {
+         return int(FREEZELEVEL);
+        }
+     }
+   Print("Unable to retrieve Symbol's FreezeLevel");
+   return 0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Time                                            |
+//+------------------------------------------------------------------+
+datetime CSymbolProperties::Time(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TIME,TIME))
+        {
+         return datetime(TIME);
+        }
+     }
+   Print("Unable to retrieve Symbol's Time");
+   TIME=0;
+   return datetime(TIME);
+  }
+
+//+------------------------------------------------------------------+
+//|Normalize Price                                                   |
+//+------------------------------------------------------------------+
+double CSymbolProperties::NormalizePrice(const double price,string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh()&&CSymbol.RefreshRates())
+        {
+         return CSymbol.NormalizePrice(price);
+        }
+     }
+   Print("Unable to Normalize Symbol's Price");
+   return price;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Digits                                          |
+//+------------------------------------------------------------------+
+int CSymbolProperties::Digits(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_DIGITS,DIGITS))
+        {
+         return int(DIGITS);
+        }
+     }
+   Print("Unable to retrieve Symbol's Digits");
+   return 0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Point                                           |
+//+------------------------------------------------------------------+
+double CSymbolProperties::Point(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_POINT,POINT))
+        {
+         return POINT;
+        }
+     }
+   Print("Unable to retrieve Symbol's Point");
+   return 0.0;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Trade Mode                                      |
+//+------------------------------------------------------------------+
+ENUM_SYMBOL_TRADE_MODE CSymbolProperties::TradeMode(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.TradeMode();
+        }
+     }
+   Print("Unable to retrieve Symbol's TradeMode");
+   return SYMBOL_TRADE_MODE_DISABLED;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Orders Volume                                   |
+//+------------------------------------------------------------------+
+double CSymbolProperties::OrdersVolume(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      for(int i=0; i<OrdersTotal(); i++)
+        {
+         if(OrderSelect(OrderGetTicket(i)))
+           {
+            if(OrderGetString(ORDER_SYMBOL)==GetSymbolName())
+              {
+               ORDERSVOLUME+=OrderGetDouble(ORDER_VOLUME_CURRENT);
+              }
+           }
+        }
+     }
+   else
+     {
+      Print("Unable to retrieve Symbol's OrdersVolume");
+      return 0.0;
+     }
+   return ORDERSVOLUME;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Positions Volume                                |
+//+------------------------------------------------------------------+
+double CSymbolProperties::PositionsVolume(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      for(int i=0; i<PositionsTotal(); i++)
+        {
+         if(PositionGetTicket(i)>0)
+           {
+            if(PositionGetString(POSITION_SYMBOL)==GetSymbolName())
+              {
+               POSITIONSVOLUME+=PositionGetDouble(POSITION_VOLUME);
+              }
+           }
+        }
+     }
+   else
+     {
+      Print("Unable to retrieve Symbol's PositionsVolume");
+      return 0.0;
+     }
+   return POSITIONSVOLUME;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Currency Base                                   |
+//+------------------------------------------------------------------+
+string CSymbolProperties::CurrencyBase(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyBase();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyBase");
+   return "";
+  }
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Currency Profit                                 |
+//+------------------------------------------------------------------+
+string CSymbolProperties::CurrencyProfit(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyProfit();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyProfit");
+   return "";
+  }
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Currency Margin                                 |
+//+------------------------------------------------------------------+
+string CSymbolProperties::CurrencyMargin(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyMargin();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyMargin");
+   return "";
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Custom status                                   |
+//+------------------------------------------------------------------+
+bool CSymbolProperties::Custom(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_CUSTOM,CUSTOM))
+        {
+         return bool(CUSTOM);
+        }
+     }
+   Print("Unable to retrieve if Symbol is Custom");
+   return false;
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Symbol's Background color                                |
+//+------------------------------------------------------------------+
+color CSymbolProperties::SymbolBackground(string SYMBOL=NULL,bool allow_black=false)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_BACKGROUND_COLOR,BACKGROUND_CLR))
+        {
+         /*Avoid any Symbol black background color */
+         BACKGROUND_CLR = ((ColorToString(color(BACKGROUND_CLR))=="0,0,0"||
+                            color(BACKGROUND_CLR)==clrBlack)&&!allow_black)?
+                          long(StringToColor("236,236,236")):BACKGROUND_CLR;
+         return color(BACKGROUND_CLR);
+        }
+     }
+   Print("Unable to retrieve Symbol's Background color");
+   return color(StringToColor("236,236,236"));//Retrieve a lightish gray color
+  }
+//+------------------------------------------------------------------+
+```
+
+In the class's constructor below, we initialize the variables we declared earlier such as the double variable ASK, and we assign ASK the value 0.0 as we don't yet have the Ask price for the Symbol.
+
+```
+//Initializing Variables
+CSymbolProperties::CSymbolProperties(void):ASK(0.0),BID(0.0),
+   LOTSMIN(0.0),LOTSMAX(0.0),
+   LOTSSTEP(0.0),LOTSLIMIT(0.0),DIGITS(0),
+   SPREAD(0),STOPLEVEL(0),ORDERSVOLUME(0.0),
+   FREEZELEVEL(0),TIME(0),POINT(0.0),POSITIONSVOLUME(0.0),
+   CUSTOM(0),BACKGROUND_CLR(0)
+  {
+  }
+```
+
+In the code below we go through and order of steps to finally retrieve the Symbol's ask price.
+
+1. Firstly we have an optional parameter where we can decide to input or edit the Symbol's name in the variable SYMBOL.
+
+2. We then set the Symbol's name to the parameter value. If the parameter value is still the default value of NULL we will assume that we want the Symbol's properties for the current chart's Symbol - Symbol().
+
+3. If we cannot find the Symbol's name we will Print an error message to notify the user that the Symbol's Ask price cannot be retrieved and return 0.0
+
+4. Once we were able to set the Symbol's name we will retrieve the ask price for that specific Symbol and return the value.
+
+```
+double CSymbolProperties::Ask(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))
+     {
+      if(CSymbol.InfoDouble(SYMBOL_ASK,ASK))
+        {
+         return ASK;
+        }
+     }
+   Print("Unable to retrieve Symbol's Ask Price");
+   return 0.0;
+  }
+```
+
+```
+   bool              SetSymbolName(string SYMBOL)
+     {
+      //-- If Symbol's name was successfully set.
+      if(!CSymbol.Name((SYMBOL==NULL)?Symbol():SYMBOL))
+        {
+         Print("Invalid Symbol: ",SYMBOL);
+         return false;
+        }
+      return true;
+     }
+```
+
+The function below will retrieve the Symbol's Bid Price based of the SYMBOL variable.
+
+```
+double CSymbolProperties::Bid(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_BID,BID))
+        {
+         return BID;
+        }
+     }
+   Print("Unable to retrieve Symbol's Bid Price");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Contract size. A Symbol's contract size affects the trader as a higher contract size increases risk on the individual's trades. Whereas a lower contract size will decrease risk on an individual's trades.
+
+```
+double CSymbolProperties::ContractSize(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.ContractSize();
+        }
+     }
+   Print("Unable to retrieve Symbol's Contract size");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Minimum allowed lot-size/volume. Meaning the trader cannot open a position with a lot-size less than the minimum.
+
+```
+double CSymbolProperties::LotsMin(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_MIN,LOTSMIN))
+        {
+         return LOTSMIN;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsMin");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Maximum allowed lot-size/volume. This implies that the trader will not be allowed to open a position with a higher lot-size/volume than the maximum, but they may open multiple positions that could sum up to a higher lot-size/volume than the maximum depending on the broker's volume limit and account's orders limit.
+
+```
+double CSymbolProperties::LotsMax(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_MAX,LOTSMAX))
+        {
+         return LOTSMAX;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsMax");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Volume/lot-size Step. Meaning that the lot-size should have an interval of this value. Example if the volume step is 1 the trader cannot select a lot-size/volume of 1.5.
+
+```
+double CSymbolProperties::LotsStep(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_STEP,LOTSSTEP))
+        {
+         return LOTSSTEP;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsStep");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Volume/lot-size Limit. This is the sum of volume/lot-sizes that are allowed to be placed before restrictions are implemented on the trader's account for the specific Symbol.
+
+```
+double CSymbolProperties::LotsLimit(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_VOLUME_LIMIT,LOTSLIMIT))
+        {
+         return LOTSLIMIT;
+        }
+     }
+   Print("Unable to retrieve Symbol's LotsLimit");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Spread. The spread affects traders as the higher the Symbol's spread is the less profitable the trader will be, depending on the spread, a strategy could be profitable or not, obviously there are many different circumstances that could make a strategy unprofitable but the Symbol's spread could be a significant circumstance. Spreads are essentially a form of income for your broker, you could think of it as the broker's tax for that Symbol.
+
+```
+int CSymbolProperties::Spread(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_SPREAD,SPREAD))
+        {
+         return int(SPREAD);
+        }
+     }
+   Print("Unable to retrieve Symbol's Spread");
+   return 0;
+  }
+```
+
+The function below will retrieve the Symbol's Stops level. This is a restriction on the minimum distance between an open-price and stoploss or take-profit as well as the minimum distance between the current price Ask or Bid and the price of opening an order.
+
+```
+int CSymbolProperties::StopLevel(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TRADE_STOPS_LEVEL,STOPLEVEL))
+        {
+         return int(STOPLEVEL);
+        }
+     }
+   Print("Unable to retrieve Symbol's StopLevel");
+   return 0;
+  }
+```
+
+The function below will retrieve the Symbol's Freeze level. This is the minimum distance a price has to move from it's open-price for the trade to be allowed closure(when you are allowed to close the specific trade in a profit or loss).
+
+```
+int CSymbolProperties::FreezeLevel(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TRADE_FREEZE_LEVEL,FREEZELEVEL))
+        {
+         return int(FREEZELEVEL);
+        }
+     }
+   Print("Unable to retrieve Symbol's FreezeLevel");
+   return 0;
+  }
+```
+
+The function below will retrieve the Symbol's Time.
+
+```
+datetime CSymbolProperties::Time(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_TIME,TIME))
+        {
+         return datetime(TIME);
+        }
+     }
+   Print("Unable to retrieve Symbol's Time");
+   TIME=0;
+   return datetime(TIME);
+  }
+```
+
+The function below will attempt to normalize a price for a specific symbol.
+
+For example if the Ask price for EURUSD is 1.07735 and you try to open a buy trade at a price level 1.077351. You may get an error like invalid price, as the number of decimal digits are more than the allowed number for example 5 digits. This function will take the price with 6 digits and convert it into 5 digits, therefore normalizing the price.
+
+```
+double CSymbolProperties::NormalizePrice(const double price,string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh()&&CSymbol.RefreshRates())
+        {
+         return CSymbol.NormalizePrice(price);
+        }
+     }
+   Print("Unable to Normalize Symbol's Price");
+   return price;
+  }
+```
+
+The function below will retrieve the Symbol's Digits. The Digits are represented as the Symbol's price's decimal places.
+
+```
+int CSymbolProperties::Digits(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_DIGITS,DIGITS))
+        {
+         return int(DIGITS);
+        }
+     }
+   Print("Unable to retrieve Symbol's Digits");
+   return 0;
+  }
+```
+
+The function below will retrieve the Symbol's Point.
+
+```
+double CSymbolProperties::Point(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoDouble(SYMBOL_POINT,POINT))
+        {
+         return POINT;
+        }
+     }
+   Print("Unable to retrieve Symbol's Point");
+   return 0.0;
+  }
+```
+
+The function below will retrieve the Symbol's Trade Mode.
+
+```
+ENUM_SYMBOL_TRADE_MODE CSymbolProperties::TradeMode(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.TradeMode();
+        }
+     }
+   Print("Unable to retrieve Symbol's TradeMode");
+   return SYMBOL_TRADE_MODE_DISABLED;
+  }
+```
+
+The function below will retrieve the sum of the Symbol's Orders' volume/lots.
+
+```
+double CSymbolProperties::OrdersVolume(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      for(int i=0; i<OrdersTotal(); i++)
+        {
+         if(OrderSelect(OrderGetTicket(i)))
+           {
+            if(OrderGetString(ORDER_SYMBOL)==GetSymbolName())
+              {
+               ORDERSVOLUME+=OrderGetDouble(ORDER_VOLUME_CURRENT);
+              }
+           }
+        }
+     }
+   else
+     {
+      Print("Unable to retrieve Symbol's OrdersVolume");
+      return 0.0;
+     }
+   return ORDERSVOLUME;
+  }
+```
+
+The function below will retrieve the sum of the Symbol's Positions' volume/lots.
+
+```
+double CSymbolProperties::PositionsVolume(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      for(int i=0; i<PositionsTotal(); i++)
+        {
+         if(PositionGetTicket(i)>0)
+           {
+            if(PositionGetString(POSITION_SYMBOL)==GetSymbolName())
+              {
+               POSITIONSVOLUME+=PositionGetDouble(POSITION_VOLUME);
+              }
+           }
+        }
+     }
+   else
+     {
+      Print("Unable to retrieve Symbol's PositionsVolume");
+      return 0.0;
+     }
+   return POSITIONSVOLUME;
+  }
+```
+
+The function below will retrieve the Symbol's Base Currency.
+
+```
+string CSymbolProperties::CurrencyBase(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyBase();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyBase");
+   return "";
+  }
+```
+
+The function below will retrieve the Symbol's Profit Currency.
+
+```
+string CSymbolProperties::CurrencyProfit(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyProfit();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyProfit");
+   return "";
+  }
+```
+
+The function below will retrieve the Symbol's Margin Currency.
+
+```
+string CSymbolProperties::CurrencyMargin(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.Refresh())
+        {
+         return CSymbol.CurrencyMargin();
+        }
+     }
+   Print("Unable to retrieve Symbol's CurrencyMargin");
+   return "";
+  }
+```
+
+The function below will retrieve a Boolean value to identify if a Symbol is custom or not.
+
+```
+bool CSymbolProperties::Custom(string SYMBOL=NULL)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_CUSTOM,CUSTOM))
+        {
+         return bool(CUSTOM);
+        }
+     }
+   Print("Unable to retrieve if Symbol is Custom");
+   return false;
+  }
+```
+
+The function below will retrieve the Symbol's background color. And has an optional parameter allow\_black which is false by default, this is because we will use the Symbol's background color to set the chart's background color later on and we do want to retrieve a black color as other elements of our chart will be in black. If we allowed the black color, based on our anticipated chart format it would cause the chart to be distracting and unreadable.
+
+Example of black background chart with our new chart format which will be established later.
+
+```
+color CSymbolProperties::SymbolBackground(string SYMBOL=NULL,bool allow_black=false)
+  {
+   if(SetSymbolName(SYMBOL))//Set Symbol
+     {
+      if(CSymbol.InfoInteger(SYMBOL_BACKGROUND_COLOR,BACKGROUND_CLR))
+        {
+        /*Avoid any Symbol black background color */
+         BACKGROUND_CLR = ((ColorToString(color(BACKGROUND_CLR))=="0,0,0"||
+                            color(BACKGROUND_CLR)==clrBlack)&&!allow_black)?
+                          long(StringToColor("236,236,236")):BACKGROUND_CLR;
+         return color(BACKGROUND_CLR);
+        }
+     }
+   Print("Unable to retrieve Symbol's Background color");
+   return color(StringToColor("236,236,236"));//Retrieve a lightish gray color
+  }
+```
+
+## Time Management Class
+
+In this class, I will highlight the new functions added to the class's functionality. The purpose of this class is to manipulate and or interact with time data.
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|TimeManagement class                                              |
+//+------------------------------------------------------------------+
+class CTimeManagement
+  {
+
+private:
+
+   MqlDateTime       today;//private variable
+   MqlDateTime       timeFormat;//private variable
+
+public:
+
+   //-- Checks if a date is within two other dates
+   bool              DateIsInRange(datetime FirstTime,datetime SecondTime,datetime compareTime);
+   //-- Check if two dates(Start&End) are within CompareStart & CompareEnd
+   bool              DateIsInRange(datetime Start,datetime End,datetime CompareStart,datetime CompareEnd);
+   bool              DateisToday(datetime TimeRepresented);//Checks if a date is within the current day
+   int               SecondsS(int multiple=1);//Returns seconds
+   int               MinutesS(int multiple=1);//Returns Minutes in seconds
+   int               HoursS(int multiple=1);//Returns Hours in seconds
+   int               DaysS(int multiple=1);//Returns Days in seconds
+   int               WeeksS(int multiple=1);//Returns Weeks in seconds
+   int               MonthsS(int multiple=1);//Returns Months in seconds
+   int               YearsS(int multiple=1);//Returns Years in seconds
+   int               ReturnYear(datetime time);//Returns the Year for a specific date
+   int               ReturnMonth(datetime time);//Returns the Month for a specific date
+   int               ReturnDay(datetime time);//Returns the Day for a specific date
+   //-- Will return a datetime type of a date with an subtraction offset in seconds
+   datetime          TimeMinusOffset(datetime standardtime,int timeoffset);
+   //-- Will return a datetime type of a date with an addition offset in seconds
+   datetime          TimePlusOffset(datetime standardtime,int timeoffset);
+  };
+
+//+------------------------------------------------------------------+
+//|Checks if a date is within two other dates                        |
+//+------------------------------------------------------------------+
+bool CTimeManagement::DateIsInRange(datetime FirstTime,datetime SecondTime,datetime compareTime)
+  {
+   return(FirstTime<=compareTime&&SecondTime>compareTime);
+  }
+
+//+------------------------------------------------------------------+
+//|Check if two dates(Start&End) are within CompareStart & CompareEnd|
+//+------------------------------------------------------------------+
+bool CTimeManagement::DateIsInRange(datetime Start,datetime End,datetime CompareStart,datetime CompareEnd)
+  {
+   return(Start<=CompareStart&&CompareEnd<End);
+  }
+
+//+------------------------------------------------------------------+
+//|Checks if a date is within the current day                        |
+//+------------------------------------------------------------------+
+bool CTimeManagement::DateisToday(datetime TimeRepresented)
+  {
+   MqlDateTime TiM;
+   TimeToStruct(TimeRepresented,TiM);
+   TimeCurrent(today);
+   return(TiM.year==today.year&&TiM.mon==today.mon&&TiM.day==today.day);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns seconds                                                   |
+//+------------------------------------------------------------------+
+int CTimeManagement::SecondsS(int multiple=1)
+  {
+   return (1*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Minutes in seconds                                        |
+//+------------------------------------------------------------------+
+int CTimeManagement::MinutesS(int multiple=1)
+  {
+   return (SecondsS(60)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Hours in seconds                                          |
+//+------------------------------------------------------------------+
+int CTimeManagement::HoursS(int multiple=1)
+  {
+   return (MinutesS(60)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Days in seconds                                           |
+//+------------------------------------------------------------------+
+int CTimeManagement::DaysS(int multiple=1)
+  {
+   return (HoursS(24)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Weeks in seconds                                          |
+//+------------------------------------------------------------------+
+int CTimeManagement::WeeksS(int multiple=1)
+  {
+   return (DaysS(7)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Months in seconds                                         |
+//+------------------------------------------------------------------+
+int CTimeManagement::MonthsS(int multiple=1)
+  {
+   return (WeeksS(4)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns Years in seconds                                          |
+//+------------------------------------------------------------------+
+int CTimeManagement::YearsS(int multiple=1)
+  {
+   return (MonthsS(12)*multiple);
+  }
+
+//+------------------------------------------------------------------+
+//|Returns the Year for a specific date                              |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnYear(datetime time)
+  {
+   TimeToStruct(time,timeFormat);
+   return timeFormat.year;
+  }
+
+//+------------------------------------------------------------------+
+//|Returns the Month for a specific date                             |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnMonth(datetime time)
+  {
+   TimeToStruct(time,timeFormat);
+   return timeFormat.mon;
+  }
+
+//+------------------------------------------------------------------+
+//|Returns the Day for a specific date                               |
+//+------------------------------------------------------------------+
+int CTimeManagement::ReturnDay(datetime time)
+  {
+   TimeToStruct(time,timeFormat);
+   return timeFormat.day;
+  }
+
+//+------------------------------------------------------------------+
+//|Will return a datetime type of a date with an subtraction offset  |
+//|in seconds                                                        |
+//+------------------------------------------------------------------+
+datetime CTimeManagement::TimeMinusOffset(datetime standardtime,int timeoffset)
+  {
+   standardtime-=timeoffset;
+   return standardtime;
+  }
+
+//+------------------------------------------------------------------+
+//|Will return a datetime type of a date with an addition offset     | 
+//|in seconds                                                        |
+//+------------------------------------------------------------------+
+datetime CTimeManagement::TimePlusOffset(datetime standardtime,int timeoffset)
+  {
+   standardtime+=timeoffset;
+   return standardtime;
+  }
+//+------------------------------------------------------------------+
+```
+
+## Chart Properties Class
+
+The purpose of chart properties is to store the chart configuration before we change the layout of the chart. Once the expert is removed from the chart, the class's destructor will restore the charts configuration's state before the changes we would have made to the chart.
+
+Making changes to the chart is not necessary for the experts functionality, but it is visually pleasing to have a chart the isn't just green and black(default chart layout) and may be hard to make out chart prices and or trade levels once trades are placed.
+
+CChartProperties has a singular Inheritance from class CSymbolProperties.
+
+CChartProperties has hierarchical Inheritance from classes:
+
+- CSymbolProperties
+- CSymbolInfo
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include "SymbolProperties.mqh"
+//+------------------------------------------------------------------+
+//|ChartProperties class                                             |
+//+------------------------------------------------------------------+
+class CChartProperties : public CSymbolProperties
+  {
+private:
+   struct ChartFormat
+     {
+      ulong             CHART_MODE;//Chart Candle Mode
+      ulong             CHART_COLOR_BACKGROUND;//Chart Background Color
+      ulong             CHART_COLOR_FOREGROUND;//Chart Foreground Color
+      ulong             CHART_COLOR_CHART_LINE;//Chart Line Color
+      ulong             CHART_COLOR_CANDLE_BEAR;//Chart Bear Candle Color
+      ulong             CHART_COLOR_CHART_DOWN;//Chart Down Candle Color
+      ulong             CHART_COLOR_CANDLE_BULL;//Chart Bull Candle Color
+      ulong             CHART_COLOR_CHART_UP;//Chart Up Candle Color
+      ulong             CHART_COLOR_ASK;//Chart Ask Color
+      ulong             CHART_COLOR_BID;//Chart Bid Color
+      ulong             CHART_COLOR_STOP_LEVEL;//Chart Stoplevel Color
+      ulong             CHART_SHOW_PERIOD_SEP;//Chart Show Period Separator
+      ulong             CHART_SCALE;//Chart Scale
+      ulong             CHART_FOREGROUND;//Chart Show Foreground
+      ulong             CHART_SHOW_ASK_LINE;//Chart Show Ask Line
+      ulong             CHART_SHOW_BID_LINE;//Chart Show Bid Line
+      ulong             CHART_SHOW_TRADE_LEVELS;//Chart Show Trade Levels
+      ulong             CHART_SHOW_OHLC;//Chart Show Open-High-Low-Close
+      ulong             CHART_SHOW_GRID;//Chart Show Grid
+      ulong             CHART_SHOW_VOLUMES;//Chart Show Volumes
+      ulong             CHART_AUTOSCROLL;//Chart Auto Scroll
+      double            CHART_SHIFT_SIZE;//Chart Shift Size
+      ulong             CHART_SHIFT;//Chart Shift
+      ulong             CHART_SHOW_ONE_CLICK;//Chart One Click Trading
+     };
+   ulong             ChartConfig[65];//Array To Store Chart Properties
+   void              ChartSet();//Apply Chart format
+   void              ChartConfigure();//Set Chart Values
+   ChartFormat       Chart;//Variable of type ChartFormat
+
+public:
+                     CChartProperties(void);//Constructor
+                    ~CChartProperties(void);//Destructor
+   void              ChartRefresh() {ChartConfigure();}
+  };
+
+//+------------------------------------------------------------------+
+//|Constructor                                                       |
+//+------------------------------------------------------------------+
+CChartProperties::CChartProperties(void)//Class Constructor
+  {
+   for(int i=0;i<65;i++)//Iterating through ENUM_CHART_PROPERTY_INTEGER Elements
+     {
+      ChartGetInteger(0,(ENUM_CHART_PROPERTY_INTEGER)i,0,ChartConfig[i]);//Storing Chart values into ChartConfig array
+     }
+   ChartConfigure();
+  }
+
+//+------------------------------------------------------------------+
+//|Destructor                                                        |
+//+------------------------------------------------------------------+
+CChartProperties::~CChartProperties(void)
+  {
+   for(int i=0;i<65;i++)//Iterating through ENUM_CHART_PROPERTY_INTEGER Elements
+     {
+      ChartSetInteger(0,(ENUM_CHART_PROPERTY_INTEGER)i,0,ChartConfig[i]);//Restoring Chart values from ChartConfig array
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|Set Chart Properties                                              |
+//+------------------------------------------------------------------+
+void CChartProperties::ChartSet()
+  {
+   ChartSetInteger(0,CHART_MODE,Chart.CHART_MODE);//Set Chart Candle Mode
+   ChartSetInteger(0,CHART_COLOR_BACKGROUND,Chart.CHART_COLOR_BACKGROUND);//Set Chart Background Color
+   ChartSetInteger(0,CHART_COLOR_FOREGROUND,Chart.CHART_COLOR_FOREGROUND);//Set Chart Foreground Color
+   ChartSetInteger(0,CHART_COLOR_CHART_LINE,Chart.CHART_COLOR_CHART_LINE);//Set Chart Line Color
+   ChartSetInteger(0,CHART_COLOR_CANDLE_BEAR,Chart.CHART_COLOR_CANDLE_BEAR);//Set Chart Bear Candle Color
+   ChartSetInteger(0,CHART_COLOR_CHART_DOWN,Chart.CHART_COLOR_CHART_DOWN);//Set Chart Down Candle Color
+   ChartSetInteger(0,CHART_COLOR_CANDLE_BULL,Chart.CHART_COLOR_CANDLE_BULL);//Set Chart Bull Candle Color
+   ChartSetInteger(0,CHART_COLOR_CHART_UP,Chart.CHART_COLOR_CHART_UP);//Set Chart Up Candle Color
+   ChartSetInteger(0,CHART_COLOR_ASK,Chart.CHART_COLOR_ASK);//Set Chart Ask Color
+   ChartSetInteger(0,CHART_COLOR_BID,Chart.CHART_COLOR_BID);//Set Chart Bid Color
+   ChartSetInteger(0,CHART_COLOR_STOP_LEVEL,Chart.CHART_COLOR_STOP_LEVEL);//Set Chart Stop Level Color
+   ChartSetInteger(0,CHART_FOREGROUND,Chart.CHART_FOREGROUND);//Set if Chart is in Foreground Visibility
+   ChartSetInteger(0,CHART_SHOW_ASK_LINE,Chart.CHART_SHOW_ASK_LINE);//Set Chart Ask Line Visibility
+   ChartSetInteger(0,CHART_SHOW_BID_LINE,Chart.CHART_SHOW_BID_LINE);//Set Chart Bid Line Visibility
+   ChartSetInteger(0,CHART_SHOW_PERIOD_SEP,Chart.CHART_SHOW_PERIOD_SEP);//Set Chart Period Separator Visibility
+   ChartSetInteger(0,CHART_SHOW_TRADE_LEVELS,Chart.CHART_SHOW_TRADE_LEVELS);//Set Chart Trade Levels Visibility
+   ChartSetInteger(0,CHART_SHOW_OHLC,Chart.CHART_SHOW_OHLC);//Set Chart Open-High-Low-Close Visibility
+   ChartSetInteger(0,CHART_SHOW_GRID,Chart.CHART_SHOW_GRID);//Set Chart Grid Visibility
+   ChartSetInteger(0,CHART_SHOW_VOLUMES,Chart.CHART_SHOW_VOLUMES);//Set Chart Volumes Visibility
+   ChartSetInteger(0,CHART_SCALE,Chart.CHART_SCALE);//Set Chart Scale Value
+   ChartSetInteger(0,CHART_AUTOSCROLL,Chart.CHART_AUTOSCROLL);//Set Chart Auto Scroll Option
+   ChartSetDouble(0,CHART_SHIFT_SIZE,Chart.CHART_SHIFT_SIZE);//Set Chart Shift Size Value
+   ChartSetInteger(0,CHART_SHIFT,Chart.CHART_SHIFT);//Set Chart Shift Option
+   ChartSetInteger(0,CHART_SHOW_ONE_CLICK,Chart.CHART_SHOW_ONE_CLICK);//Set Chart One Click Trading
+  }
+
+//+------------------------------------------------------------------+
+//|Initialize Chart Properties                                       |
+//+------------------------------------------------------------------+
+void CChartProperties::ChartConfigure(void)
+  {
+   Chart.CHART_MODE=(ulong)CHART_CANDLES;//Assigning Chart Mode of CHART_CANDLES
+   Chart.CHART_COLOR_BACKGROUND=ulong(SymbolBackground());//Assigning Chart Background Color of Symbol's Background color
+   Chart.CHART_COLOR_FOREGROUND=(ulong)clrBlack;//Assigning Chart Foreground Color of clrBalck(Black color)
+   Chart.CHART_COLOR_CHART_LINE=(ulong)clrBlack;//Assigning Chart Line Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CANDLE_BEAR=(ulong)clrBlack;//Assigning Chart Bear Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CHART_DOWN=(ulong)clrBlack;//Assigning Chart Down Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CANDLE_BULL=(ulong)clrWhite;//Assigning Chart Bull Candle Color of clrWhite(White color)
+   Chart.CHART_COLOR_CHART_UP=(ulong)clrBlack;//Assigning Chart Up Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_ASK=(ulong)clrBlack;//Assigning Chart Ask Color of clrBlack(Black color)
+   Chart.CHART_COLOR_BID=(ulong)clrBlack;//Assigning Chart Bid Color of clrBlack(Black color)
+   Chart.CHART_COLOR_STOP_LEVEL=(ulong)clrBlack;//Assigning Chart Stop Level Color of clrBlack(Black color)
+   Chart.CHART_FOREGROUND=(ulong)false;//Assigning Chart Foreground Boolean Value of 'false'
+   Chart.CHART_SHOW_ASK_LINE=(ulong)true;//Assigning Chart Ask Line Boolean Value of 'true'
+   Chart.CHART_SHOW_BID_LINE=(ulong)true;//Assigning Chart Bid Line Boolean Value of 'true'
+   Chart.CHART_SHOW_PERIOD_SEP=(ulong)true;//Assigning Chart Period Separator Boolean Value of 'true'
+   Chart.CHART_SHOW_TRADE_LEVELS=(ulong)true;//Assigning Chart Trade Levels Boolean Value of 'true'
+   Chart.CHART_SHOW_OHLC=(ulong)false;//Assigning Chart Open-High-Low-Close Boolean Value of 'false'
+   Chart.CHART_SHOW_GRID=(ulong)false;//Assigning Chart Grid Boolean Value of 'false'
+   Chart.CHART_SHOW_VOLUMES=(ulong)false;//Assigning Chart Volumes Boolean Value of 'false'
+   Chart.CHART_SCALE=(ulong)3;//Assigning Chart Scale Boolean Value of '3'
+   Chart.CHART_AUTOSCROLL=(ulong)true;//Assigning Chart Auto Scroll Boolean Value of 'true'
+   Chart.CHART_SHIFT_SIZE=30;//Assigning Chart Shift Size Value of '30'
+   Chart.CHART_SHIFT=(ulong)true;//Assigning Chart Shift Boolean Value of 'true'
+   Chart.CHART_SHOW_ONE_CLICK=ulong(false);//Assigning Chart One Click Trading a value of 'false'
+   ChartSet();//Calling Function to set chart format
+  }
+//+------------------------------------------------------------------+
+```
+
+In the structure ChartFormat we declared, we store different chart variables that we will change on the current chart the expert is on.
+
+```
+   struct ChartFormat
+     {
+      ulong             CHART_MODE;//Chart Candle Mode
+      ulong             CHART_COLOR_BACKGROUND;//Chart Background Color
+      ulong             CHART_COLOR_FOREGROUND;//Chart Foreground Color
+      ulong             CHART_COLOR_CHART_LINE;//Chart Line Color
+      ulong             CHART_COLOR_CANDLE_BEAR;//Chart Bear Candle Color
+      ulong             CHART_COLOR_CHART_DOWN;//Chart Down Candle Color
+      ulong             CHART_COLOR_CANDLE_BULL;//Chart Bull Candle Color
+      ulong             CHART_COLOR_CHART_UP;//Chart Up Candle Color
+      ulong             CHART_COLOR_ASK;//Chart Ask Color
+      ulong             CHART_COLOR_BID;//Chart Bid Color
+      ulong             CHART_COLOR_STOP_LEVEL;//Chart Stoplevel Color
+      ulong             CHART_SHOW_PERIOD_SEP;//Chart Show Period Separator
+      ulong             CHART_SCALE;//Chart Scale
+      ulong             CHART_FOREGROUND;//Chart Show Foreground
+      ulong             CHART_SHOW_ASK_LINE;//Chart Show Ask Line
+      ulong             CHART_SHOW_BID_LINE;//Chart Show Bid Line
+      ulong             CHART_SHOW_TRADE_LEVELS;//Chart Show Trade Levels
+      ulong             CHART_SHOW_OHLC;//Chart Show Open-High-Low-Close
+      ulong             CHART_SHOW_GRID;//Chart Show Grid
+      ulong             CHART_SHOW_VOLUMES;//Chart Show Volumes
+      ulong             CHART_AUTOSCROLL;//Chart Auto Scroll
+      double            CHART_SHIFT_SIZE;//Chart Shift Size
+      ulong             CHART_SHIFT;//Chart Shift
+      ulong             CHART_SHOW_ONE_CLICK;//Chart One Click Trading
+     };
+```
+
+The ChartConfig array will store all the chart properties before we make changes to the chart.
+
+```
+ulong             ChartConfig[65];//Array To Store Chart Properties
+```
+
+In the Function SetBackground we get the current Symbol's MarketWatch background color:
+
+and set the current chart's background color to this color:
+
+In the class's constructor we get all the chart properties of type Integer and store them into ChartConfig array.
+
+```
+CChartProperties::CChartProperties(void)//Class Constructor
+  {
+   for(int i=0;i<65;i++)//Iterating through ENUM_CHART_PROPERTY_INTEGER Elements
+     {
+      ChartGetInteger(0,(ENUM_CHART_PROPERTY_INTEGER)i,0,ChartConfig[i]);//Storing Chart values into ChartConfig array
+     }
+   ChartConfigure();
+  }
+```
+
+We also initialize the variable Chart which is of type structure ChartFormat previously mentioned and give it the appropriate values to customize the chart to our liking in the function ChartConfigure.
+
+```
+void CChartProperties::ChartConfigure(void)
+  {
+   Chart.CHART_MODE=(ulong)CHART_CANDLES;//Assigning Chart Mode of CHART_CANDLES
+   Chart.CHART_COLOR_BACKGROUND=ulong(SymbolBackground());//Assigning Chart Background Color of Symbol's Background color
+   Chart.CHART_COLOR_FOREGROUND=(ulong)clrBlack;//Assigning Chart Foreground Color of clrBalck(Black color)
+   Chart.CHART_COLOR_CHART_LINE=(ulong)clrBlack;//Assigning Chart Line Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CANDLE_BEAR=(ulong)clrBlack;//Assigning Chart Bear Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CHART_DOWN=(ulong)clrBlack;//Assigning Chart Down Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_CANDLE_BULL=(ulong)clrWhite;//Assigning Chart Bull Candle Color of clrWhite(White color)
+   Chart.CHART_COLOR_CHART_UP=(ulong)clrBlack;//Assigning Chart Up Candle Color of clrBlack(Black color)
+   Chart.CHART_COLOR_ASK=(ulong)clrBlack;//Assigning Chart Ask Color of clrBlack(Black color)
+   Chart.CHART_COLOR_BID=(ulong)clrBlack;//Assigning Chart Bid Color of clrBlack(Black color)
+   Chart.CHART_COLOR_STOP_LEVEL=(ulong)clrBlack;//Assigning Chart Stop Level Color of clrBlack(Black color)
+   Chart.CHART_FOREGROUND=(ulong)false;//Assigning Chart Foreground Boolean Value of 'false'
+   Chart.CHART_SHOW_ASK_LINE=(ulong)true;//Assigning Chart Ask Line Boolean Value of 'true'
+   Chart.CHART_SHOW_BID_LINE=(ulong)true;//Assigning Chart Bid Line Boolean Value of 'true'
+   Chart.CHART_SHOW_PERIOD_SEP=(ulong)true;//Assigning Chart Period Separator Boolean Value of 'true'
+   Chart.CHART_SHOW_TRADE_LEVELS=(ulong)true;//Assigning Chart Trade Levels Boolean Value of 'true'
+   Chart.CHART_SHOW_OHLC=(ulong)false;//Assigning Chart Open-High-Low-Close Boolean Value of 'false'
+   Chart.CHART_SHOW_GRID=(ulong)false;//Assigning Chart Grid Boolean Value of 'false'
+   Chart.CHART_SHOW_VOLUMES=(ulong)false;//Assigning Chart Volumes Boolean Value of 'false'
+   Chart.CHART_SCALE=(ulong)3;//Assigning Chart Scale Boolean Value of '3'
+   Chart.CHART_AUTOSCROLL=(ulong)true;//Assigning Chart Auto Scroll Boolean Value of 'true'
+   Chart.CHART_SHIFT_SIZE=30;//Assigning Chart Shift Size Value of '30'
+   Chart.CHART_SHIFT=(ulong)true;//Assigning Chart Shift Boolean Value of 'true'
+   Chart.CHART_SHOW_ONE_CLICK=ulong(false);//Assigning Chart One Click Trading a value of 'false'
+   ChartSet();//Calling Function to set chart format
+  }
+```
+
+In the ChartSet function will set the values of the selected chart properties from the variable Chart of structure type ChartFormat.
+
+```
+void CChartProperties::ChartSet()
+  {
+   ChartSetInteger(0,CHART_MODE,Chart.CHART_MODE);//Set Chart Candle Mode
+   ChartSetInteger(0,CHART_COLOR_BACKGROUND,Chart.CHART_COLOR_BACKGROUND);//Set Chart Background Color
+   ChartSetInteger(0,CHART_COLOR_FOREGROUND,Chart.CHART_COLOR_FOREGROUND);//Set Chart Foreground Color
+   ChartSetInteger(0,CHART_COLOR_CHART_LINE,Chart.CHART_COLOR_CHART_LINE);//Set Chart Line Color
+   ChartSetInteger(0,CHART_COLOR_CANDLE_BEAR,Chart.CHART_COLOR_CANDLE_BEAR);//Set Chart Bear Candle Color
+   ChartSetInteger(0,CHART_COLOR_CHART_DOWN,Chart.CHART_COLOR_CHART_DOWN);//Set Chart Down Candle Color
+   ChartSetInteger(0,CHART_COLOR_CANDLE_BULL,Chart.CHART_COLOR_CANDLE_BULL);//Set Chart Bull Candle Color
+   ChartSetInteger(0,CHART_COLOR_CHART_UP,Chart.CHART_COLOR_CHART_UP);//Set Chart Up Candle Color
+   ChartSetInteger(0,CHART_COLOR_ASK,Chart.CHART_COLOR_ASK);//Set Chart Ask Color
+   ChartSetInteger(0,CHART_COLOR_BID,Chart.CHART_COLOR_BID);//Set Chart Bid Color
+   ChartSetInteger(0,CHART_COLOR_STOP_LEVEL,Chart.CHART_COLOR_STOP_LEVEL);//Set Chart Stop Level Color
+   ChartSetInteger(0,CHART_FOREGROUND,Chart.CHART_FOREGROUND);//Set if Chart is in Foreground Visibility
+   ChartSetInteger(0,CHART_SHOW_ASK_LINE,Chart.CHART_SHOW_ASK_LINE);//Set Chart Ask Line Visibility
+   ChartSetInteger(0,CHART_SHOW_BID_LINE,Chart.CHART_SHOW_BID_LINE);//Set Chart Bid Line Visibility
+   ChartSetInteger(0,CHART_SHOW_PERIOD_SEP,Chart.CHART_SHOW_PERIOD_SEP);//Set Chart Period Separator Visibility
+   ChartSetInteger(0,CHART_SHOW_TRADE_LEVELS,Chart.CHART_SHOW_TRADE_LEVELS);//Set Chart Trade Levels Visibility
+   ChartSetInteger(0,CHART_SHOW_OHLC,Chart.CHART_SHOW_OHLC);//Set Chart Open-High-Low-Close Visibility
+   ChartSetInteger(0,CHART_SHOW_GRID,Chart.CHART_SHOW_GRID);//Set Chart Grid Visibility
+   ChartSetInteger(0,CHART_SHOW_VOLUMES,Chart.CHART_SHOW_VOLUMES);//Set Chart Volumes Visibility
+   ChartSetInteger(0,CHART_SCALE,Chart.CHART_SCALE);//Set Chart Scale Value
+   ChartSetInteger(0,CHART_AUTOSCROLL,Chart.CHART_AUTOSCROLL);//Set Chart Auto Scroll Option
+   ChartSetDouble(0,CHART_SHIFT_SIZE,Chart.CHART_SHIFT_SIZE);//Set Chart Shift Size Value
+   ChartSetInteger(0,CHART_SHIFT,Chart.CHART_SHIFT);//Set Chart Shift Option
+   ChartSetInteger(0,CHART_SHOW_ONE_CLICK,Chart.CHART_SHOW_ONE_CLICK);//Set Chart One Click Trading
+  }
+```
+
+In the destructor we will restore the previous chart's integer values.
+
+```
+CChartProperties::~CChartProperties(void)
+  {
+   for(int i=0;i<65;i++)//Iterating through ENUM_CHART_PROPERTY_INTEGER Elements
+     {
+      ChartSetInteger(0,(ENUM_CHART_PROPERTY_INTEGER)i,0,ChartConfig[i]);//Restoring Chart values from ChartConfig array
+     }
+  }
+```
+
+## Candle Properties Class
+
+CCandleProperties has multilevel Inheritance from classes:
+
+- CChartProperties
+- CSymbolProperties
+
+CCandleProperties has Inclusion from class CTimeManagement.
+
+CCandleProperties has hierarchical Inheritance from classes:
+
+- CSymbolProperties
+- CSymbolInfo
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include "TimeManagement.mqh"
+#include "ChartProperties.mqh"
+//+------------------------------------------------------------------+
+//|CandleProperties class                                            |
+//+------------------------------------------------------------------+
+class CCandleProperties : public CChartProperties
+  {
+private:
+   CTimeManagement   Time;
+
+public:
+   double            Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Open-Price
+   double            Close(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Close-Price
+   double            High(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle High-Price
+   double            Low(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Low-Price
+   bool              IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL);//Determine if one candle is larger than two others
+  };
+
+//+------------------------------------------------------------------+
+//|Retrieve Candle Open-Price                                        |
+//+------------------------------------------------------------------+
+double CCandleProperties::Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   return (SetSymbolName(SYMBOL))?iOpen(GetSymbolName(),Period,CandleIndex):0;//return candle open price
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Candle Close-Price                                       |
+//+------------------------------------------------------------------+
+double CCandleProperties::Close(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   return (SetSymbolName(SYMBOL))?iClose(GetSymbolName(),Period,CandleIndex):0;//return candle close price
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Candle High-Price                                        |
+//+------------------------------------------------------------------+
+double CCandleProperties::High(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   return (SetSymbolName(SYMBOL))?iHigh(GetSymbolName(),Period,CandleIndex):0;//return candle high price
+  }
+
+//+------------------------------------------------------------------+
+//|Retrieve Candle Low-Price                                         |
+//+------------------------------------------------------------------+
+double CCandleProperties::Low(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   return (SetSymbolName(SYMBOL))?iLow(GetSymbolName(),Period,CandleIndex):0;//return candle low price
+  }
+
+//+------------------------------------------------------------------+
+//|Determine if one candle is larger than two others                |
+//+------------------------------------------------------------------+
+bool CCandleProperties::IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL)
+  {
+   int CandleIndex = iBarShift(SYMBOL,PERIOD_M15,CandleTime);//Assign candle index of candletime
+//--Assign candle index of candletime minus time offset
+   int CandleIndexMinusOffset = iBarShift(SYMBOL,PERIOD_M15,Time.TimeMinusOffset(CandleTime,Offset));
+//--Assign candle index of candletime plus time offset
+   int CandleIndexPlusOffset = iBarShift(SYMBOL,PERIOD_M15,Time.TimePlusOffset(CandleTime,Offset));
+//--Assign height of M15 candletime in pips
+   double CandleHeight = High(CandleIndex,PERIOD_M15,SYMBOL)-Low(CandleIndex,PERIOD_M15,SYMBOL);
+//--Assign height of M15 candletime  minus offset in Pips
+   double CandleHeightMinusOffset = High(CandleIndexMinusOffset,PERIOD_M15,SYMBOL)-Low(CandleIndexMinusOffset,PERIOD_M15,SYMBOL);
+//--Assign height of M15 candletime plus offset in Pips
+   double CandleHeightPlusOffset = High(CandleIndexPlusOffset,PERIOD_M15,SYMBOL)-Low(CandleIndexPlusOffset,PERIOD_M15,SYMBOL);
+//--Determine if candletime height is greater than candletime height minus offset and candletime height plus offset
+   if(CandleHeight>CandleHeightMinusOffset&&CandleHeight>CandleHeightPlusOffset)
+     {
+      return true;//Candletime is likely when the news event occured
+     }
+   return false;//Candletime is unlikely when the real news data was released
+  }
+//+------------------------------------------------------------------+
+```
+
+## Object Properties Class
+
+This class will be responsible for creating and deleting chart objects.
+
+CObjectProperties has multilevel Inheritance from classes:
+
+- CChartProperties
+- CSymbolProperties
+
+CObjectProperties has hierarchical Inheritance from classes:
+
+- CSymbolProperties
+- CSymbolInfo
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include "ChartProperties.mqh"
+//+------------------------------------------------------------------+
+//|ObjectProperties class                                            |
+//+------------------------------------------------------------------+
+class CObjectProperties:public CChartProperties
+  {
+private:
+   //Simple  chart objects structure
+   struct ObjStruct
+     {
+      long           ChartId;
+      string         Name;
+     } Objects[];//ObjStruct variable array
+
+   //-- Add chart object to Objects array
+   void              AddObj(long chart_id,string name)
+     {
+      ArrayResize(Objects,Objects.Size()+1,Objects.Size()+2);
+      Objects[Objects.Size()-1].ChartId=chart_id;
+      Objects[Objects.Size()-1].Name=name;
+     }
+
+public:
+                     CObjectProperties(void) {}//Class constructor
+
+   //-- Create Rectangle chart object
+   void              Square(long chart_ID,string name,int x_coord,int y_coord,int width,int height,ENUM_ANCHOR_POINT Anchor);
+
+   //-- Create text chart object
+   void              TextObj(long chartID,string name,string text,int x_coord,int y_coord,
+                             ENUM_BASE_CORNER Corner=CORNER_LEFT_UPPER,int fontsize=10);
+
+   //-- Create Event object
+   void               EventObj(long chartID,string name,string description,datetime eventdate);
+
+   //-- Class destructor removes all chart objects created previously
+                    ~CObjectProperties(void)
+     {
+      for(uint i=0;i<Objects.Size();i++)
+        {
+         ObjectDelete(Objects[i].ChartId,Objects[i].Name);
+        }
+     }
+  };
+
+//+------------------------------------------------------------------+
+//|Create Rectangle chart object                                     |
+//+------------------------------------------------------------------+
+void CObjectProperties::Square(long chart_ID,string name,int x_coord,int y_coord,int width,int height,ENUM_ANCHOR_POINT Anchor)
+  {
+   const int              sub_window=0;             // subwindow index
+   const int              x=x_coord;                // X coordinate
+   const int              y=y_coord;                // Y coordinate
+   const color            back_clr=clrBlack;        // background color
+   const ENUM_BORDER_TYPE border=BORDER_SUNKEN;     // border type
+   const color            clr=clrRed;               // flat border color (Flat)
+   const ENUM_LINE_STYLE  style=STYLE_SOLID;        // flat border style
+   const int              line_width=0;             // flat border width
+   const bool             back=false;               // in the background
+   const bool             selection=false;          // highlight to move
+   const bool             hidden=true;              // hidden in the object list
+
+   ObjectDelete(chart_ID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chart_ID,name,OBJ_RECTANGLE_LABEL,sub_window,0,0))//create rectangle object label
+     {
+      AddObj(chart_ID,name);//Add object to array
+      ObjectSetInteger(chart_ID,name,OBJPROP_XDISTANCE,x);//Set x Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_YDISTANCE,y);//Set y Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_XSIZE,width);//Set object's width/x-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_YSIZE,height);//Set object's height/y-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_BGCOLOR,back_clr);//Set object's background color
+      ObjectSetInteger(chart_ID,name,OBJPROP_BORDER_TYPE,border);//Set object's border type
+      ObjectSetInteger(chart_ID,name,OBJPROP_ANCHOR,Anchor);//Set objects anchor point
+      ObjectSetInteger(chart_ID,name,OBJPROP_COLOR,clr);//Set object's color
+      ObjectSetInteger(chart_ID,name,OBJPROP_STYLE,style);//Set object's style
+      ObjectSetInteger(chart_ID,name,OBJPROP_WIDTH,line_width);//Set object's flat border width
+      ObjectSetInteger(chart_ID,name,OBJPROP_BACK,back);//Set if object is in foreground or not
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTABLE,selection);//Set if object is selectable/dragable
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTED,selection);//Set if object is Selected
+      ObjectSetInteger(chart_ID,name,OBJPROP_HIDDEN,hidden);//Set if object is hidden in object list
+      ChartRedraw(chart_ID);
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|Create text chart object                                          |
+//+------------------------------------------------------------------+
+void CObjectProperties::TextObj(long chartID,string name,string text,int x_coord,int y_coord,
+                                ENUM_BASE_CORNER Corner=CORNER_LEFT_UPPER,int fontsize=10)
+  {
+   ObjectDelete(chartID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chartID,name,OBJ_LABEL,0,0,0))//Create object label
+     {
+      AddObj(chartID,name);//Add object to array
+      ObjectSetInteger(chartID,name,OBJPROP_XDISTANCE,x_coord);//Set x Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_YDISTANCE,y_coord);//Set y Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_CORNER,Corner);//Set object's corner anchor
+      ObjectSetString(chartID,name,OBJPROP_TEXT,text);//Set object's text
+      ObjectSetInteger(chartID,name,OBJPROP_COLOR,SymbolBackground());//Set object's color
+      ObjectSetInteger(chartID,name,OBJPROP_FONTSIZE,fontsize);//Set object's font-size
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+
+//+------------------------------------------------------------------+
+//|Create Event object                                               |
+//+------------------------------------------------------------------+
+void CObjectProperties::EventObj(long chartID,string name,string description,datetime eventdate)
+  {
+   ObjectDelete(chartID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chartID,name,OBJ_EVENT,0,eventdate,0))//Create object event
+     {
+      AddObj(chartID,name);//Add object to array
+      ObjectSetString(chartID,name,OBJPROP_TEXT,description);//Set object's text
+      ObjectSetInteger(chartID,name,OBJPROP_COLOR,clrBlack);//Set object's color
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+//+------------------------------------------------------------------
+```
+
+  
+
+The array variable Objects will store all chart objects created in this class CObjectProperties.
+
+```
+struct ObjStruct
+     {
+      long           ChartId;
+      string         Name;
+     } Objects[];//ObjStruct variable array
+```
+
+The function AddObj will add the chart object's chart id and object name into the Objects array.
+
+```
+   //-- Add chart object to Objects array
+   void              AddObj(long chart_id,string name)
+     {
+      ArrayResize(Objects,Objects.Size()+1,Objects.Size()+2);
+      Objects[Objects.Size()-1].ChartId=chart_id;
+      Objects[Objects.Size()-1].Name=name;
+     }
+```
+
+The function Square's purpose is to create a Rectangle object with specific properties to allow for customization.
+
+```
+void CObjectProperties::Square(long chart_ID,string name,int x_coord,int y_coord,int width,int height,ENUM_ANCHOR_POINT Anchor)
+  {
+   const int              sub_window=0;             // subwindow index
+   const int              x=x_coord;                // X coordinate
+   const int              y=y_coord;                // Y coordinate
+   const color            back_clr=clrBlack;        // background color
+   const ENUM_BORDER_TYPE border=BORDER_SUNKEN;     // border type
+   const color            clr=clrRed;               // flat border color (Flat)
+   const ENUM_LINE_STYLE  style=STYLE_SOLID;        // flat border style
+   const int              line_width=0;             // flat border width
+   const bool             back=false;               // in the background
+   const bool             selection=false;          // highlight to move
+   const bool             hidden=true;              // hidden in the object list
+
+   ObjectDelete(chart_ID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chart_ID,name,OBJ_RECTANGLE_LABEL,sub_window,0,0))//create rectangle object label
+     {
+      AddObj(chart_ID,name);//Add object to array
+      ObjectSetInteger(chart_ID,name,OBJPROP_XDISTANCE,x);//Set x Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_YDISTANCE,y);//Set y Distance/coordinate
+      ObjectSetInteger(chart_ID,name,OBJPROP_XSIZE,width);//Set object's width/x-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_YSIZE,height);//Set object's height/y-size
+      ObjectSetInteger(chart_ID,name,OBJPROP_BGCOLOR,back_clr);//Set object's background color
+      ObjectSetInteger(chart_ID,name,OBJPROP_BORDER_TYPE,border);//Set object's border type
+      ObjectSetInteger(chart_ID,name,OBJPROP_ANCHOR,Anchor);//Set objects anchor point
+      ObjectSetInteger(chart_ID,name,OBJPROP_COLOR,clr);//Set object's color
+      ObjectSetInteger(chart_ID,name,OBJPROP_STYLE,style);//Set object's style
+      ObjectSetInteger(chart_ID,name,OBJPROP_WIDTH,line_width);//Set object's flat border width
+      ObjectSetInteger(chart_ID,name,OBJPROP_BACK,back);//Set if object is in foreground or not
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTABLE,selection);//Set if object is selectable/dragable
+      ObjectSetInteger(chart_ID,name,OBJPROP_SELECTED,selection);//Set if object is Selected
+      ObjectSetInteger(chart_ID,name,OBJPROP_HIDDEN,hidden);//Set if object is hidden in object list
+      ChartRedraw(chart_ID);
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+```
+
+The function TextObj will create text objects on the chart.
+
+```
+void CObjectProperties::TextObj(long chartID,string name,string text,int x_coord,int y_coord,
+                                ENUM_BASE_CORNER Corner=CORNER_LEFT_UPPER,int fontsize=10)
+  {
+   ObjectDelete(chartID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chartID,name,OBJ_LABEL,0,0,0))//Create object label
+     {
+      AddObj(chartID,name);//Add object to array
+      ObjectSetInteger(chartID,name,OBJPROP_XDISTANCE,x_coord);//Set x Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_YDISTANCE,y_coord);//Set y Distance/coordinate
+      ObjectSetInteger(chartID,name,OBJPROP_CORNER,Corner);//Set object's corner anchor
+      ObjectSetString(chartID,name,OBJPROP_TEXT,text);//Set object's text
+      ObjectSetInteger(chartID,name,OBJPROP_COLOR,SymbolBackground());//Set object's color
+      ObjectSetInteger(chartID,name,OBJPROP_FONTSIZE,fontsize);//Set object's font-size
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+```
+
+The function EventObj will create event objects on the chart to show the economic events the have or will occur.
+
+```
+void CObjectProperties::EventObj(long chartID,string name,string description,datetime eventdate)
+  {
+   ObjectDelete(chartID,name);//Delete previous object with the same name and chart id
+   if(ObjectCreate(chartID,name,OBJ_EVENT,0,eventdate,0))//Create object event
+     {
+      AddObj(chartID,name);//Add object to array
+      ObjectSetString(chartID,name,OBJPROP_TEXT,description);//Set object's text
+      ObjectSetInteger(chartID,name,OBJPROP_COLOR,clrBlack);//Set object's color
+     }
+   else
+     {
+      Print("Failed to create object: ",name);
+     }
+  }
+```
+
+## News Class
+
+Calendar Tables in Part 1:
+
+In our previous database in part 1, the file size was massive and pretty slow to store all the news data into the database. This is due to the news data being stored inefficiently. The biggest contributor to the file size and sluggish performance, is storing similar data repeatedly.
+
+The tables:
+
+- Data\_AU
+- Data\_None
+- Data\_UK
+- Data\_US
+
+Store the same news data with a variation to the time data.
+
+New Design:
+
+Calendar Contents in Part 2:
+
+Instead of repeatedly storing the same news event data with different times. We will create a singular table to store all the news event data called MQL5Calendar. And to store the differing time data between each DST schedule, we will have another table called TimeSchedule. This layout will therefore reduce the file size by more than half of the previous calendar database and increase performance.
+
+In the new database design we will have these contents:
+
+- AutoDST Table
+- Calendar\_AU View
+- Calendar\_NONE View
+- Calendar\_UK View
+- Calendar\_US View
+- MQL5Calendar Table
+- Record Table
+- TimeSchedule Table
+- OnlyOne\_AutoDST Trigger
+- OnlyOne\_Record Trigger
+
+We are going to Normalize the Tables from the previous database, these tables are Data\_AU, Data\_None, Data\_UK and Data\_US.
+
+[What is Database Normalization?](https://learn.microsoft.com/en-us/office/troubleshoot/access/database-normalization-description "https://learn.microsoft.com/en-us/office/troubleshoot/access/database-normalization-description")
+
+Database normalization is a process in database design used to organize a database into tables and columns to minimize redundancy and dependency. The main goals are to eliminate redundant data (for example, storing the same data in more than one table) and ensure data dependencies make sense (only storing related data in a table). This process results in a set of tables that can be more easily maintained and reduces the chances of data anomalies.
+
+We will also create triggers to assure that only one record is stored in tables AutoDST and Record. Additionally we will create views for each DST schedule to show the News events for the last updated day, ideally to easily navigate which news events were up to date without having to repeatedly run queries on the tables with thousands of entries. 
+
+### Okay so what is a Trigger?
+
+A [trigger in SQLite](https://www.sqlitetutorial.net/sqlite-trigger/ "https://www.sqlitetutorial.net/sqlite-trigger/") is a special kind of stored procedure that automatically executes a specified set of actions in response to certain events on a particular table. These events can be insertions, updates, or deletions of rows in the table.
+
+### What is a View?
+
+A [view in SQLite](https://www.sqlitetutorial.net/sqlite-create-view/ "https://www.sqlitetutorial.net/sqlite-create-view/") is a virtual table that is based on the result set of a SELECT query. Unlike a table, a view does not store data physically. Instead, it provides a way to present data from one or more tables in a specific structure or format, often simplifying complex queries and enhancing data security.
+
+Before we start creating new tables and adding to the already large size of the database. We need a way to know which tables to delete and which to keep. A simple solution would be to check for each table we know exists in our previous database, which would include Data\_AU and others. But we can't just hard code which tables to delete from our memory, our program needs to find the tables we do not need anymore by itself. In order to do this we need to check which tables exist in our database, and iterate through the tables we want to delete and skip those we want to keep.
+
+In SQLite there is a table called SQLITE\_MASTER/SQLITE\_SCHEMA that stores database's metadata, including information about all objects in the database and the SQL used to define them. It's the most important system catalog in SQLite. The query below is used to get all the information from the database.
+
+```
+SELECT * FROM SQLITE_MASTER;
+```
+
+ Database output:
+
+```
+type    name		    		tbl_name        rootpage        sql
+table   Data_None       		Data_None       2       	CREATE TABLE Data_None(ID INT NOT NULL,EVENTID  INT   NOT NULL,COUNTRY  STRING   NOT NULL,EVENTNAME   STRING   NOT NULL,EVENTTYPE   STRING   NOT NULL,EVENTIMPORTANCE   STRING   NOT NULL,EVENTDATE   STRING   NOT NULL,EVENTCURRENCY  STRING   NOT NULL,EVENTCODE   STRING   NOT NULL,EVENTSECTOR STRING   NOT NULL,EVENTFORECAST  STRING   NOT NULL,EVENTPREVALUE  STRING   NOT NULL,EVENTIMPACT STRING   NOT NULL,EVENTFREQUENCY STRING   NOT NULL,PRIMARY KEY(ID))
+index   sqlite_autoindex_Data_None_1    Data_None       3       
+table   Data_US 			Data_US 	4       	CREATE TABLE Data_US(ID INT NOT NULL,EVENTID  INT   NOT NULL,COUNTRY  STRING   NOT NULL,EVENTNAME   STRING   NOT NULL,EVENTTYPE   STRING   NOT NULL,EVENTIMPORTANCE   STRING   NOT NULL,EVENTDATE   STRING   NOT NULL,EVENTCURRENCY  STRING   NOT NULL,EVENTCODE   STRING   NOT NULL,EVENTSECTOR STRING   NOT NULL,EVENTFORECAST  STRING   NOT NULL,EVENTPREVALUE  STRING   NOT NULL,EVENTIMPACT STRING   NOT NULL,EVENTFREQUENCY STRING   NOT NULL,PRIMARY KEY(ID))
+index   sqlite_autoindex_Data_US_1      Data_US 	5       
+table   Data_UK 			Data_UK 	6       	CREATE TABLE Data_UK(ID INT NOT NULL,EVENTID  INT   NOT NULL,COUNTRY  STRING   NOT NULL,EVENTNAME   STRING   NOT NULL,EVENTTYPE   STRING   NOT NULL,EVENTIMPORTANCE   STRING   NOT NULL,EVENTDATE   STRING   NOT NULL,EVENTCURRENCY  STRING   NOT NULL,EVENTCODE   STRING   NOT NULL,EVENTSECTOR STRING   NOT NULL,EVENTFORECAST  STRING   NOT NULL,EVENTPREVALUE  STRING   NOT NULL,EVENTIMPACT STRING   NOT NULL,EVENTFREQUENCY STRING   NOT NULL,PRIMARY KEY(ID))
+index   sqlite_autoindex_Data_UK_1      Data_UK 	7       
+table   Data_AU 			Data_AU 	8       	CREATE TABLE Data_AU(ID INT NOT NULL,EVENTID  INT   NOT NULL,COUNTRY  STRING   NOT NULL,EVENTNAME   STRING   NOT NULL,EVENTTYPE   STRING   NOT NULL,EVENTIMPORTANCE   STRING   NOT NULL,EVENTDATE   STRING   NOT NULL,EVENTCURRENCY  STRING   NOT NULL,EVENTCODE   STRING   NOT NULL,EVENTSECTOR STRING   NOT NULL,EVENTFORECAST  STRING   NOT NULL,EVENTPREVALUE  STRING   NOT NULL,EVENTIMPACT STRING   NOT NULL,EVENTFREQUENCY STRING   NOT NULL,PRIMARY KEY(ID))
+index   sqlite_autoindex_Data_AU_1      Data_AU 	9       
+table   Records 			Records 	38774   	CREATE TABLE Records(RECORDEDTIME INT NOT NULL)
+table   AutoDST 			AutoDST 	38775   	CREATE TABLE AutoDST(DST STRING NOT NULL)
+```
+
+As seen from the database output, there is something called an index, which we did not create before.
+
+### What is an Index?
+
+An [index in SQLite](https://www.sqlitetutorial.net/sqlite-index/ "https://www.sqlitetutorial.net/sqlite-index/") is a database object that provides a way to improve the performance of query operations by facilitating faster retrieval of records from a table. Indexes are particularly useful for speeding up searches, sorting, and join operations by creating a sorted data structure (typically a B-tree) that allows the database engine to locate rows more quickly.
+
+Why was the index created if we didn't create it previously?
+
+When a table has a primary key in SQLite an index is automatically created for that particular table.
+
+In our database output previously, we finally got all the objects and metadata in the database, we can now find the tables which are no longer necessary and delete them. In order to do this we will create an array of the tables we need and the SQL statements that create these tables, so we can compare them to the one in the database output and therefore remove the ones that do not match.
+
+CNews has multilevel Inheritance from classes:
+
+- CCandleProperties
+- CChartProperties
+- CSymbolProperties
+
+CNews has Inclusions from classes:
+
+- CDaylightSavings\_UK
+- CDaylightSavings\_US
+- CDaylightSavings\_AU
+
+CNews has an inclusion from header file CommonVariables.mqh
+
+CNews has hierarchical Inheritance from classes:
+
+- CSymbolProperties
+- CSymbolInfo
+- CCandleProperties
+- CTimeManagement
+
+```
+//+------------------------------------------------------------------+
+//|                                                      NewsTrading |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                            https://www.mql5.com/en/users/kaaiblo |
+//+------------------------------------------------------------------+
+#include "CommonVariables.mqh"
+#include "DayLightSavings/DaylightSavings_UK.mqh"
+#include "DayLightSavings/DaylightSavings_US.mqh"
+#include "DayLightSavings/DaylightSavings_AU.mqh"
+#include "CandleProperties.mqh"
+
+//+------------------------------------------------------------------+
+//|News class                                                        |
+//+------------------------------------------------------------------+
+class CNews : private CCandleProperties
+  {
+   //Private Declarations Only accessable by this class/header file
+private:
+
+   //-- To keep track of what is in our database
+   enum CalendarComponents
+     {
+      AutoDST_Table,//AutoDST Table
+      CalendarAU_View,//View for DST_AU
+      CalendarNONE_View,//View for DST_NONE
+      CalendarUK_View,//View for DST_UK
+      CalendarUS_View,//View for DST_US
+      Record_Table,// Record Table
+      TimeSchedule_Table,//TimeSchedule Table
+      MQL5Calendar_Table,//MQL5Calendar Table
+      AutoDST_Trigger,//Table Trigger for AutoDST
+      Record_Trigger//Table Trigger for Record
+     };
+
+   //-- structure to retrieve all the objects in the database
+   struct SQLiteMaster
+     {
+      string         type;//will store object's type
+      string         name;//will store object's name
+      string         tbl_name;//will store table name
+      int            rootpage;//will store rootpage
+      string         sql;//Will store the sql create statement
+     } DBContents[];//Array of type SQLiteMaster
+
+   //--  MQL5CalendarContents inherits from SQLiteMaster structure
+   struct MQL5CalendarContents:SQLiteMaster
+     {
+      CalendarComponents  Content;
+      string         insert;//Will store the sql insert statement
+     } CalendarContents[10];//Array to Store objects in our database
+
+   CTimeManagement   Time;//TimeManagement Object declaration
+   CDaylightSavings_UK  Savings_UK;//DaylightSavings Object for the UK and EU
+   CDaylightSavings_US  Savings_US;//DaylightSavings Object for the US
+   CDaylightSavings_AU  Savings_AU;//DaylightSavings Object for the AU
+
+   bool              AutoDetectDST(DST_type &dstType);//Function will determine Broker DST
+   DST_type          DSTType;//variable of DST_type enumeration declared in the CommonVariables class/header file
+   bool              InsertIntoTables(int db,Calendar &Evalues[]);//Function for inserting Economic Data in to a database's table
+   void              CreateAutoDST(int db);//Function for creating and inserting Recommend DST for the Broker into a table
+   bool              CreateCalendarTable(int db,bool &tableExists);//Function for creating a table in a database
+   bool              CreateTimeTable(int db,bool &tableExists);//Function for creating a table in a database
+   void              CreateCalendarViews(int db);//Function for creating a view in a database
+   void              CreateRecordTable(int db);//Creates a table to store the record of when last the Calendar database was updated/created
+   bool              UpdateRecords();//Checks if the main Calendar database needs an update or not
+   void              EconomicDetails(Calendar &NewsTime[]);//Gets values from the MQL5 economic Calendar
+   string            DropRequest;//Variable for dropping tables in the database
+
+   //-- Function for retrieving the MQL5CalendarContents struct

@@ -1,0 +1,1039 @@
+---
+id: 20037
+source_url: https://www.mql5.com/en/articles/20037
+title: "From Novice to Expert: Time Filtered Trading"
+author: ""
+author_url: 
+published: 2025-11-14T11:14Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# From Novice to Expert: Time Filtered Trading
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 14 November 2025 at 06:14
+
+7 997
+[
+0](https://www.mql5.com/en/forum/500066 "Comments")
+
+[Clemence Benjamin](https://www.mql5.com/en/users/billionaire2024)
+
+### Contents
+
+- [Introduction](https://www.mql5.com/en/articles/20037#introduction)
+- [Implementation](https://www.mql5.com/en/articles/20037#implementation)
+- [Testing](https://www.mql5.com/en/articles/20037#testing)
+- [Conclusion](https://www.mql5.com/en/articles/20037#conclusion)
+- [Key Takeaways](https://www.mql5.com/en/articles/20037#key_takeaways)
+- [Attachments](https://www.mql5.com/en/articles/20037#attachments)
+
+### Introduction
+
+By leveraging the capabilities of MQL5, we can precisely define the times we want to trade and receive alerts accordingly. In our previous discussion, we established the foundation for session visualization, where we uncovered the structure of each trading session—its body, upper wick, and lower wick. That project enabled us to visualize the broader market structure across higher-timeframe sessions, synchronized with lower-timeframe data to reveal the magnified internal price movements and patterns forming within.
+
+These concepts may not be exhaustive, but they serve as a valuable stepping stone for other ambitious researchers seeking to visualize and design more advanced market-analysis tools. Price, by its nature, is a time-series phenomenon—it evolves continuously, tick by tick. Our Expert Advisors and indicators are designed to monitor these fluctuations relentlessly, reacting to every pattern or condition they detect. However, without introducing time-based filters, they will execute actions indiscriminately whenever technical conditions are met—even during periods of thin liquidity, erratic spreads, or low-volume drift.
+
+This is when time reference becomes critical. By anchoring our algorithms to well-defined trading windows or sessions, we guide them to act only when the market is most active, structured, and meaningful. Time filtering therefore serves as a disciplinary framework, ensuring that execution happens when market behavior aligns not just with strategy logic, but with the rhythm of time itself.
+
+Known calendar events can serve as powerful reference points for time-filtered trading. Economic events such as Non-Farm Payrolls, CPI, FOMC decisions, or GDP releases evolve in time and can be used to define precise trading windows—periods in which our tools are either permitted or restricted from placing orders and generating signals.
+
+In the same way that session markers define market rhythm, economic calendar markers define event-driven volatility zones. For instance, an algorithm might automatically suspend trading 30 minutes before a high-impact event and resume only after volatility stabilizes. MQL5 provides direct access to such data through the [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) structure and [CalendarValueById()](https://www.mql5.com/en/docs/calendar/calendarvaluebyid) function, allowing EAs to detect upcoming releases and align their operations accordingly.
+
+Beyond event-driven scheduling, the hour of the clock itself is another crucial control factor. A trader or researcher might define fixed time windows such as 10:00–12:00 hrs for signal generation or execution. This not only reduces noise but helps isolate statistically favorable periods within a trading day.
+
+Together, these mechanisms—calendar-based event filters and hour-based time windows—give our systems a dual awareness of time: one derived from scheduled economic behavior, and the other from intraday structural rhythm. Integrating both enables our Expert Advisors to act not only on price conditions but also on temporal context, which is often the deciding factor between precision and randomness in automated trading.
+
+Today’s focus is on time-filtered trading. We will explore how to use the time reference points established in our previous projects to filter trading frequency and control signal delivery. Through algorithms, we can define specific time windows in which trading activity is allowed—giving us greater control, precision, and adaptability in automated trading strategies. It encourages us to move beyond mere condition-based triggers and embrace temporal awareness—allowing our trading systems to respect both what the market is doing and when it is doing it.
+
+By leveraging the MQL5 framework, we can create systems that:
+
+- Trade only during selected sessions (e.g., London or New York).
+- Suspend trading before major news releases or low-liquidity hours.
+- Deliver alerts, signals, or entries only when the clock and conditions align.
+
+The Concept Behind Time Filtering
+
+Time filtering ensures that your strategy’s logic is executed only during specific time windows. Instead of letting an EA or indicator run continuously, you can wrap its execution in time checks that confirm whether the current market time falls within the desired trading period.
+
+This approach is useful for:
+
+- Avoiding off-peak or illiquid periods (e.g., post-New York close).
+- Capturing session-based volatility bursts (e.g., London–New York overlap).
+- Controlling signal frequency to reduce noise or over-trading.
+
+In today’s approach, our focus shifts entirely to implementation. We are not introducing any further upgrades to the Market Periods Synchronizer at this stage. Instead, we build upon the work established in our previous publication, which now serves as the foundation for the present study.
+
+Specifically, we will reference the SessionVisualizer header file—the module responsible for defining and marking our market session periods. The time markers created within it will serve as key reference points for this new concept of time-filtered trading. By utilizing these markers, we can now define and control trading windows that occur before or after a session’s start or close.
+
+In the next section, we will explore a detailed implementation of this idea, demonstrating how time-based controls can be integrated directly into our trading logic. Here are the implementation steps we will follow:
+
+1. Build a modular TimeFilter layer that works together with the SessionVisualizer to provide session-based, clock-based, and (optionally) event-based time windows.
+2. Create an example Expert Advisor that executes trades only when the active time filters allow trading.
+3. Create an example indicator that plots or triggers signals only within the permitted time-filtered windows.
+
+### Implementation
+
+Now we will begin by implementing the TimeFilter class, then integrate it into two example projects—an Expert Advisor and an indicator—and finally present our test results along with the complete source files.
+
+**TimeFilter**
+
+1. Module Header and Include Guard
+
+We start by treating this file as a reusable library, not a throwaway code fragment. Using #property strict enforces safer compilation rules, while the include guard prevents duplicate definitions when the file is used in multiple projects. We also include SessionVisualizer.mqh because our time filter is designed to cooperate with your existing session visualization logic. This is the kind of structural discipline that makes a codebase scalable.
+
+```
+// ============================================================================
+// TimeFilters.mqh — modular helpers for time-filtered trading
+// Author—Clemence Benjamin
+// ============================================================================
+
+#property strict
+#ifndef __TIMEFILTERS_MQH__
+#define __TIMEFILTERS_MQH__
+
+#include "SessionVisualizer.mqh"
+```
+
+2. Inputs and User-Controlled Settings
+
+Next, we expose a small control panel through input parameters. Instead of hard-coding behavior, we allow the trader (or tester) to decide whether to filter by sessions, fixed hours, or events. The clock start/end, pre/post-session padding, and (future) news filters are all tweakable without touching the source. The names are consistently prefixed with Inp and each input is documented—this is precisely how you make your modules readable in the MetaTrader 5 “Inputs” tab and self-explanatory inside the code.
+
+```
+// --------------------------- Inputs / Settings ------------------------------
+input bool   InpUseSessionFilter   = true;      // gate by session times
+input bool   InpUseClockFilter     = true;      // gate by fixed clock window
+input bool   InpUseEventFilter     = false;     // gate by economic calendar (stubbed safe)
+
+input int    InpClockStartHour     = 10;        // e.g., 10:00
+input int    InpClockEndHour       = 12;        // e.g., 12:00
+input int    InpPreSessionMins     = 0;         // allow N minutes before session start
+input int    InpPostSessionMins    = 0;         // allow N minutes after session end
+
+// Event filter parameters (used when you enable InpUseEventFilter)
+input int    InpCalLookAheadMin    = 60;
+input int    InpCalBlockBeforeMin  = 30;
+input int    InpCalBlockAfterMin   = 30;
+input int    InpCalMinImportance   = 2;         // 0=low,1=medium,2=high
+```
+
+3. Time Filter Context Wrapper
+
+Rather than scattering global variables across your EA, we encapsulate time-related state in CTimeFilterContext. This class can optionally store a pointer to CSessionVisualizer and the active gmt\_offset. That means any EA or indicator can pass around a single lightweight context object, and all time decisions stay consistent. SetGMTOffset forwards the offset into the visualizer when it exists—keeping your drawings and your filters synchronized without duplicated logic.
+
+```
+// --------------------------- Context wrapper --------------------------------
+class CTimeFilterContext
+{
+public:
+   CSessionVisualizer *viz;   // optional visualizer pointer
+   int                 gmt_offset;
+
+   CTimeFilterContext() : viz(NULL), gmt_offset(0) {}
+
+   void AttachVisualizer(CSessionVisualizer &ref) { viz = &ref; }
+
+   void SetGMTOffset(int off)
+   {
+      gmt_offset = off;
+      if(viz != NULL)
+      {
+         // safest explicit dereference form
+         (*viz).SetGMTOffset(off);
+      }
+   }
+};
+```
+
+4. Core Clock-Window Filter
+
+The clock window is our first and simplest time barrier: “only operate between these hours.” Here we convert the server time into a structured form and check it against the user-defined range. Two behaviors are worth noting: if startHour == endHour we interpret that as “no restriction,” and if startHour > endHour we treat the window as wrapping over midnight (e.g. 22:00–02:00). Many beginners forget the wrap-around case; handling it here means the rest of your logic can rely on this utility confidently.
+
+```
+// --------------------------- Utility: Clock Window --------------------------
+bool InClockWindow(const int startHour, const int endHour)
+{
+   MqlDateTime t;
+   TimeToStruct(TimeCurrent(), t);
+
+   if(startHour == endHour)
+      return true; // treat as "always on"
+
+   if(startHour < endHour)
+      return (t.hour >= startHour && t.hour < endHour);
+
+   // wrap across midnight, e.g., 22..02
+   return (t.hour >= startHour || t.hour < endHour);
+}
+```
+
+5. Session-Based Window Filter
+
+This function connects our time-filter engine to the session logic. It expects the CTimeFilterContext (for configuration) and a SESSION\_TYPE (Sydney, Tokyo, London, New York). Depending on your implementation, GetTodaySessionWindow (in your SessionVisualizer) returns the current day’s session start and end. Moreover, we add pre- and post-session padding in minutes, which is where traders usually encode rules like “start looking 15 minutes before London” or “avoid the last 30 minutes of New York.” Notice how we fail open: if we can’t get a session window, we return true so that a missing visualizer or config doesn’t silently kill all trading.
+
+```
+// --------------------------- Utility: Session Window ------------------------
+bool InSessionWindow(CTimeFilterContext &ctx, const SESSION_TYPE sType,
+                     const int preMins = 0, const int postMins = 0)
+{
+   if(ctx.viz == NULL)
+      return true; // no visualizer attached -> don't block
+
+   datetime ss, se;
+
+   if(!(*ctx.viz).GetTodaySessionWindow(sType, ss, se))
+      return true; // session not available -> don't block
+
+   // Apply pre/post-minute padding
+   ss -= (preMins * 60);
+   se += (postMins * 60);
+
+   datetime now = TimeCurrent();
+   return (now >= ss && now <= se);
+}
+```
+
+6. Event Filter Stub (Expandable Hook)
+
+Here, we define EventWindowAllowed as a safe stub: for now, it always returns true. The design decision is intentional. Many readers run brokers or testers without economic calendar support; a hard dependency would break portability. By providing this hook with the right signature, we make it trivial to later plug in real calendar-based logic (blocking around NFP, FOMC, CPI etc.) without changing any EA code that already relies on IsTradingAllowed.
+
+```
+// --------------------------- Utility: Economic Calendar ---------------------
+bool EventWindowAllowed(const int /*lookAheadMin*/,
+                        const int /*blockBeforeMin*/,
+                        const int /*blockAfterMin*/,
+                        const int /*minImportance*/)
+{
+   // Stubbed: always allow for safe compilation
+   return true;
+}
+```
+
+7. Composite Decision: Is Trading Allowed?
+
+Finally, all the pieces converge into a single tidy function: IsTradingAllowed. This is the method your EA or indicator should call on every tick or on every signal. It sequentially applies the enabled filters:
+
+- If the clock filter is on, we must be inside the allowed hours.
+- If the session filter is on, we must be inside at least one configured session window (with padding).
+- If the event filter is on, we must pass the (future) event rule.
+
+The pattern ok = ok && ... keeps the logic readable: once a filter fails, we keep returning false without special branching. The  result is a clean Boolean gate that turns your raw strategy into a time-aware strategy with a single call.
+
+```
+// --------------------------- Composite Gate --------------------------------
+bool IsTradingAllowed(CTimeFilterContext &ctx)
+{
+   bool ok = true;
+
+   if(InpUseClockFilter)
+      ok = ok && InClockWindow(InpClockStartHour, InpClockEndHour);
+
+   if(InpUseSessionFilter)
+   {
+      bool any = false;
+      any = any || InSessionWindow(ctx, SESSION_LONDON,  InpPreSessionMins, InpPostSessionMins);
+      any = any || InSessionWindow(ctx, SESSION_NEWYORK, InpPreSessionMins, InpPostSessionMins);
+      any = any || InSessionWindow(ctx, SESSION_TOKYO,   InpPreSessionMins, InpPostSessionMins);
+      any = any || InSessionWindow(ctx, SESSION_SYDNEY,  InpPreSessionMins, InpPostSessionMins);
+      ok = ok && any;
+   }
+
+   if(InpUseEventFilter)
+      ok = ok && EventWindowAllowed(InpCalLookAheadMin,
+                                    InpCalBlockBeforeMin,
+                                    InpCalBlockAfterMin,
+                                    InpCalMinImportance);
+
+   return ok;
+}
+
+#endif // __TIMEFILTERS_MQH__
+```
+
+**Example Expert Advisor using time filters**
+
+1. EA Header and High-Level Intent
+
+Every professional EA should introduce itself clearly at the top. Here we declare ownership, describe the purpose, and fix the version. This is more than cosmetics: when you come back months later—or when someone else downloads your source from the CodeBase—these fields tell them this is not a random experiment, but a structured, documented system specifically designed for time-filtered trading with clean CTrade integration.
+
+```
+// TimeFilteredEA.mq5 -                                             
+#property copyright  "Clemence Benjamin"
+#property description "Professional Time-Filtered EA with streamlined CTrade usage."
+#property version     "1.0"
+```
+
+2. Strategic Includes: Trading, Symbol Info, Sessions, Time Filters
+
+Next, we selectively include only the building blocks this EA truly depends on. Trade.mqh gives us the high-level CTrade wrapper; SymbolInfo.mqh helps with broker-specific symbol properties; SessionVisualizer.mqh handles our visual context; TimeFilters.mqh provides the central IsTradingAllowed gate. We are composing behavior from well-defined modules, not reinventing everything inside one bloated file.
+
+```
+#include <Trade/Trade.mqh>
+#include <Trade/SymbolInfo.mqh>
+#include <SessionVisualizer.mqh>
+#include <TimeFilters.mqh>
+```
+
+3. Exposed Inputs: Configurable
+
+Here we offer a clean input panel for traders. We don’t bury lot size, stop loss, or visualization flags inside the logic. Instead, we declare them as input variables so they appear in the EA settings dialog. Note how each input has a clear comment explaining its purpose. We also use a dedicated magic number and deviation, both fundamental best practices for managing orders safely in multi-EA environments.
+
+```
+input int    InpGMTOffsetHours = 0;     // GMT offset for session alignment
+input bool   InpDrawSessions    = true; // Enable session visualization
+input int    InpLookbackDays    = 5;    // Days to draw sessions
+input double InpLotSize         = 0.01; // Fixed lot size
+input int    InpStopLossPips    = 50;   // SL in pips (0 = none; TP auto-set to 2x if >0)
+input int    InpTakeProfitPips  = 0;    // TP in pips (0 = auto 2x SL if SL>0)
+input int    InpMagicNumber     = 12345; // Magic number for trades
+input int    InpDeviationPips   = 10;   // Max slippage in pips
+```
+
+4. Core Objects and State
+
+We now declare the key objects used by the EA: CTrade for order execution, CSymbolInfo for spread/tick/volume data, CSessionVisualizer to draw session blocks, and CTimeFilterContext to coordinate time-related decisions. We also prepare MA handles and gLastSignalBar to ensure we don’t double-trigger signals on the same candle. This pattern is tidy: environment-level tools are global, while trade logic and filters stay modular.
+
+```
+CTrade              trade;
+CSymbolInfo         gSymbolInfo;
+CSessionVisualizer  gSV("TF_SESS_");
+CTimeFilterContext  gCTX;
+
+// MA handles
+int       gFastMAHandle   = INVALID_HANDLE;
+int       gSlowMAHandle   = INVALID_HANDLE;
+datetime  gLastSignalBar  = 0;
+```
+
+5. Professional Trade Manager: Encapsulating Execution Logic
+
+Instead of firing raw trade.Buy() calls all over the EA, we introduce CTradeManager. This class centralizes lot normalization, slippage, magic number assignment, SL/TP calculation, and account validation. This is how you keep your strategy code clean—your signal logic asks for a buy, and the manager handles all plumbing details in one place, including robust logging of failure reasons.
+
+```
+//+------------------------------------------------------------------+
+//| Professional Trade Manager Wrapper                               |
+//+------------------------------------------------------------------+
+class CTradeManager
+{
+private:
+   CTrade* m_trade;
+   int     m_magic;
+   int     m_deviation;
+   double  m_minVolume;
+   double  m_maxVolume;
+   double  m_volumeStep;
+   int     m_digits;
+   double  m_point;
+
+public:
+   CTradeManager() : m_trade(NULL), m_magic(0), m_deviation(0) {}
+   ~CTradeManager() {}
+
+   bool Init(int magic, int deviation)
+   {
+      m_trade = new CTrade();
+      if(m_trade == NULL) return false;
+      
+      m_magic = magic;
+      m_deviation = deviation;
+      
+      m_trade.SetExpertMagicNumber(m_magic);
+      m_trade.SetDeviationInPoints(m_deviation);
+      m_trade.LogLevel(LOG_LEVEL_ERRORS);  // Match reference: log errors only
+      
+      // Cache symbol props (no filling set - default to broker/symbol)
+      m_minVolume  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      m_maxVolume  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+      m_volumeStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      m_digits     = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+      m_point      = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+      
+      Print("TradeManager initialized: Magic=", m_magic,
+            " Deviation=", m_deviation, "pts (default filling)");
+      return true;
+   }
+
+   void Deinit()
+   {
+      if(m_trade != NULL)
+      {
+         delete m_trade;
+         m_trade = NULL;
+      }
+   }
+```
+
+6. Volume Safety and Account Validation
+
+Before placing any trade, a robust EA must answer two questions: Is this volume valid for this symbol? And Is this account in a healthy state? IsValidVolume and NormalizeVolume align requested volume to the broker’s SYMBOL\_VOLUME\_STEP constraints. ValidateAccount confirms that balance, equity, and free margin are not in nonsense territory.
+
+```
+   bool IsValidVolume(double volume)
+   {
+      if(volume < m_minVolume || volume > m_maxVolume) return false;
+      double normalized = NormalizeDouble(volume / m_volumeStep, 0) * m_volumeStep;
+      return (MathAbs(volume - normalized) < m_point);
+   }
+
+   double NormalizeVolume(double volume)
+   {
+      return NormalizeDouble(
+               MathMax(m_minVolume,
+                       MathMin(m_maxVolume,
+                               NormalizeDouble(volume / m_volumeStep, 0) * m_volumeStep)),
+               2);
+   }
+
+   bool ValidateAccount()
+   {
+      double balance    = AccountInfoDouble(ACCOUNT_BALANCE);
+      double equity     = AccountInfoDouble(ACCOUNT_EQUITY);
+      double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+      
+      if(balance <= 0 || equity <= 0 || freeMargin < 0)
+      {
+         Print("TradeManager: Invalid account state - Balance=", balance,
+               " Equity=", equity, " FreeMargin=", freeMargin);
+         return false;
+      }
+      
+      Print("TradeManager: Account validated - Balance=", balance,
+            " FreeMargin=", freeMargin);
+      return true;
+   }
+```
+
+7. ExecuteBuy: SL/TP Logic, Spread Awareness, and Error Reporting
+
+ExecuteBuy is where all the pieces come together. We validate the account, normalize and verify volume, fetch fresh symbol prices, and calculate stop-loss and take-profit in a way that respects spread, pip size, and minimum stop levels. If only SL is given and TP is zero, the EA auto-derives a 1:2 risk-reward TP—this introduces good practice directly into the framework. And if something goes wrong, the function prints both the ResultRetcodeDescription() and GetLastError().
+
+```
+   bool ExecuteBuy(double volume, double sl = 0, double tp = 0, string comment = "")
+   {
+      if(!ValidateAccount()) return false;
+      
+      volume = NormalizeVolume(volume);
+      if(!IsValidVolume(volume))
+      {
+         Print("TradeManager: Invalid volume ", volume);
+         return false;
+      }
+      
+      gSymbolInfo.Name(_Symbol);
+      gSymbolInfo.RefreshRates();
+      double ask    = gSymbolInfo.Ask();
+      double bid    = gSymbolInfo.Bid();
+      double spread = ask - bid;
+      
+      double price      = NormalizeDouble(ask, m_digits);
+      double stoploss   = 0.0;
+      double takeprofit = 0.0;
+      
+      double pipValue = (m_digits == 3 || m_digits == 5) ? m_point * 10 : m_point;
+
+      // --- SL/TP logic (spread-aware, 1:2 RR auto if desired) ---
+      if(InpStopLossPips > 0)
+      {
+         if(spread >= InpStopLossPips * m_point)
+         {
+            PrintFormat("StopLoss (%d points) <= current spread = %.0f points. Spread value will be used",
+                        InpStopLossPips, spread / m_point);
+            stoploss = NormalizeDouble(price - spread, m_digits);
+         }
+         else
+         {
+            stoploss = NormalizeDouble(price - InpStopLossPips * pipValue, m_digits);
+         }
+
+         if(InpTakeProfitPips == 0)
+         {
+            takeprofit = NormalizeDouble(price + (InpStopLossPips * 2 * pipValue), m_digits);
+            Print("TradeManager: Auto-set TP for 1:2 RR: ", takeprofit);
+         }
+         else
+         {
+            if(spread >= InpTakeProfitPips * m_point)
+            {
+               PrintFormat("TakeProfit (%d points) < current spread = %.0f points. Spread value will be used",
+                           InpTakeProfitPips, spread / m_point);
+               takeprofit = NormalizeDouble(price + spread, m_digits);
+            }
+            else
+            {
+               takeprofit = NormalizeDouble(price + InpTakeProfitPips * pipValue, m_digits);
+            }
+         }
+      }
+      else if(InpTakeProfitPips > 0)
+      {
+         if(spread >= InpTakeProfitPips * m_point)
+         {
+            PrintFormat("TakeProfit (%d points) < current spread = %.0f points. Spread value will be used",
+                        InpTakeProfitPips, spread / m_point);
+            takeprofit = NormalizeDouble(price + spread, m_digits);
+         }
+         else
+         {
+            takeprofit = NormalizeDouble(price + InpTakeProfitPips * pipValue, m_digits);
+         }
+      }
+
+      // Directional sanity checks
+      if(stoploss > 0 && stoploss >= price)
+      {
+         Print("TradeManager: Invalid SL for BUY - resetting to 0");
+         stoploss = 0;
+      }
+      if(takeprofit > 0 && takeprofit <= price)
+      {
+         Print("TradeManager: Invalid TP for BUY - resetting to 0");
+         takeprofit = 0;
+      }
+
+      // Respect broker minimum stop levels
+      long stopsLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+      if(stopsLevel > 0)
+      {
+         double minDist = stopsLevel * m_point;
+         if(stoploss > 0 && (price - stoploss) < minDist)
+         {
+            stoploss = NormalizeDouble(price - minDist, m_digits);
+            Print("TradeManager: SL adjusted to min dist: ", stoploss);
+         }
+         if(takeprofit > 0 && (takeprofit - price) < minDist)
+         {
+            takeprofit = NormalizeDouble(price + minDist, m_digits);
+            Print("TradeManager: TP adjusted to min dist: ", takeprofit);
+         }
+      }
+
+      Print("TradeManager: Executing BUY - Entry=", price,
+            " Vol=", volume, " SL=", stoploss, " TP=", takeprofit);
+
+      ResetLastError();
+      bool result = m_trade.Buy(volume, _Symbol, price, stoploss, takeprofit, comment);
+      
+      if(!result)
+      {
+         uint   retcode = m_trade.ResultRetcode();
+         string ret_desc = m_trade.ResultRetcodeDescription();
+         PrintFormat("Failed %s buy %G at %G (sl=%G tp=%G) Retcode=%u (%s) MQL Error=%d",
+                     _Symbol, volume, price, stoploss, takeprofit,
+                     retcode, ret_desc, GetLastError());
+         m_trade.PrintResult();
+         Print("   ");
+      }
+      else
+      {
+         Print("TradeManager: BUY success - Deal=", m_trade.ResultDeal(),
+               " Price=", m_trade.ResultPrice());
+      }
+      
+      return result;
+   }
+};
+```
+
+8. Initialization: Wiring Time Filters, Visualizer, Trade Manager, and EMAs
+
+OnInit is where the EA becomes alive. We attach the CSessionVisualizer to gCTX, set the GMT offset so both visuals and logic agree on time, and initialize the CTradeManager with our magic number and deviation. We also validate the account (especially useful in Strategy Tester) and create MA handles that drive our signal logic. The printed messages are intentional—they tell the user not only that the EA is “ready”, but also what risk model and configuration it is using.
+
+```
+// Global Trade Manager
+CTradeManager gTradeMgr;
+
+//+------------------------------------------------------------------+
+//| OnInit                                                           |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   Print("=== PIONEER EA INITIALIZATION (v2.11) ===");
+   
+   // Time filter setup
+   gCTX.AttachVisualizer(gSV);
+   gCTX.SetGMTOffset(InpGMTOffsetHours);
+   if(InpDrawSessions)
+      gSV.RefreshSessions(InpLookbackDays);
+   
+   // Initialize Trade Manager
+   if(!gTradeMgr.Init(InpMagicNumber, InpDeviationPips))
+   {
+      Print("FAIL: TradeManager initialization failed");
+      return INIT_FAILED;
+   }
+   
+   // Validate account early
+   if(!gTradeMgr.ValidateAccount())
+   {
+      Print("FAIL: Account validation failed - Check deposit in tester");
+      return INIT_FAILED;
+   }
+   
+   // MA indicators
+   gFastMAHandle = iMA(_Symbol, _Period, 9, 0, MODE_EMA, PRICE_CLOSE);
+   gSlowMAHandle = iMA(_Symbol, _Period, 21, 0, MODE_EMA, PRICE_CLOSE);
+   
+   if(gFastMAHandle == INVALID_HANDLE || gSlowMAHandle == INVALID_HANDLE)
+   {
+      Print("FAIL: MA handles creation failed");
+      return INIT_FAILED;
+   }
+   
+   Print("SUCCESS: Pioneer EA ready - Clean CTrade integration active (default filling)");
+   Print("RR Logic: SL=", InpStopLossPips, " pips; TP=",
+         (InpStopLossPips > 0 && InpTakeProfitPips == 0
+            ? InpStopLossPips * 2
+            : InpTakeProfitPips),
+         " pips (1:2 auto if TP=0)");
+   return INIT_SUCCEEDED;
+}
+```
+
+9. Cleanup: Resource Management
+
+In OnDeinit, we release indicator handles, deinitialize the trade manager, and clear session objects. This EA cleans up after itself.
+
+```
+//+------------------------------------------------------------------+
+//| OnDeinit                                                         |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   if(gFastMAHandle != INVALID_HANDLE) IndicatorRelease(gFastMAHandle);
+   if(gSlowMAHandle != INVALID_HANDLE) IndicatorRelease(gSlowMAHandle);
+   gTradeMgr.Deinit();
+   gSV.ClearAll();
+}
+```
+
+10. Entry Logic: EMA Crossover with One-Signal-Per-Bar
+
+The signal logic is intentionally simple: a 9 EMA crossing above 21 EMA. What matters is how it’s implemented. We pull two values from each MA buffer, detect the cross using previous vs current values, and then guard with gLastSignalBar so we don’t spam multiple entries on the same candle.
+
+```
+//+------------------------------------------------------------------+
+//| Signal Detection: EMA Crossover                                  |
+//+------------------------------------------------------------------+
+bool EntrySignalDetected()
+{
+   double fast[2], slow[2];
+   if(CopyBuffer(gFastMAHandle, 0, 0, 2, fast) != 2 ||
+      CopyBuffer(gSlowMAHandle, 0, 0, 2, slow) != 2)
+      return false;
+   
+   bool crossover = (fast[1] <= slow[1] && fast[0] > slow[0]);
+   if(!crossover) return false;
+   
+   datetime barTime = iTime(_Symbol, _Period, 0);
+   if(barTime == gLastSignalBar) return false;
+   gLastSignalBar = barTime;
+   return true;
+}
+```
+
+11. Position Filtering by Magic and Symbol
+
+HasOpenPosition scans through open positions and checks both symbol and magic number. This ensures the EA only reacts to its own trades and doesn’t interfere with other systems. It is important to always isolate your strategy using magic numbers; never assume you “own” every position on the account.
+
+```
+//+------------------------------------------------------------------+
+//| Position Check                                                   |
+//+------------------------------------------------------------------+
+bool HasOpenPosition()
+{
+   int total = PositionsTotal();
+   for(int i = 0; i < total; i++)
+   {
+      if(PositionGetSymbol(i) == _Symbol &&
+         PositionGetInteger(POSITION_MAGIC) == InpMagicNumber)
+         return true;
+   }
+   return false;
+}
+```
+
+12. OnTick: Time Filter First, Then Logic
+
+The OnTick body is deliberately short and readable—this is the payoff of all the abstractions. First, we refresh session visuals (if enabled). Then we pass through the time filter gate: if IsTradingAllowed(gCTX) returns false, the EA simply annotates “Trading OFF” and exits. Only when time conditions are satisfied do we check that there is no open position and that an EMA signal is present. If both hold, we hand off execution to gTradeMgr.ExecuteBuy.
+
+```
+//+------------------------------------------------------------------+
+//| OnTick                                                           |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   if(InpDrawSessions)
+      gSV.RefreshSessions(InpLookbackDays);
+   
+   if(!IsTradingAllowed(gCTX))
+   {
+      Comment("Pioneer EA: Trading OFF");
+      return;
+   }
+   
+   Comment("Pioneer EA: Trading ON | Positions: ", PositionsTotal());
+   
+   if(!HasOpenPosition() && EntrySignalDetected())
+   {
+      Print("=== SIGNAL: EMA Crossover Detected ===");
+      gTradeMgr.ExecuteBuy(InpLotSize, 0, 0, "Pioneer Buy");
+   }
+}
+```
+
+**Example indicator using TimeFilters**
+
+1. Indicator Overview–A Visual Companion to the Time-Filtered EA
+
+We start by declaring a chart-window indicator with two plots: one for bullish signals and one for bearish signals. The properties tell MetaTrader 5 that we’re drawing arrows directly on price, not in a separate subwindow.
+
+```
+// ============================================================================
+// Author: Clemence Benjamin
+// File: TimeFilteredSignal.mq5
+// Purpose: Time-filtered RSI signal + alerts indicator
+// Notes : Uses large Wingdings arrows for visual clarity
+//         Signals only appear when IsTradingAllowed(iCTX) == true
+// ============================================================================
+
+#property strict
+#property indicator_chart_window
+
+// We use two plots: one for bullish arrows, one for bearish arrows
+#property indicator_plots   2
+#property indicator_buffers 2
+
+// --- Plot 1: Bullish RSI signal (up arrow) ---
+#property indicator_type1   DRAW_ARROW
+#property indicator_color1  clrLime
+#property indicator_width1  2
+#property indicator_label1  "TF_RSI_Bull"
+
+// --- Plot 2: Bearish RSI signal (down arrow) ---
+#property indicator_type2   DRAW_ARROW
+#property indicator_color2  clrRed
+#property indicator_width2  2
+#property indicator_label2  "TF_RSI_Bear"
+```
+
+2. Reusing the Time Infrastructure–Sessions and Filters, Not Reinvented
+
+Here we include the same building blocks as the EA: SessionVisualizer.mqh and TimeFilters.mqh. That’s the key pattern: one centralized time policy, many consumers (EAs, indicators, dashboards). We also declare inputs for session drawing and RSI configuration, plus alert behavior. We can switch sessions on/off, tune RSI levels, and choose how noisy or quiet notifications should be.
+
+```
+#include <SessionVisualizer.mqh>
+#include <TimeFilters.mqh>
+
+// --------------------------- Inputs -----------------------------------------
+// Visual session context (indicator-side)
+input bool   InpDrawSessions_i    = true;
+input int    InpGMTOffsetHours_i  = 0;
+input int    InpLookbackDays_i    = 5;
+
+// RSI configuration
+input int    InpRSIPeriod         = 14;
+input int    InpRSIOverbought     = 70;
+input int    InpRSIOversold       = 30;
+
+// Alert behavior
+input bool   InpAlertOnCross      = true;      // enable popup alert on RSI cross
+input bool   InpSendPush          = false;     // send mobile push
+input bool   InpSendEmail         = false;     // send email
+input string InpAlertPrefix       = "TF-RSI";  // prefix tag in messages
+```
+
+3. Shared Context and Buffers–One Time Brain, Two Arrows
+
+The indicator uses the same CTimeFilterContext we designed earlier, pointing it at its own CSessionVisualizer instance. This keeps the implementation consistent with the EA: both consult the same idea of “allowed time.” We allocate two buffers: BuffUp for bullish arrows and BuffDn for bearish arrows. This separation makes interpretation instant on the chart—green up arrow: filtered bullish event; red down arrow: filtered bearish event.
+
+```
+// --------------------------- Globals ----------------------------------------
+CSessionVisualizer  iSV("TFI_SESS_");
+CTimeFilterContext  iCTX;
+
+// Two buffers: one for bullish arrows, one for bearish arrows
+double BuffUp[];
+double BuffDn[];
+
+int      rsiHandle            = INVALID_HANDLE;
+datetime gLastRSIAlertBarTime = 0;   // avoid duplicate alerts per bar
+```
+
+4. Alert Helper–One Message, Many Channels
+
+Instead of sprinkling Alert() calls inside our loop, we centralize notification logic in FireRSIAlert. That keeps the signal code clean and makes enhancements (prefix changes, formatting, extra data) trivial. This pattern scales—today it’s RSI messages; tomorrow it can be “Orderflow cluster detected” or “Custom regime shift confirmed” without refactoring the whole indicator.
+
+```
+// --------------------------- Alert helper -----------------------------------
+void FireRSIAlert(const string direction, const double rsiValue, const datetime barTime)
+{
+   string timeStr = TimeToString(barTime, TIME_DATE|TIME_SECONDS);
+
+   string msg = StringFormat("%s | %s | %s | RSI=%.2f | Time=%s (inside allowed window)",
+                             InpAlertPrefix,
+                             _Symbol,
+                             direction,
+                             rsiValue,
+                             timeStr);
+
+   Alert(msg);
+
+   if(InpSendPush)
+      SendNotification(msg);
+
+   if(InpSendEmail)
+      SendMail(InpAlertPrefix + " " + _Symbol, msg);
+
+   Print("TimeFilteredSignal: ", msg);
+}
+```
+
+5. OnInit–Binding Arrows to Buffers and Time to Sessions
+
+In OnInit, we do the structural wiring:
+
+- Assign buffers to the two plots.
+- Select Wingdings arrow codes (233 up, 234 down).
+- Attach the visualizer to the context and apply GMT offset.
+- Optionally draw sessions.
+- Create the RSI handle and initialize buffers.
+
+ The indicator should fail fast if a core resource (RSI, symbol info) cannot be created.
+
+```
+// --------------------------- OnInit -----------------------------------------
+int OnInit()
+{
+   // Bind buffers
+   SetIndexBuffer(0, BuffUp, INDICATOR_DATA);
+   SetIndexBuffer(1, BuffDn, INDICATOR_DATA);
+
+   // Use large Wingdings arrows:
+   // 233 = up arrow, 234 = down arrow
+   PlotIndexSetInteger(0, PLOT_ARROW, 233); // Bullish arrow up
+   PlotIndexSetInteger(1, PLOT_ARROW, 234); // Bearish arrow down
+
+   // Time filter context
+   iCTX.AttachVisualizer(iSV);
+   iCTX.SetGMTOffset(InpGMTOffsetHours_i);
+
+   if(InpDrawSessions_i)
+      iSV.RefreshSessions(InpLookbackDays_i);
+
+   // Create RSI handle
+   rsiHandle = iRSI(_Symbol, _Period, InpRSIPeriod, PRICE_CLOSE);
+   if(rsiHandle == INVALID_HANDLE)
+   {
+      Print("TimeFilteredSignal: Failed to create RSI handle. Error = ", GetLastError());
+      return(INIT_FAILED);
+   }
+
+   // Initialize buffers as empty
+   ArrayInitialize(BuffUp, EMPTY_VALUE);
+   ArrayInitialize(BuffDn, EMPTY_VALUE);
+
+   return(INIT_SUCCEEDED);
+}
+```
+
+6. OnCalculate—Time-Disciplined RSI Crosses with Arrows
+
+This is where the indicator earns its name. We iterate through bars, but the logic is intentionally simple and layered:
+
+1. Clear arrows by default (EMPTY\_VALUE hides them).
+2. Optionally refresh session visuals when new bars arrive.
+3. Pull RSI values via CopyBuffer.
+
+For each bar:
+
+1. Check IsTradingAllowed(iCTX)—if time filters reject, skip.
+2. Detect RSI crosses:
+
+- Bullish: leaving oversold upwards → draw green up arrow under the bar.
+- Bearish: leaving overbought downwards → draw red down arrow above the bar.
+
+For the latest bar only, fire alerts once using gLastRSIAlertBarTime.
+
+Signals are not just “RSI crosses”; they are “RSI crosses that respect our professional trading hours, sessions, and (future) event blocks."
+
+```
+// --------------------------- OnCalculate ------------------------------------
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+{
+   if(rates_total <= 2 || rsiHandle == INVALID_HANDLE)
+      return(rates_total);
+
+   // Refresh session drawings when new bars appear
+   if(InpDrawSessions_i && rates_total != prev_calculated)
+      iSV.RefreshSessions(InpLookbackDays_i);
+
+   // Prepare RSI buffer
+   static double rsiBuffer[];
+   ArrayResize(rsiBuffer, rates_total);
+
+   int copied = CopyBuffer(rsiHandle, 0, 0, rates_total, rsiBuffer);
+   if(copied <= 0)
+      return(prev_calculated > 0 ? prev_calculated : rates_total);
+
+   // Recalc from prev-1 so last bar updates smoothly
+   int start = (prev_calculated > 1 ? prev_calculated - 1 : 1);
+
+   for(int i = start; i < rates_total; ++i)
+   {
+      // Default: hide both arrows on this bar
+      BuffUp[i] = EMPTY_VALUE;
+      BuffDn[i] = EMPTY_VALUE;
+
+      // Respect global time filters (same logic as EA)
+      if(!IsTradingAllowed(iCTX))
+         continue;
+
+      double rsi_prev = rsiBuffer[i - 1];
+      double rsi_curr = rsiBuffer[i];
+
+      bool bullCross =
+         (rsi_prev < InpRSIOversold && rsi_curr >= InpRSIOversold);
+
+      bool bearCross =
+         (rsi_prev > InpRSIOverbought && rsi_curr <= InpRSIOverbought);
+
+      // Bullish RSI recovery: big green up arrow below bar
+      if(bullCross)
+      {
+         BuffUp[i] = low[i] - (_Point * 5);
+
+         if(InpAlertOnCross && i == rates_total - 1 && time[i] != gLastRSIAlertBarTime)
+         {
+            FireRSIAlert("RSI cross UP from oversold", rsi_curr, time[i]);
+            gLastRSIAlertBarTime = time[i];
+         }
+      }
+
+      // Bearish RSI rejection: big red down arrow above bar
+      if(bearCross)
+      {
+         BuffDn[i] = high[i] + (_Point * 5);
+
+         if(InpAlertOnCross && i == rates_total - 1 && time[i] != gLastRSIAlertBarTime)
+         {
+            FireRSIAlert("RSI cross DOWN from overbought", rsi_curr, time[i]);
+            gLastRSIAlertBarTime = time[i];
+         }
+      }
+   }
+
+   return(rates_total);
+}
+```
+
+Scalability: Beyond RSI
+
+RSI is just a placeholder. The structure we built supports any signal engine with almost no changes:
+
+Replace the RSI block with:
+
+- Moving average cross clusters.
+- Breakout conditions (high/low of session, VWAP deviations).
+- Candlestick patterns (pin bars, engulfing) only during London.
+- Volatility regimes (ATR filters).
+- Orderbook/proxy metrics, machine learning outputs, you name it.
+
+Keep everything else:
+
+- IsTradingAllowed(iCTX) as the universal time gate.
+- Arrows (or markers) on the chart.
+- Optional alerts via FireRSIAlert (rename to a generic FireSignalAlert).
+
+In this example, we used RSI crosses simply because they are easy to recognize. The true value is not in the oscillator choice, but in the framework: any signal can be routed through the same TimeFilter layer. You define when your strategy is allowed to speak, and then you plug in what it should say.
+
+### Testing
+
+After successfully compiling the source files, we deployed both the TimeFilteredEA and the TimeFilteredSignal indicator in the Strategy Tester to validate the overall behavior of the framework. The test execution was noticeably slow—unsurprising given the layered time filters, session rendering, and signal logic running together—but it completed reliably and produced clear, interpretable results. Below are the captured screenshots illustrating how trades and RSI-based arrows were only triggered inside the permitted time windows, exactly as designed.
+
+Fig. 1. Testing the TimeFilteredEA in the Strategy Tester
+
+Fig. 2. Testing TimeFilteredSignal Indicator
+
+  
+
+### Conclusion
+
+It is absolutely possible to control when our trading systems are allowed to operate by implementing structured MQL5 time-filtering logic, such as the framework developed in this project. Instead of scattering conditions across random if statements, we used clean abstractions, shared context, and session-aware utilities to make the behavior both predictable and reusable. By anchoring our logic to clear reference points—market sessions, clock ranges, and (optionally) economic calendar windows—we can define precise trading and signaling windows with minimal effort.
+
+Once those time windows are in place, the real creativity begins on the signal side. Any strategy logic—RSI, moving averages, structure breaks, volatility filters, or orderflow concepts—can now be plugged into a disciplined schedule instead of firing 24/5. This approach directly reduces noise caused by continuous, context-blind monitoring and helps us focus on improving execution quality where it matters most. In the summary table below, I’ve highlighted the key lessons from this discussion, and the full source codes are attached beneath the article so you can study them, modify them, and extend this foundation with your own ideas.
+
+  
+
+### Key Takeaways:
+
+| Key Takeaways | Description |
+| --- | --- |
+| 1. Centralize Time Filtering Logic | Implementing a dedicated TimeFilter layer (instead of scattered if-conditions) makes it easy to reuse the same session, clock, and event rules across multiple EAs and indicators, ensuring consistent behavior and simpler maintenance. |
+| 2. Use Context Objects Instead of Global Chaos | The CTimeFilterContext pattern shows how to bundle configuration (GMT offset, visualizer link) into a single object, reducing global dependencies and making your codebase more modular, testable, and scalable. |
+| 3. Separate Signal Logic from Execution Logic | By placing trade execution inside CTradeManager and signal detection in dedicated functions/indicators, we clearly separate “what triggers” from “how orders are sent,” improving clarity, debuggability, and reuse. |
+| 4. Design for Visual Feedback and Diagnostics | The SessionVisualizer and Wingdings arrow signals provide immediate visual confirmation that time filters and signals behave as expected, which is essential for debugging complex logic and building trader confidence in the system. |
+| 5. Build Extensible Signal Frameworks | Using RSI as a plug-in module inside a time-filtered framework demonstrates a scalable design: any future method (price action, MA crosses, volatility filters, custom models) can be integrated behind the same IsTradingAllowed() gate with minimal code changes. |
+
+### Attachments:
+
+| Source File | Version | Description |
+| --- | --- | --- |
+| SessionVisualizer.mqh | 1.02 | Modular session-mapping and drawing library that renders key Forex trading sessions on the chart and exposes reusable time-window references for higher-level tools. |
+| TimeFilters.mqh | 1.00 | Core time-filtering framework providing clock, session, and (extensible) event-based checks through a unified IsTradingAllowed() interface and shared context object. |
+| TimeFilteredEA.mq5 | 1.0 | Example Expert Advisor that uses the TimeFilters and SessionVisualizer to execute EMA-based entries only inside permitted time windows, with structured trade management. |
+| TimeFilteredSignal.mq5 | 1.0 | Chart indicator that plots large Wingdings arrows and generates RSI-based alerts strictly within the defined time-filtered windows, serving as a visual and extensible signal layer. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/20037.zip "Download all attachments in the single ZIP archive")
+
+[SessionVisualizer.mqh](https://www.mql5.com/en/articles/download/20037/SessionVisualizer.mqh "Download SessionVisualizer.mqh")
+(31.1 KB)
+
+[TimeFilters.mqh](https://www.mql5.com/en/articles/download/20037/TimeFilters.mqh "Download TimeFilters.mqh")
+(12.16 KB)
+
+[TimeFilteredSignal.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredSignal.mq5 "Download TimeFilteredSignal.mq5")
+(6.3 KB)
+
+[TimeFilteredEA.mq5](https://www.mql5.com/en/articles/download/20037/TimeFilteredEA.mq5 "Download TimeFilteredEA.mq5")
+(12.07 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Blood inheritance optimization (BIO)](https://www.mql5.com/en/articles/17246)
+
+I present to you my new population optimization algorithm - Blood Inheritance Optimization (BIO), inspired by the human blood group inheritance system. In this algorithm, each solution has its own "blood type" that determines the way it evolves. Just as in nature where a child's blood type is inherited according to specific rules, in BIO new solutions acquire their characteristics through a system of inheritance and mutations.
+
+[Building AI-Powered Trading Systems in MQL5 (Part 5): Adding a Collapsible Sidebar with Chat Popups](https://www.mql5.com/en/articles/20249)
+
+In Part 5 of our MQL5 AI trading system series, we enhance the ChatGPT-integrated Expert Advisor by introducing a collapsible sidebar, improving navigation with small and large history popups for seamless chat selection, while maintaining multiline input handling, persistent encrypted chat storage, and AI-driven trade signal generation from chart data.
+
+[Integrating MQL5 with Data Processing Packages (Part 6): Merging Market Feedback with Model Adaptation](https://www.mql5.com/en/articles/20235)
+
+In this part, we focus on how to merge real-time market feedback—such as live trade outcomes, volatility changes, and liquidity shifts—with adaptive model learning to maintain a responsive and self-improving trading system.
+
+[Neural Networks in Trading: Memory Augmented Context-Aware Learning for Cryptocurrency Markets (Final Part)](https://www.mql5.com/en/articles/16993)
+
+The MacroHFT framework for high-frequency cryptocurrency trading uses context-aware reinforcement learning and memory to adapt to dynamic market conditions. At the end of this article, we will test the implemented approaches on real historical data to assess their effectiveness.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=uiveayhsugbeyuczzzdmfjzirmvzdnfu&ssn=1788787952164829674&ssn_dr=0&ssn_sr=0&fv_date=1788787952&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20037&back_ref=https%3A%2F%2Fwww.google.com%2F&title=From%20Novice%20to%20Expert%3A%20Time%20Filtered%20Trading%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178878795279277595&fz_uniq=5124298483061894896&sv=2552)

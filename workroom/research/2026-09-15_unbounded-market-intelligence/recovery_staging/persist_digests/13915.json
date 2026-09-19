@@ -1,0 +1,34 @@
+{
+  "article_id": 13915,
+  "title": "MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves",
+  "chars": 36689,
+  "heads": [
+    "# MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves",
+    "###",
+    "### **Introduction**",
+    "### **Algorithm Comparison**",
+    "### **Data**",
+    "### **Struct**",
+    "### **ALGLIB**",
+    "### **Forecasting**",
+    "### **Evaluation and Results**",
+    "### **Implementing with Fractal Waves**",
+    "### **Conclusion**",
+    "### **References**",
+    "###",
+    "### **Appendix**"
+  ],
+  "intro": "--- id: 13915 source_url: https://www.mql5.com/en/articles/13915 title: \"MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves\" author: \"\" author_url: published: 2023-12-19T11:51Z platform: \"MetaTrader 5\" section: \"Trading systems\" tags: [] series_title: \"MQL5 Wizard Techniques you should know (): Pairing K-Means Clustering with Fractal Waves\" series_part: 9 source: mql5 language: en --- ![preview](data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAwICQoJBwwKCQoNDAwOER0TERAQESMZGxUdKiUsKyklKCguNEI4LjE/MigoOk46P0RHSktKLTdRV1FIVkJJSkf/2wBDAQwNDREPESITEyJHMCgwR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0f/wAARCAAQACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUl\n\n[MetaTrader 5](https://www.mql5.com/en/articles/mt5) \u2014 [Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems) | 19 December 2023 at 06:51\n\n[Stephen Njuki](https://www.mql5.com/en/users/ssn)\n\nThis article continues the look at possible simple ideas that can be implemented and tested thanks to the MQL5 wizard, by delving into [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering \"https://en.wikipedia.org/wiki/K-means_clustering\"). This like [AHC](https://en.wikipedia.org/wiki/Hierarchical_clustering \"https://en.wikipedia.org/wiki/Hierarchical_clustering\") which we looked at in [this](https://www.mql5.com/en/articles/13630) prior article, is an [unsupervised](https://en.wikipedia.org/wiki/Unsupervised_learning \"https://en.wikipedia.org/wiki/Unsupervised_learning\") approach to classifying data.",
+  "conclusion": "",
+  "claim_hits": [
+    "Fuzzy clustering as mentioned provides a regressive weight to each data point, which would be in vector format depending on the number of clusters in play. This weight would be in the 0.0 \u2013 1.0 range for each cluster by using a fuzzy prototype (membership function) unlike k-means which uses a definitive centroid. This tends to provide more information and is therefore better representative of the data. It does out-score typical k-means on all the points mentioned above with the main drawback bei",
+    "if(i>0)//assign classifier only for data points for which eventual bar range is known",
+    "Once the \u2018x\u2019 matrix and \u2018y\u2019 array are filled with data the cluster definition proceeds in the steps already mentioned above and this then is followed identifying the cluster of the current close price changes, or the top row of the \u2018x\u2019 matrix. Since it is processed to clustering together with the other data points, it would have a cluster index. With this cluster index we compare it to already \u2018labelled\u2019 data points, data for which the eventual close price change is known, to get the sum of thes",
+    "double _range=m_high.GetData(m_high.MaxIndex(StartIndex(),StartIndex()+_range_size))-m_low.GetData(m_low.MinIndex(StartIndex(),StartIndex()+_range_size));",
+    "\u2018LongCondition\u2019 and \u2018ShortCondition\u2019 functions return values in the 0 \u2013 100 range so our normalized value would have to be multiplied by 100.",
+    "![Filtering and feature extraction in the frequency domain](https://c.mql5.com/2/62/power_spectrumf_avatar.png)",
+    "[Filtering and feature extraction in the frequency domain](https://www.mql5.com/en/articles/13881)",
+    "In this article we explore the application of digital filters on time series represented in the frequency domain so as to extract unique features that may be useful to prediction models.",
+    "The initial goal of this article is not to cover all the possibilities of Forex trading, but rather to adapt the system so that you can perform at least one market replay. We'll leave simulation for another moment. However, if we don't have ticks and only bars, with a little effort we can simulate possible trades that could happen in the Forex market. This will be the case until we look at how to adapt the simulator. An attempt to work with Forex data inside the system without modifying it leads"
+  ]
+}

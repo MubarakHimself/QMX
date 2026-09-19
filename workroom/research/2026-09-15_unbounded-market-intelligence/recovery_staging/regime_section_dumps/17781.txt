@@ -1,0 +1,459 @@
+# Building a Custom Market Regime Detection System in MQL5 (Part 2): Expert Advisor
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 25 April 2025 at 08:43
+14 050
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+1](https://www.mql5.com/en/forum/485549 "Comments")
+[Sahil Bagdi](https://www.mql5.com/en/users/sahilbagdi)
+1. [Introduction](https://www.mql5.com/en/articles/17781#introduction)
+2. [Building an Adaptive Expert Advisor](https://www.mql5.com/en/articles/17781#building_an_adaptive_expert_advisor)
+3. [Practical Considerations and Optimization](https://www.mql5.com/en/articles/17781#practical_considerations_and_optimization)
+4. [Indicator: Multi Timeframe Regimes](https://www.mql5.com/en/articles/17781#indicator_multi_timeframe_regimes)
+5. [Evaluating the Adaptive Expert Advisor: Backtesting Results](https://www.mql5.com/en/articles/17781#evaluating_the_adaptive_expert_advisor_backtesting)
+6. [Conclusion](https://www.mql5.com/en/articles/17781#sec6)
+### 
+### Introduction
+In [Part 1](https://www.mql5.com/en/articles/17737) of this series, we laid the essential groundwork for tackling the challenge of ever-changing market dynamics. We established a robust statistical foundation, constructed a CMarketRegimeDetector class capable of objectively classifying market behavior, and developed a custom indicator ( MarketRegimeIndicator ) to visualize these regimes directly on our charts. We moved from recognizing the problem – the performance degradation of static strategies in dynamic markets – to developing a system that can *identify* the prevailing market state: Trending (Up/Down), Ranging, or Volatile [(Link Part 1 for Reference)](https://www.mql5.com/en/articles/17737).
+However, merely identifying the current regime is only half the battle. The true power lies in *adapting* our trading approach based on this knowledge. A detector, no matter how sophisticated, remains an analytical tool until its insights are translated into actionable trading decisions. What if our trading system could automatically switch gears, deploying trend-following logic when trends are strong, shifting to mean-reversion tactics in sideways markets, and adjusting risk parameters when volatility spikes?
+This is precisely the gap we will bridge in Part 2. Building upon the foundation laid previously, we will now focus on practical application and refinement. In this article, we will delve into:
+- Building an Adaptive Expert Advisor (EA): We'll construct a complete MarketRegimeEA that integrates our CMarketRegimeDetector to automatically select and execute different trading strategies (trend-following, mean-reversion, breakout) tailored to the detected regime.
+- Implementing Regime-Specific Risk Management: The EA will demonstrate how to adjust parameters like lot size, stop loss, and take profit based on the current market state.
+- Practical Considerations: We'll explore crucial aspects of real-world implementation, including parameter optimization for different instruments and timeframes.
+- Handling Regime Transitions: Strategies to manage the critical moments when the market shifts from one regime to another, ensuring smoother strategy adjustments.
+- Integration Techniques: Discussing how to incorporate the Market Regime Detection System into your existing trading frameworks to enhance their adaptability.
+By the end of this second part, you will not only understand how to detect market regimes but also how to build an automated trading system that intelligently adapts its behavior, aiming for more consistent performance across the diverse conditions financial markets present. Let's transform our detection system into a truly adaptive trading solution.
+### **Building an Adaptive Expert Advisor**
+In this section, we'll create an Expert Advisor that uses our Market Regime Detector to adapt its trading strategy based on the current market conditions. This demonstrates how regime detection can be integrated into a complete trading system.
+**The MarketRegimeEA**
+Our Expert Advisor will use different trading approaches for different market regimes:
+- In trending markets, it will use trend-following strategies
+- In ranging markets, it will use mean-reversion strategies
+- In volatile markets, it will use breakout strategies with reduced position sizes
+Here's the implementation:
+```
+// Include the Market Regime Detector
+#include <MarketRegimeEnum.mqh>
+#include <MarketRegimeDetector.mqh>
+// EA input parameters
+input int      LookbackPeriod = 100;       // Lookback period for calculations
+input int      SmoothingPeriod = 10;       // Smoothing period for regime transitions
+input double   TrendThreshold = 0.2;       // Threshold for trend detection (0.1-0.5) 
+input double   VolatilityThreshold = 1.5;  // Threshold for volatility detection (1.0-3.0)
+// Trading parameters
+input double   TrendingLotSize = 0.1;      // Lot size for trending regimes
+input double   RangingLotSize = 0.05;      // Lot size for ranging regimes
+input double   VolatileLotSize = 0.02;     // Lot size for volatile regimes
+input int      TrendingStopLoss = 100;     // Stop loss in points for trending regimes
+input int      RangingStopLoss = 50;       // Stop loss in points for ranging regimes
+input int      VolatileStopLoss = 150;     // Stop loss in points for volatile regimes
+input int      TrendingTakeProfit = 200;   // Take profit in points for trending regimes
+input int      RangingTakeProfit = 80;     // Take profit in points for ranging regimes
+input int      VolatileTakeProfit = 300;   // Take profit in points for volatile regimes
+// Global variables
+CMarketRegimeDetector *Detector = NULL;
+int OnBarCount = 0;
+datetime LastBarTime = 0;
+```
+The EA includes parameters for configuring both the regime detection and the trading strategy. Note how we use different lot sizes, stop losses, and take profits for different market regimes. This allows the EA to adapt its risk management approach to the current market conditions.
+**EA Initialization**
+The OnInit() function creates and configures the Market Regime Detector:
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Building a Custom Market Regime Detection System in MQL5 (Part 2): Expert Advisor
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+5. [Evaluating the Adaptive Expert Advisor: Backtesting Results](https://www.mql5.com/en/articles/17781#evaluating_the_adaptive_expert_advisor_backtesting)
+6. [Conclusion](https://www.mql5.com/en/articles/17781#sec6)
+### 
+### Introduction
+In [Part 1](https://www.mql5.com/en/articles/17737) of this series, we laid the essential groundwork for tackling the challenge of ever-changing market dynamics. We established a robust statistical foundation, constructed a CMarketRegimeDetector class capable of objectively classifying market behavior, and developed a custom indicator ( MarketRegimeIndicator ) to visualize these regimes directly on our charts. We moved from recognizing the problem – the performance degradation of static strategies in dynamic markets – to developing a system that can *identify* the prevailing market state: Trending (Up/Down), Ranging, or Volatile [(Link Part 1 for Reference)](https://www.mql5.com/en/articles/17737).
+- Building an Adaptive Expert Advisor (EA): We'll construct a complete MarketRegimeEA that integrates our CMarketRegimeDetector to automatically select and execute different trading strategies (trend-following, mean-reversion, breakout) tailored to the detected regime.
+- Implementing Regime-Specific Risk Management: The EA will demonstrate how to adjust parameters like lot size, stop loss, and take profit based on the current market state.
+- Practical Considerations: We'll explore crucial aspects of real-world implementation, including parameter optimization for different instruments and timeframes.
+- Handling Regime Transitions: Strategies to manage the critical moments when the market shifts from one regime to another, ensuring smoother strategy adjustments.
+- Integration Techniques: Discussing how to incorporate the Market Regime Detection System into your existing trading frameworks to enhance their adaptability.
+### **Building an Adaptive Expert Advisor**
+In this section, we'll create an Expert Advisor that uses our Market Regime Detector to adapt its trading strategy based on the current market conditions. This demonstrates how regime detection can be integrated into a complete trading system.
+**The MarketRegimeEA**
+Our Expert Advisor will use different trading approaches for different market regimes:
+- In trending markets, it will use trend-following strategies
+- In ranging markets, it will use mean-reversion strategies
+- In volatile markets, it will use breakout strategies with reduced position sizes
+
+Here's the implementation:
+// Include the Market Regime Detector
+#include <MarketRegimeEnum.mqh>
+#include <MarketRegimeDetector.mqh>
+// EA input parameters
+input int      SmoothingPeriod = 10;       // Smoothing period for regime transitions
+input double   TrendThreshold = 0.2;       // Threshold for trend detection (0.1-0.5) 
+input double   VolatilityThreshold = 1.5;  // Threshold for volatility detection (1.0-3.0)
+// Trading parameters
+input double   TrendingLotSize = 0.1;      // Lot size for trending regimes
+input double   RangingLotSize = 0.05;      // Lot size for ranging regimes
+input double   VolatileLotSize = 0.02;     // Lot size for volatile regimes
+input int      TrendingStopLoss = 100;     // Stop loss in points for trending regimes
+input int      RangingStopLoss = 50;       // Stop loss in points for ranging regimes
+input int      VolatileStopLoss = 150;     // Stop loss in points for volatile regimes
+input int      TrendingTakeProfit = 200;   // Take profit in points for trending regimes
+input int      RangingTakeProfit = 80;     // Take profit in points for ranging regimes
+input int      VolatileTakeProfit = 300;   // Take profit in points for volatile regimes
+// Global variables
+CMarketRegimeDetector *Detector = NULL;
+int OnBarCount = 0;
+datetime LastBarTime = 0;
+    // Configure the detector
+    Detector.SetTrendThreshold(TrendThreshold);
+    Detector.SetVolatilityThreshold(VolatilityThreshold);
+    Detector.Initialize();
+    
+    // Get current market regime
+    ENUM_MARKET_REGIME currentRegime = Detector.GetCurrentRegime();
+    // Display current regime information
+    string regimeText = "Current Market Regime: " + Detector.GetRegimeDescription();
+    string trendText = "Trend Strength: " + DoubleToString(Detector.GetTrendStrength(), 4);
+    string volatilityText = "Volatility: " + DoubleToString(Detector.GetVolatility(), 4);
+    Comment(regimeText + "\n" + trendText + "\n" + volatilityText);
+    // Execute trading strategy based on market regime
+    ExecuteRegimeBasedStrategy(currentRegime);
+}
+```
+5. Gets the current market regime
+6. Displays the regime information
+7. Executes the regime-based trading strategy
+
+The use of ArraySetAsSeries(close, true) is important as it ensures that the price array is indexed in reverse order, with the most recent price at index 0. This is the standard indexing convention in MQL5 for working with time series data.
+**Regime-Based Trading Strategy**
+The ExecuteRegimeBasedStrategy() function implements different trading approaches for different market regimes:
+void ExecuteRegimeBasedStrategy(ENUM_MARKET_REGIME regime)
+{
+    // Check if we already have open positions
+    
+    switch(regime)
+    {
+        case REGIME_TRENDING_UP: {
+            lotSize = TrendingLotSize;
+            stopLoss = TrendingStopLoss;
+        }
+        case REGIME_TRENDING_DOWN: {
+            
+        case REGIME_RANGING: {
+            // In ranging markets, we can use mean-reversion strategies
+            // For simplicity, we'll use RSI to determine overbought/oversold
+            double rsi[];
+        case REGIME_VOLATILE: {
+            // In volatile markets, we can use breakout strategies
+            // For simplicity, we'll use Bollinger Bands
+            double upper[], lower[];
+    MqlTradeRequest request;
+    MqlTradeResult result;
+    ZeroMemory(request);
+    ZeroMemory(result);
+    
+    request.action = TRADE_ACTION_DEAL;
+
+1. Trending Regimes: Uses trend-following strategies, buying in uptrends and selling in downtrends.
+2. Ranging Regimes: Uses mean-reversion strategies based on RSI, buying when oversold and selling when overbought.
+3. Volatile Regimes: Uses breakout strategies based on Bollinger Bands, with reduced position sizes to manage risk.
+For each regime, the function sets appropriate lot sizes, stop losses, and take profits based on the user-specified parameters. It then calculates the specific stop loss and take profit levels and executes the trade using the OrderSend() function.
+The use of different strategies for different regimes is the key innovation of this EA. By adapting its approach to the current market conditions, the EA can achieve more consistent performance across a wide range of market environments.
+**Advantages of Regime-Based Trading**
+This Expert Advisor demonstrates several key advantages of regime-based trading:
+### 
+### Practical Considerations and Optimization
+In this final section, we'll discuss practical considerations for implementing and optimizing the Market Regime Detection System in real trading environments. We'll cover parameter optimization, regime transition handling, and integration with existing trading systems.
+   {
+       CMarketRegimeDetector detector(lookback, SmoothingPeriod);
+       detector.SetTrendThreshold(TrendThreshold);
+       detector.SetVolatilityThreshold(VolatilityThreshold);
+       
+       // Process historical data and evaluate performance
+   Typically, lookback periods between 50 and 200 bars work well for most instruments and timeframes. The optimal value depends on the typical duration of market regimes for the specific instrument being traded.
+2. Trend Threshold:The trend threshold determines how strong a trend must be to classify the market as trending. Higher thresholds result in fewer trending classifications but with higher confidence. Lower thresholds identify more trends but may include weaker ones.  
+   ```
+   // Example of testing different trend thresholds
+   for(double threshold = 0.1; threshold <= 0.5; threshold += 0.05)
+       CMarketRegimeDetector detector(LookbackPeriod, SmoothingPeriod);
+       detector.SetTrendThreshold(threshold);
+
+   Trend thresholds between 0.1 and 0.3 are common starting points. The optimal value depends on the instrument's typical trending behavior.
+3. Volatility Threshold: The volatility threshold determines how much volatility is required to classify the market as volatile. Higher thresholds result in fewer volatile classifications, while lower thresholds identify more volatile periods.  
+   // Example of testing different volatility thresholds
+   for(double threshold = 1.0; threshold <= 3.0; threshold += 0.25)
+       detector.SetVolatilityThreshold(threshold);
+   Volatility thresholds between 1.5 and 2.5 are common starting points. The optimal value depends on the instrument's typical volatility characteristics.
+**Handling Regime Transitions**
+Note: The following 5 code blocks are not the implementation of the idea rather just the ideas and pseudo code of how teh implementation might look like.
+Regime transitions are critical moments that require special attention. Abrupt changes in trading strategy during transitions can lead to poor execution and increased slippage. Here are strategies for handling transitions more effectively
+1. Smoothing Transitions: The smoothing period parameter helps reduce regime classification noise by requiring a regime to persist for a minimum number of bars before being recognized:  
+   // Example of implementing smoothed regime transitions
+   ENUM_MARKET_REGIME SmoothRegimeTransition(ENUM_MARKET_REGIME newRegime)
+   {
+       static ENUM_MARKET_REGIME regimeHistory[20];
+       
+       // Add new regime to history
+       for(int i = 19; i > 0; i--)
+           regimeHistory[i] = regimeHistory[i-1];
+           
+       regimeHistory[0] = newRegime;
+       if(historyCount < 20)
+       // Count occurrences of each regime
+       int regimeCounts[5] = {0};
+       for(int i = 0; i < historyCount; i++)
+           regimeCounts[regimeHistory[i]]++;
+       // Find most common regime
+       int maxCount = 0;
+       ENUM_MARKET_REGIME dominantRegime = REGIME_UNDEFINED;
+       for(int i = 0; i < 5; i++)
+       {
+           if(regimeCounts[i] > maxCount)
+           {
+               maxCount = regimeCounts[i];
+               dominantRegime = (ENUM_MARKET_REGIME)i;
+           }
+       }
+       // Base lot sizes for each regime
+       double regimeLotSizes[5] = {
+           TrendingLotSize,    // REGIME_TRENDING_UP
+           TrendingLotSize,    // REGIME_TRENDING_DOWN
+           RangingLotSize,     // REGIME_RANGING
+           VolatileLotSize,    // REGIME_VOLATILE
+           0.0                 // REGIME_UNDEFINED
+       };
+       // If not in transition, use current regime's lot size
+       if(previousRegime == currentRegime || transitionBars >= maxTransitionBars)
+           return regimeLotSizes[currentRegime];
+           
+       // Calculate weighted average during transition
+       
+       return regimeLotSizes[previousRegime] * previousWeight + 
+              regimeLotSizes[currentRegime] * currentWeight;
+   }
+   ```
+
+The Market Regime Detection System can be integrated with existing trading systems to enhance their performance. Here are strategies for effective integration:
+1. Strategy Selection: Use the detected regime to select the most appropriate trading strategy:  
+       switch(regime)
+       {
+           case REGIME_TRENDING_UP:
+           case REGIME_TRENDING_DOWN:
+               // In trending regimes, only take signals in the direction of the trend
+               if((regime == REGIME_TRENDING_UP && strategySignal == 1) ||
+                  (regime == REGIME_TRENDING_DOWN && strategySignal == -1))
+                   return true;
+               break;
+               
+           case REGIME_RANGING:
+               // In ranging regimes, take all signals
+               if(strategySignal != 0)
+           case REGIME_VOLATILE:
+               // In volatile regimes, be more selective
+               // Only take strong signals (implementation depends on strategy)
+   This function filters trading signals based on the current market regime, only executing trades that align with the regime's characteristics.
+2. Parameter Adaptation: Adapt strategy parameters based on the detected regime:  
+
+   {
+               // In trending regimes, use longer moving averages
+               FastPeriod = 20;
+               // In ranging regimes, use shorter moving averages
+               FastPeriod = 10;
+               // In volatile regimes, use very short moving averages
+               FastPeriod = 5;
+// Example of performance monitoring for regime detection
+void MonitorRegimeDetectionPerformance()
+{
+    static int regimeTransitions = 0;
+    static int correctPredictions = 0;
+    static ENUM_MARKET_REGIME lastRegime = REGIME_UNDEFINED;
+    
+    // Get current regime
+    ENUM_MARKET_REGIME currentRegime = Detector.GetCurrentRegime();
+    // If regime has changed, evaluate the previous regime's prediction
+    if(currentRegime != lastRegime && lastRegime != REGIME_UNDEFINED)
+    {
+        regimeTransitions++;
+        
+        // Evaluate if the previous regime's prediction was correct
+        // Implementation depends on your specific evaluation criteria
+        if(EvaluateRegimePrediction(lastRegime))
+            correctPredictions++;
+            
+        double accuracy = (double)correctPredictions / regimeTransitions * 100.0;
+        Print("Regime Detection Accuracy: ", DoubleToString(accuracy, 2), "% (", 
+              correctPredictions, "/", regimeTransitions, ")");
+    }
+    lastRegime = currentRegime;
+}
+```
+
+### Indicator: Multi Timeframe Regimes
+Full Code:
+#property indicator_chart_window
+#property indicator_buffers 0
+#property indicator_plots   0
+// Include the Market Regime Detector
+#include <MarketRegimeEnum.mqh>
+#include <MarketRegimeDetector.mqh>
+// Input parameters
+input int      LookbackPeriod = 100;       // Lookback period for calculations
+input double   TrendThreshold = 0.2;       // Threshold for trend detection (0.1-0.5)
+input double   VolatilityThreshold = 1.5;  // Threshold for volatility detection (1.0-3.0)
+// Timeframes to analyze
+// Global variables
+CMarketRegimeDetector *Detectors[];
+ENUM_TIMEFRAMES Timeframes[];
+int TimeframeCount = 0;
+        // Configure the detector
+        Detectors[i].SetTrendThreshold(TrendThreshold);
+        Detectors[i].SetVolatilityThreshold(VolatilityThreshold);
+        Detectors[i].Initialize();
+    }
+        commentText += Detectors[i].GetRegimeDescription();
+        commentText += " (Trend: " + DoubleToString(Detectors[i].GetTrendStrength(), 2);
+        commentText += ", Vol: " + DoubleToString(Detectors[i].GetVolatility(), 2) + ")";
+        commentText += "\n";
+{
+    switch(timeframe)
+    {
+        case PERIOD_M1:  return "M1";
+
+   - LookbackPeriod , TrendThreshold , VolatilityThreshold : These are the core settings for the regime detection logic, applied uniformly to all analyzed timeframes.
+   - UseM1 to UseMN1 : A series of boolean inputs allowing the user to toggle ( true / false ) which standard timeframes (1-minute to Monthly) should be included in the analysis.
+3. Global Variables:
+     - For each selected timeframe, it creates a *new* CMarketRegimeDetector object using the shared LookbackPeriod .
+     - It configures this specific detector instance with the shared TrendThreshold and VolatilityThreshold .
+     - Crucially, each detector instance maintains its own internal state based on the data from its assigned timeframe.
+   - Sets the indicator's display name.
+     - If data fetching is successful, it calls the ProcessData() method of the *corresponding detector object* ( Detectors[i] ) with the fetched price data ( tfClose ).
+     - Appends the results (Timeframe name, Regime Description, Trend Strength, Volatility) from Detectors[i] to the commentText string.
+   - Finally, uses Comment(commentText) to display the aggregated analysis for all selected timeframes in the chart's corner.
+7. TimeframeToString() (Helper Function):
+### Evaluating the Adaptive Expert Advisor: Backtesting Results
+Having constructed the MarketRegimeEA , the next logical step is to evaluate its performance through backtesting. This allows us to observe how the regime-adaptive logic functions on historical data and assess the impact of its parameter settings.
+- SmoothingPeriod: 10
+- TrendThreshold: 0.2
+- VolatilityThreshold: 1.5
+- Lot Sizes: Trending=0.1, Ranging=0.1, Volatile=0.1
+- SL: Trending=1000, Ranging=1600, Volatile=2000
+- TP: Trending=1400, Ranging=1000, Volatile=1800
+![](https://c.mql5.com/2/133/6093239133219.png)
+
+To explore the potential for improved performance, we employed the parameter optimization capabilities within the MetaTrader 5 Strategy Tester, utilizing its genetic algorithm. The goal was to identify a set of parameters (within the tested range) that better align the regime detection and trading logic with the historical price behavior of Gold during the backtest period. The parameters targeted for optimization included the regime-specific Stop Loss and Take Profit values with other params as default.
+Following the optimization process, the Strategy Tester identified the following parameter set as yielding significantly improved historical performance:
+Executing the backtest again using these optimized parameters resulted in a notably different performance profile:
+![](https://c.mql5.com/2/133/385294018195.png)
+The backtest utilizing the optimized parameters demonstrates a marked improvement, showing a positive net profit and a more favorable equity curve compared to the initial run.
+![](https://c.mql5.com/2/133/3043417282445.png)
+### Conclusion
+Over the course of this two-part series, we have journeyed from identifying a fundamental challenge in algorithmic trading – the detrimental effect of changing market conditions on static strategies – to architecting and implementing a complete, adaptive solution. In Part 1, we built the engine for understanding the market's state by developing a statistically grounded Market Regime Detection System and visualizing its output.
+Furthermore, we addressed the practical realities of deploying such a system. We explored the importance of parameter optimization (Lookback Period, Trend Threshold, Volatility Threshold) to tune the detector to specific market characteristics and discussed techniques for handling regime transitions smoothly, minimizing potential whipsaws or abrupt strategy shifts. Finally, we touched upon how this regime detection framework can be integrated into existing trading systems, acting as an intelligent filter or parameter adjuster.
+The goal was ambitious: to create trading systems that acknowledge and adapt to the market's inherent non-stationarity. By combining the detection capabilities developed in Part 1 with the adaptive execution framework and practical considerations discussed in Part 2, you now possess the blueprint for building strategies that are significantly more robust and attuned to the dynamic nature of financial markets. The journey from a static approach to a regime-adaptive one is complete, empowering you to navigate the market's complexities with greater intelligence and flexibility.
+### 
+### File Overview
+Here's a summary of all the files created in this article:
+| --- | --- |
+| MarketRegimeEnum.mqh | Defines the market regime enumeration types used throughout the system |
+| CStatistics.mqh | Statistical calculations class for market regime detection |
+| MarketRegimeDetector.mqh | Core market regime detection implementation |
+| MarketRegimeEA.mq5 | Expert Advisor that adapts to different market regimes |
+| MultiTimeframeRegimes.mq5 | Example for analyzing regimes across multiple timeframes |
+**Attached files** |
+
+[MarketRegimeEnum.mqh](https://www.mql5.com/en/articles/download/17781/marketregimeenum.mqh "Download MarketRegimeEnum.mqh")
+(0.79 KB)
+[MarketRegimeDetector.mqh](https://www.mql5.com/en/articles/download/17781/marketregimedetector.mqh "Download MarketRegimeDetector.mqh")
+(16.5 KB)
+[MarketRegimeEA.mq5](https://www.mql5.com/en/articles/download/17781/marketregimeea.mq5 "Download MarketRegimeEA.mq5")
+(9.21 KB)
+[MultiTimeframeRegimes.mq5](https://www.mql5.com/en/articles/download/17781/multitimeframeregimes.mq5 "Download MultiTimeframeRegimes.mq5")
+(7.13 KB)
+![Websockets for MetaTrader 5: Asynchronous client connections with the Windows API](https://c.mql5.com/2/137/websockets.png)
+[Websockets for MetaTrader 5: Asynchronous client connections with the Windows API](https://www.mql5.com/en/articles/17877)
+This article details the development of a custom dynamically linked library designed to facilitate asynchronous websocket client connections for MetaTrader programs.
+![MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning](https://c.mql5.com/2/138/article-17910-logo.png)
+[MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning](https://www.mql5.com/en/articles/17910)
+The ADX Oscillator and CCI oscillator are trend following and momentum indicators that can be paired when developing an Expert Advisor. We look at how this can be systemized by using all the 3 main training modes of Machine Learning. Wizard Assembled Expert Advisors allow us to evaluate the patterns presented by these two indicators, and we start by looking at how Supervised-Learning can be applied with these Patterns.
+![Automating Trading Strategies in MQL5 (Part 15): Price Action Harmonic Cypher Pattern with Visualization](https://c.mql5.com/2/137/logo-17865.png)
+In this article, we explore the automation of the Cypher harmonic pattern in MQL5, detailing its detection and visualization on MetaTrader 5 charts. We implement an Expert Advisor that identifies swing points, validates Fibonacci-based patterns, and executes trades with clear graphical annotations. The article concludes with guidance on backtesting and optimizing the program for effective trading.
+[![](https://www.mql5.com/ff/sh/qg3nrg39qbz6bn3jp2/6724511cb5bb4939a02bed7c08af1219.png)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Over the course of this two-part series, we have journeyed from identifying a fundamental challenge in algorithmic trading – the detrimental effect of changing market conditions on static strategies – to architecting and implementing a complete, adaptive solution. In Part 1, we built the engine for understanding the market's state by developing a statistically grounded Market Regime Detection System and visualizing its output.
+
+In this second and concluding part, we took the crucial step from detection to action. We demonstrated how to harness the power of our CMarketRegimeDetector by building the MarketRegimeEA, an Expert Advisor capable of automatically switching between trend-following, mean-reversion, and breakout strategies based on the identified market regime. We saw how adapting not just the entry logic but also risk parameters like lot size and stop levels can create a more resilient trading approach.
+
+Furthermore, we addressed the practical realities of deploying such a system. We explored the importance of parameter optimization (Lookback Period, Trend Threshold, Volatility Threshold) to tune the detector to specific market characteristics and discussed techniques for handling regime transitions smoothly, minimizing potential whipsaws or abrupt strategy shifts. Finally, we touched upon how this regime detection framework can be integrated into existing trading systems, acting as an intelligent filter or parameter adjuster.
+
+The goal was ambitious: to create trading systems that acknowledge and adapt to the market's inherent non-stationarity. By combining the detection capabilities developed in Part 1 with the adaptive execution framework and practical considerations discussed in Part 2, you now possess the blueprint for building strategies that are significantly more robust and attuned to the dynamic nature of financial markets. The journey from a static approach to a regime-adaptive one is complete, empowering you to navigate the market's complexities with greater intelligence and flexibility.
+
+### 
+
+### File Overview
+
+Here's a summary of all the files created in this article:
+
+| File Name | Description |
+| --- | --- |
+| MarketRegimeEnum.mqh | Defines the market regime enumeration types used throughout the system |
+| CStatistics.mqh | Statistical calculations class for market regime detection |
+| MarketRegimeDetector.mqh | Core market regime detection implementation |
+| MarketRegimeEA.mq5 | Expert Advisor that adapts to different market regimes |
+| MultiTimeframeRegimes.mq5 | Example for analyzing regimes across multiple timeframes |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17781.zip "Download all attachments in the single ZIP archive")
+
+[MarketRegimeEnum.mqh](https://www.mql5.com/en/articles/download/17781/marketregimeenum.mqh "Download MarketRegimeEnum.mqh")
+(0.79 KB)
+
+[CStatistics.mqh](https://www.mql5.com/en/articles/download/17781/cstatistics.mqh "Download CStatistics.mqh")
+(9.28 KB)
+
+[MarketRegimeDetector.mqh](https://www.mql5.com/en/articles/download/17781/marketregimedetector.mqh "Download MarketRegimeDetector.mqh")
+(16.5 KB)
+
+[MarketRegimeEA.mq5](https://www.mql5.com/en/articles/download/17781/marketregimeea.mq5 "Download MarketRegimeEA.mq5")
+(9.21 KB)
+
+[MultiTimeframeRegimes.mq5](https://www.mql5.com/en/articles/download/17781/multitimeframeregimes.mq5 "Download MultiTimeframeRegimes.mq5")
+(7.13 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![From Basic to Intermediate: FOR Statement](https://c.mql5.com/2/94/Do_b4sico_ao_intermediqrio_Comando_FOR___LOGO.png)
+[From Basic to Intermediate: FOR Statement](https://www.mql5.com/en/articles/15406)
+
+In this article, we will look at the most basic concepts of the FOR statement. It is very important to understand everything that will be shown here. Unlike the other statements we've talked about so far, the FOR statement has some quirks that quickly make it very complex. So don't let stuff like this accumulate. Start studying and practicing as soon as possible.
+
+![Websockets for MetaTrader 5: Asynchronous client connections with the Windows API](https://c.mql5.com/2/137/websockets.png)
+[Websockets for MetaTrader 5: Asynchronous client connections with the Windows API](https://www.mql5.com/en/articles/17877)
+
+This article details the development of a custom dynamically linked library designed to facilitate asynchronous websocket client connections for MetaTrader programs.
+
+![MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning](https://c.mql5.com/2/138/article-17910-logo.png)
+[MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning](https://www.mql5.com/en/articles/17910)
+
+The ADX Oscillator and CCI oscillator are trend following and momentum indicators that can be paired when developing an Expert Advisor. We look at how this can be systemized by using all the 3 main training modes of Machine Learning. Wizard Assembled Expert Advisors allow us to evaluate the patterns presented by these two indicators, and we start by looking at how Supervised-Learning can be applied with these Patterns.
+
+![Automating Trading Strategies in MQL5 (Part 15): Price Action Harmonic Cypher Pattern with Visualization](https://c.mql5.com/2/137/logo-17865.png)
+[Automating Trading Strategies in MQL5 (Part 15): Price Action Harmonic Cypher Pattern with Visualization](https://www.mql5.com/en/articles/17865)
+
+In this article, we explore the automation of the Cypher harmonic pattern in MQL5, detailing its detection and visualization on MetaTrader 5 charts. We implement an Expert Advisor that identifies swing points, validates Fibonacci-based patterns, and executes trades with clear graphical annotations. The article concludes with guidance on backtesting and optimizing the program for effective trading.
+
+[![](https://www.mql5.com/ff/sh/qg3nrg39qbz6bn3jp2/6724511cb5bb4939a02bed7c08af1219.png)
+
+Build Smarter with MQL5 Algo Forge
+
+Use Git-powered tools in MetaEditor for structured, reliable development
+
+Learn more](https://www.mql5.com/ff/go?link=https://forge.mql5.io%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.mql5.226&a=oygnrjjxveoqzycxkjkckcgtshfunvdu&s=1e458fdafe5955c82ea32b518845e77efbe1196295936353793e9e23a750f4d6&uid=&ref=https://www.mql5.com/en/articles/17781&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5124966097073355260)

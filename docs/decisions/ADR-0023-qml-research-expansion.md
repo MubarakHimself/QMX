@@ -5,10 +5,10 @@ type: adr
 status: provisional
 component: COMP-QML
 depends_on: [COMP-QML, COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON, COMP-QMB, COMP-QMF-REGISTRY]
-decisions: [DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/QML-EXPANSION.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/REQUIREMENTS-ADDENDUM.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/.memlog.md, _docwork/riders/qml-research-expansion-2026-09-16.md, _docwork/qml-research-increment-brief.md, _docwork/ledger.yaml, docs/architecture/dependencies.yaml, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0020-qma-agentic-system.md, docs/decisions/ADR-0022-workbench-expansion.md]
+decisions: [DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413, DEC-0415, DEC-0417, DEC-0445, DEC-0449]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/QML-EXPANSION.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/REQUIREMENTS-ADDENDUM.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/.memlog.md, _docwork/riders/qml-research-expansion-2026-09-16.md, _docwork/qml-research-increment-brief.md, _docwork/ledger.yaml, docs/architecture/dependencies.yaml, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0020-qma-agentic-system.md, docs/decisions/ADR-0022-workbench-expansion.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0024-workflows-construction-kit.md]
 generated: 2026-09-16
-verified: 2026-09-16
+verified: 2026-09-19
 stale_after: 90d
 ---
 
@@ -107,3 +107,12 @@ Blast radius (change mode): `COMP-QML`, `COMP-QMA-CORE`, `COMP-QMA-DAEMON`, `COM
 Cheap-veto (DEC-0404): A1 `source_id=strats` freeze; A2 AD-4 include/exclude lists; A3 six dim spellings + `unscored`; A4 QMA AD-19 empty-corpus factual refresh only; A5 FR-RES-* on GAP-0064, GAP-0061 not closed.
 
 Implementation authorization remains factory-pipeline-only. First epic after docs is FEAT-0047 (AD-14 seed bind + Stage 0 view).
+
+## Follow-up — 2026-09-19 Workflows construction kit (ADR-0024)
+
+This ADR remains **provisional**. The mill package is not flipped to accepted architecture. Operator-direct paradigm DEC-0380 stays ratified; absorbed local AD-1..AD-21 and package umbrellas DEC-0402..DEC-0407 stay provisional. The 2026-09-19 Workflows construction-kit spine ([ADR-0024](ADR-0024-workflows-construction-kit.md), DEC-0445) records one named amendment against this package and otherwise leaves it alone.
+
+- **DEC-0389 two-class freeze named-amended by DEC-0449.** Product discovery concatenates `KnowledgeHit`, `ArtifactHit`, and `ContributionHit`. `ContributionHit` is a third **discovery** class — never fp1, never a registry kind, never a Library kind. The Consequences sentence “Federation must not grow a third hit class” is **qualified** by this follow-up: federation may grow `ContributionHit` as a discovery class (DEC-0449, DEC-0415); hypotheses still must not become a third **Library** rail (DEC-0381). Do not set DEC-0389 `superseded_by`; the rest of DEC-0389 stands (occupancy none; no `hit_class: strats`; no `qml_candidate`; daemon never `import qmb`; ranked/semantic search stays GAP-0073).
+- **Mill package remains provisional.** ADR-0023 status stays `provisional`. Workflows does not accept the mill package by implication (DEC-0445).
+- **Hypotheses are still not Library objects (DEC-0381).** Hypotheses remain off the Library facade and are found through the QML research surface / `research_ref` until CT-33 registration.
+- **Stage 0 `graph` is still not a workflow (DEC-0417).** A Stage 0 `graph` is none of Board layout, Graph Template, Task Graph, or ungoverned library call, and is never compiled to a bot, Graph Template, or `run_slice` (DEC-0411 honored).

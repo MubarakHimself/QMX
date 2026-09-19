@@ -1,0 +1,98 @@
+[
+  [
+    "01-glassnode.png",
+    "Glassnode — quiet scanning",
+    "584d2732-734e-40e1-b296-e647f28ae6fe",
+    "Grouped metric rows, aligned values and sparklines. Useful for scanning datasets or candidates. The oversized heading consumes working space."
+  ],
+  [
+    "02-rork-workbench.png",
+    "Rork — agent and working tools",
+    "f5ad8322-4d69-42c8-82cb-ba7d4a4167f9",
+    "Conversation remains substantial beside files, code, logs and a floating preview. QMX could pair a discussion with a notebook or comparison. Multiple narrow regions compete for width; the floating preview obscures code."
+  ],
+  [
+    "03-exa-run-output.png",
+    "Exa — setup beside execution",
+    "c6f62e8f-07cb-4f40-8597-c5e9649537a0",
+    "Configuration and run output have distinct places. Status, cancellation and raw/visual output are visible. Useful for batches and research runs, but the captured running state provides little detail beyond Thinking."
+  ],
+  [
+    "04-pryzm-editor.png",
+    "Pryzm — canvas and contextual controls",
+    "8a84287a-0888-4273-8615-d6bcb6d90f69",
+    "Navigation, preset browser, working canvas and properties are separate. Candidate transfer: strategy components and parameter inspector around an experiment canvas. Four permanent columns are too costly for many laptop tasks."
+  ],
+  [
+    "05-missive-navigation.png",
+    "Missive — layered navigation",
+    "977c2a86-a50f-4889-9091-d7587027b8bc",
+    "Persistent work destinations plus a compact command menu. Useful for keeping secondary actions out of the main workspace. This empty-state screenshot is only a navigation reference."
+  ],
+  [
+    "06-replo-experiment.png",
+    "Replo — weak match retained for transparency",
+    "29f40ad2-cdb3-4f3d-839c-cf6e0af89bb8",
+    "Search returned an experiment empty state, not comparison controls. No meaningful comparison mechanism can be inferred from this screen."
+  ],
+  [
+    "07-wandb-runs.png",
+    "Weights & Biases — runs beside analysis",
+    "1653cc08-edba-44ac-bddf-54f183015194",
+    "Run identities, visibility toggles, filter/sort controls and an analysis canvas coexist. Strong candidate for QMX experiment selection. The captured tutorial panels are not the intended QMX content."
+  ],
+  [
+    "08-equals-analysis.png",
+    "Equals — directly usable analysis",
+    "b530f0e5-d457-46c8-8292-a10e8c358021",
+    "Spreadsheet values and a chart share a working surface, with related sheets below. Useful precedent for human manipulation of agent-produced results. This static capture does not verify live recalculation."
+  ],
+  [
+    "09-apple-stocks.png",
+    "Apple Stocks — compressed scanning",
+    "b97be053-cbc8-41b6-9cf3-6c7e76c2a9da",
+    "A row carries identity, miniature trend and numeric value. Transfer to compact candidate lists or watchlists. Search and keyboard obscure much of the list in this capture."
+  ],
+  [
+    "10-chatgpt-sources.png",
+    "ChatGPT iOS — activity and sources on demand",
+    "c5c63629-dbaa-4686-93a1-10971e820b00",
+    "An activity/source sheet overlays conversation with two clear tabs. Useful for secondary evidence and progress inspection, not sustained comparison of multiple artifacts."
+  ],
+  [
+    "11-linear-mobile.png",
+    "Linear iOS — attention tied to objects",
+    "7dfe88e6-2202-4211-bbe5-b5755e362c52",
+    "Inbox entries show an object, what changed, an actor and time. Candidate QMX use: review requests and completed or blocked work linked to the relevant run. Avoid turning every log event into an inbox item."
+  ],
+  [
+    "12-linear-projects.png",
+    "Linear — list and timeline in one surface",
+    "817d7194-809f-4d28-b042-fd9dd089497f",
+    "Project rows align with timeline context under a shared toolbar. A precedent for changing a view of shared work without opening another product area. Sparse sample is not evidence of scalability."
+  ],
+  [
+    "13-fal-inspector.png",
+    "fal — selection changes the available tools",
+    "4131dc79-3880-417b-9d9e-bc91ec86cda8",
+    "Multi-selected assets remain visible, with a selection summary, details and bulk actions. Candidate transfer: select strategies and expose compare, collect or batch-test actions. A visual gallery alone cannot support numeric ranking."
+  ],
+  [
+    "14-wandb-evaluation.png",
+    "Weights & Biases — inspect the underlying records",
+    "1ff391d4-ba59-4433-baa2-080dfc71fb50",
+    "Dense records expose individual outcomes, numeric columns, export and column controls. Useful for evidence inspection. A modal is limiting for long analytical sessions; QMX could promote this to a full tab."
+  ],
+  [
+    "15-matter-evidence.png",
+    "Matter — source and working notes together",
+    "96f6af6b-0535-49a3-afb4-4d467d2f1865",
+    "Source text and extracted highlights share the screen. Candidate transfer: paper beside strategy assumptions, with provenance carried into subsequent work. Not a mandate for a permanent notes sidebar."
+  ],
+  [
+    "16-manus-workspace.png",
+    "Manus — activity adjacent to source changes",
+    "bcf4d2d7-bfb8-478a-a23a-38a2e805ee84",
+    "Agent activity and file operations sit beside a file tree and visible diff. Useful continuity between agent action and artifact. The screenshot has repetitive progress text; QMX should offer a more concise activity summary."
+  ]
+]

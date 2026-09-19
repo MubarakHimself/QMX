@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_012",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1551,
+      "title": "All about Automated Trading Championship: Reporting the Championship 2006",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1551.md"
+    },
+    {
+      "id": 1552,
+      "title": "All about Automated Trading Championship: Interviews with the Participants'07",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1552.md"
+    },
+    {
+      "id": 1553,
+      "title": "All about Automated Trading Championship: Reporting the Championship 2007",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1553.md"
+    },
+    {
+      "id": 1554,
+      "title": "All about Automated Trading Championship: Additional Materials of Championships 2006-2007",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1554.md"
+    },
+    {
+      "id": 1556,
+      "title": "Idleness is the Stimulus to Progress. Semiautomatic Marking a Template",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1556.md"
+    },
+    {
+      "id": 1557,
+      "title": "Visual Testing of the Profitability of Indicators and Alerts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1557.md"
+    },
+    {
+      "id": 1558,
+      "title": "To Sleep, or Not to Sleep?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1558.md"
+    },
+    {
+      "id": 1560,
+      "title": "Program Folder of MetaTrader 4 Client Terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1560.md"
+    },
+    {
+      "id": 1561,
+      "title": "Working with Doubles in MQL4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1561.md"
+    },
+    {
+      "id": 1562,
+      "title": "Recipes for Neuronets",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1562.md"
+    },
+    {
+      "id": 1563,
+      "title": "Effective Averaging Algorithms with Minimal Lag: Use in Indicators and Expert Advisors",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1563.md"
+    },
+    {
+      "id": 1565,
+      "title": "Using Neural Networks In MetaTrader",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1565.md"
+    }
+  ]
+}

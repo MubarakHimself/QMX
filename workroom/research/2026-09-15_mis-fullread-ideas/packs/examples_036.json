@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_036",
+  "section": "Examples",
+  "parent_shard": "examples_036",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 13366,
+      "title": "Population optimization algorithms: Shuffled Frog-Leaping algorithm (SFL)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13366.md"
+    },
+    {
+      "id": 13432,
+      "title": "Population optimization algorithms: Mind Evolutionary Computation (MEC) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13432.md"
+    },
+    {
+      "id": 13451,
+      "title": "Classification models in the Scikit-Learn library and their export to ONNX",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13451.md"
+    },
+    {
+      "id": 13514,
+      "title": "Alternative risk return metrics in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13514.md"
+    },
+    {
+      "id": 13540,
+      "title": "Population optimization algorithms: Stochastic Diffusion Search (SDS)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13540.md"
+    },
+    {
+      "id": 13591,
+      "title": "Permuting price bars in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13591.md"
+    },
+    {
+      "id": 13594,
+      "title": "Master MQL5 from beginner to pro (Part I): Getting started with programming",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13594.md"
+    },
+    {
+      "id": 13646,
+      "title": "Matrix Factorization: The Basics",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13646.md"
+    },
+    {
+      "id": 13647,
+      "title": "Matrix Factorization: A more practical modeling",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13647.md"
+    },
+    {
+      "id": 13730,
+      "title": "Population optimization algorithms: Intelligent Water Drops (IWD) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13730.md"
+    },
+    {
+      "id": 13749,
+      "title": "Master MQL5 from beginner to pro (Part II): Basic data types and use of variable",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13749.md"
+    },
+    {
+      "id": 13781,
+      "title": "Population optimization algorithms: Differential Evolution (DE)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13781.md"
+    }
+  ]
+}

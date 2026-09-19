@@ -1,0 +1,95 @@
+{
+  "pack_id": "tester_012",
+  "section": "Tester",
+  "parent_shard": "tester_012",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "category theory in mql5",
+    "chaos theory in trading"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 12417,
+      "title": "Category Theory in MQL5 (Part 5): Equalizers",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Equalizers",
+      "series_key": "category theory in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12417.md"
+    },
+    {
+      "id": 12470,
+      "title": "Category Theory in MQL5 (Part 7): Multi, Relative and Indexed Domains",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Multi, Relative and Indexed Domains",
+      "series_key": "category theory in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12470.md"
+    },
+    {
+      "id": 12634,
+      "title": "Category Theory in MQL5 (Part 8): Monoids",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Monoids",
+      "series_key": "category theory in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12634.md"
+    },
+    {
+      "id": 12950,
+      "title": "Category Theory in MQL5 (Part 13): Calendar Events with Database Schemas",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Calendar Events with Database Schemas",
+      "series_key": "category theory in mql5",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12950.md"
+    },
+    {
+      "id": 13018,
+      "title": "Category Theory in MQL5 (Part 14): Functors with Linear-Orders",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Functors with Linear-Orders",
+      "series_key": "category theory in mql5",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13018.md"
+    },
+    {
+      "id": 13033,
+      "title": "Category Theory in MQL5 (Part 15) : Functors with Graphs",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 () : Functors with Graphs",
+      "series_key": "category theory in mql5",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13033.md"
+    },
+    {
+      "id": 13116,
+      "title": "Category Theory in MQL5 (Part 16): Functors with Multi-Layer Perceptrons",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Functors with Multi-Layer Perceptrons",
+      "series_key": "category theory in mql5",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13116.md"
+    },
+    {
+      "id": 13200,
+      "title": "Category Theory in MQL5 (Part 18): Naturality Square",
+      "section": "Tester",
+      "series_title": "Category Theory in MQL5 (): Naturality Square",
+      "series_key": "category theory in mql5",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13200.md"
+    },
+    {
+      "id": 15332,
+      "title": "Chaos theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent",
+      "section": "Tester",
+      "series_title": "Chaos theory in trading (): Introduction, application in financial markets and Lyapunov exponent",
+      "series_key": "chaos theory in trading",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15332.md"
+    }
+  ]
+}

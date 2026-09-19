@@ -1,0 +1,76 @@
+{
+  "pack_id": "trading_systems_034",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_034",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "data science and ml"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 17736,
+      "title": "Data Science and ML (Part 36): Dealing with Biased Financial Markets",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Dealing with Biased Financial Markets",
+      "series_key": "data science and ml",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17736.md"
+    },
+    {
+      "id": 17832,
+      "title": "Data Science and ML (Part 37): Using Candlestick patterns and AI to beat the market",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Using Candlestick patterns and AI to beat the market",
+      "series_key": "data science and ml",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17832.md"
+    },
+    {
+      "id": 18143,
+      "title": "Data Science and ML (Part 41): Forex and Stock Markets Pattern Detection using YOLOv8",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Forex and Stock Markets Pattern Detection using YOLOv8",
+      "series_key": "data science and ml",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18143.md"
+    },
+    {
+      "id": 18247,
+      "title": "Data Science and ML (Part 42): Forex Time series Forecasting using ARIMA in Python, Everything you need to Know",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Forex Time series Forecasting using ARIMA in Python, Everything you need to Know",
+      "series_key": "data science and ml",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18247.md"
+    },
+    {
+      "id": 18371,
+      "title": "Data Science and ML (Part 44): Forex OHLC Time series Forecasting using Vector Autoregression (VAR)",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Forex OHLC Time series Forecasting using Vector Autoregression (VAR)",
+      "series_key": "data science and ml",
+      "series_part": 44,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18371.md"
+    },
+    {
+      "id": 18242,
+      "title": "Data Science and ML (Part 46): Stock Markets Forecasting Using N-BEATS in Python",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Stock Markets Forecasting Using N-BEATS in Python",
+      "series_key": "data science and ml",
+      "series_part": 46,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18242.md"
+    },
+    {
+      "id": 20571,
+      "title": "Data Science and ML (Part 47): Forecasting the Market Using the DeepAR model in Python",
+      "section": "Trading systems",
+      "series_title": "Data Science and ML (): Forecasting the Market Using the DeepAR model in Python",
+      "series_key": "data science and ml",
+      "series_part": 47,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20571.md"
+    }
+  ]
+}

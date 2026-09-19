@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_037",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 13805,
+      "title": "Population optimization algorithms: Nelder\u2013Mead, or simplex search (NM) method",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13805.md"
+    },
+    {
+      "id": 13824,
+      "title": "Color buffers in multi-symbol multi-period indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13824.md"
+    },
+    {
+      "id": 13851,
+      "title": "Population optimization algorithms: Simulated Annealing (SA) algorithm. Part I",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13851.md"
+    },
+    {
+      "id": 13870,
+      "title": "Population optimization algorithms: Simulated Isotropic Annealing (SIA) algorithm. Part II",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13870.md"
+    },
+    {
+      "id": 13881,
+      "title": "Filtering and feature extraction in the frequency domain",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13881.md"
+    },
+    {
+      "id": 13893,
+      "title": "Population optimization algorithms: Changing shape, shifting probability distributions and testing on Smart Cephalopod (SC)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13893.md"
+    },
+    {
+      "id": 13911,
+      "title": "Indicator of historical positions on the chart as their profit/loss diagram",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13911.md"
+    },
+    {
+      "id": 13923,
+      "title": "Population optimization algorithms: Evolution Strategies, (\u03bc,\u03bb)-ES and (\u03bc+\u03bb)-ES",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13923.md"
+    },
+    {
+      "id": 13951,
+      "title": "Population optimization algorithms: Micro Artificial immune system (Micro-AIS)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13951.md"
+    },
+    {
+      "id": 13991,
+      "title": "Implementation of the Augmented Dickey Fuller test in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13991.md"
+    },
+    {
+      "id": 14011,
+      "title": "Population optimization algorithms: Bacterial Foraging Optimization - Genetic Algorithm (BFO-GA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14011.md"
+    },
+    {
+      "id": 14040,
+      "title": "Population optimization algorithms: Binary Genetic Algorithm (BGA). Part II",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14040.md"
+    }
+  ]
+}

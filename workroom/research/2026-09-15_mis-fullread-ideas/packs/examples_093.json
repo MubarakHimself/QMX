@@ -1,0 +1,50 @@
+{
+  "pack_id": "examples_093",
+  "section": "Examples",
+  "parent_shard": "examples_093",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "swing extremes and pullbacks",
+    "swing extremes and pullbacks in mql5"
+  ],
+  "n": 4,
+  "articles": [
+    {
+      "id": 22807,
+      "title": "Swing Extremes and Pullbacks (Part 4): Dynamic Pullback Depth Using Volatility Models",
+      "section": "Examples",
+      "series_title": "Swing Extremes and Pullbacks (): Dynamic Pullback Depth Using Volatility Models",
+      "series_key": "swing extremes and pullbacks",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22807.md"
+    },
+    {
+      "id": 21330,
+      "title": "Swing Extremes and Pullbacks in MQL5 (Part 1): Developing a Multi-Timeframe Indicator",
+      "section": "Examples",
+      "series_title": "Swing Extremes and Pullbacks in MQL5 (): Developing a Multi-Timeframe Indicator",
+      "series_key": "swing extremes and pullbacks in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21330.md"
+    },
+    {
+      "id": 21135,
+      "title": "Swing Extremes and Pullbacks in MQL5 (Part 2): Automating the Strategy with an Expert Advisor",
+      "section": "Examples",
+      "series_title": "Swing Extremes and Pullbacks in MQL5 (): Automating the Strategy with an Expert Advisor",
+      "series_key": "swing extremes and pullbacks in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21135.md"
+    },
+    {
+      "id": 21888,
+      "title": "Swing Extremes and Pullbacks in MQL5 (Part 3): Defining Structural Validity Beyond Simple Highs/Lows",
+      "section": "Examples",
+      "series_title": "Swing Extremes and Pullbacks in MQL5 (): Defining Structural Validity Beyond Simple Highs/Lows",
+      "series_key": "swing extremes and pullbacks in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21888.md"
+    }
+  ]
+}

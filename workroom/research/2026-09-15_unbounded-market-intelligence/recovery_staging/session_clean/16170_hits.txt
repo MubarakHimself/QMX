@@ -1,0 +1,400 @@
+20: # News Trading Made Easy (Part 6): Performing Trades (III)
+25: | 10 January 2025 at 04:58
+36: ### Introduction
+38: In this article we will make improvements to the storage database, new views will be added to present data such as displaying dates for the last news event or the next news event for each unique event in the [MQL5 Economic calendar](https://www.mql5.com/en/economic-calendar) this will improve the user's experience when using the program as it will bring awareness to future or past events. In addit
+42: ### 
+44: ### News Settings Inputs
+46: - SELECT NEWS OPTION: This option's purpose is to allow for different News profiles. The different profiles are:
+48: - NEWS SETTINGS: In this News profile the user/trader can filter news events to their liking based on:
+56: - CUSTOM NEWS EVENTS: In this News profile the user/trader can filter news events to their liking depending on the event ids entered as input, with up to 14 event IDs per input.
+60: ### Trade Settings Inputs
+62: - SELECT TRADE ENTRY OPTION: This option's purpose is to allow for different trade entry methods. These method are namely:
+64: - MARKET POSITION: In this trade entry method, trades will only happen through market execution(Buy or Sell trades). The main requirement is that any news event being chosen to trade in this trade entry selection must have an event impact to know the direction of the trade(long or short) before hand
+65: - STOP ORDERS: In this trade entry method, trades will only be executed with a Buy-Stop and Sell-Stop order before any chosen news event occurs. The main requirement is that the user/trader should set a price deviation for the expert to have a price buffer to place the Buy-Stop and Sell-Stop order. 
+66: - SINGLE STOP ORDER: In this trade entry method, trades will only be executed with either a Buy-Stop or Sell-Stop order. The two main requirements is:
+73: ### News Class
+79: - NewsSelection: Defines two profiles:
+84: - myNewsSelection is a variable of this enum type that stores the current news profile selection.
+88: - CustomEvent: A structure for storing custom event IDs and a flag (useEvents) indicating whether these events should be included in the query.
+90: - There are five variables: CEvent1, CEvent2, CEvent3, CEvent4, and CEvent5 of type CustomEvent, each representing a separate group of events.
+92: ```
+106: ```
+110: - CalendarComponents: Enumerates various components of the economic calendar such as tables and views used to structure data related to DST (Daylight Saving Time) schedules, event information, and currency data.
+112: Within the CalendarComponents enumeration we have added two new values:
+117: ```
+126: ```
+128: Function GetCalendar(CalendarData &Data[]):
+130: - This function retrieves all relevant calendar data from the calendar database in storage and stores it in the Data array.
+131: - It opens a database (NEWS\_DATABASE\_FILE) and executes a SQL query based on the current news selection (myNewsSelection).
+132: - Depending on whether News\_Select\_Custom\_Events or News\_Select\_Settings is selected, a different SQL query is generated to fetch event information.
+133: - Custom Events: Joins the MQL5Calendar table and the TimeSchedule table to retrieve custom news events using a filter based on custom event IDs.
+134: - News Settings: Retrieves event data filtered by user-specified settings like importance, frequency, sector, type, and currency.
+135: - The function processes the SQL query results and stores the fetched data in the Data array.
+136: - If the database query fails, it prints an error and the failed SQL query.
+138: ```
+139:    //--- Will Retrieve all relevant Calendar data for DB in Memory from DB in Storage
+140:    void              GetCalendar(CalendarData &Data[])
+152:                                       "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+154:                                       CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+162:                                       "TS.DST_UK,TS.DST_US,TS.DST_AU,TS.DST_NONE from %s MQ "
+165:                                       CalendarStruct(MQL5Calendar_Table).name,CalendarStruct(TimeSchedule_Table).name,
+173: ```
+177: - This function generates a SQL WHERE clause for querying the database based on custom event IDs stored in the CustomEvent structure.
+178: - It checks if useEvents is true. If so, it adds each event ID from the CEvent.EventIds[] array to the SQL query.
+180: ```
+203: ```
+209: - EconomicDetailsMemory: Fetches values from the in-memory calendar database.
+210: - EconomicNextEvent: Updates the structure variable with the next event's data.
+211: - isEvent: Checks if a news event is about to occur and modifies the passed parameters accordingly.
+213: ```
+217:    void              EconomicDetailsMemory(Calendar &NewsTime[],datetime date,bool ImpactRequired);//Gets values from the MQL5 DB Calendar in Memory
+222: ```
+224: In the function EconomicDetailsMemory the purpose is to retrieve economic calendar event data from an in-memory database (DBMemory) for a specific date, optionally considering the event impact, and stores the data in an array NewsTime[].
+226: - The function fetches economic event details from a database for a specified date and stores them in the NewsTime[] array.
+227: - If ImpactRequired is true, it retrieves the event’s previous and forecast values and assigns the impact based on historical data.
+228: - If ImpactRequired is false, it simply retrieves the current day's and next event's data.
+229: - The results are fetched using a prepared SQL query and stored in the NewsTime[] array, which is resized dynamically based on the number of events retrieved.
+231: ```
+233: //|Gets values from the MQL5 DB Calendar in Memory                   |
+235: void CNews::EconomicDetailsMemory(Calendar &NewsTime[],datetime date,bool ImpactRequired)
+299: ```
+303: - Arguments:
+305: - Calendar &NewsTime[]: An array of Calendar structures (each holding event details), which will be filled with the retrieved data.
+306: - datetime date: The specific date for which economic events are retrieved.
+307: - bool ImpactRequired: A flag indicating whether the event impact should be factored into the query.
+317: - The query retrieves economic events for the given date and also considers the next upcoming event after the current day.
+318: - It looks for previous events within the last 24 months where both forecast and prevalue are available and compares them to the current event.
+319: - If the forecast value is larger than the prevalue (or vice versa) or even equal, it matches this with the historical event having the same trend (forecast > prevalue or forecast < prevalue or forecast = prevalue).
+320: - It assigns the event impact from the past event to the current event.
+324: ```
+327: ```
+329: - DAILY\_EVENTS: Selects all economic events for the specified date from the calendar. Events with a valid Forecast and Prevalue are selected.
+330: - DAILY\_IMPACT: This finds historical events (within the last 24 months) where the trend of Forecast and Prevalue (greater/less than or equal) is similar to the current event. It ranks events by date to find the most recent matching event and assigns its impact to the current event.
+331: - NEXT\_EVENT: Selects the next upcoming event after the current day.
+332: - NEXT\_IMPACT: Similar to DAILY\_IMPACT, it retrieves the most recent past event that matches the trend of forecast/prevalue and assigns its impact to the next event.
+333: - ALL\_EVENTS: Combines DAILY\_EVENTS\_RECORDS (for the current day) and NEXT\_EVENT\_RECORD (for the next event) and orders them by time.
+339: - It retrieves all events for the current day and the next event after the current day (within 60 days).
+343: ```
+345: ```
+347: - DAILY\_EVENTS: Retrieves the economic events for the current day.
+348: - NEXT\_EVENT: Retrieves the next upcoming event after the current day within the next 60 days.
+349: - ALL\_EVENTS: Combines both the daily events and the next event and orders them by time.
+353: ```
+355: ```
+357: - DatabasePrepare: Prepares the SQL query for execution. The result is stored in request, which is a handle to the query. This handle will be used to fetch the data.
+358: - Error Handling: If the request fails (request == INVALID\_HANDLE), it prints the error message and the SQL query for debugging purposes.
+362: ```
+370: ```
+372: - ArrayRemove: Clears the NewsTime[] array to prepare it for new data.
+373: - DatabaseReadBind: Fetches the results from the prepared query, binding each result row to the ReadDB\_Data variable, which is a Calendar structure.
+374: - ArrayResize: Resizes the NewsTime[] array to accommodate the new data. For each row returned by DatabaseReadBind, the array grows by 1 element.
+375: - NewsTime[i] = ReadDB\_Data: Copies the retrieved data into the NewsTime[] array.
+379: ```
+381: ```
+383: - DatabaseFinalize: Cleans up the resources allocated by DatabasePrepare, releasing the query handle.
+387: - The function looks through all the events in the CalendarArray and finds the one that is the next upcoming event, based on the server time (TimeTradeServer()).
+388: - It updates the UpcomingNews structure with the details of this next event.
+389: - The logic ensures that only future events (relative to the server time) are considered, and the soonest upcoming event is selected.
+391: ```
+398: //--- Declare unassigned Calendar structure variable Next
+400: //--- assign empty values to Calendar structure variable UpcomingNews
+404: //--- Iterate through CalendarArray to retrieve news events
+407:       //--- Check for next earliest news event from CalendarArray
+408:       if((NextEvent==0)||(TimeTradeServer()<datetime(CalendarArray[i].EventDate)
+409:                           &&NextEvent>datetime(CalendarArray[i].EventDate))||(NextEvent<TimeTradeServer()))
+411:          //--- assign values from the CalendarArray
+412:          NextEvent = datetime(CalendarArray[i].EventDate);
+419: ```
+423: ```
+425: ```
+427: - The variable Next is declared as a Calendar structure (a custom structure holding event details like event date, name, country, etc.).
+428: - Initially, it is unassigned and will later hold the data of the next economic event.
+432: ```
+434: ```
+436: - UpcomingNews is a global or class-level variable (another Calendar structure) that stores the details of the next upcoming event.
+437: - At the start, it is reset to the default (empty) values of the Next variable.
+441: ```
+443: ```
+445: - The NextEvent variable is initialized to 0, which means no event has been assigned yet.
+446: - NextEvent will store the timestamp (in datetime format) of the next economic event during the loop.
+450: ```
+451: for (uint i = 0; i < CalendarArray.Size(); i++)
+452: ```
+454: - CalendarArray is an array that holds the details of economic events.
+455: - The for loop iterates through each element of this array (each representing an event), checking if the event qualifies as the next upcoming event.
+459: ```
+460: if ((NextEvent == 0) || (TimeTradeServer() < datetime(CalendarArray[i].EventDate) && 
+461: NextEvent > datetime(CalendarArray[i].EventDate)) || (NextEvent < TimeTradeServer()))
+462: ```
+464: This if statement checks several conditions to determine if the current event in the array (CalendarArray[i]) is the next news event:
+466: - First Condition: (NextEvent == 0)
+468: - If NextEvent is still 0 (no event has been assigned yet), the current event will be selected as the next event.
+470: - Second Condition: (TimeTradeServer() < datetime(CalendarArray[i].EventDate) && NextEvent > datetime(CalendarArray[i].EventDate))
+472: - This checks if the current event in the array (CalendarArray[i]) happens after the current server time (TimeTradeServer()) and is earlier than the event currently stored in NextEvent. If true, the current event becomes the next event.
+474: - Third Condition: (NextEvent < TimeTradeServer())
+476: - If the event currently stored in NextEvent has already occurred (is in the past), the function continues searching for a valid future event.
+480: ```
+481: NextEvent = datetime(CalendarArray[i].EventDate);
+483: ```
+485: - If any of the conditions are satisfied, the current event in CalendarArray[i] is determined to be the next event:
+487: - NextEvent is updated to the event date of the current event.
+488: - Next is updated to hold all details (date, name, type, etc.) of the current event.
+492: ```
+494: ```
+496: - After the loop finishes iterating through CalendarArray, the variable UpcomingNews is updated with the details of the next upcoming event (stored in Next).
+497: - The function ensures that the first future event found, relative to the current server time, is stored in UpcomingNews.
+499: In the function isEvent checks if a news event is about to occur or is currently occurring within a specific time range. The purpose of this function is to check if any news event from the CalendarArray is happening or about to happen, based on a time offset. If such an event is found, it provides details about the event such as its name, importance, and code.
+501: - This function iterates through the CalendarArray (which holds the data of economic events) and checks if any event is occurring or about to occur within a time range defined by SecondsPreEvent.
+502: - If such an event is found, it updates the Name, Importance, and Code with the event’s details and returns true.
+503: - If no event is found within the defined time range, it returns false and leaves Name, Importance, and Code unchanged (or set to default/NULL)
+505: ```
+517:       if(CTime.TimeIsInRange(CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate),SecondsPreEvent),
+518:                              CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate),59)))
+520:          //--- assign appropriate CalendarArray values
+522:          Importance=CalendarArray[i].EventImportance;
+531: ```
+535: - uint SecondsPreEvent: The number of seconds before the event during which the event is considered "upcoming."
+536: - string &Name: A reference to a string that will store the name of the event if it’s within the defined time range.
+537: - string &Importance: A reference to a string that will store the importance level of the event if found.
+538: - string &Code: A reference to a string that will store the event code.
+542: ```
+544: ```
+546: - The variable Name is initialized to NULL. If no event is found within the specified time range, Name will remain NULL.
+547: - This ensures that Name is only updated if an event is found within the timespan.
+551: ```
+552: for (uint i = 0; i < CalendarArray.Size(); i++)
+553: ```
+555: - The loop goes through every element in the CalendarArray, where each element represents a news event.
+556: - The loop will check each event to see if it falls within the specified time range around the current time.
+560: ```
+561: if (CTime.TimeIsInRange(CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate), SecondsPreEvent),
+562:                         CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate), 59)))
+563: ```
+565: - CTime.TimeMinusOffset(datetime(CalendarArray[i].EventDate), SecondsPreEvent):
+567: - This function call checks if the event’s date (CalendarArray[i].EventDate) minus the SecondsPreEvent value is in the past.
+568: - Essentially, it defines the lower boundary of the time window (how many seconds before the event).
+570: - CTime.TimePlusOffset(datetime(CalendarArray[i].EventDate), 59):
+572: - This function checks if the event’s date plus 59 seconds is in the future, defining the upper boundary of the time window (how long the event is considered active).
+574: - The function CTime.TimeIsInRange checks if the current time falls within this time range. If the current time is within this range, it means the event is about to occur or is already occurring.
+578: ```
+580: Importance = CalendarArray[i].EventImportance;
+582: ```
+584: - If the event is found to be within the specified time range, the relevant details (event name, importance, and code) are extracted from the CalendarArray and assigned to the reference parameters:
+586: - Name: The name of the news event.
+587: - Importance: The importance level of the news event.
+588: - Code: The event code.
+592: ```
+594: ```
+596: - If a news event is found within the time range, the function returns true , indicating that a relevant event is currently happening or is about to happen.
+600: ```
+602: ```
+604: - If the loop finishes iterating through all events in CalendarArray and no event is found within the specified time range, the function returns false, indicating no relevant event is occurring.
+608: - Initializes the class by setting up SQL DROP, CREATE, and INSERT statements for different components of the economic calendar.
+610: - Tables: Defines tables like AutoDST, Record, TimeSchedule, and MQL5Calendar.
+611: - Views: Defines views for different DST schedules (Calendar\_AU, Calendar\_UK, etc.), event information, currencies, and recent/upcoming event dates.
+612: - Triggers: Defines triggers like OnlyOne\_AutoDST and OnlyOne\_Record to ensure only one record exists in specific tables.
+618: - For each DST schedule and calendar component, specific SQL views are defined to structure data according to various criteria (e.g., by event importance, currency, or event date). For example:
+620: - View for Upcoming Events: Displays upcoming event dates along with the day of the week and event details.
+621: - View for Recent Events: Similar to upcoming events, but retrieves recent event dates.
+625: - Triggers are used to ensure that only one record exists in the AutoDST and Record tables at any given time by deleting existing records before an insert operation.
+627: ```
+639: //-- Sql statement for creating the table views for each DST schedule
+640:    string view_sql = "CREATE VIEW IF NOT EXISTS Calendar_%s "
+643:                      "(CASE WHEN Date(REPLACE(T.DST_%s,'.','-'))<R.Date THEN CONCAT(T.DST_%s,' | Yesterday') "
+644:                      "WHEN Date(REPLACE(T.DST_%s,'.','-'))=R.Date THEN CONCAT(T.DST_%s,' | Today') "
+645:                      "WHEN Date(REPLACE(T.DST_%s,'.','-'))>R.Date THEN CONCAT(T.DST_%s,' | Tomorrow') END) as "
+646:                      "'Date',C.EventCurrency as 'Currency',Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','')"
+647:                      " as 'Importance' from MQL5Calendar C,Record R Inner join TimeSchedule T on C.ID=T.ID Where"
+648:                      " DATE(REPLACE(T.DST_%s,'.','-'))>=DATE(R.Date,'-1 day') AND DATE(REPLACE(T.DST_%s,'.','-'))"
+649:                      "<=DATE(R.Date,'+1 day') Order by T.DST_%s Asc;";
+652:    CalendarContents[5].Content = EventInfo_View;
+654:    CalendarContents[5].sql = "CREATE VIEW IF NOT EXISTS 'Event Info' "
+656:                              "REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',"
+657:                              "REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',MC.EVENTCURRENCY as 'Currency',"
+658:                              "REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',MC.EVENTCODE as 'Code' "
+659:                              "FROM MQL5Calendar MC ORDER BY \"Country\" Asc,"
+661:    CalendarContents[5].tbl_name = "Event Info";
+665:    CalendarContents[7].Content = UpcomingEventInfo_View;
+666:    CalendarContents[7].name = "Upcoming Event Dates";
+667:    CalendarContents[7].sql = "CREATE VIEW IF NOT EXISTS 'Upcoming Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID as 'E_ID',"
+668:                              "M.COUNTRY as 'Country',M.EVENTNAME as 'Name',M.EVENTCURRENCY as 'Currency' FROM 'MQL5Calendar' M),"
+669:                              "INFO_DATE AS(SELECT E_ID,Country,Name,Currency,(SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,"
+678:    CalendarContents[7].tbl_name = "Upcoming Event Dates";
+681:    CalendarContents[8].Content = RecentEventInfo_View;
+682:    CalendarContents[8].name = "Recent Event Dates";
+683:    CalendarContents[8].sql = "CREATE VIEW IF NOT EXISTS 'Recent Event Dates' AS WITH UNIQUE_EVENTS AS(SELECT DISTINCT M.EVENTID"
+685:                              "FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,"
+686:                              "(SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON"
+693:    CalendarContents[8].tbl_name = "Recent Event Dates";
+696: ```
+698: The query below is responsible for creating four similar but different views: Calendar\_AU, Calendar\_NONE, Calendar\_UK, and Calendar\_US. Each of these views pulls data from three tables: MQL5Calendar, Record, and TimeSchedule. These queries create views that display event details (ID, name, country, date, currency, and importance) for different time-zones (Australia, None/Default, UK, and US). 
+700: We will use the view Calendar\_AU to explain.
+704: ```
+705: CREATE VIEW IF NOT EXISTS Calendar_AU AS SELECT C.Eventid as 'ID',C.Eventname as 'Name',C.Country as 'Country', 
+706: (CASE WHEN Date(REPLACE(T.DST_AU,'.','-'))<R.Date THEN CONCAT(T.DST_AU,' | Yesterday') WHEN Date(REPLACE(T.DST_AU,'.','-'))=R.Date 
+707: THEN CONCAT(T.DST_AU,' | Today') WHEN Date(REPLACE(T.DST_AU,'.','-'))>R.Date THEN CONCAT(T.DST_AU,' | Tomorrow') END) as 'Date',
+708: C.EventCurrency as 'Currency',Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','') as 'Importance' from MQL5Calendar C,
+709: Record R Inner join TimeSchedule T on C.ID=T.ID Where DATE(REPLACE(T.DST_AU,'.','-'))>=DATE(R.Date,'-1 day') AND 
+710: DATE(REPLACE(T.DST_AU,'.','-'))<=DATE(R.Date,'+1 day') Order by T.DST_AU Asc;
+711: ```
+713: CREATE VIEW IF NOT EXISTS Calendar\_AU, This creates a view named Calendar\_AU if it doesn't already exist. A view is essentially a virtual table created based on a query, allowing you to retrieve data without storing it again.
+717: ```
+723:         WHEN Date(REPLACE(T.DST_AU,'.','-')) < R.Date THEN CONCAT(T.DST_AU, ' | Yesterday') 
+724:         WHEN Date(REPLACE(T.DST_AU,'.','-')) = R.Date THEN CONCAT(T.DST_AU, ' | Today') 
+725:         WHEN Date(REPLACE(T.DST_AU,'.','-')) > R.Date THEN CONCAT(T.DST_AU, ' | Tomorrow') 
+728:     Replace(C.EventImportance,'CALENDAR_IMPORTANCE_','') as 'Importance'
+729: ```
+731: This portion of the query selects specific fields from the MQL5Calendar, Record, and TimeSchedule tables and formats the data accordingly:
+733: - C.Eventid is the event ID.
+734: - C.Eventname is the event name.
+735: - C.Country is the event's associated country.
+736: - A CASE statement is used to compare the date DST\_AU (Australian time-zone, stored in TimeSchedule) with R.Date (current date from the Record table) to label the event as either "Yesterday", "Today", or "Tomorrow".
+737: - C.EventCurrency is the currency related to the event.
+738: - Replace(C.EventImportance,'CALENDAR\_IMPORTANCE\_','') removes the prefix 'CALENDAR\_IMPORTANCE\_' from the EventImportance field, extracting only the relevant importance level (e.g., "HIGH" or "LOW").
+742: ```
+747: ```
+749: - The query pulls data from three tables: MQL5Calendar (C), Record (R), and TimeSchedule (T).
+750: - The MQL5Calendar and Record tables are part of the FROM clause, and the TimeSchedule table is joined using INNER JOIN on the condition C.ID=T.ID, which means the ID from the MQL5Calendar table must match the ID in the TimeSchedule table.
+754: ```
+756:     DATE(REPLACE(T.DST_AU,'.','-')) >= DATE(R.Date,'-1 day') 
+757:     AND DATE(REPLACE(T.DST_AU,'.','-')) <= DATE(R.Date,'+1 day')
+758: ```
+760: - This filters the results to only include events where the DST\_AU (the event date in Australian time-zone) is within one day before or after the current date (R.Date).
+764: ```
+766: ```
+768: - This sorts the events in ascending order based on DST\_AU, the date in Australian time.
+772: - Date and Time Formatting: The REPLACE() function is used to replace periods . with hyphens - in the DST\_ columns, which are stored as strings representing dates (e.g., 2024.09.23 is converted to 2024-09-23).
+773: - Conditional Logic: The CASE statement checks if the event date (DST\_AU, DST\_NONE, DST\_UK, or DST\_US) is before, equal to, or after the current date (R.Date), and adds a label accordingly ("Yesterday", "Today", or "Tomorrow").
+774: - Filtering: The WHERE clause ensures that only events that fall within the range of one day before or after the current date are included in the view.
+775: - Importance Extraction: The REPLACE() function removes the prefix from the EventImportance column to display only the relevant importance level (e.g., "HIGH", "MEDIUM", or "LOW").
+779: ```
+788: ```
+790: The query below creates a view named 'Event Info' that selects and organizes event information from the MQL5Calendar table. This view extracts distinct event information from the MQL5Calendar table and formats the data for easier reading and analysis. It cleans up the field names by removing unnecessary prefixes (CALENDAR\_TYPE\_, CALENDAR\_SECTOR\_, etc.).
+792: ```
+794: REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',
+795: REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',MC.EVENTCURRENCY as 'Currency',
+796: REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',MC.EVENTCODE as 'Code' FROM MQL5Calendar MC 
+798: ```
+806: ```
+811:     REPLACE(MC.EVENTTYPE,'CALENDAR_TYPE_','') as 'Type',
+812:     REPLACE(MC.EVENTSECTOR,'CALENDAR_SECTOR_','') as 'Sector',
+813:     REPLACE(MC.EVENTIMPORTANCE,'CALENDAR_IMPORTANCE_','') as 'Importance',
+815:     REPLACE(MC.EVENTFREQUENCY,'CALENDAR_FREQUENCY_','') as 'Frequency',
+817: ```
+819: This section retrieves distinct rows (removing duplicates) from the MQL5Calendar table (MC is an alias for this table) and selects specific columns to form the view.
+823: - MC.EVENTID as 'ID': Retrieves the unique ID of each event and renames it to 'ID'.
+824: - MC.COUNTRY as 'Country': Retrieves the country associated with the event.
+825: - MC.EVENTNAME as 'Name': Retrieves the event name.
+829: Several fields use the REPLACE() function to remove prefixes like CALENDAR\_TYPE\_, CALENDAR\_SECTOR\_, CALENDAR\_IMPORTANCE\_, and CALENDAR\_FREQUENCY\_, leaving only the meaningful part of the field:
+831: - REPLACE(MC.EVENTTYPE,'CALENDAR\_TYPE\_','') as 'Type': Removes the CALENDAR\_TYPE\_ prefix from the EVENTTYPE field to get a cleaner value (e.g., instead of CALENDAR\_TYPE\_CONSUMER, you get CONSUMER).
+832: - REPLACE(MC.EVENTSECTOR,'CALENDAR\_SECTOR\_','') as 'Sector': Removes the CALENDAR\_SECTOR\_ prefix from the EVENTSECTOR field to get the sector name.
+833: - REPLACE(MC.EVENTIMPORTANCE,'CALENDAR\_IMPORTANCE\_','') as 'Importance': Removes the CALENDAR\_IMPORTANCE\_ prefix from the EVENTIMPORTANCE field to show the importance level (e.g., HIGH, MODERATE, LOW).
+834: - MC.EVENTCURRENCY as 'Currency': Retrieves the currency involved in the event.
+835: - REPLACE(MC.EVENTFREQUENCY,'CALENDAR\_FREQUENCY\_','') as 'Frequency': Removes the CALENDAR\_FREQUENCY\_ prefix from the EVENTFREQUENCY field, providing the event's frequency (e.g., MONTHLY or QUARTERLY).
+836: - MC.EVENTCODE as 'Code': Retrieves the event code without any transformation.
+840: ```
+842: ```
+844: The query pulls data from the MQL5Calendar table, aliased as MC.
+848: ```
+858: ```
+864: - The first sorting criterion is Country in ascending order (Asc), meaning the events are grouped and sorted alphabetically by the country field.
+868: - The CASE statement sorts the Importance levels based on a custom priority:
+870: - 'HIGH' importance is assigned a value of 1 (highest priority).
+871: - 'MODERATE' importance is assigned a value of 2.
+872: - 'LOW' importance is assigned a value of 3.
+873: - Any other value (e.g., NONE) is assigned a value of 4, which is the lowest priority.
+879: - Finally, the events are ordered by the Sector field in descending order (Desc). This might order sectors like MONEY, CONSUMER, etc., in reverse alphabetical order.
+883: ```
+899: ```
+901: The query below creates a view called 'Recent Event Dates', which provides a summary of the most recent events from the MQL5Calendar table, along with the day of the week on which the event occurred. This view provides a list of recent events from the MQL5Calendar table, along with the day of the week the event occurred. It focuses on the most recent event for each distinct event in the calendar.
+903: ```
+905: M.EVENTNAME as 'Name',M.EVENTCURRENCY as 'Currency'FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,
+906: (SELECT T.DST_NONE as 'Time' FROM MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))
+911: ```
+923: ```
+932: ```
+934: - This CTE (UNIQUE\_EVENTS) extracts distinct events from the MQL5Calendar table.
+935: - It selects the event's ID (EVENTID), country, name, and currency, ensuring that each event is listed only once (DISTINCT removes duplicate entries).
+939: - M.EVENTID as 'E\_ID': The unique event ID.
+940: - M.COUNTRY as 'Country': The country associated with the event.
+941: - M.EVENTNAME as 'Name': The name of the event.
+942: - M.EVENTCURRENCY as 'Currency': The currency associated with the event.
+946: ```
+969: ```
+973: - For each unique event (E\_ID, Country, Name, Currency), it selects the most recent event date from the TimeSchedule and MQL5Calendar tables.
+977: > - The subquery retrieves the field DST\_NONE from the TimeSchedule table (joined with the MQL5Calendar and Record tables), which represents a timestamp or event time.
+986: > - Last Event Date: The most recent event date for each event, retrieved from the MQL5Calendar and TimeSchedule tables.
+990: ```
+1010: ```
+1014: - E\_ID as 'ID': The event ID, renamed as 'ID'.
+1015: - Country: The country associated with the event.
+1016: - Name: The event name.
+1017: - Currency: The currency related to the event.
+1018: - "Last Event Date" as 'Recent Date': The most recent event date, renamed as 'Recent Date'.
+1022: - The query uses strftime('%w', DATE(REPLACE("Last Event Date", '.', '-'))), which converts the 'Last Event Date' into a valid date format and retrieves the day of the week.
+1024: - %w returns an integer representing the day of the week, where 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+1025: - The CASE statement maps the integer to the appropriate day name (e.g., 0 -> Sunday, 1 -> Monday, etc.).
+1031: ```
+1033: ```
+1039: ```
+1045: ```
+1047: The query below creates a view called 'Upcoming Event Dates' to list upcoming events from the MQL5Calendar table. It includes the event's next date and the day of the week. The query has two key parts: it first identifies unique events, then it determines the next scheduled event date for each of those events.
+1049: ```
+1051:  as 'Name',M.EVENTCURRENCY as 'Currency' FROM 'MQL5Calendar' M),INFO_DATE AS(SELECT E_ID,Country,Name,Currency,(SELECT T.DST_NONE as 'Time' FROM
+1052:  MQL5Calendar M,Record R INNER JOIN TIMESCHEDULE T ON T.ID=M.ID WHERE DATE(REPLACE(Time,'.','-'))>R.Date AND E_ID=M.EVENTID ORDER BY Time ASC 
+1057: ```
+1069: ```
+1078: ```
+1080: - This part selects unique events from the MQL5Calendar table.
+1081: - It retrieves the event's ID (EVENTID), country, name, and currency, ensuring each event is listed only once using DISTINCT.
+1087: - E\_ID: The event's unique ID.
+1088: - Country: The country where the event is associated.
+1089: - Name: The name of the event.
+1090: - Currency: The currency associated with the event.
+1094: ```
+1116: ```
+1120: - For each event (E\_ID, Country, Name, Currency), it looks for the upcoming event date in the TimeSchedule table (DST\_NONE field).
+1124: - The subquery retrieves the DST\_NONE field from the TimeSchedule table, which represents the time or date of the event.
+1125: - The condition DATE(REPLACE(Time, '.', '-')) > R.Date ensures that only future events (dates greater than the current date, R.Date) are selected.
+1126: - Events are sorted in ascending order by Time (ORDER BY Time ASC), so the earliest upcoming event date is picked (LIMIT 1 ensures only one date is returned).
+1130: - E\_ID: The event ID from UNIQUE\_EVENTS.
+1131: - Country: The country of the event.
+1132: - Name: The event name.
+1133: - Currency: The currency of the event.
+1134: - Next Event Date: The next upcoming event date, determined by the subquery.
+1138: ```
+1158: ```
+1164: - E\_ID as 'ID': The event ID, renamed as 'ID'.
+1165: - Country: The country associated with the event.
+1166: - Name: The event name.
+1167: - Currency: The currency related to the event.
+1168: - Upcoming Date: This is based on the 'Next Event Date'. If the 'Next Event Date' is NULL, it will display 'Unknown'; otherwise, it will show the date.
+1178: - If the Next Event Date is not 'Unknown', the query converts the upcoming date into a day of the week using the following CASE statement:
+1180: ```
+1190: ```
+1194: - %w returns an integer representing the day of the week (0 = Sunday, 1 = Monday, etc.).
+1195: - The CASE statement maps this integer to a day name (e.g., 0 -> Sunday).
+1196: - If the Next Event Date is 'Unknown', the Day column will also display 'Unknown'.
+1200: ```
+1202: ```
+1208: ```
+1218: ```
+1220: ### Expert Code
+1224: ```
+1235: ```
+1241: - Type: Choice
+1242: - Variable Name: iCustom\_Event\_1
+1243: - Default Value: No
+1244: - Description: This input allows the user to enable or disable the use of custom event IDs for event 1. The Choice type here is an enum type with two values, Yes or No. If set to Yes, the program will use the event IDs provided in the corresponding string input (iCustom\_Event\_1\_IDs).
+1248: - Type: string
+1249: - Variable Name: iCustom\_Event\_1\_IDs
+1250: - Default Value: An empty string ""
+1251: - Description: This input allows the user to input a list of Event IDs for Custom Event 1. These IDs are expected to be separated by commas (e.g., "36010006,840030005,840030016"), and the maximum of 14 IDs is specified.
+1255: ```
+1266: ```
+1270: - CEvent1.useEvents = Answer(iCustom\_Event\_1);:
+1272: - CEvent1 is a struct that holds information about a specific custom news event set. The useEvents flag is set using the Answer() function, which returns a boolean value (true or false) based on the input variable iCustom\_Event\_1.
+1273: - If iCustom\_Event\_1 is true, the expert will use this custom event for trading logic; otherwise, it will ignore it.
+1275: - StringSplit(iCustom\_Event\_1\_IDs, ',', CEvent1.EventIds);:
+1277: - StringSplit() is a function that splits a string of event IDs (iCustom\_Event\_1\_IDs) by a comma (,), and the resulting list of event IDs is stored in CEvent1.EventIds.
+1278: - iCustom\_Event\_1\_IDs is a string containing one or more event IDs, and the split function converts this string into an array of event IDs for further use in the trading logic.

@@ -1,0 +1,307 @@
+{
+  "shard_id": "examples_073",
+  "section": "Examples",
+  "n": 33,
+  "series_in_shard": [
+    "doeasy. controls"
+  ],
+  "articles": [
+    {
+      "id": 10663,
+      "title": "DoEasy. Controls (Part 1): First steps",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): First steps",
+      "series_key": "doeasy. controls",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10663.md"
+    },
+    {
+      "id": 10697,
+      "title": "DoEasy. Controls (Part 2): Working on the CPanel class",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Working on the CPanel class",
+      "series_key": "doeasy. controls",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10697.md"
+    },
+    {
+      "id": 10733,
+      "title": "DoEasy. Controls (Part 3): Creating bound controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Creating bound controls",
+      "series_key": "doeasy. controls",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10733.md"
+    },
+    {
+      "id": 10756,
+      "title": "DoEasy. Controls (Part 4): Panel control, Padding and Dock parameters",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Panel control, Padding and Dock parameters",
+      "series_key": "doeasy. controls",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10756.md"
+    },
+    {
+      "id": 10794,
+      "title": "DoEasy. Controls (Part 5): Base WinForms object, Panel control, AutoSize parameter",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base WinForms object, Panel control, AutoSize parameter",
+      "series_key": "doeasy. controls",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10794.md"
+    },
+    {
+      "id": 10989,
+      "title": "DoEasy. Controls (Part 6): Panel control, auto resizing the container to fit inner content",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Panel control, auto resizing the container to fit inner content",
+      "series_key": "doeasy. controls",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10989.md"
+    },
+    {
+      "id": 11045,
+      "title": "DoEasy. Controls (Part 7): Text label control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Text label control",
+      "series_key": "doeasy. controls",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11045.md"
+    },
+    {
+      "id": 11075,
+      "title": "DoEasy. Controls (Part 8): Base WinForms objects by categories, GroupBox and CheckBox controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base WinForms objects by categories, GroupBox and CheckBox controls",
+      "series_key": "doeasy. controls",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11075.md"
+    },
+    {
+      "id": 11121,
+      "title": "DoEasy. Controls (Part 9): Re-arranging WinForms object methods, RadioButton and Button controls",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Re-arranging WinForms object methods, RadioButton and Button controls",
+      "series_key": "doeasy. controls",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11121.md"
+    },
+    {
+      "id": 11173,
+      "title": "DoEasy. Controls (Part 10): WinForms objects \u2014 Animating the interface",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): WinForms objects \u2014 Animating the interface",
+      "series_key": "doeasy. controls",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11173.md"
+    },
+    {
+      "id": 11194,
+      "title": "DoEasy. Controls (Part 11): WinForms objects \u2014 groups, CheckedListBox WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): WinForms objects \u2014 groups, CheckedListBox WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11194.md"
+    },
+    {
+      "id": 11228,
+      "title": "DoEasy. Controls (Part 12): Base list object, ListBox and ButtonListBox WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Base list object, ListBox and ButtonListBox WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11228.md"
+    },
+    {
+      "id": 11260,
+      "title": "DoEasy. Controls (Part 13): Optimizing interaction of WinForms objects with the mouse, starting the development of the TabControl WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Optimizing interaction of WinForms objects with the mouse, starting the development of the TabControl WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11260.md"
+    },
+    {
+      "id": 11288,
+      "title": "DoEasy. Controls (Part 14): New algorithm for naming graphical elements. Continuing work on the TabControl WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): New algorithm for naming graphical elements. Continuing work on the TabControl WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11288.md"
+    },
+    {
+      "id": 11316,
+      "title": "DoEasy. Controls (Part 15): TabControl WinForms object \u2014 several rows of tab headers, tab handling methods",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): TabControl WinForms object \u2014 several rows of tab headers, tab handling methods",
+      "series_key": "doeasy. controls",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11316.md"
+    },
+    {
+      "id": 11356,
+      "title": "DoEasy. Controls (Part 16): TabControl WinForms object \u2014 several rows of tab headers, stretching headers to fit the container",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): TabControl WinForms object \u2014 several rows of tab headers, stretching headers to fit the container",
+      "series_key": "doeasy. controls",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11356.md"
+    },
+    {
+      "id": 11408,
+      "title": "DoEasy. Controls (Part 17): Cropping invisible object parts, auxiliary arrow buttons WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Cropping invisible object parts, auxiliary arrow buttons WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11408.md"
+    },
+    {
+      "id": 11454,
+      "title": "DoEasy. Controls (Part 18): Functionality for scrolling tabs in TabControl",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Functionality for scrolling tabs in TabControl",
+      "series_key": "doeasy. controls",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11454.md"
+    },
+    {
+      "id": 11490,
+      "title": "DoEasy. Controls (Part 19): Scrolling tabs in TabControl, WinForms object events",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Scrolling tabs in TabControl, WinForms object events",
+      "series_key": "doeasy. controls",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11490.md"
+    },
+    {
+      "id": 11524,
+      "title": "DoEasy. Controls (Part 20): SplitContainer WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11524.md"
+    },
+    {
+      "id": 11564,
+      "title": "DoEasy. Controls (Part 21): SplitContainer control. Panel separator",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer control. Panel separator",
+      "series_key": "doeasy. controls",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11564.md"
+    },
+    {
+      "id": 11601,
+      "title": "DoEasy. Controls (Part 22): SplitContainer. Changing the properties of the created object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): SplitContainer. Changing the properties of the created object",
+      "series_key": "doeasy. controls",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11601.md"
+    },
+    {
+      "id": 11634,
+      "title": "DoEasy. Controls (Part 23): Improving TabControl and SplitContainer WinForms objects",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Improving TabControl and SplitContainer WinForms objects",
+      "series_key": "doeasy. controls",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11634.md"
+    },
+    {
+      "id": 11661,
+      "title": "DoEasy. Controls (Part 24): Hint auxiliary WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Hint auxiliary WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11661.md"
+    },
+    {
+      "id": 11700,
+      "title": "DoEasy. Controls (Part 25): Tooltip WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Tooltip WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11700.md"
+    },
+    {
+      "id": 11732,
+      "title": "DoEasy. Controls (Part 26): Finalizing the ToolTip WinForms object and moving on to ProgressBar development",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Finalizing the ToolTip WinForms object and moving on to ProgressBar development",
+      "series_key": "doeasy. controls",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11732.md"
+    },
+    {
+      "id": 11764,
+      "title": "DoEasy. Controls (Part 27): Working on ProgressBar WinForms object",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Working on ProgressBar WinForms object",
+      "series_key": "doeasy. controls",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11764.md"
+    },
+    {
+      "id": 11823,
+      "title": "DoEasy. Controls (Part 28): Bar styles in the ProgressBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Bar styles in the ProgressBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11823.md"
+    },
+    {
+      "id": 11847,
+      "title": "DoEasy. Controls (Part 29): ScrollBar auxiliary control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): ScrollBar auxiliary control",
+      "series_key": "doeasy. controls",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11847.md"
+    },
+    {
+      "id": 11887,
+      "title": "DoEasy. Controls (Part 30): Animating the ScrollBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Animating the ScrollBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11887.md"
+    },
+    {
+      "id": 11926,
+      "title": "DoEasy. Controls (Part 31): Scrolling the contents of the ScrollBar control",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Scrolling the contents of the ScrollBar control",
+      "series_key": "doeasy. controls",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11926.md"
+    },
+    {
+      "id": 12849,
+      "title": "DoEasy. Controls (Part 32): Horizontal ScrollBar, mouse wheel scrolling",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Horizontal ScrollBar, mouse wheel scrolling",
+      "series_key": "doeasy. controls",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12849.md"
+    },
+    {
+      "id": 14278,
+      "title": "DoEasy. Controls (Part 33): Vertical ScrollBar",
+      "section": "Examples",
+      "series_title": "DoEasy. Controls (): Vertical ScrollBar",
+      "series_key": "doeasy. controls",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14278.md"
+    }
+  ]
+}

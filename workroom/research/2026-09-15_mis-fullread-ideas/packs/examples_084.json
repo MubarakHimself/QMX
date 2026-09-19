@@ -1,0 +1,50 @@
+{
+  "pack_id": "examples_084",
+  "section": "Examples",
+  "parent_shard": "examples_084",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "multiple indicators on one chart",
+    "native twitter client"
+  ],
+  "n": 4,
+  "articles": [
+    {
+      "id": 10229,
+      "title": "Multiple indicators on one chart (Part 01): Understanding the concepts",
+      "section": "Examples",
+      "series_title": "Multiple indicators on one chart (): Understanding the concepts",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10229.md"
+    },
+    {
+      "id": 10230,
+      "title": "Multiple indicators on one chart (Part 02): First experiments",
+      "section": "Examples",
+      "series_title": "Multiple indicators on one chart (): First experiments",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10230.md"
+    },
+    {
+      "id": 10239,
+      "title": "Multiple indicators on one chart (Part 03): Developing definitions for users",
+      "section": "Examples",
+      "series_title": "Multiple indicators on one chart (): Developing definitions for users",
+      "series_key": "multiple indicators on one chart",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10239.md"
+    },
+    {
+      "id": 8318,
+      "title": "Native Twitter Client: Part 2",
+      "section": "Examples",
+      "series_title": "Native Twitter Client",
+      "series_key": "native twitter client",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8318.md"
+    }
+  ]
+}

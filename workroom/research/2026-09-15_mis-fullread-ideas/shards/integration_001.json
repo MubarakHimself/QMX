@@ -1,0 +1,116 @@
+{
+  "shard_id": "integration_001",
+  "section": "Integration",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 2990,
+      "title": "ZUP - Universal ZigZag with Pesavento patterns. Search for patterns",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2990.md"
+    },
+    {
+      "id": 3024,
+      "title": "Embed MetaTrader 4/5 WebTerminal on your website for free and make a profit",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3024.md"
+    },
+    {
+      "id": 3068,
+      "title": "Ready-made Expert Advisors from the MQL5 Wizard work in MetaTrader 4",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3068.md"
+    },
+    {
+      "id": 3112,
+      "title": "Creating Documentation Based on MQL5 Source Code",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3112.md"
+    },
+    {
+      "id": 3398,
+      "title": "Automatic Selection of Promising Signals",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3398.md"
+    },
+    {
+      "id": 3486,
+      "title": "Deep Neural Networks (Part I). Preparing Data",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3486.md"
+    },
+    {
+      "id": 3507,
+      "title": "Deep Neural Networks (Part II). Working out and selecting predictors",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3507.md"
+    },
+    {
+      "id": 3526,
+      "title": "Deep Neural Networks (Part III). Sample selection and dimensionality reduction",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3526.md"
+    },
+    {
+      "id": 4318,
+      "title": "LifeHack for traders: Fast food made of indicators",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4318.md"
+    },
+    {
+      "id": 4388,
+      "title": "Comparing speeds of self-caching indicators",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4388.md"
+    },
+    {
+      "id": 5303,
+      "title": "How to create and test custom MOEX symbols in MetaTrader 5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5303.md"
+    },
+    {
+      "id": 5638,
+      "title": "MQL Parsing by Means of MQL",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5638.md"
+    }
+  ]
+}

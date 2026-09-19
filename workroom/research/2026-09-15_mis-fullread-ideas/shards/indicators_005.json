@@ -1,0 +1,116 @@
+{
+  "shard_id": "indicators_005",
+  "section": "Indicators",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 23278,
+      "title": "Extreme Value Theory in MQL5: Building a Tail-Risk Crash Gauge Beyond Monte Carlo VaR",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23278.md"
+    },
+    {
+      "id": 23301,
+      "title": "Implementing a Circular Buffer Class in MQL5: Fixed-Memory Rolling Windows for Real-Time Indicator Calculations",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23301.md"
+    },
+    {
+      "id": 23335,
+      "title": "Online Linear Regression with Recursive Least Squares in MQL5: A Parameter-Free Adaptive Trend Estimator",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23335.md"
+    },
+    {
+      "id": 23351,
+      "title": "Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23351.md"
+    },
+    {
+      "id": 23482,
+      "title": "Bayesian Online Change-Point Detection (BOCPD) in MQL5: One Regime-Break Signal, Three Ways to Use It",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23482.md"
+    },
+    {
+      "id": 23484,
+      "title": "Symbolic Aggregate Approximation (SAX) in MQL5: Historical Analog Search and Forecasting",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23484.md"
+    },
+    {
+      "id": 23491,
+      "title": "Implementing and Benchmarking Bag-of-SFA-Symbols (BOSS) Against Dynamic Time Warping (DTW)",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23491.md"
+    },
+    {
+      "id": 23499,
+      "title": "Exporting Custom Indicator Buffers to CSV for Python Backtesting Pipelines",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23499.md"
+    },
+    {
+      "id": 23550,
+      "title": "Building a Volume-Based Liquidity Heatmap Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23550.md"
+    },
+    {
+      "id": 23633,
+      "title": "Machine Learning Without the Black Box: The Tsetlin Machine for Trading",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23633.md"
+    },
+    {
+      "id": 23637,
+      "title": "Building a Future Swing Projection Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23637.md"
+    },
+    {
+      "id": 23644,
+      "title": "How To Debug MQL5 Code in MetaEditor",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23644.md"
+    }
+  ]
+}

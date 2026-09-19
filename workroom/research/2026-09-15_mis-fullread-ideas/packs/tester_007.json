@@ -1,0 +1,119 @@
+{
+  "pack_id": "tester_007",
+  "section": "Tester",
+  "parent_shard": "tester_007",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 14183,
+      "title": "Using optimization algorithms to configure EA parameters on the fly",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14183.md"
+    },
+    {
+      "id": 14212,
+      "title": "Population optimization algorithms: Resistance to getting stuck in local extrema (Part II)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14212.md"
+    },
+    {
+      "id": 14331,
+      "title": "The base class of population algorithms as the backbone of efficient optimization",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14331.md"
+    },
+    {
+      "id": 14413,
+      "title": "Role of random number generator quality in the efficiency of optimization algorithms",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14413.md"
+    },
+    {
+      "id": 14518,
+      "title": "Modified Grid-Hedge EA in MQL5 (Part IV): Optimizing Simple Grid Strategy (I)",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14518.md"
+    },
+    {
+      "id": 14552,
+      "title": "MQL5 Wizard Techniques you should know (14): Multi Objective Timeseries Forecasting with STF",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14552.md"
+    },
+    {
+      "id": 14895,
+      "title": "Fast trading strategy tester in Python using Numba",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14895.md"
+    },
+    {
+      "id": 15041,
+      "title": "Chemical reaction optimization (CRO) algorithm (Part I): Process chemistry in optimization",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15041.md"
+    },
+    {
+      "id": 15319,
+      "title": "Price-Driven CGI Model: Advanced Data Post-Processing and Implementation",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15319.md"
+    },
+    {
+      "id": 15320,
+      "title": "From Novice to Expert: The Essential Journey Through MQL5 Trading",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15320.md"
+    },
+    {
+      "id": 15486,
+      "title": "Artificial Bee Hive Algorithm (ABHA): Tests and results",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15486.md"
+    },
+    {
+      "id": 15543,
+      "title": "Animal Migration Optimization (AMO) algorithm",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15543.md"
+    }
+  ]
+}

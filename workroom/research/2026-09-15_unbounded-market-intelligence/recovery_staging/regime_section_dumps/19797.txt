@@ -1,0 +1,233 @@
+# Creating a Probabilistic Market-Neutral Trading Robot Based on a Return Distribution
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+| 4 August 2026 at 07:46
+1 955
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/513916 "Comments")
+[Yevgeniy Koshtenko](https://www.mql5.com/en/users/koshtenko)
+Most traders try to predict the market's direction, and most lose money. There is another approach: instead of trying to predict direction, use the statistical properties of the market itself. A market-neutral strategy based on the distribution of returns works exactly this way: it places orders at levels where the price is statistically likely to be, regardless of the trend.
+### 
+### Foundation: Return Distribution
+Return is the percentage change in price over a fixed period. If the price was 1.0850 and rose to 1.0900, the return is equal to (1.0900 - 1.0850) / 1.0850 = 0.0046, or 0.46%. If you take all the historical returns from past periods and plot a histogram, you get a return distribution. For currency pairs, this distribution is typically close to a normal distribution, with the center of the distribution around zero and heavy tails.
+For example, here is a histogram of the return distribution on the hourly EURUSD chart over 11 years, starting in January 2014:
+Here is the cumulative distribution, and here we can already see the notorious “fat tails” of the distribution — as one of the reasons for the asymmetry between profit and risk, as well as one of the reasons why forecasting the market as a whole is so difficult: extreme movements occur much more frequently than a normal distribution would predict. If returns followed a classic bell-shaped Gaussian curve, the probability of a move of more than 1% in 10 hours would be negligible, but actual data show that such events occur regularly.
+This is precisely why strategies based on the assumption of normality systematically underestimate the risk of catastrophic losses and overestimate the frequency of small profitable moves, making statistical arbitrage a more complex — but also a more honest — approach: we work with the actual empirical distribution, rather than its idealized mathematical model.
+Key idea: if we know the return distribution covering 90% of observed returns over a given time window, we can predict not the direction, but the probability of reaching specific price levels. This is a fundamentally different trading philosophy.
+Instead of asking, "Where will the price go?", we ask, "What is the probability that the price will reach a certain level within N periods?" The difference is crucial: the first question requires knowledge of the future, while the second relies on past statistics. If the empirical distribution shows that in 10% of cases the price falls by 0.5% or more within 10 hours, we can place a BUY LIMIT order at that level, knowing that the probability of it being triggered is about 10%. We do not know exactly when this will happen, but we do know that it will happen with a certain frequency.
+This logic reverses the traditional approach to money management. A classic strategy uses large position sizes for “reliable” signals and small ones for “questionable” signals. The statistical approach does the opposite: small position sizes are used for high-probability central levels (they are triggered frequently but generate small profits), while large position sizes are used for low-probability tail levels (they are triggered rarely but generate large profits). The math balances frequency and magnitude through inverse probability weighting.
+Moreover, by using a full distribution rather than point forecasts, the strategy naturally becomes market-neutral. We place orders across the entire range of possible price movements — both up and down — with order sizes proportional to their statistical rarity. This is not hedging in the traditional sense; rather, it is an acknowledgment of the fundamental uncertainty of direction while simultaneously leveraging the statistical certainty of the distribution.
+Let's start by creating a structure to store the statistics:
+```
+struct ReturnStats {
+   double mean;              // Average return
+   double stdDev;            // Standard deviation
+   double percentiles[10];   // P10, P20, ..., P100
+};
+ReturnStats returnStats;
+double returns[];
+bool statsCalculated = false;
+```
+The mean reflects the overall trend over the window (usually close to zero for short periods); the standard deviation indicates volatility; and the percentiles are quantiles of the distribution that divide it into equal parts by probability.
+### 
+### Calculation of the Empirical Distribution
+The calculation function loads historical data and computes returns over a rolling window:
+```
+bool CalculateReturnDistribution() {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_CURRENT, 0, HistoryBars + WindowBars, rates);
+   if(copied < HistoryBars + WindowBars) {
+      Print("ERROR: Not enough history. Got ", copied, " bars");
+      return false;
+   int numReturns = HistoryBars;
+   ArrayResize(returns, numReturns);
+   for(int i = 0; i < numReturns; i++) {
+      double priceStart = rates[i + WindowBars].close;
+      double priceEnd = rates[i].close;
+      if(priceStart > 0) {
+         returns[i] = (priceEnd - priceStart) / priceStart;
+      } else {
+         returns[i] = 0;
+```
+For each point in the history, we take the closing price of the current bar and the closing price from WindowBars bars ago. The return is calculated as a relative change. If you set WindowBars = 10 on the M5 chart, you will get the return over 50 minutes. On the H1 chart, this represents the return over a 10-hour period.
+After calculating all the returns, we sort the array to extract the percentiles:
+```
+double sortedReturns[];
+   ArrayResize(sortedReturns, numReturns);
+   ArrayCopy(sortedReturns, returns);
+   ArraySort(sortedReturns);
+   returnStats.mean = 0;
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Creating a Probabilistic Market-Neutral Trading Robot Based on a Return Distribution
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+### 
+### Foundation: Return Distribution
+Return is the percentage change in price over a fixed period. If the price was 1.0850 and rose to 1.0900, the return is equal to (1.0900 - 1.0850) / 1.0850 = 0.0046, or 0.46%. If you take all the historical returns from past periods and plot a histogram, you get a return distribution. For currency pairs, this distribution is typically close to a normal distribution, with the center of the distribution around zero and heavy tails.
+   double stdDev;            // Standard deviation
+   double percentiles[10];   // P10, P20, ..., P100
+};
+The mean reflects the overall trend over the window (usually close to zero for short periods); the standard deviation indicates volatility; and the percentiles are quantiles of the distribution that divide it into equal parts by probability.
+### Calculation of the Empirical Distribution
+The calculation function loads historical data and computes returns over a rolling window:
+After calculating all the returns, we sort the array to extract the percentiles:
+```
+   for(int i = 0; i < 10; i++) {
+      double percentileLevel = (i + 1) * 0.10;
+      int index = (int)(numReturns * percentileLevel);
+      if(index >= numReturns) index = numReturns - 1;
+      returnStats.percentiles[i] = sortedReturns[index];
+   }
+   
+
+Percentiles are extracted by simple indexing of the sorted array. P10 is the element at the index equal to 10% of the array length. P90 is the element at the 90% index. We obtain exact quantiles of the empirical distribution without making any assumptions about its shape. This is important: we do not assume normality; we use the data as it is.
+### The Mathematics of Weighting Factors
+If you place all orders with the same volume, the strategy will be unbalanced. Orders in the center of the distribution (near zero return) are triggered frequently but generate small profits because the price distance from the current market level is small. Orders placed in the tails of the distribution are triggered rarely, but they offer significant profit potential.
+The optimal approach: orders with a low probability of being filled should have a larger volume so that their infrequent fills compensate for the long wait. The probability of reaching a level is related to its percentile. If the level corresponds to P10, this means that 10% of historical price movements have reached it or gone beyond it. The probability of reaching it is approximately 90% (100% - 10%). For P90, the probability of reaching or exceeding the value is 10%.
+double CalculateProbabilityWeight(int percentileIndex) {
+   if(!UseProbabilityWeights) {
+      return MathPow(LotMultiplier, percentileIndex);
+   double probability = (100.0 - (percentileIndex + 1) * 10.0) / 100.0;
+   double weight = 1.0 / MathMax(probability, 0.1);
+   return MathPow(weight, 0.5) * MathPow(LotMultiplier, percentileIndex * 0.3);
+}
+The formula converts probability into weight: the lower the probability, the higher the weight. The square root reduces the steepness of the progression to avoid extreme volumes at distant levels. The additional LotMultiplier factor used as an exponent provides adjustable aggressiveness.
+With a base lot size of 0.01 and LotMultiplier = 1.5, we get: P10 (90% probability) yields a weight of approximately 1.2 and a volume of 0.012 lots, P50 (50% probability) yields a weight of 2.0 and a volume of 0.020 lots, and P90 (10% probability) yields a weight of 5.0 and a volume of 0.050 lots. The progression is nonlinear; the outermost levels are 4–5 times larger than the central ones.
+### 
+### Placing the Order Grid
+The PlaceAllGridOrders function places limit orders at levels corresponding to percentiles:
+```
+      for(int i = 0; i < 10; i++) {
+         double returnLevel = returnStats.percentiles[i];
+         
+         if(returnLevel <= 0.01) {
+         if(returnLevel >= -0.01) {
+
+For each percentile, the target price is calculated using the formula: current\_price × (1 + percentile\_return). If the return is negative (for example, -0.005 or -0.5%), the target price is below the current price, and a BUY LIMIT order is placed. The logic is this: statistically, there is a certain probability that the price will fall by this amount, so we buy on that dip. If the return is positive and the price is higher than the current price, a SELL LIMIT order is placed. We sell into a statistically probable rise.
+The Direction parameter controls the strategy's directional bias. NEUTRAL places orders in both directions; this is a classic market-neutral strategy. BUY places only buy orders at negative-return levels, betting on a rebound after a decline. SELL places only sell orders at positive-return levels, betting on a pullback after a rise.
+### Grid Expiration
+The statistical distribution changes slowly over time. Volatility rises and falls. The average return shifts as a trend develops. The grid placed an hour ago may no longer match the current distribution. Solution: recalculate the distribution periodically and update the grid.
+   
+   datetime expirationThreshold = rates[WindowBars].time;
+   if(gridPlacementTime <= expirationThreshold) {
+      Print("Grid EXPIRED! Placement:", TimeToString(gridPlacementTime), 
+            " Threshold:", TimeToString(expirationThreshold));
+      return true;
+   }
+The function compares the time the grid was placed with the expiration threshold. The threshold is the time corresponding to WindowBars bars back from the current moment. If the grid is older, it is considered obsolete. Upon expiration, all pending orders are canceled, open positions are optionally closed, the distribution is recalculated from scratch, and a fresh grid is placed. This keeps the strategy adaptive to market changes.
+### 
+### Profit and Position Management
+The robot has three independent take-profit parameters: an overall target, a buy target, and a sell target. This provides flexible risk management.
+### Grid Maintenance
+The ManageGrid function keeps the grid up to date and removes expired orders:
+### Optimizing Parameters for the Instrument
+WindowBars defines the strategy's time horizon. A small window (5–10 bars) provides rapid adaptation but makes the strategy highly sensitive to noise. A large window (50–100 bars) provides stable statistics but results in a slow response. For the M5 EURUSD chart, the optimal range is 10–20 bars (50–100 minutes). For the H1 chart, use 5–10 bars (5–10 hours).
+For volatile currency pairs such as GBPJPY, increase WindowBars to 15–20 and decrease LotMultiplier to 1.3. For less volatile pairs such as EURCHF, reduce WindowBars to 8–10 and increase LotMultiplier to 2.0. For cryptocurrencies, the parameters are radically different due to high volatility: WindowBars 5–8, HistoryBars 1,000–2,000, LotMultiplier 1.2–1.5.
+
+### Practical Results
+On EURUSD M5 with the settings WindowBars=10, HistoryBars=3000, LotSize=0.01, LotMultiplier=1.5, the strategy generates 300–500 trades per quarter, with a win rate of 55–65%, an average profit per trade of 0.50–1.00 USD, a maximum drawdown of 50–100 USD, and a total profit of 150–300 USD per 0.01 lot. Profit factor: 1.3–1.8; Sharpe ratio: 0.8–1.2.
+### Handling Edge Cases
+Real-world trading is full of situations that are not accounted for in theory. First edge case: not enough historical data is available on first launch. If not enough historical data is available for HistoryBars periods, the CalculateReturnDistribution function will return false, and the robot will not run. Solution: Allow the history to accumulate gradually, or use a lower value for HistoryBars at the beginning.
+Second case: all the percentiles were on one side of zero. This happens in a strong trend. If all ten percentiles are positive, no BUY orders will be placed, even in NEUTRAL mode. The code checks the conditions returnLevel <= 0.01 for BUY and returnLevel >= -0.01 for SELL. In an extreme trend, orders may be placed on only one side. This is normal; the strategy adapts to the market, but it is important to understand that in such a situation, market neutrality is temporarily lost.
+Third case: extreme volatility leads to overly wide levels. If P90 is +5% from the current price, the order is placed very far away and may never be triggered. Solution: Add a limit on the maximum deviation:
+```
+   for(int i = 0; i < 10; i++) {
+      double returnLevel = returnStats.percentiles[i];
+      
+      if(returnLevel >= -0.01 && returnLevel <= 0.03) {  // Max. 3% deviation
+            OrderGetInteger(ORDER_MAGIC) == OrderMagic) {
+            ENUM_ORDER_STATE state = (ENUM_ORDER_STATE)OrderGetInteger(ORDER_STATE);
+            if(state == ORDER_STATE_PLACED || state == ORDER_STATE_PARTIAL)
+               pending++;
+         }
+### 
+### Conclusion
+A market-neutral strategy based on return distribution is a rare example of a mathematically sound approach that actually works in practice. Unlike most trading strategies based on technical analysis or attempts to predict the future, this method takes advantage of a fundamental property of markets — their statistical nature.
+Practical implementation requires attention to detail. The code, which looks simple at first glance, contains many nuances: correct percentile calculation, weighting volumes by probability, expiration of an outdated grid, and handling edge cases. Each of these details is important. Miss just one, and the strategy will stop working or start losing money under certain market conditions.
+
+It is important to understand the limitations. The strategy is not universal. It performs better in sideways, volatile markets and worse in strong trends. It requires sufficient liquidity and reasonable spreads. It is vulnerable to black swan events and sharp news-driven moves. Being aware of these limitations does not weaken the strategy; on the contrary, it allows you to use it correctly.
+Backtesting is essential, but it is not enough. A strategy will produce different results in backtesting and in live trading. Slippage, execution delays, requotes, and spread fluctuations during news events — none of these occur in an ideal backtest. Be sure to conduct forward testing on a demo account for at least two to three months. Only then should you switch to a live account with minimum lot sizes.
+Document everything. Every grid placement, every expiration, every parameter change, every drawdown, and every recovery. A year from now, this data will help you identify patterns that are invisible in the moment. You will see that the strategy performs very well on Tuesdays and Thursdays, but worse on Fridays. That July is consistently worse than March. That a period of profitability follows a sharp increase in volatility. This knowledge is invaluable.
+![Crow Search Algorithm (CSA)](https://c.mql5.com/2/173/19669-algoritm-poiska-vorona-crow-logo.png)
+[Crow Search Algorithm (CSA)](https://www.mql5.com/en/articles/19669)
+The Crow Search Algorithm (CSA) is an elegant metaheuristic inspired by crows’ ability to hide food and find other crows' caches, solving optimization problems by balancing following successful solutions with random exploration of the search space. Let's find out how well the algorithm performs.
+![Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5](https://c.mql5.com/2/236/23443-automated-trade-statement-exporter-logo.png)
+[Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5](https://www.mql5.com/en/articles/23443)
+An MQL5 script reconstructs closed trades from deal history using a two-pass SL/TP lookup and exports them to an Excel-compatible XLSX file without third-party libraries. Four cooperating classes handle trade data, history reconstruction, SpreadsheetML XML generation, and ZIP assembly via .NET's ZipFile class through a direct ShellExecuteW call with marker-file polling. The output opens in Excel and Google Sheets with correct numeric types, formatted date columns, and a bold header row.
+metatrader.com: Your New Hub for Trading
+A unified portal with global market news and analytics to help you trade smarter
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=nohacijjghimvcjzaekwvnuwufwnpswg&s=ee3b83e6d9917a3b0fdbb21e0b44c932faa82951112160b419f2890a2e1c30a8&uid=&ref=https://www.mql5.com/en/articles/19797&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6482311943137407017)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+A market-neutral strategy based on return distribution is a rare example of a mathematically sound approach that actually works in practice. Unlike most trading strategies based on technical analysis or attempts to predict the future, this method takes advantage of a fundamental property of markets — their statistical nature.
+
+The key advantage of the strategy is its honesty. It does not promise outsized returns, nor does it claim to know where the price is headed. Instead, it acknowledges uncertainty and works with probabilities. The robot does not try to be right; it tries to be statistically profitable. The difference is critical.
+
+Practical implementation requires attention to detail. The code, which looks simple at first glance, contains many nuances: correct percentile calculation, weighting volumes by probability, expiration of an outdated grid, and handling edge cases. Each of these details is important. Miss just one, and the strategy will stop working or start losing money under certain market conditions.
+
+It is important to understand the limitations. The strategy is not universal. It performs better in sideways, volatile markets and worse in strong trends. It requires sufficient liquidity and reasonable spreads. It is vulnerable to black swan events and sharp news-driven moves. Being aware of these limitations does not weaken the strategy; on the contrary, it allows you to use it correctly.
+
+Parameter optimization is not a one-time task. Markets change, volatility rises and falls, and correlations shift. What worked three months ago might not work now. Regular review of the WindowBars, HistoryBars, and LotMultiplier parameters is necessary. Keep a log of changes and results. In six months, you will have an invaluable body of knowledge about how the strategy performs on your trading instrument.
+
+The psychological aspect is underestimated. Even with a fully automated trading bot, you will be tempted to intervene. A drawdown equal to 20% of your profit can trigger the urge to stop the trading bot. A string of losing trades raises doubts about the strategy. A period without profits causes anxiety. That is normal. It is important to remember that a statistical advantage becomes apparent over hundreds of trades, not just dozens. If you cannot patiently weather drawdowns, this strategy isn't for you.
+
+Capital and risk management are critical. The strategy can open 10–15 positions simultaneously in various combinations. Make sure your deposit can handle it. The rule is simple: if you are trading 0.01 lots and a maximum of 10 positions with weights of up to 5x, you will need a minimum deposit of $500–$1,000 for EUR/USD. Any less than that, and you risk a margin call if things go wrong.
+
+Backtesting is essential, but it is not enough. A strategy will produce different results in backtesting and in live trading. Slippage, execution delays, requotes, and spread fluctuations during news events — none of these occur in an ideal backtest. Be sure to conduct forward testing on a demo account for at least two to three months. Only then should you switch to a live account with minimum lot sizes.
+
+Document everything. Every grid placement, every expiration, every parameter change, every drawdown, and every recovery. A year from now, this data will help you identify patterns that are invisible in the moment. You will see that the strategy performs very well on Tuesdays and Thursdays, but worse on Fridays. That July is consistently worse than March. That a period of profitability follows a sharp increase in volatility. This knowledge is invaluable.
+
+A strategy based on return distribution is an instrument, not magic. Like any instrument, it requires understanding, configuration, monitoring, and adaptation. In the right hands, with the right expectations, it provides a consistent mathematical advantage. That is all it takes to achieve long-term profitability in the markets. Not the Holy Grail, not a get-rich-quick scheme, but simply honest statistical arbitrage that works because it uses the actual properties of price rather than trying to predict the unpredictable.
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/19797>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/19797.zip "Download all attachments in the single ZIP archive")
+
+[GridMM\_ReturnDistribution.mq5](https://www.mql5.com/en/articles/download/19797/GridMM_ReturnDistribution.mq5 "Download GridMM_ReturnDistribution.mq5")
+(41.02 KB)
+
+[ReturnDistribution.py](https://www.mql5.com/en/articles/download/19797/ReturnDistribution.py "Download ReturnDistribution.py")
+(5.16 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Bayesian Online Change-Point Detection (BOCPD) in MQL5: One Regime-Break Signal, Three Ways to Use It](https://c.mql5.com/2/231/23482-bocpd-logo.png)
+[Bayesian Online Change-Point Detection (BOCPD) in MQL5: One Regime-Break Signal, Three Ways to Use It](https://www.mql5.com/en/articles/23482)
+
+This article delivers Bayesian Online Change-Point Detection as a single, dependency-free MQL5 class that maintains a per-bar, causal probability of a regime break. We use it three ways: a live monitor, a moving average that flushes on breaks, and a risk overlay with a matched-frequency random control. Readers get a reusable primitive to watch structural change, adapt indicators, and gate exposure after detected shifts.
+
+![Crow Search Algorithm (CSA)](https://c.mql5.com/2/173/19669-algoritm-poiska-vorona-crow-logo.png)
+[Crow Search Algorithm (CSA)](https://www.mql5.com/en/articles/19669)
+
+The Crow Search Algorithm (CSA) is an elegant metaheuristic inspired by crows’ ability to hide food and find other crows' caches, solving optimization problems by balancing following successful solutions with random exploration of the search space. Let's find out how well the algorithm performs.
+
+![Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5](https://c.mql5.com/2/236/23443-automated-trade-statement-exporter-logo.png)
+[Automated Trade Statement Exporter to Excel-Compatible XLSX in MQL5](https://www.mql5.com/en/articles/23443)
+
+An MQL5 script reconstructs closed trades from deal history using a two-pass SL/TP lookup and exports them to an Excel-compatible XLSX file without third-party libraries. Four cooperating classes handle trade data, history reconstruction, SpreadsheetML XML generation, and ZIP assembly via .NET's ZipFile class through a direct ShellExecuteW call with marker-file polling. The output opens in Excel and Google Sheets with correct numeric types, formatted date columns, and a bold header row.
+
+![Trading Options Without Options (Part 3): Complex Option Strategies](https://c.mql5.com/2/172/18951-torguem-opcioni-bez-opcionov-logo.png)
+[Trading Options Without Options (Part 3): Complex Option Strategies](https://www.mql5.com/en/articles/18951)
+
+The article discusses flat (non-directional) and trend-following (directional) option strategies and their implementation in MQL5. The EA described in the previous article is updated. The display of option levels has been added. Now it is time to examine the strategies used by options traders in practice and put them into action.
+
+[![](https://www.mql5.com/ff/sh/xmu05j3v4yx1g4gyp2/f90f83bc5c043cd6df0de7712fc3cbfd.png)
+
+metatrader.com: Your New Hub for Trading
+
+A unified portal with global market news and analytics to help you trade smarter
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=nohacijjghimvcjzaekwvnuwufwnpswg&s=ee3b83e6d9917a3b0fdbb21e0b44c932faa82951112160b419f2890a2e1c30a8&uid=&ref=https://www.mql5.com/en/articles/19797&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6482311943137407017)

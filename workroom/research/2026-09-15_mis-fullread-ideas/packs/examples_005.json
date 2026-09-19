@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_005",
+  "section": "Examples",
+  "parent_shard": "examples_005",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1372,
+      "title": "Alert and Comment for External Indicators (Part Two)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1372.md"
+    },
+    {
+      "id": 1375,
+      "title": "Expert Advisor for Trading in the Channel",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1375.md"
+    },
+    {
+      "id": 1376,
+      "title": "EA Status SMS Notifications",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1376.md"
+    },
+    {
+      "id": 1378,
+      "title": "Graphic Expert Advisor: AutoGraf",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1378.md"
+    },
+    {
+      "id": 1381,
+      "title": "Visual Optimization of Indicator and Signal Profitability",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1381.md"
+    },
+    {
+      "id": 1382,
+      "title": "Working with Files. An Example of Important Market Events Visualization",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1382.md"
+    },
+    {
+      "id": 1387,
+      "title": "Offline Charts in the New MQL4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1387.md"
+    },
+    {
+      "id": 1388,
+      "title": "Data Structure in MetaTrader 4 Build 600 and Higher",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1388.md"
+    },
+    {
+      "id": 1389,
+      "title": "Upgrade to MetaTrader 4 Build 600 and Higher",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1389.md"
+    },
+    {
+      "id": 1390,
+      "title": "Considering Orders in a Large Program",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1390.md"
+    },
+    {
+      "id": 1391,
+      "title": "Common Errors in MQL4 Programs and How to Avoid Them",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1391.md"
+    },
+    {
+      "id": 1392,
+      "title": "Why Is It Important to Update MetaTrader 4 to the Latest Build by August 1?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1392.md"
+    }
+  ]
+}

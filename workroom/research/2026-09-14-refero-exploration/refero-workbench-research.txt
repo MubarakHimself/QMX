@@ -1,0 +1,618 @@
+- link "Refero":
+  - /url: /
+- link "New research":
+  - /url: /
+  - button "New research":
+    - generic: New research
+- list:
+  - link "Web apps":
+    - /url: /search
+    - generic: Web apps
+  - link "iOS apps":
+    - /url: /apps/search
+    - generic: iOS apps
+  - link "Styles Beta":
+    - /url: https://styles.refero.design/
+    - generic: Styles
+    - generic: Beta
+  - link "Bookmarks":
+    - /url: /bookmarks
+    - generic: Bookmarks
+- heading "History" [level=3]
+- list:
+  - link "Desktop AI Workbench Layouts":
+    - /url: /research/dfe9f4dd-85ed-4f80-8e65-7be3574a759a
+  - link "Bloomberg-Style Dashboard Designs":
+    - /url: /research/78fe04a9-1dc6-4a4a-86ea-4389b6aa8c5b
+  - link:
+    - /url: /research/null
+- generic: Mubarak Himself
+- textbox [disabled]: Multi-pane AI workspace examples
+- generic: Research mode
+- generic: Web apps
+- generic: iOS apps
+- paragraph: "Explore desktop workbench layouts that combine AI agent conversations, code or notebooks, files, and substantial directly usable tools. Find real product screens showing split workspaces, persistent project navigation, multiple open documents, agent task progress, and output inspection. Look beyond chatbots: creative editors, developer tools, research and analytics products. Compare structurally different approaches and explain where each breaks under complex work. Focus on layout and interaction, not landing pages or color palettes."
+- text: Screens search
+- text: Web apps
+- link "AI agent workbench workspace":
+  - /url: /search?query=AI%20agent%20workbench%20workspace&pass_source=chat
+- link "263 screens See all":
+  - /url: /search?query=AI%20agent%20workbench%20workspace&pass_source=chat
+  - generic: 263 screens
+  - text: See all
+- link "Exa web screenshot. Content Management Page UI":
+  - /url: /pages/6a3afad4-c472-4694-9942-b14523b1386b?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "Exa web screenshot. Content Management Page UI"
+- link "Exa Exa":
+  - /url: /search?site_id[id][]=898
+  - img "Exa"
+  - generic: Exa
+- link "MWM web screenshot. Home Page UI":
+  - /url: /pages/2e001c62-8eeb-466a-a082-50b067a56162?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "MWM web screenshot. Home Page UI"
+- link "MWM MWM":
+  - /url: /search?site_id[id][]=931
+  - img "MWM"
+  - generic: MWM
+- link "MWM web screenshot. Home Page UI":
+  - /url: /pages/35dd28e0-6634-4aba-b756-8a0882c0329f?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "MWM web screenshot. Home Page UI"
+- link "MWM MWM":
+  - /url: /search?site_id[id][]=931
+  - img "MWM"
+  - generic: MWM
+- link "Exa web screenshot. Content Management Page UI":
+  - /url: /pages/1adeee6d-a0e4-4bd8-a8ef-fa40d6c6f220?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "Exa web screenshot. Content Management Page UI"
+- link "Exa Exa":
+  - /url: /search?site_id[id][]=898
+  - img "Exa"
+  - generic: Exa
+- link "Exa web screenshot. Content Management Page UI":
+  - /url: /pages/79b4214f-8c9e-45f8-858d-9e8c6b23df02?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "Exa web screenshot. Content Management Page UI"
+- link "Exa Exa":
+  - /url: /search?site_id[id][]=898
+  - img "Exa"
+  - generic: Exa
+- link "Spyglass web screenshot. Sign Up UI":
+  - /url: /pages/e828d065-9d5a-4071-9821-802f1fd902ba?query=AI%20agent%20workbench%20workspace&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Sign Up UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "Show More":
+  - /url: /search?query=AI%20agent%20workbench%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Code editor split workspace":
+  - /url: /search?query=Code%20editor%20split%20workspace&pass_source=chat
+- link "949 screens See all":
+  - /url: /search?query=Code%20editor%20split%20workspace&pass_source=chat
+  - generic: 949 screens
+  - text: See all
+- link "Rork web screenshot. Content Management Page UI":
+  - /url: /pages/e60ab61e-74f6-4a35-b234-e7494bfde454?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Rork web screenshot. Content Management Page UI"
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link "Anthropic web screenshot.":
+  - /url: /pages/5d724963-72b6-46a0-819a-c7c491ba7598?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Anthropic web screenshot."
+- link "Anthropic Anthropic":
+  - /url: /search?site_id[id][]=508
+  - img "Anthropic"
+  - generic: Anthropic
+- link "Rork web screenshot. Content Management Page UI":
+  - /url: /pages/f5ad8322-4d69-42c8-82cb-ba7d4a4167f9?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Rork web screenshot. Content Management Page UI"
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link "Lovable web screenshot. Content Management Page UI":
+  - /url: /pages/51c0e751-f916-4b37-8288-1ae80f8362a8?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Lovable web screenshot. Content Management Page UI"
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- link "Anthropic web screenshot.":
+  - /url: /pages/e9b210d8-9936-4b01-adb8-0e7a8c8bc9c2?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Anthropic web screenshot."
+- link "Anthropic Anthropic":
+  - /url: /search?site_id[id][]=508
+  - img "Anthropic"
+  - generic: Anthropic
+- link "Manus web screenshot.":
+  - /url: /pages/bcf4d2d7-bfb8-478a-a23a-38a2e805ee84?query=Code%20editor%20split%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Show More":
+  - /url: /search?query=Code%20editor%20split%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Research notebook workspace":
+  - /url: /search?query=Research%20notebook%20workspace&pass_source=chat
+- link "349 screens See all":
+  - /url: /search?query=Research%20notebook%20workspace&pass_source=chat
+  - generic: 349 screens
+  - text: See all
+- link "Pitch web screenshot.":
+  - /url: /pages/04360430-c402-43c1-bf7b-9d289535bd78?query=Research%20notebook%20workspace&pass_source=chat&source=search
+  - img "Pitch web screenshot."
+- link "Pitch Pitch":
+  - /url: /search?site_id[id][]=40
+  - img "Pitch"
+  - generic: Pitch
+- link "MyMind web screenshot.":
+  - /url: /pages/d0401e4f-0931-444f-9145-b498be80e3e7?query=Research%20notebook%20workspace&pass_source=chat&source=search
+  - img "MyMind web screenshot."
+- link "MyMind MyMind":
+  - /url: /search?site_id[id][]=110
+  - img "MyMind"
+  - generic: MyMind
+- link "MyMind web screenshot.":
+  - /url: /pages/3c3a7824-ed05-4edb-a50a-4418405fd9ac?query=Research%20notebook%20workspace&pass_source=chat&source=search
+  - img "MyMind web screenshot."
+- link "MyMind MyMind":
+  - /url: /search?site_id[id][]=110
+  - img "MyMind"
+  - generic: MyMind
+- link "Dropbox web screenshot. Blog Post Page UI":
+  - /url: /pages/4b954a07-d81a-4cbe-a520-3cb7748b9a44?query=Research%20notebook%20workspace&pass_source=chat&source=search
+  - img "Dropbox web screenshot. Blog Post Page UI"
+- link "Dropbox Dropbox":
+  - /url: /search?site_id[id][]=2
+  - img "Dropbox"
+  - generic: Dropbox
+- link:
+  - /url: /pages/820575b2-1f4c-44b2-9db8-3c09135f493f?query=Research%20notebook%20workspace&pass_source=chat&source=search
+- link "Dropbox":
+  - /url: /search?site_id[id][]=2
+  - generic: Dropbox
+- link:
+  - /url: /pages/9ce5507e-80ae-423b-b77f-36ccaa01de5e?query=Research%20notebook%20workspace&pass_source=chat&source=search
+- link "Dropbox":
+  - /url: /search?site_id[id][]=2
+  - generic: Dropbox
+- link "Show More":
+  - /url: /search?query=Research%20notebook%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Analytics dashboard workspace":
+  - /url: /search?query=Analytics%20dashboard%20workspace&pass_source=chat
+- link "1,469 screens See all":
+  - /url: /search?query=Analytics%20dashboard%20workspace&pass_source=chat
+  - generic: 1,469 screens
+  - text: See all
+- link:
+  - /url: /pages/881f8b00-e9b4-4bd9-836f-37092131fa7c?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link:
+  - /url: /pages/6bb83b4e-eabe-48a1-8566-cac60750dd57?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Fernand":
+  - /url: /search?site_id[id][]=891
+  - generic: Fernand
+- link:
+  - /url: /pages/de6b572b-8057-4641-9b84-f24b3b567494?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link:
+  - /url: /pages/32aa5e7b-2fa8-4344-ac18-5d0a146bacd6?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link:
+  - /url: /pages/b8ac7ba3-7e06-4589-a2bd-9edd73c3ff93?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link:
+  - /url: /pages/119ea1e2-2644-468a-8366-49034820aea9?query=Analytics%20dashboard%20workspace&pass_source=chat&source=search
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- link "Show More":
+  - /url: /search?query=Analytics%20dashboard%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Creative editor workspace":
+  - /url: /search?query=Creative%20editor%20workspace&pass_source=chat
+- link "1,987 screens See all":
+  - /url: /search?query=Creative%20editor%20workspace&pass_source=chat
+  - generic: 1,987 screens
+  - text: See all
+- link:
+  - /url: /pages/7e43fd64-88f1-4063-ac05-bcdb8a0c7035?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link:
+  - /url: /pages/c3bafcdd-a718-4859-a802-dc8843101c3f?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "WhatsApp":
+  - /url: /search?site_id[id][]=154
+  - generic: WhatsApp
+- link:
+  - /url: /pages/a5a8a74c-be72-4d82-a4ac-0566b4874088?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link:
+  - /url: /pages/a6b59254-14af-4acf-9bd1-48bee45eecf7?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link:
+  - /url: /pages/e32f8f33-f575-418f-a2cd-1de8b3c9fdc5?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link:
+  - /url: /pages/a3939cba-9a78-4f0b-9701-a84c3a84fe6d?query=Creative%20editor%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link "Show More":
+  - /url: /search?query=Creative%20editor%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Agent task progress workspace":
+  - /url: /search?query=Agent%20task%20progress%20workspace&pass_source=chat
+- link "568 screens See all":
+  - /url: /search?query=Agent%20task%20progress%20workspace&pass_source=chat
+  - generic: 568 screens
+  - text: See all
+- link:
+  - /url: /pages/96eeec76-1c3f-4387-a511-6948bbe8a450?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "Lemni":
+  - /url: /search?site_id[id][]=608
+  - generic: Lemni
+- link:
+  - /url: /pages/bf5e01af-b493-44e3-bab5-aaaccc518e98?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "n8n":
+  - /url: /search?site_id[id][]=805
+  - generic: n8n
+- link:
+  - /url: /pages/09e0bedd-7c86-43cb-b852-2a60dcca5f11?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "Lemni":
+  - /url: /search?site_id[id][]=608
+  - generic: Lemni
+- link:
+  - /url: /pages/b6847b70-f3b4-461d-a65f-792e07a7fde3?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "MWM MWM":
+  - /url: /search?site_id[id][]=931
+  - img "MWM"
+  - generic: MWM
+- link:
+  - /url: /pages/f9119b9d-31e7-4915-9ac2-aa1b0245ed63?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "Rox":
+  - /url: /search?site_id[id][]=847
+  - generic: Rox
+- link:
+  - /url: /pages/83242441-8149-44c2-bf13-afa9a9b63b1d?query=Agent%20task%20progress%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link "Show More":
+  - /url: /search?query=Agent%20task%20progress%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Notebook files documents workspace":
+  - /url: /search?query=Notebook%20files%20documents%20workspace&pass_source=chat
+- link "635 screens See all":
+  - /url: /search?query=Notebook%20files%20documents%20workspace&pass_source=chat
+  - generic: 635 screens
+  - text: See all
+- link:
+  - /url: /pages/a3ad3929-afeb-4d88-8cf7-4b6f16e9ffbd?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+- link "Craft":
+  - /url: /search?site_id[id][]=112
+  - generic: Craft
+- link:
+  - /url: /pages/63dc1426-8a62-4da2-bdc3-fa4f1077f653?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+- link "Wealthsimple":
+  - /url: /search?site_id[id][]=764
+  - generic: Wealthsimple
+- link "Spyglass web screenshot. Sign Up UI":
+  - /url: /pages/e828d065-9d5a-4071-9821-802f1fd902ba?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Sign Up UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link:
+  - /url: /pages/08c42cbe-68c4-432f-bdb7-5794d298a701?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+- link "Tango":
+  - /url: /search?site_id[id][]=653
+  - generic: Tango
+- link:
+  - /url: /pages/fb958001-7561-4b19-9d4c-858efa3ff596?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+- link "Tango":
+  - /url: /search?site_id[id][]=653
+  - generic: Tango
+- link:
+  - /url: /pages/98426cfc-6cb6-44d5-afaf-04445b1a729b?query=Notebook%20files%20documents%20workspace&pass_source=chat&source=search
+- link "Wealthsimple":
+  - /url: /search?site_id[id][]=764
+  - generic: Wealthsimple
+- link "Show More":
+  - /url: /search?query=Notebook%20files%20documents%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Multiple document tabs project workspace":
+  - /url: /search?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat
+- link "910 screens See all":
+  - /url: /search?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat
+  - generic: 910 screens
+  - text: See all
+- link:
+  - /url: /pages/38a620d7-faf4-4037-9d83-d60b204f7a24?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Monday":
+  - /url: /search?site_id[id][]=171
+  - generic: Monday
+- link:
+  - /url: /pages/36fce9b9-4aea-4d33-8cb8-e6a74130dd05?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/c9f5b674-456c-45fe-9b2e-7e5e2ef1088f?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Monday":
+  - /url: /search?site_id[id][]=171
+  - generic: Monday
+- link:
+  - /url: /pages/ba7ca333-3e8c-40f4-becb-8244515758d1?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/2ad97674-c2ad-4ecd-8278-f05e14f80aea?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/1238861e-3035-45b2-9f30-c310c75639fa?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat&source=search
+- link "Sketch":
+  - /url: /search?site_id[id][]=39
+  - generic: Sketch
+- link "Show More":
+  - /url: /search?query=Multiple%20document%20tabs%20project%20workspace&pass_source=chat
+  - text: Show More
+- text: Flows search
+- text: Web apps
+- link "AI coding agent build preview workspace":
+  - /url: /search/flows?query=AI%20coding%20agent%20build%20preview%20workspace&pass_source=chat
+- link "205 flows See all":
+  - /url: /search/flows?query=AI%20coding%20agent%20build%20preview%20workspace&pass_source=chat
+  - generic: 205 flows
+  - text: See all
+- link:
+  - /url: /flows/13337/b6847b70-f3b4-461d-a65f-792e07a7fde3?query=AI coding agent build preview workspace
+- link "Copying screen on MWM":
+  - /url: /search/flows?site_id[id][]=931&order=trending
+  - generic: Copying screen
+  - generic: on MWM
+- link:
+  - /url: /flows/13338/b6847b70-f3b4-461d-a65f-792e07a7fde3?query=AI coding agent build preview workspace
+- link "Deleting screen on MWM":
+  - /url: /search/flows?site_id[id][]=931&order=trending
+  - generic: Deleting screen
+  - generic: on MWM
+- link:
+  - /url: /flows/12019/6a3afad4-c472-4694-9942-b14523b1386b?query=AI coding agent build preview workspace
+- link "Running high-compute research using AI Agent on Exa":
+  - /url: /search/flows?site_id[id][]=898&order=trending
+  - generic: Running high-compute research using AI Agent
+  - generic: on Exa
+- link:
+  - /url: /flows/12018/039361ca-c87e-4727-9114-9ba9e078f5bf?query=AI coding agent build preview workspace
+- link "Finding web-grounded answers using AI on Exa":
+  - /url: /search/flows?site_id[id][]=898&order=trending
+  - generic: Finding web-grounded answers using AI
+  - generic: on Exa
+- link:
+  - /url: /flows/13340/3070ca40-ea2b-4094-b171-e9cf18d8e198?query=AI coding agent build preview workspace
+- link "Publishing app to TestFlight on MWM":
+  - /url: /search/flows?site_id[id][]=931&order=trending
+  - generic: Publishing app to TestFlight
+  - generic: on MWM
+- link:
+  - /url: /flows/9514/ddc0569f-3cf0-4722-b4f5-2c8371eeb0e3?query=AI coding agent build preview workspace
+- link "Adding example AI Agent on n8n":
+  - /url: /search/flows?site_id[id][]=805&order=trending
+  - generic: Adding example AI Agent
+  - generic: on n8n
+- link "Show More":
+  - /url: /search/flows?query=AI%20coding%20agent%20build%20preview%20workspace&pass_source=chat
+  - text: Show More
+- text: Flows search
+- text: Web apps
+- link "AI creative editor generation workflow":
+  - /url: /search/flows?query=AI%20creative%20editor%20generation%20workflow&pass_source=chat
+- link "2 flows See all":
+  - /url: /search/flows?query=AI%20creative%20editor%20generation%20workflow&pass_source=chat
+  - generic: 2 flows
+  - text: See all
+- link:
+  - /url: /flows/12791/9cb68a69-f446-4b42-bed5-7835984a10ff?query=AI creative editor generation workflow
+- link "Generating image using additional reference on Leonardo.Ai":
+  - /url: /search/flows?site_id[id][]=922&order=trending
+  - generic: Generating image using additional reference
+  - generic: on Leonardo.Ai
+- link:
+  - /url: /flows/13334/d08569f6-ba23-4743-a595-d0026e820149?query=AI creative editor generation workflow
+- link "Recording voice for transcription on MWM":
+  - /url: /search/flows?site_id[id][]=931&order=trending
+  - generic: Recording voice for transcription
+  - generic: on MWM
+- generic: Research Insights
+- heading "Three-panel agent workbench" [level=3]
+- paragraph: "These layouts give the agent a persistent home beside directly usable artifacts: code, logs, files, or previews. They support fast inspection, but the fixed column split becomes fragile when one surface needs substantially more width."
+- link "Rork web screenshot. Content Management Page UI":
+  - /url: /pages/f5ad8322-4d69-42c8-82cb-ba7d4a4167f9?source=chat
+  - img "Rork web screenshot. Content Management Page UI"
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- generic: Chat and planning on the left, code and logs in the center, mobile preview on the right. Strong for agent-to-output traceability; weak when chat, code, and preview all need deep simultaneous inspection.
+- link "Exa web screenshot. Content Management Page UI":
+  - /url: /pages/6a3afad4-c472-4694-9942-b14523b1386b?source=chat
+  - img "Exa web screenshot. Content Management Page UI"
+- link "Exa Exa":
+  - /url: /search?site_id[id][]=898
+  - img "Exa"
+  - generic: Exa
+- generic: Persistent navigation, configuration form, and output preview. Clear separation between setup and results, but the center form can become a long control column rather than a working surface.
+- link "Rork web screenshot. Dashboard UI":
+  - /url: /pages/32aa5e7b-2fa8-4344-ac18-5d0a146bacd6?source=chat
+  - img "Rork web screenshot. Dashboard UI"
+- link "Rork Rork":
+  - /url: /search?site_id[id][]=900
+  - img "Rork"
+  - generic: Rork
+- generic: Chat-like briefing, navigation rail, and analytics workspace. Useful when the agent produces decisions or metrics; less suitable for editing large source documents.
+- heading "Agent plus inspectable output" [level=3]
+- paragraph: These references make execution state and output inspection first-class rather than treating the agent as a chat transcript. They are stronger for research and API work, but require careful handling of run history, schemas, raw data, and results without overwhelming the main workspace.
+- link "Exa web screenshot. Content Management Page UI":
+  - /url: /pages/c6f62e8f-07cb-4f40-8597-c5e9649537a0?source=chat
+  - img "Exa web screenshot. Content Management Page UI"
+- link "Exa Exa":
+  - /url: /search?site_id[id][]=898
+  - img "Exa"
+  - generic: Exa
+- generic: A live output console exposes run status, thinking/output state, tabs, and structured results. Good observability model; the output pane risks becoming a terminal, JSON viewer, and report reader at once.
+- link "Rox web screenshot.":
+  - /url: /pages/f9119b9d-31e7-4915-9ac2-aa1b0245ed63?source=chat
+  - img "Rox web screenshot."
+- link "Rox Rox":
+  - /url: /search?site_id[id][]=847
+  - img "Rox"
+  - generic: Rox
+- generic: A left workflow with progress steps and task chips paired with a report side sheet. The task model is easier to scan than a long conversation, but side-sheet content can hide context when reports become substantial.
+- link "Anthropic web screenshot.":
+  - /url: /pages/e9b210d8-9936-4b01-adb8-0e7a8c8bc9c2?source=chat
+  - img "Anthropic web screenshot."
+- link "Anthropic Anthropic":
+  - /url: /search?site_id[id][]=508
+  - img "Anthropic"
+  - generic: Anthropic
+- generic: Prompt editor and response output share equal space. Excellent for iterative comparison; it breaks down when prompts become multi-document projects or outputs need richer manipulation.
+- heading "Persistent navigation with document and file context" [level=3]
+- paragraph: "These layouts prioritize orientation: a stable project shell, a document list or file tree, and an active editor. They handle multiple open artifacts better than chat-first layouts, but agent progress is usually secondary or must be added as another panel."
+- link "Hello Ivy web screenshot.":
+  - /url: /pages/01bdeef9-de7b-4d16-85c2-be55a8f259cf?source=chat
+  - img "Hello Ivy web screenshot."
+- link "Hello Ivy Hello Ivy":
+  - /url: /search?site_id[id][]=602
+  - img "Hello Ivy"
+  - generic: Hello Ivy
+- generic: Navigation, Pages list, and active document editor form a durable three-column shell. Strong for project memory and multiple documents; limited for monitoring long-running agent work.
+- link "Lovable web screenshot. Content Management Page UI":
+  - /url: /pages/51c0e751-f916-4b37-8288-1ae80f8362a8?source=chat
+  - img "Lovable web screenshot. Content Management Page UI"
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- generic: File explorer, code tabs, and a large syntax-highlighted editor. Efficient for source inspection, but agent reasoning and build progress are outside the primary working surface.
+- link "Manus web screenshot.":
+  - /url: /pages/bcf4d2d7-bfb8-478a-a23a-38a2e805ee84?source=chat
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- generic: A narrow icon rail, notes/activity list, file tree, and large editor. This is a strong project-navigation pattern; its risk is cumulative width loss as every context column becomes persistent.
+- link "Matter web screenshot.":
+  - /url: /pages/96f6af6b-0535-49a3-afb4-4d467d2f1865?source=chat
+  - img "Matter web screenshot."
+- link "Matter Matter":
+  - /url: /search?site_id[id][]=752
+  - img "Matter"
+  - generic: Matter
+- generic: "Reading surface paired with a Notebook panel for highlights and notes. Useful research precedent: keep evidence adjacent to the working document instead of burying it in chat."
+- heading "Creative editors with AI as a working tool" [level=3]
+- paragraph: Creative products give the usable artifact most of the canvas and place AI alongside it as an assistant, inspector, or generation panel. This preserves direct manipulation better than a chat-led shell, but agent progress can become visually subordinate to the canvas.
+- link "Synthesia.io web screenshot.":
+  - /url: /pages/7e43fd64-88f1-4063-ac05-bcdb8a0c7035?source=chat
+  - img "Synthesia.io web screenshot."
+- link "Synthesia.io Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - img "Synthesia.io"
+  - generic: Synthesia.io
+- generic: Scene thumbnails, central canvas and timeline, script area, and AI assistant panel. Strong for output inspection and sequencing; crowded when script, timeline, properties, and conversation all demand attention.
+- link "Synthesia.io web screenshot.":
+  - /url: /pages/a5a8a74c-be72-4d82-a4ac-0566b4874088?source=chat
+  - img "Synthesia.io web screenshot."
+- link "Synthesia.io Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - img "Synthesia.io"
+  - generic: Synthesia.io
+- generic: Scene list, central media canvas, and right properties inspector. The inspector is more actionable than a chat response, but it leaves little room for persistent agent history.
+- link "Pryzm web screenshot.":
+  - /url: /pages/8a84287a-0888-4273-8615-d6bcb6d90f69?source=chat
+  - img "Pryzm web screenshot."
+- link "Pryzm Pryzm":
+  - /url: /search?site_id[id][]=944
+  - img "Pryzm"
+  - generic: Pryzm
+- generic: Navigation, preset library, live preview, and detailed controls. A useful four-zone model for substantial tools; it risks turning every new capability into another permanent column.
+- link "Canva web screenshot.":
+  - /url: /pages/31a3c74f-2d50-4bed-b44c-4f7d8819b53b?source=chat
+  - img "Canva web screenshot."
+- link "Canva Canva":
+  - /url: /search?site_id[id][]=94
+  - img "Canva"
+  - generic: Canva
+- generic: Tool rail, central canvas, formatting controls, and full-width timeline. Excellent for direct manipulation and output review; less suited to transparent multi-step agent execution.
+- heading "Flows that expose complex work over time" [level=3]
+- paragraph: "These sequences show how a static workbench can evolve: setup, execution, inspection, and review. They are useful when designing progress states that should not collapse into a single “working” spinner."
+- link:
+  - /url: /flows/12019/6a3afad4-c472-4694-9942-b14523b1386b
+- link "Running high-compute research using AI Agent on Exa":
+  - /url: /search/flows?site_id[id][]=898&order=trending
+  - generic: Running high-compute research using AI Agent
+  - generic: on Exa
+- generic: Moves from imported data and output-schema definition to run monitoring, structured results, and source review.
+- link:
+  - /url: /flows/7751/ef83d488-4ff5-47a9-9c42-42fb105af16d
+- link "Creating new AI session on Factory":
+  - /url: /search/flows?site_id[id][]=734&order=trending
+  - generic: Creating new AI session
+  - generic: on Factory
+- generic: Shows an agent selecting a repository, inspecting files, opening code and configuration, then producing a report with supporting context.
+- link:
+  - /url: /flows/9514/ddc0569f-3cf0-4722-b4f5-2c8371eeb0e3
+- link "Adding example AI Agent on n8n":
+  - /url: /search/flows?site_id[id][]=805&order=trending
+  - generic: Adding example AI Agent
+  - generic: on n8n
+- generic: Combines a workflow canvas with execution status, node output, logs, raw JSON, evaluations, publishing, and version history.
+- text: Compare agent pane behaviors
+- text: Explore file tabs and run history
+- text: Study resizable workspace patterns
+- textbox "Ask follow up…"
+- button [disabled]:

@@ -1,0 +1,76 @@
+{
+  "pack_id": "indicators_010",
+  "section": "Indicators",
+  "parent_shard": "indicators_010",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "price action analysis toolkit development"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 17234,
+      "title": "Price Action Analysis Toolkit Development (Part 14): Parabolic Stop and Reverse Tool",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Parabolic Stop and Reverse Tool",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17234.md"
+    },
+    {
+      "id": 18052,
+      "title": "Price Action Analysis Toolkit Development (Part 22): Correlation Dashboard",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Correlation Dashboard",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18052.md"
+    },
+    {
+      "id": 18297,
+      "title": "Price Action Analysis Toolkit Development (Part 25): Dual EMA Fractal Breaker",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Dual EMA Fractal Breaker",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18297.md"
+    },
+    {
+      "id": 20390,
+      "title": "Price Action Analysis Toolkit Development (Part 53): Pattern Density Heatmap for Support and Resistance Zone Discovery",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Pattern Density Heatmap for Support and Resistance Zone Discovery",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 53,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20390.md"
+    },
+    {
+      "id": 20949,
+      "title": "Price Action Analysis Toolkit Development (Part 55): Designing a CPI Mini-Candle Overlay for Intra-bar Pressure",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Designing a CPI Mini-Candle Overlay for Intra-bar Pressure",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 55,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20949.md"
+    },
+    {
+      "id": 22884,
+      "title": "Price Action Analysis Toolkit Development (Part 72): Building a Gap Fill Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Building a Gap Fill Indicator in MQL5",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 72,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22884.md"
+    },
+    {
+      "id": 23666,
+      "title": "Price Action Analysis Toolkit Development (Part 79): Extending the Indicator Search Panel with Dynamic Input Parameter Configuration",
+      "section": "Indicators",
+      "series_title": "Price Action Analysis Toolkit Development (): Extending the Indicator Search Panel with Dynamic Input Parameter Configuration",
+      "series_key": "price action analysis toolkit development",
+      "series_part": 79,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23666.md"
+    }
+  ]
+}

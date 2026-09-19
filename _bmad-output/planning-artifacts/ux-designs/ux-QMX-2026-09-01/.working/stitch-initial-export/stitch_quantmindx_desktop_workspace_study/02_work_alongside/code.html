@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-fixed-variant":"#003ea8","surface-container-lowest":"#ffffff","surface-container-high":"#e5e8f3","surface":"#f9f9ff","secondary":"#006c4a","secondary-fixed":"#85f8c4","outline":"#737686","primary":"#004ac6","surface-container-low":"#f1f3ff","on-secondary-fixed-variant":"#005137","on-error":"#ffffff","inverse-surface":"#2c3039","on-primary-fixed":"#00174b","on-surface-variant":"#434655","surface-container":"#ebedf9","tertiary-container":"#a65900","surface-dim":"#d7dae5","primary-fixed-dim":"#b4c5ff","on-tertiary-container":"#ffede1","on-primary":"#ffffff","on-secondary":"#ffffff","on-tertiary":"#ffffff","on-tertiary-fixed":"#2f1500","on-secondary-fixed":"#002114","inverse-on-surface":"#eef0fc","on-secondary-container":"#00714e","inverse-primary":"#b4c5ff","tertiary-fixed-dim":"#ffb77d","outline-variant":"#c3c6d7","surface-variant":"#dfe2ed","on-tertiary-fixed-variant":"#6e3900","surface-tint":"#0053db","on-primary-container":"#eeefff","tertiary-fixed":"#ffdcc3","secondary-container":"#82f5c1","primary-fixed":"#dbe1ff","error":"#ba1a1a","on-surface":"#181c24","secondary-fixed-dim":"#68dba9","primary-container":"#2563eb","surface-bright":"#f9f9ff","on-error-container":"#93000a","on-background":"#181c24","surface-container-highest":"#dfe2ed","error-container":"#ffdad6","tertiary":"#824500","background":"#f9f9ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"0.5rem","space-xs":"0.25rem","space-xl":"1rem","space-2xs":"0.125rem","margin":"0px","gutter":"1px","space-sm":"0.375rem","space-lg":"0.75rem"},"fontFamily":{"body-md":["Inter"],"label-dense":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"data-mono-sm":["JetBrains Mono"],"data-mono-lg":["JetBrains Mono"],"headline-sm":["Inter"],"label-mono-tag":["JetBrains Mono"],"data-mono-md":["JetBrains Mono"],"body-lg":["Inter"],"body-sm":["Inter"]},"fontSize":{"body-md":["12px",{"lineHeight":"16px","letterSpacing":"0em","fontWeight":"400"}],"label-dense":["10px",{"lineHeight":"12px","letterSpacing":"0.04em","fontWeight":"600"}],"headline-md":["16px",{"lineHeight":"20px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["20px",{"lineHeight":"24px","letterSpacing":"-0.02em","fontWeight":"600"}],"data-mono-sm":["10px",{"lineHeight":"12px","letterSpacing":"0em","fontWeight":"400"}],"data-mono-lg":["13px",{"lineHeight":"16px","letterSpacing":"-0.02em","fontWeight":"500"}],"headline-sm":["13px",{"lineHeight":"16px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-mono-tag":["9px",{"lineHeight":"10px","letterSpacing":"0.06em","fontWeight":"600"}],"data-mono-md":["11px",{"lineHeight":"14px","letterSpacing":"-0.01em","fontWeight":"500"}],"body-lg":["13px",{"lineHeight":"18px","letterSpacing":"-0.005em","fontWeight":"400"}],"body-sm":["11px",{"lineHeight":"14px","letterSpacing":"0em","fontWeight":"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface select-none"><aside class="fixed left-0 top-0 bottom-0 w-12 bg-inverse-surface z-50 flex flex-col items-center justify-between py-space-sm"><div class="w-full flex flex-col items-center gap-space-sm"><div class="w-8 h-8 flex items-center justify-center bg-primary text-on-primary rounded font-headline-sm text-headline-sm tracking-tighter">QMX</div><div class="w-8 h-px bg-on-surface-variant/30 my-space-2xs"></div><button class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" title="App Launcher"><span class="material-symbols-outlined text-[18px]">grid_view</span></button><nav class="w-full flex flex-col items-center gap-space-xs mt-space-xs" data-active-classes="bg-primary text-on-primary rounded"><a aria-current="page" class="relative w-8 h-8 flex items-center justify-center transition-colors bg-primary text-on-primary rounded" data-path="hermes-agent" href="#" title="Hermes Agent / Liquidity Workspace"><span class="material-symbols-outlined text-[18px]">smart_toy</span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="research-notebook" href="#" title="Cross-Market Research"><span class="material-symbols-outlined text-[18px]">terminal</span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="market-monitor" href="#" title="Market Monitor"><span class="material-symbols-outlined text-[18px]">candlestick_chart</span></a><a class="relative w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="active-runs" href="#" title="Execution Runs &amp; Backtests"><span class="material-symbols-outlined text-[18px]">layers</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-secondary ring-1 ring-inverse-surface"></span></a><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="strategy-library" href="#" title="Model &amp; Strategy Library"><span class="material-symbols-outlined text-[18px]">dataset</span></a></nav></div><div class="w-full flex flex-col items-center gap-space-xs"><a class="w-8 h-8 flex items-center justify-center text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded transition-colors" data-path="terminal-settings" href="#" title="Settings &amp; Workspace Tuning"><span class="material-symbols-outlined text-[18px]">settings</span></a></div></aside><div class="pl-12 min-h-screen flex flex-col justify-between bg-surface"><header class="fixed top-0 left-12 right-0 h-10 bg-inverse-surface z-40 flex items-center justify-between px-space-md"><div class="flex items-center h-full gap-space-2xs overflow-x-auto"><nav class="flex items-center h-full gap-space-2xs" data-active-classes="bg-surface-container-lowest text-on-surface border-t-2 border-primary font-headline-sm"><a aria-current="page" class="flex items-center h-8 px-space-sm transition-colors whitespace-nowrap rounded-t bg-surface-container-lowest text-on-surface border-t-2 border-primary font-headline-sm" data-path="hermes-agent" href="#">Hermes / Liquidity study</a><a class="flex items-center h-8 px-space-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface-variant/20 transition-colors font-headline-sm text-headline-sm whitespace-nowrap rounded-t" data-path="research-notebook" href="#">Research / Cross-market</a><a class="flex items-center h-8 px-space-sm bg-inverse-surface text-inverse-on-surface hover:bg-on-surface-variant/20 transition-colors font-headline-sm text-headline-sm whitespace-nowrap rounded-t" data-path="market-monitor" href="#">Markets</a></nav><button class="h-6 px-space-xs flex items-center gap-space-2xs text-inverse-on-surface hover:text-on-primary hover:bg-on-surface-variant/20 rounded font-label-dense text-label-dense ml-space-2xs" title="Add Environment View"><span class="material-symbols-outlined text-[14px]">add</span><span>Env</span></button></div><div class="flex items-center gap-space-md font-data-mono-sm text-data-mono-sm"><div class="flex items-center gap-space-2xs px-space-xs py-space-2xs rounded bg-surface-container/20 text-inverse-on-surface"><span class="material-symbols-outlined text-[14px]">splitscreen</span><span class="font-label-dense text-label-dense">2x2 Tile</span></div><div class="flex items-center gap-space-2xs px-space-xs py-space-2xs bg-tertiary-container text-on-tertiary-container rounded font-label-mono-tag text-label-mono-tag uppercase font-bold"><span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span><span>Group A</span></div><div class="text-inverse-on-surface font-data-mono-sm text-data-mono-sm tracking-tight">14:22:08 UTC</div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-10 pb-7 bg-surface min-h-[calc(100vh-28px)]"><div class="flex flex-col w-full">
+<!-- SUB-TOOLBAR / WORKBENCH ACTION STRIP -->
+<div class="h-9 w-full bg-surface-container-lowest flex items-center justify-between px-space-md select-none shadow-sm z-10">
+<!-- Left: Session context & collapsed state toggle -->
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="flex items-center gap-space-xs text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px]">terminal</span>
+<span class="font-headline-sm text-headline-sm font-semibold truncate text-on-surface">Hermes / SES-8821: Cost sensitivity &amp; regimes</span>
+</div>
+<span class="text-outline-variant/60">|</span>
+<button class="h-6 px-space-xs flex items-center gap-space-2xs rounded bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition-colors" title="Toggle Session Drawer">
+<span class="material-symbols-outlined text-[15px]">left_panel_close</span>
+<span class="font-data-mono-sm text-data-mono-sm">Dock</span>
+</button>
+<span class="px-space-xs py-0.5 rounded bg-secondary-container/40 text-on-secondary-container font-label-mono-tag text-label-mono-tag uppercase tracking-wider font-semibold">Active Run</span>
+</div>
+<!-- Center: Saved Layout Selector & Link Group Indicators -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Layout:</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface flex items-center gap-space-2xs cursor-pointer hover:text-primary transition-colors">
+          Compare &amp; inspect
+          <span class="material-symbols-outlined text-[14px]">expand_more</span>
+</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<!-- Link Groups -->
+<div class="flex items-center gap-space-xs">
+<span class="font-label-dense text-label-dense uppercase text-on-surface-variant tracking-wider">Sync:</span>
+<div class="flex items-center gap-space-2xs bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded shadow-sm" title="Group A (Linked: EUR/USD &amp; Momentum)">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-mono-tag text-label-mono-tag font-bold">GRP A</span>
+</div>
+<div class="flex items-center gap-space-2xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer" title="Group B (Unassigned)">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span class="font-label-mono-tag text-label-mono-tag">GRP B</span>
+</div>
+</div>
+</div>
+<!-- Right: Quick Tools & Execution Telemetry -->
+<div class="flex items-center gap-space-sm font-data-mono-sm text-data-mono-sm">
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-sm py-1 rounded">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[15px] animate-spin">progress_activity</span>
+<span class="text-on-surface font-medium truncate max-w-[190px]">R-024: 18/36 cases</span>
+</div>
+<div class="w-16 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-300" style="width: 50%;"></div>
+</div>
+<button class="text-primary hover:text-on-primary-fixed-variant text-[10px] font-semibold underline underline-offset-2">Background</button>
+</div>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<div class="flex items-center gap-space-xs">
+<button class="h-6 px-space-xs flex items-center gap-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded transition-colors font-headline-sm text-[11px]">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Tool</span>
+</button>
+<button class="h-6 px-space-xs flex items-center gap-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded transition-colors font-headline-sm text-[11px]">
+<span class="material-symbols-outlined text-[14px]">dashboard_customize</span>
+<span>Grid</span>
+</button>
+<button class="h-6 px-space-sm flex items-center gap-space-2xs bg-primary hover:bg-primary-container text-on-primary rounded transition-colors font-headline-sm text-[11px] shadow-sm">
+<span class="material-symbols-outlined text-[14px]">bookmark</span>
+<span>Save</span>
+</button>
+</div>
+</div>
+</div>
+<!-- INTERIOR WORKSPACE (MANUS CONVERSATION LEFT + DOCK GRID RIGHT) -->
+<div class="w-full flex h-[calc(100vh-100px)] min-h-[640px] bg-surface-container overflow-hidden gap-gutter p-gutter">
+<!-- ========================================================================= -->
+<!-- LEFT COLUMN: Compact Agent Working Conversation (Manus Copilot Engine) -->
+<!-- ========================================================================= -->
+<section class="w-[420px] shrink-0 bg-surface-container-lowest flex flex-col shadow-sm rounded-sm overflow-hidden">
+<!-- Agent Pane Header -->
+<div class="h-7 px-space-sm bg-surface-container-high flex items-center justify-between shrink-0">
+<div class="flex items-center gap-space-xs min-w-0">
+<div class="w-4 h-4 rounded bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[11px]">smart_toy</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">Hermes Agent</span>
+<span class="text-outline-variant/60 text-[10px]">•</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface-variant font-medium">SES-8821</span>
+</div>
+<div class="flex items-center gap-space-2xs text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary" title="Agent online"></span>
+<button class="w-5 h-5 flex items-center justify-center hover:bg-surface-container-highest rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">unfold_less</span>
+</button>
+</div>
+</div>
+<!-- Agent Message & Task Stream (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-space-sm flex flex-col gap-space-sm bg-surface-bright text-on-surface">
+<!-- Human Input Query Card -->
+<div class="flex flex-col gap-1 self-end max-w-[92%]">
+<div class="flex items-center gap-space-xs justify-end text-on-surface-variant font-data-mono-sm text-[10px]">
+<span>14:18:22</span>
+<span class="font-semibold text-on-surface">Analyst</span>
+</div>
+<div class="bg-surface-container-high text-on-surface p-space-sm rounded-lg rounded-tr-none text-body-md font-body-md leading-relaxed shadow-sm">
+            Investigate whether this momentum signal survives realistic costs across <span class="font-semibold text-primary">BTC-USDT</span>, <span class="font-semibold text-tertiary">EUR/USD</span>, and <span class="font-semibold text-primary-container">SPY</span>. Run slippage sweep from 0 to 6 bps.
+          </div>
+</div>
+<!-- Agent Response Container -->
+<div class="flex flex-col gap-space-xs self-start w-full">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-data-mono-sm text-[10px]">
+<span class="font-semibold text-primary">Hermes Copilot</span>
+<span class="text-outline-variant/60">•</span>
+<span>Synthesizing parameters</span>
+</div>
+<div class="bg-surface-container-low text-on-surface p-space-sm rounded-lg rounded-tl-none flex flex-col gap-space-sm shadow-sm">
+<p class="font-body-md text-body-md leading-snug">
+              Executing multi-asset cost sweep across <strong>36 parameter permutations</strong> (4 slippage brackets × 3 turnover variants × 3 assets).
+            </p>
+<!-- Active Run Card -->
+<div class="bg-surface-container-lowest p-space-sm rounded shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-primary text-[16px] animate-spin">autorenew</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">Run R-024: momentum_cost_sweep</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-bold">50%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-primary h-full transition-all duration-500 rounded-full" style="width: 50%;"></div>
+</div>
+<!-- Asset Sub-progress Matrix -->
+<div class="grid grid-cols-3 gap-space-2xs pt-space-2xs">
+<div class="bg-surface-container-low p-space-xs rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between text-[10px] font-label-dense">
+<span class="text-on-surface font-semibold">BTC-USDT</span>
+<span class="material-symbols-outlined text-secondary text-[12px]">check_circle</span>
+</div>
+<span class="font-data-mono-sm text-[10px] text-secondary font-medium">12/12 done</span>
+</div>
+<div class="bg-tertiary-fixed/30 p-space-xs rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between text-[10px] font-label-dense">
+<span class="text-tertiary font-bold">EUR/USD</span>
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+</div>
+<span class="font-data-mono-sm text-[10px] text-tertiary font-semibold">6/12 active</span>
+</div>
+<div class="bg-surface-container-low p-space-xs rounded flex flex-col gap-0.5">
+<div class="flex items-center justify-between text-[10px] font-label-dense">
+<span class="text-on-surface-variant font-semibold">SPY</span>
+<span class="material-symbols-outlined text-outline text-[12px]">schedule</span>
+</div>
+<span class="font-data-mono-sm text-[10px] text-on-surface-variant">0/12 queued</span>
+</div>
+</div>
+<!-- Run Control buttons -->
+<div class="flex items-center justify-between pt-space-2xs font-data-mono-sm text-[11px]">
+<button class="text-primary hover:text-on-primary-fixed-variant font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">tune</span>
+                  Inspect telemetry
+                </button>
+<button class="text-on-surface-variant hover:text-on-surface flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">terminal</span>
+                  Stdout (124 L)
+                </button>
+</div>
+</div>
+<!-- Agent Diagnostic Finding Note -->
+<div class="bg-tertiary-fixed/40 p-space-sm rounded flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[18px] shrink-0 mt-0.5">warning</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-headline-sm text-headline-sm text-tertiary font-semibold">EUR/USD Breakdown Identified</span>
+<p class="font-body-md text-body-md text-on-surface leading-snug">
+                  EUR/USD displays steep Sharpe ratio decay past <strong>3.0 bps</strong> fee threshold due to high mean turnover (3.2x daily). Linked panels updated in <strong>Group A</strong> for immediate drilldown.
+                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Agent Prompt Input Bar -->
+<div class="p-space-sm bg-surface-container-lowest shrink-0 flex flex-col gap-space-xs shadow-inner">
+<div class="flex items-center justify-between text-[10px] font-data-mono-sm text-on-surface-variant">
+<span>Model: QMX-Hermes-Quant-v2</span>
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Ready
+          </span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-low text-on-surface text-body-md font-body-md rounded px-space-sm py-space-xs pr-8 focus:outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary placeholder:text-outline-variant" placeholder="Direct Hermes or write Python expression..." type="text" value="rerun VAR-07 with dynamic volatility slippage filter"/>
+<button class="absolute right-1.5 w-6 h-6 flex items-center justify-center bg-primary hover:bg-primary-container text-on-primary rounded transition-colors shadow-sm" title="Execute instruction">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- RIGHT TWO THIRDS: Bloomberg Launchpad Tiled Research Grid                 -->
+<!-- ========================================================================= -->
+<div class="flex-1 flex flex-col gap-gutter min-w-0 overflow-hidden">
+<!-- TOP ROW: Python Code Editor (55%) + Performance Chart (45%) -->
+<div class="h-[48%] flex gap-gutter w-full min-w-0 overflow-hidden">
+<!-- PANEL 1: Python Editor -->
+<div class="w-[54%] bg-surface-container-lowest flex flex-col shadow-sm rounded-sm overflow-hidden min-w-0">
+<!-- Pane Header -->
+<div class="h-7 px-space-sm bg-surface-container-high flex items-center justify-between shrink-0">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-label-mono-tag text-label-mono-tag font-bold">A</span>
+<div class="flex items-center gap-1 overflow-x-auto">
+<span class="px-space-xs py-0.5 bg-surface-container-lowest text-on-surface font-data-mono-sm text-[11px] font-semibold rounded-t shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[13px]">code</span>
+                  momentum.py
+                  <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</span>
+<span class="px-space-xs py-0.5 text-on-surface-variant hover:text-on-surface font-data-mono-sm text-[11px] cursor-pointer">cost_model.py</span>
+<span class="px-space-xs py-0.5 text-on-surface-variant hover:text-on-surface font-data-mono-sm text-[11px] cursor-pointer">fees_baseline.yaml</span>
+</div>
+</div>
+<div class="flex items-center gap-space-2xs text-on-surface-variant">
+<button class="px-space-xs h-5 bg-surface-container hover:bg-surface-container-highest text-on-surface text-[10px] font-data-mono-sm rounded flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px] text-secondary">play_arrow</span> Run Sel
+              </button>
+<button class="w-5 h-5 flex items-center justify-center hover:bg-surface-container-highest rounded text-on-surface-variant" title="Diff with v11">
+<span class="material-symbols-outlined text-[13px]">difference</span>
+</button>
+<button class="w-5 h-5 flex items-center justify-center hover:bg-surface-container-highest rounded text-on-surface-variant" title="Maximize">
+<span class="material-symbols-outlined text-[13px]">open_in_full</span>
+</button>
+</div>
+</div>
+<!-- Code View with Synthetic Syntax Coloring -->
+<div class="flex-1 bg-surface text-on-surface font-data-mono-md text-data-mono-md overflow-auto p-space-xs leading-5 select-text">
+<div class="flex">
+<!-- Line Numbers -->
+<div class="flex flex-col text-outline-variant pr-space-sm select-none font-data-mono-sm text-right w-8">
+<span>139</span>
+<span>140</span>
+<span>141</span>
+<span>142</span>
+<span>143</span>
+<span>144</span>
+<span class="text-tertiary font-bold">145</span>
+<span>146</span>
+<span>147</span>
+<span>148</span>
+</div>
+<!-- Code Buffer -->
+<div class="flex-1 flex flex-col whitespace-pre pl-space-xs">
+<div><span class="text-primary font-medium">class</span> <span class="text-on-surface font-bold">RegimeMomentumEvaluator</span>:</div>
+<div class="text-outline-variant italic">    """Calculates decay surfaces under tier-based taker fees."""</div>
+<div></div>
+<div> <span class="text-primary font-medium">def</span> <span class="text-on-primary-fixed-variant font-semibold">compute_regime_decay</span>(self, returns, turnover, slippage_model):</div>
+<div>        costs = turnover * slippage_model.effective_spread(returns.volatility)</div>
+<div class="text-tertiary font-medium bg-tertiary-fixed/30 px-1 rounded"> <span class="italic"># EUR/USD high sensitivity under low-volatility compression</span></div>
+<div class="bg-primary-fixed/30 px-1 rounded font-semibold">        net_pnl = returns.pnl - costs</div>
+<div> <span class="text-primary font-medium">return</span> calculate_sharpe(net_pnl, risk_free_rate=0.045)</div>
+<div></div>
+<div> <span class="text-primary font-medium">def</span> <span class="text-on-primary-fixed-variant font-semibold">export_sensitivities</span>(self, asset_basket):</div>
+</div>
+</div>
+</div>
+<!-- Code Editor Footer Status -->
+<div class="h-5 px-space-sm bg-surface-container-high text-on-surface-variant font-data-mono-sm text-[10px] flex items-center justify-between shrink-0 select-none">
+<div class="flex items-center gap-space-sm">
+<span>Ln 145, Col 28</span>
+<span class="text-outline-variant/60">|</span>
+<span>Python 3.11.8 (quant-node-04)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span>4 spaces</span>
+<span class="text-outline-variant/60">|</span>
+<span>UTF-8</span>
+</div>
+</div>
+</div>
+<!-- PANEL 2: Performance & Decay Interactive Chart -->
+<div class="w-[46%] bg-surface-container-lowest flex flex-col shadow-sm rounded-sm overflow-hidden min-w-0">
+<!-- Pane Header -->
+<div class="h-7 px-space-sm bg-surface-container-high flex items-center justify-between shrink-0">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-label-mono-tag text-label-mono-tag font-bold">A</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">Chart: Net Sharpe vs Slippage Tier (bps)</span>
+</div>
+<div class="flex items-center gap-space-2xs text-on-surface-variant">
+<div class="flex items-center bg-surface-container-low rounded p-0.5 text-[10px] font-label-dense">
+<span class="px-1.5 py-0.5 bg-surface-container-lowest text-on-surface rounded shadow-sm">Decay Curve</span>
+<span class="px-1.5 py-0.5 text-on-surface-variant hover:text-on-surface cursor-pointer">DD Horizon</span>
+</div>
+<button class="w-5 h-5 flex items-center justify-center hover:bg-surface-container-highest rounded text-on-surface-variant" title="Maximize">
+<span class="material-symbols-outlined text-[13px]">open_in_full</span>
+</button>
+</div>
+</div>
+<!-- Chart Area with Bespoke Micro-Grid & SVG Curves -->
+<div class="flex-1 p-space-sm flex flex-col justify-between relative bg-surface-bright select-none">
+<!-- Legend bar with Group A linkage -->
+<div class="flex items-center justify-between text-data-mono-sm text-data-mono-sm z-10">
+<div class="flex items-center gap-space-sm">
+<!-- BTC-USDT -->
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-1 bg-secondary rounded-full"></span>
+<span class="text-on-surface font-medium">BTC-USDT</span>
+<span class="text-secondary font-bold">1.35 SR</span>
+</div>
+<!-- SPY -->
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-1 bg-primary rounded-full"></span>
+<span class="text-on-surface font-medium">SPY</span>
+<span class="text-primary font-bold">0.85 SR</span>
+</div>
+<!-- EUR/USD (Active Selection) -->
+<div class="flex items-center gap-1.5 bg-tertiary-fixed/60 px-1.5 py-0.5 rounded">
+<span class="w-2.5 h-1.5 bg-tertiary rounded-full"></span>
+<span class="text-tertiary font-bold">EUR/USD [GRP A]</span>
+<span class="text-error font-bold">-0.21 SR</span>
+</div>
+</div>
+<span class="text-outline-variant font-label-mono-tag text-label-mono-tag uppercase">Cost: 0-6 bps</span>
+</div>
+<!-- SVG Vector Plot -->
+<div class="relative w-full h-[180px] my-auto">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 460 180">
+<defs>
+<!-- EUR/USD Area subtle gradient -->
+<lineargradient id="eurDecayGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#824500" stop-opacity="0.18"></stop>
+<stop offset="100%" stop-color="#824500" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Grid lines (Horizontal: Sharpe Ratios) -->
+<line stroke="#e5e8f3" stroke-dasharray="3,3" stroke-width="1" x1="30" x2="450" y1="20" y2="20"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="end" x="25" y="24">2.0</text>
+<line stroke="#e5e8f3" stroke-dasharray="3,3" stroke-width="1" x1="30" x2="450" y1="60" y2="60"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="end" x="25" y="64">1.0</text>
+<!-- Zero Line (Critical boundary) -->
+<line stroke="#737686" stroke-width="1.2" x1="30" x2="450" y1="110" y2="110"></line>
+<text class="fill-on-surface-variant font-data-mono-sm text-[9px] font-bold" text-anchor="end" x="25" y="114">0.0</text>
+<line stroke="#e5e8f3" stroke-dasharray="3,3" stroke-width="1" x1="30" x2="450" y1="150" y2="150"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="end" x="25" y="154">-0.5</text>
+<!-- Vertical tick guides (0, 1.5, 3.0, 4.5, 6.0 bps) -->
+<line stroke="#f1f3ff" stroke-width="1" x1="40" x2="40" y1="20" y2="160"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="middle" x="40" y="172">0.0</text>
+<line stroke="#f1f3ff" stroke-width="1" x1="140" x2="140" y1="20" y2="160"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="middle" x="140" y="172">1.5</text>
+<!-- Critical 3.0 bps threshold vertical line -->
+<line stroke="#a65900" stroke-dasharray="2,2" stroke-width="1" x1="240" x2="240" y1="20" y2="160"></line>
+<text class="fill-tertiary font-data-mono-sm text-[9px] font-bold" text-anchor="middle" x="240" y="172">3.0 bps</text>
+<line stroke="#f1f3ff" stroke-width="1" x1="340" x2="340" y1="20" y2="160"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="middle" x="340" y="172">4.5</text>
+<line stroke="#f1f3ff" stroke-width="1" x1="440" x2="440" y1="20" y2="160"></line>
+<text class="fill-outline-variant font-data-mono-sm text-[9px]" text-anchor="middle" x="440" y="172">6.0</text>
+<!-- SERIES 1: BTC-USDT (Secondary / Green) - resilient decay -->
+<path d="M 40 18 C 140 24, 240 38, 440 48" fill="none" stroke="#006c4a" stroke-linecap="round" stroke-width="2.2"></path>
+<circle cx="40" cy="18" fill="#006c4a" r="3"></circle>
+<circle cx="240" cy="38" fill="#006c4a" r="3"></circle>
+<circle cx="440" cy="48" fill="#006c4a" r="3.5"></circle>
+<!-- SERIES 2: SPY (Primary / Blue) - moderate decay -->
+<path d="M 40 44 C 140 56, 240 68, 440 76" fill="none" stroke="#004ac6" stroke-linecap="round" stroke-width="2.2"></path>
+<circle cx="40" cy="44" fill="#004ac6" r="3"></circle>
+<circle cx="240" cy="68" fill="#004ac6" r="3"></circle>
+<circle cx="440" cy="76" fill="#004ac6" r="3.5"></circle>
+<!-- SERIES 3: EUR/USD (Active Highlight: Amber/Gold) - steep collapse -->
+<path d="M 40 36 C 120 48, 190 76, 240 110 C 275 130, 340 144, 440 156" fill="none" stroke="#824500" stroke-linecap="round" stroke-width="3"></path>
+<!-- Shading below 0 for EUR/USD -->
+<polygon fill="url(#eurDecayGrad)" points="240,110 440,156 440,160 240,160"></polygon>
+<!-- EUR/USD Key inflection points -->
+<circle cx="40" cy="36" fill="#824500" r="3.5"></circle>
+<circle cx="140" cy="54" fill="#824500" r="3.5"></circle>
+<circle cx="240" cy="110" fill="#ba1a1a" r="5" stroke="#ffffff" stroke-width="1.5"></circle>
+<circle cx="280" cy="128" fill="#824500" r="4.5" stroke="#ffffff" stroke-width="1"></circle>
+</svg>
+<!-- Interactive Floating Callout Annotation Pin -->
+<div class="absolute left-[242px] top-[46px] bg-inverse-surface text-inverse-on-surface px-space-xs py-1 rounded shadow-md font-body-sm text-[10px] pointer-events-none flex flex-col gap-0.5 z-20">
+<div class="flex items-center gap-1 font-bold text-tertiary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  EUR/USD Breakeven (3.1 bps)
+                </div>
+<span class="text-inverse-on-surface">Decays from 1.62 to -0.21! Fails realistic spreads.</span>
+</div>
+</div>
+<!-- Bottom chart mini-meta -->
+<div class="flex items-center justify-between text-on-surface-variant font-data-mono-sm text-[10px] pt-1">
+<span>Model: Taker Half-Spread + Volatility Impact Curve</span>
+<span class="text-tertiary font-medium">Confidence: 94.2% based on tick data</span>
+</div>
+</div>
+</div>
+</div>
+<!-- BOTTOM ROW: Results Comparison Matrix (Dense Quantitative Data Grid) (52%) -->
+<div class="h-[52%] bg-surface-container-lowest flex flex-col shadow-sm rounded-sm overflow-hidden min-w-0">
+<!-- Panel 3 Header & Micro Controls -->
+<div class="h-7 px-space-sm bg-surface-container-high flex items-center justify-between shrink-0">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-label-mono-tag text-label-mono-tag font-bold">A</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">Results Matrix: Cost Sensitivity (Run R-024: 18/36 completed)</span>
+<span class="px-space-xs py-0.5 bg-tertiary-container text-on-tertiary-container rounded font-label-mono-tag text-[9px] uppercase font-semibold">Group A Filter Active</span>
+</div>
+<div class="flex items-center gap-space-xs font-data-mono-sm text-[11px]">
+<div class="flex items-center gap-1 bg-surface-container-low px-space-xs py-0.5 rounded text-on-surface">
+<span class="text-on-surface-variant">Filter:</span>
+<span class="font-medium cursor-pointer flex items-center">All Assets <span class="material-symbols-outlined text-[13px]">expand_more</span></span>
+</div>
+<button class="h-5 px-space-xs bg-surface-container hover:bg-surface-container-highest rounded text-on-surface flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">download</span> Export CSV
+            </button>
+<button class="w-5 h-5 flex items-center justify-center hover:bg-surface-container-highest rounded text-on-surface-variant" title="Maximize">
+<span class="material-symbols-outlined text-[13px]">open_in_full</span>
+</button>
+</div>
+</div>
+<!-- Quantitative Data Table -->
+<div class="flex-1 overflow-auto bg-surface-container-lowest">
+<table class="w-full border-collapse text-left font-data-mono-sm text-data-mono-sm">
+<!-- Header Row -->
+<thead class="sticky top-0 bg-surface-container-high z-10 select-none shadow-sm">
+<tr class="h-6 text-on-surface-variant font-label-dense text-label-dense uppercase tracking-wider">
+<th class="px-space-sm font-semibold w-16">Variant</th>
+<th class="px-space-sm font-semibold w-24">Asset</th>
+<th class="px-space-sm font-semibold w-28">Sample Horizon</th>
+<th class="px-space-sm font-semibold text-right w-24">Ann. Return</th>
+<th class="px-space-sm font-semibold text-right w-24">Max Drawdown</th>
+<th class="px-space-sm font-semibold text-right w-24">Turnover/Day</th>
+<th class="px-space-sm font-semibold text-right w-28">Cost Assumption</th>
+<th class="px-space-sm font-semibold text-right w-20">Net Sharpe</th>
+<th class="px-space-sm font-semibold text-center w-28">Status</th>
+</tr>
+</thead>
+<!-- Body Rows -->
+<tbody class="divide-y divide-surface-container-high/60">
+<!-- Row 1: BTC Low cost -->
+<tr class="h-6 hover:bg-surface-container-low transition-colors text-on-surface">
+<td class="px-space-sm font-semibold text-on-surface-variant">VAR-01</td>
+<td class="px-space-sm font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> BTC-USDT
+                </td>
+<td class="px-space-sm text-on-surface-variant">2019-2024</td>
+<td class="px-space-sm text-right font-medium text-secondary">+28.4%</td>
+<td class="px-space-sm text-right text-error font-medium">-18.2%</td>
+<td class="px-space-sm text-right">1.8x</td>
+<td class="px-space-sm text-right text-on-surface-variant">1.5 bps (low)</td>
+<td class="px-space-sm text-right font-bold text-secondary">1.84</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container font-label-mono-tag text-[9px] uppercase font-semibold">Completed</span>
+</td>
+</tr>
+<!-- Row 2: BTC Mid cost -->
+<tr class="h-6 hover:bg-surface-container-low transition-colors text-on-surface">
+<td class="px-space-sm font-semibold text-on-surface-variant">VAR-02</td>
+<td class="px-space-sm font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> BTC-USDT
+                </td>
+<td class="px-space-sm text-on-surface-variant">2019-2024</td>
+<td class="px-space-sm text-right font-medium text-secondary">+21.6%</td>
+<td class="px-space-sm text-right text-error font-medium">-22.1%</td>
+<td class="px-space-sm text-right">1.8x</td>
+<td class="px-space-sm text-right text-on-surface-variant">3.5 bps (mid)</td>
+<td class="px-space-sm text-right font-bold text-secondary">1.48</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container font-label-mono-tag text-[9px] uppercase font-semibold">Completed</span>
+</td>
+</tr>
+<!-- Row 3: EUR/USD Selected Base (Group A Linked) -->
+<tr class="h-6 bg-tertiary-fixed/50 hover:bg-tertiary-fixed/70 transition-colors text-on-surface relative">
+<td class="px-space-sm font-bold text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-tertiary">chevron_right</span>
+                  VAR-07
+                </td>
+<td class="px-space-sm font-bold text-tertiary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> EUR/USD <span class="text-[9px] bg-tertiary-fixed text-on-tertiary-fixed px-1 rounded">SYNC A</span>
+</td>
+<td class="px-space-sm font-medium text-on-surface">2019-2024</td>
+<td class="px-space-sm text-right font-bold text-secondary">+7.2%</td>
+<td class="px-space-sm text-right text-error font-medium">-14.6%</td>
+<td class="px-space-sm text-right font-medium text-tertiary">3.2x</td>
+<td class="px-space-sm text-right font-medium text-on-surface">1.5 bps (base)</td>
+<td class="px-space-sm text-right font-bold text-secondary">1.41</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container font-label-mono-tag text-[9px] uppercase font-semibold">Completed</span>
+</td>
+</tr>
+<!-- Row 4: EUR/USD Selected Stress (Group A Linked & Failing) -->
+<tr class="h-6 bg-tertiary-fixed/30 hover:bg-tertiary-fixed/50 transition-colors text-on-surface">
+<td class="px-space-sm font-bold text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-tertiary">chevron_right</span>
+                  VAR-08
+                </td>
+<td class="px-space-sm font-bold text-tertiary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> EUR/USD
+                </td>
+<td class="px-space-sm font-medium text-on-surface">2019-2024</td>
+<td class="px-space-sm text-right font-bold text-error">-1.8%</td>
+<td class="px-space-sm text-right text-error font-medium">-24.9%</td>
+<td class="px-space-sm text-right font-medium text-tertiary">3.2x</td>
+<td class="px-space-sm text-right font-medium text-error">3.0 bps (stress)</td>
+<td class="px-space-sm text-right font-bold text-error bg-error-container/40 rounded">-0.18</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container/50 text-on-secondary-container font-label-mono-tag text-[9px] uppercase font-semibold">Completed</span>
+</td>
+</tr>
+<!-- Row 5: EUR/USD In Progress -->
+<tr class="h-6 hover:bg-surface-container-low transition-colors text-on-surface">
+<td class="px-space-sm font-semibold text-on-surface-variant">VAR-09</td>
+<td class="px-space-sm font-medium flex items-center gap-1 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> EUR/USD
+                </td>
+<td class="px-space-sm text-on-surface-variant">2019-2024</td>
+<td class="px-space-sm text-right text-error font-medium">-6.4%</td>
+<td class="px-space-sm text-right text-error font-medium">-31.2%</td>
+<td class="px-space-sm text-right">3.2x</td>
+<td class="px-space-sm text-right text-on-surface-variant">4.5 bps (stress)</td>
+<td class="px-space-sm text-right font-bold text-error">-0.82</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-primary-fixed text-primary font-label-mono-tag text-[9px] uppercase font-bold flex items-center justify-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span> In Progress
+                  </span>
+</td>
+</tr>
+<!-- Row 6: SPY Queued -->
+<tr class="h-6 hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<td class="px-space-sm font-semibold">VAR-13</td>
+<td class="px-space-sm font-medium flex items-center gap-1 text-on-surface">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> SPY
+                </td>
+<td class="px-space-sm">2019-2024</td>
+<td class="px-space-sm text-right text-secondary font-medium">+14.1%</td>
+<td class="px-space-sm text-right text-error">-12.4%</td>
+<td class="px-space-sm text-right">0.9x</td>
+<td class="px-space-sm text-right">0.5 bps (base)</td>
+<td class="px-space-sm text-right font-semibold text-on-surface">1.36</td>
+<td class="px-space-sm text-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-mono-tag text-[9px] uppercase font-semibold">Queued (Batch 3)</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Status Strip -->
+<div class="h-6 px-space-sm bg-surface-container-high flex items-center justify-between text-on-surface-variant font-data-mono-sm text-[10px] shrink-0 select-none">
+<div class="flex items-center gap-space-md">
+<span>Showing <strong>18 of 36</strong> parameter cases</span>
+<span class="text-outline-variant/60">|</span>
+<span class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[12px]">sync</span> Auto-refresh on batch completion
+            </span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="text-tertiary font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Linked selection: EUR/USD in Group A
+            </span>
+<span class="text-outline-variant/60">|</span>
+<span class="text-outline">Compute node: node-04-gpu-a100</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main><footer class="fixed bottom-0 left-12 right-0 h-7 bg-inverse-surface z-40 flex items-center justify-between px-space-md font-data-mono-sm text-data-mono-sm text-inverse-on-surface"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary"></span><span>Engine: quant-node-04</span></div><span class="text-outline-variant">|</span><div class="text-inverse-on-surface">1.4ms</div></div><div class="flex items-center gap-space-md text-inverse-on-surface"><span class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary">sync</span>Runs: 1 active (R-024: momentum_cost_sweep)</span><span class="text-outline-variant">|</span><span>Mem: 4.2 / 32 GB</span></div><div class="flex items-center gap-space-md"><span class="font-label-mono-tag text-label-mono-tag px-space-xs py-space-2xs rounded bg-surface-container/20 text-inverse-on-surface uppercase">Illustrative Data</span><span class="text-inverse-on-surface">QMX v3.4.2 Desktop</span></div></footer></div></body></html>

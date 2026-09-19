@@ -1,0 +1,369 @@
+# Building a Research-Grounded Grid EA in MQL5: Why Most Grid EAs Fail and What Taranto Proved
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 27 March 2026 at 06:16
+8 677
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+0](https://www.mql5.com/en/forum/507449 "Comments")
+[Muhammad Minhas Qamar](https://www.mql5.com/en/users/ayantrader)
+### Introduction
+Grid trading has a reputation problem. Ask any experienced trader about grid Expert Advisors and the response is predictable: "It looks great until it blows your account." They are not wrong. The well-known MQL5 article [*Grid and martingale: what are they and how to use them?*](https://www.mql5.com/en/articles/8390) demonstrates mathematically that a naive grid converges toward ruin. Countless forum threads and blown demo accounts confirm the pattern: steady profits for weeks or months, then a catastrophic loss that wipes everything in days.
+But dismissing grid trading entirely based on these failures is, to borrow a phrase from the academic literature, "a gross over-simplification of the resulting stochastic system." The same mathematics that proves why unconstrained grids fail also reveals exactly what makes a *constrained, restartable* grid survivable and under what conditions it can be profitably operated.
+This article is based on [Aldo Taranto's PhD research](https://research.usq.edu.au/item/q7q62/bi-directional-grid-constrained-stochastic-processes-and-their-applications-in-mathematical-finance "https://research.usq.edu.au/item/q7q62/bi-directional-grid-constrained-stochastic-processes-and-their-applications-in-mathematical-finance") at the University of Southern Queensland (2020–2022). The research formalized grid trading as a Bi-Directional Grid Constrained (BGC) stochastic process, derived conditions for positive expected value, and proved that unconstrained operation leads to almost sure ruin. It also identified the mechanism that prevents ruin: finite, restartable cycles with regime-aware gating.
+The Expert Advisor presented here is not a naive grid. It is a regime-adaptive cycle manager with three modes (BGT for ranging, TGT for trending, and MGT for post-trend mean reversion). It also includes ATR-dynamic spacing, equity-based lot sizing, CUSUM structural-break detection, and a diagnostics pipeline with companion Python tools.
+We will cover:
+- [The Grid Trading Problem Is Not the Gambler's Ruin Problem](https://www.mql5.com/en/articles/21833#the_grid_trading_problem_is_not_the_gambler_s_ruin)
+- [The Loss Formula and the Live Kill Switch](https://www.mql5.com/en/articles/21833#the_loss_formula_and_the_live_kill_switch)
+- [Variance Growth, Almost Sure Ruin, and the Restart Mechanism](https://www.mql5.com/en/articles/21833#variance_growth_almost_sure_ruin_and_the_restart)
+- [ATR-Dynamic Spacing and Dynamic Lot Sizing](https://www.mql5.com/en/articles/21833#atr_dynamic_spacing_and_dynamic_lot_sizing)
+- [Regime Detection — VolatilityGate and Change Point Detection](https://www.mql5.com/en/articles/21833#regime_detection_volatilitygate_and_change_point)
+- [Three Grid Modes — BGT, TGT, and MGT](https://www.mql5.com/en/articles/21833#three_grid_modes_bgt_tgt_and_mgt)
+- [Production Design — Start Gates, Persistence, and Diagnostics](https://www.mql5.com/en/articles/21833#production_design_start_gates_persistence_and)
+- [Strategy Testing](https://www.mql5.com/en/articles/21833#strategy_testing)
+- [The Diagnostics Pipeline — Analyzing and Calibrating Your Grid](https://www.mql5.com/en/articles/21833#the_diagnostics_pipeline_analyzing_and_calibrating)
+- [Conclusion](https://www.mql5.com/en/articles/21833#conclusion)
+The complete source code for the EA, all nine header modules, and both companion Python scripts are attached at the end of this article.
+### The Grid Trading Problem Is Not the Gambler's Ruin Problem
+The most consequential mistake in the grid-trading discourse is the assumption that grid EAs are martingale systems with a different skin. They are not. Taranto & Khan (2020) proved that the Grid Trading Problem (GTP) and the Gambler's Ruin Problem (GRP) are mathematically distinct processes with fundamentally different loss accumulation rates.
+Martingale: Exponential Loss Growth
+In a classical martingale (the Gambler's Ruin Problem), the bet is doubled after every loss. After n consecutive adverse steps, the cumulative loss is 2^n. This is exponential growth. Ten adverse steps require 1,024 units of capital to survive. Twenty steps require over a million. The death spiral is fast and unforgiving; every serious trader correctly warns against martingale strategies.
+Grid Trading: Triangular Loss Growth
+In a bi-directional grid (the Grid Trading Problem), the strategy does not double the bet. Instead, it accumulates one new losing position at each grid level the price traverses. After n levels of directional movement, the cumulative loss is not 2^n but the **triangular number** n(n+1)/2. This is quadratic growth, substantially slower than exponential.
+The practical difference is dramatic:
+Fig. 1. Martingale vs. Grid loss growth
+| Adverse levels reached | Martingale loss (2^n) | Grid loss (n(n+1)/2) | Grid survival advantage |
+| --- | --- | --- | --- |
+| 1 | 2 | 1 | 2x |
+| 3 | 8 | 6 | 1.3x |
+| 5 | 32 | 15 | 2.1x |
+| 8 | 256 | 36 | 7.1x |
+| 10 | 1,024 | 55 | 18.6x |
+At 10 adverse moves, a martingale EA needs 1,024 units of capital to survive. A grid EA needs only 55, roughly 18 times less. This is the fundamental survival advantage of grid trading over martingale. It does not make grids safe. It makes them *engineerable*: the slower loss growth gives you time to detect adverse conditions and intervene before the damage becomes terminal.
+The Formal Distinction: Semimartingale
+Taranto formalized this difference through the BGC stochastic differential equation:
+dX = [f(X,t) - sgn[X,t] · Ψ(X,t)] dt + g(X,t) dW\_t
+The key term here is the BGC constraining function Ψ(X,t) . This captures the mathematical effect of the grid: the further price drifts from the grid origin, the more the structure resists. This is not a hard barrier; it is a soft, graduated resistance that increases with distance. The grid creates hidden reflective barriers that emerge from the interaction between the grid structure and price movement.
+Because of this constraining function, the GTP is classified as a semimartingale — a stochastic process that can have genuine positive expectation under the right conditions. A pure martingale (like the Gambler's Ruin) has zero expected drift by definition. A semimartingale can have positive drift. This is the mathematical foundation for why grid trading can work when properly constrained, while martingale strategies cannot.
+The GTP probability of the trader winning, starting with i coins at grid level x out of a total n coins, was derived as Theorem 52 in the thesis:
+P(Trader wins | grid level x) = [1 - ((x+1)/2)^i] / [1 - ((x+1)/2)^n]
+The key observation is that the win probability stays stable across many grid levels but collapses near a characteristic threshold. This matches exactly what traders observe in practice: the grid looks safe for an extended period, then the account blows up "suddenly." The mathematics shows that the transition is not sudden at all: the ruin probability was climbing all along, but the cliff-like decay makes it invisible until it is too late. A kill switch that fires well before the cliff is what makes the difference.
+### The Loss Formula and the Live Kill Switch
+The single most practically powerful result in the research is the **total loss formula**. It tells you your entire floating loss exposure at any moment from just two measurements: how far price has fallen from its session high, and how far it has risen from its session low.
+Definitions
+Drawdown D\_t — the distance that the price has fallen from its highest point since the grid cycle started, measured in grid levels:
+D\_t = floor((SessionHigh - CurrentPrice) / g) — where g is the grid spacing in price units.
+Drawup U\_t — the distance that the price has risen from its lowest point since the grid cycle started, measured in grid levels:
+U\_t = floor((CurrentPrice - SessionLow) / g)
+From these two numbers, the total loss exposure is:
+L\_t = 1/2 \* (D\_t^2 + D\_t + U\_t^2 + U\_t) — the Taranto & Khan loss formula, giving total losing trade exposure in grid-level units.
+A Concrete Example
+Consider a grid with spacing g = 50 pips, anchored at 1.1000. Price rises to a session high of 1.1250, then falls to a session low of 1.0850, and currently sits at 1.0900. Note that D\_t is measured from session high to current price, not from the anchor, so it spans both the upside excursion and the partial retracement.
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Building a Research-Grounded Grid EA in MQL5: Why Most Grid EAs Fail and What Taranto Proved
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+### Introduction
+Grid trading has a reputation problem. Ask any experienced trader about grid Expert Advisors and the response is predictable: "It looks great until it blows your account." They are not wrong. The well-known MQL5 article [*Grid and martingale: what are they and how to use them?*](https://www.mql5.com/en/articles/8390) demonstrates mathematically that a naive grid converges toward ruin. Countless forum threads and blown demo accounts confirm the pattern: steady profits for weeks or months, then a catastrophic loss that wipes everything in days.
+The Expert Advisor presented here is not a naive grid. It is a regime-adaptive cycle manager with three modes (BGT for ranging, TGT for trending, and MGT for post-trend mean reversion). It also includes ATR-dynamic spacing, equity-based lot sizing, CUSUM structural-break detection, and a diagnostics pipeline with companion Python tools.
+We will cover:
+- [The Grid Trading Problem Is Not the Gambler's Ruin Problem](https://www.mql5.com/en/articles/21833#the_grid_trading_problem_is_not_the_gambler_s_ruin)
+- [The Loss Formula and the Live Kill Switch](https://www.mql5.com/en/articles/21833#the_loss_formula_and_the_live_kill_switch)
+- [Variance Growth, Almost Sure Ruin, and the Restart Mechanism](https://www.mql5.com/en/articles/21833#variance_growth_almost_sure_ruin_and_the_restart)
+- [ATR-Dynamic Spacing and Dynamic Lot Sizing](https://www.mql5.com/en/articles/21833#atr_dynamic_spacing_and_dynamic_lot_sizing)
+- [Regime Detection — VolatilityGate and Change Point Detection](https://www.mql5.com/en/articles/21833#regime_detection_volatilitygate_and_change_point)
+- [Three Grid Modes — BGT, TGT, and MGT](https://www.mql5.com/en/articles/21833#three_grid_modes_bgt_tgt_and_mgt)
+- [Production Design — Start Gates, Persistence, and Diagnostics](https://www.mql5.com/en/articles/21833#production_design_start_gates_persistence_and)
+- [The Diagnostics Pipeline — Analyzing and Calibrating Your Grid](https://www.mql5.com/en/articles/21833#the_diagnostics_pipeline_analyzing_and_calibrating)
+- [Conclusion](https://www.mql5.com/en/articles/21833#conclusion)
+The complete source code for the EA, all nine header modules, and both companion Python scripts are attached at the end of this article.
+### The Grid Trading Problem Is Not the Gambler's Ruin Problem
+The most consequential mistake in the grid-trading discourse is the assumption that grid EAs are martingale systems with a different skin. They are not. Taranto & Khan (2020) proved that the Grid Trading Problem (GTP) and the Gambler's Ruin Problem (GRP) are mathematically distinct processes with fundamentally different loss accumulation rates.
+
+P(Trader wins | grid level x) = [1 - ((x+1)/2)^i] / [1 - ((x+1)/2)^n]
+The key observation is that the win probability stays stable across many grid levels but collapses near a characteristic threshold. This matches exactly what traders observe in practice: the grid looks safe for an extended period, then the account blows up "suddenly." The mathematics shows that the transition is not sudden at all: the ruin probability was climbing all along, but the cliff-like decay makes it invisible until it is too late. A kill switch that fires well before the cliff is what makes the difference.
+### The Loss Formula and the Live Kill Switch
+The single most practically powerful result in the research is the **total loss formula**. It tells you your entire floating loss exposure at any moment from just two measurements: how far price has fallen from its session high, and how far it has risen from its session low.
+Fig. 2. Lt formula visualization showing Dt, Ut, and losing positions on grid levels
+The Ruin Proximity Ratio
+Taranto's L\_t formula is mathematically correct under the model's assumptions: flat lots at every level, each level fills exactly once, and the grid does not re-arm closed levels. Our EA violates all three.
+With re-arming, the same grid level can fill, take profit, re-arm, fill again, and lose again, all within one cycle. The L\_t formula counts each level once based on session extremes; the actual damage can be higher. Conversely, the Refraction Principle (Theorem 57 in the thesis) proves that for oscillatory paths, L\_t *overestimates* exposure because it uses session extremes rather than tracking the specific order in which levels were crossed.
+//| Compute theoretical Lt in grid-level units                       |
+//| (Taranto & Khan formula: Lt = 1/2(Dt^2 + Dt + Ut^2 + Ut))        |
+//+------------------------------------------------------------------+
+double ComputeLt(const GridSession &session, double bid)
+//--- Tighter threshold for MGT (post-trend recovery)
+double effectiveKillThreshold = InpRuinThreshold;
+if(g_session.gridMode == GRID_MODE_MGT && InpMGTKillThreshold > 0)
+   effectiveKillThreshold = InpMGTKillThreshold;
+//--- Only fire when real money is at risk (not a blocked zero-position cycle)
+bool cycleIsEmpty = (g_cycleBlocked && openPositionCount == 0);
+if(!cycleIsEmpty && cycleDrawdown >= effectiveKillThreshold)
+{
+   if(g_session.gridMode == GRID_MODE_TGT)
+   g_session.cycleCount++;
+   g_stateManager.ClearState();
+   StartNewCycle();
+   return;
+
+The kill switch computes cycleDrawdown as the percentage drop from cycle-start equity, using [AccountInfoDouble](https://www.mql5.com/en/docs/account/accountinfodouble) with ACCOUNT\_EQUITY. Two nuances are worth noting. First, MGT mode (the post-trend mean-reversion mode covered in Section 6) supports a tighter kill threshold because MGT cycles carry higher structural risk. Second, the cycleIsEmpty guard prevents the kill switch from firing on a blocked cycle with zero open positions. Without this, an empty paused cycle would repeatedly trigger exit logic and generate runaway fake cycle counts. When the kill fires on a TGT cycle, the flag g\_lastCycleWasTGTKill tells the next cycle to enter MGT mode.
+### Variance Growth, Almost Sure Ruin, and the Restart Mechanism
+Understanding why grid EAs fail is the foundation on which every safety mechanism is designed. The research identifies two mathematical processes that cause failure, and proving both rigorously is what makes the survival mechanism defensible rather than hopeful.
+E[E\_t] = E\_0 · exp([v·t + (2v·mu\_t/g) - (v·sigma\_t^2/g) - (2v^2·sigma\_t^2/g^2)] · t)
+The parameters: E\_0 is starting equity, v is profit per grid level, g is grid spacing, mu\_t is drift (trend strength), sigma\_t is diffusion (volatility, measurable as ATR), and t is time elapsed. But the critical finding is the variance:
+Var[E\_t] grows as exp(4v^2 · sigma\_t^2 / g^2 · t)
+This proves mathematically what experienced grid traders observe: a grid running for 200 hours is dramatically more dangerous than one running for 20 hours, *even if the equity curve looks similar*. The variance, the range of possible outcomes expands exponentially. The probability of a catastrophic event increases the longer a single cycle persists.
+- lim (x approaches infinity) P(Trader wins) = 0
+- lim (x approaches infinity) P(Broker wins) = 1
+If price keeps trending and the grid keeps extending, the trader will be ruined with probability 1. The thesis qualifies this: the result "assumes that the trend continues indefinitely, which is not the case in practice." The proof is an upper bound on ruin probability. But the structural implication is clear:
+No grid EA can run indefinitely without a restart mechanism. This is a mathematical proof, not conjecture. The restart is not a stop-loss — it is a variance reset that restores finite ruin probability for the next cycle.
+v·t + (2v·mu\_t/g) > (v·sigma\_t^2/g) + (2v^2·sigma\_t^2/g^2)
+The left side is accumulation — time-based wins plus drift contribution. The right side is the variance penalty. When volatility sigma\_t is moderate and drift mu\_t is low (ranging market), the left side dominates. When a strong trend emerges, the condition fails. Restart ensures profitable periods are crystallized before variance erodes the gains.
+Theory vs. reality: Like L\_t, the profitability condition is directionally correct but not quantitatively precise for production. The exact threshold where it flips depends on re-arming frequency, spread costs, and the specific path through the grid. We use the condition to understand which regime the grid should operate in (the sigma\_t/mu\_t ratio), not to compute a go/no-go signal per tick.
+Here is the profit-target basket close — the core restart logic:
+   //--- Close the entire basket in one shot
+   g_session.state = GRID_STATE_CLOSING;
+   int closedCount = g_gridCore.CloseAllPositions(g_session, profitOrphans);
+   {
+      g_session.state = GRID_STATE_ACTIVE;
+      return;
+   }
+   g_session.cycleCount++;
+   g_stateManager.ClearState();
+
+   //--- Restart — variance clock resets here
+The profit check compares current equity with cycle-start equity, using either a percentage target or a fixed dollar target. The default is a 3% profit target per cycle. When the target is hit, CloseAllPositions() closes the basket, with a remaining-positions guard that retries on the next tick if the broker did not execute all closures in one pass. After confirmation, the cycle counter increments, saved state clears, and StartNewCycle() re-anchors at the current price with fresh ATR-computed spacing and equity-based lot size. The variance clock resets here.
+![Animated illustration of profit-target basket close and cycle restart](https://c.mql5.com/2/202/5365720827938.gif "Variance Growth and Restart Mechanism")
+The Four Market States
+The interplay between drift mu\_t and volatility sigma\_t determines whether the grid operates in positive or negative expected value territory:
+| Market state | Drift mu\_t | Volatility sigma\_t | Grid outcome |
+| --- | --- | --- | --- |
+| Ranging + volatile | Low | High | Best — rapid profit collection, frequent level closures |
+| Ranging + quiet | Low | Low | Good — slow but steady profit accumulation |
+| Trending + volatile | High | High | Survivable — counter-trend chop provides relief |
+| Trending + quiet | High | Low | Worst — clean trend, maximum loss accumulation |
+The danger scenario is not high volatility that generates the counter-trend oscillations that close winners. The danger is a **low-volatility directional trend**: price moves cleanly through level after level, accumulating losses at the triangular rate without counter-moves. This "quiet trend" is the specific condition the regime detection system in Section 5 is designed to identify. The "trending + volatile" state being survivable rather than fatal is the insight that motivates TGT mode in Section 6 — if the trend can be identified, the grid can harvest it rather than fight it.
+| --- | --- | --- |
+| sigma\_t (volatility) | Dominant | The single most important runtime variable |
+| mu\_t (drift) | Dominant | Second most important — trending is the primary danger |
+| g (grid width) | Moderate | Affects when ruin occurs, not whether it occurs |
+This has a direct architectural consequence: the EA's design effort must be concentrated on measuring and responding to sigma\_t and mu\_t. Optimizing grid spacing or lot size without addressing the regime is working on the wrong problem. This is why the system dedicates VolatilityGate and CPDEngine to regime detection, and why it has three grid algorithms for different sigma\_t/mu\_t conditions.
+### ATR-Dynamic Spacing and Dynamic Lot Sizing
+Although the sensitivity analysis shows grid spacing g has only moderate impact compared to sigma\_t and mu\_t, a fixed spacing that was safe at last month's volatility can be dangerously tight at this month's. The thesis (GA optimization study, Section 10.6.2) found that the optimal static spacing for forex corresponded to roughly 10–15% of the Average Daily Range — implying that spacing should scale with the instrument's current volatility, not be a hardcoded constant.
+ATR-Dynamic Grid Spacing
+
+The EA recalculates grid spacing at each cycle restart from a dedicated D1-timeframe ATR handle. The formula is straightforward: g = ATR(period, D1) × multiplier, clamped to a configurable floor and ceiling. Spacing is not changed mid-cycle — the grid level structure would become inconsistent. The cycle restart is the natural recalibration point.
+An important design decision: the spacing ATR uses the daily timeframe (D1) while the regime detection ATR uses **H4**. These are different questions. Spacing wants a broad daily-range estimate to size the grid ladder. Regime detection wants a multi-hour signal responsive enough to matter within a cycle that typically lives hours to a few days.
+```
+//+------------------------------------------------------------------+
+//| ATR-dynamic grid spacing — recalculated at each cycle start      |
+double ComputeATRSpacing()
+{
+   if(!InpUseATRSpacing || g_spacingATRHandle == INVALID_HANDLE)
+      return InpGridSpacing * SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   double atrBuffer[];
+   ArraySetAsSeries(atrBuffer, true);
+   if(CopyBuffer(g_spacingATRHandle, 0, 1, 1, atrBuffer) <= 0)
+   {
+      PrintFormat("[BGC Grid] ATR spacing buffer copy failed; using fixed spacing");
+   }
+   double atrValue = atrBuffer[0];
+   double spacingPrice = atrValue * InpATRSpacingMultiplier;
+   //--- Clamp to [min, max] in price units
+The function reads the completed D1 ATR (bar index 1, avoiding the incomplete bar 0) via [CopyBuffer](https://www.mql5.com/en/docs/series/copybuffer), multiplies by InpATRSpacingMultiplier (default 0.12), and clamps to a [min, max] point range. It falls back to fixed spacing if the ATR handle is invalid or the buffer copy fails. The result is normalized to the symbol's digit precision with [NormalizeDouble](https://www.mql5.com/en/docs/convert/normalizedouble).
+A subtle consequence: when ATR-dynamic spacing is active, the ATR/spacing magnitude check inside VolatilityGate becomes self-calibrating (ATR / (ATR × multiplier) = 1/multiplier), making it uninformative. The implementation skips that check and relies solely on the drift-based sigma/mu test.
+
+Dynamic Base Lot Sizing
+### Regime Detection — VolatilityGate and Change Point Detection
+The sensitivity finding from Section 3 established that sigma\_t and mu\_t dominate the equity process. This section implements the response: a two-layer regime detection system that answers two different questions. VolatilityGate asks "are conditions favorable for BGT re-arming right now?" CPDEngine asks "has the process structurally shifted?"
+VolatilityGate — The Continuous Filter
+VolatilityGate computes three things on the regime timeframe (H4 by default): ATR (the sigma\_t proxy), drift magnitude (the mu\_t proxy), and the sigma\_t/mu\_t ratio. High ratio means volatility dominates drift, safe for bi-directional grid trading. Low ratio means drift dominates, dangerous.
+The drift formula deserves particular attention. It uses the average absolute bar-by-bar MA change over the lookback window:
+mu\_t = (1/N) × Σ |MA[i] - MA[i+1]| for i = 0...N-1
+This is the research-correct proxy for instantaneous drift magnitude from the Itô SDE. The critical detail: it uses absolute changes, not net displacement. Net displacement can cancel to zero when a trend reverses within the window, falsely reporting "no drift" during a whipsaw period. The absolute version accumulates the true magnitude of directional movement.
+//+------------------------------------------------------------------+
+//| Compute sigma_t/mu_t ratio                                       |
+//| High = ranging (safe), Low = trending (dangerous)                |
+double ComputeSigmaMuRatio()
+{
+   double atr   = GetATRValue();
+   double drift = ComputeDrift();
+   {
+      m_lastSigmaMuRatio = 999;  //--- effectively no drift = pure ranging
+      return m_lastSigmaMuRatio;
+   }
+   m_lastSigmaMuRatio = MathMin(atr / drift, 999.0);
+   return m_lastSigmaMuRatio;
+}
+```
+
+When drift is extremely small, sigma/mu is capped at 999, effectively indicating pure ranging. The ratio feeds into a cooldown mechanism: when sigma/mu drops below InpMinSigmaMuRatio (default 5.0), the system marks conditions as unfavorable. BGT re-arming pauses. N consecutive favorable regime-timeframe bars must clear before resuming, preventing rapid pause/resume oscillation. Crucially, the drift gate applies to BGT only, TGT and MGT bypass it because they are designed for the very conditions the gate detects.
+CPDEngine — The Structural Break Detector
+VolatilityGate is a continuous, smoothed signal that transitions gradually. CPD (Change Point Detection) adds a discrete structural break signal: it detects the moment when the underlying process shifts from one regime to another. The EA implements a frozen-baseline CUSUM algorithm: it collects an initial baseline window, freezes that baseline, then accumulates deviations. When the cumulative sum crosses a scaled threshold, a structural break is declared.
+The baseline is intentionallyfrozen after initialization, not recomputed on a rolling basis. A rolling baseline would adapt toward the very trend it is supposed to detect, defeating the purpose. The frozen baseline keeps the reference regime fixed long enough for genuine structural drift to accumulate.
+### Three Grid Modes — BGT, TGT, and MGT
+The thesis formalized three distinct grid algorithms, each designed for a specific market regime. The current EA pauses during unfavorable conditions (via VolatilityGate). The thesis implies that pausing is conservative, not optimal. During a detected trend, a trend-following grid can harvest the directional movement rather than sitting idle.
+The default ranging-market mode. Both buy and sell sides are armed at each grid level above and below the anchor, with fixed take-profit at the next adjacent level. An optional buy-bias mode (InpBuyBiasAboveAnchor) can skip sell orders above the anchor for instruments with a structural upward drift. BGT is the mode described by the mathematical framework in Sections 1–3. Its failure mode is directional trends that create one profitable side and one accumulating losing side.
+TGT — Trending Grid Trading
+The trend-following mode. Only stop orders in the trend direction are placed. Uptrend means buy stops above the anchor, downtrend means sell stops below. No trade is placed at the origin (avoiding an immediately losing position against the trend). The defining characteristic: **no per-trade take-profit**. Positions remain open and accumulate as the trend continues. The basket exits only through the profit target, kill switch, age limit, or weekend close. This variable-TP design allows TGT to behave like a scaled pyramid entry rather than a grid that closes winners too early.
+TGT activates through two paths: a soft trigger when sigma/mu drops below InpTGTSigmaMuThreshold (drift dominating volatility), or a **hard trigger** when CPD fires a structural break. Its failure mode is a false trend signal followed by immediate reversal, carrying open positions in the trend direction with no hedge.
+MGT — Mean-Reversion Grid Trading
+The temporary post-trend recovery mode. Counter-trend limit orders only: sell limits above the anchor, buy limits below. Fixed take-profit toward the anchor. MGT is the structural inverse of TGT. It anticipates that an extended trend will revert. It triggers when the previous TGT cycle ended via kill switch or regime restart (g\_lastCycleWasTGTKill = true). MGT is intentionally exempt from mid-cycle regime checks, otherwise DetermineGridMode() would often flip it out of MGT on its first new bar, destroying the intended recovery behavior.
+| TP per trade | Fixed (next level) | Variable (basket) | Fixed (toward anchor) |
+| Best regime | Ranging | Trending | Post-trend reversion |
+Mode Selection Logic
+//+------------------------------------------------------------------+
+//| Regime-adaptive mode selection — three-tier priority             |
+ENUM_GRID_MODE DetermineGridMode()
+   //--- Priority 2b: TGT — sigma/mu below threshold (soft signal)
+   if(InpEnableTGT)
+   {
+      double sigmaMu = g_volatilityGate.ComputeSigmaMuRatio();
+      if(sigmaMu < InpTGTSigmaMuThreshold)
+         return GRID_MODE_TGT;
+   }
+
+(1) MGT — if the previous TGT cycle was killed (kill switch or regime restart), enter mean-reversion mode. The trigger flag is consumed so it fires once. **(2)** TGT — two paths: a hard signal from CPD forces TGT regardless of sigma/mu, or a soft signal when sigma/mu drops below the threshold indicating drift dominates. (3) BGT — the default for ranging conditions. This implements the thesis's regime-adaptive cycling: BGT → TGT → MGT → BGT.
+### Production Design — Start Gates, Persistence, and Diagnostics
+A critical design principle is that a new cycle does not always start immediately. The research establishes that deploying a grid into a confirmed trend is the primary ruin scenario. StartNewCycle() runs through three gate checks before arming the grid:
+      g_cycleBlocked = true;
+      g_session.state = GRID_STATE_PAUSED;
+      return;
+   //--- ... ATR spacing, session init, dynamic lot sizing ...
+   //--- Gate 3: BGT disabled — wait for TGT/MGT conditions
+StateManager saves cycle state (anchor, spacing, session extremes, equity baseline, cycle count, grid mode, trend direction) to MQL5 global variables. Tickets are *not* persisted. On resume, GridCore::RecoverPositions() scans actual open positions from the broker and maps them back by price proximity. This makes the recovery robust to broker-side ticket reassignment. StateManager also supports ATR-dynamic spacing mismatches so that a spacing recalculation between sessions does not falsely invalidate resumable state.
+Weekend Rules
+A weekend flat close forces all positions closed on Friday at a configurable hour and delays restart until Monday. This protects against gap risk that the continuous diffusion model which underpins the entire mathematical framework does not account for. The weekend close is implemented as a cycle-ending event: it increments the cycle counter, clears saved state, and the Monday restart goes through all the same start gates as any normal cycle.
+The Diagnostics Pipeline
+The EA relies on structured CSV diagnostics instead of journal-only inspection. DiagnosticLog.mqh buffers three datasets in memory: **BarSnapshot** (30 fields per bar), DiagCycleSummary (28 fields per completed cycle), and DiagEventRecord (7 fields per event: covering cycle starts/ends, drift pauses, CPD fires, mode switches, regime restarts, weekend events, and more). These flush to CSV in MetaTrader's common files directory during OnDeinit() or OnTester().
+Two companion Python scripts complete the pipeline. *analyze\_backtest.py* loads the latest CSV outputs, runs 10 bug-detection checks, prints 13 text-analysis sections, and optionally generates 8 diagnostic charts. *calibrate\_parameters.py* loads all CSV files across all backtest dates, optionally pulls MT5 historical data, and runs six calibration passes: variance age curves, Theorem 53 kill-switch validation, sigma/mu threshold derivation, profitability-condition zone analysis, expected-steps validation, and multi-timeframe regime detection. Together they provide a research-grade toolkit for validating and refining the EA's parameters against empirical data.
+### Strategy Testing
+The full system was backtested on the Strategy Tester with the following configuration. The input settings and results are shown below.
+![Equity curve from the Strategy Tester backtest showing cycle restarts and regime transitions](https://c.mql5.com/2/201/4033692662469.png "Strategy Tester equity curve")
+![Backtest results summary showing key performance metrics](https://c.mql5.com/2/201/783092020208.png "Strategy Tester results")
+Fig. 6. Strategy Tester results summary
+### The Diagnostics Pipeline — Analyzing and Calibrating Your Grid
+
+The EA writes structured CSV diagnostics automatically during every backtest and live session. Two companion Python scripts transform that raw data into actionable analysis. This section shows how to use them and what they produce.
+Both scripts expect the CSV files in MetaTrader's common files directory (typically %APPDATA%/MetaQuotes/Terminal/Common/Files on Windows). The EA writes three files per run with a BGC prefix: bar snapshots (30 fields per bar), cycle summaries (28 fields per completed cycle), and an event log (7 fields per event covering cycle starts, kills, drift pauses, CPD fires, mode switches, weekend events, and more).
+analyze\_backtest.py — Post-Run Diagnostics
+This script loads the latest set of CSVs and produces immediate diagnostic output. Run it from the command line:
+```
+python analyze_backtest.py [csv_dir] [--no-charts] [--date YYYYMMDD]
+With no arguments, it defaults to the MetaTrader common files directory and picks the latest CSVs by date suffix. The --date flag selects a specific run. The --no-charts flag skips chart generation for fast text-only analysis.
+The script prints 13 text-analysis sections covering cycle statistics (count, duration, profit distribution by mode), drawdown analysis, regime detection behavior, kill switch activations, and re-arming patterns. It also runs 10 automated bug-detection checks that flag anomalies such as zombie cycles (excessively long duration), orphaned positions, or mode classification inconsistencies. When charts are enabled, it generates 8 diagnostic PNGs into an analysis\_output/ directory — including equity curves with cycle boundaries marked, drawdown heatmaps, and mode distribution histograms.
+While analyze\_backtest.py examines a single run, calibrate\_parameters.py loads *all* CSVs across all dates — aggregating data from multiple backtests to derive statistically robust parameter recommendations. Run it with:
+The --no-mt5 flag skips direct MT5 historical data access when it is unavailable (e.g., running on a machine without MetaTrader installed). The script runs six calibration passes:
+1. Variance age curve — plots realized cycle variance against cycle age in hours, validating the exponential variance growth finding from Section 3 against your actual backtest data. This is what calibrates InpMaxCycleHours.
+2. Theorem 53 kill-switch validation — computes the theoretical ruin probability at your current grid configuration and compares it against the observed kill-switch firing rate. This validates whether InpRuinThreshold is in the correct region for your account size and grid depth.
+3. Sigma/mu threshold derivation — analyzes the relationship between the sigma\_t/mu\_t ratio at cycle start and eventual cycle outcome (profit vs kill). This calibrates InpMinSigmaMuRatio and InpTGTSigmaMuThreshold.
+4. Profitability-condition zone analysis — maps which combinations of volatility and drift produced profitable cycles versus losing cycles, validating the four-quadrant market states from Section 3.
+5. Expected-steps validation — compares the theoretical expected number of grid-level crossings before absorption against the observed cycle lengths.
+6. Multi-timeframe regime detection — evaluates whether the current InpRegimeTF choice (default H4) produces the best regime classification accuracy across the historical data.
+The Workflow
+The intended usage is a feedback loop: run a backtest in MetaTrader (CSVs are written automatically) → run analyze\_backtest.py for immediate diagnostics and bug detection → accumulate multiple backtests across different parameter settings or time periods → run calibrate\_parameters.py to derive refined parameters → apply the recommendations and repeat. This positions the EA not as a black box but as a research instrument with a built-in empirical validation pipeline.
+### Conclusion
+This article presented a research-grounded approach to grid trading that addresses the known mathematical failure modes through constrained, restartable cycles with regime-aware gating. The key findings that drive the architecture are:
+- Grid trading is not martingale. Loss accumulation follows the triangular number series (quadratic), not exponential doubling. This makes grid EAs engineerable — the slower loss growth provides time for detection and intervention.
+- The L\_t formula gives constant-time risk visibility. Total loss exposure can be computed from two measurements without inspecting individual positions. In practice, we use L\_t for diagnostics and direct equity measurement for the live kill switch, because the formula's assumptions (flat lots, no re-arming) differ from the production EA.
+- Equity variance grows exponentially with cycle time. An older cycle is mathematically more dangerous than a younger one. This justifies unconditional age-based restart as a structural necessity.
+- Unconstrained grid operation leads to almost sure ruin. This is a proven theorem. Restart is the structural response — resetting both the variance clock and the grid level.
+- sigma\_t and mu\_t dominate everything. Grid spacing and lot size are secondary. The architecture is centered on measuring and responding to the volatility/drift regime through VolatilityGate and CPDEngine.
+- Three algorithms for three markets. BGT harvests ranging conditions, TGT follows confirmed trends, MGT captures post-trend reversion. The mode selection logic adapts at each cycle restart based on the detected regime.
+- ATR-dynamic spacing and equity-compounding lots make the grid adaptive to current market conditions rather than dependent on hardcoded constants.
+- Restart is not failure. The research proves that a single indefinite cycle converges to ruin. Profitable restart cycles are the mechanism of survival — they reset variance, crystallize gains, and re-enter the favorable zone.
+
+| ProfitMonitor.mqh | Cycle profit logic and position counting |
+| VolatilityGate.mqh | ATR/drift regime filter with cooldown mechanism |
+| CPDEngine.mqh | Frozen-baseline CUSUM structural break detector |
+| StateManager.mqh | Cycle state persistence via MQL5 global variables |
+| DiagnosticLog.mqh | CSV diagnostic logging (bar snapshots, cycle summaries, events) |
+| analyze\_backtest.py | Post-run analysis: 13 text sections, 10 bug checks, 8 chart outputs |
+| calibrate\_parameters.py | Cross-run calibration: variance age curves, sigma/mu threshold derivation, Theorem 53 validation |
+- [*Gambler's Ruin Problem and Bi-Directional Grid Constrained Trading and Investment Strategies* — IMFI, 2020](https://www.researchgate.net/publication/343655940_Gambler'%20rel= "https://www.researchgate.net/publication/343655940_Gambler%27s_ruin_problem_and_bi-directional_grid_constrained_trading_and_investment_strategies")
+![Developing Market Entropy Indicator: Trading System Based on Information Theory](https://c.mql5.com/2/202/21743-developing-market-entropy-indicator-logo.png)
+[Developing Market Entropy Indicator: Trading System Based on Information Theory](https://www.mql5.com/en/articles/21743)
+This article explores the development of a Market Entropy Indicator based on principles from Information Theory to measure the uncertainty and information content within financial markets. By applying concepts such as Shannon Entropy to price movements, the indicator quantifies whether the market is structured (trending), transitioning, or chaotic.
+![MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline](https://c.mql5.com/2/202/21823-metatrader-5-machine-learning-logo__1.png)
+[MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline](https://www.mql5.com/en/articles/21823)
+​This article integrates the Optuna hyperparameter optimization (HPO) backend into a unified ModelDevelopmentPipeline. It adds joint tuning of model hyperparameters and sample-weight schemes, early pruning with Hyperband, and crash-resistant SQLite study storage. The pipeline auto-detects primary vs. secondary models, prepends a fitted column-dropping preprocessor for safe inference, supports sequential bootstrapping, generates an Optuna report, and includes bid/ask and LearnedStrategy links. Readers get faster, resumable runs and deployable, self-contained models.
+
+----- CONCLUSION -----
+
+### Conclusion
+
+This article presented a research-grounded approach to grid trading that addresses the known mathematical failure modes through constrained, restartable cycles with regime-aware gating. The key findings that drive the architecture are:
+
+- Grid trading is not martingale. Loss accumulation follows the triangular number series (quadratic), not exponential doubling. This makes grid EAs engineerable — the slower loss growth provides time for detection and intervention.
+- The L\_t formula gives constant-time risk visibility. Total loss exposure can be computed from two measurements without inspecting individual positions. In practice, we use L\_t for diagnostics and direct equity measurement for the live kill switch, because the formula's assumptions (flat lots, no re-arming) differ from the production EA.
+- Equity variance grows exponentially with cycle time. An older cycle is mathematically more dangerous than a younger one. This justifies unconditional age-based restart as a structural necessity.
+- Unconstrained grid operation leads to almost sure ruin. This is a proven theorem. Restart is the structural response — resetting both the variance clock and the grid level.
+- sigma\_t and mu\_t dominate everything. Grid spacing and lot size are secondary. The architecture is centered on measuring and responding to the volatility/drift regime through VolatilityGate and CPDEngine.
+- Three algorithms for three markets. BGT harvests ranging conditions, TGT follows confirmed trends, MGT captures post-trend reversion. The mode selection logic adapts at each cycle restart based on the detected regime.
+- ATR-dynamic spacing and equity-compounding lots make the grid adaptive to current market conditions rather than dependent on hardcoded constants.
+- Restart is not failure. The research proves that a single indefinite cycle converges to ruin. Profitable restart cycles are the mechanism of survival — they reset variance, crystallize gains, and re-enter the favorable zone.
+
+Disclaimer: This article is for educational purposes. Grid trading involves significant financial risk. The mathematical proofs presented here demonstrate both the potential and the limitations of constrained grid systems. Always test thoroughly on demo accounts before risking live funds. Past backtest performance does not guarantee future results.
+
+All code referenced in the article is attached below. The following table describes the source code files.
+
+| File name | Description |
+| --- | --- |
+| GridEA.mq5 | Main EA file — orchestrator, inputs, cycle management, runtime policy |
+| Defines.mqh | Shared enums, structs, constants, and session model |
+| GridCore.mqh | Order placement, sync, re-arm, close, and recovery for BGT/TGT/MGT |
+| LotEngine.mqh | Per-level lot sizing with mild multiplier and dynamic shrink modes |
+| LtMonitor.mqh | L\_t computation, RPR, Theorem 52/53 diagnostics, path-aware tracking |
+| ProfitMonitor.mqh | Cycle profit logic and position counting |
+| VolatilityGate.mqh | ATR/drift regime filter with cooldown mechanism |
+| CPDEngine.mqh | Frozen-baseline CUSUM structural break detector |
+| StateManager.mqh | Cycle state persistence via MQL5 global variables |
+| DiagnosticLog.mqh | CSV diagnostic logging (bar snapshots, cycle summaries, events) |
+| analyze\_backtest.py | Post-run analysis: 13 text sections, 10 bug checks, 8 chart outputs |
+| calibrate\_parameters.py | Cross-run calibration: variance age curves, sigma/mu threshold derivation, Theorem 53 validation |
+
+- [*Gambler's Ruin Problem and Bi-Directional Grid Constrained Trading and Investment Strategies* — IMFI, 2020](https://www.researchgate.net/publication/343655940_Gambler'%20rel= "https://www.researchgate.net/publication/343655940_Gambler%27s_ruin_problem_and_bi-directional_grid_constrained_trading_and_investment_strategies")
+- [*Drawdown and Drawup of Bi-Directional Grid Constrained Stochastic Processes* — JMS, 2020](https://www.researchgate.net/publication/344238885_Drawdown_and_Drawup_of_Bi-Directional_Grid_Constrained_Stochastic_Processes "https://www.researchgate.net/publication/344238885_Drawdown_and_Drawup_of_Bi-Directional_Grid_Constrained_Stochastic_Processes")
+- [*Application of Bi-Directional Grid Constrained Stochastic Processes to Algorithmic Trading* — JMS, 2021](https://www.researchgate.net/publication/349836417_Application_of_Bi-Directional_Grid_Constrained_Stochastic_Processes_to_Algorithmic_Trading "https://www.researchgate.net/publication/349836417_Application_of_Bi-Directional_Grid_Constrained_Stochastic_Processes_to_Algorithmic_Trading")
+- [*Iterated Logarithm Bounds of Bi-Directional Grid Constrained Stochastic Processes* — GSA, 2021](https://www.researchgate.net/publication/354921641_ITERATED_LOGARITHM_BOUNDS_OF_BI-DIRECTIONAL_GRID_CONSTRAINED_STOCHASTIC_PROCESSES "https://www.researchgate.net/publication/354921641_ITERATED_LOGARITHM_BOUNDS_OF_BI-DIRECTIONAL_GRID_CONSTRAINED_STOCHASTIC_PROCESSES")
+- [*Bi-Directional Grid Constrained Stochastic Processes and Their Applications in Mathematical Finance* — PhD Thesis, 2022](https://research.usq.edu.au/item/q7q62/bi-directional-grid-constrained-stochastic-processes-and-their-applications-in-mathematical-finance "https://research.usq.edu.au/item/q7q62/bi-directional-grid-constrained-stochastic-processes-and-their-applications-in-mathematical-finance")
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/21833.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/21833/MQL5.zip "Download MQL5.zip")
+(69.29 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Introduction to MQL5 (Part 43): Beginner Guide to File Handling in MQL5 (V)](https://c.mql5.com/2/202/21728-introduction-to-mql5-part-43-logo.png)
+[Introduction to MQL5 (Part 43): Beginner Guide to File Handling in MQL5 (V)](https://www.mql5.com/en/articles/21728)
+
+The article explains how to use MQL5 structures with binary files to persist Expert Advisor parameters. It covers defining structures, accessing members, and distinguishing simple from complex layouts, then writing and reading entire records using FileWriteStruct and FileReadStruct in FILE BIN mode. You will learn safe patterns for fixed-size data and how shared storage (FILE COMMON) enables reuse across sessions and terminals.
+
+![Neural Networks in Trading: Adaptive Detection of Market Anomalies (DADA)](https://c.mql5.com/2/126/Neural_Networks_in_Trading_Adaptive_Market_Anomaly_Detection__LOGO_.png)
+[Neural Networks in Trading: Adaptive Detection of Market Anomalies (DADA)](https://www.mql5.com/en/articles/17549)
+
+We invite you to get acquainted with the DADA framework, which is an innovative method for detecting anomalies in time series. It helps distinguish random fluctuations from suspicious deviations. Unlike traditional methods, DADA is flexible and adapts to different data. Instead of a fixed compression level, it uses several options and chooses the most appropriate one for each case.
+
+![Developing Market Entropy Indicator: Trading System Based on Information Theory](https://c.mql5.com/2/202/21743-developing-market-entropy-indicator-logo.png)
+[Developing Market Entropy Indicator: Trading System Based on Information Theory](https://www.mql5.com/en/articles/21743)
+
+This article explores the development of a Market Entropy Indicator based on principles from Information Theory to measure the uncertainty and information content within financial markets. By applying concepts such as Shannon Entropy to price movements, the indicator quantifies whether the market is structured (trending), transitioning, or chaotic.
+
+![MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline](https://c.mql5.com/2/202/21823-metatrader-5-machine-learning-logo__1.png)
+[MetaTrader 5 Machine Learning Blueprint (Part 9): Integrating Bayesian HPO into the Production Pipeline](https://www.mql5.com/en/articles/21823)
+
+​This article integrates the Optuna hyperparameter optimization (HPO) backend into a unified ModelDevelopmentPipeline. It adds joint tuning of model hyperparameters and sample-weight schemes, early pruning with Hyperband, and crash-resistant SQLite study storage. The pipeline auto-detects primary vs. secondary models, prepends a fitted column-dropping preprocessor for safe inference, supports sequential bootstrapping, generates an Optuna report, and includes bid/ask and LearnedStrategy links. Readers get faster, resumable runs and deployable, self-contained models.
+
+[![](https://www.mql5.com/ff/sh/vzatb6m64gt8yfc4z2/01.png)
+![](https://www.mql5.com/ff/sh/vzatb6m64gt8yfc4z2/02.png)
+
+Powerful analytics for traders of any level
+All the necessary trading reports for beginners and professionals](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/454106&a=muccpajyfystoakuukdobwigjejzmpqn&s=52daad60fa795e635264e6f94898f05493bca3b5124d4cca8eb7e82333c2ef12&uid=&ref=https://www.mql5.com/en/articles/21833&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6469424511513660471)

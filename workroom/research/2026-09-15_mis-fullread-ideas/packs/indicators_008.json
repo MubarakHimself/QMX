@@ -1,0 +1,87 @@
+{
+  "pack_id": "indicators_008",
+  "section": "Indicators",
+  "parent_shard": "indicators_008",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "larry williams market secrets",
+    "making custom indicators for beginners",
+    "mql5 wizard techniques you should know"
+  ],
+  "n": 8,
+  "articles": [
+    {
+      "id": 20511,
+      "title": "Larry Williams Market Secrets (Part 1): Building a Swing Structure Indicator in MQL5",
+      "section": "Indicators",
+      "series_title": "Larry Williams Market Secrets (): Building a Swing Structure Indicator in MQL5",
+      "series_key": "larry williams market secrets",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20511.md"
+    },
+    {
+      "id": 20745,
+      "title": "Larry Williams Market Secrets (Part 5): Automating the Volatility Breakout Strategy in MQL5",
+      "section": "Indicators",
+      "series_title": "Larry Williams Market Secrets (): Automating the Volatility Breakout Strategy in MQL5",
+      "series_key": "larry williams market secrets",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20745.md"
+    },
+    {
+      "id": 21128,
+      "title": "Larry Williams Market Secrets (Part 11): Detecting Smash Day Reversals with a Custom Indicator",
+      "section": "Indicators",
+      "series_title": "Larry Williams Market Secrets (): Detecting Smash Day Reversals with a Custom Indicator",
+      "series_key": "larry williams market secrets",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21128.md"
+    },
+    {
+      "id": 21392,
+      "title": "Larry Williams Market Secrets (Part 14): Detecting Hidden Smash Day Reversals with a Custom Indicator",
+      "section": "Indicators",
+      "series_title": "Larry Williams Market Secrets (): Detecting Hidden Smash Day Reversals with a Custom Indicator",
+      "series_key": "larry williams market secrets",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21392.md"
+    },
+    {
+      "id": 21867,
+      "title": "Larry Williams Market Secrets (Part 17) : Detecting Oops Signals Using a Custom Indicator",
+      "section": "Indicators",
+      "series_title": "Larry Williams Market Secrets () : Detecting Oops Signals Using a Custom Indicator",
+      "series_key": "larry williams market secrets",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21867.md"
+    },
+    {
+      "id": 15615,
+      "title": "MQL5 Wizard Techniques you should know (Part 33): Gaussian Process Kernels",
+      "section": "Indicators",
+      "series_title": "MQL5 Wizard Techniques you should know (): Gaussian Process Kernels",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15615.md"
+    },
+    {
+      "id": 18992,
+      "title": "MQL5 Wizard Techniques you should know (Part 78): Gator and AD Oscillator Strategies for Market Resilience",
+      "section": "Indicators",
+      "series_title": "MQL5 Wizard Techniques you should know (): Gator and AD Oscillator Strategies for Market Resilience",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 78,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18992.md"
+    },
+    {
+      "id": 23587,
+      "title": "Making Custom Indicators for Beginners (Part 1): SuperTrend Indicator",
+      "section": "Indicators",
+      "series_title": "Making Custom Indicators for Beginners (): SuperTrend Indicator",
+      "series_key": "making custom indicators for beginners",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23587.md"
+    }
+  ]
+}

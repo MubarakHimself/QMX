@@ -1,0 +1,101 @@
+{
+  "shard_id": "trading_systems_038",
+  "section": "Trading systems",
+  "n": 10,
+  "series_in_shard": [
+    "feature engineering for ml",
+    "forecasting time series"
+  ],
+  "articles": [
+    {
+      "id": 22516,
+      "title": "Feature Engineering for ML (Part 3): Session-Aware Time Features for Forex Machine Learning",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Session-Aware Time Features for Forex Machine Learning",
+      "series_key": "feature engineering for ml",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22516.md"
+    },
+    {
+      "id": 22517,
+      "title": "Feature Engineering for ML (Part 4): Implementing Time Features in MQL5",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Implementing Time Features in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22517.md"
+    },
+    {
+      "id": 22733,
+      "title": "Feature Engineering for ML (Part 5): Microstructural Features in Python",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Microstructural Features in Python",
+      "series_key": "feature engineering for ml",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22733.md"
+    },
+    {
+      "id": 22734,
+      "title": "Feature Engineering for ML (Part 6): Microstructural Features in MQL5",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Microstructural Features in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22734.md"
+    },
+    {
+      "id": 22756,
+      "title": "Feature Engineering for ML (Part 7): Entropy Features in Python",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Entropy Features in Python",
+      "series_key": "feature engineering for ml",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22756.md"
+    },
+    {
+      "id": 23077,
+      "title": "Feature Engineering for ML (Part 8): Entropy Features in MQL5",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Entropy Features in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23077.md"
+    },
+    {
+      "id": 23158,
+      "title": "Feature Engineering for ML (Part 9): Structural Break Tests in Python",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Structural Break Tests in Python",
+      "series_key": "feature engineering for ml",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23158.md"
+    },
+    {
+      "id": 23159,
+      "title": "Feature Engineering for ML (Part 10): Structural Break Tests in MQL5",
+      "section": "Trading systems",
+      "series_title": "Feature Engineering for ML (): Structural Break Tests in MQL5",
+      "series_key": "feature engineering for ml",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23159.md"
+    },
+    {
+      "id": 7601,
+      "title": "Forecasting Time Series (Part 1): Empirical Mode Decomposition (EMD) Method",
+      "section": "Trading systems",
+      "series_title": "Forecasting Time Series (): Empirical Mode Decomposition (EMD) Method",
+      "series_key": "forecasting time series",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7601.md"
+    },
+    {
+      "id": 7603,
+      "title": "Forecasting Time Series (Part 2): Least-Square Support-Vector Machine (LS-SVM)",
+      "section": "Trading systems",
+      "series_title": "Forecasting Time Series (): Least-Square Support-Vector Machine (LS-SVM)",
+      "series_key": "forecasting time series",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7603.md"
+    }
+  ]
+}

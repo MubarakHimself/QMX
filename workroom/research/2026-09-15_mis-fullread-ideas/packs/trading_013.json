@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_013",
+  "section": "Trading",
+  "parent_shard": "trading_013",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12301,
+      "title": "Learn how to design a trading system by Fibonacci",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12301.md"
+    },
+    {
+      "id": 12385,
+      "title": "How to use MQL5 to detect candlesticks patterns",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12385.md"
+    },
+    {
+      "id": 12445,
+      "title": "Rebuy algorithm: Math model for increasing efficiency",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12445.md"
+    },
+    {
+      "id": 12446,
+      "title": "Brute force approach to patterns search (Part V): Fresh angle",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12446.md"
+    },
+    {
+      "id": 12475,
+      "title": "OpenAI's ChatGPT features within the framework of MQL4 and MQL5 development",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12475.md"
+    },
+    {
+      "id": 12479,
+      "title": "How to detect trends and chart patterns using MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12479.md"
+    },
+    {
+      "id": 12510,
+      "title": "How to create a custom indicator (Heiken Ashi) using MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12510.md"
+    },
+    {
+      "id": 12550,
+      "title": "Money management in trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12550.md"
+    },
+    {
+      "id": 12570,
+      "title": "How to create a custom True Strength Index indicator using MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12570.md"
+    },
+    {
+      "id": 12711,
+      "title": "How to create a custom Donchian Channel indicator using MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12711.md"
+    },
+    {
+      "id": 12751,
+      "title": "Improve Your Trading Charts With Interactive GUI's in MQL5 (Part I): Movable GUI (I)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12751.md"
+    },
+    {
+      "id": 12813,
+      "title": "Understanding MQL5 Object-Oriented Programming (OOP)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12813.md"
+    }
+  ]
+}

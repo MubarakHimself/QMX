@@ -1,0 +1,167 @@
+4: title: "News Filtering with MetaTrader 5 Economic Calendar and CSV Fallback"
+20: # News Filtering with MetaTrader 5 Economic Calendar and CSV Fallback
+25: | 28 May 2026 at 08:44
+36: ### Introduction
+38: Handling economic news in MQL5 is typically managed in one of two ways: ignoring news events entirely or applying fixed trading restrictions. While a manual time filter might cover a scheduled release like Non-Farm Payrolls, it fails to address unscheduled volatility, emergency central bank meetings, or unexpected data revisions. This approach leaves the Expert Advisor vulnerable to the spread exp
+40: This article presents a news filter module developed using only built-in calendar functions. The module pauses trading before high-impact events, resumes automatically after a configurable post-release delay, and provides a secondary function that reduces position size rather than blocking entirely on days with multiple scheduled events. A companion logging script generates a CSV-based news calend
+42: ### 
+44: ### Section 1: The MetaTrader 5 Calendar API
+48: MetaQuotes provides a real-time, built-in economic calendar for MetaTrader 5. It covers scheduled economic events across more than 60 countries, including major central bank announcements, employment reports, inflation data, GDP releases, purchasing managers' index (PMI) releases, and trade balance figures. The data updates in real time as events are scheduled, revised, or released.
+50: From MQL5 code, six functions provide access to this data. Table 1 below summarizes them with their return types and primary use cases. In practice, the module uses CalendarEventByCountry() to retrieve events for a country code. It then uses CalendarValueHistoryByEvent() to load scheduled timestamps. This logic is used both for the live API and for the companion logging script.
+52: | Function | Returns | Use Case |
+53: | --- | --- | --- |
+54: | CalendarCountries() | Country array | Get all countries whose economic events are in the calendar |
+55: | CalendarEventByCountry() | Event array | Get all scheduled events for a specific country code |
+56: | CalendarEventById() | Single event | Retrieve the full definition of one event by its unique ID |
+57: | CalendarValueById() | Single value | Get the most recent release value for a specific event |
+58: | CalendarValueHistoryByEvent() | Value array | Get all historical values for one event across a date range |
+59: | CalendarValueLast() | Value array | Get new events since a given change ID — ideal for live polling |
+61: Table 1 — The six MQL5 calendar API functions available in MetaTrader 5 build 2265 and later. All six are free, require no external connection beyond the standard MetaTrader 5 server, and work on any demo or live account. None work in the Strategy Tester because the tester has no server connection during historical replay.
+65: - MqlCalendarEvent: Describes a scheduled event type — its name, country, currency, importance level, and unique ID.
+66: - MqlCalendarValue: Describes one specific instance of that event — the timestamp, the forecast value, the previous value, and the actual value once released.
+68: A single MqlCalendarEvent might have dozens of MqlCalendarValue records associated with it, one for each historical release.
+72: Understanding what fields are available in MqlCalendarEvent is important for building a useful filter. The most critical fields for news filtering are importance, country\_code, event\_currency, and type. The importance field takes one of three values corresponding to low, medium, and high impact. This is what the filter uses to decide whether to pause trading or not.
+74: ```
+76: //| MqlCalendarEvent key fields used by the news filter              |
+81:    ENUM_CALENDAR_EVENT_TYPE      type;          // Event type
+82:    ENUM_CALENDAR_EVENT_SECTOR    sector;        // Event sector
+83:    ENUM_CALENDAR_EVENT_FREQUENCY frequency;     // Event frequency
+84:    ENUM_CALENDAR_EVENT_TIMEMODE  time_mode;     // Event time mode
+86:    ENUM_CALENDAR_EVENT_UNIT      unit;          // Event unit
+87:    ENUM_CALENDAR_EVENT_IMPORTANCE importance;   // Event importance
+88:    ENUM_CALENDAR_EVENT_MULTIPLIER multiplier;   // Event multiplier
+97: ```
+103: | Impact Level | MQL5 Constant | Integer | Typical Events | Filter Action |
+104: | --- | --- | --- | --- | --- |
+105: | Low | CALENDAR\_IMPORTANCE\_LOW | 1 | Minor surveys, secondary indices | Ignore — no trading pause required |
+106: | Medium | CALENDAR\_IMPORTANCE\_MODERATE | 2 | CPI, PPI, retail sales, PMI | Optional pause — reduce position size if preferred |
+107: | High | CALENDAR\_IMPORTANCE\_HIGH | 3 | NFP, FOMC, central bank rates, GDP | Pause entries 30 min before and 30 min after |
+109: Table 2 — The three calendar importance levels with their MQL5 constants, typical event types, and suggested filter actions. The NewsFilter.mqh built in this article defaults to filtering on CALENDAR\_IMPORTANCE\_HIGH only, with an optional parameter to also block medium-impact events.
+111: Note: MetaQuotes assigns importance based on their assessment of each event's typical market impact. This classification can occasionally differ from what traders might expect. Some regional central bank decisions are marked medium when they may have high impact on specific pairs. The filter allows manual override of the minimum importance threshold through an input parameter, so traders can set i
+113: ### 
+115: ### Section 2: Mapping Symbols to Relevant Currencies
+119: The calendar API organizes events by country code, not by trading symbol. To know which events are relevant to EURUSD, the filter needs to check events for both the EU (affecting EUR) and the US (affecting USD). For USDJPY, it monitors the US and Japan. For XAUUSD, the US is the primary country to monitor because gold is priced in USD and most major gold-moving events are US data releases, though 
+123: | Symbol | Base Currency | Quote Currency | Country Codes to Monitor |
+124: | --- | --- | --- | --- |
+125: | EURUSD | EUR | USD | EU, DE, FR — plus US |
+126: | GBPUSD | GBP | USD | GB — plus US |
+127: | USDJPY | USD | JPY | US — plus JP |
+128: | AUDUSD | AUD | USD | AU — plus US |
+129: | USDCAD | USD | CAD | US — plus CA |
+130: | XAUUSD | XAU (Gold) | USD | US primary; also EU/JP for risk-off context |
+131: | GER40 / DAX | EUR (index) | N/A | DE, EU — ECB, German CPI, Ifo Business Climate |
+132: | US30 / DJIA | USD (index) | N/A | US only — FOMC, NFP, GDP, ISM |
+138: **2.2 CalendarEvents() and Country Codes**
+140: CalendarEventByCountry() takes a country code string and fills an array of MqlCalendarEvent structures with all events associated with that country. The country code format matches ISO 3166-1 alpha-2 codes: "US" for the United States, "EU" for the European Union, "GB" for the United Kingdom, "JP" for Japan, "AU" for Australia, and so on. The full list of available country codes can be retrieved wi
+142: ```
+147: int count = CalendarEventByCountry("US", events);
+153:    if(events[i].importance == CALENDAR_IMPORTANCE_HIGH)
+162: ```
+164: This pattern — retrieve all events for a country, then filter by importance — is the foundation of the live polling loop inside the news filter. The event IDs retrieved this way are passed to CalendarValueHistoryByEvent() to pull the scheduled timestamps for each upcoming release and populate the internal cache.
+166: ### Section 3: Building NewsFilter.mqh
+172: - IsNewsWindow(): Returns true if the current time falls within the pre-event pause window for any relevant high-impact event.
+173: - IsPostNewsWindow(): Returns true if the current time falls within the post-release volatility window after a recent event.
+174: - IsHighImpactNewsToday(): Returns true if any high-impact event affecting the traded currencies is scheduled at any point during the current trading day.
+178: Internally, the filter maintains a cached list of upcoming relevant events stored in a fixed-size array of 3,000 slots (NF\_MAX\_EVENTS). In live mode, this cache refreshes automatically at the start of each new hour by calling NF\_LoadEvents(), which uses CalendarEventByCountry() to retrieve all events for the relevant country codes and CalendarValueHistoryByEvent() to pull their timestamps. The 
+184: ```
+188: #property strict
+197: input string   InpCsvFileName      = "NewsCalendarLog_EURUSD.csv";
+200: #define NF_MAX_EVENTS 3000
+282:    int tzOffset    = (int)(TimeCurrent() - TimeGMT());
+295:       int evCount = CalendarEventByCountry(countries[c], events);
+301:          bool isHigh = (events[i].importance == CALENDAR_IMPORTANCE_HIGH);
+302:          bool isMed  = (events[i].importance == CALENDAR_IMPORTANCE_MODERATE);
+307:          int valCount = CalendarValueHistoryByEvent(events[i].id, values, now - 86400, window);
+471:       if(FileIsExist("NewsCalendarLog_" + _Symbol + ".csv", FILE_COMMON))
+472:          targetFile = "NewsCalendarLog_" + _Symbol + ".csv";
+477:          string searchPattern = "NewsCalendarLog_" + _Symbol + "_*.csv";
+510: //| Pre-News Window Check                                            |
+531: //| Post-News Window Check                                           |
+562: ```
+564: ### Section 4: Integration and Live Testing
+568: Adding the news filter to any existing EA requires four additions: one #include at the top, one NewsFilterInit() call in OnInit(), and two conditional checks at the top of OnTick(). The IsNewsWindow() and IsPostNewsWindow() calls sit before any entry logic and return early when a news window is active. Nothing about the entry logic itself changes.
+572: ```
+576: #include <NewsFilter.mqh>
+621: ```
+627: The calendar API functions — CalendarEventByCountry(), CalendarValueHistoryByEvent(), CalendarValueLast() — all require a live connection to the MetaQuotes server to operate. During a Strategy Tester run, no such connection exists. The tester replays historical bar and tick data in isolation, so any call to these functions inside the tester returns zero results.
+631: - Priority 1 — If the InpCsvFileName input contains a valid filename and that file exists in the MetaTrader 5 common files folder, it is used directly. This is the right choice when you want to specify an exact file by name.
+632: - Priority 2 — If a file named NewsCalendarLog\_ followed by the current symbol and .csv exists (for example, NewsCalendarLog\_EURUSD.csv), it is used. This is the standard output name produced when the logger script is run without date stamps.
+633: - Priority 3 — If neither of the above matches, the filter searches for any file matching the pattern NewsCalendarLog\_ followed by the symbol and a wildcard date stamp (for example, NewsCalendarLog\_EURUSD\_20230101\_20240101.csv). If a matching file is found it is used automatically and its name i
+639: Important: Live API only works on connected accounts. The MetaTrader 5 calendar API functions require that the terminal be connected to a broker server — either a live or demo account. They do not work when the terminal is offline or when running a detached historical backtest without a server connection. Always test the filter on a connected demo account before deploying live, and verify with Pri
+645: The EA adds one element not present in the minimal wiring example from Section 4.1: a live chart dashboard. A coloured text label in the upper-left corner of the chart updates on every tick to show the current filter state. When no news window is active the label reads "NEWS FILTER: ACTIVE" in green. When the pre-event window is open it switches to "NEWS BLOCK: PRE-EVENT BLOCK ACTIVE" in red. Duri
+649: ```
+654: #property strict
+655: #property description "News Filter Demo — Smart Logs and Dashboard"
+657: #include <Trade\Trade.mqh>
+658: #include "NewsFilter.mqh"
+727:       PrintFormat("Blocked by Pre-News Window: %d", g_PreEventBlocks);
+728:       PrintFormat("Blocked by Post-News Window: %d", g_PostEventBlocks);
+841: ```
+851: - InpStartDate: D'2023.01.01'
+852: - InpEndDate: D'2024.12.31'
+853: - InpCurrencies: leave blank (the script will auto-detect USD and EUR from the chart symbol)
+854: - InpLogPrefix: NewsCalendarLog (default)
+855: - InpLogMedium: false
+857: The script generates a date-stamped file in your MetaTrader 5 common files folder, for example NewsCalendarLog\_EURUSD\_20230101\_20241231.csv. Confirm it was created by checking the Experts tab — you should see a line similar to "NewsLogger SUCCESS: 412 events written." Open the file in a spreadsheet to spot-check that dates, currency codes, and impact levels look correct.
+861: Fig. 1: A sample of the NewsCalendarLog\_EURUSD CSV file used as a historical data fallback for backtesting.
+867: - InpNewsFilterEnabled: true
+868: - InpReduceSizeOnNews: true
+869: - InpFilterHigh: true
+870: - InpFilterMedium: true
+871: - InpUseCsvFallback: false — leave this at false; the EA passes isTesting=true to NewsFilterInit() automatically when running in the tester, so the CSV path is taken regardless of this input
+872: - InpCsvFileName: leave blank to use auto-detection, or enter the exact filename from Step 1 if you want to pin it
+876: - Symbol: EURUSD (or whichever symbol matches your CSV)
+877: - Timeframe: H1
+878: - Date range: 2023.01.01 to 2024.12.31 (must be covered by the CSV)
+879: - Modelling: Open Prices Only is sufficient for verification; use Every Tick for a full quality test
+880: - Spread: Current spread or a fixed value such as 15
+886: First, the file detection output. You should see either "NewsFilter: Auto-detected date-stamped file: NewsCalendarLog\_EURUSD\_20230101\_20241231.csv" (Priority 3 match) or a Priority 1 or 2 match message if you named the file accordingly.
+890: Third, the load confirmation: "NewsFilter: SUCCESS! Loaded 412 events from NewsCalendarLog\_EURUSD\_20230101\_20241231.csv" (the event count will match what the logger reported in Step 1).
+896: | News Filter Summary |
+897: | --- |
+898: | Total Signals Detected: 82 |
+899: | Blocked by Pre-News Window: 4 |
+900: | Blocked by Post-News Window: 2 |
+901: | Trades Opened: 76 |
+907: Fig. 2: A strategy tester log showing a News Filter Backtest Summary, which details the number of signals detected versus those blocked by pre-news and post-news windows.
+911: To verify that blocking happened at the right calendar times, export the full trade list from the backtest result (right-click the Trades tab and save as CSV). Then open your NewsCalendarLog CSV alongside it. Pick any high-impact event date — for example the NFP release on 2023.02.03 at 13:30 UTC. Confirm that no trades were opened between 13:00 and 14:00 UTC on that date (30 minutes either side).
+919: Attach any EA with the news filter to a demo chart during a normal trading week. Add a Print() call immediately inside the IsNewsWindow() return block — something like Print("Blocked: pre-event window") — and check the Experts tab around a known upcoming event. About 30 minutes before the scheduled time, the log should start printing the block message. It should stop printing after the 30-minute p
+921: Cross-reference the block times against the economic calendar shown in MetaTrader 5's own calendar view (available from the top menu under View). If the filter fires at the right time relative to a scheduled high-impact event for the currencies you are monitoring, the API is working correctly. If no blocks appear around events you expected to be filtered, check that the country codes from NF\_Coun
+927: ### 
+929: ### Section 5: The News Event Logger and Tester Fallback
+933: Backtesting a news-aware EA is essential for evaluating whether the filter improves performance, but the live calendar API makes it impossible to do this directly. Without the fallback, backtests of EAs using NewsFilter.mqh would simply ignore all news events — the filter would never fire, and the backtest would not reflect the live EA's behavior around major releases.
+935: Run NewsEventLogger on a live or demo terminal for the target period and save the timestamps to CSV. Use that CSV as the news source during backtests. The NewsEventLogger generates date-stamped filenames automatically — for example, NewsCalendarLog\_EURUSD\_20230101\_20241231.csv — so files for different date ranges do not overwrite each other and can coexist in the common files folder. The filter
+941: ```
+945: #property strict
+946: #property script_show_inputs
+955: input string   InpLogPrefix     = "NewsCalendarLog";
+974:    string endStr   = TimeToString(InpEndDate, TIME_DATE);
+979:    string filename = InpLogPrefix + "_" + _Symbol + "_" + startStr + "_" + endStr + ".csv";
+1004:    int tzOffset = (int)(TimeCurrent() - TimeGMT());
+1028:       int evCount = CalendarEventByCountry(countryCode, events);
+1033:          bool isHigh = (events[i].importance == CALENDAR_IMPORTANCE_HIGH);
+1034:          bool isMed  = (events[i].importance == CALENDAR_IMPORTANCE_MODERATE);
+1040:          int vCount = CalendarValueHistoryByEvent(events[i].id, values, InpStartDate, InpEndDate);
+1069: ```
+1071: Run this script once per backtest period. For a two-year backtest of EURUSD, set InpStartDate to the first date of the backtest and InpEndDate to the last. Leave InpCurrencies blank — the script will auto-detect USD and EUR from the chart symbol. The script pulls all high-impact events for those currencies from the MetaQuotes calendar across the requested date range, applies a timezone offset so t
+1075: ### 
+1077: ### Section 6: Practical Considerations
+1081: Some calendar events have a time\_mode of CALENDAR\_TIMEMODE\_TENTATIVE, meaning the release time is approximate and could shift by an hour or more from the scheduled time. Central bank press conferences and speech events are common examples. The filter handles this conservatively: when the event's actual release time differs from the originally scheduled time, the cache refresh that happens at th
+1083: The default pre-event window of 30 minutes and post-event window of 30 minutes in the filter are set conservatively to handle timing uncertainty and to allow sufficient time for spreads to normalize after the release. For high-stakes events like FOMC announcements and major central bank press conferences, these defaults provide a solid buffer. If the resulting trade frequency reduction is too larg
+1085: For events with historically large but short-lived reactions — such as NFP or a surprise rate decision — extending InpPostEventMins beyond 30 gives the market additional time to absorb the news before new entries are attempted.
+1089: A small number of calendar events have a time\_mode of CALENDAR\_TIMEMODE\_RELEASED, meaning the exact release time is not known in advance — only the calendar date. Budget announcements, some central bank minutes releases, and certain government reports fall into this category. For these events, the timestamp recorded in MqlCalendarValue will typically be midnight of the release date.
+1091: When the filter loads one of these events, the pre-event window will fire around midnight on the release date and the post-event window will clear shortly after. This is not ideal — the event might actually release at any time during that day. The practical approach is to treat date-only events as full-day caution periods and use IsHighImpactNewsToday() rather than IsNewsWindow() for them: reduce 
+1095: CalendarValueHistoryByEvent() can retrieve historical event data going back several years for most major economies. However, coverage depth varies by event. Very recent additions to the calendar may have shorter history, and some country-specific events may have gaps in their historical record. When running NewsEventLogger for a long backtest period, check the total event count printed in the Expe
+1097: MetaQuotes Calendar vs. Forex Factory: The MetaQuotes economic calendar covers the same set of high-impact events as Forex Factory and DailyFX for all major economies. It is broadly equivalent in coverage for the purposes of news filtering. The advantage over manually scraping those websites is that the MetaTrader 5 calendar is accessible from MQL5 code without any web request, has no rate limits,
+1101: The news filter works independently of any other filter in the EA. The IsNewsWindow() and IsPostNewsWindow() checks sit at the top of OnTick() and return early, so they fire before any other logic runs. They can be combined with session time filters, spread guards, daily trade limits, or any other gating mechanism without any interaction between them.
+1103: For EAs that already use a session filter (such as the SessionClock.mqh from Article 1), the recommended pattern is to check the session filter first, then the spread guard, then the news filter. Session and spread checks are cheaper computationally since they do not involve array iteration over cached events. This ordering ensures the fastest possible OnTick() execution in the common case where a
+1105: ### 
+1107: ### Conclusion
+1109: The MetaTrader 5 economic calendar has been available to MQL5 programmers for several years and remains one of the least-used features in the platform. The six calendar functions give every MetaTrader 5 user free access to the same news schedule that manual traders consult on Forex Factory and DailyFX — but accessible directly in code, without web scraping, API keys, or subscriptions.
+1111: The filter built in this article uses that data to solve a problem that affects every continuously-running EA: entries that fire during major news releases see worse execution, wider spreads, and higher slippage than entries taken under normal conditions. The impact is often invisible in a standard backtest because the tester applies fixed or typical spreads regardless of the time of day. The filt
+1113: The CSV fallback mechanism ensures the filter works correctly in the Strategy Tester without requiring any modifications to the core logic. The same NewsFilter.mqh file handles both live and backtest environments transparently — the EA does not need to know which mode it is in. One call to NewsFilterInit() in OnInit() handles the routing, and the two gate functions behave identically regardless of
+1117: | # | Name | Type | Description |
+1118: | --- | --- | --- | --- |
+1119: | 1 | NewsFilter.mqh | Include File | The core include file containing all filtering logic, live API integration, and automated CSV health checks. It automatically toggles between live and tester modes to manage news-based trade restrictions. |
+1120: | 2 | NewsEventLogger.mq5 | Script | A companion script that generates date-stamped CSV files from the MetaTrader 5 Calendar for backtesting. It saves these files to the Common folder, ensuring the filter has historical data during strategy simulations. |
+1121: | 3 | NewsFilterDemo.mq5 | Demo EA | A sample EMA crossover EA that demonstrates the integration. It features a real-time dashboard for live trading and a detailed trade-block summary in the Journal for backtest verification. |

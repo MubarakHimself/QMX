@@ -1,0 +1,400 @@
+20: # News Trading Made Easy (Part 3): Performing Trades
+25: | 12 August 2024 at 07:46
+36: ### Introduction
+38: Previously, we created an Expert Advisor to store economic data in our news calendar database. We also developed many classes to build a foundation for our expert to perform adequately. In this article, we will expand on these classes in our project to finally get to our goal of trading from economic data. Our next goal will be profitability which we will address in the next upcoming articles. For
+55: - 10: Displays the terminal Date and time. The time text will be shown in red when a news event occurs while the chart is in light mode.
+56: - 11: Displays the current/next news event date and time. The text will be shown in red when the date and time are equal to the terminal time.
+57: - 12: Displays the name of the news event. The text color will change depending on the event's Importance, e.g. High Importance is shown in red.
+58: - 13: Displays the country name of the news event. The text color will change depending on the event's Importance and chart color mode e.g. Light mode.
+59: - 14: Displays the currency name of the news event. The text color will vary.
+60: - 15: Displays the news event's importance. The text color will vary.
+61: - 16: Displays the spread for the current symbol and the rating which is calculated with 2 weeks' worth of 1-minute candle spread data and categorized into groups of excellent, good, normal, bad, and terrible with different colors for each category with variation for dark mode and light mode.
+67: - 17: Displays the event time of all events which will or have occurred on the current terminal day.
+73: - CHART COLOUR MODE: This option's purpose is to change between Dark or Light Mode.
+74: - DISPLAY NEWS INFO: This option's purpose is to show or not show sections (11 & 12 & 13& 14 & 15) on the chart.
+75: - DISPLAY EVENT OBJ: This option's purpose is to show or not show section 17 on the chart.
+76: - DISPLAY SPREAD RATING: This option's purpose is to show or not show section 16 on the chart.
+77: - DISPLAY DATE: This option's purpose is to show or not show section 10 on the chart.
+83: - SELECT DST OPTION: This option's purpose is to allow the user/trader to select there custom DST schedule or allow the expert to automatically select the recommended DST schedule to correctly configure the event times when back-testing in the strategy tester.
+84: - SELECT CUSTOM DST: This option's purpose is to allow the user/trader to manually configure the DST schedule.
+90: - SELECT RISK OPTION: This option's purpose is to allow the user/trader to select different Risk Management profiles e.g. MINIMUM LOTSIZE, MAXIMUM LOTSIZE etc.
+91: - RISK FLOOR: This option's purpose is to set a minimum risk for all risk profiles. Example if there is not enough money for a lot-size of 1 lot, but there is enough money for the minimum lot-size of 0.01 lot, then 0.01 will be used to open the trade instead of not opening any trades because there w
+92: - MAX-RISK: This option's purpose is to open a trade with the percentage of free-margin in the account if there wasn't enough money for a normal trade to be opened. This option is only operational when RISK FLOOR is set to MAX-RISK.
+93: - RISK CEILING: This option's purpose is to set a lot-size cap/limit when the account is large enough to open the max lot for a specific symbol. The cap/limit varies from MAX LOTSIZE which means the maximum lot-size possible is the one set by the specific symbol, whereas MAX LOTSIZE(x2) will open tw
+94: - PERCENTAGE OF [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain percentage of the available Balance or Free-margin.
+95: - AMOUNT PER [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain value amount of the Balance or Free-margin e.g. if [BALANCE | FREE-MARGIN] is set to 1000 and EACH AMOUNT is set to 10, this means that for every 1000 in Balance or Free-margin currency value risk 10 currency value for 
+96: - LOTSIZE PER [BALANCE | FREE-MARGIN]: This option's purpose is to risk a certain lot-size for a Balance or Free-margin value e.g. if [BALANCE | FREE-MARGIN] is set to 1000 and EACH LOTS(VOLUME) is set to 0.1, this means that for every 1000 in Balance or Free-margin currency value risk 0.1 in lot-si
+97: - CUSTOM LOTSIZE: This option's purpose is to risk a predetermined lot-size for every trade opened.
+98: - PERCENTAGE OF MAX-RISK: This option's purpose is to risk a percentage of the Maximum risk volume for a symbol with the account's available Free-margin e.g. if the Maximum risk volume for AUDUSD with an account's Free-margin at 10,000 USD is 100 Lots then if we set PERCENTAGE OF MAX-RISK to 25% the
+118: - CALENDAR IMPORTANCE: This option's purpose is to filter the news data to a specified news Importance.
+122: - EVENT FREQUENCY: This option's purpose is to filter the news data based of its frequency of occurrence.
+126: - EVENT SECTOR: This option's purpose is to filter the news data based on the sector.
+130: - EVENT TYPE: This option's purpose is to filter the news data of its type, e.g. EVENT is typically used for Speeches and meetings, whereas INDICATOR is for interest rates, Employment data etc. and HOLIDAY is for News years and various other holidays.
+134: - EVENT CURRENCY: This option's purpose is to filter the news data based of the selected currency options available. SYMBOL CURRENCIES will consider all the currencies from SYMBOL MARGIN, SYMBOL BASE and SYMBOL PROFIT.
+140: - STOPLOSS[0=NONE]: This option's purpose is to set a fixed stoploss for all trades. When the stoploss is set to zero all trades will not have a stoploss value.
+141: - TAKEPROFIT[0=NONE]: This option's purpose is to set a fixed take-profit for all trades. When the take-profit is set to zero, all trades will not have a take-profit value.
+142: - PRE-ENTRY SEC: This option's purpose is to allow the user/trader to configure the number of seconds before a trade is open before the event time. So if the PRE-ENTRY SEC is set to 5 this means that 5 seconds before the event occurs is the timespan for trades to be opened before the event time. Ex.
+143: - TRADING DAY OF WEEK: This option's purpose is to filter any business day of the week e.g. Monday, Tuesday etc.
+149: ### Symbol Properties Class
+153: - Declaration of enumeration for spread rating
+155: ```
+165: ```
+167: - Declaration of Boolean variable to configure Chart color mode
+169: ```
+171: ```
+173: - Declaration of Boolean function to retrieve spread float
+175: ```
+176: bool              SpreadFloat(string SYMBOL=NULL);//Retrieve Spread Float
+177: ```
+179: ```
+181: //|Retrieve Spread Float                                             |
+183: bool CSymbolProperties::SpreadFloat(string SYMBOL=NULL)
+189:    Print("Unable to retrieve Symbol's Spread Float");
+192: ```
+194: - Declaration of Spread rating function to retrieve spread rating
+196: ```
+197: SpreadRating      SpreadValue(string SYMBOL=NULL);//Retrieve Spread Rating
+198: ```
+200: This function has to return an enumeration value from SpreadRating.
+202: ```
+204: //|Retrieve Spread Rating                                            |
+206: SpreadRating CSymbolProperties::SpreadValue(string SYMBOL=NULL)
+210:       if(SpreadFloat(SYMBOL))//Check if Symbol has a floating Spread
+215:          int SpreadArray[],SpreadAvg=0,SpreadMax=0,SpreadMin=0,
+216:                            SpreadUpper=0,SpreadLower=0,SpreadAvgUpper=0,
+217:                            SpreadAvgLower=0,SpreadMidUpper=0,SpreadMidLower=0;
+219:          //Get Spread data from CopySpread built-in function for 2 weeks using M1 timeframe.
+220:          if(CopySpread(GetSymbolName(),PERIOD_M1,iTime(GetSymbolName(),PERIOD_W1,2),
+221:                        iTime(GetSymbolName(),PERIOD_M1,0),SpreadArray)==-1)
+223:             Print("Error trying to retrieve spread values");
+224:             return SpreadRating_Normal;//Retrieve default value when failed.
+228:             Spreads.Assign(SpreadArray);//Assign spread array into Spreads vector variable
+230:             SpreadMax = int(Spreads.Max());//Assign max spread
+231:             SpreadMin = int(Spreads.Min());//Assign min spread
+232:             SpreadAvg = int(Spreads.Median());//Assign average spread
+234:             //Divide Spread into sectors based of different averages.
+235:             SpreadMidUpper = int((SpreadAvg+SpreadMax)/2);
+236:             SpreadMidLower = int((SpreadAvg+SpreadMin)/2);
+237:             SpreadAvgUpper = int((SpreadAvg+SpreadMidUpper)/2);
+238:             SpreadAvgLower = int((SpreadAvg+SpreadMidLower)/2);
+239:             SpreadUpper = int((SpreadMidUpper+SpreadMax)/2);
+240:             SpreadLower = int((SpreadMidLower+SpreadMin)/2);
+242:             int Spread = Spread(SYMBOL);//Assign Symbol's Spread
+244:             if(Spread<SpreadLower||Spread==SpreadMin)//Excellent
+249:                if(Spread>=SpreadLower&&Spread<SpreadAvgLower)//Good
+254:                   if(Spread>=SpreadAvgLower&&Spread<=SpreadAvgUpper)//Normal
+259:                      if(Spread>SpreadAvgUpper&&Spread<=SpreadUpper)//Bad
+271:          return SpreadRating_Normal;//Retrieve default value when spread is fixed.
+274:    Print("Unable to retrieve Symbol's Spread Rating");
+275:    return SpreadRating_Normal;//Retrieve default value when failed.
+277: ```
+279: We first set the symbol, then we check if the symbol has a floating spread before we perform simple calculations to rate the spread based on its averages. If the setting of the symbol failed or the symbol doesn't have a floating spread, we return SpreadRating\_Normal as a default value.
+281: ```
+284:       if(SpreadFloat(SYMBOL))//Check if Symbol has a floating Spread
+286: ```
+288: If we successfully set the symbol and the symbol has a floating spread, then we will declare a Spreads vector variable, and int variables to store spread values. After declaring our variables, we will use the CopySpread function to store the spread values into our SpreadArray variable from the 1-minute candle starting from 2 weeks back to the current 1-minute candle time. If the CopySpread functio
+290: ```
+293:          int SpreadArray[],SpreadAvg=0,SpreadMax=0,SpreadMin=0,
+294:                            SpreadUpper=0,SpreadLower=0,SpreadAvgUpper=0,
+295:                            SpreadAvgLower=0,SpreadMidUpper=0,SpreadMidLower=0;
+297:          //Get Spread data from CopySpread built-in function for 2 weeks using M1 timeframe.
+298:          if(CopySpread(GetSymbolName(),PERIOD_M1,iTime(GetSymbolName(),PERIOD_W1,2),
+299:                        iTime(GetSymbolName(),PERIOD_M1,0),SpreadArray)==-1)
+301:             Print("Error trying to retrieve spread values");
+302:             return SpreadRating_Normal;//Retrieve default value when failed.
+304: ```
+306: Once CopySpread is successful, we will assign the Spreads vector the integer values from our SpreadArray. Then we need to get basic information from these array values, such as the maximum spread throughout the 2-week period as well as the minimum spread and the average spread, we will store these values into SpreadMax, SpreadMin and SpreadAvg accordingly. We now want to get different averages fro
+308: For SpreadMidUpper variable we want the average between the SpreadAvg and SpreadMax, for SpreadMidLower variable we want the average between SpreadAvg and SpreadMin, for SpreadAvgUpper variable we want the average between SpreadAvg and SpreadMidUpper, for SpreadAvgLower variable we want the average between SpreadAvg and SpreadMidLower, for SpreadUpper variable we want the average between SpreadMid
+310: ```
+311: Spreads.Assign(SpreadArray);//Assign spread array into Spreads vector variable
+313:             SpreadMax = int(Spreads.Max());//Assign max spread
+314:             SpreadMin = int(Spreads.Min());//Assign min spread
+315:             SpreadAvg = int(Spreads.Median());//Assign average spread
+317:             //Divide Spread into sectors based of different averages.
+318:             SpreadMidUpper = int((SpreadAvg+SpreadMax)/2);
+319:             SpreadMidLower = int((SpreadAvg+SpreadMin)/2);
+320:             SpreadAvgUpper = int((SpreadAvg+SpreadMidUpper)/2);
+321:             SpreadAvgLower = int((SpreadAvg+SpreadMidLower)/2);
+322:             SpreadUpper = int((SpreadMidUpper+SpreadMax)/2);
+323:             SpreadLower = int((SpreadMidLower+SpreadMin)/2);
+325:             int Spread = Spread(SYMBOL);//Assign Symbol's Spread
+326: ```
+332: - Excellent: When the current spread is less than SpreadLower variable or equal to SpreadMin.
+333: - Good: When the current spread is more than or equal to SpreadLower variable and the current spread is less than SpreadAvgLower variable.
+334: - Normal: When the current spread is less than or equal to SpreadAvgLower variable and the current spread is less than or equal to SpreadAvgUpper variable.
+335: - Bad: When the current spread is more than SpreadAvgUpper and the current spread is less than or equal to SpreadUpper variable.
+336: - Terrible: When the current spread is more than SpreadUpper variable
+338: ```
+339:             if(Spread<SpreadLower||Spread==SpreadMin)//Excellent
+344:                if(Spread>=SpreadLower&&Spread<SpreadAvgLower)//Good
+349:                   if(Spread>=SpreadAvgLower&&Spread<=SpreadAvgUpper)//Normal
+354:                      if(Spread>SpreadAvgUpper&&Spread<=SpreadUpper)//Bad
+362: ```
+364: - Declaration of function to retrieve spread color based of its rating
+366: ```
+367: color             SpreadColor(string SYMBOL=NULL);//Retrieve Spread Color
+368: ```
+370: In order to get the spread color for each spread enumeration value, we will consider using a switch statement as the enumeration values are constant. Colors for each rating are as shown:
+372: - Excellent: if in light mode then clrBlue
+380: - Good: if in light mode then clrCornflowerBlue
+386: - Normal: if in light mode then clrBlack
+392: - Bad: clrOrange
+393: - Terrible: clrRed
+394: - Default:  if in light mode then clrBlack, else clrWheat
+396: ```
+398: //|Retrieve Spread Color                                             |
+400: color CSymbolProperties::SpreadColor(string SYMBOL=NULL)
+402:    switch(SpreadValue(SYMBOL))//Get Spread Rating value
+404:       case SpreadRating_Excellent://Excellent Spread
+416:       case SpreadRating_Terrible://Terrible Spread
+424: ```
+426: - Declaration of string function to retrieve spread's description
+428: ```
+429: string            SpreadDesc(string SYMBOL=NULL);//Retrieve Spread Description
+430: ```
+432: ```
+434: //|Retrieve Spread Description                                       |
+436: string CSymbolProperties::SpreadDesc(string SYMBOL=NULL)
+438:    switch(SpreadValue(SYMBOL))//Get Spread Rating value
+440:       case SpreadRating_Excellent://Excellent Spread
+452:       case SpreadRating_Terrible://Terrible Spread
+460: ```
+462: - Declaration of string function to retrieve symbol's description
+464: ```
+466: ```
+468: ```
+481: ```
+485: ### Chart Properties Class
+489: ```
+490: #include "SymbolProperties.mqh"
+491: #include <Charts/Chart.mqh>
+542: ```
+546: ```
+556: ```
+560: ```
+568:    DefaultChart.clrBackground = ColorBackground();//assign Background color
+576:    DefaultChart.clrBarDown = ColorBarDown();//assign Chart Down Candle Color
+580:    DefaultChart.clrBarUp = ColorBarUp();//assign Chart Up Candle Color
+633: ```
+637: ```
+644:    ColorBackground(Prop.clrBackground);//Set Chart Background Color
+648:    ColorBarDown(Prop.clrBarDown);//Set Chart Down Candle Color
+650:    ColorBarUp(Prop.clrBarUp);//Set Chart Up Candle Color
+673: ```
+677: ```
+730: ```
+734: ```
+743: ```
+745: ### Object Properties Class
+749: ```
+750: #include "ChartProperties.mqh"
+801: ```
+805: ```
+828: ```
+832: ```
+875: ```
+877: ### CommonVariables Header File
+881: ```
+882: #define NEWS_DATABASE_MEMORY           StringFormat("Calendar_%s_%d_%s.sqlite",broker,ChartID(),(MQLInfoInteger(MQL_TESTER)?"TESTER":"REAL"))
+883: ```
+887: ```
+911: ```
+913: ### 
+915: ### Time Variables Class
+919: ```
+935: ```
+939: ```
+950: ```
+954: ```
+965: ```
+969: ```
+977: ```
+979: ### 
+981: ### Time Management Class
+983: We will declare DSTSchedule enumeration for the user/trader to select between Auto DST or Custom DST for the expert's input. MySchedule variable will be used to store the custom DST.
+985: ```
+993: DST_type MySchedule;//Variable for custom DST schedule
+994: ```
+996: The function below will return the hour for a specific date in an integer datatype.
+998: ```
+999: int               ReturnHour(datetime time);//Returns the Hour for a specific date
+1000: ```
+1002: ```
+1004: //|Returns the Hour for a specific date                              |
+1006: int CTimeManagement::ReturnHour(datetime time)
+1010: ```
+1014: ```
+1016: ```
+1018: ```
+1026: ```
+1030: ```
+1032: ```
+1034: ```
+1042: ```
+1046: ```
+1049: ```
+1051: ```
+1060: ```
+1062: The function below will return the datetime for the datetime argument time with modification to the hour, minute and second.
+1064: ```
+1065: //-- Will return a datetime with changes to the hour,minute and second
+1066:    datetime          Time(datetime time,int Hour,int Minute,int Second);
+1067: ```
+1069: ```
+1071: //|Will return a datetime with changes to the hour,minute and second |
+1073: datetime CTimeManagement::Time(datetime time,int Hour,int Minute,int Second)
+1081: ```
+1083: The function below will return the datetime for the datetime argument time with modification to the hour and minute.
+1085: ```
+1086: //-- Will return a datetime with changes to the hour and minute
+1087:    datetime          Time(datetime time,int Hour,int Minute);
+1088: ```
+1090: ```
+1092: //|Will return a datetime with changes to the hour and minute        |
+1094: datetime CTimeManagement::Time(datetime time,int Hour,int Minute)
+1101: ```
+1103: The function below will return true if the TimeTradeServer time is within the BeginTime and EndTime arguments.
+1105: ```
+1108: ```
+1110: ```
+1122: ```
+1126: ```
+1129: ```
+1131: ```
+1143: ```
+1145: The function below will return the MqlDateTime for the current time with modification to the hour and minute.
+1147: ```
+1148: //-- Return MqlDateTime for current date time with custom hour and minute
+1149:    MqlDateTime       Today(int Hour,int Minute);
+1150: ```
+1152: ```
+1154: //|Return MqlDateTime for current date time with custom hour and     |
+1157: MqlDateTime CTimeManagement::Today(int Hour,int Minute)
+1164: ```
+1166: The function below will return the MqlDateTime for the current time with modification to the hour, minute and second.
+1168: ```
+1169: //-- Return MqlDateTime for current date time with custom hour, minute and second
+1170:    MqlDateTime       Today(int Hour,int Minute,int Second);
+1171: ```
+1173: ```
+1175: //|Return MqlDateTime for current date time with custom hour, minute |
+1178: MqlDateTime CTimeManagement::Today(int Hour,int Minute,int Second)
+1186: ```
+1190: ```
+1193: ```
+1195: ```
+1241: ```
+1245: ```
+1248: ```
+1250: ```
+1258: ```
+1260: ### Candle Properties Class
+1264: ```
+1281: ```
+1285: ```
+1302: ```
+1304: ### 
+1306: ### Sessions Class
+1308: This class's purpose is to deal with session trading times. We won't make use of these trading sessions times in this article, but we will have a use for this class later on. This class will inherit from the TimeManagement class as this class will utilize the functions in TimeManagement.
+1312: ```
+1313: #include "Timemanagement.mqh"
+1315: //|Sessions Class                                                    |
+1323:    bool              isSessionStart(int offsethour=0,int offsetmin=0);
+1325:    bool              isSessionEnd(int offsethour=0,int offsetmin=45);
+1327:    datetime          SessionEnd(int offsethour=0,int offsetmin=45);
+1329: ```
+1331: The function below will check all valid trading Sessions for the current Symbol and Day Of Week, Once the earliest trading session is found we will add and offset to this time ex. if the earliest trading session is from 01:00-05:00 then our offset hour is 1 and the offset minute is 0, our trading session will start at 02:00-05:00. The purpose of knowing the starting session time is to avoid large 
+1333: ```
+1335: //|Check if trading Session has started                              |
+1337: bool CSessions::isSessionStart(int offsethour=0,int offsetmin=0)
+1345:       //--- Get the session dates for the current symbol and Day of week
+1346:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+1348:          //--- Check if the end date's hour is at midnight
+1349:          if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+1351:             //--- Adjust the date to one minute before midnight
+1371:       DateFrom[0] = TimePlusOffset(DateFrom[0],HoursS(startoffsethour));
+1375:          //--- Check if the current time is within the trading session
+1384:       //--- If there are no trading session times
+1389: ```
+1391: The function below will return the true if the session has ended, on some brokers an hour before the trading session ends spreads are huge, so this function can help us avoid trading during those times.
+1393: ```
+1395: //|Check if trading Session has ended                                |
+1397: bool CSessions::isSessionEnd(int offsethour=0,int offsetmin=45)
+1400:    datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+1405:       //--- Get the session dates for the current symbol and Day of week
+1406:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+1408:          //--- Check if the end date's hour is at midnight
+1409:          if(ReturnHour(dateto)==00||ReturnHour(dateto)==24)
+1411:             //--- Adjust the date to one minute before midnight
+1438:       //--- If there are no trading session times
+1441:    /* get the current time and modify the hour and minute time to the lastdate variable
+1442:    and assign the new datetime to sessionend variable*/
+1443:    sessionend = Today(ReturnHour(lastdate),ReturnMinute(lastdate));
+1444: //--- Re-adjust the sessionend dates with the minute and hour offsets
+1445:    sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+1446:    sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+1448: //--- Check if sessionend date is more than the current time
+1455: ```
+1457: The function below will return the trading session ending date for the current day, there are some limitations to trading session times in MQL5, I've noticed that during a holiday some symbols can close a lot earlier than the trading session time would indicate so that is something to keep in mind.
+1459: ```
+1461: //|Get Session End datetime                                          |
+1463: datetime CSessions::SessionEnd(int offsethour=0,int offsetmin=45)
+1466:    datetime datefrom,dateto,DateTo[],lastdate=0,sessionend;
+1471:       //--- Get the session dates for the current symbol and Day of week
+1472:       if(SymbolInfoSessionTrade(Symbol(),DayOfWeek(TimeTradeServer()),i,datefrom,dateto))
+1474:          //--- Check if the end date's hour is at midnight
+1475:          if(CTV.ReturnHour(dateto)==00||CTV.ReturnHour(dateto)==24)
+1477:             //--- Adjust the date to one minute before midnight
+1504:       //--- If there are no trading session times
+1507:    /* get the current time and modify the hour and minute time to the lastdate variable
+1508:    and assign the new datetime to sessionend variable*/
+1509:    sessionend = Today(ReturnHour(lastdate),ReturnMinute(lastdate));
+1510: //--- Re-adjust the sessionend dates with the minute and hour offsets
+1511:    sessionend = TimeMinusOffset(sessionend,MinutesS(offsetmin));
+1512:    sessionend = TimeMinusOffset(sessionend,HoursS(offsethour));
+1516: ```
+1518: ### News Class
+1520: This class is the most crucial in the whole project and the largest, spanning over 1000 lines of code alone. From part 2 we made major improvements to this class and the code that interacts with the calendar database in the common folder. In this article we will create another database but this time, the database will be in memory.
+1524: - Speed: In-memory databases store data directly in RAM, leading to significantly faster read and write operations. This is especially beneficial for applications requiring real-time data processing and analytics. Since RAM is much faster than disk storage, accessing data in an in-memory database is
+1525: - Performance: The reduced latency and faster data access translate into higher throughput, meaning the database can handle more transactions per second. In-memory databases can process large volumes of data more efficiently, making them suitable for big data applications, analytics, and other inten
+1529: We will start off with the declarations outside the class for use in the expert's input. The DBMemoryConnection integer variable will hold the integer connection handle for our database in memory. Calendar\_Importance enumeration will be used to select different event importance in the expert's input parameter. Event\_Sector enumeration will be used to select different event sectors in the expert'
+1531: ```
+1534: //--- Enumeration for Calendar Importance
+1563: //--- Enumeration for Calendar Event Frequency
+1575: //--- Enumeration for Calendar Event type
+1584: //--- Enumeration for Calendar Event Currency
+1617: //--- Structure variable to store Calendar next Event data
+1619: ```
+1623: - Expansion to the Enumeration CalendarComponents: EventInfo\_View was added to show event details in the calendar storage database, Currencies\_View was added to show all currencies available by the MQL5 economic calendar.
+1624: - Structure Array CalendarContents has increased by size from 10 to 12 to accommodate the two new views EventInfo\_View and Currencies\_View.
+1625: - Declaration of DBMemory variable of MQL5CalendarContents structure type to store DB properties.
+1626: - Declaration of CalendarData structure and variables to store all data from the Calendar DB in the common folder.
+1627: - Declaration of the function GetCalendar which will request all the filtered data from the calendar DB in the common folder and store this data into the CalendarData structure array Data this array data will be inserted into our new calendar DB in memory once it is created.
+1628: - Declaration of the function GetAutoDST to retrieve the enumeration DST\_type from the table AutoDST in the Calendar DB in the common folder.
+1629: - Declaration of the function Request\_Importance to retrieve the string request for the event importance based on the Calendar\_Importance enumeration.
+1630: - Declaration of the function Request\_Frequency to retrieve the string request for the event frequency based on the Event\_Frequency enumeration.
+1631: - Declaration of the function Request\_Sector to retrieve the string request for the event sector based on the Event\_Sector enumeration.
+1632: - Declaration of the function Request\_Type to retrieve the string request for the event type based on the Event\_Type enumeration.
+1633: - Declaration of the function Request\_Currency to retrieve the string request for the event currency based on the Event\_Currency enumeration.
+1634: - Declaration of the function EconomicDetailsMemory will populate the NewsTime Calendar structure array with the events for a specific date.
+1635: - Declaration of the function CreateEconomicDatabaseMemory will create the calendar database in memory.
+1636: - Declaration of the function EconomicNextEvent will update UpcomingNews structure variable with the next event data.
+1637: - Declaration of the function GetImpact will retrieve Upcoming Event Impact data.
+1638: - Declaration of the function IMPORTANCE will convert the Importance string into Calendar Event Importance Enumeration.
+1639: - Declaration of the function IMPORTANCE will convert Calendar\_Importance Enumeration into Calendar Event Importance Enumeration.
+1640: - Declaration of the function GetImportance will convert Calendar Event Importance Enumeration into string Importance Rating.
+1641: - Declaration of the function GetImportance\_color will retrieve color for each Calendar Event Importance Enumeration.
+1642: - Declaration of the function SECTOR will convert Event\_Sector Enumeration into Calendar Event Sector Enumeration.
+1643: - Declaration of the function FREQUENCY will convert Event\_Frequency Enumeration into Calendar Event Frequency Enumeration.
+1644: - Declaration of the function TYPE will convert Event\_Type Enumeration into Calendar Event Type Enumeration.
+1646: ```
+1668:       AutoDST_Trigger,//Table Trigger for AutoDST
+1682:    //--  MQL5CalendarContents inherits from SQLiteMaster structure
+1687:      } CalendarContents[12],DBMemory;//Array to Store objects in our database
+1690:    CDaylightSavings_UK  Savings_UK;//DaylightSavings Object for the UK and EU
+1691:    CDaylightSavings_US  Savings_US;//DaylightSavings Object for the US
+1692:    CDaylightSavings_AU  Savings_AU;//DaylightSavings Object for the AU
+1694:    bool              AutoDetectDST(DST_type &dstType);//Function will determine Broker DST
+1695:    DST_type          DSTType;//variable of DST_type enumeration declared in the CommonVariables class/header file
+1696:    bool              InsertIntoTables(int db,Calendar &Evalues[]);//Function for inserting Economic Data in to a database's table
+1697:    void              CreateAutoDST(int db);//Function for creating and inserting Recommend DST for the Broker into a table

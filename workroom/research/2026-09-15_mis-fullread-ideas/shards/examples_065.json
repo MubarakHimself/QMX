@@ -1,0 +1,113 @@
+{
+  "shard_id": "examples_065",
+  "section": "Examples",
+  "n": 11,
+  "series_in_shard": [
+    "adaptive malaysian engulfing indicator",
+    "automating chart patterns in mql5",
+    "automating classic market methods in mql5",
+    "better programmer",
+    "beyond the clock"
+  ],
+  "articles": [
+    {
+      "id": 22419,
+      "title": "Adaptive Malaysian Engulfing Indicator (Part 1): Pattern Detection and Retest Validation",
+      "section": "Examples",
+      "series_title": "Adaptive Malaysian Engulfing Indicator (): Pattern Detection and Retest Validation",
+      "series_key": "adaptive malaysian engulfing indicator",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22419.md"
+    },
+    {
+      "id": 22420,
+      "title": "Adaptive Malaysian Engulfing Indicator (Part 2): Optimized Retest Bar Range",
+      "section": "Examples",
+      "series_title": "Adaptive Malaysian Engulfing Indicator (): Optimized Retest Bar Range",
+      "series_key": "adaptive malaysian engulfing indicator",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22420.md"
+    },
+    {
+      "id": 23538,
+      "title": "Automating Chart Patterns in MQL5 (Part 1): The Multi-Timeframe Swing Structure Engine",
+      "section": "Examples",
+      "series_title": "Automating Chart Patterns in MQL5 (): The Multi-Timeframe Swing Structure Engine",
+      "series_key": "automating chart patterns in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23538.md"
+    },
+    {
+      "id": 22472,
+      "title": "Automating Classic Market Methods in MQL5 (Part 2): Wyckoff Cause and Effect\u2014Point and Figure Price Targets",
+      "section": "Examples",
+      "series_title": "Automating Classic Market Methods in MQL5 (): Wyckoff Cause and Effect\u2014Point and Figure Price Targets",
+      "series_key": "automating classic market methods in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22472.md"
+    },
+    {
+      "id": 9643,
+      "title": "Better Programmer (Part 01): You must stop doing these 5 things to become a successful MQL5 programmer",
+      "section": "Examples",
+      "series_title": "Better Programmer (): You must stop doing these 5 things to become a successful MQL5 programmer",
+      "series_key": "better programmer",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9643.md"
+    },
+    {
+      "id": 9746,
+      "title": "Better Programmer (Part 03): Give Up doing these 5 things to become a successful MQL5 Programmer",
+      "section": "Examples",
+      "series_title": "Better Programmer (): Give Up doing these 5 things to become a successful MQL5 Programmer",
+      "series_key": "better programmer",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9746.md"
+    },
+    {
+      "id": 9752,
+      "title": "Better Programmer (Part 04): How to become a faster developer",
+      "section": "Examples",
+      "series_title": "Better Programmer (): How to become a faster developer",
+      "series_key": "better programmer",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9752.md"
+    },
+    {
+      "id": 9840,
+      "title": "Better programmer (Part 05): How to become a faster developer",
+      "section": "Examples",
+      "series_title": "Better programmer (): How to become a faster developer",
+      "series_key": "better programmer",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9840.md"
+    },
+    {
+      "id": 9923,
+      "title": "Better Programmer (Part 06): 9 habits that lead to effective coding",
+      "section": "Examples",
+      "series_title": "Better Programmer (): 9 habits that lead to effective coding",
+      "series_key": "better programmer",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9923.md"
+    },
+    {
+      "id": 9995,
+      "title": "Better Programmer (Part 07): Notes on becoming a successful freelance developer",
+      "section": "Examples",
+      "series_title": "Better Programmer (): Notes on becoming a successful freelance developer",
+      "series_key": "better programmer",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9995.md"
+    },
+    {
+      "id": 23310,
+      "title": "Beyond the Clock (Part 4): Efficacy of Bars on Trending and Mean-Reversion Strategies",
+      "section": "Examples",
+      "series_title": "Beyond the Clock (): Efficacy of Bars on Trending and Mean-Reversion Strategies",
+      "series_key": "beyond the clock",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23310.md"
+    }
+  ]
+}

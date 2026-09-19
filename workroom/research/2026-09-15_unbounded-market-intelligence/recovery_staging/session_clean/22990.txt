@@ -1,0 +1,528 @@
+---
+id: 22990
+source_url: https://www.mql5.com/en/articles/22990
+title: "Building an Object-Oriented Session VWAP Engine in MQL5"
+author: ""
+author_url: 
+published: 2026-06-29T14:18Z
+platform: "MetaTrader 5"
+section: "Trading systems"
+tags: []
+series_title: ""
+series_part: 
+source: mql5
+language: en
+---
+
+# Building an Object-Oriented Session VWAP Engine in MQL5
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 29 June 2026 at 10:18
+
+1 451
+[
+9](https://www.mql5.com/en/forum/511914 "Comments")
+
+[Amanda Vitoria De Paula Pereira](https://www.mql5.com/en/users/kayruyuta)
+
+### Introduction and Practical Pain Points
+
+When I build intraday trading systems in MQL5, my first reflex is usually to drop a standard moving average on the chart to filter the short-term trend. This approach looks tolerable during dead market hours or tight ranges. However, live tests on liquid currency pairs reveal a major structural flaw. A major macro news candle can instantly shift the market baseline due to institutional volume. A simple moving average treats that heavy candle the same as a low-volume candle from the quiet night session because it only accounts for closing prices. This creates a dangerous trap for an automated robot. The Expert Advisor executes a trade at the moving average line, thinking it is a fair value pullback, but the real institutional volume anchor is left far behind.
+
+The root of the error is that standard indicators entirely ignore tick volume arrays during their calculation passes. I wanted to replace this traditional approach with something much more adaptive that tracks where money is actually being spent. The Volume Weighted Average Price (VWAP) fulfills this role by weighting every price fluctuation by the absolute liquidity traded at that level. Standard MQL5 does not provide a native VWAP that resets daily and includes rolling deviation bands. This makes quick integration into automated strategies difficult. We will move the cumulative calculations into an include file. Then we will plot the baseline and volatility bands in a custom indicator for visual verification. Finally, we will integrate the module into an Expert Advisor for pullback trading.
+
+### The Core Math and Daily Time Anchors
+
+The mathematical calculation behind the VWAP is highly pragmatic and avoids the smoothing lag found in traditional technical indicators. Instead of simply summing closing prices and dividing by a fixed lookback period, we extract the typical price of each candle by averaging its high, low, and close coordinates. We then multiply this typical price by the corresponding tick volume recorded for that specific bar. This product is accumulated sequentially from a fixed starting point. Finally, we divide this cumulative sum of price and volume by the total accumulated tick volume recorded over that identical historical span.
+
+The base equation can be written as follows:
+
+If the current market price trades close to the resulting VWAP line, the asset is considered to be fluctuating at its intraday fair value accepted by the majority of participants. When the price stretches significantly far from this benchmark, it enters an overbought or oversold condition relative to the daily liquidity distribution. To quantify this stretch dynamically, our engine will also calculate a volume-weighted standard deviation. This mathematical variance allows us to project upper and lower deviation bands that naturally expand and contract based on real intraday volatility shifts. I do not treat the resulting VWAP baseline as a magic support or resistance level. Financial markets break through these boundaries violently during aggressive trend extensions. In my experience, it serves as an institutional filter to confirm if a pullback is returning to an authentic zone of high historical liquidity before a developer authorizes an entry.
+
+### The VWAP Signal Contract
+
+Before translating this mathematical architecture into MQL5 structures, we must establish a strict operational agreement for our execution layers. This signal contract defines exactly how and when our automated robot will read the VWAP metrics and authorize a market order. For our strategy blueprint, the entry threshold is defined by the first standard deviation boundaries. The contract dictates that the algorithm looks for a bullish entry if the price drops and touches the lower deviation band, assuming the broader market context supports a buy setup. Conversely, we look for a short execution if the price spikes directly into the upper deviation band.
+
+To prevent our trading robot from executing trades based on unconfirmed intraday noise, the calculation loop will operate exclusively on fully closed bars. We enforce this constraint across both the indicator and the advisor by passing a fixed bar shift parameter of 1 to our calculation methods. This ensures that the algorithm entirely ignores the active, unconfirmed fluctuations of candle index 0. Furthermore, the signal contract strictly mandates that the accumulation math resets to absolute zero at exactly 00:00 broker server time every single day. The algorithm must wipe its memory banks clean at midnight, ignoring yesterday's volume data entirely to focus solely on the building intraday liquidity profile.
+
+### Architecting the Reusable Include File
+
+Placing heavy statistical loops directly inside the main execution file of an Expert Advisor creates rigid, unscalable architecture. If you later decide to track multiple symbols or deploy the calculation across different timeframes, the code quickly becomes unmanageable. To ensure robust performance, we isolate the VWAP calculation engine inside a custom include file named VWAP\_Engine.mqh. This object-oriented approach achieves a clean separation between mathematical data processing and order routing mechanics. The visual chart indicator and the trading robot will call the same external include class, ensuring that our calculation output remains completely identical across both modules.
+
+Let's begin by defining the interface and private structural members of our object class.
+
+```
+//+------------------------------------------------------------------+
+//|                                                VWAP_Engine.mqh   |
+//|                                  Copyright 2026, MetaQuotes Ltd. |
+//+------------------------------------------------------------------+
+#property copyright "Open Source"
+#property version   "3.08"
+
+class CVWAP
+  {
+private:
+   string            m_symbol;
+   ENUM_TIMEFRAMES   m_timeframe;
+
+   datetime          GetStartOfDay(datetime current_time);
+
+public:
+                     CVWAP(string symbol, ENUM_TIMEFRAMES tf);
+                    ~CVWAP(void);
+                    
+   bool              GetVWAPData(int shift, double &vwap, double &upper_band, double &lower_band, double deviation_multiplier = 1.0); 
+  };
+
+CVWAP::CVWAP(string symbol, ENUM_TIMEFRAMES tf)
+  {
+//--- Initialize internal environment variables
+   m_symbol = (symbol == "") ? _Symbol : symbol;
+   m_timeframe = tf;
+  }
+
+CVWAP::~CVWAP(void)
+  {
+  }
+
+datetime CVWAP::GetStartOfDay(datetime current_time)
+  {
+   MqlDateTime dt;
+//--- Deconstruct raw Unix time into calendar structure variables
+   TimeToStruct(current_time, dt);
+   dt.hour = 0;
+   dt.min = 0;
+   dt.sec = 0;
+   return StructToTime(dt);
+  }
+
+bool CVWAP::GetVWAPData(int shift, double &vwap, double &upper_band, double &lower_band, double deviation_multiplier)
+  {
+//--- Read time signature from the target historical index
+   datetime current_time = iTime(m_symbol, m_timeframe, shift);
+   if(current_time == 0) return false;
+   
+//--- Grab the session midnight anchor node coordinates
+   datetime start_time = GetStartOfDay(current_time);
+   MqlRates rates[];
+   int copied = CopyRates(m_symbol, m_timeframe, start_time, current_time, rates);
+   if(copied <= 0) return false;
+   
+   double cumulative_pv = 0.0;
+   long   cumulative_vol = 0;
+   
+//--- Pass 1: Sum historical typical prices weighted by liquidity volumes
+   for(int i = 0; i < copied; i++)
+     {
+      double typical_price = (rates[i].high + rates[i].low + rates[i].close) / 3.0;
+      cumulative_pv += typical_price * rates[i].tick_volume;
+      cumulative_vol += rates[i].tick_volume;
+     }
+     
+//--- Defensive engineering: Intercept fatal zero volume division crashes
+   if(cumulative_vol == 0) return false;
+   vwap = cumulative_pv / (double)cumulative_vol;
+   double variance_sum = 0.0;
+   
+//--- Pass 2: Compute statistical variance distribution weighted by volume
+   for(int i = 0; i < copied; i++)
+     {
+      double typical_price = (rates[i].high + rates[i].low + rates[i].close) / 3.0;
+      double diff = typical_price - vwap;
+      variance_sum += (diff * diff) * rates[i].tick_volume;
+     }
+     
+   double std_dev = MathSqrt(variance_sum / (double)cumulative_vol);
+   upper_band = vwap + (std_dev * deviation_multiplier);
+   lower_band = vwap - (std_dev * deviation_multiplier);
+   return true;
+  }
+```
+
+The private section of the CVWAP class strictly manages our environment variables, locking the targeted financial instrument and timeframe upon initialization. Exposing only the necessary data retrieval method to the public scope protects the internal calculation properties from unauthorized external modifications. Notice that the primary public function GetVWAPData returns a primitive boolean value instead of a raw double array. It passes the actual mathematical results by reference using the ampersand operator. This design pattern is a vital performance optimization in MQL5. It allows a single function execution to update the baseline, the upper band, and the lower band simultaneously without requiring three separate heavy historical array loops.
+
+### Tracking Midnight via MqlDateTime
+
+The most difficult engineering hurdle when building a session VWAP is identifying the starting point of the current trading day. In standard MQL5 development, you cannot simply look back a fixed number of bars like 20 or 200. On a standard 5-minute chart, a full day should theoretically contain 288 candlesticks. However, if the market closes early for a holiday, or if the broker server drops connection packets during low-liquidity hours, the actual number of bars will fluctuate unpredictably. Hardcoding a static lookback window will force the loops to pull data from the previous day, completely corrupting the intraday volume-weighting math.
+
+We pass the requested bar's time to a private helper method. It converts the Unix timestamp into a readable calendar structure.
+
+```
+//+------------------------------------------------------------------+
+//| Extracts the exact 00:00 midnight timestamp of the current bar   |
+//+------------------------------------------------------------------+
+datetime CVWAP::GetStartOfDay(datetime current_time)
+  {
+   MqlDateTime dt;
+   //--- Deconstruct raw Unix time into calendar structure variables
+   TimeToStruct(current_time, dt);
+   
+   //--- Force time parameters to absolute midnight baseline
+   dt.hour = 0;
+   dt.min = 0;
+   dt.sec = 0;
+   
+   //--- Reconstruct properties back into a clean timestamp index
+   return StructToTime(dt);
+  }
+```
+
+This guarantees that the loops can always identify the exact start of the current day, even with missing candles or irregular feeds. Converting this structure back via StructToTime delivers the absolute time anchor point for our historical data requests. This layout guarantees that regardless of missing candles or irregular data feeds, our calculation loops will always know the exact index where the current day began.
+
+### Implementing the Double-Pass Calculation Loop
+
+With the midnight anchor point secured, the GetVWAPData method must extract raw bar data and process the volume weighting loops. The algorithm utilizes the native CopyRates function to pull an array of MqlRates structures covering the specific window from midnight up to the requested shift coordinate. During early testing, I found a structural indexing bug. If you pull rates directly without sorting, the data reads in chronological order (oldest to newest), which breaks the shift-based calculation patterns used by standard trading systems. To fix this, the engine explicitly applies ArraySetAsSeries to the internal rates array, ensuring that index zero always references the newest bar in the collected sample.
+
+The implementation of this core data processing method handles the data loading and combines the mathematical steps cleanly inside the include file.
+
+```
+//+------------------------------------------------------------------+
+//| Main accumulation loop: Computes baseline price and deviations   |
+//+------------------------------------------------------------------+
+bool CVWAP::GetVWAPData(int shift, double &vwap, double &upper_band, double &lower_band, double deviation_multiplier)
+  {
+   //--- Read time signature from the target historical index
+   datetime current_time = iTime(m_symbol, m_timeframe, shift);
+   if(current_time == 0) return false;
+   
+   //--- Grab the session midnight anchor node coordinates
+   datetime start_time = GetStartOfDay(current_time);
+   
+   //--- Fetch historical chart rates data into series array
+   MqlRates rates[];
+   int copied = CopyRates(m_symbol, m_timeframe, start_time, current_time, rates);
+   
+   //--- Gracefully abort execution if history synchronization is incomplete
+   if(copied <= 0) return false;
+   
+   double cumulative_pv = 0.0;
+   long   cumulative_vol = 0;
+   
+   //--- Pass 1: Sum historical typical prices weighted by liquidity volumes
+   for(int i = 0; i < copied; i++)
+     {
+      double typical_price = (rates[i].high + rates[i].low + rates[i].close) / 3.0;
+      cumulative_pv += typical_price * rates[i].tick_volume;
+      cumulative_vol += rates[i].tick_volume;
+     }
+     
+   //--- Defensive engineering: Intercept fatal zero volume division crashes
+   if(cumulative_vol == 0) return false;
+   
+   //--- Complete tracking pass by extracting daily vwap benchmark price
+   vwap = cumulative_pv / (double)cumulative_vol;
+   
+   double variance_sum = 0.0;
+   //--- Pass 2: Compute statistical variance distribution weighted by volume
+   for(int i = 0; i < copied; i++)
+     {
+      double typical_price = (rates[i].high + rates[i].low + rates[i].close) / 3.0;
+      double diff = typical_price - vwap;
+      variance_sum += (diff * diff) * rates[i].tick_volume;
+     }
+     
+   //--- Calculate dynamic standard deviation from historical sample variance
+   double std_dev = MathSqrt(variance_sum / (double)cumulative_vol);
+   
+   //--- Project structural outer boundary bands using the multiplier
+   upper_band = vwap + (std_dev * deviation_multiplier);
+   lower_band = vwap - (std_dev * deviation_multiplier);
+   
+   return true;
+  }
+```
+
+The data loop relies on a strict double-pass linear profile. The first pass iterates through the synchronized rates memory to calculate the baseline VWAP. It sums the volume products and tracks total liquidity. One critical trap here involves zero-volume environments. During the weekly market rollover or sudden broker disconnections, the platform can print a phantom candle with absolute zero tick volume. Attempting to divide the cumulative price sum by a volume of zero will cause a fatal division-by-zero exception, instantly crashing the Expert Advisor. The engine intercepts this risk with a defensive validation check, dropping the current calculation step if the volume accumulator reads zero.
+
+The second pass targets the volume-weighted variance. It scans the same bar window again, subtracting the newly defined baseline VWAP from each bar's typical price. This difference is squared and multiplied by the tick volume of that specific candle to ensure high-liquidity spikes dominate the volatility rating. Finally, the square root of this average gives the standard deviation, allowing the engine to calculate the upper and lower bands dynamically.
+
+### Building the Visual Diagnostic Indicator
+
+Before plugging this include file into live automated market orders, we must visually verify how the baseline resets across different market sessions. Because our core architecture is thoroughly encapsulated inside the include class, we can instantiate the same CVWAP component within a custom indicator called Ind\_Session\_VWAP.mq5. This script configures three dynamic plotting streams using indicator buffers to draw the lines directly onto the main price chart.
+
+The header and initialization code blocks establish the plotting properties and safely bind the internal arrays to the terminal drawing layer.
+
+```
+//+------------------------------------------------------------------+
+//|                                             Ind_Session_VWAP.mq5 |
+//|                                  Copyright 2026, MetaQuotes Ltd. |
+//+------------------------------------------------------------------+
+#property indicator_chart_window
+#property indicator_buffers 3
+#property indicator_plots   3
+
+#include "VWAP_Engine.mqh"
+
+input double InpDeviation = 1.5; 
+
+double    BufferVWAP[];
+double    BufferUpper[];
+double    BufferLower[];
+CVWAP    *g_vwap_engine;
+
+int OnInit()
+  {
+//--- Bind dynamic double arrays to indicator data channels
+   SetIndexBuffer(0, BufferVWAP, INDICATOR_DATA);
+   SetIndexBuffer(1, BufferUpper, INDICATOR_DATA);
+   SetIndexBuffer(2, BufferLower, INDICATOR_DATA);
+   g_vwap_engine = new CVWAP(_Symbol, PERIOD_CURRENT);
+   return(INIT_SUCCEEDED);
+  }
+
+void OnDeinit(const int reason)
+  {
+//--- Purge dynamic memory pointer allocation to prevent leaks
+   if(CheckPointer(g_vwap_engine) == POINTER_DYNAMIC)
+     {
+      delete g_vwap_engine;
+     }
+  }
+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+  {
+//--- Enforce historical bars availability check
+   if(rates_total < 1) return 0;
+   
+//--- Identify optimized calculation start point to save CPU power
+   int start = (prev_calculated > 0) ? prev_calculated - 1 : 0;
+   
+//--- Traverse the visible timeline dataset sequentially
+   for(int i = start; i < rates_total && !IsStopped(); i++)
+     {
+      int shift = rates_total - 1 - i;
+      double vwap, upper, lower;
+      
+      //--- Query the engine and populate indicator buffers via dot operator
+      if(g_vwap_engine.GetVWAPData(shift, vwap, upper, lower, InpDeviation))
+        {
+         BufferVWAP[i] = vwap;
+         BufferUpper[i] = upper;
+         BufferLower[i] = lower;
+        }
+     }
+   return(rates_total);
+  }
+```
+
+To protect platform CPU efficiency, the calculation script utilizes the prev\_calculated parameter. When the indicator first loads, it runs the double-pass loops across the entire visible chart history. On every subsequent incoming market tick, the algorithm locks the start index to update only the newest forming bar. This optimization check prevents the terminal from recalculating thousands of historical days simultaneously on every price tick, saving processing power during intense trading hours.
+
+### EA Integration and Execution Layer
+
+With visual confirmation that the engine computes values correctly across the chart timeline, the next logical milestone is building the execution layer. I chose to implement the trading script inside an Expert Advisor shell named EA\_VWAP\_Pullback.mq5. When routing orders, a developer can build custom structures manually or leverage existing modules. I preferred to include the native CTrade standard library class because it eliminates hundreds of lines of low-level trade tracking code. The global pointer initializes our class, and the logic remains tightly focused on the actual signal contract parameters.
+
+The initialization code establishes our object lifetime boundaries.
+
+```
+//+------------------------------------------------------------------+
+//|                                          EA_VWAP_Pullback.mq5    |
+//|                                  Copyright 2026, MetaQuotes Ltd. |
+//+------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+#include "VWAP_Engine.mqh" 
+
+input double InpDeviation    = 1.5;  
+input double InpLotSize      = 0.10; 
+
+CVWAP  *g_vwap_engine;
+CTrade  g_trade;
+
+int OnInit()
+  {
+//--- Secure memory space and instantiate the include engine class
+   g_vwap_engine = new CVWAP(_Symbol, PERIOD_CURRENT);
+   return(INIT_SUCCEEDED);
+  }
+
+void OnDeinit(const int reason)
+  {
+//--- Release heap allocation memory to clean the system footprint
+   if(CheckPointer(g_vwap_engine) == POINTER_DYNAMIC)
+     {
+      delete g_vwap_engine;
+     }
+  }
+
+void OnTick()
+  {
+   static datetime last_bar_time = 0;
+//--- Check opening timestamp coordinates for the current active candle
+   datetime current_bar_time = iTime(_Symbol, PERIOD_CURRENT, 0);
+   
+//--- Open execution gate exclusively when a new bar forms on chart
+   if(current_bar_time != last_bar_time)
+     {
+      last_bar_time = current_bar_time;
+      
+      //--- Validate active state allocation of dynamic class pointer
+      if(CheckPointer(g_vwap_engine) != POINTER_INVALID)
+        {
+         double vwap, upper, lower;
+         
+         //--- Query calculation engine using the last confirmed closed bar (shift 1)
+         if(g_vwap_engine.GetVWAPData(1, vwap, upper, lower, InpDeviation))
+           {
+            double close_price = iClose(_Symbol, PERIOD_CURRENT, 1);
+            
+            //--- Manage trade routing conditions based on active netting exposure
+            if(!PositionSelect(_Symbol))
+              {
+               //--- Open entries when price breaks structure deviations boundaries
+               if(close_price <= lower)
+                 {
+                  g_trade.Buy(InpLotSize, _Symbol, 0, 0, 0, "VWAP Lower Band Touch");
+                 }
+               else if(close_price >= upper)
+                 {
+                  g_trade.Sell(InpLotSize, _Symbol, 0, 0, 0, "VWAP Upper Band Touch");
+                 }
+              }
+            else
+              {
+               long pos_type = PositionGetInteger(POSITION_TYPE);
+               
+               if(pos_type == POSITION_TYPE_BUY && close_price >= vwap)
+                 {
+                  g_trade.PositionClose(_Symbol);
+                 }
+               else if(pos_type == POSITION_TYPE_SELL && close_price <= vwap)
+                 {
+                  g_trade.PositionClose(_Symbol);
+                 }
+              }
+           }
+        }
+     }
+  }
+```
+
+Querying history and recalculating volume-based standard deviations on every tick can overload the CPU during volatile sessions. We avoid this trap by installing a strict new bar gate inside the OnTick event handler. By checking the opening timestamp of the current candle, the algorithm authorizes the main calculation loop to execute only once per timeframe cycle.
+
+The execution logic runs within this optimized tick structure to manage open trades.
+
+```
+//+------------------------------------------------------------------+
+//| Expert tick function with strict CPU optimization                |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   static datetime last_bar_time = 0;
+   //--- Check opening timestamp coordinates for the current active candle
+   datetime current_bar_time = iTime(_Symbol, PERIOD_CURRENT, 0);
+   
+   //--- Open execution gate exclusively when a new bar forms on chart
+   if(current_bar_time != last_bar_time)
+     {
+      last_bar_time = current_bar_time;
+      
+      //--- Validate active state allocation of dynamic class pointer
+      if(CheckPointer(g_vwap_engine) != POINTER_INVALID)
+        {
+         double vwap, upper, lower;
+         
+         //--- Query calculation engine using the last confirmed closed bar (shift 1)
+         if(g_vwap_engine.GetVWAPData(1, vwap, upper, lower, InpDeviation))
+           {
+            double close_price = iClose(_Symbol, PERIOD_CURRENT, 1);
+            
+            //--- Manage trade routing conditions based on active netting exposure
+            if(!PositionSelect(_Symbol))
+              {
+               //--- Open entries when price breaks structure deviations boundaries
+               if(close_price <= lower)
+                 {
+                  g_trade.Buy(InpLotSize, _Symbol, 0, 0, 0, "VWAP Lower Band Touch");
+                 }
+               else if(close_price >= upper)
+                 {
+                  g_trade.Sell(InpLotSize, _Symbol, 0, 0, 0, "VWAP Upper Band Touch");
+                 }
+              }
+            else
+              {
+               //--- Read order type properties from the active deal ticket
+               long pos_type = PositionGetInteger(POSITION_TYPE);
+               
+               //--- Enforce immediate structural exit when price returns to fair value core
+               if(pos_type == POSITION_TYPE_BUY && close_price >= vwap)
+                 {
+                  g_trade.PositionClose(_Symbol);
+                 }
+               else if(pos_type == POSITION_TYPE_SELL && close_price <= vwap)
+                 {
+                  g_trade.PositionClose(_Symbol);
+                 }
+              }
+           }
+        }
+     }
+  }
+```
+
+The exit protocol acts as a strict mean-reversion rule. This logic functions perfectly in netting accounts where PositionSelect maps the single active exposure directly. For hedging structures, a developer would need to modify this section with a ticket selection loop to manage multiple concurrent trades safely.
+
+### Backtesting Constraints and Market Dynamics
+
+No mathematical engine operates in a vacuum. During my validation runs in the Strategy Tester on five-minute charts using the 'Open prices only' modeling mode, I observed a critical constraint embedded in the daily session baseline model. Because the mathematical accumulators reset hard at midnight, the first few candles of a new broker day lack significant volume weight. During the Asian opening hours, the deviation bands become exceptionally tight and hypersensitive to low-liquidity market noise. Applying raw entries during this specific window results in erratic fills and excessive stop-outs.
+
+The engine achieves its highest statistical reliability during the high-volume crossovers of the London and New York sessions. Massive institutional order flow anchors a stable fair price boundary during these times, making pullback interactions highly reliable. On a daily timeframe, the bar open time equals the midnight anchor. As a result, the loop has no intraday history to accumulate and will return false.
+
+### Conclusion and Reusable Artifacts
+
+The development of this session engine provides a robust workspace that separates raw liquidity math from trade management. The core blueprint delivers a complete set of three unified files that work together to map intraday value. The VWAP\_Engine.mqh include file acts as the standalone core, containing the structural anchor checks and double-pass volume loops. The Ind\_Session\_VWAP.mq5 indicator instantiates this class to draw the visual baseline and volatility markers smoothly on the chart screen. Finally, the EA\_VWAP\_Pullback.mq5 robot plugs directly into the include methods, utilizing a strict timing filter to query data safely without risking terminal performance or cluttering memory. Developers can scale this framework by adding time-of-day filters and trailing stops. The same include class can also be reused across multiple symbols to build multi-asset intraday portfolios without changing the math.
+
+The file structure is organized cleanly. VWAP\_Engine.mqh contains the source code for the object-oriented daily reset class. Ind\_Session\_VWAP.mq5 delivers the source code for the chart plotting indicator. EA\_VWAP\_Pullback.mq5 implements the trading logic for the automated pullback robot.
+
+### File Structure Table
+
+| File Name | Description |
+| --- | --- |
+| VWAP\_Engine.mqh | Source code for the object-oriented daily reset class and mathematical accumulation engine. |
+| Ind\_Session\_VWAP.mq5 | Source code for the custom visualization indicator plotting the baseline and deviation bands. |
+| EA\_VWAP\_Pullback.mq5 | Source code for the automated pullback trading Expert Advisor with closed bar filters. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22990.zip "Download all attachments in the single ZIP archive")
+
+[VWAP\_Engine.mqh](https://www.mql5.com/en/articles/download/22990/VWAP_Engine.mqh "Download VWAP_Engine.mqh")
+(4.3 KB)
+
+[Ind\_Session\_VWAP.mq5](https://www.mql5.com/en/articles/download/22990/Ind_Session_VWAP.mq5 "Download Ind_Session_VWAP.mq5")
+(3.62 KB)
+
+[EA\_VWAP\_Pullback.mq5](https://www.mql5.com/en/articles/download/22990/EA_VWAP_Pullback.mq5 "Download EA_VWAP_Pullback.mq5")
+(3.58 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Engineering a Self-Healing Expert Advisor in MQL5 (Part 3): Restart-Aware Breakeven and Trailing Systems](https://www.mql5.com/en/articles/22614)
+
+Building on Part 2, the implementation introduces restart-aware breakeven and trailing-stop systems for MetaTrader 5. The EA persists the state, such as breakeven activation, last trailing price, and virtual SL in SQLite, then restores them on startup. This preserves dynamic protection flow and prevents lost progress after terminal interruptions.
+
+[Feature Engineering for ML (Part 7): Entropy Features in Python](https://www.mql5.com/en/articles/22756)
+
+The article provides production-ready entropy estimators (Shannon, plug-in, Lempel–Ziv, Kontoyiannis) operating on tick-rule–encoded sequences. It resolves three correctness and performance issues in the original code, verifies outputs against chapter references, and extends encoding with quantile and sigma options. Users gain reproducible results and markedly improved computation speed for large bar sets.
+
+[MetaTrader 5 Machine Learning Blueprint (Part 18): Sequential Bootstrap, Corrected — Clone, Class Erasure, and the Comparison Toolkit](https://www.mql5.com/en/articles/22912)
+
+The article diagnoses two defects that neutralize sequential bootstrap during cross‑validation: type erasure of SequentiallyBootstrappedBaggingClassifier and a fold‑level shape mismatch from cloning full samples info sets. It retains the classifier's identity, adds find seq bagging to re‑inject fold‑sliced t1 in CalibratorCV.fit, and resets state per split. A new bootstrap\_comparison module reports OOF and OOB metrics and memory, letting you verify that sequential sampling is applied correctly and quantify its impact.
+
+[Forecasting in Trading Using Grey Models](https://www.mql5.com/en/articles/19012)
+
+The article discusses the application of Grey models to forecasting financial time series. We will consider the operating principles of Grey models and the specifics of their application to financial series. We will also discuss the advantages and limitations of using these models in trading.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=tbhjnpuqwxhpclxcbddjqkjduncqomjn&s=79b3b7d43ab907fc7600c7b642473740cb615767dd449e8297031033d7b9547b&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=nrhkqzqwfbqpafnveoqxiiewrcfayfsm&ssn=1788777656674614667&ssn_dr=0&ssn_sr=0&fv_date=1788777656&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22990&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Building%20an%20Object-Oriented%20Session%20VWAP%20Engine%20in%20MQL5%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877765690770168&fz_uniq=5121657666585364152&sv=2552)

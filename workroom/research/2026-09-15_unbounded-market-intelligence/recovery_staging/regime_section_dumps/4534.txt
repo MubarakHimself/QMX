@@ -1,0 +1,341 @@
+# Comparative analysis of 10 flat trading strategies
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+| 14 August 2018 at 11:09
+29 278
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+13](https://www.mql5.com/en/forum/272700 "Comments")
+[Alexander Fedosov](https://www.mql5.com/en/users/alex2356)
+### Table of Contents
+- [Introduction](https://www.mql5.com/en/articles/4534#introduction)
+- [Defining the task when creating a flat trading strategy](https://www.mql5.com/en/articles/4534#defining_the_task_when_creating_a_flat_trading)
+- [Flat trading strategies](https://www.mql5.com/en/articles/4534#flat_trading_strategies)
+- [Strategy #1. The Envelopes indicator with the MFI-based filter](https://www.mql5.com/en/articles/4534#strategy_1_the_envelopes_indicator_with_the_mfi)
+- [Strategy #2. Bollinger Bands and two Moving Averages](https://www.mql5.com/en/articles/4534#strategy_2_bollinger_bands_and_two_moving_averages)
+- [Strategy #3. WSO & WRO Channel with a filter based on Fractal Dimension Ehlers](https://www.mql5.com/en/articles/4534#strategy_3_wso_wro_channel_and_fractal_dimension)
+- [Strategy #4. The Percentage Crossover Channel indicator and the TrendRange-based filter](https://www.mql5.com/en/articles/4534#strategy_4_the_percentage_crossover_channel)
+- [Strategy #5. The Price Channel indicator and the RBVI-based filter](https://www.mql5.com/en/articles/4534#strategy_5_the_price_channel_indicator_and_the)
+- [Strategy #6. The Williams Percent Range indicator and the ADX-based filter](https://www.mql5.com/en/articles/4534#strategy_6_the_williams_percent_range_indicator)
+- [Strategy #7. Modified Keltner channel and the Magic Trend-based filter](https://www.mql5.com/en/articles/4534#strategy_7_modified_keltner_channel_and_the_magic)
+- [Strategy #8. Donchian channel with a confirmation by Trinity Impulse](https://www.mql5.com/en/articles/4534#strategy_8_donchian_channel_with_a_confirmation_by)
+- [Strategy #9. The ATR Channel indicator and a filter based on CCI Color Levels](https://www.mql5.com/en/articles/4534#strategy_9_the_atr_channel_indicator_and_a_filter)
+- [Strategy #10. RSI histogram and a filter based on the Flat indicator](https://www.mql5.com/en/articles/4534#strategy_10_rsi_histogram_and_a_filter_based_on)
+- [Testing](https://www.mql5.com/en/articles/4534#tests)
+- [Findings](https://www.mql5.com/en/articles/4534#findings)
+- [Conclusion](https://www.mql5.com/en/articles/4534#conclusion)
+### Introduction
+Trend following strategies are very popular and easy-to-use, especially for beginners. However, current markets have become more dynamic, while trend movements are less distinct (in terms of both range and duration). By not using the possibility of trading in flat or sideways markets, we lose potential profits. Trend following trading rules are simple: identify the signs of a trend and try to capitalize on it. Trading in flat periods differs much from that. During sideways movement, the price is in a small range and may stay unchanged for quite a long time. There is no directional movement in the market, and liquidity is low.
+### Defining the task when creating a flat trading strategy
+[In the](https://www.mql5.com/en/articles/4534#conclusion) [previous article](https://www.mql5.com/en/articles/3074#task), I defined three tasks, which were required for creating a trend following strategy. Tasks required for the creation of flat trading strategies are very similar.
+Fig. 1. Example of a sideways/flat movement.
+*Task 1. Identifying the presence of a flat period.*
+There is no general and exhaustive definition of a flat (actually there is no proper description of the concept of a trend). However, there can be certain indications of that the market is currently in a flat state. This movement is also called sideways, because there is no clear vertical movement both upwards and downwards. The price moves inside a range, approaching its lower and upper borders in waves. Another sign of a flat period can be low volume of trades in the market or low interest from market participants. This can be seen from a weak price change, as well as from the small tick volume.
+*Task 2. The targets of an open position.*
+Channel trading is often used in relation to flat trading techniques. This is the major method of using the sideways movement for the purpose of profiting. A flat channel is determined in some virtual borders. Further, the trading strategy is built based on relations between the price and the channel borders. Most often, the strategy implies buying or selling when the price bounces off the channel border (Fig. 2).
+Fig. 2. Trading when price bounces off channel borders.
+When selling in the upper part of the channel, we assume that the price will move towards the lower border. That will act as a take profit level. Stop loss can be set as a certain numerical value in points or in accordance with the channel border. A counter strategy is used for Buy operations: buying at the lower channel border and setting the take profit level near the upper border.
+### Flat trading strategies
+I used the above principles when choosing flat trading strategies.
+- Trading will be performed inside the channel. Therefore, we need to choose tools that will help us build a channel and determine the virtual borders of the flat zone.
+- In addition to defining the channel, we need at least one more additional tool to confirm that the price will go in the right direction after rebounding from the channel border. The purpose of such a filter is to avoid false entry signals.
+#### Strategy #1. The Envelopes indicator with the MFI-based filter
+ The channel borders are determined based on the Envelopes indicator. The MFI indicator is additionally used for filtering of signals.
+| Indicator Parameter | Description |
+| --- | --- |
+| Used indicator | [Envelopes](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/envelopes "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/envelopes") |
+| Used indicator | [MFI](https://www.metatrader5.com/en/terminal/help/indicators/bw_indicators/market_facilitation "https://www.metatrader5.com/en/terminal/help/indicators/bw_indicators/market_facilitation") |
+| Timeframe | H1 |
+| Buy conditions | The price reaches the lower channel border, and MFI is in the oversold zone (below 20) |
+| Sell conditions | The price reaches the upper channel border, and MFI is in the overbought zone (above 80) |
+| Exit conditions | The price reaches the opposite channel border |
+Fig. 3 shows market entry conditions according to Strategy #1.
+Fig. 3. Entry conditions for the flat trading Strategy #1
+The code of the Expert Advisor trading this strategy is shown below:
+```
+void OnTick()
+//--- Checking orders previously opened by the EA
+   if(!Trade.IsOpenedByMagic(Inp_MagicNum))
+      //--- Getting data for calculations
+      if(!GetIndValue())
+         return;
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Comparative analysis of 10 flat trading strategies
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)
+### Table of Contents
+- [Introduction](https://www.mql5.com/en/articles/4534#introduction)
+- [Defining the task when creating a flat trading strategy](https://www.mql5.com/en/articles/4534#defining_the_task_when_creating_a_flat_trading)
+- [Flat trading strategies](https://www.mql5.com/en/articles/4534#flat_trading_strategies)
+- [Strategy #1. The Envelopes indicator with the MFI-based filter](https://www.mql5.com/en/articles/4534#strategy_1_the_envelopes_indicator_with_the_mfi)
+- [Strategy #5. The Price Channel indicator and the RBVI-based filter](https://www.mql5.com/en/articles/4534#strategy_5_the_price_channel_indicator_and_the)
+- [Strategy #6. The Williams Percent Range indicator and the ADX-based filter](https://www.mql5.com/en/articles/4534#strategy_6_the_williams_percent_range_indicator)
+- [Strategy #7. Modified Keltner channel and the Magic Trend-based filter](https://www.mql5.com/en/articles/4534#strategy_7_modified_keltner_channel_and_the_magic)
+- [Strategy #8. Donchian channel with a confirmation by Trinity Impulse](https://www.mql5.com/en/articles/4534#strategy_8_donchian_channel_with_a_confirmation_by)
+- [Strategy #9. The ATR Channel indicator and a filter based on CCI Color Levels](https://www.mql5.com/en/articles/4534#strategy_9_the_atr_channel_indicator_and_a_filter)
+- [Strategy #10. RSI histogram and a filter based on the Flat indicator](https://www.mql5.com/en/articles/4534#strategy_10_rsi_histogram_and_a_filter_based_on)
+- [Findings](https://www.mql5.com/en/articles/4534#findings)
+- [Conclusion](https://www.mql5.com/en/articles/4534#conclusion)
+### Introduction
+Trend following strategies are very popular and easy-to-use, especially for beginners. However, current markets have become more dynamic, while trend movements are less distinct (in terms of both range and duration). By not using the possibility of trading in flat or sideways markets, we lose potential profits. Trend following trading rules are simple: identify the signs of a trend and try to capitalize on it. Trading in flat periods differs much from that. During sideways movement, the price is in a small range and may stay unchanged for quite a long time. There is no directional movement in the market, and liquidity is low.
+### Defining the task when creating a flat trading strategy
+
+[In the](https://www.mql5.com/en/articles/4534#conclusion) [previous article](https://www.mql5.com/en/articles/3074#task), I defined three tasks, which were required for creating a trend following strategy. Tasks required for the creation of flat trading strategies are very similar.
+### Flat trading strategies
+I used the above principles when choosing flat trading strategies.
+#### Strategy #1. The Envelopes indicator with the MFI-based filter
+ The channel borders are determined based on the Envelopes indicator. The MFI indicator is additionally used for filtering of signals.
+| --- | --- |
+| Used indicator | [Envelopes](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/envelopes "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/envelopes") |
+| Used indicator | [MFI](https://www.metatrader5.com/en/terminal/help/indicators/bw_indicators/market_facilitation "https://www.metatrader5.com/en/terminal/help/indicators/bw_indicators/market_facilitation") |
+| Timeframe | H1 |
+| Buy conditions | The price reaches the lower channel border, and MFI is in the oversold zone (below 20) |
+#### Strategy #2. Bollinger Bands and two Moving Averages
+Channel borders are determined using Bollinger Bands, and signals are filtered based on the relative position of the slow and fast MAs.
+| Used indicator | [Bollinger Bands](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/bb "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/bb") |
+| Used indicator | [Moving Average](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/ma") |
+| Buy conditions | The price reaches the lower channel border, the fast MA is above the slow one |
+#### Strategy #3. WSO & WRO Channel and Fractal Dimension Ehlers
+The main signal indicator is WSO & WRO Channel, which is a channel based on two oscillators: WSO (Widner Support Oscillator) and WRO (Widner Resistance Oscillator). The idea of the indicator is based on the article "Automated Support and Resistance" by Mel Widner. To filter the signals, we will use the Fractal Dimension indicator, which was described in the article "Fractal Dimension as a Market Mode Sensor" by John F. Ehlers and Ric Way.
+| Used indicator | [WSO & WRO Channel](https://www.mql5.com/en/code/20589) |
+| Used indicator | [Fractal Dimension Ehlers](https://www.mql5.com/en/code/20580) |
+| Timeframe | Any |
+| Buy conditions | The price reaches the lower channel border, and the Fractal Dimension value is below the threshold |
+| Sell conditions | The price reaches the upper channel border, and the Fractal Dimension value is below the threshold |
+| Exit conditions | The price reaches the opposite channel border |
+
+  {
+   if(wwc_low[0]>close[0] && fdi[0]<Inp_FdiThreshold)
+     {
+      tp=wwc_up[0];
+   if(wwc_up[0]<close[0] && fdi[0]<Inp_FdiThreshold)
+      tp=wwc_low[0];
+#### Strategy #4. The Percentage Crossover Channel indicator and the TrendRange-based filter
+In this case, the channel is built at the breakout of levels by a certain percentage. We need an indicator building the channel, search for points where the price bounces off the channel borders and a signals filter. We will use the TrendRange indicator, which shows both trend and flat states. The states will be applied for filtering signals.
+#### Strategy #5. The Price Channel indicator and the RBVI-based filter
+The Price Channel indicator builds the channel, whose upper and lower borders are determined by the highest and the lowest prices over the period. False signals will be filtered out by RBVI, which determines the presence of a flat period in the market.
+| Buy conditions | The price reaches the lower channel border, and the RBVI value is below the threshold |
+| Sell conditions | The price reaches the upper channel border, and the RBVI value is below the threshold |
+Entry conditions are shown in fig.7. RBVI threshold value is 40. The value can be changed in the Expert Advisor parameters.
+![](https://c.mql5.com/2/32/005__2.gif)
+#### Strategy #6. The Williams Percent Range indicator and the ADX-based filter
+Williams's Percent Range determining the overbought/oversold state is used for finding entry points. Since our purpose is to trade in flat period or when the price is supposed to return to a certain range, let's use the trend indicator ADX in order to determine the absence of a directional movement.
+| Indicator Parameter | Description |
+| --- | --- |
+| Used indicator | [Williams Percent Range](https://www.metatrader5.com/en/terminal/help/indicators/oscillators/wpr "https://www.metatrader5.com/en/terminal/help/indicators/oscillators/wpr") |
+| Used indicator | [ADX](https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/admi "https://www.metatrader5.com/en/terminal/help/indicators/trend_indicators/admi") |
+| Timeframe | Any |
+| Buy conditions | The WPR indicator is in the oversold zone (below -80) and the ADX value is below the threshold. |
+| Sell conditions | The WPR indicator is in the overbought zone (above -20) and the ADX value is below the threshold. |
+| Exit conditions | Take Profit/Stop Loss |
+
+As can be seen in Fig. 8, the default flat area by ADX is set to 30. The value can be customized in the Expert Advisor code.
+![](https://c.mql5.com/2/32/6.gif)
+The strategy implementation is provided in the below listing. Here the Inp\_FlatLevel variable sets the above mentioned ADX threshold value.
+```
+  {
+   return(wpr[0]<-80 && adx[0]<Inp_FlatLevel)?true:false;
+  }
+//+------------------------------------------------------------------+
+   return(wpr[0]>=-20 && adx[0]<Inp_FlatLevel)?true:false;
+   return(CopyBuffer(InpInd_Handle1,0,0,2,wpr)<=0  ||
+          CopyBuffer(InpInd_Handle2,0,0,2,adx)<=0)?false:true;
+#### Strategy #7. Modified Keltner channel and the Magic Trend-based filter
+Price's bouncing off the Keltner channel is checked using the Magic Trend indicator, which should identify flat zones.
+#### Strategy #8. Donchian channel with a confirmation by Trinity Impulse
+In this case, we try to catch the moments when the price bounces off the Donchian channel borders, while the Trinity Impulse indicator is in the sideways movement state.
+#### Strategy #9. The ATR Channel indicator and a filter based on CCI Color Levels
+ATR Channel is based on ATR deviations from a moving average. CCI Color Levels is a CCI indicator displayed as a histogram of threshold values, which indicate price movement. We use this indicator to filter the channel's flat state (when CCI is between the threshold values).
+| Indicator Parameter | Description |
+| --- | --- |
+| Used indicator | [ATR Channel](https://www.mql5.com/en/code/766) |
+| Used indicator | [CCI Color Levels](https://www.mql5.com/en/code/19704) |
+| Timeframe | Any |
+| Buy conditions | The price reaches the lower channel border, and the CCI Color Levels value is in the range between the thresholds |
+| Sell conditions | The price reaches the upper channel border, and the CCI Color Levels value is in the range between the thresholds |
+| Exit conditions | The price reaches the opposite channel border |
+
+  {
+   if(atr_low[0]>close[0] && cci[0]<Inp_CCI_LevelUP && cci[0]>Inp_CCI_LevelDOWN)
+     {
+      tp=atr_up[0];
+      return true;
+     }
+   if(atr_up[0]<close[0] && cci[0]<Inp_CCI_LevelUP && cci[0]>Inp_CCI_LevelDOWN)
+      tp=atr_low[0];
+   return(CopyBuffer(InpInd_Handle1,1,0,2,atr_up)<=0  ||
+          CopyBuffer(InpInd_Handle1,2,0,2,atr_low)<=0 || 
+          CopyBuffer(InpInd_Handle2,2,0,2,cci)<=0 || 
+          CopyClose(Symbol(),PERIOD_CURRENT,0,2,close)<=0
+#### Strategy #10. RSI histogram and a filter based on the Flat indicator
+RSI in the form of a histogram provides a better visualization, since the main market entry signals are generated in its overbought/oversold zones. Flat is used to filter out false signals.
+| Used indicator | [RSI\_Histogram](https://www.mql5.com/en/code/14923) |
+| Used indicator | [Flat](https://www.mql5.com/en/code/2060) |
+| Timeframe | Any |
+| Buy conditions | RSI is in the oversold zone (below the threshold) and Flat is in the flat zone. |
+| Sell conditions | RSI is in the overbought zone (above the threshold) and Flat is in the flat zone. |
+| Exit conditions | Take Profit/Stop Loss |
+
+### Testing
+Now, that we have defined 10 flat trading strategies and implemented them in the code, let's select common testing conditions.
+Testing results:
+![](https://c.mql5.com/2/32/001.gif)
+Fig. 13. Flat Strategy #1. Testing results.
+**Strategy #2 Test (Bollinger Bands and two Moving Averages)**
+![](https://c.mql5.com/2/32/002.gif)
+Fig. 14. Flat Strategy #2. Testing results.
+**Strategy #3 Test (WSO & WRO Channel with a filter based on Fractal Dimension Ehlers)**
+input int                  Inp_WsoWroPeriod=16;                         //Wso & Wro Channel period
+//--- Fractal Dimension Ehlers parameters
+input int                  Inp_FdiPeriod    =  18;                      //Fractal dimension period
+input double               Inp_FdiThreshold =  1.4;                     //Fractal dimension threshold
+input ENUM_APPLIED_PRICE   Inp_Price        = PRICE_CLOSE;              //Applied price
+```
+![](https://c.mql5.com/2/32/003.gif)
+Fig. 15. Flat Strategy #3. Testing results.
+**Strategy #4 Test (the Percentage Crossover Channel indicator and the TrendRange based filter)**
+![](https://c.mql5.com/2/32/004__1.gif)
+Fig.16. Flat Strategy #4. Testing results.
+
+**Strategy #5 Test (the Price Channel indicator and the RBVI based filter)**
+![](https://c.mql5.com/2/32/005__3.gif)
+Fig. 17. Flat Strategy #5. Testing results.
+**Strategy #6 Test (the Williams Percent Range indicator and the ADX based filter)**
+Preset:
+input int                  Inp_WPRPeriod=10;                            //Period of WPR
+//--- ADX indicator parameter
+input int                  Inp_ADXPeriod=14;                            //Period of ADX
+input int                  Inp_FlatLevel=40;                            //Flat Level of ADX
+Testing results:
+![](https://c.mql5.com/2/32/006__2.gif)
+Fig. 18. Flat Strategy #6. Testing results.
+**Strategy #7 Test (Modified Keltner channel and the Magic Trend based filter)**
+input uint                    Inp_PeriodCCI   =  60;                    // CCI period
+input uint                    Inp_PeriodATR   =  5;                     // ATR period
+```
+![](https://c.mql5.com/2/32/007__2.gif)
+Fig. 19. Flat Strategy #7. Testing results.
+**Strategy #8 Test (Donchian channel with a confirmation by Trinity Impulse)**
+![](https://c.mql5.com/2/32/008__2.gif)
+
+Fig. 20. Flat Strategy #8. Testing results.
+**Strategy #9 Test (the ATR Channel indicator and a filter based on CCI Color Levels)**
+//--- ATR Channel parameters
+input ENUM_MA_METHOD       Inp_MA_Method=MODE_SMA;                      //MA smoothing method
+input uint                 Inp_MA_Period=10;                            //MA period
+input uint                 Inp_ATR_Period=12;                           //ATR period
+input double               Inp_Factor=1.5;                              //Number of deviations
+input ENUM_APPLIED_PRICE   Inp_IPC=PRICE_LOW;                           //Applied price
+![](https://c.mql5.com/2/32/009__2.gif)
+Fig. 21. Flat Strategy #9. Testing results.
+**Strategy #10 Test (RSI histogram and a filter based on the Flat indicator)**
+input int                  Inp_Shift=0;                                 // horizontal shift of the indicator in bars
+//--- Flat indicator parameters
+input uint                 Inp_Smooth=10;                               // Smoothing period
+input ENUM_MA_METHOD       Inp_ma_method=MODE_SMA;                      // Smoothing type
+Testing results:
+![](https://c.mql5.com/2/32/010__2.gif)
+Fig. 22. Flat Strategy #10. Testing results.
+### Findings
+Testing and optimization of the analyzed strategies for trading the sideways market have produced the following results.
+
+### Conclusion
+Below is a summary table of the names of Expert Advisors, which were developed and used in this article, as well as auxiliary classes and a list of indicators used in the above strategies. The archive attached below contains all described files properly arranged into folders. For their proper operation, you only need to save the **MQL5** folder into the terminal folder.
+| 5 | Strategy\_5.mq5 | Expert Advisor | Strategy #5. The Price Channel indicator and the RBVI-based filter |
+| 6 | Strategy\_6.mq5 | Expert Advisor | Strategy #6. The Williams Percent Range indicator and the ADX-based filter |
+| 7 | Strategy\_7.mq5 | Expert Advisor | Strategy #7. Modified Keltner channel and the Magic Trend-based filter |
+| 8 | Strategy\_8.mq5 | Expert Advisor | Strategy #8. Donchian channel with a confirmation by Trinity Impulse |
+| 9 | Strategy\_9.mq5 | Expert Advisor | Strategy #9. The ATR Channel indicator and a filter based on CCI Color Levels |
+| 10 | Strategy\_10.mq5 | Expert Advisor | Strategy #10. RSI histogram and a filter based on the Flat indicator |
+| 11 | Trade.mqh | Library | A class of trading functions |
+| 22 | trinity\_impulse.mq5 | Indicator | Used in Strategy #8 |
+| 23 | atr\_channel.mq5 | Indicator | Used in Strategy #9 |
+| 24 | cci\_color\_levels.mq5 | Indicator | Used in Strategy #9 |
+| 25 | rsi\_histogram.mq5 | Indicator | Used in Strategy #10 |
+| 26 | flat.mq5 | Indicator | Used in Strategy #10 |
+Translated from Russian by MetaQuotes Ltd.   
+[10Flat.zip](https://www.mql5.com/en/articles/download/4534/10flat.zip "Download 10Flat.zip")
+(60.96 KB)
+[Need a reliable hosting solution for your robots?
+Contact your broker and find out about available Sponsored MetaTrader VPS offerings
+Learn more
+
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Below is a summary table of the names of Expert Advisors, which were developed and used in this article, as well as auxiliary classes and a list of indicators used in the above strategies. The archive attached below contains all described files properly arranged into folders. For their proper operation, you only need to save the **MQL5** folder into the terminal folder.
+
+**Programs used in the article:**
+
+| # | Name | Type | Description |
+| --- | --- | --- | --- |
+| 1 | Strategy\_1.mq5 | Expert Advisor | Strategy #1. The Envelopes indicator with the MFI-based filter |
+| 2 | Strategy\_2.mql5 | Expert Advisor | Strategy #2. Bollinger Bands and two Moving Averages |
+| 3 | Strategy\_3.mq5 | Expert Advisor | Strategy #3. WSO & WRO Channel with a filter based on Fractal Dimension Ehlers |
+| 4 | Strategy\_4.mq5 | Expert Advisor | Strategy #4. The Percentage Crossover Channel indicator and the TrendRange-based filter |
+| 5 | Strategy\_5.mq5 | Expert Advisor | Strategy #5. The Price Channel indicator and the RBVI-based filter |
+| 6 | Strategy\_6.mq5 | Expert Advisor | Strategy #6. The Williams Percent Range indicator and the ADX-based filter |
+| 7 | Strategy\_7.mq5 | Expert Advisor | Strategy #7. Modified Keltner channel and the Magic Trend-based filter |
+| 8 | Strategy\_8.mq5 | Expert Advisor | Strategy #8. Donchian channel with a confirmation by Trinity Impulse |
+| 9 | Strategy\_9.mq5 | Expert Advisor | Strategy #9. The ATR Channel indicator and a filter based on CCI Color Levels |
+| 10 | Strategy\_10.mq5 | Expert Advisor | Strategy #10. RSI histogram and a filter based on the Flat indicator |
+| 11 | Trade.mqh | Library | A class of trading functions |
+| 13 | wwc.mq5 | Indicator | Used in Strategy #3 |
+| 14 | fdi.mq5 | Indicator | Used in Strategy #3 |
+| 15 | pcc.mq5 | Indicator | Used in Strategy #4 |
+| 16 | trend\_range.mq5 | Indicator | Used in Strategy #4 |
+| 17 | price\_channel.mq5 | Indicator | Used in Strategy #5 |
+| 18 | rbvi.mq5 | Indicator | Used in Strategy #5 |
+| 19 | customizable \_keltner.mq5 | Indicator | Used in Strategy #7 |
+| 20 | magic\_trend.mq5 | Indicator | Used in Strategy #7 |
+| 21 | donchian\_channel.mq5 | Indicator | Used in Strategy #8 |
+| 22 | trinity\_impulse.mq5 | Indicator | Used in Strategy #8 |
+| 23 | atr\_channel.mq5 | Indicator | Used in Strategy #9 |
+| 24 | cci\_color\_levels.mq5 | Indicator | Used in Strategy #9 |
+| 25 | rsi\_histogram.mq5 | Indicator | Used in Strategy #10 |
+| 26 | flat.mq5 | Indicator | Used in Strategy #10 |
+
+Translated from Russian by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/ru/articles/4534>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/4534.zip "Download all attachments in the single ZIP archive")
+
+[10Flat.zip](https://www.mql5.com/en/articles/download/4534/10flat.zip "Download 10Flat.zip")
+(60.96 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Implementing indicator calculations into an Expert Advisor code](https://c.mql5.com/2/32/expert_indicator.png)
+[Implementing indicator calculations into an Expert Advisor code](https://www.mql5.com/en/articles/4602)
+
+The reasons for moving an indicator code to an Expert Advisor may vary. How to assess the pros and cons of this approach? The article describes implementing an indicator code into an EA. Several experiments are conducted to assess the speed of the EA's operation.
+
+![Applying the Monte Carlo method for optimizing trading strategies](https://c.mql5.com/2/32/Monte_Carlo.png)
+[Applying the Monte Carlo method for optimizing trading strategies](https://www.mql5.com/en/articles/4347)
+
+Before launching a robot on a trading account, we usually test and optimize it on quotes history. However, a reasonable question arises: how can past results help us in the future? The article describes applying the Monte Carlo method to construct custom criteria for trading strategy optimization. In addition, the EA stability criteria are considered.
+
+![How to create Requirements Specification for ordering a trading robot](https://c.mql5.com/2/32/HowCreateExpertSpecification.png)
+[How to create Requirements Specification for ordering a trading robot](https://www.mql5.com/en/articles/4368)
+
+Are you trading using your own strategy? If your system rules can be formally described as software algorithms, it is better to entrust trading to an automated Expert Advisor. A robot does not need sleep or food and is not subject to human weaknesses. In this article, we show how to create Requirements Specification when ordering a trading robot in the Freelance service.
+
+![Deep Neural Networks (Part VI). Ensemble of neural network classifiers: bagging](https://c.mql5.com/2/48/Deep_Neural_Networks_06.png)
+[Deep Neural Networks (Part VI). Ensemble of neural network classifiers: bagging](https://www.mql5.com/en/articles/4227)
+
+The article discusses the methods for building and training ensembles of neural networks with bagging structure. It also determines the peculiarities of hyperparameter optimization for individual neural network classifiers that make up the ensemble. The quality of the optimized neural network obtained in the previous article of the series is compared with the quality of the created ensemble of neural networks. Possibilities of further improving the quality of the ensemble's classification are considered.
+
+[Need a reliable hosting solution for your robots?
+Contact your broker and find out about available Sponsored MetaTrader VPS offerings
+Learn more
+
+![](https://www.mql5.com/ff/sh/0pw0dk81s56qy774z2/01.png)](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/forum/449311&a=vljwvezfjkfbvviocwskggexlvgykvob&s=70cf8e354b9a125332533ffb65d7365abe8dde5b5c1ede9caac479a9e9df4f25&uid=&ref=https://www.mql5.com/en/articles/4534&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6419662595220466868)

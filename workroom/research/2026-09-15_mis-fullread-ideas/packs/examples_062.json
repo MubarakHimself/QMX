@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_062",
+  "section": "Examples",
+  "parent_shard": "examples_062",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 22258,
+      "title": "Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22258.md"
+    },
+    {
+      "id": 22323,
+      "title": "Creating an EMA Crossover Forward Simulation Indicator in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22323.md"
+    },
+    {
+      "id": 22383,
+      "title": "Event-Driven Architecture in MQL5: How to Turn an Expert Advisor into a Full-Fledged Trading System",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22383.md"
+    },
+    {
+      "id": 22388,
+      "title": "Overcoming Accessibility Problems in MQL5 Trading Tools (Part IV): Remote voice trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22388.md"
+    },
+    {
+      "id": 22391,
+      "title": "MetaTrader 5: Build a Market to Suit Your Strategy \u2014 Renko/Range/Volume, Synthetics, and Stress Tests on Custom Symbols",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22391.md"
+    },
+    {
+      "id": 22393,
+      "title": "3D Visualization Without External Libraries: How MetaTrader 5 Reveals Optimization Results via MQL5 + DX11",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22393.md"
+    },
+    {
+      "id": 22395,
+      "title": "The Power of MetaTrader 5: From Step-by-Step Debugging to EX5 Protection in a Unified Environment",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22395.md"
+    },
+    {
+      "id": 22526,
+      "title": "Integrating AI into 3 Smart Money Concepts (SMC): OB, BOS, and FVG",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22526.md"
+    },
+    {
+      "id": 22666,
+      "title": "Interactive Supply and Demand Zone Manager in MQL5 (Part I): From Manual to Automated Lifecycle",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22666.md"
+    },
+    {
+      "id": 22668,
+      "title": "Overcoming Accessibility Problems in MQL5 Trading Tools (Part V): Gesture-Based Trading With Computer Vision",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22668.md"
+    },
+    {
+      "id": 22691,
+      "title": "Step-by-Step Implementation of a Local Stop Loss System in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22691.md"
+    },
+    {
+      "id": 22699,
+      "title": "Publish Your Article Code to MQL5 Algo Forge in 10 Minutes: A Step-by-Step Guide",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22699.md"
+    }
+  ]
+}

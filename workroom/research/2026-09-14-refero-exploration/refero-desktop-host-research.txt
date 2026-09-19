@@ -1,0 +1,777 @@
+- link "Refero":
+  - /url: /
+- link "New research":
+  - /url: /
+  - button "New research":
+    - generic: New research
+- list:
+  - link "Web apps":
+    - /url: /search
+    - generic: Web apps
+  - link "iOS apps":
+    - /url: /apps/search
+    - generic: iOS apps
+  - link "Styles Beta":
+    - /url: https://styles.refero.design/
+    - generic: Styles
+    - generic: Beta
+  - link "Bookmarks":
+    - /url: /bookmarks
+    - generic: Bookmarks
+- heading "History" [level=3]
+- list:
+  - link "Desktop Agent Hosts & Workspaces":
+    - /url: /research/cbeeec09-2790-4143-9ae6-feb7ff0b66b9
+  - link "Analytics & Experiment UI References":
+    - /url: /research/2e49353b-2587-454f-935a-abbd54f6f0c0
+  - link "Desktop AI Workbench Layouts":
+    - /url: /research/dfe9f4dd-85ed-4f80-8e65-7be3574a759a
+  - link "Bloomberg-Style Dashboard Designs":
+    - /url: /research/78fe04a9-1dc6-4a4a-86ea-4389b6aa8c5b
+  - link:
+    - /url: /research/null
+  - link:
+    - /url: /research/null
+  - link:
+    - /url: /research/null
+- generic: Mubarak Himself
+- textbox [disabled]: Desktop agent host layouts
+- generic: Research mode
+- generic: Web apps
+- generic: iOS apps
+- generic: Checking what works...
+- paragraph: "DESKTOP interfaces only. Investigate whole agent working environments, especially Manus, Factory, ChatGPT and Claude: session/project navigation, substantial conversation, browser/files/code/tools alongside it, open-work tabs and expandable work areas. The design question is a desktop application host: a compact global menu opens a complete work environment in a tab; its interior can have its own navigation and tools. The agent environment is one such interior, and agents can also participate in other environments. Find full-screen working layouts that help distinguish global navigation, local session navigation and active work. Also compare Bloomberg-style trading terminals and CRM/CMS multi-module shells for the outer host. Do not return mobile, isolated component examples, landing pages, generic KPI dashboards, or arbitrary sidebar-plus-chat mockups. Clearly identify whether each screenshot supports the outer host or the inner agent environment. Prioritize Manus and distinctly different desktop agent layouts."
+- text: Screens search
+- text: Web apps
+- link "Manus agent workspace":
+  - /url: /search?query=Manus%20agent%20workspace&pass_source=chat
+- link "622 screens See all":
+  - /url: /search?query=Manus%20agent%20workspace&pass_source=chat
+  - generic: 622 screens
+  - text: See all
+- link "Manus web screenshot. Home Page UI":
+  - /url: /pages/521c9118-85f5-4241-a297-1f98a0445c17?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot. Home Page UI"
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Manus web screenshot. Home Page UI":
+  - /url: /pages/b0dffda1-ba46-4ce1-969a-2e813351f7d8?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot. Home Page UI"
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Manus web screenshot.":
+  - /url: /pages/cd774b1d-9a72-43c2-9234-3ea4087bf142?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Manus web screenshot.":
+  - /url: /pages/2001938c-d735-49ff-9f63-4586bfd5dac0?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Manus web screenshot. Home Page UI":
+  - /url: /pages/aae46cc0-070f-49cc-9fef-5059c3644698?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot. Home Page UI"
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Manus web screenshot. Home Page UI":
+  - /url: /pages/7da38c19-2291-4240-b7d0-e12f50de4f90?query=Manus%20agent%20workspace&pass_source=chat&source=search
+  - img "Manus web screenshot. Home Page UI"
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- link "Show More":
+  - /url: /search?query=Manus%20agent%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "ChatGPT project workspace":
+  - /url: /search?query=ChatGPT%20project%20workspace&pass_source=chat
+- link "338 screens See all":
+  - /url: /search?query=ChatGPT%20project%20workspace&pass_source=chat
+  - generic: 338 screens
+  - text: See all
+- link "MWM web screenshot. Home Page UI":
+  - /url: /pages/617ea67c-ec2b-4401-a0a3-fa2ef2309e37?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "MWM web screenshot. Home Page UI"
+- link "MWM MWM":
+  - /url: /search?site_id[id][]=931
+  - img "MWM"
+  - generic: MWM
+- link "ChatGPT web screenshot.":
+  - /url: /pages/6ed2a1ca-a1fc-49f4-8e3c-44910bb0de28?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "ChatGPT web screenshot.":
+  - /url: /pages/65f083c7-89d2-4aa7-86ac-7462abe1eb4b?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "Spyglass web screenshot. Sign Up UI and Verification UI":
+  - /url: /pages/f8736f53-3ffc-4929-aa31-7c808ea75c24?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Sign Up UI and Verification UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "ChatGPT web screenshot.":
+  - /url: /pages/e04babc2-aa6e-441a-8ac9-5730feaa3a5c?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "ChatGPT web screenshot.":
+  - /url: /pages/d7abe121-64e4-4a20-b1b1-433c67b0a612?query=ChatGPT%20project%20workspace&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "Show More":
+  - /url: /search?query=ChatGPT%20project%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Claude workspace artifacts":
+  - /url: /search?query=Claude%20workspace%20artifacts&pass_source=chat
+- link "748 screens See all":
+  - /url: /search?query=Claude%20workspace%20artifacts&pass_source=chat
+  - generic: 748 screens
+  - text: See all
+- link "Claude web screenshot. Home Page UI":
+  - /url: /pages/0366c911-ef77-4a8f-9976-811c3bdd8cc7?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+  - img "Claude web screenshot. Home Page UI"
+- link "Claude":
+  - /url: /search?site_id[id][]=506
+  - generic: Claude
+- link "Fibery web screenshot. Delete Account UI":
+  - /url: /pages/3712ee3e-a06c-49c6-9f18-7f963f14dc23?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+  - img "Fibery web screenshot. Delete Account UI"
+- link "Fibery":
+  - /url: /search?site_id[id][]=415
+  - generic: Fibery
+- link "Spyglass web screenshot. Sign Up UI and Verification UI":
+  - /url: /pages/af224cce-ade5-48c3-901a-24a91f2f1bc1?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Sign Up UI and Verification UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "Spyglass web screenshot. Sign Up UI and Verification UI":
+  - /url: /pages/f8736f53-3ffc-4929-aa31-7c808ea75c24?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Sign Up UI and Verification UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link:
+  - /url: /pages/e828d065-9d5a-4071-9821-802f1fd902ba?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link:
+  - /url: /pages/66af9df6-f079-428e-bdde-4b93eb125ea6?query=Claude%20workspace%20artifacts&pass_source=chat&source=search
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "Show More":
+  - /url: /search?query=Claude%20workspace%20artifacts&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Factory agent workspace":
+  - /url: /search?query=Factory%20agent%20workspace&pass_source=chat
+- link "705 screens See all":
+  - /url: /search?query=Factory%20agent%20workspace&pass_source=chat
+  - generic: 705 screens
+  - text: See all
+- link:
+  - /url: /pages/ea596f70-2cf9-4192-b264-0f93e5fdee58?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link:
+  - /url: /pages/87e10fb9-8b0a-4e71-b95a-31b6eb7b58d1?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link:
+  - /url: /pages/00018f10-0cef-422d-82cc-cb19f334324a?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link:
+  - /url: /pages/57ff0472-70d6-4215-851c-d1f013b4a3bb?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link:
+  - /url: /pages/06af9d72-9e1b-4ae0-9104-8d38d9270632?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link:
+  - /url: /pages/8bcd2e73-62e0-40c9-8b5b-56267986aef4?query=Factory%20agent%20workspace&pass_source=chat&source=search
+- link "Factory":
+  - /url: /search?site_id[id][]=734
+  - generic: Factory
+- link "Show More":
+  - /url: /search?query=Factory%20agent%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Trading terminal multi panel workspace":
+  - /url: /search?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/5178eac4-47e4-48ae-977f-aed6fa00bdc6?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Kraken":
+  - /url: /search?site_id[id][]=161
+  - generic: Kraken
+- link:
+  - /url: /pages/60ecbcc5-62d7-4615-abd4-72bb3cccefbd?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Mural":
+  - /url: /search?site_id[id][]=327
+  - generic: Mural
+- link:
+  - /url: /pages/6b264f61-5572-4a58-8480-22f66ff68969?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Twitch":
+  - /url: /search?site_id[id][]=159
+  - generic: Twitch
+- link:
+  - /url: /pages/69751349-05f1-4fee-abac-c5452f01bc17?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Kraken":
+  - /url: /search?site_id[id][]=161
+  - generic: Kraken
+- link:
+  - /url: /pages/08c31957-8496-489a-af95-04e35fd20f57?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Twitch":
+  - /url: /search?site_id[id][]=159
+  - generic: Twitch
+- link:
+  - /url: /pages/a73ad3cd-d23b-4cb5-99b9-aa8d4e6b961c?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Missive":
+  - /url: /search?site_id[id][]=671
+  - generic: Missive
+- link "Show More":
+  - /url: /search?query=Trading%20terminal%20multi%20panel%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "CRM multi module application shell":
+  - /url: /search?query=CRM%20multi%20module%20application%20shell&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=CRM%20multi%20module%20application%20shell&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/af2a79b4-b6c3-4001-9b25-dcfa413e4faa?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "DocuSign":
+  - /url: /search?site_id[id][]=31
+  - generic: DocuSign
+- link:
+  - /url: /pages/396f54f0-ec64-419c-9092-c887941120d5?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Creative Market":
+  - /url: /search?site_id[id][]=264
+  - generic: Creative Market
+- link:
+  - /url: /pages/cf738728-0f1c-42a0-8249-0627f1249715?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Teachable":
+  - /url: /search?site_id[id][]=358
+  - generic: Teachable
+- link:
+  - /url: /pages/0ede0c40-5673-48f7-a9fe-ce0e1aea90c9?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Tango":
+  - /url: /search?site_id[id][]=653
+  - generic: Tango
+- link:
+  - /url: /pages/8c2ff81a-bb6b-4db3-a4c4-edd98769ee87?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Attio":
+  - /url: /search?site_id[id][]=37
+  - generic: Attio
+- link:
+  - /url: /pages/17bc3989-ea3d-455d-89db-b552da0d1f01?query=CRM%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Monday":
+  - /url: /search?site_id[id][]=171
+  - generic: Monday
+- link "Show More":
+  - /url: /search?query=CRM%20multi%20module%20application%20shell&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "CMS multi module application shell":
+  - /url: /search?query=CMS%20multi%20module%20application%20shell&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=CMS%20multi%20module%20application%20shell&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/af2a79b4-b6c3-4001-9b25-dcfa413e4faa?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "DocuSign":
+  - /url: /search?site_id[id][]=31
+  - generic: DocuSign
+- link:
+  - /url: /pages/03fcdf5c-0bd1-447a-aa77-f4a306591796?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Rive":
+  - /url: /search?site_id[id][]=219
+  - generic: Rive
+- link:
+  - /url: /pages/2d79faa4-e35d-403f-ac44-5825f4f5a4b2?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Acuity Scheduling":
+  - /url: /search?site_id[id][]=825
+  - generic: Acuity Scheduling
+- link:
+  - /url: /pages/cf738728-0f1c-42a0-8249-0627f1249715?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Teachable":
+  - /url: /search?site_id[id][]=358
+  - generic: Teachable
+- link:
+  - /url: /pages/42049204-f9e5-4a4f-a7fe-12b539b6d9d3?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Lulu and Georgia":
+  - /url: /search?site_id[id][]=368
+  - generic: Lulu and Georgia
+- link:
+  - /url: /pages/9204a9ab-1a7b-4c44-a48a-79a6c3606b75?query=CMS%20multi%20module%20application%20shell&pass_source=chat&source=search
+- link "Webflow":
+  - /url: /search?site_id[id][]=43
+  - generic: Webflow
+- link "Show More":
+  - /url: /search?query=CMS%20multi%20module%20application%20shell&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Manus browser files computer use agent session workspace":
+  - /url: /search?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/e278c240-1289-411e-a642-680de580ef69?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "Miro":
+  - /url: /search?site_id[id][]=80
+  - generic: Miro
+- link:
+  - /url: /pages/54cb477f-c614-490b-a744-9e902f84e4db?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "Attio":
+  - /url: /search?site_id[id][]=37
+  - generic: Attio
+- link:
+  - /url: /pages/8ec20870-5256-4ea1-8029-0c83fca6145f?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "Enode":
+  - /url: /search?site_id[id][]=599
+  - generic: Enode
+- link:
+  - /url: /pages/6b264f61-5572-4a58-8480-22f66ff68969?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "Twitch":
+  - /url: /search?site_id[id][]=159
+  - generic: Twitch
+- link:
+  - /url: /pages/5a07bc9f-6ade-4193-aa49-5bbd66e85278?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "DocuSign DocuSign":
+  - /url: /search?site_id[id][]=31
+  - img "DocuSign"
+  - generic: DocuSign
+- link:
+  - /url: /pages/88079a91-c8a4-4087-803a-aae13758ad7f?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat&source=search
+- link "Missive":
+  - /url: /search?site_id[id][]=671
+  - generic: Missive
+- link "Show More":
+  - /url: /search?query=Manus%20browser%20files%20computer%20use%20agent%20session%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Claude artifact split pane conversation workspace":
+  - /url: /search?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/b045badc-7f13-4ddc-ba90-c1e7bea5c5cd?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "Claude":
+  - /url: /search?site_id[id][]=506
+  - generic: Claude
+- link:
+  - /url: /pages/b45cf47a-0e9b-48fe-a388-1cc172d85348?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "GlossGenius":
+  - /url: /search?site_id[id][]=830
+  - generic: GlossGenius
+- link:
+  - /url: /pages/b1ed33f7-475c-4efa-a85c-a00e2da74c43?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "Figma":
+  - /url: /search?site_id[id][]=206
+  - generic: Figma
+- link:
+  - /url: /pages/f8c44728-a79b-40e3-9552-194ca9e4ac91?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "Figma":
+  - /url: /search?site_id[id][]=206
+  - generic: Figma
+- link:
+  - /url: /pages/12dafe02-10fa-4288-97a5-e8d677fa6418?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "Hello Ivy":
+  - /url: /search?site_id[id][]=602
+  - generic: Hello Ivy
+- link:
+  - /url: /pages/d184c223-cfae-4bc0-8c37-4143d94db654?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat&source=search
+- link "Missive Missive":
+  - /url: /search?site_id[id][]=671
+  - img "Missive"
+  - generic: Missive
+- link "Show More":
+  - /url: /search?query=Claude%20artifact%20split%20pane%20conversation%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "ChatGPT canvas split pane code files conversation":
+  - /url: /search?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link "ChatGPT web screenshot.":
+  - /url: /pages/65f083c7-89d2-4aa7-86ac-7462abe1eb4b?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "ChatGPT web screenshot.":
+  - /url: /pages/6ed2a1ca-a1fc-49f4-8e3c-44910bb0de28?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link:
+  - /url: /pages/a810da7d-535d-4a14-bde6-9b462a96b34c?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link:
+  - /url: /pages/ec435108-54e5-49e7-94c0-d912b75697d9?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link:
+  - /url: /pages/043ad6af-e966-4bee-bee6-25df2c19b1aa?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link:
+  - /url: /pages/2492920c-b54a-4e84-be22-edd0318a075b?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat&source=search
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- link "Show More":
+  - /url: /search?query=ChatGPT%20canvas%20split%20pane%20code%20files%20conversation&pass_source=chat
+  - text: Show More
+- text: Flows search
+- text: Web apps
+- link "Manus agent task workspace browser files":
+  - /url: /search/flows?query=Manus%20agent%20task%20workspace%20browser%20files&pass_source=chat
+- link "224 flows See all":
+  - /url: /search/flows?query=Manus%20agent%20task%20workspace%20browser%20files&pass_source=chat
+  - generic: 224 flows
+  - text: See all
+- link:
+  - /url: /flows/6152/8614ec8e-e4a0-46c6-9eeb-81171c9cb116?query=Manus agent task workspace browser files
+- link "Sharing access to folder with shareholder on Cake Equity":
+  - /url: /search/flows?site_id[id][]=661&order=trending
+  - generic: Sharing access to folder with shareholder
+  - generic: on Cake Equity
+- link:
+  - /url: /flows/10811/43a4eeb5-c00d-45b2-9932-dc7b5b13f355?query=Manus agent task workspace browser files
+- link "Editing campaign on Rox":
+  - /url: /search/flows?site_id[id][]=847&order=trending
+  - generic: Editing campaign
+  - generic: on Rox
+- link:
+  - /url: /flows/1007/3aa76490-a67a-4865-98cf-93cc16b693d0?query=Manus agent task workspace browser files
+- link "Exploring tutorial on Miro":
+  - /url: /search/flows?site_id[id][]=80&order=trending
+  - generic: Exploring tutorial
+  - generic: on Miro
+- link:
+  - /url: /flows/11275/03d42d81-767a-4a43-ab0a-6b58175c58cf?query=Manus agent task workspace browser files
+- link "Creating playlist on YouTube":
+  - /url: /search/flows?site_id[id][]=197&order=trending
+  - generic: Creating playlist
+  - generic: on YouTube
+- link:
+  - /url: /flows/11276/6223954f-a30b-4c3c-93ab-0cbee6647a23?query=Manus agent task workspace browser files
+- link "Saving video to playlist on YouTube":
+  - /url: /search/flows?site_id[id][]=197&order=trending
+  - generic: Saving video to playlist
+  - generic: on YouTube
+- link:
+  - /url: /flows/13452/f2dea698-d299-4b96-afba-801bd9945e4e?query=Manus agent task workspace browser files
+- link "Signing up & onboarding on Spyglass":
+  - /url: /search/flows?site_id[id][]=936&order=trending
+  - generic: Signing up & onboarding
+  - generic: on Spyglass
+- link "Show More":
+  - /url: /search/flows?query=Manus%20agent%20task%20workspace%20browser%20files&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Bloomberg terminal trading workspace panels":
+  - /url: /search?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/10265a51-2c9c-4c8e-a185-729a6c1f9043?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Bloomberg":
+  - /url: /search?site_id[id][]=231
+  - generic: Bloomberg
+- link:
+  - /url: /pages/ce1eb55d-49f9-41c3-bace-0b3dade075c4?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Bloomberg":
+  - /url: /search?site_id[id][]=231
+  - generic: Bloomberg
+- link:
+  - /url: /pages/bae60d48-3126-474f-8caa-b8c5bbf7538d?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Bloomberg":
+  - /url: /search?site_id[id][]=231
+  - generic: Bloomberg
+- link:
+  - /url: /pages/001ed100-ed0d-44e3-8821-1490cb9fb532?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Kraken":
+  - /url: /search?site_id[id][]=161
+  - generic: Kraken
+- link:
+  - /url: /pages/409d996e-9cab-4560-b40e-4d63a6fdf9e8?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Sonarworks":
+  - /url: /search?site_id[id][]=82
+  - generic: Sonarworks
+- link:
+  - /url: /pages/f05b92a1-bb81-43ae-90a2-07f45b4aa5d9?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat&source=search
+- link "Stocktwits":
+  - /url: /search?site_id[id][]=707
+  - generic: Stocktwits
+- link "Show More":
+  - /url: /search?query=Bloomberg%20terminal%20trading%20workspace%20panels&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Salesforce CRM application shell navigation workspace records panels":
+  - /url: /search?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/0a4f7e95-f8c2-47db-b598-9a81751e078f?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "Fingerprint":
+  - /url: /search?site_id[id][]=866
+  - generic: Fingerprint
+- link:
+  - /url: /pages/de2810c3-3cbd-4097-b4fd-a0c2e51a4419?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "Aboard":
+  - /url: /search?site_id[id][]=545
+  - generic: Aboard
+- link:
+  - /url: /pages/ae33db0c-308e-4566-a931-93b62ba4613a?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "Aboard":
+  - /url: /search?site_id[id][]=545
+  - generic: Aboard
+- link:
+  - /url: /pages/d2e8a525-2401-41f5-b7ba-c63f99530156?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "Monday":
+  - /url: /search?site_id[id][]=171
+  - generic: Monday
+- link:
+  - /url: /pages/76ecf74e-8255-4c7d-87af-76153166c677?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "DocuSign DocuSign":
+  - /url: /search?site_id[id][]=31
+  - img "DocuSign"
+  - generic: DocuSign
+- link:
+  - /url: /pages/8cd19c01-dafb-494d-81c4-b10869835cbd?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat&source=search
+- link "Aboard":
+  - /url: /search?site_id[id][]=545
+  - generic: Aboard
+- link "Show More":
+  - /url: /search?query=Salesforce%20CRM%20application%20shell%20navigation%20workspace%20records%20panels&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Webflow CMS editor multi panel workspace":
+  - /url: /search?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat
+- link "1,001 screens See all":
+  - /url: /search?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat
+  - generic: 1,001 screens
+  - text: See all
+- link:
+  - /url: /pages/476f7b47-3e3c-4a42-afb3-40adb11f1bad?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Webflow":
+  - /url: /search?site_id[id][]=43
+  - generic: Webflow
+- link:
+  - /url: /pages/a355dadc-09c5-40a2-bdfb-88fd4f9527f0?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Webflow":
+  - /url: /search?site_id[id][]=43
+  - generic: Webflow
+- link:
+  - /url: /pages/c22cad19-e525-4ec8-b4e6-58b3bdf0b25b?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Vercel":
+  - /url: /search?site_id[id][]=24
+  - generic: Vercel
+- link:
+  - /url: /pages/66034e8e-da5e-4a79-8614-21237fa7fd8d?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Pitch":
+  - /url: /search?site_id[id][]=40
+  - generic: Pitch
+- link:
+  - /url: /pages/e1c7e658-c3b9-4790-9c55-c821cea2185b?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "OneSoil":
+  - /url: /search?site_id[id][]=109
+  - generic: OneSoil
+- link:
+  - /url: /pages/f9af62f4-4f25-4cd1-b6b9-d13e9708ee43?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat&source=search
+- link "Perplexity":
+  - /url: /search?site_id[id][]=421
+  - generic: Perplexity
+- link "Show More":
+  - /url: /search?query=Webflow%20CMS%20editor%20multi%20panel%20workspace&pass_source=chat
+  - text: Show More
+- generic: Research Insights
+- heading "Inner agent environment — Manus’s project and task shell" [level=3]
+- paragraph: "These are the strongest references for the interior environment: global-ish app navigation on the left, project/session context inside it, and substantial work content in the main area."
+- link "Manus web screenshot. Home Page UI":
+  - /url: /pages/aae46cc0-070f-49cc-9fef-5059c3644698?source=chat
+  - img "Manus web screenshot. Home Page UI"
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- generic: "Manus inner environment: project identity, instructions, metadata, and tasks distinguish local project navigation from active work."
+- link "Manus web screenshot.":
+  - /url: /pages/6eef8257-c53c-475f-96da-9d6bb8170074?source=chat
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- generic: "Manus inner environment: a three-zone reading layout for navigation, AI progress, and generated document output."
+- link "Manus web screenshot.":
+  - /url: /pages/1350f056-b50e-4461-b60f-e2cd7b09ed62?source=chat
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- generic: "Manus inner environment: conversation, generated content, thinking state, and a persistent composer share one working surface."
+- link "Manus web screenshot.":
+  - /url: /pages/899d0429-8a1c-4f43-a9a7-297597806b24?source=chat
+  - img "Manus web screenshot."
+- link "Manus Manus":
+  - /url: /search?site_id[id][]=843
+  - img "Manus"
+  - generic: Manus
+- generic: "Manus inner environment: local session navigation stays fixed while the active result behaves like a document workspace."
+- heading "Inner agent environment — distinct agent layouts" [level=3]
+- paragraph: "These provide useful alternatives to Manus: split-pane work, developer workspace selection, and an explicit model/tool configuration rail."
+- link "ChatGPT web screenshot.":
+  - /url: /pages/e04babc2-aa6e-441a-8ac9-5730feaa3a5c?source=chat
+  - img "ChatGPT web screenshot."
+- link "ChatGPT ChatGPT":
+  - /url: /search?site_id[id][]=693
+  - img "ChatGPT"
+  - generic: ChatGPT
+- generic: "ChatGPT inner environment: conversation and editable output occupy equal vertical panels, making the artifact an active work area rather than a secondary attachment."
+- link "OpenAI web screenshot.":
+  - /url: /pages/ee5f0adc-7136-4b6c-b08b-3a856fe86473?source=chat
+  - img "OpenAI web screenshot."
+- link "OpenAI OpenAI":
+  - /url: /search?site_id[id][]=180
+  - img "OpenAI"
+  - generic: OpenAI
+- generic: "Inner agent environment: global top bar, project navigation, transcript, and model/voice/function controls are explicitly separated into three columns."
+- link "Factory web screenshot. Home Page UI":
+  - /url: /pages/8bcd2e73-62e0-40c9-8b5b-56267986aef4?source=chat
+  - img "Factory web screenshot. Home Page UI"
+- link "Factory Factory":
+  - /url: /search?site_id[id][]=734
+  - img "Factory"
+  - generic: Factory
+- generic: "Factory inner environment: workspace selection is treated as a first-class session step, with local/remote scope, search, workspace creation, and a persistent command bar."
+- link "Grok web screenshot.":
+  - /url: /pages/bc24e43e-5f2f-44bd-9cd6-aa473ec8c00e?source=chat
+  - img "Grok web screenshot."
+- link "Grok Grok":
+  - /url: /search?site_id[id][]=629
+  - img "Grok"
+  - generic: Grok
+- generic: "Grok inner environment: workspace title, conversation composer, attachments, and conversation/file tabs form a compact task container."
+- link "Claude web screenshot. Home Page UI":
+  - /url: /pages/0366c911-ef77-4a8f-9976-811c3bdd8cc7?source=chat
+  - img "Claude web screenshot. Home Page UI"
+- link "Claude Claude":
+  - /url: /search?site_id[id][]=506
+  - img "Claude"
+  - generic: Claude
+- generic: "Claude inner environment: local chat history and recent sessions sit beside the active assistant start surface; useful as a lighter-weight agent interior."
+- heading "Outer host — dense multi-module workspaces" [level=3]
+- paragraph: "These are useful models for the host surrounding an interior: persistent global navigation, module switching, dense panels, and several simultaneous work areas."
+- link "Kraken web screenshot.":
+  - /url: /pages/5178eac4-47e4-48ae-977f-aed6fa00bdc6?source=chat
+  - img "Kraken web screenshot."
+- link "Kraken Kraken":
+  - /url: /search?site_id[id][]=161
+  - img "Kraken"
+  - generic: Kraken
+- generic: "Outer host reference: top navigation and bottom status framing contain order entry, order book, chart, and account work areas."
+- link "Kraken web screenshot. Dashboard UI":
+  - /url: /pages/69751349-05f1-4fee-abac-c5452f01bc17?source=chat
+  - img "Kraken web screenshot. Dashboard UI"
+- link "Kraken Kraken":
+  - /url: /search?site_id[id][]=161
+  - img "Kraken"
+  - generic: Kraken
+- generic: "Outer host reference: tabbed panels and a dense three-column grid support simultaneous monitoring without collapsing everything into one page."
+- link "Kraken web screenshot.":
+  - /url: /pages/0bfeff29-e274-4df6-9006-775da4955138?source=chat
+  - img "Kraken web screenshot."
+- link "Kraken Kraken":
+  - /url: /search?site_id[id][]=161
+  - img "Kraken"
+  - generic: Kraken
+- generic: "Outer host reference: a global ticker, filter bar, table, and scoped dropdown establish a clear hierarchy from host-level market context to active data."
+- heading "Outer host — CRM and operational shells" [level=3]
+- paragraph: "These show a more restrained host pattern: persistent module navigation, a primary working"
+- generic: You've reached your daily limit
+- generic: Upgrade your plan to unlock full access and keep using Refero.
+- link "Upgrade to PRO":
+  - /url: /upgrade
+- textbox "Ask follow up…"
+- button

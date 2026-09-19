@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_012",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 11425,
+      "title": "Learn how to design a trading system by Relative Vigor Index",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11425.md"
+    },
+    {
+      "id": 11467,
+      "title": "Learn how to design a trading system by Accelerator Oscillator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11467.md"
+    },
+    {
+      "id": 11468,
+      "title": "Learn how to design a trading system by Awesome Oscillator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11468.md"
+    },
+    {
+      "id": 11500,
+      "title": "Risk and capital management using Expert Advisors",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11500.md"
+    },
+    {
+      "id": 11538,
+      "title": "How to deal with lines using MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11538.md"
+    },
+    {
+      "id": 11549,
+      "title": "Learn how to design a trading system by Alligator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11549.md"
+    },
+    {
+      "id": 11620,
+      "title": "Learn how to design a trading system by Fractals",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11620.md"
+    },
+    {
+      "id": 11928,
+      "title": "Learn how to design a trading system by Gator Oscillator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11928.md"
+    },
+    {
+      "id": 11998,
+      "title": "Revisiting Murray system",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11998.md"
+    },
+    {
+      "id": 12026,
+      "title": "Creating a comprehensive Owl trading strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12026.md"
+    },
+    {
+      "id": 12134,
+      "title": "Moral expectation in trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12134.md"
+    },
+    {
+      "id": 12172,
+      "title": "Learn how to design a trading system by Bill Williams' MFI",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12172.md"
+    }
+  ]
+}

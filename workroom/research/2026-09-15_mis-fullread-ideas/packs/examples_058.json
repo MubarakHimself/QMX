@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_058",
+  "section": "Examples",
+  "parent_shard": "examples_058",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 19619,
+      "title": "Reusing Invalidated Orderblocks As Mitigation Blocks (SMC)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19619.md"
+    },
+    {
+      "id": 19649,
+      "title": "From Novice to Expert: Backend Operations Monitor using MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19649.md"
+    },
+    {
+      "id": 19793,
+      "title": "Dynamic Swing Architecture: Market Structure Recognition from Swings to Automated Execution",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19793.md"
+    },
+    {
+      "id": 19841,
+      "title": "From Novice to Expert: Market Periods Synchronizer",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19841.md"
+    },
+    {
+      "id": 19919,
+      "title": "From Novice to Expert: Revealing the Candlestick Shadows (Wicks)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19919.md"
+    },
+    {
+      "id": 19979,
+      "title": "Tables in the MVC Paradigm in MQL5: Customizable and sortable table columns",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19979.md"
+    },
+    {
+      "id": 20054,
+      "title": "Black-Scholes Greeks: Gamma and Delta",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20054.md"
+    },
+    {
+      "id": 20147,
+      "title": "Automating Terminal Startup for Service Tasks",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20147.md"
+    },
+    {
+      "id": 20160,
+      "title": "From Novice to Expert: Predictive Price Pathways",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20160.md"
+    },
+    {
+      "id": 20287,
+      "title": "Automating Black-Scholes Greeks: Advanced Scalping and Microstructure Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20287.md"
+    },
+    {
+      "id": 20327,
+      "title": "Analytical Volume Profile Trading (AVPT): Liquidity Architecture, Market Memory, and Algorithmic Execution",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20327.md"
+    },
+    {
+      "id": 20414,
+      "title": "Adaptive Smart Money Architecture (ASMA): Merging SMC Logic With Market Sentiment for Dynamic Strategy Switching",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20414.md"
+    }
+  ]
+}

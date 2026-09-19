@@ -1,0 +1,122 @@
+{
+  "pack_id": "examples_085",
+  "section": "Examples",
+  "parent_shard": "examples_085",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "neural networks made easy",
+    "news trading made easy"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 8119,
+      "title": "Neural networks made easy (Part 2): Network training and testing",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Network training and testing",
+      "series_key": "neural networks made easy",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8119.md"
+    },
+    {
+      "id": 8234,
+      "title": "Neural networks made easy (Part 3): Convolutional networks",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Convolutional networks",
+      "series_key": "neural networks made easy",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8234.md"
+    },
+    {
+      "id": 8485,
+      "title": "Neural networks made easy (Part 6): Experimenting with the neural network learning rate",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Experimenting with the neural network learning rate",
+      "series_key": "neural networks made easy",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8485.md"
+    },
+    {
+      "id": 8765,
+      "title": "Neural networks made easy (Part 8): Attention mechanisms",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Attention mechanisms",
+      "series_key": "neural networks made easy",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8765.md"
+    },
+    {
+      "id": 8819,
+      "title": "Neural networks made easy (Part 9): Documenting the work",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Documenting the work",
+      "series_key": "neural networks made easy",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8819.md"
+    },
+    {
+      "id": 8909,
+      "title": "Neural networks made easy (Part 10): Multi-Head Attention",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Multi-Head Attention",
+      "series_key": "neural networks made easy",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8909.md"
+    },
+    {
+      "id": 9112,
+      "title": "Neural networks made easy (Part 12): Dropout",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Dropout",
+      "series_key": "neural networks made easy",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9112.md"
+    },
+    {
+      "id": 9207,
+      "title": "Neural networks made easy (Part 13): Batch Normalization",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Batch Normalization",
+      "series_key": "neural networks made easy",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9207.md"
+    },
+    {
+      "id": 10785,
+      "title": "Neural networks made easy (Part 14): Data clustering",
+      "section": "Examples",
+      "series_title": "Neural networks made easy (): Data clustering",
+      "series_key": "neural networks made easy",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10785.md"
+    },
+    {
+      "id": 14944,
+      "title": "Neural Networks Made Easy (Part 91): Frequency Domain Forecasting (FreDF)",
+      "section": "Examples",
+      "series_title": "Neural Networks Made Easy (): Frequency Domain Forecasting (FreDF)",
+      "series_key": "neural networks made easy",
+      "series_part": 91,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14944.md"
+    },
+    {
+      "id": 14324,
+      "title": "News Trading Made Easy (Part 1): Creating a Database",
+      "section": "Examples",
+      "series_title": "News Trading Made Easy (): Creating a Database",
+      "series_key": "news trading made easy",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14324.md"
+    },
+    {
+      "id": 14912,
+      "title": "News Trading Made Easy (Part 2): Risk Management",
+      "section": "Examples",
+      "series_title": "News Trading Made Easy (): Risk Management",
+      "series_key": "news trading made easy",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14912.md"
+    }
+  ]
+}

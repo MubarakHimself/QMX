@@ -1,0 +1,1232 @@
+---
+id: 18111
+source_url: https://www.mql5.com/en/articles/18111
+title: "Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven"
+author: ""
+author_url: 
+published: 2026-06-08T11:57Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "Implementing a Breakeven Mechanism in MQL5 (): ATR- and RRR-Based Breakeven"
+series_part: 2
+source: mql5
+language: en
+---
+[IMG]
+
+[IMG]
+
+# Implementing a Breakeven Mechanism in MQL5 (Part 2): ATR- and RRR-Based Breakeven
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 8 June 2026 at 07:57
+
+[IMG]
+1 949
+[[IMG]
+0](https://www.mql5.com/en/forum/510896 "Comments")
+
+[IMG]
+
+[Niquel Mendoza](https://www.mql5.com/en/users/nique_372)
+
+- [Introduction](https://www.mql5.com/en/articles/18111#introduction)
+- [Developing the CBreakEvenAtr Class Based on the ATR Indicator](https://www.mql5.com/en/articles/18111#developing_the_cbreakevenatr_class_based_on_the)
+- [Fundamentals and Design of the RRR-Based CBreakEvenRR Class](https://www.mql5.com/en/articles/18111#fundamentals_and_design_of_the_rrrr_based)
+- [The CBreakEven Class: Selecting and Dynamically Configuring the Breakeven Mode](https://www.mql5.com/en/articles/18111#the_cbreakeven_class_selecting_and_dynamically)
+- [Testing the Order Blocks Expert Advisor with Different Breakeven Types](https://www.mql5.com/en/articles/18111#testing_the_order_blocks_expert_advisor_with)
+- [Conclusion](https://www.mql5.com/en/articles/18111#conclusion)
+
+### Introduction
+
+Welcome everyone to the second part of the article on the breakeven mechanism. Here we will continue programming the different breakeven types whose implementation remained unfinished in the first part. In addition, we will create an auxiliary class that simplifies the user's choice of breakeven mode. First, we will consider the ATR-based breakeven type, then the one related to RRR, and finally, a class for selecting and using the breakeven mechanism. At the end, we will perform a comparative analysis to determine which breakeven type is the most suitable for the Order Blocks Expert Advisor originally developed in the [last article](https://www.mql5.com/en/articles/17640) of the risk-management series.
+
+### Developing the CBreakEvenAtr class based on the ATR
+
+The breakeven mode based on ATR, as already mentioned in the previous article, means that fixed points are not used either for the distance at which breakeven is activated or for the difference between the breakeven price and the position opening price. Instead, multipliers applied to the ATR value are used. This approach provides greater flexibility when configuring both the distance to breakeven activation and the level at which it is triggered.
+
+A high ATR multiplier usually means a larger offset, so breakeven will be triggered less often. Conversely, a lower value may cause breakeven to be triggered more often than usual, which may negatively affect profitability if the position is given room to run.
+
+To implement this approach in MQL5, we will create the CBreakEvenAtr class, which will inherit from CBreakEvenBase, the base class for any breakeven type.
+
+```
+//--- class CBreakEvenAtr
+class CBreakEvenAtr : public CBreakEvenBase
+```
+
+To work with ATR we will need a handle, which will allow us to obtain indicator data, that is, to copy its values. In addition, we will use an array of type double named atr\_buff, where the data copied from the indicator will be stored.
+
+We will also need an integer variable atr\_idx, which indicates the index from which data will be copied; for example, a value of 0 means copying will be performed from the current ATR value. Exactly one buffer element will be copied on each access.
+
+Next, we will need two multipliers: one — for the distance at which the breakeven level will be set and the other — for the distance at which it will be activated.
+
+Private variables
+
+```
+private:
+  int                atr_handle;
+  double             atr_buff[];
+  int                atr_idx;
+  double             atr_multiplier_be;
+  double             atr_multiplier_extra_be;
+```
+
+**Constructor and destructor**
+
+In the constructor, we initialize the private variables with default values. In addition, we prepare the atr\_buff array, which will store the ATR value. We also specify that the class requires five parameters, so the num\_params variable will have the corresponding value.
+
+The constructor will take three parameters, which are passed to the CBreakEvenBase base class for initialization.
+
+```
+  CBreakEvenAtr(string symbol_, ulong magic_, ENUM_BREAKEVEN_MODE mode_)
+    :                CBreakEvenBase(symbol_, magic_, mode_), atr_handle(INVALID_HANDLE), atr_idx(0), atr_multiplier_be(1.0), atr_multiplier_extra_be(1.0)
+   {                 ArraySetAsSeries(atr_buff, true); this.num_params = 5; }
+```
+
+In the destructor, the ATR indicator handle will be released, as well as the array that stores ATR values:
+
+```
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CBreakEvenAtr::~CBreakEvenAtr(void)
+ {
+  ArrayFree(atr_buff);
+  if(this.atr_handle != INVALID_HANDLE)
+    IndicatorRelease(this.atr_handle);
+ }
+```
+
+****Functions** for setting parameters**
+
+Continuing the definition and declaration of the ATR-based breakeven class, it is time to define methods for setting the internal variables. First, we will define the SetSimple functions. They are used to set the parameters required by the class without using MqlParams, which is ideal when it is already known that the breakeven mode will always be ATR-based. Two versions of these functions are provided:
+
+```
+  void               SetSimple(int atr_handle_, int atr_idx_, double atr_multiplier_extra_be_, double atr_multiplier_be_);
+  void               SetSimple(int atr_period, int atr_idx_, double atr_multiplier_extra_be_, double atr_multiplier_be_, ENUM_TIMEFRAMES timeframe);
+```
+
+In the first SetSimple function, we first check that parameters such as the multipliers are valid.
+
+```
+  if(atr_multiplier_extra_be_ >= atr_multiplier_be_)
+   {
+    printf("%s: Error | The multiplier of the atr to calculate the price be is greater than or equal to the multiplier to set the be", __FUNCSIG__);
+    ExpertRemove();
+   }
+```
+
+We check that the multiplier at which breakeven will be activated is smaller than the multiplier at which breakeven will be set. This is necessary to prevent errors such as invalid stop levels.
+
+Then we make sure that the ATR index is always greater than or equal to zero.
+
+```
+  if(atr_idx_ < 0)
+   {
+    printf("%s: Critical error | Atr index is less than 0", __FUNCTION__);
+    ExpertRemove();
+   }
+```
+
+Finally, we make sure that the ATR indicator handle is not invalid; if it is, the Expert Advisor will be removed from the chart.
+
+```
+  if(atr_handle_ == INVALID_HANDLE)
+   {
+    printf("%s: Critical Error | The handle of the indicator atr is invalid, last error: %I32d", __FUNCTION__, GetLastError());
+    ExpertRemove();
+   }
+```
+
+After all checks have been performed, we assign the parameters to the class's internal variables.
+
+```
+  this.atr_idx = atr_idx_;
+  this.atr_multiplier_be = atr_multiplier_be_;
+  this.atr_multiplier_extra_be = atr_multiplier_extra_be_;
+  this.atr_handle = atr_handle_;
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------------------------+
+//| Function to set the values ​​of the CBreakEvenAtr class without using MqlParams      |
+//| Using the handle instead of period and timeframe                                   |
+//+------------------------------------------------------------------------------------+
+void CBreakEvenAtr::SetSimple(int atr_handle_, int atr_idx_, double atr_multiplier_extra_be_, double atr_multiplier_be_)
+ {
+  if(atr_multiplier_extra_be_ >= atr_multiplier_be_)
+   {
+    printf("%s: Error | The multiplier of the atr to calculate the price be is greater than or equal to the multiplier to set the be", __FUNCSIG__);
+    ExpertRemove();
+   }
+
+  if(atr_idx_ < 0)
+   {
+    printf("%s: Critical error | Atr index is less than 0", __FUNCTION__);
+    ExpertRemove();
+   }
+
+  if(atr_handle_ == INVALID_HANDLE)
+   {
+    printf("%s: Critical Error | The handle of the indicator atr is invalid, last error: %I32d", __FUNCTION__, GetLastError());
+    ExpertRemove();
+   }
+
+  this.atr_idx = atr_idx_;
+  this.atr_multiplier_be = atr_multiplier_be_;
+  this.atr_multiplier_extra_be = atr_multiplier_extra_be_;
+  this.atr_handle = atr_handle_;
+ }
+```
+
+The second SetSimple function requires an additional parameter. Instead of receiving a handle, the function requests the ATR period because we will configure the handle inside this function. Then the first SetSimple function is called and passed the created handle.
+
+```
+//+------------------------------------------------------------------------------------+
+//| Function to set the values ​​of the CBreakEvenAtr class without using MqlParams      |
+//| Configuring the handle with the period and timeframe.                              |
+//+------------------------------------------------------------------------------------+
+void CBreakEvenAtr::SetSimple(int atr_period, int atr_idx_, double atr_multiplier_extra_be_, double atr_multiplier_be_, ENUM_TIMEFRAMES timeframe)
+ {
+  TesterHideIndicators(true);
+  ResetLastError();
+  this.atr_handle = iATR(this.symbol, timeframe, atr_period);
+  TesterHideIndicators(false);
+  
+  SetSimple(atr_handle,atr_idx_,atr_multiplier_extra_be_,atr_multiplier_be_);
+ }
+```
+
+Now we will define the Set function, which will inherit from the breakeven mechanism base class. This function will be used in the CBreakEven selector class. As I mentioned in the [previous article](https://www.mql5.com/en/articles/17957), we cannot override the SetSimple function in the base class because it is unknown what parameters it will receive. This is why the Set function allows us to work with dynamic parameters.
+
+For the Set function, since we have two versions of SetSimple with different numbers of required parameters, we will use the size of the largest parameter set to check the correct input size. To distinguish between cases where parameters are passed with an already-created handle and cases — without one, we will create a define named HANDLE\_INSTEAD\_OF\_PERIOD with a default value of 0.
+
+```
+#define HANDLE_INSTEAD_OF_PERIOD 0
+```
+
+This define will be located at the last index of the params array. If its value is 0, we assume that configuration is performed with an already-created handle; otherwise, the SetSimple function without a predefined handle will be used.
+
+The above means that the body of the Set function looks as follows:
+
+```
+//+------------------------------------------------------------------+
+//| Function for setting CBreakEvenAtr variables with MqlParams |
+//+------------------------------------------------------------------+
+void CBreakEvenAtr::Set(MqlParam &params[])
+{
+  // Check that params has the correct size; ATR requires 5 parameters
+  if(params.Size() < 5)
+  {
+    printf("%s: Critical error | The size of the MqlParams array %I32u is less than 5", __FUNCTION__, params.Size());
+    ExpertRemove();
+    return;
+  }
+
+  // If the last parameter is HANDLE_INSTEAD_OF_PERIOD, use SetSimple with a handle
+  if(params[4].integer_value == HANDLE_INSTEAD_OF_PERIOD)
+  {
+    SetSimple(
+      (int)params[3].integer_value,   // atr_handle
+      (int)params[0].integer_value,   // atr_idx
+      params[2].double_value,         // atr_multiplier_extra_be
+      params[1].double_value          // atr_multiplier_be
+    );
+  }
+  else
+  {
+    // Otherwise, use SetSimple with period and timeframe
+    SetSimple(
+      (int)params[4].integer_value,   // atr_period
+      (int)params[0].integer_value,   // atr_idx
+      params[2].double_value,         // atr_multiplier_extra_be
+      params[1].double_value,         // atr_multiplier_be
+      (ENUM_TIMEFRAMES)params[3].integer_value // timeframe
+    );
+  }
+}
+```
+
+**Function for implementing breakeven**
+
+To implement the ATR-based breakeven mode, we will override the .Add function. It is executed every time a new position is opened, that is, it is called inside the OnTradeTransactionEvent function of the base class. In the body of the .Add method, we need to determine the breakeven price and the trigger price that activates the breakeven mechanism.
+
+To calculate the required prices, such as breakeven\_price and price\_to\_beat (the trigger price that activates breakeven and modifies the position Stop Loss), we will use a formula similar to the one used in the fixed-points breakeven class.
+
+- Buy positions:
+
+> **break\_even\_price = open\_price + (atr\_buff[0] \* atr\_multiplier\_extra\_be)**
+
+- Sell positions:
+
+> **break\_even\_price = open\_price - (atr\_buff[0]\* atr\_multiplier\_extra\_be)**
+
+In this formula, we use atr\_multiplier\_extra\_be instead of extra\_points\_be to calculate the breakeven price. For the trigger price, — price\_to\_beat —, the formula will be the same, except that instead of atr\_multiplier\_extra\_be we use the atr\_multiplier\_be variable.
+
+After determining the values to be assigned, we define the .Add function. First, we copy ATR data starting from this.atr\_idx and copy only one element. We check that the value returned by CopyBuffer is not less than 1; otherwise, we return false, indicating that the ticket could not be added to the breakeven array.
+
+```
+  ResetLastError();
+
+  if(CopyBuffer(this.atr_handle, 0, this.atr_idx, 1, this.atr_buff) < 1)
+   {
+    printf("%s: Error | When copying the data of the indicator atr, last error %I32d", __FUNCTION__, GetLastError());
+    return false;
+   }
+```
+
+Then we create the new\_pos structure, which contains important information for the BreakEven() function. We assign the required values to its members: the breakeven price, the trigger price (using the formulas above), the ticket, and the position type (buy or sell).
+
+```
+  position_be new_pos;
+  new_pos.breakeven_price =  position_type == POSITION_TYPE_BUY ? open_price + (atr_buff[0] * atr_multiplier_extra_be) : open_price - (atr_buff[0] * atr_multiplier_extra_be);
+  new_pos.type =  position_type;
+  new_pos.price_to_beat = position_type == POSITION_TYPE_BUY ? open_price + (atr_buff[0] * atr_multiplier_be) : open_price - (atr_buff[0] * atr_multiplier_be);
+  new_pos.ticket = post_ticket;
+  ExtraFunctions::AddArrayNoVerification(this.PostionsBe, new_pos);
+```
+
+Full code of the .Add function
+
+```
+//+------------------------------------------------------------------+
+//| Function to add an element to the positions array                |
+//+------------------------------------------------------------------+
+bool CBreakEvenAtr::Add(ulong post_ticket, double open_price, double sl_price, ENUM_POSITION_TYPE position_type)
+ {
+  ResetLastError();
+
+  if(CopyBuffer(this.atr_handle, 0, this.atr_idx, 1, this.atr_buff) < 1)
+   {
+    printf("%s: Error | When copying the data of the indicator atr, last error %I32d", __FUNCTION__, GetLastError());
+    return false;
+   }
+
+  position_be new_pos;
+  new_pos.breakeven_price =  position_type == POSITION_TYPE_BUY ? open_price + (atr_buff[0] * atr_multiplier_extra_be) : open_price - (atr_buff[0] * atr_multiplier_extra_be);
+  new_pos.type =  position_type;
+  new_pos.price_to_beat = position_type == POSITION_TYPE_BUY ? open_price + (atr_buff[0] * atr_multiplier_be) : open_price - (atr_buff[0] * atr_multiplier_be);
+  new_pos.ticket = post_ticket;
+  ExtraFunctions::AddArrayNoVerification(this.PostionsBe, new_pos);
+  return true;
+ }
+```
+
+### Fundamentals and design of the RRRR-based CBreakEvenRR class
+
+The breakeven mode based on RRR (risk-reward ratio) is another dynamic breakeven type, alongside ATR. In short, it consists of moving the Stop Loss to a certain distance from the opening price once the position reaches a specified level above the Stop Loss. For example, a ratio value of 1 indicates that breakeven is activated when the current price becomes greater than or equal to the opening price plus the Stop Loss distance in points.
+
+First, I will make some changes. In the previous article, the Stop Loss was moved by a fixed number of points from the opening price. In this new part, I will add the ability to perform this movement based on ATR in order to make the RRRR-based breakeven even more dynamic.
+
+Now let's start programming.
+
+As I have already noted, adding ATR as an option for calculating the breakeven price requires creating an enumeration that allows us to choose how the breakeven price is calculated: either by fixed points or by the ATR value multiplied by the corresponding multiplier.
+
+```
+enum ENUM_TYPE_EXTRA_BE_BY_RRR
+ {
+  EXTRA_BE_RRR_BY_ATR,         //By Atr
+  EXTRA_BE_RRR_BY_FIXED_POINTS //By Fixed Points
+ };
+```
+
+The class will publicly inherit from the CBreakEvenBase base class.
+
+```
+class CBreakEvenRR : public CBreakEvenBase
+ {
+private:
+```
+
+Let's start by defining the main variables. We will need a variable that stores the coefficient at which the breakeven mechanism will be activated.
+
+```
+double             coefficient_rr; //Coefficient of rr
+```
+
+We will also need to store the calculation type for the breakeven price.
+
+```
+ENUM_TYPE_EXTRA_BE_BY_RRR type;
+```
+
+Next comes a variable that will store either the ATR multiplier or the value already multiplied by point\_value, depending on the selected mode:
+
+```
+  double             extra_value_be; //Extra value that will be added to the opening price of the position to obtain the breakeven price
+  //Note: if the type is atr this will contain the atr multiplier, if not it will contain the value already multiplied by the point value
+```
+
+To integrate ATR, we need three required variables: a handle, an array for storing values, and an integer variable for storing the index from which data copying will start.
+
+```
+  int                handle_atr;
+  int                idx_atr;
+  double             atr_buff[];
+```
+
+**Constructor**
+
+The class constructor takes the same three parameters as the main class.
+
+```
+CBreakEvenRR(string symbol_, ulong magic_, ENUM_BREAKEVEN_MODE mode_);
+```
+
+Inside the constructor body, we initialize the internal class variables and also call the base-class constructor.
+
+```
+//+------------------------------------------------------------------+
+//| Constructor                                                       |
+//+------------------------------------------------------------------+
+void CBreakEvenRR::CBreakEvenRR(string symbol_, ulong magic_, ENUM_BREAKEVEN_MODE mode_)
+  : CBreakEvenBase(symbol_, magic_, mode_),
+    handle_atr(INVALID_HANDLE),
+    idx_atr(0),
+    coefficient_rr(1.0),
+    extra_value_be(100.0),
+    type(EXTRA_BE_RRR_BY_FIXED_POINTS)
+ {
+  ArraySetAsSeries(atr_buff, true);
+  this.num_params = 6;
+ }
+```
+
+**Destructor**
+
+In the destructor, the array that stores ATR data and the ATR indicator handle are released.
+
+```
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CBreakEvenRR::~CBreakEvenRR(void)
+ {
+  ArrayFree(this.atr_buff);
+  if(handle_atr != INVALID_HANDLE)
+    IndicatorRelease(this.handle_atr);
+ }
+```
+
+****Functions** for setting parameters**
+
+In the functions for setting class parameters, we will create two more functions with logic similar to the ATR-based breakeven class. One of them will take a handle, and the other will take parameters such as timeframe and ATR period to create the handle directly inside the function.
+
+First, let's define the function that takes a handle.
+
+At the beginning, we check that there are no invalid variable values and that the breakeven type stored in the type\_extra variable is valid.
+
+```
+//+------------------------------------------------------------------+
+//| Function to set break even values ​​by rr without MqlParams        |
+//+------------------------------------------------------------------+
+void CBreakEvenRR::SetSimple(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, int atr_handle_)
+ {
+  if(coefficient_rr <= 0.00)
+   {
+    printf("%s: Critical Error | The %+f coefficient of 'reward' is invalid", __FUNCTION__, coefficient_rr);
+    ExpertRemove();
+    return;
+   }
+
+  if(atr_multiplier_or_extra_points <= 0.00)
+   {
+    printf("%s: Error | The ATR multiplier or extra points value %f is less than or equal to 0", __FUNCTION__, atr_multiplier_or_extra_points);
+    ExpertRemove();
+    return;
+   }
+
+  if(type_extra != EXTRA_BE_RRR_BY_ATR && type_extra != EXTRA_BE_RRR_BY_FIXED_POINTS)
+   {
+    printf("%s: Critical error | The extra value type %s is invalid", __FUNCTION__, EnumToString(type_extra));
+    ExpertRemove();
+    return;
+   }
+```
+
+If any check fails, we will remove the Expert Advisor from the current chart and print an error message.
+
+Then we assign the corresponding values to the internal variables:
+
+```
+ this.type = type_extra;
+ this.coefficient_rr = rr_a_put_the_break_even;
+```
+
+If the type\_extra variable has the value EXTRA\_BE\_RRR\_BY\_ATR, we check the ATR index.
+
+```
+  if(type_extra == EXTRA_BE_RRR_BY_ATR)
+   {
+    if(idx_atr_ < 0)
+     {
+      printf("%s: Error | The ATR index %I32d is invalid", __FUNCTION__, idx_atr_);
+      ExpertRemove();
+      return;
+     }
+    else
+      this.idx_atr = idx_atr_;
+```
+
+If the check is successful, we assign the idx\_atr\_ parameter value to the internal idx\_atr variable.
+
+Next, we check whether the handle is valid; if it is not, we remove the Expert Advisor. If the check passes, we assign the atr\_handle\_ parameter value to the internal handle\_atr variable. In addition, the extra\_value\_be variable is assigned the atr\_multiplier\_or\_extra\_points value.
+
+```
+    if(atr_handle_  == INVALID_HANDLE)
+     {
+      printf("%s: Critical Error | The handle of the indicator atr is invalid, last error: %I32d", __FUNCTION__, GetLastError());
+      ExpertRemove();
+      return;
+     }
+    else
+      this.handle_atr = atr_handle_;
+
+    this.extra_value_be = atr_multiplier_or_extra_points;
+  }
+  else
+    this.extra_value_be =  atr_multiplier_or_extra_points  * this.point_value;
+```
+
+Now we move on to the second function, which takes parameters for creating the ATR handle.
+
+```
+  void               SetSimple(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, ENUM_TIMEFRAMES tf_atr, int atr_period_);
+```
+
+First, we check that the type\_extra and atr\_period\_ parameter values are valid.
+
+```
+//+------------------------------------------------------------------+
+//| Function to set break even values ​​by rr without MqlParams        |
+//+------------------------------------------------------------------+
+void CBreakEvenRR::SetSimple(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, ENUM_TIMEFRAMES tf_atr, int atr_period_)
+ {
+  if(type_extra != EXTRA_BE_RRR_BY_ATR && type_extra != EXTRA_BE_RRR_BY_FIXED_POINTS)
+   {
+    printf("%s: Critical error | The extra value type %s is invalid", __FUNCTION__, EnumToString(type_extra));
+    ExpertRemove();
+    return;
+   }
+
+  if(atr_period_ < 0)
+   {
+    printf("%s: Error | The ATR period %I32d is invalid", __FUNCTION__, atr_period_);
+    ExpertRemove();
+    return;
+   }
+```
+
+If any of the values is invalid, we remove the Expert Advisor from the current chart.
+
+If type\_extra has the value EXTRA\_BE\_RRR\_BY\_ATR, we create the ATR indicator handle using the tf\_atr and atr\_period\_ parameters.
+
+```
+  if(type_extra == EXTRA_BE_RRR_BY_ATR)
+   {
+    TesterHideIndicators(true);
+    ResetLastError();
+    this.handle_atr = iATR(this.symbol, tf_atr, atr_period_);
+    TesterHideIndicators(false);
+   }
+```
+
+Finally, we call the first SetSimple function.
+
+```
+  SetSimple(rr_a_put_the_break_even, type_extra, atr_multiplier_or_extra_points, idx_atr_, this.handle_atr);
+ }
+```
+
+Now we override the .Set() function, which is used to set the class parameters and is inherited from the breakeven base class.
+
+```
+  void               Set(MqlParam &params[]) override;
+```
+
+As in the Set function, we first check that the size of the params array is not less than the number of parameters required by this class.
+
+```
+//+------------------------------------------------------------------+
+//| Function to set break even values ​​by rr with MqlParams           |
+//+------------------------------------------------------------------+
+void CBreakEvenRR::Set(MqlParam &params[])
+ {
+  if((int)params.Size() < num_params)
+   {
+    printf("%s: Error | The size of the MqlParams array %I32u to set the be by rr is less than 2", __FUNCTION__, params.Size());
+    ExpertRemove();
+    return;
+   }
+```
+
+If the check fails, we remove the Expert Advisor.
+
+To use the params array and set the class's internal values, the HANDLE\_INSTEAD\_OF\_PERIOD define is applied. This define indicates whether the parameters in the params array already contain a ready-made handle. If so, the first SetSimple function is used; otherwise, the second SetSimple function is called, which creates the handle.
+
+```
+  if(params[5].integer_value == HANDLE_INSTEAD_OF_PERIOD)
+   {
+    //->  (0)double rr_a_put_the_break_even,(1) ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, (2)double atr_multiplier_or_extra_points, (3)int idx_atr_, (4)int atr_handle_
+    SetSimple(params[0].double_value, (ENUM_TYPE_EXTRA_BE_BY_RRR)params[1].integer_value, params[2].double_value, (int)params[3].integer_value, (int)params[4].integer_value);
+   }
+  else
+   {
+    //->  (0)double rr_a_put_the_break_even,(1) ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, (2)double atr_multiplier_or_extra_points, (3)int idx_atr_, (4)ENUM_TIMEFRAMES tf_atr, (5)int atr_period_
+    SetSimple(params[0].double_value, (ENUM_TYPE_EXTRA_BE_BY_RRR)params[1].integer_value, params[2].double_value, (int)params[3].integer_value, (ENUM_TIMEFRAMES)params[4].integer_value, (int)params[5].integer_value);
+   }
+ }
+```
+
+**The .Add function**
+
+Inside the Add function, we start setting the values required by the CBreakEvenBase class for the correct execution of the CBreakEvenfunction, which is responsible for applying the breakeven mechanism to open positions.
+
+First, we check that the position has a Stop Loss set:
+
+```
+//+------------------------------------------------------------------+
+//| Function to add an element to the positions array                |
+//+------------------------------------------------------------------+
+bool CBreakEvenRR::Add(ulong post_ticket, double open_price, double sl_price, ENUM_POSITION_TYPE position_type)
+ {
+  if(sl_price <= 0.00)
+   {
+    printf("%s: Error | Position %I64u with stop loss %+f has sl less than 0", __FUNCTION__, post_ticket, sl_price);
+    return false;
+   }
+```
+
+If there is no Stop Loss, false is returned, and the position will not be added to the PositionsBe array.
+
+Next, we create a double variable named val, which will store the distance from the opening price at which the Stop Loss level will be placed. If the type variable has the value EXTRA\_BE\_RRR\_BY\_ATR, we copy ATR data starting from the internal idx\_atr variable, copying only one element. If fewer than one element is copied, we return false and print an error message. Otherwise, we multiply val by the value at index 0 of the atr\_buff array.
+
+```
+ double val = this.extra_value_be;
+
+  if(type == EXTRA_BE_RRR_BY_ATR)
+   {
+    ResetLastError();
+    if(CopyBuffer(this.handle_atr, 0, this.idx_atr, 1, this.atr_buff) < 1)
+     {
+      printf("%s: Error | When copying the data of the indicator atr, last error %I32d", __FUNCTION__, GetLastError());
+      return false;
+     }
+    else
+      val *= this.atr_buff[0];
+   }
+```
+
+Next, we check that the distance at which the Stop Loss will be set is valid, that is, smaller than the distance at which the breakeven mechanism will be activated, in order to avoid invalid stops errors.
+
+```
+  double diff = MathAbs(open_price - sl_price);
+
+  if((diff * coefficient_rr) <= val)
+   {
+    printf("%s: Error | The distance from the opening price %f where the stoploss is located is greater than or equal to the price to trigger the breakeven", __FUNCTION__, this.extra_value_be);
+    return false;
+   }
+```
+
+Finally, if all checks are successful, we calculate the new Stop Loss price value, breakeven\_price, as well as the trigger price that activates breakeven mode, price\_to\_beat, using the following formulas:
+
+For the new Stop Loss (breakeven\_price):
+
+- Buy positions:
+
+> **break\_even\_price = open\_price + val**
+
+- Sell positions:
+
+> **break\_even\_price = open\_price - val**
+
+For the breakeven activation price, price\_to\_beat:
+
+- Buy positions:
+
+> **price\_to\_beat = open\_price + (coefficient\_rr \* diff)**
+
+- Sell positions:
+
+> **price\_to\_beat = open\_price - (coefficient\_rr \* diff)**
+
+We create the position\_be structure and assign it the required values: position type, ticket, and the two price levels (breakeven\_price and price\_to\_beat).
+
+After that, we add this structure to the PositionsBe array.
+
+```
+  position_be new_pos;
+  new_pos.breakeven_price =  position_type == POSITION_TYPE_BUY ? open_price + val : open_price - val;
+  new_pos.type =  position_type;
+  new_pos.price_to_beat = position_type == POSITION_TYPE_BUY ? open_price + (coefficient_rr * diff) : open_price - (coefficient_rr * diff);
+  new_pos.ticket = post_ticket;
+
+  ExtraFunctions::AddArrayNoVerification(this.PostionsBe, new_pos);
+  return true;
+ }
+```
+
+### The CBreakEven class: selecting and dynamically configuring the breakeven mode
+
+To efficiently select the breakeven mode to be used, we will create a selector class. It will be responsible for executing the breakeven logic and for converting the internal pointer to a derived type depending on the breakeven type selected by the user.
+
+Let's start by defining the BreakEvenParams structure, which will contain an MqlParam array where the parameters of a specific breakeven type will be stored.
+
+```
+struct BreakEvenParams
+ {
+  MqlParam           params[];
+ };
+```
+
+ Now let's declare the class itself and its private section.
+
+```
+//---
+class CBreakEven
+ {
+private:
+  ulong              magic;
+  string             symbol;
+  ENUM_BREAKEVEN_MODE breakeven_mode;
+
+  BreakEvenParams    parameters[];
+  CBreakEvenBase*    CreateBreakEven(ENUM_BREAKEVEN_TYPE type);
+```
+
+The private section contains the magic number, symbol, and breakeven mode. It also includes an array of type BreakEvenParams to store the parameters of the three breakeven types that will be considered. A function returning a CBreakEvenBase pointer is also declared; it will be called in one of the following functions to set the internal pointer.
+
+Finally, a CBreakEvenBase\* variable is created; it will be configured and cast to the required type in the SetInternalPointer function, depending on the breakeven mode selected by the user.
+
+```
+CBreakEvenBase*    obj;
+```
+
+**Constructor**
+
+The constructor will have the same parameters as the constructor of the breakeven base class.
+
+```
+CBreakEven(ulong magic_, string symbol_, ENUM_BREAKEVEN_MODE mode);
+```
+
+Inside the constructor, we initialize the internal variable values and set the size of the parameters array to 3, corresponding to the three supported breakeven types.
+
+```
+//+------------------------------------------------------------------+
+//| Constructor                                                       |
+//+------------------------------------------------------------------+
+CBreakEven::CBreakEven(ulong magic_, string symbol_, ENUM_BREAKEVEN_MODE mode)
+ {
+  this.magic = magic_;
+  this.symbol = symbol_;
+  this.breakeven_mode = mode;
+  ArrayResize(parameters, 3);
+ }
+```
+
+**Destructor**
+
+Inside the destructor, we first free the parameters array.
+
+```
+//+------------------------------------------------------------------+
+//| Destructor                                                       |
+//+------------------------------------------------------------------+
+CBreakEven::~CBreakEven()
+ {
+  ArrayFree(this.parameters);
+```
+
+Before deleting the breakeven pointer obj, we check whether it is dynamic, and if so, we delete it.
+
+```
+  if(CheckPointer(this.obj) == POINTER_DYNAMIC)
+   {
+    delete obj;
+    obj = NULL;
+   }
+ }
+```
+
+****Functions** for setting parameters**
+
+To set values inside the parameters array, we will create five functions that allow us to configure the parameters of the three breakeven modes: two for ATR, two for RRR, and one for fixed-points breakeven.
+
+**Functions for setting RRR breakeven parameters**
+
+Let's start with the RRR functions. As mentioned above, there will be two of them. One requires passing the ATR handle:
+
+```
+void               SetBeByRR(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, int atr_handle_);
+```
+
+And the other requires general parameters and parameters for creating the ATR handle:
+
+```
+void               SetBeByRR(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, ENUM_TIMEFRAMES tf_atr, int atr_period_);
+```
+
+Let's start by defining the first function, which requires passing the ATR handle. In this function, as in the others, we first set the size of the params array to 6.
+
+```
+ArrayResize(parameters[int(BREAKEVEN_TYPE_RR)].params, 6);
+```
+
+Then we assign the corresponding value to each index of the params array.
+
+```
+  parameters[BREAKEVEN_TYPE_RR].params[0].double_value = rr_a_put_the_break_even;
+  parameters[BREAKEVEN_TYPE_RR].params[1].integer_value = (int)type_extra;
+  parameters[BREAKEVEN_TYPE_RR].params[2].double_value = atr_multiplier_or_extra_points;
+  parameters[BREAKEVEN_TYPE_RR].params[3].integer_value = idx_atr_;
+  parameters[BREAKEVEN_TYPE_RR].params[4].integer_value = atr_handle_;
+```
+
+The last index, 5, will have the value HANDLE\_INSTEAD\_OF\_PERIOD so that the parameter-setting function of the CBreakEvenRR class can determine which function should be called; in this case, the one that requires passing a handle.
+
+```
+parameters[BREAKEVEN_TYPE_RR].params[5].integer_value = HANDLE_INSTEAD_OF_PERIOD;
+```
+
+For the second function, the steps are similar, but now index 4, which previously contained the ATR handle value, will contain the ATR timeframe, and index 5 will contain the ATR period.
+
+```
+//+------------------------------------------------------------------+
+//| Set rr without handle                                            |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByRR(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, ENUM_TIMEFRAMES tf_atr, int atr_period_)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_RR)].params, 6);
+  parameters[BREAKEVEN_TYPE_RR].params[0].double_value = rr_a_put_the_break_even;
+  parameters[BREAKEVEN_TYPE_RR].params[1].integer_value = (int)type_extra;
+  parameters[BREAKEVEN_TYPE_RR].params[2].double_value = atr_multiplier_or_extra_points;
+  parameters[BREAKEVEN_TYPE_RR].params[3].integer_value = idx_atr_;
+  parameters[BREAKEVEN_TYPE_RR].params[4].integer_value = (int)tf_atr;
+  parameters[BREAKEVEN_TYPE_RR].params[5].integer_value = atr_period_;
+ }
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------+
+//| Set rr without handle                                            |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByRR(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, ENUM_TIMEFRAMES tf_atr, int atr_period_)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_RR)].params, 6);
+  parameters[BREAKEVEN_TYPE_RR].params[0].double_value = rr_a_put_the_break_even;
+  parameters[BREAKEVEN_TYPE_RR].params[1].integer_value = (int)type_extra;
+  parameters[BREAKEVEN_TYPE_RR].params[2].double_value = atr_multiplier_or_extra_points;
+  parameters[BREAKEVEN_TYPE_RR].params[3].integer_value = idx_atr_;
+  parameters[BREAKEVEN_TYPE_RR].params[4].integer_value = (int)tf_atr;
+  parameters[BREAKEVEN_TYPE_RR].params[5].integer_value = atr_period_;
+ }
+
+//+------------------------------------------------------------------+
+//| Set rr with handle                                               |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByRR(double rr_a_put_the_break_even, ENUM_TYPE_EXTRA_BE_BY_RRR type_extra, double atr_multiplier_or_extra_points, int idx_atr_, int atr_handle_)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_RR)].params, 6);
+  parameters[BREAKEVEN_TYPE_RR].params[0].double_value = rr_a_put_the_break_even;
+  parameters[BREAKEVEN_TYPE_RR].params[1].integer_value = (int)type_extra;
+  parameters[BREAKEVEN_TYPE_RR].params[2].double_value = atr_multiplier_or_extra_points;
+  parameters[BREAKEVEN_TYPE_RR].params[3].integer_value = idx_atr_;
+  parameters[BREAKEVEN_TYPE_RR].params[4].integer_value = atr_handle_;
+  parameters[BREAKEVEN_TYPE_RR].params[5].integer_value = HANDLE_INSTEAD_OF_PERIOD;
+ }
+```
+
+**Functions for setting ATR breakeven parameters**
+
+To set the values of the params array, we will also use two functions, as in the RRR breakeven case, but with fewer parameters.
+
+Both parameter-setting functions will have exactly five parameters. The first one, which requires a handle, will be defined as follows:
+
+```
+void CBreakEven::SetBeByAtr(int atr_idx, double atr_multiplier_be, double atr_multiplier_extra_be, int atr_handle)
+```
+
+When describing this function, the first step is to set the size of the parameters array inside the params array:
+
+```
+ArrayResize(parameters[int(BREAKEVEN_TYPE_ATR)].params, 5);
+```
+
+Then values are assigned to all five elements of the params array:
+
+```
+  parameters[BREAKEVEN_TYPE_ATR].params[0].integer_value = atr_idx;
+  parameters[BREAKEVEN_TYPE_ATR].params[1].double_value = atr_multiplier_be;
+  parameters[BREAKEVEN_TYPE_ATR].params[2].double_value = atr_multiplier_extra_be;
+  parameters[BREAKEVEN_TYPE_ATR].params[3].integer_value = atr_handle;
+```
+
+Recall that the last element, index 4, must have the value HANDLE\_INSTEAD\_OF\_PERIOD so that the member function of the CBreakEvenAtr class that requires passing a handle can be selected:
+
+```
+parameters[BREAKEVEN_TYPE_ATR].params[4].integer_value = HANDLE_INSTEAD_OF_PERIOD;
+```
+
+For the second function, only the values of indices 3 and 4 change.
+
+Index 3 will contain the ATR timeframe value:
+
+```
+parameters[BREAKEVEN_TYPE_ATR].params[3].integer_value = int(timeframe);
+```
+
+And index 4 will contain the ATR period value:
+
+```
+parameters[BREAKEVEN_TYPE_ATR].params[4].integer_value = atr_period;
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------+
+//| Set atr (without handle)                                         |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByAtr(int atr_period, int atr_idx_, double atr_multiplier_extra_be_, double atr_multiplier_be_, ENUM_TIMEFRAMES timeframe)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_ATR)].params, 5);
+  parameters[BREAKEVEN_TYPE_ATR].params[0].integer_value = atr_idx_;
+  parameters[BREAKEVEN_TYPE_ATR].params[1].double_value = atr_multiplier_be_;
+  parameters[BREAKEVEN_TYPE_ATR].params[2].double_value = atr_multiplier_extra_be_;
+  parameters[BREAKEVEN_TYPE_ATR].params[3].integer_value = int(timeframe);
+  parameters[BREAKEVEN_TYPE_ATR].params[4].integer_value = atr_period;
+ }
+
+//+------------------------------------------------------------------+
+//| Set atr (with handle)                                            |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByAtr(int atr_idx, double atr_multiplier_be, double atr_multiplier_extra_be, int atr_handle)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_ATR)].params, 5);
+  parameters[BREAKEVEN_TYPE_ATR].params[0].integer_value = atr_idx;
+  parameters[BREAKEVEN_TYPE_ATR].params[1].double_value = atr_multiplier_be;
+  parameters[BREAKEVEN_TYPE_ATR].params[2].double_value = atr_multiplier_extra_be;
+  parameters[BREAKEVEN_TYPE_ATR].params[3].integer_value = atr_handle;
+  parameters[BREAKEVEN_TYPE_ATR].params[4].integer_value = HANDLE_INSTEAD_OF_PERIOD;
+ }
+```
+
+**Function for setting fixed-points breakeven parameters**
+
+To complete the configuration, the points-based breakeven remains; it requires only two parameters. Inside the CBreakEven class, we will declare it as follows:
+
+```
+void               SetBeByFixedPoints(int points_be_, int extra_points_be_);
+```
+
+To define it, we first set the size of the corresponding params array to 2:
+
+```
+ArrayResize(parameters[int(BREAKEVEN_TYPE_FIXED_POINTS)].params, 2);
+```
+
+Then we assign index 0 the number of points for breakeven activation, and index 1 the number of additional points.
+
+```
+  parameters[BREAKEVEN_TYPE_FIXED_POINTS].params[0].integer_value = points_be_;
+  parameters[BREAKEVEN_TYPE_FIXED_POINTS].params[1].integer_value = extra_points_be_;
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------+
+//| Set Fixed Point be                                               |
+//+------------------------------------------------------------------+
+void CBreakEven::SetBeByFixedPoints(int points_be_, int extra_points_be_)
+ {
+  ArrayResize(parameters[int(BREAKEVEN_TYPE_FIXED_POINTS)].params, 2);
+  parameters[BREAKEVEN_TYPE_FIXED_POINTS].params[0].integer_value = points_be_;
+  parameters[BREAKEVEN_TYPE_FIXED_POINTS].params[1].integer_value = extra_points_be_;
+ }
+```
+
+**Function for obtaining a pointer based on the breakeven type**
+
+To obtain the required breakeven mode depending on the type set by the user, we will create a function that returns a CBreakEvenBase pointer.
+
+```
+CBreakEvenBase *CBreakEven::CreateBreakEven(ENUM_BREAKEVEN_TYPE type)
+```
+
+Let's start by creating a switch statement in which each case corresponds to one breakeven type. If the type variable does not match any of them, NULL will be returned by default. If a match is found, the function will return a pointer to the corresponding child class.
+
+```
+  switch(type)
+   {
+    case BREAKEVEN_TYPE_ATR:
+      return new CBreakEvenAtr(this.symbol, this.magic, this.breakeven_mode);
+
+    case BREAKEVEN_TYPE_RR:
+      return new CBreakEvenRR(this.symbol, this.magic, this.breakeven_mode);
+
+    case BREAKEVEN_TYPE_FIXED_POINTS:
+      return new CBreakEvenSimple(this.symbol, this.magic, this.breakeven_mode);
+
+    default:
+      return NULL;
+   }
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------+
+//| Dynamically create the correct BreakEven                         |
+//+------------------------------------------------------------------+
+CBreakEvenBase *CBreakEven::CreateBreakEven(ENUM_BREAKEVEN_TYPE type)
+ {
+  switch(type)
+   {
+    case BREAKEVEN_TYPE_ATR:
+      return new CBreakEvenAtr(this.symbol, this.magic, this.breakeven_mode);
+
+    case BREAKEVEN_TYPE_RR:
+      return new CBreakEvenRR(this.symbol, this.magic, this.breakeven_mode);
+
+    case BREAKEVEN_TYPE_FIXED_POINTS:
+      return new CBreakEvenSimple(this.symbol, this.magic, this.breakeven_mode);
+
+    default:
+      return NULL;
+   }
+  return NULL;
+ }
+```
+
+**Function for setting the internal value of the obj pointer**
+
+Finally, to assign a value to the internal pointer, we will create a function named SetInternalPointer that takes the breakeven type as a parameter:
+
+```
+void SetInternalPointer(ENUM_BREAKEVEN_TYPE type)
+```
+
+We begin the function definition by checking the state of the obj pointer.
+
+```
+  if(CheckPointer(this.obj) == POINTER_DYNAMIC)
+   {
+    delete this.obj;
+    this.obj = NULL;
+   }
+```
+
+If the pointer is dynamic, we delete it.
+
+Then the obj pointer is initialized with the CreateBreakEven function, which returns a pointer depending on the selected breakeven type. After assignment, we check whether it is NULL. In that case, we print an error message and remove the Expert Advisor from the current chart.
+
+```
+  this.obj = CreateBreakEven(type);
+
+  if(this.obj == NULL)
+   {
+    printf("%s: Critical error | The type %d is invalid.", __FUNCTION__, type);
+    ExpertRemove();
+    return;
+   }
+```
+
+We check whether the size of the params array is sufficient to store the required parameters. If this check fails, we delete the object, set the pointer to NULL, and remove the Expert Advisor from the chart.
+
+```
+  if((int)parameters[type].params.Size() < obj.GetNumParams())
+   {
+    printf("%s: Error | The parameter array for %s is too small (%I32u elements)",
+           __FUNCTION__, EnumToString(type), parameters[type].params.Size());
+    delete obj;
+    obj = NULL;
+    ExpertRemove();
+    return;
+   }
+```
+
+Finally, we set the required values using the Set function of the base class:
+
+```
+obj.Set(parameters[type].params);
+```
+
+Full code
+
+```
+//+------------------------------------------------------------------+
+//| Set Pointer                                                      |
+//+------------------------------------------------------------------+
+void CBreakEven::SetInternalPointer(ENUM_BREAKEVEN_TYPE type)
+ {
+  if(CheckPointer(this.obj) == POINTER_DYNAMIC)
+   {
+    delete this.obj;
+    this.obj = NULL;
+   }
+
+  this.obj = CreateBreakEven(type);
+
+  if(this.obj == NULL)
+   {
+    printf("%s: Critical error | The type %d is invalid.", __FUNCTION__, type);
+    ExpertRemove();
+    return;
+   }
+
+  if((int)parameters[type].params.Size() < obj.GetNumParams())
+   {
+    printf("%s: Error | The parameter array for %s is too small (%I32u elements)",
+           __FUNCTION__, EnumToString(type), parameters[type].params.Size());
+    delete obj;
+    obj = NULL;
+    ExpertRemove();
+    return;
+   }
+
+  obj.Set(parameters[type].params);
+ }
+//+------------------------------------------------------------------+
+```
+
+### Testing the Order Blocks Expert Advisor with different breakeven types
+
+In this final section, we will focus on testing the three breakeven modes in the Strategy Tester.
+
+Let's start by configuring the parameters. We will use ATR-based Stop Loss and Take Profit. The ATR multiplier for Stop Loss will be set to 3.0, and for Take Profit to 6.0, that is, with a 1:2 ratio. The trading interval will be set from 03:00 to 14:00 GMT-3.
+
+Settings
+
+[IMG]
+
+Figure 1: Settings for the Order Blocks Expert Advisor backtest
+
+As shown in the image, the robot will be tested on gold (XAUUSD), and we will choose the M5 timeframe (5 minutes). The model will be based on real ticks, with 1:30 leverage and an initial deposit of 10,000 USD.
+
+**Initial backtest without breakeven activation**
+
+For a clearer comparison, the first test will be performed without activating breakeven mode.
+
+[IMG]
+
+Figure 2: Backtest chart of the Order Blocks Expert Advisor without breakeven activation
+
+Before starting the backtests, it is important to note that the obtained results are valid for the specific parameters, so the conclusions presented cannot be generalized to every strategy or arbitrary set of parameters. However, an approximate assessment can be made for similar values.
+
+For example, in the backtest presented below, we will test fixed-points breakeven. The parameters will be set to 100 additional points for the breakeven price and 200 points for its activation. Thus, the conclusions drawn from this backtest will apply to values close to 200 and 100 points for breakeven activation and the extra breakeven offset, respectively.
+
+**Backtest for points-based breakeven**
+
+For the backtest with fixed points, we will choose 200 points for breakeven activation and 100 additional points. The results obtained are shown below.
+
+[IMG]
+
+Figure 3: Trading results chart for the Order Blocks Expert Advisor with fixed-points breakeven
+
+As shown in the image, there were many series of positions with small profits. As expected, they were affected by the breakeven mechanism. In addition, in this fixed-points breakeven backtest, positions that had a positive floating result around the period from April 16 to April 29, 2025 were closed without losses. By contrast, in the first backtest, losses were recorded during this period.
+
+This may indicate that points-based breakeven is a more conservative approach, but it can also limit future profits. As a result, in this backtest the final balance was only 12,000 USD, whereas in the first backtest the final balance was approximately 15,800 USD. This suggests that fixed-points breakeven reduces losses but at the same time significantly limits profit.
+
+**Backtest with ATR-based breakeven**
+
+[IMG]
+
+Figure 4: Backtest chart of the Order Blocks Expert Advisor with ATR-based breakeven
+
+In the second backtest with ATR-based breakeven, the chart shows an improvement. First of all, we will analyze the effect of this breakeven type on positive and negative trade series.
+
+In positive series, this breakeven does not act as aggressively as fixed-points breakeven. In negative series, it moderately limits losses. This is clearly visible in the first major drawdown sequence, which lasted from the beginning of 2024 until March. The balance curve of this backtest is largely similar to the curve of the first backtest.
+
+Thus, we can conclude that this breakeven mode is more moderate, perhaps not as aggressive as fixed-points breakeven, because depending on volatility, its activation price may be either higher or lower depending on the ATR value.
+
+**Backtest with RRR-based breakeven**
+
+[IMG]
+
+Figure 5: Trading results chart for the Order Blocks Expert Advisor with RRR-based breakeven and a Stop Loss – Take Profit ratio of 1:2
+
+Based on this backtest, we can note that in negative series, especially in January and February 2024, the difference between the backtest without breakeven and the version with RRR-based breakeven is small. This indicates that these losses were real, that is, there was no positive floating result: after a position was opened, price immediately reached Stop Loss, so RRR-based breakeven had no opportunity to activate.
+
+In positive series, profit growth is moderately limited. For example, in July 2024, when in the first backtest almost all positions were closed by Take Profit, when using RRR-based breakeven this upward sequence largely stalled. This may be due to the Expert Advisor trading in consolidation ranges where price did not form a clear trend, allowing the breakeven mechanism to activate and close the trade before a clear direction developed.
+
+We can conclude that RRR-based breakeven is more conservative, because price must travel a greater distance for it to activate. Therefore, it is not the optimal option for aggressive strategies, but it may be useful for swing-type strategies focused on a high risk-reward ratio, such as 1:3 or 1:5. To check this, next we will run a backtest with a 1:3 risk-reward ratio.
+
+[IMG]
+
+Figure 6: Trading results chart for the Order Blocks Expert Advisor with RRR-based breakeven and a Stop Loss – Take Profit ratio of 1:3.
+
+The new backtest showed better results than the previous one with a 1:2 ratio. The main changes are that the minimum balance was around 9,500 USD, which almost matches the result of the ATR-based breakeven backtest. In addition, during the first negative series, from January to February, the losses were not as significant as in the initial backtest.
+
+However, in April the longest negative series among all three breakeven types is observed: almost five months of losses. This coincides with a roughly five-month sideways movement in gold. Compared with the first RRR breakeven backtest, this may indicate that positions were not closed immediately but probably fluctuated between negative and positive floating results, so the Stop Loss and Take Profit sizes must have been significant.
+
+The problem is that in this new backtest, the Stop Loss size was reduced to one third of the original, so the probability of positions closing at a loss increased. This may indicate that during the sideways period, trade holding time was longer and that fluctuations between positive and negative values occurred before closing.
+
+### Conclusion
+
+In this article, we completed the implementation of ATR- and RRR-based breakeven in MQL5. Then we created a class that allows different breakeven types to be managed within a single class, which simplifies switching between them without having to re-enter parameters for each new mode.
+
+Finally, we tested and analyzed the different breakeven types. We saw that fixed-points breakeven with the specified parameters is more aggressive. By contrast, RRR-based breakeven is more passive, but it limits profit more strongly. ATR-based breakeven occupies an intermediate position between these two options.
+
+To summarize, it should be noted that it is impossible to say with certainty which breakeven type is best for each specific strategy, because this depends on a number of factors that must be taken into account. This should be assessed individually. Nevertheless, as a recommendation, different breakeven types can be tested and the one that best fits the strategy being used can be selected.
+
+Thus, based on the three backtests, we can assume that RRR-based breakeven is better suited to strategies with a predefined risk-reward ratio greater than or equal to 1:3. This was confirmed in the fifth backtest, where net profit was almost three times higher than in the fourth.
+
+Files used/updated in this article:
+
+| File name | Type | Description |
+| --- | --- | --- |
+| Risk\_Management.mqh | .mqh (header file) | Contains the risk-management class developed in the [last article](https://www.mql5.com/en/articles/17640) of the risk-management series. |
+| Order\_Block\_Indicador\_New\_Part\_2.mq5 | .mq5 (indicator) | Contains the Order Block indicator code. |
+| Order Block EA MT5.mq5 | .mq5 (Expert Advisor) | Order Block Expert Advisor code with the integrated breakeven mechanism. |
+| OB\_SET\_WITHOUT\_BREAKEVEN.set | .set (configuration file) | Settings for the first backtest, without the breakeven mechanism. |
+| OB\_SET\_BREAKEVEN\_POINTS.set | .set (configuration file) | Settings for the second backtest with fixed-points breakeven. |
+| OB\_SET\_BREAKEVEN\_ATR.set | .set (configuration file) | Settings for the third backtest with ATR-based breakeven. |
+| OB\_SET\_BREAKEVEN\_RR\_1\_2.set | .set (configuration file) | Settings for the fourth backtest with RRR-based breakeven at a 1:2 ratio. |
+| OB\_SET\_BREAKEVEN\_RR\_1\_3.set | .set (configuration file) | Settings for the fifth backtest with breakeven based on RR at a 1:3 ratio. |
+| PositionManagement.mqh | .mqh (header file) | MQH file containing the breakeven mechanism code. |
+
+Translated from Spanish by MetaQuotes Ltd.   
+Original article: <https://www.mql5.com/es/articles/18111>
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/18111.zip "Download all attachments in the single ZIP archive")
+
+[MQL5.zip](https://www.mql5.com/en/articles/download/18111/mql5.zip "Download MQL5.zip")
+(242.42 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[IMG]
+[Market Simulation: Getting started with SQL in MQL5 (I)](https://www.mql5.com/en/articles/13062)
+
+In today's article we will begin studying the use of SQL in MQL5 code. We will also look at how to create a database. Or, more precisely, how to create a SQLite database file using the features built into MQL5. We will also see how to create a table, and then how to establish a relationship between tables by using primary and foreign keys. All of this, once again, will be done with MQL5. We will see how easy it is to create code that can later be migrated to other SQL implementations by using a class that helps hide the implementation being created. And, most importantly, we will see that at various points we may face the risk that something will go wrong when using SQL. This happens because, in MQL5 code, SQL code will always be placed inside a string.
+
+[IMG]
+[Interactive Supply and Demand Zone Manager in MQL5 (Part I): From Manual to Automated Lifecycle](https://www.mql5.com/en/articles/22666)
+
+Replace static drawings with automated, stateful zones controlled by a CZone wrapper. The system synchronizes user rectangles, sizes zones by ATR, validates breakouts using consecutive closes, applies ghost/deactivation rules, merges nearby structures by a 1.5×ATR threshold, and projects edges forward. Traders gain durable levels that update themselves and reduce repetitive chart management.
+
+[IMG]
+[Neural Networks in Trading: Anomaly Detection in the Frequency Domain (Final Part)](https://www.mql5.com/en/articles/17675)
+
+We continue to work on implementing the CATCH framework, which combines the Fourier transform and frequency patching mechanisms, ensuring accurate detection of market anomalies. In this article, we complete the implementation of our own vision of the proposed approaches and test the new models on real historical data.
+
+[IMG]
+[Market Microstructure in MQL5 (Part 4): Volatility That Remembers](https://www.mql5.com/en/articles/22638)
+
+This article adds eight volatility functions to MicroStructure\_Foundation.mqh, including realized volatility, duration-adjusted volatility, fractional volatility, a FIGARCH-inspired proxy, a volatility clustering index, a GJR-GARCH asymmetry measure (using the Dube library), bipower-variation jump detection, and a wrapper function. The MFDFA implementation is revised to return the conventional Legendre-transform Δα with an R² confidence field, replacing the τ-spread proxy used in the original submission. Thresholds are derived from 514 NY sessions of NQ E-mini Nasdaq 100 futures (May 2024–May 2026); no new include file is created.
+
+[[IMG]](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=kwytixmhbkjqnqsbeidzwauzudobbxqc&s=854bd7dc2245707f8a34c15af1d749f2f3945d4b61c7e96c79f07e6b2d2f6776&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=qvfkpzclbtecocjbevdajgjarpwejxua&ssn=1788790267571468967&ssn_dr=0&ssn_sr=0&fv_date=1788790267&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F18111&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Implementing%20a%20Breakeven%20Mechanism%20in%20MQL5%20(Part%202)%3A%20ATR-%20and%20RRR-Based%20Breakeven%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178879026771141764&fz_uniq=6407570522820458491&sv=2552)

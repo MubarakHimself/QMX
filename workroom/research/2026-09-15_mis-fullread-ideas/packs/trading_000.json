@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_000",
+  "section": "Trading",
+  "parent_shard": "trading_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 625,
+      "title": "MetaTrader 5 on Linux",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\625.md"
+    },
+    {
+      "id": 626,
+      "title": "MetaTrader 4 and MetaTrader 5 Trading Signals Widgets",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\626.md"
+    },
+    {
+      "id": 701,
+      "title": "Social Trading with the MetaTrader 4 and MetaTrader 5 Trading Platforms",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\701.md"
+    },
+    {
+      "id": 719,
+      "title": "Building an Automatic News Trader",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\719.md"
+    },
+    {
+      "id": 756,
+      "title": "How to Make Money from MetaTrader AppStore and Trading Signals Services If You Are Not a Seller or a Provider",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\756.md"
+    },
+    {
+      "id": 821,
+      "title": "Video tutorial: MetaTrader Signals Service",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\821.md"
+    },
+    {
+      "id": 910,
+      "title": "Tales of Trading Robots: Is Less More?",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\910.md"
+    },
+    {
+      "id": 1044,
+      "title": "Building a Social Technology Startup, Part II: Programming an MQL5 REST Client",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1044.md"
+    },
+    {
+      "id": 1045,
+      "title": "Johnpaul77 Signal Providers: \"Our Strategy Remains Profitable for More Than Three Years Now. So Why Would We Change It?\"",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1045.md"
+    },
+    {
+      "id": 1077,
+      "title": "Outline of MetaTrader Market (Infographics)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1077.md"
+    },
+    {
+      "id": 1100,
+      "title": "How we developed the MetaTrader Signals service and Social Trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1100.md"
+    },
+    {
+      "id": 1201,
+      "title": "Plotting trend lines based on fractals using MQL4 and MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1201.md"
+    }
+  ]
+}

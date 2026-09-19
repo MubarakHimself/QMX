@@ -1,0 +1,1088 @@
+---
+id: 22231
+source_url: https://www.mql5.com/en/articles/22231
+title: "Using the MQL5 Economic Calendar for News Filter (Part 4): Accurate Backtesting with Static Data"
+author: ""
+author_url: 
+published: 2026-04-28T10:54Z
+platform: "MetaTrader 5"
+section: "Tester"
+tags: []
+series_title: "Using the MQL5 Economic Calendar for News Filter (): Accurate Backtesting with Static Data"
+series_part: 4
+source: mql5
+language: en
+---
+
+# Using the MQL5 Economic Calendar for News Filter (Part 4): Accurate Backtesting with Static Data
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+| 28 April 2026 at 06:54
+
+3 042
+[
+0](https://www.mql5.com/en/forum/509055 "Comments")
+
+[Solomon Anietie Sunday](https://www.mql5.com/en/users/soloharbinger)
+
+**Table of Contents**
+
+- [Introduction](https://www.mql5.com/en/articles/22231#introduction)
+- [The Problem: Historical News Events Are Not Availiable](https://www.mql5.com/en/articles/22231#para2)
+- [How the Problem Is Solved](https://www.mql5.com/en/articles/22231#how_the_problem_is_solved)
+- [Designing the Static News File Format and Loading Architecture](https://www.mql5.com/en/articles/22231#para4)
+- [Implementing the Static News Loader](https://www.mql5.com/en/articles/22231#implementing_the_static_news_loader)
+- [Create a Helper Script for Exporting Live Calendar to CSV](https://www.mql5.com/en/articles/22231#para6)
+- [Testing and Validation—Verifying the Static News Loader in the Strategy Tester](https://www.mql5.com/en/articles/22231#testing_and_validation_verifying_the_static_news)
+- [Prepare the EA for testing (dummy trade generator)](https://www.mql5.com/en/articles/22231#para8)
+- [Conclusion](https://www.mql5.com/en/articles/22231#para9)
+
+### 
+
+### Introduction
+
+In [Part 3](https://www.mql5.com/en/articles/21803), we solved the problem of state-loss during terminal restarts by introducing persistent storage using terminal global variables. The news-filter suspension system could now survive a VPS reboot or an EA recompile without losing track of which trades had their stops removed. That was a big step toward operational robustness.
+
+In live trading, the EA's news filter works: CalendarValueHistory() supplies upcoming events, and the EA can block new entries, suspend SL/TP modifications, or close positions around releases. In the Strategy Tester, this same logic usually becomes blind—terminal calendar queries return no or incomplete historical events—so backtests can show unrealistically smooth equity curves or unexplained drawdown “tails.” Crucially, this prevents you from verifying the behaviors you care about: does the EA detect news windows, does it block openings, does it suspend and later restore stops, and does it close positions before high‑impact releases?
+
+This part addresses that precise gap. The objective is to make news events deterministic in the tester so you can reproduce and validate the EA's news‑related actions. The solution is a static, preloaded CSV of historical events that the EA reads in tester mode, combined with a currency cache and an automatic switch (MQL\_TESTER). With this approach you can (1) reproduce the same news sequence across runs, (2) observe explicit log markers for detections, and (3) confirm that the EA performs the exact stop/entry/close operations you expect.
+
+The Problem: Historical News Events Are Not Available
+
+When you attach the EA to a live chart, the CalendarValueHistory() function returns real upcoming economic events from the terminal's internal calendar database. This works because the database contains future events. But in the Strategy Tester, TimeCurrent() advances through historical dates. If you request calendar events for a date that has already passed (e.g., 2025-01-15), the terminal does not guarantee that those events are still present in its cache. In practice, for most brokers and most older dates, CalendarValueHistory() returns zero records, or at best, an incomplete subset.
+
+Why This Breaks Backtesting
+
+When historical news events are not available in the Strategy Tester, it produces specific, observable distortions in the results.
+
+In a typical backtest:
+
+- The EA never detects news windows because no events are returned.
+- Trade-blocking logic is never triggered.
+- Stop-loss and take-profit suspension routines remain inactive.
+- Position-closing logic before high-impact events is never executed.
+
+This leads to misleading output, as volatility spikes are ignored, and inability to validate behavior since no logs or actions confirm that the news filter is working.
+
+As a result, the trader cannot answer these questions:
+
+- Did the EA correctly detect a news window?
+- Were trades blocked at the right time?
+- Were stops removed and later restored?
+- Did overlapping events produce continuous restriction periods?
+
+Without observable evidence of these behaviors, the backtest is unverifiable and incomplete.
+
+Why the "Sliding 24-Hour Window" Does Not Help
+
+Because we reload the calendar every few hours, it may seem that the tester will eventually pick up events as simulation time advances. The fundamental issue remains: when *from* equals the current simulation time, CalendarValueHistory(from, to) only returns events where event\_time >= *from*. It does not return events that happened earlier in the simulation but were not loaded at that moment because the terminal rarely stores them. In other words, if the terminal's internal database lacks historical records for 2024-03-15, no amount of reloading will magically create them.
+
+Success Criteria: What a Correct Backtest Must Show
+
+Before implementing a solution, we must define what a correct backtest looks like when the news filter is functioning properly.
+
+A valid and testable result must include the following observable behaviors:
+
+1. Deterministic Event Detection
+
+- News events are consistently detected at the same timestamps across multiple runs.
+- Journal logs contain clear markers (e.g., STATIC NEWS: or NEWS:) at expected times.
+
+2. Correct Trade Restrictions (if enabled)
+
+- New trades are blocked during defined news windows. Meaning no entries occur between NewsMinutesBefore and NewsMinutesAfter.
+
+3. Stop Management Behavior (if enabled)
+
+- Stop-loss and take-profit levels are suspended when entering a news window.
+- Stops are restored correctly after the window ends.
+
+4. Position Management (if enabled)
+
+- Open trades are closed before high-impact events when configured.
+
+5. Continuous Handling of Overlapping Events
+
+- Closely spaced events produce a single continuous restriction window.
+- There is no flickering between active/inactive states.
+
+6. Reproducibility
+
+- Running the same test with the same data produces identical results.
+- Modifying the CSV produces predictable changes in behavior.
+
+If these conditions are not met, the news filter cannot be considered validated, regardless of the equity curve.
+
+### 
+
+### How the Problem Is Solved
+
+A reliable solution: a static, pre-loaded news file
+
+To obtain deterministic and accurate backtesting, we must decouple the news source from the terminal's live calendar API. The approach is simple but powerful:
+
+1. Create a static CSV file that contains a curated list of historical economic events, including a date, time, currency, importance, and event name.
+2. Load this file once when the EA initializes in the tester (detected via MQLInfoInteger(MQL\_TESTER)).
+3. Replace the live calendar query with a fast, in-memory search over the static data.
+4. Keep the live logic unchanged, because the same IsNewsTime() function works with either source.
+
+This gives us:
+
+- Full control over which events are considered,
+- deterministic results as every backtest run sees the same news events,
+- no dependency on broker's calendar completeness, and
+- the ability to test "what-if" scenarios by editing the CSV.
+
+Scope of This Article
+
+This part focuses on adding static file-based news loading for the Strategy Tester. We will not modify the existing news detection logic for live trading. Our additions are:
+
+- A new input to specify the CSV file path (or a default location).
+- A CSV parsing function that reads historical events into a persistent array.
+- Modification to IsNewsTime() to use the static array when running in the tester.
+- Optional: a single tool to export the terminal's current calendar to CSV for future backtesting.
+
+All other features, like stop suspension, persistence, trade blocking, etc., stay exactly as they are.
+
+What You Will Learn
+
+By the end of this part, you will understand:
+
+- Why backtesting event-driven systems requires a different data strategy than live trading.
+- A way to parse CSV files in MQL5 without external libraries.
+- How to seamlessly switch between live and backtest data sources using the MQL\_TESTER flag.
+- How to validate that your backtest now correctly reacts to news events.
+
+The result is a news filter that you can finally backtest with confidence and that behaves identically in live trading.
+
+Implementation Overview
+
+To achieve the defined success criteria, the solution is composed of core components and supporting tools.
+
+Core components (required):
+
+- A static CSV file containing historical news events.
+- A loader that parses and stores these events in memory.
+- Automatic switching between live and tester modes using MQL\_TESTER.
+
+Supporting components (optional but recommended):
+
+- Currency caching for performance optimization.
+- A helper script to export calendar data into CSV format.
+- A temporary trade generator for validation during testing.
+
+Only the core components are required to achieve deterministic backtesting. The supporting components improve usability, performance, and validation clarity.
+
+Designing the Static News File Format and Loading Architecture
+
+Before writing any code, we must decide how the historical news data will be stored and how the EA will access it. A well-thought-out design saves debugging time later.
+
+Why CSV?
+
+Comma-separated values (CSV) are the obvious choice:
+
+- Human-readable. You can open it in any text editor or spreadsheet.
+- It is easy to edit by adding, removing, or modifying events without recompiling the EA.
+- No external libraries are needed; MQL5's FileOpen() and FileReadString() handle it natively.
+- It is portable since the file sits in the \Files folder of the terminal data directory.
+
+Required Data Fields
+
+From our live calendar function, isUpcomingNews(), we see that the EA needs only a few pieces of information per event:
+
+| Field | Type | Description | Example |
+| --- | --- | --- | --- |
+| event\_time | datetime | Scheduled time of the news release (UTC) | 2024.03.15 14:30:00 |
+| currency | string | Affected currency (e.g., "USD", "EUR") | USD |
+| importance | int | 1 = low, 2 = moderate, 3 = high | 3 |
+| event\_name | string | Optional for debugging/logging | FOMC Statement |
+
+We do not need the event ID, country ID, or any other metadata; they were only necessary for the live calendar API.
+
+Proposed CSV format:
+
+Each line represents one event. The first line can be a header (ignored by the EA). Fields are separated by commas. We adopt a simple, strict format:
+
+```
+event_time,currency,importance,event_name
+2024.01.15 14:30:00,USD,3,FOMC Statement
+2024.01.15 15:00:00,USD,2,Industrial Production
+2024.01.16 09:00:00,EUR,2,German ZEW
+```
+
+Rules:
+
+- Dates use the format YYYY.MM.DD HH:MM:SS. This matches what StringToTime() expects.
+- Currency is a three-letter code.
+- Importance: 3 for high, 2 for moderate, 1 for low (we will filter later).
+- Event name is optional but recommended; it appears in logs.
+
+Where to Store the File
+
+The terminal's sandbox system requires the CSV to be placed in the MQL5\Files folder of the terminal data directory (or a subfolder). We will use a default name, e.g., HistoricalNews.csv, but also allow the user to specify a custom path via an input parameter. Loading Strategy in the EA: Because the file is static, we load it once in OnInit(), but only when the EA is running in the Strategy Tester. Live trading continues to use the live calendar API.
+
+We will introduce a new global array:
+
+```
+// Structure to store historical news information
+struct StaticNewsEvent
+  {
+   datetime          eventTime;
+   string            currency;
+   int               importance;
+   string            name;
+  };
+StaticNewsEvent historicalNews[];
+```
+
+Then a dedicated function, LoadHistoricalNewsFromCSV(), will:
+
+1. Check if we are in the tester (MQLInfoInteger(MQL\_TESTER)).
+2. Open the CSV file.
+3. Read line by line, skip the header, and parse each field.
+4. Populate the historicalNews[] array.
+5. Close the file and report the count.
+
+Performance Consideration
+
+Even a CSV with several thousand events is small; parsing takes milliseconds. Once loaded, the IsNewsTime() function in the tester mode will simply loop through historicalNews[] and check the time window. This is O(n) per call, and n is the total number of events (e.g., 2000), and IsNewsTime() is called once per tick.
+
+### 
+
+### Implementing the Static News Loader
+
+CSV Parsing and Tester Detection
+
+Now we move from design to actual MQL5 code. This section implements the file loading logic. Integrate it into the EA's initialization and modify the news detection to use static data when backtesting.
+
+Step 1: Adding the Input Parameter for the CSV File
+
+We add a new input string to allow the user to specify the filename (or full path relative to the \File folder). Place this inside the existing news filter configuration input group.
+
+```
+input group  "New Filter Configuration"
+input bool   EnableNewsFilter = false;                           // Enable Economic News Filter
+input int    NewsMinutesBefore = 5;                              // Minutes before news to restrict
+input int    NewsMinutesAfter = 5;                               // Minutes after news to restrict
+input bool   RestrictNewTradesDuringNews = true;                 // Block new trades during news window
+input bool   SuspendStopsDuringNews = false;                     // Pause SL/TP modifications during the news window [NEW]
+input bool   CloseOpenTradesBeforeHighImpactNews = false;        // Close all trades before news
+input string SymbolCurrencyOverride = "";                        // Manual currency override e.g. "USD,JPY"
+enum ENUM_NEWS_IMPORTANCE_MODE
+  {
+   NEWS_HIGH_ONLY = 0,
+   NEWS_MODERATE_ONLY,
+   NEWS_HIGH_AND_MODERATE
+  };
+input ENUM_NEWS_IMPORTANCE_MODE NewsImportanceMode = NEWS_HIGH_ONLY; // Which importance levels to consider
+// Cache reload interval
+input int CacheReloadHours = 6;                                  // How often to reload calendar cache (hours)
+
+// ADD NEW INPUT
+input string HistoricalNewsFile = "HistoricalNews.csv";  // CSV file for backtesting news events
+```
+
+If left empty, the EA will not attempt to load static data (fallback to live calendar, which will fail in tester, but at least it's explicit).
+
+Step 2: Global Storage for Static Events
+
+We need a structure and an array to hold the parsed events, plus a cache for the current symbol's currencies. The below will be added under previous global variables.
+
+```
+//+------------------------------------------------------------------+
+//| GLOBAL VARIABLES                                                 |
+//+------------------------------------------------------------------+
+MqlCalendarValue TodayEvents[];    // Calendar cache
+datetime lastCalendarLoad = 0;
+CTrade trade;                      // CTrade instance for order management
+
+// Structure to store removed stop information
+struct SavedStops
+  {
+   ulong             ticket;       // Trade ticket number
+   double            sl;           // Original stop loss
+   double            tp;           // Original take profit
+  };
+SavedStops savedStops[];
+bool newsSuspended = false;
+
+// NEW GLOBAL VARIABLES AND STRUCTURE
+// Structure to store historical news information
+struct StaticNewsEvent
+  {
+   datetime          eventTime;
+   string            currency;
+   int               importance;
+   string            name;
+  };
+StaticNewsEvent historicalNews[];
+bool staticNewsLoaded = false;    // Flag to indicate that we've loaded the CSV
+
+string cachedCurrencies[];
+int cachedCurrencyCount = 0;
+bool currencyCacheValid = false;
+```
+
+Step 3: The CSV Loading Function
+
+We write a dedicated function that:
+
+- Opens the file from the \File folder specifically inside Common\Files for tester compatibility.
+- Reads line by line.
+- Skips empty lines and the header.
+- Parses each line using StringSplit().
+- Converts the date string to datetime with StringToTime().
+- Stores valid events in historicalNews[].
+
+Below is the complete implementation of the function to be added below other functions in the news filter EA:
+
+```
+//+------------------------------------------------------------------+
+//| Load historical news from CSV file (for backtesting only)      |
+//+------------------------------------------------------------------+
+
+bool LoadHistoricalNewsFromCSV()
+  {
+// Clear any previous data
+   ArrayFree(historicalNews);
+   staticNewsLoaded = false;
+
+// Only load in the tester
+   if(!MQLInfoInteger(MQL_TESTER))
+     {
+      // Skip this function when not in strategy tester
+      return false;
+     }
+
+// If no filename provided, skip
+   if(StringLen(HistoricalNewsFile) == 0)
+     {
+      Print("Static news loader: HistoricalNewsFile is empty – no news in backtest.");
+      return false;
+     }
+
+// Open the file (must be in \Common\Files\ folder for Strategy tester compatibility)
+   int fileHandle = FileOpen(HistoricalNewsFile, FILE_READ|FILE_TXT|FILE_ANSI|FILE_COMMON, ",");
+   if(fileHandle == INVALID_HANDLE)
+     {
+      PrintFormat("Static news loader: Failed to open '%s'. Error: %d",
+                  HistoricalNewsFile, GetLastError());
+      return false;
+     }
+
+   int lineCount = 0;
+   int eventCount = 0;
+   string line;
+
+   while(!FileIsEnding(fileHandle))
+     {
+      line = FileReadString(fileHandle);
+      lineCount++;
+
+      // Trim whitespace and skip empty lines
+      StringTrimLeft(line);
+      StringTrimRight(line);
+      if(StringLen(line) == 0)
+         continue;
+
+      // Skip header line (starts with "event_time" or "date")
+      string lowerLine = line;
+      StringToLower(lowerLine);
+      if(StringFind(lowerLine, "event_time") != -1 ||
+         StringFind(lowerLine, "date") != -1 ||
+         StringFind(lowerLine, "time") != -1)
+        {
+         // Skip header line
+         continue;
+        }
+
+      // Split the line by comma
+      string parts[];
+      int partCount = StringSplit(line, ',', parts);
+      if(partCount < 3)
+        {
+         continue;
+        }
+
+      // Trim each part
+      for(int i = 0; i < partCount; i++)
+        {
+         StringTrimLeft(parts[i]);
+         StringTrimRight(parts[i]);
+        }
+
+      // Parse fields
+      datetime evTime = StringToTime(parts[0]);
+      if(evTime == 0)
+        {
+         continue;
+        }
+      string currency = parts[1];
+      StringToUpper(currency);
+
+      int importance = (int)StringToInteger(parts[2]);
+      if(importance < 1 || importance > 3)
+        {
+         // Importance level must be 1, or 2, or 3
+         continue;
+        }
+
+      string name = (partCount >= 4) ? parts[3] : "";
+
+      // Store the event
+      int idx = ArraySize(historicalNews);
+      ArrayResize(historicalNews, idx + 1);
+      historicalNews[idx].eventTime = evTime;
+      historicalNews[idx].currency = currency;
+      historicalNews[idx].importance = importance;
+      historicalNews[idx].name = name;
+
+      eventCount++;
+     }
+
+   FileClose(fileHandle);
+
+   staticNewsLoaded = (eventCount > 0);
+   return staticNewsLoaded;
+  }
+```
+
+Explanation of key parts:
+
+- MQLInfoInteger(MQL\_TESTER) detects backtest mode.
+- FileOpen() with FILE\_READ|FILE\_TXT|FILE\_ANSI|FILE\_COMMON text mode, comma as delimiter hint.
+- We skip lines that look like headers (contain "date" or "time" case-insensitive).
+- StringToTime() expects format YYYY.MM.DD HH:MM:SS.
+- Importance values are stored as integers (3 = high, 2 = moderate, 1 = low) for easy filtering later.
+
+Step 4: Building the Currency Cache
+
+To avoid repeatedly parsing the currency list on every tick, we build a cache during initialization. This function is called once and stores the relevant currencies for the current symbol. This function is also an upgrade for both the backtest and the live mode of the news filter EA.
+
+```
+//+------------------------------------------------------------------+
+//| Build cached currency list for current symbol                    |
+//+------------------------------------------------------------------+
+void BuildCurrencyCache()
+  {
+   string relevant = GetRelevantCurrencies(_Symbol);
+   if(StringLen(relevant) == 0)
+     {
+      currencyCacheValid = false;
+      Print("Currency cache: No relevant currencies found for ", _Symbol);
+      return;
+     }
+
+   cachedCurrencyCount = StringSplit(relevant, ',', cachedCurrencies);
+   for(int i = 0; i < cachedCurrencyCount; i++)
+     {
+      StringTrimLeft(cachedCurrencies[i]);
+      StringTrimRight(cachedCurrencies[i]);
+      StringToUpper(cachedCurrencies[i]);
+     }
+   currencyCacheValid = true;
+
+   Print("Currency cache built for ", _Symbol, ": ", relevant);
+  }
+```
+
+Step 5: Initialize the Static Loader in OnInit()
+
+We will call the loading function and the currency cache function inside OnInit() after the news filter is enabled and before any other news-related initialization, and restructure the OnInit() function to differentiate between live trading and testing mode.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   Print("News Filter Part initialized");
+
+   if(EnableNewsFilter)
+     {
+      // Load static news for backtesting (does nothing if it's not running in Strategy Tester)
+      LoadHistoricalNewsFromCSV();
+
+      // Build currency cache for current symbol (used in both live and backtest)
+      BuildCurrencyCache();
+     }
+
+// Load persistent stop state after restart
+   LoadStopsFromGlobals();
+   if(ArraySize(savedStops) > 0)
+     {
+      Print("Recovered suspended trades from previous session.");
+     }
+
+// Pre-load live calendar only if not in tester
+   if(EnableNewsFilter && !MQLInfoInteger(MQL_TESTER))
+      LoadTodayCalendarEvents();
+
+   return INIT_SUCCEEDED;
+  }
+```
+
+Note: For live trading, we still call LoadTodayCalendarEvents() as before. In the tester, we will skip it because we rely on static data.
+
+Step 6: Modify isUpcomingNews() to Use Static Data and Cached Currencies
+
+We must change the main news detection function so that when running in the Strategy Tester and static data is loaded, it checks historicalNews[] instead of calling the live calendar API.
+
+We will add the below logic at the beginning of isUpcomingNews().
+
+```
+// --- BACKTEST MODE: use the static CSV data ---
+   if(MQLInfoInteger(MQL_TESTER) && staticNewsLoaded)
+     {
+      if(!currencyCacheValid)
+         return false;
+
+      // Loop through static events
+      for(int i = 0; i < ArraySize(historicalNews); i++)
+        {
+         // Importance filter
+         bool okImportance = false;
+         switch(NewsImportanceMode)
+           {
+            case NEWS_HIGH_ONLY:
+               okImportance = (historicalNews[i].importance == 3);
+               break;
+            case NEWS_MODERATE_ONLY:
+               okImportance = (historicalNews[i].importance == 2);
+               break;
+            case NEWS_HIGH_AND_MODERATE:
+               okImportance = (historicalNews[i].importance >= 2);
+               break;
+           }
+         if(!okImportance)
+            continue;
+
+         // Currency relevance using cached array
+         bool affect = false;
+         for(int j = 0; j < cachedCurrencyCount; j++)
+           {
+            if(historicalNews[i].currency == cachedCurrencies[j])
+              {
+               affect = true;
+               break;
+              }
+           }
+         if(!affect)
+            continue;
+
+         // Time window check
+         datetime eventTime = historicalNews[i].eventTime;
+         datetime windowStart = eventTime - (NewsMinutesBefore * 60);
+         datetime windowEnd   = eventTime + (NewsMinutesAfter * 60);
+
+         if(now >= windowStart && now <= windowEnd)
+           {
+            // Optional: print once per event to avoid spam
+            static string lastDetectedKey = "";
+            string key = historicalNews[i].name + "|" + TimeToString(eventTime);
+            if(key != lastDetectedKey)
+              {
+               PrintFormat("STATIC NEWS: %s | Time: %s | Currency: %s",
+                           historicalNews[i].name, TimeToString(eventTime), historicalNews[i].currency);
+               lastDetectedKey = key;
+              }
+            return true;
+           }
+        }
+      return false;
+     }
+```
+
+Below is what the whole isUpcomingNews() function will look like after adding the backtest section:
+
+```
+//+-----------------------------------------------------------------------+
+//| Core Detection Logic                                                  |
+//| Returns true if 'now' is inside a news window for the specific symbol |
+//+-----------------------------------------------------------------------+
+bool isUpcomingNews(const string symbol)
+  {
+   datetime now = TimeCurrent();
+
+// --- BACKTEST MODE: use the static CSV data ---
+   if(MQLInfoInteger(MQL_TESTER) && staticNewsLoaded)
+     {
+      if(!currencyCacheValid)
+         return false;
+
+      // Loop through static events
+      for(int i = 0; i < ArraySize(historicalNews); i++)
+        {
+         // Importance filter
+         bool okImportance = false;
+         switch(NewsImportanceMode)
+           {
+            case NEWS_HIGH_ONLY:
+               okImportance = (historicalNews[i].importance == 3);
+               break;
+            case NEWS_MODERATE_ONLY:
+               okImportance = (historicalNews[i].importance == 2);
+               break;
+            case NEWS_HIGH_AND_MODERATE:
+               okImportance = (historicalNews[i].importance >= 2);
+               break;
+           }
+         if(!okImportance)
+            continue;
+
+         // Currency relevance using cached array
+         bool affect = false;
+         for(int j = 0; j < cachedCurrencyCount; j++)
+           {
+            if(historicalNews[i].currency == cachedCurrencies[j])
+              {
+               affect = true;
+               break;
+              }
+           }
+         if(!affect)
+            continue;
+
+         // Time window check
+         datetime eventTime = historicalNews[i].eventTime;
+         datetime windowStart = eventTime - (NewsMinutesBefore * 60);
+         datetime windowEnd   = eventTime + (NewsMinutesAfter * 60);
+
+         if(now >= windowStart && now <= windowEnd)
+           {
+            // Optional: print once per event to avoid spam
+            static string lastDetectedKey = "";
+            string key = historicalNews[i].name + "|" + TimeToString(eventTime);
+            if(key != lastDetectedKey)
+              {
+               PrintFormat("STATIC NEWS: %s | Time: %s | Currency: %s",
+                           historicalNews[i].name, TimeToString(eventTime), historicalNews[i].currency);
+               lastDetectedKey = key;
+              }
+            return true;
+           }
+        }
+      return false;
+     }
+
+// --- LIVE MODE: use the original calendar API ---
+
+// Cache Management for live calendar
+   if(lastCalendarLoad == 0 || (now - lastCalendarLoad) > (datetime)CacheReloadHours * 3600)
+     {
+      LoadTodayCalendarEvents();
+     }
+
+   if(ArraySize(TodayEvents) == 0)
+      return false;
+
+   if(!currencyCacheValid)
+      return false;
+
+// Event Scan
+   for(int i = 0; i < ArraySize(TodayEvents); i++)
+     {
+      MqlCalendarEvent ev;
+      // Retrieve event details from ID
+      if(!CalendarEventById(TodayEvents[i].event_id, ev))
+         continue;
+
+      // 1. Importance Filter
+      bool okImportance = false;
+      switch(NewsImportanceMode)
+        {
+         case NEWS_HIGH_ONLY:
+            okImportance = (ev.importance == CALENDAR_IMPORTANCE_HIGH);
+            break;
+         case NEWS_MODERATE_ONLY:
+            okImportance = (ev.importance == CALENDAR_IMPORTANCE_MODERATE);
+            break;
+         case NEWS_HIGH_AND_MODERATE:
+            okImportance = (ev.importance == CALENDAR_IMPORTANCE_HIGH || ev.importance == CALENDAR_IMPORTANCE_MODERATE);
+            break;
+        }
+      if(!okImportance)
+         continue;
+
+      // 2. Currency Relevance Filter using cached array
+      string eventCurrency = GetCurrencyFromEventDirect(ev);
+      if(StringLen(eventCurrency) == 0)
+         continue;
+
+      bool affect = false;
+      for(int j = 0; j < cachedCurrencyCount; j++)
+        {
+         if(eventCurrency == cachedCurrencies[j])
+           {
+            affect = true;
+            break;
+           }
+        }
+      if(!affect)
+         continue;
+
+      // 3. Time Window Check
+      datetime eventTime = TodayEvents[i].time;
+      datetime windowStart = eventTime - (NewsMinutesBefore * 60);
+      datetime windowEnd   = eventTime + (NewsMinutesAfter * 60);
+
+      if(now >= windowStart && now <= windowEnd)
+        {
+         // Optional: Print once per detection to avoid log spam
+         static string lastDetectedKey = "";
+         string key = ev.name + "|" + TimeToString(eventTime);
+         if(key != lastDetectedKey)
+           {
+            PrintFormat("NEWS: %s | Time: %s | Currency: %s", ev.name, TimeToString(eventTime), eventCurrency);
+            lastDetectedKey = key;
+           }
+         return true;
+        }
+     }
+
+   return false;
+  }
+
+// Wrapper for external calls
+bool IsNewsTime(string symbol)
+  {
+   return isUpcomingNews(symbol);
+  }
+```
+
+All the arrays and functions in the previous isUpcomingNews() function, including TodayEvents[] and CalendarValueHistory(), stay exactly as they were. We only added the backtest branch at the top and modified both live and backtest modes to use cached currency.
+
+Why is caching safe to generalize?
+
+| Concern | Analysis |
+| --- | --- |
+| Symbol changes? | An EA is attached to a specific chart; the symbol never changes while running. If the user drags the EA to another chart, OnInit() runs again, and the cache is rebuilt. |
+| Input changes? | SymbolCurrencyOverride is an input parameter; changes require re-initialization. Again, OnInit() runs; the cache is fresh. |
+| Multi-symbol EA | We would need a more complex cache (e.g., per symbol), but that's beyond the scope of this series. For our use case, caching is safe enough. |
+
+Step 7: Create a Helper Script to Export Live Calendar to CSV
+
+To make it easy for traders to build their own HistoricalNews.csv, we will provide a separate script that exports the terminal's calendar events for a specified date range. This is not part of the EA, but it is a useful tool.
+
+Create a new script file in the MetaEditor (File —> New —> Script, use any naming of choice, e.g., ExportCalendarToCSV.mq5) with the following code:
+
+Create the name, copyright, link, and version of your script.
+
+```
+//+------------------------------------------------------------------+
+//|                                          ExportCalendarToCSV.mq5 |
+//|                                    Copyright 2026, soloharbinger |
+//|                      https://www.mql5.com/en/users/soloharbinger |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2026, soloharbinger"
+#property link      "https://www.mql5.com/en/users/soloharbinger"
+#property version   "1.00"
+```
+
+Apply inputs for your script by calling the inputs property, unlike for a normal EA.
+
+```
+#property script_show_inputs
+
+input datetime FromDate   = D'2024.01.01';
+input datetime ToDate     = D'2024.12.31';
+input string   OutputFile = "HistoricalNews.csv";
+```
+
+The main script program start function is called OnStart().
+
+```
+//+------------------------------------------------------------------+
+//| Script program start function                                    |
+//+------------------------------------------------------------------+
+void OnStart()
+  {
+    // Script to export calendar events to CSV for backtesting
+    MqlCalendarValue events[];
+    int count = CalendarValueHistory(events, FromDate, ToDate);
+    if(count <= 0)
+    {
+       Print("No calendar events found in the specified range");
+       return;
+    }
+
+    int handle = FileOpen(OutputFile, FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON, ",");
+    if(handle == INVALID_HANDLE)
+    {
+        Print("Failed to create file. Error: ", GetLastError());
+        return;
+    }
+
+    // Write header
+    FileWrite(handle, "event_time,currency,importance,event_name");
+
+    int exported = 0;
+    for(int i = 0; i < count; i++)
+    {
+        MqlCalendarEvent ev;
+        if(!CalendarEventById(events[i].event_id, ev))
+           continue;
+        
+        MqlCalendarCountry country;
+
+        if(!CalendarCountryById(ev.country_id, country))
+           continue;
+
+        string timeStr = TimeToString(events[i].time, TIME_DATE|TIME_SECONDS);
+        string currency = country.currency;
+        int importance = 0;
+        if(ev.importance == CALENDAR_IMPORTANCE_HIGH)
+           importance = 3;
+        else if(ev.importance == CALENDAR_IMPORTANCE_MODERATE)
+           importance = 2;
+        else importance = 1;
+        
+        string line = StringFormat("%s,%s,%d,\"%s\"", timeStr, currency, importance, ev.name);
+        FileWrite(handle, line);
+        exported++;
+    }
+
+    FileClose(handle);
+    PrintFormat("Exported %d events to %s", exported, OutputFile);
+  }
+//+------------------------------------------------------------------+
+```
+
+The trader can now run this script once for each year they want to backtest, then place the resulting CSV in the \Files folder. Note the use of FILE\_COMMON so the exported file is placed in the shared folder, making it accessible to the EA during backtesting.
+
+What we have achieved
+
+- Deterministic backtesting. News events are now loaded from a static file, giving consistent results across runs.
+- Currency caching that is permanently integrated, eliminating repetitive string splitting on every tick.
+- Clean separation as backtesting uses static data, live uses the calendar API, and both share the same currency cache.
+- A helper script that traders can use to generate their own historical CSV from live calendar data.
+- The user can customize which events to include by editing the CSV.
+- This implementation offers educational value as it demonstrates CSV parsing, conditional compilation via MQL\_TESTER, and structured data handling.
+
+With the implementation complete, the next section will cover testing and validation, including how to create the CSV file step by step, adding a temporary trade generator, and interpreting the results.
+
+### 
+
+### Testing and Validation—Verifying the Static News Loader in the Strategy Tester
+
+With the implemented code, we must now confirm that the EA correctly detects news events during backtesting. This section walks through a systematic test procedure, explains how to interpret the logs, and addresses edge cases.
+
+Why Testing Is Crucial
+
+The static news loader introduces a new data path that bypasses the live calendar API. Any mistake—incorrect data parsing, wrong currency mapping, or off-by-one errors in the time window—will silently break the news filter. Worse, the EA would still run, but with no news detection, giving false backtest results. Therefore, we need explicit verification.
+
+Test Environment Setup
+
+Before running the full backtest, prepare a minimal test configuration.
+
+Step 1: Create the CSV File with Historical News
+
+You need a plain text file (.csv) containing the news events you want to simulate. Here's how to create it correctly:
+
+Option A—Using Notepad (Windows)
+
+1. Open Notepad.
+2. Copy the following lines exactly (including the header):
+
+```
+event_time,currency,importance,event_name
+2024.01.15 14:30:00,USD,3,FOMC Statement
+2024.01.15 15:00:00,EUR,2,German CPI
+2024.01.16 09:00:00,GBP,2,Unemployment Rate
+```
+
+Save the file with the name TestNews.csv. In the "Save as type" dropdown, select "All Files (.)"—otherwise Notepad adds .txt at the end.
+
+The file must be placed inside the terminal's sandboxed Files folder.
+
+- Open MetaEditor 5 —> File —> Open Common Data Folder.
+- Open \Files\ and place TestNews.csv there.
+
+Option B—Using the helper script from the above Step 6 of implementing the news static loader.
+
+Compile and run the ExportCalendarToCSV.mq5 script on a live chart. It will dump real calendar events for any date you choose into the \Files folder. Then rename or copy the output as TestNews.csv. Place the file in the same folder described above.
+
+Step 2: Prepare the EA for testing (dummy trade generator)
+
+The News Filter EA from [Part 3](https://www.mql5.com/en/articles/21803) does not contain trading logic—it only suspends stops and blocks new trades. To observe the news filter in action, you need open positions *before* the news window. A simple logic to solve this is to add a minimal trade generator inside the EA. If you have already integrated the news filter EA with another EA that generates trades, you can skip this step.
+
+Insert the following code into the EA (e.g., inside OnTick(), after the news state transition logic). This will open a buy trade at the start of every hour if no trade exists.
+
+```
+// Temporary trade simulator for testing (remove this after full verification) ---
+   static datetime lastTradeTime = 0;
+   if(EnableNewsFilter && !MQLInfoInteger(MQL_OPTIMIZATION))    // Only enabled for single backtest
+     {
+      if(TimeCurrent() - lastTradeTime >= 3600)    // Every hour
+        {
+         if(PositionsTotal() == 0)    // No open positions
+           {
+            double price = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            double sl = price - 1000 * _Point;
+            double tp = price + 1000 * _Point;
+            double lot = 0.01;
+            if(trade.Buy(lot, _Symbol, 0, sl, tp, "Test Trade"))
+               Print("Opened test trade at ", TimeToString(TimeCurrent()));
+            lastTradeTime = TimeCurrent();
+           }
+        }
+     }
+```
+
+The dummy trade generator open a new trade every hour if no positions are open. It uses a 0.01 lot size with a 100 - pip stop-loss and a 100 - pip take-profit. When a news window starts, the EA will suspend the stops, block incoming trades, or close all trades until the news window ends.
+
+Step 3: Configure the EA inputs
+
+Open the Strategy Tester and set your input parameters.
+
+| Input | Value |
+| --- | --- |
+| Enable Economic News Filter | true |
+| HistoricalNewsFile | TestNews.csv |
+| Minutes before news to restrict | 15 |
+| Minutes after news to restrict | 15 |
+| News importance mode | NEWS\_HIGH\_AND\_MODERATE |
+| Pause SL/TP modification during news window | false (true as desired) |
+| Block new trades during news window | false (true as desired) |
+| Close all trades before news | true (false as desired) |
+| Testing period | From 2024.01.15 to 2024.01.17 |
+| Modelling | "Every tick" (to catch exact time windows) |
+
+You can tweak the inputs to suit your needs (e.g., "Close all trades before news" is good for observing changes in equity curve on a long).
+
+Step 4: Run the backtest and observe the logs
+
+In the test we will perform for this article, we will be setting the "Pause SL/TP modification during the news window" input to true to observe stop suspension logs.
+
+We will run 2 tests using the Option A and the Option B methods described in Step 1.
+
+Option A
+
+For this first test, we will be setting the "Pause SL/TP modification during the news window" input to true to observe stop suspension logs. We will use the exact settings in the above table and take a screenshot of the journal log.
+
+If you see any error message instead, troubleshoot:
+
+- INVALID\_HANDLE—File not found; verify the path and that the file is in \Terminal\Common\Files\.
+- Invalid date format—check that dates use YYYY.MM.DD HH:MM:SS exactly.
+
+While observing the news window in the screenshot, we can see that as the simulation time approaches the first event (2024.01.15 14:30:00), around 14:15 (15 minutes before), we notice the news window start message. The dummy trade generator does not open any trade during the news window, and lastly, we can also observe that the EA restores stops at the appropriate time, even after a news event overlap.
+
+Option B
+
+For this test we will use the ExportCalendarToCSV.mq5 script. I saved the news file as TestNews2.csv this time and used it in the EA inputs. We will run a test for a longer period since we are using real static news.
+
+YouTube
+
+Tap to unmute
+
+Video unavailable
+
+Video unavailable
+
+This video is no longer available because the uploader has closed their YouTube account.
+
+The result is identical to the previous screenshot.
+
+To appreciate the value of this implementation, run two backtests over the same period:
+
+- Before: using the original EA (or the EA with HistoricalNewsFile left empty). The log will show no news detection because the filter never activates.
+- After: with a properly populated CSV. The log will show the news windows, stop suspension, and trade blocks.
+
+Compare the equity curves. You should see more realistic behavior because the EA avoids stop-loss triggers during volatile news events and reduces long drawdown 'tails' in mean-reversion strategies.
+
+We will take it a step further by doing another test. The next video will show:
+
+- The behavior described above.
+- The behavior when the "Close all trades before news" input successfully closes trades before a news window, allowing our dummy trade generator to keep taking another trade.
+
+YouTube
+
+Tap to unmute
+
+Video unavailable
+
+Video unavailable
+
+This video is no longer available because the uploader has closed their YouTube account.
+
+### Testing Edge Cases
+
+1. Multiple Events Overlapping: If two events occur close together (e.g., USD at 14:30 and EUR at 14:45), the EA should remain in the news window continuously. The start message appears only once at the beginning, and the end message only appears after the last window closes. Our state-transition logic already handles this because IsNewsTime() returns true for the entire combined period.
+2. Events with zero SL/TP initially: Some trades may have no stop-loss or take-profit set (e.g., 0.0). The suspension function should still store 0.0 and later restore 0.0. The restoration logic's price cross-check should skip adjusting zero levels.
+3. CSV with a large data range: Load a CSV containing events spanning several years. The EA should parse all events without performance degradation. You can add a timer to measure the loading time.
+4. Missing CSV file: If the file does not exist, the EA prints an error and continues with no news detection. The backtest will run, but it will ignore news—this is acceptable as long as the trader is aware.
+
+Common Pitfalls and Solutions
+
+| Pitfall | Symptom | Solution |
+| --- | --- | --- |
+| CSV uses wrong date separator (e.g., 2024-01-15). | StringToTime returns 0. | Replace hyphens with dots, or use StringReplace(). |
+| CSV saved with UTF-8 BOM | The first line contains invisible characters. | Save as ANSI or UTF-8 without BOM. |
+| File placed in wrong folder. | INVALID\_HANDLE or error 5004. | Verify or move files to \Terminal\Common\Files\. |
+| Time zone mismatch: | EA detects news at the wrong time. | Ensure CSV times are in UTC; MetaTrader 5 uses UTC internally. |
+| No open positions to suspend, block, or restrict. | No log messages. | Add the dummy trade generator or attach the news filter EA to an EA that executes trades. |
+
+What we have accomplished in this section
+
+- A practical step-by-step guide to creating the CSV file with exact file placement and encoding.
+- A simple trade generator is integrated into the EA so users can see the news filter affect real positions.
+- A clear test procedure to validate the static news loader. Identification of edge cases and how they should behave.
+
+### Conclusion
+
+Problem recap: the Strategy Tester often lacks historical calendar data, so news‑sensitive logic is invisible in backtests, and you cannot tell whether observed drawdowns are genuine strategy failures or news‑induced volatility. What we implemented closes that gap.
+
+What do you have now?
+
+- A static CSV loader that the EA uses only in tester mode (MQL\_TESTER), providing deterministic historical events.
+- A compact CSV format (event *time,currency,importance,event* name) and a helper script to export real calendar data into that format.
+- A cached list of relevant currencies per symbol to make event filtering fast and reliable.
+- Seamless switching so live trading still uses the terminal calendar while backtests use the static file.
+- An optional dummy trade generator for validating behavior during tests.
+
+Measurable success criteria
+
+- The journal contains STATIC NEWS/NEWS entries at the expected times.
+- The EA blocks openings, suspends SL/TP, or closes trades according to inputs during news windows.
+- Overlapping events produce continuous news windows and a single state transition sequence.
+- Results are reproducible: the same CSV —> the same detections and EA actions.
+
+Quick validation checklist:
+
+1. Place your CSV in the terminal's Files (or Common\Files) folder.
+2. Set HistoricalNewsFile to its name and enable the news filter.
+3. Run a single backtest in “Every tick” mode for the CSV period.
+4. Verify journal markers, stop suspension/restoration messages, and closed/opened trades at expected times.
+
+Why this matters: You can now separate news‑induced losses from true strategy faults, run “what‑if” experiments by editing the CSV, and confidently validate stop‑suspension and blocking logic across historical periods. Attach the code to your EA, run the tests, and remove the temporary trade generator once verification is complete.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22231.zip "Download all attachments in the single ZIP archive")
+
+[News\_Filter\_integration\_part\_4.mq5](https://www.mql5.com/en/articles/download/22231/News_Filter_integration_part_4.mq5 "Download News_Filter_integration_part_4.mq5")
+(25.82 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Automating Trading Strategies in MQL5 (Part 48): Order Blocks, Inducement, Break of Structure](https://www.mql5.com/en/articles/22078)
+
+We implement an MQL5 expert advisor that detects order blocks formed after consolidation breakouts and confirms them with fair value gaps. Each zone is validated by a break of structure and a preceding inducement, then filtered by the higher-timeframe trend. The program adds mitigation tracking, risk-based lot sizing, and two trailing stop modes, providing clear on-chart visuals and backtest-ready trade execution logic.
+
+[Neural Networks in Trading: Detecting Anomalies in the Frequency Domain (CATCH)](https://www.mql5.com/en/articles/17649)
+
+The CATCH framework combines Fourier transform and frequency patching to accurately identify market anomalies beyond the reach of traditional methods. Let us examine how this approach reveals hidden patterns in financial data.
+
+[Building a Trade Analytics System (Part 2): How to Capture Closed Trades and Send JSON in MQL5](https://www.mql5.com/en/articles/22216)
+
+We build a lightweight bridge that captures closed trades in MetaTrader 5 and sends them to an external backend over HTTP as JSON. It uses OnTradeTransaction for event detection, reads details from deal history, assembles a JSON payload, and posts it via WebRequest. A local Flask API is used to test the flow, delivering a working path to move trade data outside the terminal.
+
+[Neural Networks in Trading: Adaptive Detection of Market Anomalies (Final Part)](https://www.mql5.com/en/articles/17577)
+
+We continue to build the algorithms that form the basis of the DADA framework, which is an advanced tool for detecting anomalies in time series. This approach enables effective distinguishing random fluctuations from significant deviations. Unlike classical methods, DADA dynamically adapts to different data types, choosing the optimal compression level in each specific case.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F117%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dorder.expert%26utm_content%3Dorder.freelance%26utm_campaign%3D0622.MQL5.com.Internal&a=tunpwtbhegzufrqocbwiszessdutnobs&s=d9e7484e15300021b4066b1df77a94a1352f9e7c326d5113006bb4f6476bafeb&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=oqlsiqgacwtyojkcxhxnxfeerctuwvug&ssn=1788778667261805289&ssn_dr=0&ssn_sr=0&fv_date=1788778667&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22231&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Using%20the%20MQL5%20Economic%20Calendar%20for%20News%20Filter%20(Part%204)%3A%20Accurate%20Backtesting%20with%20Static%20Data%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877866766578924&fz_uniq=6388165040238365355&sv=2552)

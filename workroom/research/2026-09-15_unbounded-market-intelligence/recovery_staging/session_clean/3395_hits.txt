@@ -1,0 +1,169 @@
+4: title: "Cross-Platform Expert Advisor: Time Filters"
+18: # Cross-Platform Expert Advisor: Time Filters
+23: | 21 July 2017 at 04:34
+34: ### Table of Contents
+39: 4. [Time Filter Classes and Types](https://www.mql5.com/en/articles/3395#time_filter_classes_and_types)
+40: 5. [Time Filters Container](https://www.mql5.com/en/articles/3395#time_filters_container)
+45: ### Introduction
+47: Time filtering is used when a certain time period is defined, and the expert advisor has to check whether a given time falls within the said time period.  Certain features can be enabled or disabled when the condition is satisfied or not satisfied. This is very useful when a given feature of an expert advisor is set to work not at all times (periodically, or work at all times with a few exceptions
+55: ### 
+57: ### Objectives
+59: - Understand and apply the most common methods in time filtering
+60: - Allow expert advisors to easily use multiple time filters
+61: - Be compatible with MQL4 and MQL5
+63: ### Base Class
+65: The class named CTime will serve as the base class for other time filter objects discussed for our expert advisor. The definition of the class CTimeBase (where CTime is based) is shown in the following code snippet:
+67: ```
+93: ```
+97: ### Time Filter Classes and Types
+99: #### Time Filtering by a Certain Date Range
+101: This is the most simple method of time filtering. To check the time using this method, one only needs the start and end dates, and if the time set falls between these dates, the output is true. Otherwise, the output is false.
+105: ```
+126: ```
+130: ```
+140: ```
+142: #### Time Filtering by Day of Week
+144: Filtering by day of week is one of the most simple and most common methods of time filtering. It is common to use this time filter to limit or allow some functions of the expert advisor at certain days of the week.
+150: ```
+180: ```
+184: ```
+195: ```
+199: ```
+211: ```
+215: ```
+223: ```
+227: ```
+249: ```
+255: #### Using a Timer
+257: Another method of time filtering is the use of a timer. In a timer, the current time is compared with a certain point in time in the past. If the time is still within the expiration upon evaluation, it should return true, and false otherwise. This method is represented by the CTimer class. The following snippet shows the code for the definition of CTimerBase, from which CTimer is based:
+259: ```
+300: ```
+304: ```
+305: #define YEAR_SECONDS 31536000
+306: #define MONTH_SECONDS 2419200
+307: #define DAY_SECONDS 86400
+308: #define HOUR_SECONDS 3600
+309: #define MINUTE_SECONDS 60
+310: ```
+314: ```
+315: CTimerBase::CTimerBase(const uint years,const uint months,const uint days,const uint hours,const uint minutes,const uint seconds) : m_years(0),
+324:    Set(years,months,days,hours,minutes,seconds);
+326: ```
+330: ```
+342: ```
+344: Calling the Evaluate method of the class, right after instantiating the class would result to the method comparing m\_total to the start of UNIX time, from which the datetime data type is based. Thus, before calling the Evaluate method, one has to set the desired start time (unless the preferred start time is January 1, 1970 (midnight UTC/GMT). The following shows the setter and getter methods for
+346: ```
+356: ```
+360: ```
+372: ```
+374: This method of time filtering is used in a number of ways, such as setting a maximum period (expiration) for certain features of an expert advisor and setting the "expiration" of a market order or position (similar to binary options trading). This time filter is roughly the same as using the timer event (which is compatible with both MQL4 and MQL5), but since only one timer event can be set up usi
+376: #### Filtering Using an Intraday Time Schedule
+378: Filtering using an intraday time schedule is one of the most popular used by traders. The filter uses a 24-hour schedule and the expert advisor selects (through its parameters) certain schedules by which the expert advisor is allowed to execute an operation (usually, trading based on entry signals). This method of filtering is represented by the CTimeFilter class. The following code shows the defi
+380: ```
+397: ```
+399: The class has two members of type MqlDateTime, and one member of [CArrayObj](https://www.mql5.com/en/docs/standardlibrary/datastructures/carrayobj). The two structures are used to contain the range within a 24-hour period, while the object member is used to store its sub-filters.
+401: Through the class object constructor, we get the start and end time in terms of hour, minute, and seconds. These values are then eventually stored in the class members m\_filter\_start and m\_filter\_end through the Set method of the class. The gmt parameter is used to account for the GMT offset of the broker.
+403: ```
+404: bool CTimeFilterBase::Set(const int gmt,const int starthour,const int endhour,const int startminute=0,const int endminute=0,
+415: ```
+417: We then proceed to the Evaluate method of the class. At the initialization, the data on the two MqlDateTime parameters are expressed only in terms of hours, minutes, and seconds within the 24-hour period. It does not contain other data such as the year and the month. In order to compare the start and end times with the indicated time (or current time, if the method argument is default). There are 
+419: 1. express the indicated time in terms of hours, minutes, and seconds, and then compare these with the struct parameters.
+424: ```
+448: ```
+452: Since the structures do not contain data greater than the hour, the missing data will need to be retrieved from the current time (or the indicated time). However, some adjustments are needed when the start and end times are within a 24-hour period, but do not belong in the same day. In the above example, 08:00 is 8:00 AM while 17:00 is 5:00 PM. In this case, both times can be found within the same
+462: These only apply when the start time and end time do not belong on the same day, which is when the start hour is greater than the end hour for the filter. The adjustments are implemented within the Evaluate method as follows:
+464: ```
+465: if(m_filter_start.hour>=m_filter_end.hour)
+480: ```
+482: The return variable is initially set to true, so the actual checking for the time filter will depend whether or not the indicated time falls between the start time and the end time. The calculation in the Evaluate method ensures that the start time will always be less than or equal to the end time. If the start time is equal to the end time (equal in terms of hours, minutes, and seconds), the meth
+484: ### Time Filters Container
+486: Similar to other class objects discussed in this series, the time filters would also have a container where their pointers are stored. This would allow the evaluation to performed by calling the Evaluate method of this container. If Evaluate method of all the time filters return true (there are no objections as far as time filtering is concerned), then this container should also return true. This 
+488: ```
+514: ```
+516: ### Sub-Filters (CTimeFilter)
+518: The Evaluate method of the time filters container requires that in order for it to return true, all of its primary members should return true as well. Although most of the time filter objects do not require more than one instance on the same expert advisor, an exception to this is CTimeFilter, which is incidentally the most used time filter of all. Consider the following code:
+520: ```
+522: CTimeFilter time1 = new CTimeFilter(gmt,8,17);
+524: ```
+526: Let us assume that the time filter is used for trading (entry). In this case, the time filters container only contains one pointer in its dynamic pointer array. Under this setup, when the Evaluate method of times is called, the end result would depend if the indicated time falls between 08:00 and 17:00.
+530: ```
+532: CTimeFilter time1 = new CTimeFilter(gmt,8,12);
+533: CTimeFilter time2 = new CTimeFilter(gmt,13,17);
+536: ```
+538: The above code will not function correctly. It will always return false since the time filters container requires all its primary time filter instances to return true. In the above setup when one returns true, the other returns false, and vice versa. The situation is complicated further if there are more than 2 time filters involved. Using this setup, the only way it would work correctly is when o
+540: The solution would be to always ensure that the time filters container should only store at most one pointer to CTimeFilter. If more than one instances of CTimeFilter is needed, it should be added as a sub-filter of another instance of CTimeFilter. The pointers to sub-filters are stored within one of CTimeFilter's class member, m\_time\_filters, and the pointers are added through its AddFilter met
+542: ```
+554: ```
+558: ```
+560: CTimeFilter time1 = new CTimeFilter(gmt,8,12);
+561: CTimeFilter time2 = new CTimeFilter(gmt,13,17);
+562: CTimeFilter time0 = new CTimeFilter(gmt,0,0);
+567: ```
+569: Given these changes, the time filters object only contains one pointer in its array, which is time0. time0, on the other hand, has two sub-filters, time1 and time2, which were originally under the time filters container. time0 has the same parameters for start and end times, and thus, would always return true. We call the Reverse method so that time0 would always return false, forcing it to check 
+573: A pointer to time0 can be found within the time filters container. Given the illustration above, this would be evaluated first. Since time0 always returns false, it would check for its sub-filters. First, it would check if the time is between 8:00 and 12:00. If it is not, it would then check if the indicated time is between 13:00 and 17:00. If either of this returns true, then time0 would also ret
+575: ### Example
+577: As an example, we will modify the expert advisor example from the [previous article](https://www.mql5.com/en/articles/3280#example). In this expert advisor, we will include all the time filters that were discussed in the article. We begin by including the header file for CTimesBase, as this is enough for our expert advisor to include all the time filter classes.
+579: ```
+580: #include "MQLx\Base\OrderManager\OrderManagerBase.mqh"
+581: #include "MQLx\Base\Signal\SignalsBase.mqh"
+582: #include "MQLx\Base\Time\TimesBase.mqh" //added include line
+583: #include <Indicators\Custom.mqh>
+584: ```
+586: We then declare a global pointer to the time filters container:
+588: ```
+590: ```
+594: ```
+596: ```
+598: For this expert advisor, we will apply time filtering to the entry of new trades only, not with exit. To achieve this, before the expert advisor is to enter a trade, an extra check is made to see if the expert is indeed allowed to enter a trade at that time:
+600: ```
+604:    if (time_filters.Evaluate(TimeCurrent()))
+614:    if (time_filters.Evaluate(TimeCurrent()))
+621: ```
+623: As shown in the code above, the exit of the last position is called prior to the checking of the time and the actual entry of a new trade, and so the time filters would only apply to entry and not the exit of existing trades.
+625: For time filtering using a date range, we will provide input parameters for the start and end date. These parameters are of datetime type. We also provide a parameters that will allow the user to turn this feature on or off:
+627: ```
+631: ```
+633: A default value of zero for both parameters means that these refer to the start of UNIX time. To prevent accidental error in using the default values, we will provide an extra measure so that the time filter is only created when the end time is greater than zero and that the end time is greater than the start time. This will be encoded on the EA's OnInit function:
+635: ```
+641: ```
+643: Also found in the code above is the actual addition of the pointer of the object on the time filters container.
+645: For the time filter by trading days, we supply 7 different parameters, each representing a particular day within the week. We also provide a parameter to turn this feature on or off:
+647: ```
+656: ```
+658: Under the OnInit function, we also create a new instance of the time filter and add it as well to the container if the feature is enabled:
+660: ```
+666: ```
+670: ```
+673: ```
+677: ```
+684: ```
+686: The intraday time filtering is a bit more complex, since we want to demonstrate the capacity of the EA in time filtering based on the following scenarios:
+688: 1. time filtering when the start and end times fall within the same day
+689: 2. time filtering when the start and end times do not fall within the same day
+692: Scenarios #1 & #2 can be demonstrated using the same set of parameters. If the start hour is less than the end hour (scenario #1), we simply switch the values of the two, and we would get scenario #2. For #3 however, we would require two or more instances, preferably with different values, and so we would need at least two sets start and end times within a 24-hour period. To achieve this, first, w
+694: ```
+701: ```
+705: ```
+723: ```
+725: To initialize this time filter, we use a switch statement. If the time\_intraday\_set is set to INTRADAY\_SET\_1, then we initialize a single instance of CTimeFilter using the first set of parameters. On the other hand, if the setting is INTRADAY\_SET\_2, we create two different instances of CTimeFilter using the 2nd and 3rd sets of parameters:  
+727: ```
+732:       CTimeFilter *timefilter=new CTimeFilter(time_intraday_gmt,intraday1_hour_start,intraday1_hour_end,intraday1_minute_start,intraday1_minute_end);
+740:       CTimeFilter *sub1 = new CTimeFilter(time_intraday_gmt,intraday2_hour1_start,intraday2_hour1_end,intraday2_minute1_start,intraday2_minute1_end);
+741:       CTimeFilter *sub2 = new CTimeFilter(time_intraday_gmt,intraday2_hour2_start,intraday2_hour2_end,intraday2_minute2_start,intraday2_minute2_end);
+749: ```
+751: After all the code for the instantiation of the time filter classes, we then initialize the time filters container, CTimes. First, we assign a pointer to symbol manager (not needed in this example, but may be needed in case the time filters need to be extended), and then check their settings:
+753: ```
+754: time_filters.Init(GetPointer(symbol_manager));
+757:    Print("one or more time filters failed validation");
+760: ```
+768: The last trade for the test was entered on 01/06 15:00, which is within the limit set on the expert advisor. Notice that the trade remained open until the next week, which is still acceptable since the time filters apply only on entry. The dotted vertical line represents the last candle for the week.
+770: For filtering by days, the filtering by days parameter is set to true. Also, the filtering by date range remains enabled, but with the Friday parameter is disabled. The last trade from the previous test shows that the last trade entered was on 01/06 (Friday). Thus, if we see that this trade was no longer entered on the test, we can confirm that this particular time filter to be working. The test r
+776: For the timer filter, as shown earlier, we used the alternative constructor of CTimer which only accepts a single argument. This is then stored in the class member m\_total which represents the number of seconds that the filter will return true before expiration. Since it is expressed in seconds we have to multiply the input parameter by 60 so that the value stored be in terms of seconds. 10080 is
+778: For the final time filter, which is CTimeFilter, it has three different cases, so we need to test each of them as well. Since the EA always keeps a position at all times, it is compelled to close the previous trade and open a new one, only to close it again and open a new one, and so on. The exception to this is when one or more of the time filters return false. Thus, if a trade went missing withi
+780: For scenario #1 in intraday time filtering mentioned in this article, we set the start time at 08:00 and the end time at 17:00. In the full test, the very first trade was entered right at the beginning of the test, which falls on the first hour (00:00). This is outside the bounds set for the first scenario. Given these settings, the EA is expected not to take that trade, but rather take the next t
+786: For the second scenario, we simply switch the start and end times for the filter, resulting to the start time being 17:00 and the end time at 08:00. On the full test (without filters), we can find the first trade that does not fall within the intraday range on 01/03 10:00. 10:00 is greater than 08:00 and less than 17:00, and so we are certain that the trade at this candle is beyond the intraday ra
+790: As we can see from the screen shot, the EA closed the previous order, but did not open a new one. The dotted vertical line represents the start of the new session. The EA opened the first trade for the intraday session 3 candles after the start of that session.
+792: For the third scenario, we configured the EA to use the settings of the first scenario, with the exception of lunch time. Thus, on the 12:00 candle, no trades should be placed, and the EA is to resume trading at the start of the 13:00 candle. On the full test (no filters), we can find an instance where it opened a trade on 01/09 12:00. Since the trade falls under the 12:00, given the setting of th
+796: As shown in the screen shot, on the 12:00 candle, the EA closed the existing buy trade, but did not enter another trade. The EA entered a one-hour hiatus, as expected. It only entered another position (buy) on 16:00, 3 hours after the afternoon session, and 1 hour before the end of that session, but this is the earliest time the EA can enter a trade based on the next signal reversal.
+798: ### Conclusion
+800: In this article, we have discussed an implementation of various methods of filtering time in a cross-platform expert advisor. The article covered various time filters use as well as on how these time filters can be combined through a time filters container so that certain features can be enabled or disabled in an expert advisor depending on a certain time setting.

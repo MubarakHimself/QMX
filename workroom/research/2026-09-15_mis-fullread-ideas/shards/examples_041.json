@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_041",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15030,
+      "title": "How to Integrate Smart Money Concepts (BOS) Coupled with the RSI Indicator into an EA",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15030.md"
+    },
+    {
+      "id": 15040,
+      "title": "Build Self Optimizing Expert Advisors With MQL5 And Python",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15040.md"
+    },
+    {
+      "id": 15049,
+      "title": "Across Neighbourhood Search (ANS)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15049.md"
+    },
+    {
+      "id": 15063,
+      "title": "Creating Time Series Predictions using LSTM Neural Networks: Normalizing Price and Tokenizing Time",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15063.md"
+    },
+    {
+      "id": 15080,
+      "title": "Chemical reaction optimization (CRO) algorithm (Part II): Assembling and results",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15080.md"
+    },
+    {
+      "id": 15116,
+      "title": "Automated Parameter Optimization for Trading Strategies Using Python and MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15116.md"
+    },
+    {
+      "id": 15162,
+      "title": "Artificial Electric Field Algorithm (AEFA)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15162.md"
+    },
+    {
+      "id": 15225,
+      "title": "Sentiment Analysis and Deep Learning for Trading with EA and Backtesting with Python",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15225.md"
+    },
+    {
+      "id": 15229,
+      "title": "Eigenvectors and eigenvalues: Exploratory data analysis in MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15229.md"
+    },
+    {
+      "id": 15283,
+      "title": "Adaptive Social Behavior Optimization (ASBO): Schwefel, Box-Muller Method",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15283.md"
+    },
+    {
+      "id": 15293,
+      "title": "Combine Fundamental And Technical Analysis Strategies in MQL5 For Beginners",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15293.md"
+    },
+    {
+      "id": 15301,
+      "title": "From Basic to Intermediate: Variables (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15301.md"
+    }
+  ]
+}

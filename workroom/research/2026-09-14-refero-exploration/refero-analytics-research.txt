@@ -1,0 +1,669 @@
+- link "Refero":
+  - /url: /
+- link "New research":
+  - /url: /
+  - button "New research":
+    - generic: New research
+- list:
+  - link "Web apps":
+    - /url: /search
+    - generic: Web apps
+  - link "iOS apps":
+    - /url: /apps/search
+    - generic: iOS apps
+  - link "Styles Beta":
+    - /url: https://styles.refero.design/
+    - generic: Styles
+    - generic: Beta
+  - link "Bookmarks":
+    - /url: /bookmarks
+    - generic: Bookmarks
+- heading "History" [level=3]
+- list:
+  - link "Analytics & Experiment UI References":
+    - /url: /research/2e49353b-2587-454f-935a-abbd54f6f0c0
+  - link "Desktop AI Workbench Layouts":
+    - /url: /research/dfe9f4dd-85ed-4f80-8e65-7be3574a759a
+  - link "Bloomberg-Style Dashboard Designs":
+    - /url: /research/78fe04a9-1dc6-4a4a-86ea-4389b6aa8c5b
+  - link:
+    - /url: /research/null
+  - link:
+    - /url: /research/null
+- generic: Mubarak Himself
+- textbox [disabled]: working analytics comparison interfaces
+- generic: Research mode
+- generic: Web apps
+- generic: iOS apps
+- paragraph: "Find real working screens for sophisticated analytics and experiment comparison: sortable result tables, saved views, filters, side-by-side variants, detailed charts, and contextual inspectors. Also find navigation that separates product areas, projects, open work, and background activity without stacking many permanent sidebars. Explore Linear, analytics tools, financial research, developer tools and unusual creative-tool precedents. Show populated working states, not landing pages, onboarding or empty dashboards. Explain transferable layout mechanisms and limitations."
+- text: Screens search
+- text: Web apps
+- link "Analytics results table":
+  - /url: /search?query=Analytics%20results%20table&pass_source=chat
+- link "918 screens See all":
+  - /url: /search?query=Analytics%20results%20table&pass_source=chat
+  - generic: 918 screens
+  - text: See all
+- link "Spyglass web screenshot. Discover UI":
+  - /url: /pages/df67b317-77c6-404e-a346-ebf73062fb54?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Discover UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "Meiro web screenshot. Dashboard UI":
+  - /url: /pages/42166681-5e11-42a7-8dd9-deb8ef4ed02e?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Meiro web screenshot. Dashboard UI"
+- link "Meiro Meiro":
+  - /url: /search?site_id[id][]=687
+  - img "Meiro"
+  - generic: Meiro
+- link "Lovable web screenshot. Settings UI":
+  - /url: /pages/a0a42dd2-10d4-492a-b196-0c9f996b30c5?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Lovable web screenshot. Settings UI"
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- link "Cartesia web screenshot.":
+  - /url: /pages/f92dbb46-31f2-4c38-9c9e-5cdf246949e0?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Cartesia web screenshot."
+- link "Cartesia Cartesia":
+  - /url: /search?site_id[id][]=756
+  - img "Cartesia"
+  - generic: Cartesia
+- link "Spyglass web screenshot. Discover UI":
+  - /url: /pages/9d239687-20c6-4a08-b601-56ecb97e269e?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Spyglass web screenshot. Discover UI"
+- link "Spyglass Spyglass":
+  - /url: /search?site_id[id][]=936
+  - img "Spyglass"
+  - generic: Spyglass
+- link "Hashnode web screenshot.":
+  - /url: /pages/d9643a97-a2d3-4dc0-9890-bd93d23ba4db?query=Analytics%20results%20table&pass_source=chat&source=search
+  - img "Hashnode web screenshot."
+- link "Hashnode Hashnode":
+  - /url: /search?site_id[id][]=194
+  - img "Hashnode"
+  - generic: Hashnode
+- link "Show More":
+  - /url: /search?query=Analytics%20results%20table&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Experiment comparison dashboard":
+  - /url: /search?query=Experiment%20comparison%20dashboard&pass_source=chat
+- link "742 screens See all":
+  - /url: /search?query=Experiment%20comparison%20dashboard&pass_source=chat
+  - generic: 742 screens
+  - text: See all
+- link "Weights & Biases web screenshot. Dashboard UI":
+  - /url: /pages/1653cc08-edba-44ac-bddf-54f183015194?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "Weights & Biases web screenshot. Dashboard UI"
+- link "Weights & Biases Weights & Biases":
+  - /url: /search?site_id[id][]=88
+  - img "Weights & Biases"
+  - generic: Weights & Biases
+- link "Understory web screenshot. Product Page & Landing UI":
+  - /url: /pages/722e78a3-bb7d-4b2b-94af-76072f8b31b0?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "Understory web screenshot. Product Page & Landing UI"
+- link "Understory Understory":
+  - /url: /search?site_id[id][]=921
+  - img "Understory"
+  - generic: Understory
+- link "Zendesk web screenshot. Product Page & Landing UI":
+  - /url: /pages/88defdb1-920b-457d-9b87-ec95692abbe3?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "Zendesk web screenshot. Product Page & Landing UI"
+- link "Zendesk Zendesk":
+  - /url: /search?site_id[id][]=51
+  - img "Zendesk"
+  - generic: Zendesk
+- link "Zendesk web screenshot. Product Page & Landing UI":
+  - /url: /pages/837fa271-efca-4c2c-82a2-409b0bc5e4f2?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "Zendesk web screenshot. Product Page & Landing UI"
+- link "Zendesk Zendesk":
+  - /url: /search?site_id[id][]=51
+  - img "Zendesk"
+  - generic: Zendesk
+- link "SoundCloud web screenshot. Dashboard UI":
+  - /url: /pages/97faa402-da32-4d55-a058-15b39b3f4c80?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "SoundCloud web screenshot. Dashboard UI"
+- link "SoundCloud SoundCloud":
+  - /url: /search?site_id[id][]=137
+  - img "SoundCloud"
+  - generic: SoundCloud
+- link "Runey web screenshot.":
+  - /url: /pages/8e4a83d0-dbe1-4598-b5d4-fc7efb3b47db?query=Experiment%20comparison%20dashboard&pass_source=chat&source=search
+  - img "Runey web screenshot."
+- link "Runey Runey":
+  - /url: /search?site_id[id][]=883
+  - img "Runey"
+  - generic: Runey
+- link "Show More":
+  - /url: /search?query=Experiment%20comparison%20dashboard&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Saved views data table":
+  - /url: /search?query=Saved%20views%20data%20table&pass_source=chat
+- link "1,427 screens See all":
+  - /url: /search?query=Saved%20views%20data%20table&pass_source=chat
+  - generic: 1,427 screens
+  - text: See all
+- link "Mercury web screenshot. Content Management Page UI":
+  - /url: /pages/2f2a5ca6-3201-49e5-b2b5-02cc82502adc?query=Saved%20views%20data%20table&pass_source=chat&source=search
+  - img "Mercury web screenshot. Content Management Page UI"
+- link "Mercury Mercury":
+  - /url: /search?site_id[id][]=857
+  - img "Mercury"
+  - generic: Mercury
+- link "Metaview web screenshot.":
+  - /url: /pages/992bb245-4f3d-427d-aae9-01e80d4f8a7f?query=Saved%20views%20data%20table&pass_source=chat&source=search
+  - img "Metaview web screenshot."
+- link "Metaview Metaview":
+  - /url: /search?site_id[id][]=700
+  - img "Metaview"
+  - generic: Metaview
+- link "Mercury web screenshot. Content Management Page UI":
+  - /url: /pages/bab28f53-21a9-4ad9-ac3f-ac2b216de165?query=Saved%20views%20data%20table&pass_source=chat&source=search
+  - img "Mercury web screenshot. Content Management Page UI"
+- link "Mercury Mercury":
+  - /url: /search?site_id[id][]=857
+  - img "Mercury"
+  - generic: Mercury
+- link "Aboard web screenshot.":
+  - /url: /pages/4010c7d0-a554-42b9-b1c7-f75764584757?query=Saved%20views%20data%20table&pass_source=chat&source=search
+  - img "Aboard web screenshot."
+- link "Aboard Aboard":
+  - /url: /search?site_id[id][]=545
+  - img "Aboard"
+  - generic: Aboard
+- link:
+  - /url: /pages/656813df-5596-46ee-8510-c39bc918cd96?query=Saved%20views%20data%20table&pass_source=chat&source=search
+- link "Dock":
+  - /url: /search?site_id[id][]=465
+  - generic: Dock
+- link:
+  - /url: /pages/eb79173f-38e8-4722-aa6b-af09e12388cb?query=Saved%20views%20data%20table&pass_source=chat&source=search
+- link "Rox":
+  - /url: /search?site_id[id][]=847
+  - generic: Rox
+- link "Show More":
+  - /url: /search?query=Saved%20views%20data%20table&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Financial research dashboard":
+  - /url: /search?query=Financial%20research%20dashboard&pass_source=chat
+- link "629 screens See all":
+  - /url: /search?query=Financial%20research%20dashboard&pass_source=chat
+  - generic: 629 screens
+  - text: See all
+- link:
+  - /url: /pages/4c2c7b02-c284-44a7-a503-1127fa5d666f?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Perplexity":
+  - /url: /search?site_id[id][]=421
+  - generic: Perplexity
+- link:
+  - /url: /pages/26205105-6246-42d4-8d18-a2201f03d218?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Parallel":
+  - /url: /search?site_id[id][]=792
+  - generic: Parallel
+- link:
+  - /url: /pages/584d2732-734e-40e1-b296-e647f28ae6fe?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Glassnode":
+  - /url: /search?site_id[id][]=87
+  - generic: Glassnode
+- link:
+  - /url: /pages/47b50f40-2189-480a-8279-8d1796ddf5eb?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Wealthsimple":
+  - /url: /search?site_id[id][]=764
+  - generic: Wealthsimple
+- link:
+  - /url: /pages/36a5ff5f-45a5-4327-a372-6288d5b3a28a?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Stocktwits":
+  - /url: /search?site_id[id][]=707
+  - generic: Stocktwits
+- link:
+  - /url: /pages/c17ab50a-1e7e-4a8f-84c3-4b8e6ea6cc7a?query=Financial%20research%20dashboard&pass_source=chat&source=search
+- link "Stocktwits":
+  - /url: /search?site_id[id][]=707
+  - generic: Stocktwits
+- link "Show More":
+  - /url: /search?query=Financial%20research%20dashboard&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Developer tools activity dashboard":
+  - /url: /search?query=Developer%20tools%20activity%20dashboard&pass_source=chat
+- link "1,225 screens See all":
+  - /url: /search?query=Developer%20tools%20activity%20dashboard&pass_source=chat
+  - generic: 1,225 screens
+  - text: See all
+- link:
+  - /url: /pages/a4a7b132-4223-474e-8bd3-9bc63b292125?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "Anthropic":
+  - /url: /search?site_id[id][]=508
+  - generic: Anthropic
+- link:
+  - /url: /pages/1a1c8da8-71a3-405e-8c9c-ef2accccaa8c?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- link:
+  - /url: /pages/2c4af944-0a85-4987-ac74-fafa922fa9c3?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "Cartesia Cartesia":
+  - /url: /search?site_id[id][]=756
+  - img "Cartesia"
+  - generic: Cartesia
+- link:
+  - /url: /pages/05339db5-381c-4b33-a9c8-1542a58b775d?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "ElevenLabs":
+  - /url: /search?site_id[id][]=772
+  - generic: ElevenLabs
+- link:
+  - /url: /pages/ead7846f-af55-4301-9958-85162c515926?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "ElevenLabs":
+  - /url: /search?site_id[id][]=772
+  - generic: ElevenLabs
+- link:
+  - /url: /pages/868c662c-afbe-4206-b364-d578643c694f?query=Developer%20tools%20activity%20dashboard&pass_source=chat&source=search
+- link "Stellate":
+  - /url: /search?site_id[id][]=606
+  - generic: Stellate
+- link "Show More":
+  - /url: /search?query=Developer%20tools%20activity%20dashboard&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Product area navigation workspace":
+  - /url: /search?query=Product%20area%20navigation%20workspace&pass_source=chat
+- link "4,770 screens See all":
+  - /url: /search?query=Product%20area%20navigation%20workspace&pass_source=chat
+  - generic: 4,770 screens
+  - text: See all
+- link:
+  - /url: /pages/cc6cdcc1-f1df-4b3f-8487-62c80b7d7fe3?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Fibery":
+  - /url: /search?site_id[id][]=415
+  - generic: Fibery
+- link:
+  - /url: /pages/b203a401-282d-4b7b-bfa2-d7735e608380?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Missive":
+  - /url: /search?site_id[id][]=671
+  - generic: Missive
+- link:
+  - /url: /pages/27362437-05e2-4713-a446-af4bd0b691a0?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Fibery":
+  - /url: /search?site_id[id][]=415
+  - generic: Fibery
+- link:
+  - /url: /pages/e5653957-8d25-49b7-9b7e-68de14961c67?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Fibery":
+  - /url: /search?site_id[id][]=415
+  - generic: Fibery
+- link:
+  - /url: /pages/e6083517-c784-42d1-9383-92261748a693?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Synthesia.io":
+  - /url: /search?site_id[id][]=943
+  - generic: Synthesia.io
+- link:
+  - /url: /pages/1657a62a-2e9c-4088-aa0b-279a9e339eb9?query=Product%20area%20navigation%20workspace&pass_source=chat&source=search
+- link "Polar":
+  - /url: /search?site_id[id][]=871
+  - generic: Polar
+- link "Show More":
+  - /url: /search?query=Product%20area%20navigation%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Creative tool inspector panel":
+  - /url: /search?query=Creative%20tool%20inspector%20panel&pass_source=chat
+- link "644 screens See all":
+  - /url: /search?query=Creative%20tool%20inspector%20panel&pass_source=chat
+  - generic: 644 screens
+  - text: See all
+- link:
+  - /url: /pages/1c2474c0-24fd-4be4-86ac-5f44e532ace7?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "Pryzm":
+  - /url: /search?site_id[id][]=944
+  - generic: Pryzm
+- link:
+  - /url: /pages/ead803f3-56d2-45c7-a444-1c0096090c11?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "fal":
+  - /url: /search?site_id[id][]=935
+  - generic: fal
+- link:
+  - /url: /pages/d754f0b2-583e-4497-b12c-2c8e4269cf92?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- link:
+  - /url: /pages/dfada064-2dc5-4bf3-a152-bfe2d244c1ad?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "fal":
+  - /url: /search?site_id[id][]=935
+  - generic: fal
+- link:
+  - /url: /pages/bef51213-77fa-4e81-b3c3-0d1f3ff75827?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "fal":
+  - /url: /search?site_id[id][]=935
+  - generic: fal
+- link:
+  - /url: /pages/52f2449b-f0c2-4844-8575-3cfebc7689fa?query=Creative%20tool%20inspector%20panel&pass_source=chat&source=search
+- link "Variant":
+  - /url: /search?site_id[id][]=877
+  - generic: Variant
+- link "Show More":
+  - /url: /search?query=Creative%20tool%20inspector%20panel&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Linear project activity navigation workspace":
+  - /url: /search?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat
+- link "1,026 screens See all":
+  - /url: /search?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat
+  - generic: 1,026 screens
+  - text: See all
+- link:
+  - /url: /pages/13774021-f998-4003-849d-ad1533489547?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/23279ae8-48ee-4b42-bbdf-1d04088fe35a?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Figma":
+  - /url: /search?site_id[id][]=206
+  - generic: Figma
+- link:
+  - /url: /pages/73ee20ee-7d2e-49ea-b5ba-8271a8d0d61c?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/817d7194-809f-4d28-b042-fd9dd089497f?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/c3835a4f-ab8b-4044-94b7-fe03f09f9396?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link:
+  - /url: /pages/ab475b02-2a05-4cee-a8f1-f8b45f2f8c05?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat&source=search
+- link "Linear":
+  - /url: /search?site_id[id][]=26
+  - generic: Linear
+- link "Show More":
+  - /url: /search?query=Linear%20project%20activity%20navigation%20workspace&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "A/B test experiment results comparison":
+  - /url: /search?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/482dea06-3ac1-49de-8441-261160356f7d?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "Promova":
+  - /url: /search?site_id[id][]=385
+  - generic: Promova
+- link:
+  - /url: /pages/cea4aa6a-92be-406e-970a-d776f8a5fb16?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "ARKET":
+  - /url: /search?site_id[id][]=510
+  - generic: ARKET
+- link:
+  - /url: /pages/83c3c771-cea3-45e5-bfa0-f14a27daa37b?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "Promova":
+  - /url: /search?site_id[id][]=385
+  - generic: Promova
+- link:
+  - /url: /pages/73c26b10-be79-4cea-bf98-600b589bb3c0?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "Promova":
+  - /url: /search?site_id[id][]=385
+  - generic: Promova
+- link:
+  - /url: /pages/447c1366-06b8-4fdc-9b17-baf531caeb30?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "Google Gemini":
+  - /url: /search?site_id[id][]=907
+  - generic: Google Gemini
+- link:
+  - /url: /pages/ccf9f212-3540-4c7c-8c96-46c06b116ce4?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat&source=search
+- link "Promova":
+  - /url: /search?site_id[id][]=385
+  - generic: Promova
+- link "Show More":
+  - /url: /search?query=A%2FB%20test%20experiment%20results%20comparison&pass_source=chat
+  - text: Show More
+- text: Screens search
+- text: Web apps
+- link "Sortable experiment runs table variants":
+  - /url: /search?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat
+- link "1,000 screens See all":
+  - /url: /search?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat
+  - generic: 1,000 screens
+  - text: See all
+- link:
+  - /url: /pages/5824e463-de9f-4b1f-8939-7a46e2259a47?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "Cake Equity":
+  - /url: /search?site_id[id][]=661
+  - generic: Cake Equity
+- link:
+  - /url: /pages/078c8f5a-3ecc-4828-87e6-74840e4f8ce0?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "Cake Equity":
+  - /url: /search?site_id[id][]=661
+  - generic: Cake Equity
+- link:
+  - /url: /pages/fb68739d-ea4c-4910-8922-8481d03a614b?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "Pattern Brands":
+  - /url: /search?site_id[id][]=229
+  - generic: Pattern Brands
+- link:
+  - /url: /pages/c958b0e3-66c9-4e96-98e8-0f01c4101e5d?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "n8n":
+  - /url: /search?site_id[id][]=805
+  - generic: n8n
+- link:
+  - /url: /pages/5c1a397c-3cec-493f-9cea-dce90e95b761?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "ManyChat":
+  - /url: /search?site_id[id][]=90
+  - generic: ManyChat
+- link:
+  - /url: /pages/1b6e7260-2ff4-4778-a2cd-161f995c40fb?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat&source=search
+- link "n8n":
+  - /url: /search?site_id[id][]=805
+  - generic: n8n
+- link "Show More":
+  - /url: /search?query=Sortable%20experiment%20runs%20table%20variants&pass_source=chat
+  - text: Show More
+- generic: Research Insights
+- heading "Run comparison as a first-class workspace" [level=3]
+- paragraph: These references keep experiment identity, filtering, charts, and comparison controls in one working surface rather than splitting analysis across separate pages.
+- link "Weights & Biases web screenshot. Dashboard UI":
+  - /url: /pages/1653cc08-edba-44ac-bddf-54f183015194?source=chat
+  - img "Weights & Biases web screenshot. Dashboard UI"
+- link "Weights & Biases Weights & Biases":
+  - /url: /search?site_id[id][]=88
+  - img "Weights & Biases"
+  - generic: Weights & Biases
+- generic: W&B uses a run-focused left rail, collapsible chart panels, and a broad analysis canvas. Useful for persistent experiment selection without giving every function its own sidebar.
+- link "Weights & Biases web screenshot.":
+  - /url: /pages/1ff391d4-ba59-4433-baa2-080dfc71fb50?source=chat
+  - img "Weights & Biases web screenshot."
+- link "Weights & Biases Weights & Biases":
+  - /url: /search?site_id[id][]=88
+  - img "Weights & Biases"
+  - generic: Weights & Biases
+- generic: "A dense evaluation table supports many numeric columns, pagination, export, column visibility, and reset controls. The trade-off is horizontal density: this pattern needs strong column management and a clear primary comparison metric."
+- link "Officevibe web screenshot.":
+  - /url: /pages/c6983acd-6c51-4dd0-9a74-098f396c869e?source=chat
+  - img "Officevibe web screenshot."
+- link "Officevibe Officevibe":
+  - /url: /search?site_id[id][]=295
+  - img "Officevibe"
+  - generic: Officevibe
+- generic: Officevibe combines score/variation tabs, segment filters, date controls, and a horizontally scrollable comparison table. The locked-data treatment is a useful precedent for capability limits, but gating inside the result surface can interrupt analysis.
+- heading "Saved views turn complex filters into reusable workspaces" [level=3]
+- paragraph: "These examples treat filters as named analytical state: visible, saveable, and recoverable rather than transient toolbar choices."
+- link "Mercury web screenshot. Content Management Page UI":
+  - /url: /pages/2f2a5ca6-3201-49e5-b2b5-02cc82502adc?source=chat
+  - img "Mercury web screenshot. Content Management Page UI"
+- link "Mercury Mercury":
+  - /url: /search?site_id[id][]=857
+  - img "Mercury"
+  - generic: Mercury
+- generic: "Mercury summarizes active filters as chips inside a “Save Data View” dialog. Transferable mechanism: serialize the current query into a named object and make the query legible before saving."
+- link "Aboard web screenshot.":
+  - /url: /pages/4010c7d0-a554-42b9-b1c7-f75764584757?source=chat
+  - img "Aboard web screenshot."
+- link "Aboard Aboard":
+  - /url: /search?site_id[id][]=545
+  - img "Aboard"
+  - generic: Aboard
+- generic: Aboard places view creation over a populated employee table, preserving the context of what will be saved. The limitation is modal interruption; for frequent view editing, an inline “Save as view” action may be faster.
+- link "Rox web screenshot. Content Management Page UI":
+  - /url: /pages/eb79173f-38e8-4722-aa6b-af09e12388cb?source=chat
+  - img "Rox web screenshot. Content Management Page UI"
+- link "Rox Rox":
+  - /url: /search?site_id[id][]=847
+  - img "Rox"
+  - generic: Rox
+- generic: Rox uses a right-docked side sheet instead of a centered dialog. This keeps the accounts table partially visible and is a strong option when view creation needs more explanation or additional settings.
+- heading "Charts plus inspectable detail" [level=3]
+- paragraph: The strongest analytics surfaces pair a large visual trend with filters, breakdowns, and nearby detail rather than making the chart carry the whole explanation.
+- link "Dub web screenshot.":
+  - /url: /pages/1c57a389-c3f6-4976-9c5f-2f024406810c?source=chat
+  - img "Dub web screenshot."
+- link "Dub Dub":
+  - /url: /search?site_id[id][]=418
+  - img "Dub"
+  - generic: Dub
+- generic: Dub places KPI cards, a primary time-series chart, and four breakdown cards in one vertical analysis surface. The 2×2 breakdown grid is transferable, but it can become repetitive when every segment deserves deeper drill-down.
+- link "ElevenLabs web screenshot. Dashboard UI":
+  - /url: /pages/05339db5-381c-4b33-a9c8-1542a58b775d?source=chat
+  - img "ElevenLabs web screenshot. Dashboard UI"
+- link "ElevenLabs ElevenLabs":
+  - /url: /search?site_id[id][]=772
+  - img "ElevenLabs"
+  - generic: ElevenLabs
+- generic: ElevenLabs exposes metric, date, granularity, cumulative, and log-scale controls directly above the chart. This is useful for technical analytics, though too many chart controls can make the main result harder to scan.
+- link "Equals web screenshot.":
+  - /url: /pages/b530f0e5-d457-46c8-8292-a10e8c358021?source=chat
+  - img "Equals web screenshot."
+- link "Equals Equals":
+  - /url: /search?site_id[id][]=289
+  - img "Equals"
+  - generic: Equals
+- generic: Equals places an editable financial table beside a live chart and uses bottom sheet tabs for related analysis. The side-by-side model is powerful for expert users, but requires careful responsive behavior and strong distinction between source data and derived visualization.
+- link "Cake Equity web screenshot. Dashboard UI":
+  - /url: /pages/9b23297d-af17-4c74-a9bc-6daa2124f4b3?source=chat
+  - img "Cake Equity web screenshot. Dashboard UI"
+- link "Cake Equity Cake Equity":
+  - /url: /search?site_id[id][]=661
+  - img "Cake Equity"
+  - generic: Cake Equity
+- generic: Cake Equity combines summary cards, ownership charts, diluted/undiluted switching, search, and a stakeholder table. It demonstrates a useful “overview above, inspectable records below” hierarchy.
+- heading "Financial research uses adjacent context instead of another sidebar" [level=3]
+- paragraph: Financial products provide strong precedents for keeping the selected subject central while placing watchlists, alerts, news, and related metrics around it.
+- link "Perplexity web screenshot. Dashboard UI":
+  - /url: /pages/4c2c7b02-c284-44a7-a503-1127fa5d666f?source=chat
+  - img "Perplexity web screenshot. Dashboard UI"
+- link "Perplexity Perplexity":
+  - /url: /search?site_id[id][]=421
+  - img "Perplexity"
+  - generic: Perplexity
+- generic: "A narrow icon rail, central stock analysis, and right-side company stats/watchlist create three levels of context. This is a useful alternative to multiple permanent navigation panels: only the selected entity gets the wide workspace."
+- link "Stocktwits web screenshot.":
+  - /url: /pages/36a5ff5f-45a5-4327-a372-6288d5b3a28a?source=chat
+  - img "Stocktwits web screenshot."
+- link "Stocktwits Stocktwits":
+  - /url: /search?site_id[id][]=707
+  - img "Stocktwits"
+  - generic: Stocktwits
+- generic: Stocktwits keeps watchlist/navigation on the left, the selected asset and chart in the center, and news on the right. The limitation is persistent three-column competition for width, especially with long labels or dense comparison tables.
+- link "Wealthsimple web screenshot. Dashboard UI":
+  - /url: /pages/47b50f40-2189-480a-8279-8d1796ddf5eb?source=chat
+  - img "Wealthsimple web screenshot. Dashboard UI"
+- link "Wealthsimple Wealthsimple":
+  - /url: /search?site_id[id][]=764
+  - img "Wealthsimple"
+  - generic: Wealthsimple
+- generic: Wealthsimple combines a focused chart/order area with stacked market metrics, news, and company information. It shows how contextual research can continue below the primary comparison instead of being split into separate destinations.
+- heading "Contextual inspectors instead of permanent panels" [level=3]
+- paragraph: Creative and developer tools use a selected object, result, or request as the anchor; details appear beside it and can often collapse without changing the main workspace.
+- link "fal web screenshot. Product Details UI":
+  - /url: /pages/ead803f3-56d2-45c7-a444-1c0096090c11?source=chat
+  - img "fal web screenshot. Product Details UI"
+- link "fal fal":
+  - /url: /search?site_id[id][]=935
+  - img "fal"
+  - generic: fal
+- generic: "fal pairs a large result preview with an accordion inspector for metadata, code, reuse, download, and sharing. This maps well to experiment variants: keep the visual comparison stable while changing the inspected variant."
+- link "fal web screenshot. Content Management Page UI":
+  - /url: /pages/4131dc79-3880-417b-9d9e-bc91ec86cda8?source=chat
+  - img "fal web screenshot. Content Management Page UI"
+- link "fal fal":
+  - /url: /search?site_id[id][]=935
+  - img "fal"
+  - generic: fal
+- generic: A selected asset opens a right-side details panel while the gallery remains visible. The pattern supports contextual inspection and bulk actions, but needs an obvious selected state and a reliable close/collapse mechanism.
+- link "Pryzm web screenshot.":
+  - /url: /pages/574aee97-fe6d-4201-aebe-1caa3f3af554?source=chat
+  - img "Pryzm web screenshot."
+- link "Pryzm Pryzm":
+  - /url: /search?site_id[id][]=944
+  - img "Pryzm"
+  - generic: Pryzm
+- generic: "Pryzm separates navigation, preset selection, canvas, and property controls. The useful transfer is progressive disclosure: show high-frequency controls in the inspector and hide advanced parameters in accordions."
+- link "Lovable web screenshot. Content Management Page UI":
+  - /url: /pages/d754f0b2-583e-4497-b12c-2c8e4269cf92?source=chat
+  - img "Lovable web screenshot. Content Management Page UI"
+- link "Lovable Lovable":
+  - /url: /search?site_id[id][]=905
+  - img "Lovable"
+  - generic: Lovable
+- generic: Lovable keeps a prompt/activity timeline beside a generated preview and code-diff inspector. This is a strong precedent for comparing result state, decision history, and implementation detail without navigating away.
+- heading "Separate areas, open work, and background activity" [level=3]
+- paragraph: These layouts use one primary product shell plus contextual rails, overlays, or collapsible regions instead of stacking permanent sidebars.
+- link "Linear web screenshot. Task Management UI":
+  - /url: /pages/080076ad-130b-4b3f-81d2-653563f2d55f?source=chat
+  - img "Linear web screenshot. Task Management UI"
+- link "Linear Linear":
+  - /url: /search?site_id[id][]=26
+  - img "Linear"
+  - generic: Linear
+- generic: Linear’s sidebar groups inbox, issues, projects, and views, while the main surface owns the active list and its filters. Its sidebar-hiding flow is especially relevant when analysis needs more horizontal space.
+- link "Linear web screenshot. Content Management Page UI":
+  - /url: /pages/817d7194-809f-4d28-b042-fd9dd089497f?source=chat
+  - img "Linear web screenshot. Content Management Page UI"
+- link "Linear Linear":
+  - /url: /search?site_id[id][]=26
+  - img "Linear"
+  - generic: Linear
+- generic: "Linear separates project records from timeline context within one workspace: a project list occupies the central pane while milestones occupy a date-based pane. This can translate to experiment rows beside variant history or run activity."
+- link "Linear web screenshot. Task Management UI":
+  - /url: /pages/882a84f3-fc9b-46f3-a5cd-ca1f81b78157?source=chat
+  - img "Linear web screenshot. Task Management UI"
+- link "Linear Linear":
+  - /url: /search?site_id[id][]=26
+  - img "Linear"
+  - generic: Linear
+- generic: The issue view uses one navigation rail, a central activity thread, and a contextual properties panel. It avoids a second permanent navigation hierarchy by making the right rail about the selected object only.
+- link "Stellate web screenshot. Settings UI":
+  - /url: /pages/868c662c-afbe-4206-b364-d578643c694f?source=chat
+  - img "Stellate web screenshot. Settings UI"
+- link "Stellate Stellate":
+  - /url: /search?site_id[id][]=606
+  - img "Stellate"
+  - generic: Stellate
+- generic: Stellate turns background activity into an expandable versioned log with timestamps, change counts, and code detail. This is a useful model for separating “open analysis” from asynchronous run, import, or deployment activity.
+- text: Find more collapsible workspace navigation
+- text: Explore variant comparison interaction flows
+- text: Compare dense tables with split-pane analysis
+- textbox "Ask follow up…"
+- button [disabled]:

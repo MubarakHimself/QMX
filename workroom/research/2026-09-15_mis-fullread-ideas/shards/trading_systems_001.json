@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_001",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 1165,
+      "title": "Random Forests Predict Trends",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1165.md"
+    },
+    {
+      "id": 1345,
+      "title": "Econometrics EURUSD One-Step-Ahead Forecast",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1345.md"
+    },
+    {
+      "id": 1349,
+      "title": "The Golden Rule of Traders",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1349.md"
+    },
+    {
+      "id": 1352,
+      "title": "Mechanical Trading System \"Chuvashov's Fork\"",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1352.md"
+    },
+    {
+      "id": 1353,
+      "title": "Synthetic Bars - A New Dimension to Displaying Graphical Information on Prices",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1353.md"
+    },
+    {
+      "id": 1364,
+      "title": "Mechanical Trading System \"Chuvashov's Triangle\"",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1364.md"
+    },
+    {
+      "id": 1373,
+      "title": "How Reliable is Night Trading?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1373.md"
+    },
+    {
+      "id": 1380,
+      "title": "Lite_EXPERT2.mqh: Functional Kit for Developers of Expert Advisors",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1380.md"
+    },
+    {
+      "id": 1384,
+      "title": "Lite_EXPERT2.mqh: Expert Advisor Implementation Examples",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1384.md"
+    },
+    {
+      "id": 1419,
+      "title": "Trading Strategies",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1419.md"
+    },
+    {
+      "id": 1424,
+      "title": "Ten \"Errors\" of a Newcomer in Trading?",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1424.md"
+    },
+    {
+      "id": 1426,
+      "title": "Creation of an Automated Trading System",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1426.md"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_059",
+  "section": "Examples",
+  "parent_shard": "examples_059",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 20417,
+      "title": "From Novice to Expert: Developing a Geographic Market Awareness with MQL5 Visualization",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20417.md"
+    },
+    {
+      "id": 20449,
+      "title": "Fortified Profit Architecture: Multi-Layered Account Protection",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20449.md"
+    },
+    {
+      "id": 20554,
+      "title": "From Novice to Expert: Trading the RSI with Market Structure Awareness",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20554.md"
+    },
+    {
+      "id": 20587,
+      "title": "From Novice to Expert: Automating Trade Discipline with an MQL5 Risk Enforcement EA",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20587.md"
+    },
+    {
+      "id": 20589,
+      "title": "Building Volatility models in MQL5 (Part I): The Initial Implementation",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20589.md"
+    },
+    {
+      "id": 20645,
+      "title": "From Novice to Expert: Navigating Market Irregularities",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20645.md"
+    },
+    {
+      "id": 20658,
+      "title": "From Novice to Expert: Higher Probability Signals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20658.md"
+    },
+    {
+      "id": 20852,
+      "title": "Integrating External Applications with MQL5 Community OAuth",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20852.md"
+    },
+    {
+      "id": 20856,
+      "title": "Graph Theory: Traversal Breadth-First Search (BFS) Applied in Trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20856.md"
+    },
+    {
+      "id": 20904,
+      "title": "From Novice to Expert: Statistical Validation of Supply and Demand Zones",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20904.md"
+    },
+    {
+      "id": 20973,
+      "title": "Developing Market Memory Zones Indicator: Where Price Is Likely To Return",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20973.md"
+    },
+    {
+      "id": 20986,
+      "title": "From Novice to Expert: Creating a Liquidity Zone Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20986.md"
+    }
+  ]
+}

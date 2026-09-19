@@ -1,0 +1,44 @@
+4: title: "MQL5 Wizard Techniques you should know (Part 21): Testing with Economic Calendar Data"
+11: series_title: "MQL5 Wizard Techniques you should know (): Testing with Economic Calendar Data"
+20: # MQL5 Wizard Techniques you should know (Part 21): Testing with Economic Calendar Data
+25: | 30 May 2024 at 12:46
+36: ### 
+38: ### **Introduction**
+40: We continue the series on wizard assembled Expert Advisors by looking at how [economic calendar](https://www.mql5.com/en/economic-calendar) news could be integrated in an Expert Advisor during testing to either confirm an idea or build a more robust trade system, thanks in no small part to this [article](https://www.mql5.com/en/articles/14324). That article is part of a series since it is the firs
+44: [SQLite](https://www.sqlite.org/ "https://www.sqlite.org/") databases can be created within the MetaEditor IDE and since they are data repositories, on paper, we should be able to use these as a data source to an Expert Advisor such that they act as indicator buffers. More than this though they can store the economic data locally, that can easily allow for offline testing and also use in the event
+46: ### Current Limitations and Workarounds
+48: There is a catch, though. Besides the inability to read economic calendar data in strategy tester, from my testing on reading databases within strategy tester it appears there is a similar constraint. At the time of this writing it could be a coding error on my part but trying to read database data with this listing:
+50: ```
+91: ```
+109: ### Building the SQLite Database
+113: ```
+136: ```
+138: This code is mostly sourced from [here,](https://www.mql5.com/en/articles/7463#database_functions)with a few modifications. Creating a database is via a handle, like declaring a file read or write handle. We are creating a database for each currency pair which I admit is wasteful and very unwieldy and a better approach would have been to have all these economic data points across currencies in a s
+140: ```
+176: ```
+178: Our created table will simply feature 4 columns namely the ‘DATE’ column which will be of text type that logs when the economic news was released, the ‘FORECAST’ column for the forecasted economic data point that will be of real type, the ‘ACTUAL’ column which will also be of [real type](https://www.sqlite.org/datatype3.html#storage_classes_and_datatypes "https://www.sqlite.org/datatype3.html#stor
+180: ```
+184: bool Get(string Currency, datetime Start, datetime Stop, ENUM_CALENDAR_EVENT_SECTOR Sector, string &Data[][4])
+187:    int _events = CalendarEventByCurrency(Currency, _event);
+194:    {  int _values = CalendarValueHistoryByEvent(_event[e].id, _value, Start, Stop);
+199:       printf(__FUNCSIG__ + " Calendar Event code: " + _event[e].event_code + ", belongs to sector: " + EnumToString(_event[e].sector));
+205:          printf(__FUNCSIG__ + " Calendar Event code: " + _event[e].event_code + ", for value: " + TimeToString(_value[v].period) + " on: " + TimeToString(_value[v].time) + ", has... ");
+221: ```
+223: We use a multidimensional string array named ‘\_data’ to retrieve the economic calendar data and its second dimension matches with the number of columns in the ‘PRICES’ table that we’ll use to store the data which means its rows are equal in number to the data rows we’ll insert into the ‘PRICES’ table. In order to expedite the loading of data from our array to the table, we firstly use the ‘Databa
+225: ```
+310: ```
+322: ### Exporting Economic Calendar Data
+326: ```
+346: ```
+352: For instance, for this article we are focusing on the pair GBPUSD which means the two currencies we’d be interested in are GBP ad USD. (Note we have evaded the EUR given multiple data points not just from the euro area but also its member countries!) If we look at the event codes for inflation data for these less ambiguous currencies, for GBP we have ‘cpi-yy’ and for USD we have ‘core-pce-price-in
+354: ### MQL5 Signal Class
+358: These workarounds are all addressing problems that would not exist if database access in strategy tester was possible. So, our signal class, since it is not reading from a database, will simply take as inputs the names of the CSV files for both the margin currency and the profit currency. With our signal class the only series buffer we will use will be the ‘m\_time’ class and strictly speaking we 
+360: ```
+378: ```
+384: ```
+398: ```
+410: ### Conclusion
+412: To sum-up, SQLite databases introduce a lot of benefits and advantages in how they allow one to store and curate customized sets of data. Economic Calendar Data that is released on key news events is one such set of data that could be archived for further analysis in helping understand what are the key drivers of market action. A very simple strategy such as the one looked at in this article, that
+421: [db\_calendar\_r1.mq5](https://www.mql5.com/en/articles/download/14993/db_calendar_r1.mq5 "Download db_calendar_r1.mq5")
+439: This is a continuation of the series for beginners. In this article, we'll look at how to create constants and variables, write dates, colors, and other useful data. We will learn how to create enumerations like days of the week or line styles (solid, dotted, etc.). Variables and expressions are the basis of programming. They are definitely present in 99% of programs, so understanding them is crit
+444: In this article, we revisit a classic crude oil trading strategy with the aim of enhancing it by leveraging supervised machine learning algorithms. We will construct a least-squares model to predict future Brent crude oil prices based on the spread between Brent and WTI crude oil prices. Our goal is to identify a leading indicator of future changes in Brent prices.

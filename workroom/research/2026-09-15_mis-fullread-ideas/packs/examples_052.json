@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_052",
+  "section": "Examples",
+  "parent_shard": "examples_052",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 16339,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part VII): Trusted User, Recovery and Cryptography",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16339.md"
+    },
+    {
+      "id": 16340,
+      "title": "Elevate Your Trading With Smart Money Concepts (SMC): OB, BOS, and FVG",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16340.md"
+    },
+    {
+      "id": 16356,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part VIII): Analytics Panel",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16356.md"
+    },
+    {
+      "id": 16357,
+      "title": "Implementing the SHA-256 Cryptographic Algorithm from Scratch in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16357.md"
+    },
+    {
+      "id": 16403,
+      "title": "Neural Networks in Trading: Enhancing Transformer Efficiency by Reducing Sharpness (Final Part)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16403.md"
+    },
+    {
+      "id": 16418,
+      "title": "From Basic to Intermediate: Like Bubbles",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16418.md"
+    },
+    {
+      "id": 16443,
+      "title": "Population ADAM (Adaptive Moment Estimation)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16443.md"
+    },
+    {
+      "id": 16445,
+      "title": "Trading Insights Through Volume: Moving Beyond OHLC Charts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16445.md"
+    },
+    {
+      "id": 16461,
+      "title": "Market Profile indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16461.md"
+    },
+    {
+      "id": 16515,
+      "title": "Expert Advisor based on the universal MLP approximator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16515.md"
+    },
+    {
+      "id": 16518,
+      "title": "The Liquidity Grab Trading Strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16518.md"
+    },
+    {
+      "id": 16539,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part IX): Code Organization (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16539.md"
+    }
+  ]
+}

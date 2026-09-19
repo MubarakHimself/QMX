@@ -1,0 +1,68 @@
+{
+  "shard_id": "tester_011",
+  "section": "Tester",
+  "n": 6,
+  "series_in_shard": [
+    "100 best optimization passes",
+    "a new approach to custom criteria in optimizations",
+    "building a candlestick trend constraint model",
+    "category theory",
+    "csv data analysis"
+  ],
+  "articles": [
+    {
+      "id": 5214,
+      "title": "100 best optimization passes (part 1). Developing optimization analyzer",
+      "section": "Tester",
+      "series_title": "100 best optimization passes (). Developing optimization analyzer",
+      "series_key": "100 best optimization passes",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5214.md"
+    },
+    {
+      "id": 17429,
+      "title": "A New Approach to Custom Criteria in Optimizations (Part 1): Examples of Activation Functions",
+      "section": "Tester",
+      "series_title": "A New Approach to Custom Criteria in Optimizations (): Examples of Activation Functions",
+      "series_key": "a new approach to custom criteria in optimizations",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17429.md"
+    },
+    {
+      "id": 15321,
+      "title": "Building a Candlestick Trend Constraint Model (Part 8): Expert Advisor Development (I)",
+      "section": "Tester",
+      "series_title": "Building a Candlestick Trend Constraint Model (): Expert Advisor Development (I)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15321.md"
+    },
+    {
+      "id": 15322,
+      "title": "Building A Candlestick Trend Constraint Model (Part 8): Expert Advisor Development (II)",
+      "section": "Tester",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Expert Advisor Development (II)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15322.md"
+    },
+    {
+      "id": 22874,
+      "title": "CSV Data Analysis (Part 1): CSV Export Engine for MQL5 Multi-Core Optimizations",
+      "section": "Tester",
+      "series_title": "CSV Data Analysis (): CSV Export Engine for MQL5 Multi-Core Optimizations",
+      "series_key": "csv data analysis",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22874.md"
+    },
+    {
+      "id": 12739,
+      "title": "Category Theory (Part 9): Monoid-Actions",
+      "section": "Tester",
+      "series_title": "Category Theory (): Monoid-Actions",
+      "series_key": "category theory",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12739.md"
+    }
+  ]
+}

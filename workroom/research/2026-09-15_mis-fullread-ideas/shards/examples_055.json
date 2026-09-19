@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_055",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 17525,
+      "title": "From Novice to Expert: Programming Candlesticks",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17525.md"
+    },
+    {
+      "id": 17631,
+      "title": "Feature Engineering With Python And MQL5 (Part IV): Candlestick Pattern Recognition With UMAP Regression",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17631.md"
+    },
+    {
+      "id": 17636,
+      "title": "Day Trading Larry Connors RSI2 Mean-Reversion Strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17636.md"
+    },
+    {
+      "id": 17653,
+      "title": "Implementation of a table model in MQL5: Applying the MVC concept",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17653.md"
+    },
+    {
+      "id": 17702,
+      "title": "Raw Code Optimization and Tweaking for Improving Back-Test Results",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17702.md"
+    },
+    {
+      "id": 17780,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part X): External resource-based interface",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17780.md"
+    },
+    {
+      "id": 17803,
+      "title": "Table and Header Classes based on a table model in MQL5: Applying the MVC concept",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17803.md"
+    },
+    {
+      "id": 17869,
+      "title": "Creating a Trading Administrator Panel in MQL5 (Part XI): Modern feature communications interface (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17869.md"
+    },
+    {
+      "id": 17877,
+      "title": "Websockets for MetaTrader 5: Asynchronous client connections with the Windows API",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17877.md"
+    },
+    {
+      "id": 17960,
+      "title": "The View component for tables in the MQL5 MVC paradigm: Base graphical element",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17960.md"
+    },
+    {
+      "id": 18183,
+      "title": "From Novice to Expert: Auto-Geometric Analysis System",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18183.md"
+    },
+    {
+      "id": 18221,
+      "title": "The View and Controller components for tables in the MQL5 MVC paradigm: Simple controls",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18221.md"
+    }
+  ]
+}

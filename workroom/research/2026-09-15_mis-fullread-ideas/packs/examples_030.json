@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_030",
+  "section": "Examples",
+  "parent_shard": "examples_030",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 8122,
+      "title": "Population optimization algorithms",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8122.md"
+    },
+    {
+      "id": 8196,
+      "title": "Websockets for MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8196.md"
+    },
+    {
+      "id": 8270,
+      "title": "Native Twitter Client for MT4 and MT5 without DLL",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8270.md"
+    },
+    {
+      "id": 8502,
+      "title": "Practical application of neural networks in trading. Python (Part I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8502.md"
+    },
+    {
+      "id": 8699,
+      "title": "Using spreadsheets to build trading strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8699.md"
+    },
+    {
+      "id": 8793,
+      "title": "Useful and exotic techniques for automated trading",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8793.md"
+    },
+    {
+      "id": 8908,
+      "title": "Multilayer perceptron and backpropagation algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\8908.md"
+    },
+    {
+      "id": 9266,
+      "title": "Tips from a professional programmer (Part I): Code storing, debugging and compiling. Working with projects and logs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9266.md"
+    },
+    {
+      "id": 9305,
+      "title": "Brute force approach to patterns search (Part VI): Cyclic optimization",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9305.md"
+    },
+    {
+      "id": 9327,
+      "title": "Tips from a professional programmer (Part II): Storing and exchanging parameters between an Expert Advisor, scripts and external programs",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9327.md"
+    },
+    {
+      "id": 9514,
+      "title": "Multilayer perceptron and backpropagation algorithm (Part II): Implementation in Python and integration with MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9514.md"
+    },
+    {
+      "id": 9527,
+      "title": "Cluster analysis (Part I): Mastering the slope of indicator lines",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9527.md"
+    }
+  ]
+}

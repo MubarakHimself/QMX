@@ -1,0 +1,437 @@
+# Swing Extremes and Pullbacks (Part 4): Dynamic Pullback Depth Using Volatility Models
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 16 June 2026 at 06:38
+3 857
+[![](https://c.mql5.com/i/icons.svg#comments-white-usage)
+1](https://www.mql5.com/en/forum/511267 "Comments")
+[Hlomohang John Borotho](https://www.mql5.com/en/users/johnhlomohang)
+### Table of contents
+1. [Introduction](https://www.mql5.com/en/articles/22807#introduction)
+2. [System Overview](https://www.mql5.com/en/articles/22807#system_overview)
+3. [Getting Started](https://www.mql5.com/en/articles/22807#getting_started)
+4. [Backtest](https://www.mql5.com/en/articles/22807#backtest)
+5. [Conclusion](https://www.mql5.com/en/articles/22807#conclusion)
+### Introduction
+[Previously](https://www.mql5.com/en/articles/21888), we built a structure-based framework capable of detecting valid swings, validating market structure, and identifying pullbacks for trade execution. Yet most traders using structure-based systems eventually hit the same wall: the EA marks valid swings, detects a pullback, and enters—then gets stopped out repeatedly on moves that formerly worked. The system cannot explain why. A 40-point retracement triggers a buy in one session and leads straight into a loss in another. The logic feels sound, but the results are inconsistent. The real problem is not the entry itself—it is that the system treats all pullbacks as equivalent. It has no vocabulary for depth, no awareness of how far price should retrace given current volatility, and no way to distinguish a healthy correction from structural breakdown in progress.
+The solution is to stop asking, "Did the price pull back?" and start asking, "How deep was the pullback relative to what the market's current volatility actually justifies?" This framework introduces a volatility-normalized retracement model. It measures each correction as a ratio of the prior impulse and calibrates acceptable depth thresholds to a rolling ATR regime. A 40-point pullback in a low-ATR environment is flagged as dangerously deep. The same 40 point during a high-ATR expansion phase is classified as healthy and tradable. Each pullback receives a quality score, compression is detected before expansion, and stop losses expand or contract with the regime—so the EA is no longer fighting market conditions it cannot see.
+### System Overview
+The EA detects swing highs and lows using a lookback window. Each candidate undergoes multiple validation checks, including a structure break (new high or low), candle size displacement, liquidity sweep, and time-based respect. Valid swings form the foundation for market structure and liquidity zone mapping. A state machine then classifies the market as accumulation, expansion, distribution, or reversal based on swing progression and sweep failures.
+Layer 1 reads raw price structure; Layer 2 validates swings through four independent checks; Layer 3 maps liquidity pools that act as future magnets for price.
+How Mapping Market Architecture goes about:
+- Step 1: Swing Candidates Detected -> Validated by Structure Break, Displacement, Sweep & Time Respect.
+- Step 2: State Machine Classifies Market as Accumulation, Expansion, Distribution or Reversal.
+- Step 3: Liquidity Zones Tracked—Clustered Highs & Lows, Marked Taken Once Swept.
+A second layer models pullbacks within each impulse leg. It measures retracement depth, normalizes it against ATR, and adjusts acceptable ranges according to the current volatility regime. Each pullback receives a quality score that considers depth, candle overlap, momentum decay, and volatility compression. A trade triggers only when a pullback scores high, aligns with the market state, stays within adaptive depth limits, and is confirmed by either a liquidity sweep or a strong displacement candle. Stop losses are placed dynamically using nearby swing levels cushioned by ATR.
+No trade fires without a scored pullback passing adaptive depth limits, and every entry demands a confirming sweep or displacement candle—the EA waits for structure to prove itself.
+How Quality Filtering and Execution Logic goes about:
+- Step 1: Each Impulse Leg Measured -> Pullback Depth Normalized Against ATR -> Quality Score Assigned.
+- Step 2: Adaptive Depth Thresholds Adjust to Volatility Regime—Compression Bonus Applied.
+- Step 3: Entry Requires Sweep or Displacement Confirmation—SL Anchored to Swing Structure.
+### Getting Started
+```
+//+------------------------------------------------------------------+
+//|                                            Dynmc Pllbck Dpth.mq5 |
+//|                                  Copyright 2025, MetaQuotes Ltd. |
+//|                     https://www.mql5.com/en/users/johnhlomohang/ |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+#include <Trade/Trade.mqh>
+CTrade trade;
+//+------------------------------------------------------------------+
+//| Input Parameters                                                 |
+//+------------------------------------------------------------------+
+input int             SwingLookback           = 5;       // Bars for swing detection
+input double          DisplacementFactor      = 1.5;     // Impulse strength factor
+input int             StructureHoldBars       = 3;       // Bars structure must hold
+input int             ATR_Period              = 14;      // ATR calculation period
+input int             ATR_AvgPeriod           = 50;      // ATR rolling average period
+input double          RiskPercent             = 1.0;     // Risk per trade (%)
+input int             StopLossPoints          = 2000;    // Fallback SL in points
+input double          RiskRewardRatio         = 2.0;     // Risk:Reward ratio
+input double          ATR_SL_Multiplier       = 1.5;     // ATR multiplier for dynamic SL
+input double          PullbackMinDepth        = 0.25;    // Minimum pullback depth
+input double          PullbackMaxDepth        = 0.65;    // Maximum pullback depth (structure valid)
+input bool            RequireCompression      = true;    // Require ATR compression before entry
+input bool            Visualize               = true;    // Show visualization
+//+------------------------------------------------------------------+
+//| Enumerations                                                     |
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Swing Extremes and Pullbacks (Part 4): Dynamic Pullback Depth Using Volatility Models
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+### Table of contents
+1. [Introduction](https://www.mql5.com/en/articles/22807#introduction)
+3. [Getting Started](https://www.mql5.com/en/articles/22807#getting_started)
+4. [Backtest](https://www.mql5.com/en/articles/22807#backtest)
+5. [Conclusion](https://www.mql5.com/en/articles/22807#conclusion)
+### Introduction
+[Previously](https://www.mql5.com/en/articles/21888), we built a structure-based framework capable of detecting valid swings, validating market structure, and identifying pullbacks for trade execution. Yet most traders using structure-based systems eventually hit the same wall: the EA marks valid swings, detects a pullback, and enters—then gets stopped out repeatedly on moves that formerly worked. The system cannot explain why. A 40-point retracement triggers a buy in one session and leads straight into a loss in another. The logic feels sound, but the results are inconsistent. The real problem is not the entry itself—it is that the system treats all pullbacks as equivalent. It has no vocabulary for depth, no awareness of how far price should retrace given current volatility, and no way to distinguish a healthy correction from structural breakdown in progress.
+The solution is to stop asking, "Did the price pull back?" and start asking, "How deep was the pullback relative to what the market's current volatility actually justifies?" This framework introduces a volatility-normalized retracement model. It measures each correction as a ratio of the prior impulse and calibrates acceptable depth thresholds to a rolling ATR regime. A 40-point pullback in a low-ATR environment is flagged as dangerously deep. The same 40 point during a high-ATR expansion phase is classified as healthy and tradable. Each pullback receives a quality score, compression is detected before expansion, and stop losses expand or contract with the regime—so the EA is no longer fighting market conditions it cannot see.
+  
+### System Overview
+The EA detects swing highs and lows using a lookback window. Each candidate undergoes multiple validation checks, including a structure break (new high or low), candle size displacement, liquidity sweep, and time-based respect. Valid swings form the foundation for market structure and liquidity zone mapping. A state machine then classifies the market as accumulation, expansion, distribution, or reversal based on swing progression and sweep failures.
+- Step 1: Swing Candidates Detected -> Validated by Structure Break, Displacement, Sweep & Time Respect.
+- Step 2: State Machine Classifies Market as Accumulation, Expansion, Distribution or Reversal.
+- Step 3: Liquidity Zones Tracked—Clustered Highs & Lows, Marked Taken Once Swept.
+A second layer models pullbacks within each impulse leg. It measures retracement depth, normalizes it against ATR, and adjusts acceptable ranges according to the current volatility regime. Each pullback receives a quality score that considers depth, candle overlap, momentum decay, and volatility compression. A trade triggers only when a pullback scores high, aligns with the market state, stays within adaptive depth limits, and is confirmed by either a liquidity sweep or a strong displacement candle. Stop losses are placed dynamically using nearby swing levels cushioned by ATR.
+![](https://c.mql5.com/2/222/SW2.png)
+
+How Quality Filtering and Execution Logic goes about:
+- Step 1: Each Impulse Leg Measured -> Pullback Depth Normalized Against ATR -> Quality Score Assigned.
+- Step 2: Adaptive Depth Thresholds Adjust to Volatility Regime—Compression Bonus Applied.
+- Step 3: Entry Requires Sweep or Displacement Confirmation—SL Anchored to Swing Structure.
+### Getting Started
+```
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, MetaQuotes Ltd."
+#property link      "https://www.mql5.com/en/users/johnhlomohang/"
+#property version   "1.00"
+#include <Trade/Trade.mqh>
+CTrade trade;
+input int             StructureHoldBars       = 3;       // Bars structure must hold
+input int             ATR_Period              = 14;      // ATR calculation period
+input int             ATR_AvgPeriod           = 50;      // ATR rolling average period
+input double          RiskPercent             = 1.0;     // Risk per trade (%)
+input int             StopLossPoints          = 2000;    // Fallback SL in points
+input double          RiskRewardRatio         = 2.0;     // Risk:Reward ratio
+input double          ATR_SL_Multiplier       = 1.5;     // ATR multiplier for dynamic SL
+input double          PullbackMinDepth        = 0.25;    // Minimum pullback depth
+input double          PullbackMaxDepth        = 0.65;    // Maximum pullback depth (structure valid)
+input bool            RequireCompression      = true;    // Require ATR compression before entry
+input bool            Visualize               = true;    // Show visualization
+
+enum MarketState
+  {
+   ACCUMULATION,
+enum VolatilityRegime
+   LOW_VOL,
+enum PullbackRegime
+   PULLBACK_AGGRESSIVE,   // 0.00-0.25  : Aggressive continuation / barely pulled back
+To get started, we define the core configuration and classification system that will drive our volatility-aware pullback framework. The input parameters allow us to control swing detection, displacement strength, structural validation, ATR calculations, risk management, pullback depth limits, and dynamic stop-loss behavior. We also introduce three enumerations that help organize market behavior into meaningful categories. MarketState classifies the broader structural phase of the market, such as accumulation or expansion. VolatilityRegime classifies current volatility conditions using ATR-based measurements, while PullbackRegime classifies retracement quality from aggressive continuations to complete structural failure.
+```
+   bool              bullish;
+   MarketState       state;
+   void              Reset()
+      bullish      = true;
+      state        = ACCUMULATION;
+     }
+  };
+   //--- Volatility context
+   double            atrAtImpulse;       // ATR value when impulse occurred
+   double            atrDuringPullback;  // ATR during the pullback phase
+   double            normalizedDepth;    // retracementDistance / ATR
+
+   //--- Regime classification
+   bool              shallowPullback;    // depth < 0.25
+   bool              healthyPullback;    // depth 0.20-0.50
+   bool              invalidPullback;    // depth > 1.0
+   PullbackRegime    regime;
+   //--- Efficiency metrics
+   //--- Compression signal
+   bool              compressionDetected; // ATR contracted during pullback
+   //--- Quality score
+      retracementDepth     = 0;
+      atrAtImpulse         = 0;
+      atrDuringPullback    = 0;
+      normalizedDepth      = 0;
+      shallowPullback      = false;
+      invalidPullback      = false;
+      regime               = PULLBACK_INVALID;
+      avgCounterCandleSize = 0;
+      overlapPercent       = 0;
+int                atrHandle;
+int                atrAvgHandle;        // Longer-period ATR for average
+datetime           lastBarTime = 0;
+double             avgCandleSize = 0;
+double             currentATR    = 0;   // live ATR
+double             avgATR        = 0;   // rolling ATR average
+VolatilityRegime   currentVolRegime = NORMAL_VOL; // current vol regime
+
+//--- Trade tracking
+   atrHandle = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
+   if(atrHandle == INVALID_HANDLE)
+     {
+      Print("Failed to create ATR handle");
+      return INIT_FAILED;
+     }
+   //--- Second ATR handle for longer rolling average
+   atrAvgHandle = iATR(_Symbol, PERIOD_CURRENT, ATR_AvgPeriod);
+   if(atrAvgHandle == INVALID_HANDLE)
+      Print("Failed to create ATR average handle");
+   ValidateSwings();
+   AnalyzePullbackDepth();       // NEW LAYER 2.5
+   UpdateLiquidityZones();
+   UpdateMarketState();
+   return INIT_SUCCEEDED;
+The PullbackModel extends the system beyond simple swing analysis by introducing a complete framework for measuring retracement quality. We store the impulse leg, pullback depth, ATR values, volatility-normalized measurements, and pullback classifications ranging from healthy retracements to structural failure. Additional metrics such as candle overlap, counter-trend momentum, and ATR compression help us evaluate the quality and behavior of a pullback rather than relying solely on price distance.
+Below the structures, we declare the global arrays and variables that hold swing data, liquidity zones, market structure information, pullback models, ATR calculations, and trade-tracking details. Finally, within OnInit(), we initialize these containers, create ATR indicators for both current and average volatility measurements, and execute the first analysis cycle. This establishes the initial market structure and pullback context before the EA begins processing live market data.
+```
+  {
+   if(atrHandle != INVALID_HANDLE)
+      IndicatorRelease(atrHandle);
+   if(atrAvgHandle != INVALID_HANDLE)
+      IndicatorRelease(atrAvgHandle);
+
+   if(Visualize)
+      UpdateAvgCandleSize();
+      UpdateATRValues();            // refresh ATR + regime
+      DetectSwingCandidates();
+      ValidateSwings();
+      AnalyzePullbackDepth();       // NEW LAYER 2.5
+      UpdateLiquidityZones();
+      UpdateMarketState();
+      CheckTradeConditions();
+//+------------------------------------------------------------------+
+//| Update ATR Values and Volatility Regime                          |
+void UpdateATRValues()
+   double atrBuf[];
+   double atrAvgBuf[];
+   ArraySetAsSeries(atrBuf,    true);
+   ArraySetAsSeries(atrAvgBuf, true);
+   if(CopyBuffer(atrHandle,    0, 0, 1, atrBuf)    > 0) currentATR = atrBuf[0];
+   if(CopyBuffer(atrAvgHandle, 0, 0, 1, atrAvgBuf) > 0) avgATR     = atrAvgBuf[0];
+   if(avgATR == 0) return;
+   double ratio = currentATR / avgATR;
+
+   if(ratio < 0.7)
+      currentVolRegime = LOW_VOL;
+   else if(ratio < 1.2)
+      currentVolRegime = NORMAL_VOL;
+   else if(ratio < 1.8)
+      currentVolRegime = HIGH_VOL;
+   else
+      currentVolRegime = EXTREME_VOL;
+  }
+```
+This section manages the EA's lifecycle and ensures that market analysis remains synchronized with newly completed candles. In OnDeinit(), we release both ATR indicator handles to free platform resources and remove any chart objects created by the visualization system before forcing a chart refresh. Within OnTick(), we process logic only when a new bar appears, preventing unnecessary calculations on every incoming tick.
+The execution flow updates candle statistics, refreshes ATR values, determines the current volatility regime, detects and validates swings, analyzes pullback depth, updates liquidity zones, evaluates market structure, and finally checks for trading opportunities. The UpdateATRValues() function plays a key role in volatility adaptation by comparing the current ATR against a longer-term ATR average. This comparison classifies market conditions as low, normal, high, or extreme volatility, providing the context needed for dynamic pullback analysis and volatility-aware trade decisions.
+//+------------------------------------------------------------------+
+void AnalyzePullbackDepth()
+  {
+   ArrayResize(pullbacks, 0);
+      //--- ATR context at impulse
+      pb.atrAtImpulse = currentATR;
+      //--- Volatility-normalized depth: how many ATRs is the pullback?
+      double retracementDistance = MathAbs(pb.impulseEnd - pb.retracementPrice);
+      pb.normalizedDepth = (currentATR > 0) ? retracementDistance / currentATR : 0;
+
+      //--- Adaptive depth thresholds based on vol regime
+      double adaptiveMax = PullbackMaxDepth;
+      double adaptiveMin = PullbackMinDepth;
+      switch(currentVolRegime)
+        {
+         case LOW_VOL:
+      //--- Classify pullback regime
+      if(pb.retracementDepth < 0.25)
+         pb.shallowPullback = true;
+         pb.regime = PULLBACK_AGGRESSIVE;
+        }
+      else if(pb.retracementDepth < 0.50)
+         pb.healthyPullback = true;
+         pb.regime = PULLBACK_HEALTHY;
+      else if(pb.retracementDepth < 0.75)
+         pb.deepPullback = true;
+         pb.regime = PULLBACK_DEEP;
+      else if(pb.retracementDepth < 1.0)
+         pb.regime = PULLBACK_WEAK;
+      else
+         pb.invalidPullback = true;
+         pb.regime = PULLBACK_INVALID;
+
+The AnalyzePullbackDepth() function introduces the dynamic pullback framework by converting validated swings into impulse-and-retracement models. We identify bullish impulses from a swing low to a swing high, and bearish impulses from a swing high to a swing low. The following swing is then treated as the pullback extreme. Using these points, we calculate the impulse size, retracement depth, and ATR-normalized pullback distance. The function also adapts acceptable pullback thresholds to the current volatility regime, allowing deeper pullbacks during volatile conditions and tighter pullbacks during quieter markets. Finally, each pullback is classified into a regime that ranges from aggressive continuation to complete structural failure.
+The MeasurePullbackEfficiency() function evaluates the quality of the retracement rather than just its depth. We analyze the pullback candles to calculate average counter-trend candle size, candle overlap, and momentum decay. A high degree of candle overlap often suggests a weak correction, while shrinking candle sizes indicate fading counter-trend momentum. These measurements are then combined with volatility compression analysis and pullback scoring. Together, they help us determine whether a pullback represents a healthy trend continuation or a sign of structural weakness.
+//+------------------------------------------------------------------+
+//| Detect volatility compression during pullback                    |
+bool DetectVolatilityCompression(PullbackModel &pb)
+  {
+   if(avgATR == 0) return false;
+   //--- ATR has contracted below 80% of average during pullback
+   return (currentATR < avgATR * 0.8);
+  }
+   //--- ATR-normalized depth bonus
+   //--- 1-2 ATRs of pullback is ideal
+   if(pb.normalizedDepth >= 0.8 && pb.normalizedDepth <= 2.0)
+      score += 2.0;
+   //--- Penalty for structural weakness
+   if(pb.regime == PULLBACK_WEAK || pb.regime == PULLBACK_INVALID)
+      score -= 3.0;
+In this section, we evaluate and rank pullbacks so that we can focus on the highest-quality trading opportunities. DetectVolatilityCompression() checks whether the current ATR has contracted below 80% of its longer-term average, which can indicate a period of reduced volatility before a potential expansion. ScorePullback() then assigns a score between 0 and 10 by combining retracement depth, ATR-normalized distance, pullback efficiency, momentum decay, volatility compression, and structural strength.
+Pullbacks that occur within the ideal retracement zone receive the highest scores, while weak or invalid structures are penalized. Finally, GetBestPullback() searches through all analyzed pullbacks and returns the highest-scoring valid setup for the requested direction. This gives the EA a simple way to prioritize the most favorable bullish or bearish pullback available at any given time.
+      if(CheckDisplacement(swingCandidates[i], rates))     isValid = true;
+      if(CheckLiquiditySweep(swingCandidates[i], rates))   isValid = true;
+      if(CheckTimeRespect(swingCandidates[i], rates))      isValid = true;
+
+//+------------------------------------------------------------------+
+bool CheckLiquiditySweep(SwingPoint &sp, MqlRates &rates[])
+   int barIndex = FindBarIndexByTime(sp.time);
+void UpdateMarketState()
+  {
+   if(ArraySize(validSwings) < 2) return;
+   switch(marketStruct.state)
+     {
+      case ACCUMULATION:
+         if(marketStruct.bullish)  marketStruct.state = EXPANSION;
+         else if(ArraySize(validSwings) > 5) marketStruct.state = DISTRIBUTION;
+         break;
+      case EXPANSION:
+         if(!marketStruct.bullish) marketStruct.state = DISTRIBUTION;
+         else if(liquiditySweepFailed) marketStruct.state = REVERSAL;
+      case DISTRIBUTION:
+         if(marketStruct.bullish)  marketStruct.state = ACCUMULATION;
+      case REVERSAL:
+         else if(!marketStruct.bullish) marketStruct.state = ACCUMULATION;
+     }
+
+   //--- Market state filter
+   bool goodState = (marketStruct.state == EXPANSION || marketStruct.state == ACCUMULATION);
+   if(!goodState) return false;
+   //--- Layer 2.5 gate: require a high-quality bullish pullback
+   if(bestPb.invalidPullback) return false;
+   if(bestPb.pullbackScore < 4.0) return false;          // Minimum quality threshold
+   //--- Require pullback within healthy or deep zone (not way too shallow or broken)
+   double adaptiveMax = PullbackMaxDepth;
+   if(currentVolRegime == HIGH_VOL)    adaptiveMax += 0.10;
+   if(currentVolRegime == EXTREME_VOL) adaptiveMax += 0.15;
+   if(bestPb.retracementDepth > adaptiveMax) return false;
+   bool goodState = (marketStruct.state == DISTRIBUTION || marketStruct.state == REVERSAL);
+   PullbackModel bestPb;
+      string volLabel = "";
+      switch(currentVolRegime)
+        {
+         case LOW_VOL:     volLabel = "LOW";     break;
+//+------------------------------------------------------------------+
+//| NEW: ATR-Dynamic Stop Loss                                       |
+double CalculateStopLoss(ENUM_ORDER_TYPE tradeType)
+  {
+   double atr = (currentATR > 0) ? currentATR : GetCurrentATR();
+
+   if(tradeType == ORDER_TYPE_BUY)
+         //--- Swing-based SL with ATR buffer
+         double buffer = atr * ATR_SL_Multiplier * 0.3;
+         return NormalizeDouble(nearestLow - buffer, _Digits);
+        }
+         return NormalizeDouble(nearestHigh + buffer, _Digits);
+   //--- Fallback: pure ATR-based SL
+   double currentPrice = (tradeType == ORDER_TYPE_BUY) ?
+                         SymbolInfoDouble(_Symbol, SYMBOL_BID) :
+   if(atr > 0)
+      return (tradeType == ORDER_TYPE_BUY) ?
+             currentPrice - atr * ATR_SL_Multiplier :
+             currentPrice + atr * ATR_SL_Multiplier;
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+The execution is tightly linked to volatility and structure, making the system adaptive rather than static. The stop loss is calculated dynamically using both swing structure and ATR, ensuring it expands or contracts based on market conditions. A buffer is added to avoid premature stop-outs, while a fallback ATR-based method ensures reliability when structure is unclear. The take profit is derived from a fixed risk-to-reward ratio, keeping the system consistent across different volatility regimes. Every trade also logs the current volatility regime and marks used swing points to prevent reuse, which helps maintain clean and non-redundant decision-making across future cycles.
+```
+//+------------------------------------------------------------------+
+//| Manage Open Position (ATR-Dynamic Trailing)                      |
+void ManageOpenPosition()
+   int    type         = (int)PositionGetInteger(POSITION_TYPE);
+   double atr          = (currentATR > 0) ? currentATR : GetCurrentATR();
+
+   if(type == POSITION_TYPE_BUY)
+           {
+            double newSL = validSwings[i].price - atr * ATR_SL_Multiplier * 0.3;
+            if(newSL > PositionGetDouble(POSITION_SL))
+              {
+                                    PositionGetDouble(POSITION_TP));
+               Print(StringFormat("Trail SL -> %.5f (ATR buf: %.5f)", newSL, atr));
+              }
+           }
+            double newSL = validSwings[i].price + atr * ATR_SL_Multiplier * 0.3;
+            if(newSL < PositionGetDouble(POSITION_SL) || PositionGetDouble(POSITION_SL) == 0)
+//| Helper: Get Current ATR                                          |
+double GetCurrentATR()
+  {
+   double atr[];
+   ArraySetAsSeries(atr, true);
+   if(CopyBuffer(atrHandle, 0, 0, 1, atr) <= 0) return 0;
+   return atr[0];
+  }
+//+------------------------------------------------------------------+
+string PullbackRegimeToString(PullbackRegime r)
+   switch(r)
+     {
+      case PULLBACK_AGGRESSIVE: return "AGGRESSIVE";
+
+The position management layer is responsible for dynamically protecting and adjusting open trades using both market structure and volatility context. We first confirm that a position exists, then extract key trade information such as entry price, current price, and trade direction. For buy trades, we scan valid swing lows between entry and current price and trail the stop-loss just below the most recent meaningful swing, adjusted with an ATR-based buffer to avoid tight stop-outs. For sell trades, we mirror this logic using swing highs above entry. This ensures that our stop-loss moves harmonize with the market structure while still adapting to current volatility conditions through ATR scaling.
+The remaining helper functions support the system by maintaining accurate market measurements and clean data handling. We calculate position size using account risk, tick value, and stop distance so that every trade respects a fixed percentage risk model. We also compute average candle size to understand normal market movement and use it in displacement logic elsewhere in the system. Additional utilities allow us to locate candles by time, retrieve real-time ATR values, and convert pullback regimes into readable labels for debugging and visualization. Together, these components ensure the system remains adaptive, consistent, and structurally aware across all stages of execution.
+```
+//| Helper: Vol regime to string                                     |
+string VolRegimeToString(VolatilityRegime r)
+      case LOW_VOL:     return "LOW";
+   //--- HUD labels
+   string stateText = "State: ";
+   switch(marketStruct.state)
+      case ACCUMULATION: stateText += "ACCUMULATION"; break;
+   CreateLabel("State",      stateText, 10, 20, clrWhite);
+   CreateLabel("Trend",      StringFormat("Trend: %s", marketStruct.bullish ? "BULLISH" : "BEARISH"),
+               10, 40, marketStruct.bullish ? clrLime : clrRed);
+   CreateLabel("VolRegime",  StringFormat("Vol Regime: %s (ATR: %.5f | Avg: %.5f)",
+               VolRegimeToString(currentVolRegime), currentATR, avgATR),
+               10, 60, clrYellow);
+   CreateLabel("ValidSwings",StringFormat("Valid Swings: %d | Pullbacks: %d",
+### Backtest
+The backtest was conducted across roughly a two-month testing window from 01 April 2026 to 30 May 2026, with the following settings:
+![](https://c.mql5.com/2/218/Dyna_Pllb__Inp.png)
+
+### Conclusion
+Throughout this implementation, the EA was rebuilt from a binary swing validator into a multi-layer pullback intelligence system. A new Layer 2.5 pairs impulse legs, measures retracement depth as a normalized ratio, and scores each pullback from 0 to 10. A dual ATR handle setup was introduced to separate the fast regime signal from the rolling average, producing four distinct volatility states that dynamically widen or tighten acceptable depth thresholds. The broken state machine was replaced with a clean bias engine reading confirmed highs and lows directly. Stop losses were decoupled from fixed points and anchored to ATR multiples. Every gate in the execution layer now requires the pullback model to pass before a trade fires.
+A trader who works through this article leaves with something most systems never provide—a principled answer to why a pullback should be traded or skipped. The guesswork around retracement depth is replaced with a scored, regime-aware model that adapts to what the market is actually doing. Entries are no longer triggered by price returning to a zone—they require the correction to be statistically appropriate for the current volatility environment. Stop losses breathe with the market instead of fighting it. The result is a system that does not just find structure—it understands context. This shift—from pattern recognition to volatility-calibrated decisions—separates a reactive EA from one that can survive across market conditions.
+The article presents a reproducible MetaTrader 5 to Python pipeline for large-scale indicator research. An MQL5 export schema captures fixed columns, including custom lag and whipsaw counters. A baseline module performs parameter-matched comparisons across symbols and timeframes, while a walk-forward module locks the InSample optimum and evaluates it on unseen data. Readers gain unbiased robustness measurements and automation that removes manual selection bias.
+![From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5](https://c.mql5.com/2/221/22695-building-a-self-adaptive-moving-logo.png)
+Use mql5.com login on metatrader.com
+Access our new hub for expert analytics, trading insights, global financial news, and more
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/22807&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121746130026760154)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Throughout this implementation, the EA was rebuilt from a binary swing validator into a multi-layer pullback intelligence system. A new Layer 2.5 pairs impulse legs, measures retracement depth as a normalized ratio, and scores each pullback from 0 to 10. A dual ATR handle setup was introduced to separate the fast regime signal from the rolling average, producing four distinct volatility states that dynamically widen or tighten acceptable depth thresholds. The broken state machine was replaced with a clean bias engine reading confirmed highs and lows directly. Stop losses were decoupled from fixed points and anchored to ATR multiples. Every gate in the execution layer now requires the pullback model to pass before a trade fires.
+
+A trader who works through this article leaves with something most systems never provide—a principled answer to why a pullback should be traded or skipped. The guesswork around retracement depth is replaced with a scored, regime-aware model that adapts to what the market is actually doing. Entries are no longer triggered by price returning to a zone—they require the correction to be statistically appropriate for the current volatility environment. Stop losses breathe with the market instead of fighting it. The result is a system that does not just find structure—it understands context. This shift—from pattern recognition to volatility-calibrated decisions—separates a reactive EA from one that can survive across market conditions.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/22807.zip "Download all attachments in the single ZIP archive")
+
+[Dynmc\_Pllbck\_Dpth.mq5](https://www.mql5.com/en/articles/download/22807/Dynmc_Pllbck_Dpth.mq5 "Download Dynmc_Pllbck_Dpth.mq5")
+(51.79 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![CSV Data Analysis (Part 4): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation](https://c.mql5.com/2/222/22921-csv-data-analysis-part-4-building-logo.png)
+[CSV Data Analysis (Part 4): Building an Automated Python-Driven Comparative Analysis Module for MQL5 Strategy Validation](https://www.mql5.com/en/articles/22921)
+
+The article presents a reproducible MetaTrader 5 to Python pipeline for large-scale indicator research. An MQL5 export schema captures fixed columns, including custom lag and whipsaw counters. A baseline module performs parameter-matched comparisons across symbols and timeframes, while a walk-forward module locks the InSample optimum and evaluates it on unseen data. Readers gain unbiased robustness measurements and automation that removes manual selection bias.
+
+![From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5](https://c.mql5.com/2/221/22695-building-a-self-adaptive-moving-logo.png)
+[From Static MA to Adaptive Filtering (Part 1): Introducing SAMA with NLMS in MQL5](https://www.mql5.com/en/articles/22695)
+
+This article introduces the Self-Adaptive Moving Average (SAMA), an adaptive filter leveraging the Normalized Least Mean Squares (NLMS) algorithm. It explores why fixed-period averages fail, how NLMS adapts bar by bar, and the engineering protections required for production. This conceptual and mathematical foundation prepares you for the MQL5 code implementation in Part 2.
+
+![Neural Networks in Trading: Actor—Director—Critic (Final Part)](https://c.mql5.com/2/136/Neural_Networks_in_Trading__Actor3Director4Critic___LOGO__2.png)
+[Neural Networks in Trading: Actor—Director—Critic (Final Part)](https://www.mql5.com/en/articles/17819)
+
+The Actor–Director–Critic framework is an evolution of the classic agent learning architecture. The article presents practical experience of its implementation and adaptation to financial market conditions.
+
+![MQL5 Trading Tools (Part 36): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer](https://c.mql5.com/2/222/22856-mql5-trading-tools-part-36-logo.png)
+[MQL5 Trading Tools (Part 36): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer](https://www.mql5.com/en/articles/22856)
+
+We add eight shape tools and nine annotation tools to the canvas and implement a full in-place label-editing system. The article walks through geometry, AA rendering, shared word-wrap and supersampled text helpers, and the caret-driven state machine for typing, navigation, and selection. This yields a complete, consistent annotation toolkit with editable labels that plugs into the prior interaction pipeline.
+
+[![](https://www.mql5.com/ff/sh/qaakb6ygfdvpv4gyp2/0c0f53ccb325ac286ddc0cb633ec045c.png)
+
+Use mql5.com login on metatrader.com
+
+Access our new hub for expert analytics, trading insights, global financial news, and more
+
+Learn more](https://www.mql5.com/ff/go?link=https://www.metatrader.com%3Futm_source=www.mql5.com%26utm_medium=display%26utm_content=visit%26utm_campaign=visit.metatrader.com.426&a=anvvomolcquvlkemiiwazrokmauingca&s=5edb2ef4182c70fd6beca6df0a841244f4dc3eb3f7df8658c0aeadcf20882dba&uid=&ref=https://www.mql5.com/en/articles/22807&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=5121746130026760154)

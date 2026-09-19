@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_020",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 18821,
+      "title": "Analyzing the Hourly Movement of Trading Symbols and Their Spreads in MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18821.md"
+    },
+    {
+      "id": 18857,
+      "title": "Competitive Learning Algorithm (CLA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18857.md"
+    },
+    {
+      "id": 18886,
+      "title": "Community of Scientists Optimization (CoSO): Theory",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18886.md"
+    },
+    {
+      "id": 18935,
+      "title": "Community of Scientists Optimization (CoSO): Practice",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18935.md"
+    },
+    {
+      "id": 19006,
+      "title": "From Novice to Expert: Mastering Detailed Trading Reports with Reporting EA",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19006.md"
+    },
+    {
+      "id": 19093,
+      "title": "Duelist Algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19093.md"
+    },
+    {
+      "id": 19177,
+      "title": "Dream Optimization Algorithm (DOA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19177.md"
+    },
+    {
+      "id": 19444,
+      "title": "Bison Algorithm (BIA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19444.md"
+    },
+    {
+      "id": 19458,
+      "title": "Dingo Optimization Algorithm (DOA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19458.md"
+    },
+    {
+      "id": 19459,
+      "title": "Developing a Volatility Based Breakout System",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19459.md"
+    },
+    {
+      "id": 19576,
+      "title": "Mastering Quick Trades: Overcoming Execution Paralysis",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19576.md"
+    },
+    {
+      "id": 19577,
+      "title": "Multi-Threaded Trading Robot with Machine Learning: From Concept to Implementation",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19577.md"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "pack_id": "indicators_000",
+  "section": "Indicators",
+  "parent_shard": "indicators_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 802,
+      "title": "Continuous futures contracts in MetaTrader 5",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\802.md"
+    },
+    {
+      "id": 812,
+      "title": "Creating Non-Lagging Digital Filters",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\812.md"
+    },
+    {
+      "id": 975,
+      "title": "Cycle analysis using the Goertzel algorithm",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\975.md"
+    },
+    {
+      "id": 1103,
+      "title": "Third Generation Neural Networks: Deep Networks",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1103.md"
+    },
+    {
+      "id": 1979,
+      "title": "MQL5 for beginners: Anti-vandal protection of graphic objects",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1979.md"
+    },
+    {
+      "id": 2564,
+      "title": "Using text files for storing input parameters of Expert Advisors, indicators and scripts",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2564.md"
+    },
+    {
+      "id": 2837,
+      "title": "MTF indicators as the technical analysis tool",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2837.md"
+    },
+    {
+      "id": 3236,
+      "title": "Developing custom indicators using CCanvas class",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3236.md"
+    },
+    {
+      "id": 3264,
+      "title": "Naive Bayes classifier for signals of a set of indicators",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3264.md"
+    },
+    {
+      "id": 3791,
+      "title": "Comparing different types of moving averages in trading",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3791.md"
+    },
+    {
+      "id": 5204,
+      "title": "Scraping bond yield data from the web",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5204.md"
+    },
+    {
+      "id": 5751,
+      "title": "Studying candlestick analysis techniques (part III): Library for pattern operations",
+      "section": "Indicators",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5751.md"
+    }
+  ]
+}

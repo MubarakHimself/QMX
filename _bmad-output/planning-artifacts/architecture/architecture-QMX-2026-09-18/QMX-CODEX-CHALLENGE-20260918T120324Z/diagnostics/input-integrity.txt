@@ -1,0 +1,24 @@
+Observed 2026-09-18/19, read-only.
+
+Input archive:
+C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-INPUTS.zip
+
+Expected SHA-256:
+4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87
+
+Observed SHA-256:
+4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87
+
+Candidate ID:
+qmx-workflows-arch-2026-09-18-a
+
+ARCHITECTURE-CANDIDATE-MANIFEST.json:
+21 entries checked; 0 missing, hash mismatches, or byte-count mismatches.
+
+Requested revisions:
+docs=b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3
+implementation=270e992995c2378ca63cf6343254ef8140a8c97e
+stale absence baseline not used=8510c032496bb870824ecc5c4f807e8a4e4f167e
+
+Frozen Pass-I baseline SHA-256:
+1c2c865d1cef50076682a737472174fa307cf1fc8eb3663b122ed04ab6f39fd8

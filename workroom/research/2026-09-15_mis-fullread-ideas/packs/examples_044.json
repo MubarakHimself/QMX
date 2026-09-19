@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_044",
+  "section": "Examples",
+  "parent_shard": "examples_044",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15442,
+      "title": "From Basic to Intermediate: Arrays and Strings (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15442.md"
+    },
+    {
+      "id": 15461,
+      "title": "From Basic to Intermediate: Arrays and Strings (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15461.md"
+    },
+    {
+      "id": 15462,
+      "title": "From Basic to Intermediate: Array (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15462.md"
+    },
+    {
+      "id": 15472,
+      "title": "From Basic to Intermediate: Array (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15472.md"
+    },
+    {
+      "id": 15473,
+      "title": "From Basic to Intermediate: Array (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15473.md"
+    },
+    {
+      "id": 15476,
+      "title": "Example of Auto Optimized Take Profits and Indicator Parameters with SMA and EMA",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15476.md"
+    },
+    {
+      "id": 15479,
+      "title": "Deconstructing examples of trading strategies in the client terminal",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15479.md"
+    },
+    {
+      "id": 15499,
+      "title": "Master MQL5 from beginner to pro (Part V): Fundamental control flow operators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15499.md"
+    },
+    {
+      "id": 15501,
+      "title": "From Basic to Intermediate: Array (IV)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15501.md"
+    },
+    {
+      "id": 15502,
+      "title": "From Basic to Intermediate: Union (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15502.md"
+    },
+    {
+      "id": 15503,
+      "title": "From Basic to Intermediate: Union (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15503.md"
+    },
+    {
+      "id": 15504,
+      "title": "From Basic to Intermediate: Recursion",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15504.md"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_025",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 4715,
+      "title": "Expert Advisor featuring GUI: Creating the panel (part I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4715.md"
+    },
+    {
+      "id": 4727,
+      "title": "Expert Advisor featuring GUI: Adding functionality (part II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4727.md"
+    },
+    {
+      "id": 4751,
+      "title": "How to analyze the trades of the Signal selected in the chart",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4751.md"
+    },
+    {
+      "id": 4803,
+      "title": "Custom presentation of trading history and creation of report diagrams",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4803.md"
+    },
+    {
+      "id": 4820,
+      "title": "PairPlot graph based on CGraphic for analyzing correlations between data arrays (time series)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4820.md"
+    },
+    {
+      "id": 4828,
+      "title": "Universal RSI indicator for working in two directions simultaneously",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4828.md"
+    },
+    {
+      "id": 4830,
+      "title": "MQL5 Cookbook: Getting properties of an open hedge position",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4830.md"
+    },
+    {
+      "id": 4907,
+      "title": "Horizontal diagrams on M\u0435taTrader 5 charts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4907.md"
+    },
+    {
+      "id": 5014,
+      "title": "Elder-Ray (Bulls Power and Bears Power)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5014.md"
+    },
+    {
+      "id": 5166,
+      "title": "EA remote control methods",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5166.md"
+    },
+    {
+      "id": 5206,
+      "title": "Using limit orders instead of Take Profit without changing the EA's original code",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5206.md"
+    },
+    {
+      "id": 5319,
+      "title": "Reversal patterns: Testing the Double top/bottom pattern",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\5319.md"
+    }
+  ]
+}

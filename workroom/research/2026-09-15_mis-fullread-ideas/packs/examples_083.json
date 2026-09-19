@@ -1,0 +1,108 @@
+{
+  "pack_id": "examples_083",
+  "section": "Examples",
+  "parent_shard": "examples_083",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "measuring what matters",
+    "meta-labeling the classics",
+    "metatrader 5 machine learning blueprint",
+    "modular indicator architecture in mql5",
+    "moving to mql5 algo forge",
+    "multiple symbol analysis with python and mql5"
+  ],
+  "n": 10,
+  "articles": [
+    {
+      "id": 23096,
+      "title": "Measuring What Matters (Part 1) : Portfolio Risk Decomposition in MQL5",
+      "section": "Examples",
+      "series_title": "Measuring What Matters () : Portfolio Risk Decomposition in MQL5",
+      "series_key": "measuring what matters",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23096.md"
+    },
+    {
+      "id": 23314,
+      "title": "Measuring What Matters (Part 2): Building the Covariance Matrix: Eigenvalue Decomposition and Risk Factor Analysis in MQL5",
+      "section": "Examples",
+      "series_title": "Measuring What Matters (): Building the Covariance Matrix: Eigenvalue Decomposition and Risk Factor Analysis in MQL5",
+      "series_key": "measuring what matters",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23314.md"
+    },
+    {
+      "id": 23440,
+      "title": "Measuring What Matters (Part 3): The Reconstruction Engine \u2014 Validating Risk Footprints with Matrix Algebra",
+      "section": "Examples",
+      "series_title": "Measuring What Matters (): The Reconstruction Engine \u2014 Validating Risk Footprints with Matrix Algebra",
+      "series_key": "measuring what matters",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23440.md"
+    },
+    {
+      "id": 22274,
+      "title": "Meta-Labeling the Classics (Part 1): Filtering and Sizing RSI Trades",
+      "section": "Examples",
+      "series_title": "Meta-Labeling the Classics (): Filtering and Sizing RSI Trades",
+      "series_key": "meta-labeling the classics",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22274.md"
+    },
+    {
+      "id": 20451,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 7): From Scattered Experiments to Reproducible Results",
+      "section": "Examples",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): From Scattered Experiments to Reproducible Results",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20451.md"
+    },
+    {
+      "id": 17566,
+      "title": "Modular Indicator Architecture in MQL5 (Part 1): Stop Copy-Pasting and Start Writing Scalable, Reusable Code",
+      "section": "Examples",
+      "series_title": "Modular Indicator Architecture in MQL5 (): Stop Copy-Pasting and Start Writing Scalable, Reusable Code",
+      "series_key": "modular indicator architecture in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17566.md"
+    },
+    {
+      "id": 17646,
+      "title": "Moving to MQL5 Algo Forge (Part 1): Creating the Main Repository",
+      "section": "Examples",
+      "series_title": "Moving to MQL5 Algo Forge (): Creating the Main Repository",
+      "series_key": "moving to mql5 algo forge",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17646.md"
+    },
+    {
+      "id": 19436,
+      "title": "Moving to MQL5 Algo Forge (Part 3): Using External Repositories in Your Own Projects",
+      "section": "Examples",
+      "series_title": "Moving to MQL5 Algo Forge (): Using External Repositories in Your Own Projects",
+      "series_key": "moving to mql5 algo forge",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19436.md"
+    },
+    {
+      "id": 19623,
+      "title": "Moving to MQL5 Algo Forge (Part 4): Working with Versions and Releases",
+      "section": "Examples",
+      "series_title": "Moving to MQL5 Algo Forge (): Working with Versions and Releases",
+      "series_key": "moving to mql5 algo forge",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19623.md"
+    },
+    {
+      "id": 17258,
+      "title": "Multiple Symbol Analysis With Python And MQL5 (Part 3): Triangular Exchange Rates",
+      "section": "Examples",
+      "series_title": "Multiple Symbol Analysis With Python And MQL5 (): Triangular Exchange Rates",
+      "series_key": "multiple symbol analysis with python and mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17258.md"
+    }
+  ]
+}

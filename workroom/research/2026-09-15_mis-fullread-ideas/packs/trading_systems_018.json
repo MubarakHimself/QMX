@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_systems_018",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_018",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 18035,
+      "title": "Quantitative Analysis of Trends: Collecting Statistics in Python",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18035.md"
+    },
+    {
+      "id": 18041,
+      "title": "Neural Networks in Trading: Time Series Forecasting Using Adaptive Modal Decomposition (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18041.md"
+    },
+    {
+      "id": 18086,
+      "title": "Price Movement: Mathematical Models and Technical Analysis",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18086.md"
+    },
+    {
+      "id": 18097,
+      "title": "Markov Chain-Based Matrix Forecasting Model",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18097.md"
+    },
+    {
+      "id": 18116,
+      "title": "Neural Networks in Trading: Generalizing Time Series Without Data-Specific Dependence (Mamba4Cast)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18116.md"
+    },
+    {
+      "id": 18138,
+      "title": "Neural Networks in Trading: Generalizing Time Series Without Data-Specific Dependence (Core Model Modules)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18138.md"
+    },
+    {
+      "id": 18192,
+      "title": "Self-Learning Expert Advisor with a Neural Network Based on a Markov State-Transition Matrix",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18192.md"
+    },
+    {
+      "id": 18208,
+      "title": "Building MQL5-Like Trade Classes in Python for MetaTrader 5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18208.md"
+    },
+    {
+      "id": 18246,
+      "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Mantis)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18246.md"
+    },
+    {
+      "id": 18307,
+      "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Building Objects)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18307.md"
+    },
+    {
+      "id": 18324,
+      "title": "Exploring Conformal Forecasting of Financial Time Series",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18324.md"
+    },
+    {
+      "id": 18329,
+      "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Final Part)",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18329.md"
+    }
+  ]
+}

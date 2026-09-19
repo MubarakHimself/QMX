@@ -1,0 +1,22 @@
+{
+  "pack_id": "examples_094_p01",
+  "section": "Examples",
+  "parent_shard": "examples_094",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "the mql5 standard library explorer"
+  ],
+  "n": 1,
+  "articles": [
+    {
+      "id": 23192,
+      "title": "The MQL5 Standard Library Explorer (Part 14): Building a Dynamic Hedge EA with the ALGLIB Port (ap.mqh)",
+      "section": "Examples",
+      "series_title": "The MQL5 Standard Library Explorer (): Building a Dynamic Hedge EA with the ALGLIB Port (ap.mqh)",
+      "series_key": "the mql5 standard library explorer",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23192.md"
+    }
+  ]
+}

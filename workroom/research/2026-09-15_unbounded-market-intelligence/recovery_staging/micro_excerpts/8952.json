@@ -1,0 +1,51 @@
+{
+  "id": 8952,
+  "title": "Prices in DoEasy library (part 61): Collection of symbol tick series",
+  "author_guess": "Artyom Trishkin",
+  "chars": 57073,
+  "n_paras": 122,
+  "headings": [
+    "# Prices in DoEasy library (part 61): Collection of symbol tick series",
+    "### Contents",
+    "### Concept",
+    "### Class collection of tick data",
+    "### Test",
+    "### What's next?"
+  ],
+  "intro": [
+    "# Prices in DoEasy library (part 61): Collection of symbol tick series",
+    "[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n—\n[Examples](https://www.mql5.com/en/articles/mt5/examples)\n| 22 March 2021 at 04:28",
+    "7 064\n[\n2](https://www.mql5.com/en/forum/365416 \"Comments\")",
+    "[Artyom Trishkin](https://www.mql5.com/en/users/artmedia70)",
+    "- [Concept](https://www.mql5.com/en/articles/8952#concept)\n- [Class collection of tick data](https://www.mql5.com/en/articles/8952#class_collection_of_tick_data)\n- [Test](https://www.mql5.com/en/articles/8952#test)\n- [What's next?](https://www.mql5.com/en/articles/8952#what_s_next)",
+    "[In the previous article,](https://www.mql5.com/en/articles/8912) I created the tick data list object class to collect and store symbol ticks for a specified number of days. Since a program may use different symbols in its work, a separate list should be created for each of them. In this article, I will combine such lists into a tick data collection. This will be a regular list based on the class of dynamic array of pointers to instances of the [CObject class](https://www.mql5.com/en/docs/standardlibrary/datastructures/carrayobj) and its descendants of the Standard library. The list is to store the pointers to created tick data lists for each symbol whose object class I prepared in the previous article.",
+    "The concept is identical to the one of constructing previous collection classes in the library. It will allow us to save, store, update, receive and use tick data of any symbols present in the library database in statistical analysis.",
+    "In \\MQL5\\Include\\DoEasy\\**Collections\\**, create a new tick data collection class file named **TickSeriesCollection.mqh**."
+  ],
+  "keyword_hits": [
+    "If the number of tick data days is not set for at least one of the objects in the list, **res** stores false upon the loop completion. Thus, the method allows setting the number of days for all tick series in the collection and returns successful execution only if the number of days is set for each tick data object stored in the list.",
+    "If a tick series is not created for at least one of the objects in the list, **res** stores false upon the loop completion. Thus, the method allows creating tick series collections for all symbols and returns successful execution only if tick series are created for each tick data object stored in the list.",
+    "============= Beginning of parameter list (Tick \"AUDUSD\" 2021.01.19 10:06:53.387) =============\nLast price update time in milliseconds: 2021.01.19 10:06:53.387\nLast price update time: 2021.01.19 10:06:53\nVolume for the current Last price: 0\nFlags: 6\nChanged data on the tick:\n - Ask price change\n - Bid price change\n------\nBid price: 0.77252\nAsk price: 0.77256\nLast price: 0.00000\nVolume for the current Last price with greater accuracy: 0.00\nSpread: 0.00004\n------\nSymbol: \"AUDUSD\"\n============= End of parameter list (Tick \"AUDUSD\" 2021.01.19 10:06:53.387) =============",
+    "============= Beginning of parameter list (Tick \"AUDUSD\" 2021.01.18 11:51:48.662) =============\nLast price update time in milliseconds: 2021.01.18 11:51:48.662\nLast price update time: 2021.01.18 11:51:48\nVolume for the current Last price: 0\nFlags: 130\nChanged data on the tick:\n - Bid price change\n------\nBid price: 0.76589\nAsk price: 0.76593\nLast price: 0.00000\nVolume for the current Last price with greater accuracy: 0.00\nSpread: 0.00004\n------\nSymbol: \"AUDUSD\"\n============= End of parameter list (Tick \"AUDUSD\" 2021.01.18 11:51:48.662) =============",
+    "============= Beginning of parameter list (Tick \"EURUSD\" 2021.01.19 10:05:07.246) =============\nLast price update time in milliseconds: 2021.01.19 10:05:07.246\nLast price update time: 2021.01.19 10:05:07\nVolume for the current Last price: 0\nFlags: 6\nChanged data on the tick:\n - Ask price change\n - Bid price change\n------\nBid price: 1.21189\nAsk price: 1.21189\nLast price: 0.00000\nVolume for the current Last price with greater accuracy: 0.00\nSpread: 0.00000\n------\nSymbol: \"EURUSD\"\n============= End of parameter list (Tick \"EURUSD\" 2021.01.19 10:05:07.246) =============",
+    "============= Beginning of parameter list (Tick \"EURUSD\" 2021.01.18 14:57:53.847) =============\nLast price update time in milliseconds: 2021.01.18 14:57:53.847\nLast price update time: 2021.01.18 14:57:53\nVolume for the current Last price: 0\nFlags: 134\nChanged data on the tick:\n - Ask price change\n - Bid price change\n------\nBid price: 1.20536\nAsk price: 1.20536\nLast price: 0.00000\nVolume for the current Last price with greater accuracy: 0.00\nSpread: 0.00000\n------\nSymbol: \"EURUSD\"\n============= End of parameter list (Tick \"EURUSD\" 2021.01.18 14:57:53.847) =============\n```",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[Prices in DoEasy library (part 62): Updating tick series in real time, preparation for working with Depth of Market](https://www.mql5.com/en/articles/8988)",
+    "In this article, I will implement updating tick data in real time and prepare the symbol object class for working with Depth of Market (DOM itself is to be implemented in the next article).",
+    "[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=adxwwdterodjejvqfxvdoxcpyzdwujoe&ssn=1788801914349032706&ssn_dr=0&ssn_sr=0&fv_date=1788801914&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F8952&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Prices%20in%20DoEasy%20library%20(part%2061)%3A%20Collection%20of%20symbol%20tick%20series%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880191440052172&fz_uniq=6349720916820911482&sv=2552)"
+  ],
+  "tail": [
+    "[MQL5.zip](https://www.mql5.com/en/articles/download/8952/mql5.zip \"Download MQL5.zip\")\n(3880.08 KB)",
+    "**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[Prices in DoEasy library (part 62): Updating tick series in real time, preparation for working with Depth of Market](https://www.mql5.com/en/articles/8988)",
+    "In this article, I will implement updating tick data in real time and prepare the symbol object class for working with Depth of Market (DOM itself is to be implemented in the next article).",
+    "[Prices in DoEasy library (part 60): Series list of symbol tick data](https://www.mql5.com/en/articles/8912)",
+    "In this article, I will create the list for storing tick data of a single symbol and check its creation and retrieval of required data in an EA. Tick data lists that are individual for each used symbol will further constitute a collection of tick data.",
+    "[Neural networks made easy (Part 11): A take on GPT](https://www.mql5.com/en/articles/9025)",
+    "Perhaps one of the most advanced models among currently existing language neural networks is GPT-3, the maximal variant of which contains 175 billion parameters. Of course, we are not going to create such a monster on our home PCs. However, we can view which architectural solutions can be used in our work and how we can benefit from them.",
+    "[Multilayer perceptron and backpropagation algorithm](https://www.mql5.com/en/articles/8908)",
+    "The popularity of these two methods grows, so a lot of libraries have been developed in Matlab, R, Python, C++ and others, which receive a training set as input and automatically create an appropriate network for the problem. Let us try to understand how the basic neural network type works (including single-neuron perceptron and multilayer perceptron). We will consider an exciting algorithm which is responsible for network training - gradient descent and backpropagation. Existing complex models are often based on such simple network models.",
+    "[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=nwegcasiojnqcoyrdlgofmjtfardztwf&s=d64d6f3c87f2458cba81f6d7b6694dd9e89dd354d4abc1d0584e405285806c9f&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=adxwwdterodjejvqfxvdoxcpyzdwujoe&ssn=1788801914349032706&ssn_dr=0&ssn_sr=0&fv_date=1788801914&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F8952&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Prices%20in%20DoEasy%20library%20(part%2061)%3A%20Collection%20of%20symbol%20tick%20series%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178880191440052172&fz_uniq=6349720916820911482&sv=2552)"
+  ]
+}

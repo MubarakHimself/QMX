@@ -1,0 +1,51 @@
+{
+  "id": 22460,
+  "title": "Creating a Custom Tick Chart in MQL5",
+  "author_guess": "Israel Pelumi Abioye",
+  "chars": 38835,
+  "n_paras": 105,
+  "headings": [
+    "# Creating a Custom Tick Chart in MQL5",
+    "### Table of Contents",
+    "### **Introduction**",
+    "### **Project Overview and Implementation Plan**",
+    "### **Creating a Custom Tick Chart in MQL5**",
+    "### **Conclusion**"
+  ],
+  "intro": [
+    "[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n—\n[Indicators](https://www.mql5.com/en/articles/mt5/examples_indicators)\n| 11 May 2026 at 11:34",
+    "3 145\n[\n0](https://www.mql5.com/en/forum/509631 \"Comments\")",
+    "[Israel Pelumi Abioye](https://www.mql5.com/en/users/13467913)",
+    "- [Introduction](https://www.mql5.com/en/articles/22460#introduction)\n- [Project Overview and Implementation Plan](https://www.mql5.com/en/articles/22460#project_overview_and_implementation_plan)",
+    "- [What We Are Building](https://www.mql5.com/en/articles/22460#tag2a)\n- [Implementation Plan](https://www.mql5.com/en/articles/22460#tag2b)",
+    "- [Creating a Custom Tick Chart in MQL5](https://www.mql5.com/en/articles/22460#creating_a_custom_tick_chart_in_mql5)",
+    "- [Creating the Custom Symbol](https://www.mql5.com/en/articles/22460#tag3a)\n- [Opening the Custom Symbol Chart](https://www.mql5.com/en/articles/22460#tag3b)\n- [Creating Tick-Based Bars](https://www.mql5.com/en/articles/22460#tag3c)\n- [Updating the Live Tick Bar](https://www.mql5.com/en/articles/22460#tag3d)",
+    "- [Conclusion](https://www.mql5.com/en/articles/22460#conclusion)"
+  ],
+  "keyword_hits": [
+    "- [Conclusion](https://www.mql5.com/en/articles/22460#conclusion)",
+    "MetaTrader 5 organizes price data using fixed time intervals, which often hides the true intensity of market activity. A one-minute candle formed from hundreds of ticks can appear identical to one created from only a few trades. For scalpers and tick-driven systems, this becomes a major limitation because MetaTrader 5 does not provide a native tick-bar chart.",
+    "This article shows how to produce activity‑driven candles that close after N ticks instead of after a clock interval. You will get a clear, executable goal: an EA that creates and configures a separate custom symbol, aggregates incoming ticks into OHLC bars of a user‑defined size (ticks‑per‑bar), assigns monotonic bar timestamps, and updates the forming candle in real time using CustomRatesUpdate. Inputs include the custom symbol name, ticks‑per‑bar, and an option to auto‑open the chart. The result is a live tick chart in MetaTrader 5 where each candle reflects market activity density rather than elapsed time.",
+    "//--- Final OHLC values for completed bar\n   rates[0].time        = bar_time;\n   rates[0].open        = open_price;\n   rates[0].high        = high_price;\n   rates[0].low         = low_price;\n   rates[0].close       = close_price;\n   rates[0].tick_volume = InpTicksPerBar;  // fixed tick count\n   rates[0].spread      = 0;\n   rates[0].real_volume = 0;",
+    "To ensure uniformity across all bars, the tick volume is subsequently allocated depending on the predetermined number of ticks per candle. Since spread and real volume are not necessary in this unique tick-based structure, they are set to zero. Using CustomRatesUpdate, the finished candle is transmitted to the custom symbol. This crucial stage enables the candle to appear on the chart by pushing the completed OHLC data into TICK\\_101. An error notice is given so that the problem can be found if this update fails for any reason.",
+    "//--- Populate current candle structure\n   rates[0].time        = bar_time;\n   rates[0].open        = open_price;\n   rates[0].high        = high_price;\n   rates[0].low         = low_price;\n   rates[0].close       = close_price;\n   rates[0].tick_volume = (long)tick_count;  // number of ticks so far\n   rates[0].spread      = 0;\n   rates[0].real_volume = 0;",
+    "Acceptance criteria you can check in the terminal: the custom symbol appears in Market Watch, its chart displays a continually updating live candle, and each candle closed contains exactly the configured number of ticks and an increasing timestamp. This architecture gives you an activity‑driven view of price action, improving visibility of momentum and micro‑structure. From here you can extend the EA with volume handling, persistent storage, different aggregation rules (eg, tick‑volume weighted), or hooks for strategy testing that require tick‑accurate bar boundaries.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "Implement the Malaysian Engulfing concept in MQL5 with two coordinated indicators. One applies strict, body‑based engulfing rules for precise pattern detection; the other uses a state-driven model to monitor what follows—pullbacks and timed retests—directly on the chart. The result is a repeatable, rule-based workflow that replaces visual guesswork with programmable logic.",
+    "This article applies the Optimal Trading Rule from AFML Chapter 13 to set profit targets and stop-losses without in-sample calibration. We model post-entry P&L with a discrete Ornstein–Uhlenbeck process, run a 100,000-path search, and implement Python, multiprocessing, and a Numba @njit parallel kernel (242× faster). The result is an optimal (PT, SL) under three forecast specifications, constrained by the prop-firm daily loss limit."
+  ],
+  "tail": [
+    "[MT5\\_TICK\\_CHART.mq5](https://www.mql5.com/en/articles/download/22460/MT5_TICK_CHART.mq5 \"Download MT5_TICK_CHART.mq5\")\n(7.84 KB)",
+    "**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[Adaptive Malaysian Engulfing Indicator (Part 1): Pattern Detection and Retest Validation](https://www.mql5.com/en/articles/22419)",
+    "Implement the Malaysian Engulfing concept in MQL5 with two coordinated indicators. One applies strict, body‑based engulfing rules for precise pattern detection; the other uses a state-driven model to monitor what follows—pullbacks and timed retests—directly on the chart. The result is a repeatable, rule-based workflow that replaces visual guesswork with programmable logic.",
+    "[The MQL5 Standard Library Explorer (Part 11): How to Build a Matrix-Based Market Structure Indicator in MQL5](https://www.mql5.com/en/articles/21837)",
+    "Learn to engineer an MQL5 indicator that converts trend, momentum, and volatility into a single raw score using a matrix.mqh (ALGLIB). The article covers a separate‑window oscillator to validate the core mathematics, then a main‑chart indicator that plots non‑repainting buy/sell arrows when the score crosses user‑defined thresholds. An optional long‑term EMA filter, a minimum‑bar cooldown, and built‑in alerts make the tool practical for live trading.",
+    "[Exploring Conformal Forecasting of Financial Time Series](https://www.mql5.com/en/articles/18324)",
+    "In this article, we will consider conformal predictions and the MAPIE library that implements them. This approach is one of the most modern ones in machine learning and allows us to focus on risk management for existing diverse machine learning models. Conformal predictions, by themselves, are not a way to find patterns in data. They only determine the degree of confidence of existing models in predicting specific examples and allow filtering for reliable predictions.",
+    "[MetaTrader 5 Machine Learning Blueprint (Part 15): How to Calibrate Profit-Taking and Stop-Loss Targets from Synthetic Data](https://www.mql5.com/en/articles/22275)",
+    "This article applies the Optimal Trading Rule from AFML Chapter 13 to set profit targets and stop-losses without in-sample calibration. We model post-entry P&L with a discrete Ornstein–Uhlenbeck process, run a 100,000-path search, and implement Python, multiprocessing, and a Numba @njit parallel kernel (242× faster). The result is an optimal (PT, SL) under three forecast specifications, constrained by the prop-firm daily loss limit.",
+    "[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fsignals%2Fmt5%2Fpage1%3Fpreset%3D2%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dmax.profit.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&a=hgyovyikvykcdukcncnktswvlctghemf&s=545653d14172edfb3c9c02ca8e948778c29f9c1b70be9a587e8d4b040fb23539&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=ujayiemwvtrmtatbigdetykgqdolanzw&ssn=1788778439619614097&ssn_dr=0&ssn_sr=0&fv_date=1788778439&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22460&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Creating%20a%20Custom%20Tick%20Chart%20in%20MQL5%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178877843937388797&fz_uniq=6418066662682659271&sv=2552)"
+  ]
+}

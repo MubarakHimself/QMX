@@ -1,0 +1,31 @@
+{
+  "pack_id": "trading_037_p01",
+  "section": "Trading",
+  "parent_shard": "trading_037",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "introduction to mql5"
+  ],
+  "n": 2,
+  "articles": [
+    {
+      "id": 20021,
+      "title": "Introduction to MQL5 (Part 26): Building an EA Using Support and Resistance Zones",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Building an EA Using Support and Resistance Zones",
+      "series_key": "introduction to mql5",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20021.md"
+    },
+    {
+      "id": 17774,
+      "title": "Introduction to MQL5 (Part 27): Mastering API and WebRequest Function in MQL5",
+      "section": "Trading",
+      "series_title": "Introduction to MQL5 (): Mastering API and WebRequest Function in MQL5",
+      "series_key": "introduction to mql5",
+      "series_part": 27,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17774.md"
+    }
+  ]
+}

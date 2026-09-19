@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_034",
+  "section": "Examples",
+  "parent_shard": "examples_034",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 12187,
+      "title": "Backpropagation Neural Networks using MQL5 Matrices",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12187.md"
+    },
+    {
+      "id": 12252,
+      "title": "Population optimization algorithms: Spiral Dynamics Optimization (SDO) algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12252.md"
+    },
+    {
+      "id": 12268,
+      "title": "Population optimization algorithms: Saplings Sowing and Growing up (SSG)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12268.md"
+    },
+    {
+      "id": 12328,
+      "title": "Implementing the Janus factor in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12328.md"
+    },
+    {
+      "id": 12352,
+      "title": "Population optimization algorithms: ElectroMagnetism-like algorithm (\u0415\u041c)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12352.md"
+    },
+    {
+      "id": 12357,
+      "title": "Canvas based indicators: Filling channels with transparency",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12357.md"
+    },
+    {
+      "id": 12434,
+      "title": "Multibot in MetaTrader: Launching multiple robots from a single chart",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12434.md"
+    },
+    {
+      "id": 12471,
+      "title": "Integrating ML models with the Strategy Tester (Conclusion): Implementing a regression model for price prediction",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12471.md"
+    },
+    {
+      "id": 12484,
+      "title": "Wrapping ONNX models in classes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12484.md"
+    },
+    {
+      "id": 12516,
+      "title": "GIT: What is it?",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12516.md"
+    },
+    {
+      "id": 12576,
+      "title": "Custom Indicator: Plotting Partial Entry, Exit and Reversal Deals for Netting Accounts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12576.md"
+    },
+    {
+      "id": 12583,
+      "title": "Implementing an ARIMA training algorithm in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12583.md"
+    }
+  ]
+}

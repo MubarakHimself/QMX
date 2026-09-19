@@ -1,0 +1,98 @@
+{
+  "pack_id": "machine_learning_001",
+  "section": "Machine learning",
+  "parent_shard": "machine_learning_001",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "generative adversarial networks (gans) for synthetic data in financial modeling",
+    "integrating ml models with the strategy tester",
+    "metatrader 5 machine learning blueprint",
+    "online machine learning for trade signal filtering in mql5",
+    "quantization in machine learning"
+  ],
+  "n": 9,
+  "articles": [
+    {
+      "id": 23676,
+      "title": "Beyond the Mean and Standard Deviation: A Robust Statistics Library for MQL5 Indicators",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23676.md"
+    },
+    {
+      "id": 23719,
+      "title": "Distribution-Free Price Channels in MQL5: Quantile Regression by Iteratively Reweighted Least Squares",
+      "section": "Machine learning",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23719.md"
+    },
+    {
+      "id": 16214,
+      "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 1): Introduction to GANs and Synthetic Data in Financial Modeling",
+      "section": "Machine learning",
+      "series_title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (): Introduction to GANs and Synthetic Data in Financial Modeling",
+      "series_key": "generative adversarial networks (gans) for synthetic data in financial modeling",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16214.md"
+    },
+    {
+      "id": 16428,
+      "title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (Part 2): Creating Synthetic Symbol for Testing",
+      "section": "Machine learning",
+      "series_title": "Generative Adversarial Networks (GANs) for Synthetic Data in Financial Modeling (): Creating Synthetic Symbol for Testing",
+      "series_key": "generative adversarial networks (gans) for synthetic data in financial modeling",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16428.md"
+    },
+    {
+      "id": 12069,
+      "title": "Integrating ML models with the Strategy Tester (Part 3): Managing CSV files (II)",
+      "section": "Machine learning",
+      "series_title": "Integrating ML models with the Strategy Tester (): Managing CSV files (II)",
+      "series_key": "integrating ml models with the strategy tester",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12069.md"
+    },
+    {
+      "id": 24057,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+      "section": "Machine learning",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint (): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\24057.md"
+    },
+    {
+      "id": 23700,
+      "title": "Online Machine Learning for Trade Signal Filtering in MQL5 (Part 1)",
+      "section": "Machine learning",
+      "series_title": "Online Machine Learning for Trade Signal Filtering in MQL5 ()",
+      "series_key": "online machine learning for trade signal filtering in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23700.md"
+    },
+    {
+      "id": 13219,
+      "title": "Quantization in machine learning (Part 1): Theory, sample code, analysis of implementation in CatBoost",
+      "section": "Machine learning",
+      "series_title": "Quantization in machine learning (): Theory, sample code, analysis of implementation in CatBoost",
+      "series_key": "quantization in machine learning",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13219.md"
+    },
+    {
+      "id": 13648,
+      "title": "Quantization in machine learning (Part 2): Data preprocessing, table selection, training CatBoost models",
+      "section": "Machine learning",
+      "series_title": "Quantization in machine learning (): Data preprocessing, table selection, training CatBoost models",
+      "series_key": "quantization in machine learning",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13648.md"
+    }
+  ]
+}

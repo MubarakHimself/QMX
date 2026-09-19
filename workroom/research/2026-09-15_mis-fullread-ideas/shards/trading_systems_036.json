@@ -1,0 +1,93 @@
+{
+  "shard_id": "trading_systems_036",
+  "section": "Trading systems",
+  "n": 9,
+  "series_in_shard": [
+    "developing a trading expert advisor from scratch",
+    "developing a trading robot in python",
+    "encoding candlestick patterns"
+  ],
+  "articles": [
+    {
+      "id": 10329,
+      "title": "Developing a trading Expert Advisor from scratch (Part 10): Accessing custom indicators",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Accessing custom indicators",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10329.md"
+    },
+    {
+      "id": 10410,
+      "title": "Developing a trading Expert Advisor from scratch (Part 12): Times and Trade (I)",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Times and Trade (I)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10410.md"
+    },
+    {
+      "id": 10412,
+      "title": "Developing a trading Expert Advisor from scratch (Part 13): Time and Trade (II)",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Time and Trade (II)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10412.md"
+    },
+    {
+      "id": 10419,
+      "title": "Developing a trading Expert Advisor from scratch (Part 14): Adding Volume At Price (II)",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): Adding Volume At Price (II)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10419.md"
+    },
+    {
+      "id": 10497,
+      "title": "Developing a trading Expert Advisor from scratch (Part 20): New order system (III)",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (III)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10497.md"
+    },
+    {
+      "id": 10499,
+      "title": "Developing a trading Expert Advisor from scratch (Part 21): New order system (IV)",
+      "section": "Trading systems",
+      "series_title": "Developing a trading Expert Advisor from scratch (): New order system (IV)",
+      "series_key": "developing a trading expert advisor from scratch",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10499.md"
+    },
+    {
+      "id": 15127,
+      "title": "Developing a trading robot in Python (Part 3): Implementing a model-based trading algorithm",
+      "section": "Trading systems",
+      "series_title": "Developing a trading robot in Python (): Implementing a model-based trading algorithm",
+      "series_key": "developing a trading robot in python",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15127.md"
+    },
+    {
+      "id": 23009,
+      "title": "Encoding Candlestick Patterns (Part 3): Frequency Analysis for Single Candlestick Type Structure",
+      "section": "Trading systems",
+      "series_title": "Encoding Candlestick Patterns (): Frequency Analysis for Single Candlestick Type Structure",
+      "series_key": "encoding candlestick patterns",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23009.md"
+    },
+    {
+      "id": 23263,
+      "title": "Encoding Candlestick Patterns (Part 4): Frequency Analysis for Double-Candlestick Structures",
+      "section": "Trading systems",
+      "series_title": "Encoding Candlestick Patterns (): Frequency Analysis for Double-Candlestick Structures",
+      "series_key": "encoding candlestick patterns",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23263.md"
+    }
+  ]
+}

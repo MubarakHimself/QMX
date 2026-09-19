@@ -1,0 +1,672 @@
+{
+  "summary": {
+    "criticality": 23,
+    "information_flow": 56,
+    "mutual_information": 29,
+    "transfer_entropy": 5,
+    "lyapunov": 12,
+    "econophysics": 3,
+    "random_matrix": 1
+  },
+  "hits": {
+    "criticality": [
+      {
+        "article_id": 18755,
+        "count": 4,
+        "context": "and Allon Percus in 1999 as a method inspired by the concept of self-organized criticality, according to which complex systems naturally evolve toward a critical state where avalanche-like changes of different"
+      },
+      {
+        "article_id": 2041,
+        "count": 3,
+        "context": "**Levels of logging** Messages received in the log files often carry different criticality and require different levels of attention. Logging levels are applied to separate messages with various criticality fro"
+      },
+      {
+        "article_id": 12309,
+        "count": 2,
+        "context": "h time is left until that bar closes. So, pay attention to this detail. Another critical point: **DO NOT include any value in seconds**. The value must be defined in minutes, never in seconds. The next step is to c"
+      },
+      {
+        "article_id": 15302,
+        "count": 2,
+        "context": "se. Try to understand what is happening with the variables, as this will be the critical point to grasp here. ``` 01. //+------------------------------------------------------------------+ 02. #property copyright"
+      },
+      {
+        "article_id": 20071,
+        "count": 2,
+        "context": "ocated to him, trusting the trading intuition of more successful colleagues. A critical point is the accelerated learning mechanism for the best agents: ``` // Additional policy updates for leaders if(g_performan"
+      },
+      {
+        "article_id": 10664,
+        "count": 1,
+        "context": "ould be ignored until the EA can respond appropriately to the events. The most critical point can be seen in the code below: ``` inline double SecureChannelPosition(void) {"
+      },
+      {
+        "article_id": 11189,
+        "count": 1,
+        "context": "s. The goal was to create as accurate a simulation as possible. We've reached a critical point where the next step is to implement a procedure that can handle random walks using the minimum amount of code required"
+      },
+      {
+        "article_id": 12121,
+        "count": 1,
+        "context": "o have a solid understanding of how the system functions as a whole. The first critical point to note is that the control indicator module will only be present on the chart if, and only if, the replay/simulation s"
+      },
+      {
+        "article_id": 12140,
+        "count": 1,
+        "context": "reliable future reversal levels. However, do not forget about stop levels. Any critical point on the chart determines where other critical points will be - either in time or in purpose - as long as the chart obeys"
+      },
+      {
+        "article_id": 16439,
+        "count": 1,
+        "context": "he parameter update vector toward one of the internal layers. There is another critical point. \u0428n this implementation, parameters used in the backpropagation pass may differ from those used in the feed-forward pas"
+      },
+      {
+        "article_id": 17796,
+        "count": 1,
+        "context": "O) algorithm, an optimization method inspired by the Bak-Sneppen self-organized criticality model, where evolution occurs through the elimination of the worst-case components of the system. The modified populati"
+      },
+      {
+        "article_id": 18467,
+        "count": 1,
+        "context": "distinct patterns for errors, warnings and information based on their degree of criticality. At the end of the day, Logify will be smarter, more accessible and much more useful in the real world. Because in alg"
+      },
+      {
+        "article_id": 19285,
+        "count": 1,
+        "context": "grity of the database. In any application that manipulates data, integrity is a critical point. Imagine a scenario in which we need to write *several records*, if one of these inserts fails and the others have alre"
+      },
+      {
+        "article_id": 19519,
+        "count": 1,
+        "context": "ormed. This includes term counting, derivative calculation for sensitivity, and critical point analysis via the Hessian matrix. This analysis helps assess model stability. ``` def analyze_symbolic_equations(self):"
+      },
+      {
+        "article_id": 19682,
+        "count": 1,
+        "context": "O) algorithm, an optimization method inspired by the Bak-Sneppen self-organized criticality model, where evolution occurs through the elimination of the worst-case components of the system. The modified populati"
+      },
+      {
+        "article_id": 20535,
+        "count": 1,
+        "context": "_size) balance += profit trades.append({...}) ``` The critical point: no future data leakage. At each point of analysis, the system sees only the data available up to the current moment. J"
+      },
+      {
+        "article_id": 22020,
+        "count": 1,
+        "context": "ory shift to prevent information leakage from the future to the past. This is a critical point: without it, the analysis becomes meaningless. ``` for period in range(2, 10, 1): data_matrix[f'next_mean_{period}"
+      },
+      {
+        "article_id": 22110,
+        "count": 1,
+        "context": "m price action, yet its standard placement in a separate subwindow disrupts the critical point of decision. The need to shift focus away from the price chart introduces a delay in interpretation, which becomes cost"
+      },
+      {
+        "article_id": 22613,
+        "count": 1,
+        "context": "O) algorithm, an optimization method inspired by the Bak-Sneppen self-organized criticality model, where evolution occurs through the elimination of the worst-case components of the system. The modified populati"
+      },
+      {
+        "article_id": 22628,
+        "count": 1,
+        "context": "s, and expanding volume on breakouts\u2014manifest clearly in tick volume data. The critical point is that we always work with relative volume, not absolute counts. A selling climax does not require a specific tick num"
+      },
+      {
+        "article_id": 22930,
+        "count": 1,
+        "context": "O) algorithm, an optimization method inspired by the Bak-Sneppen self-organized criticality model, where evolution occurs through the elimination of the worst-case components of the system. The modified populati"
+      },
+      {
+        "article_id": 22962,
+        "count": 1,
+        "context": "---------------------------------------------------+ ``` The destructor is the critical point of the ownership model. CheckPointer(m\\_wrapped) == POINTER\\_DYNAMIC verifies the pointer is a heap-allocated object be"
+      },
+      {
+        "article_id": 23125,
+        "count": 1,
+        "context": "esults that meet or exceed the observed statistic is the p-value. A subtle but critical point governs how the randomization must be performed. The Sortino Ratio is order-independent: it depends only on the set of"
+      }
+    ],
+    "information_flow": [
+      {
+        "article_id": 17241,
+        "count": 11,
+        "context": "alse; ``` After the error gradients have been successfully propagated from all information flows, we restore the object pointers to their original state. ``` if(!x_time.SetGradient(grad_x_time, false) || !x_var."
+      },
+      {
+        "article_id": 15997,
+        "count": 8,
+        "context": "ent class, we will place the positional encoding data of requests in a separate information flow. ``` base = new CNeuronBaseOCL(); if(!base || !base.Init(0, 5, OpenCL, pe.Neurons(), optimization, iBatch)"
+      },
+      {
+        "article_id": 16867,
+        "count": 5,
+        "context": "ve already implemented within the *FinAgent* framework. The construction of the information flows that define their interaction will be discussed as we examine the implementation algorithms of this class methods. Al"
+      },
+      {
+        "article_id": 18447,
+        "count": 5,
+        "context": "e *Transformer* architecture is designed to preserve the dimensions of the main information flow. In light of the above, we decided to feed only the tokens describing the last segment of the environment state into t"
+      },
+      {
+        "article_id": 18499,
+        "count": 5,
+        "context": "previously saved. We, on the other hand, need to aggregate the values from all information flows. Therefore, we first pass the error gradients from the first projection layer. ``` if(!NeuronOCL.calcHiddenGradients("
+      },
+      {
+        "article_id": 16192,
+        "count": 4,
+        "context": "tail. As you know, the gradient distribution algorithm must exactly mirror the information flow of the feed-forward pass but in reverse order, distributing the error gradient among all components based on their cont"
+      },
+      {
+        "article_id": 16916,
+        "count": 4,
+        "context": "ethod of the same object. In this stage, the gradient is propagated through the information flows of the memory hierarchy. ``` if(!CNeuronRelativeCrossAttention::calcInputGradients(cCrossAttention.AsObject(),"
+      },
+      {
+        "article_id": 17069,
+        "count": 4,
+        "context": "e continue only if this control point is successfully passed. As you know, the information flow of the feed-forward and backpropagation passes fully corresponds conceptually, differing only in direction. The feed-fo"
+      },
+      {
+        "article_id": 17675,
+        "count": 4,
+        "context": "o the input level. After these corrections, we sum the contributions from both information flows. The gradient is then distributed across the attention heads. ``` if(!cMHAttentionOut.calcHiddenGradients(cPooling"
+      },
+      {
+        "article_id": 17739,
+        "count": 4,
+        "context": "r components: the *Planner* and the *Controller*. The Planner follows a linear information flow. Raw input data passes through a common skill encoder and is then fed into a prediction module responsible for forecast"
+      },
+      {
+        "article_id": 15498,
+        "count": 3,
+        "context": "presented above, it is easy to see that the obtained initial data is used in 2 information flows: blocks of independent channels and global mixing. In both blocks, the source data is first segmented. In my implement"
+      },
+      {
+        "article_id": 16631,
+        "count": 3,
+        "context": "propagation of error gradients follows the exact structure of the feed-forward information flow, only in reverse. The operations in this method begin with a call to the parent class\u2019s method of the same name, propag"
+      },
+      {
+        "article_id": 16816,
+        "count": 3,
+        "context": "inancial markets. An author-provided visualization of the *FinMem* framework's information flow is shown below. ![](https://c.mql5.com/2/158/6037435098977__2.png) In the previous article, we began implementing the"
+      },
+      {
+        "article_id": 17104,
+        "count": 3,
+        "context": "e gradient-distribution method, however, is closely related to the feed-forward information flows and requires a more detailed explanation. The parameters of the *calcInputGradients* method include a pointer to the"
+      },
+      {
+        "article_id": 18914,
+        "count": 3,
+        "context": "ch its output is processed by a linear projection layer. In parallel, the main information flow of the input data is also processed as it passes through the *cWx* linear projection layer. ``` //--- if(!cWx.FeedF"
+      },
+      {
+        "article_id": 15288,
+        "count": 2,
+        "context": "-term financial goals In an era of global economic interconnectedness and rapid information flow these sophisticated tools provide a competitive edge enabling investors to navigate uncertainties and capitalize on opp"
+      },
+      {
+        "article_id": 15859,
+        "count": 2,
+        "context": "backpropagate the error gradient to the level of the input data along the main information flow. ``` CBufferFloat *inp = NULL; if(i == 0) { inp = prevLayer.getOutput(); temp ="
+      },
+      {
+        "article_id": 15882,
+        "count": 2,
+        "context": "n, the implementation of the forward pass algorithm results in a fairly complex information flow structure, far from linear. We observe the use of residual connections. Some components rely on two data sources. Moreo"
+      },
+      {
+        "article_id": 15928,
+        "count": 2,
+        "context": "; ``` And then, if necessary, we add the error gradient from the *Key*-*Value* information flow. ``` if((l % iLayersSP) == 0) { CBufferFloat *temp = inputs.getGradient(); if(!inputs."
+      },
+      {
+        "article_id": 16570,
+        "count": 2,
+        "context": "in both the attention modules and the *FeedForward* block. Therefore, residual information flow from the *RL agent* is inherently built into the *controller agent*, and additional connections are unnecessary. We no"
+      },
+      {
+        "article_id": 16937,
+        "count": 2,
+        "context": "ward pass algorithm within the *feedForward* method. Here, we must organize the information flow between the objects initialized earlier. ``` bool CNeuronFinConAgent::feedForward(CNeuronBaseOCL *NeuronOCL) { if"
+      },
+      {
+        "article_id": 17487,
+        "count": 2,
+        "context": "would be meaningless. As you know, gradient distribution strictly follows the information flow of the feed-forward pass, but in reverse order. Since the feed-forward pass concluded with a call to the parent class m"
+      },
+      {
+        "article_id": 18453,
+        "count": 2,
+        "context": "the ability to self-organize, forming fractal patterns through feedback loops, information flows, and the collective behavior of participants. These patterns are not external effects, but emergent properties of the"
+      },
+      {
+        "article_id": 11245,
+        "count": 1,
+        "context": "on. The fourth one transforms the source data. The LSTM block uses 2 recurrent information flows: memory and hidden state. ![LSTM block structure](https://c.mql5.com/2/48/2537882522583.png \"LSTM block structure\")"
+      },
+      {
+        "article_id": 11977,
+        "count": 1,
+        "context": "manage data that describes macroeconomic calendar events. In the modern world, information flows are all-pervasive. So, one has to deal with big data when analyzing events. Although, to a greater extent, the article"
+      },
+      {
+        "article_id": 12250,
+        "count": 1,
+        "context": "play/simulator service. Instead, we've adopted a different technique, where the information flows between the two components in a way that prevents user interference with the data being exchanged. Essentially, the s"
+      },
+      {
+        "article_id": 12816,
+        "count": 1,
+        "context": "r that, the model should independently distribute the data into the appropriate information flows. At this stage, we plan to use only one layer with data addition. In order not to complicate the process with additio"
+      },
+      {
+        "article_id": 12985,
+        "count": 1,
+        "context": "traightforward, since server databases are much more practical when it comes to information flow. To make this clearer, let us explain: a database hosted on an SQL server will be much more scalable than a database st"
+      },
+      {
+        "article_id": 13639,
+        "count": 1,
+        "context": "/articles/9025) architecture. But unlike the mentioned DT, it uses two separate information flows to model the Actor policy and the environment. The method authors try to solve 2 main problems: 1. Models should hel"
+      },
+      {
+        "article_id": 13712,
+        "count": 1,
+        "context": "he future encoder model. Here we will use the approach tested above to separate information flows. One of the initial data streams will be the current state. The second one will be the future embedding. The second q"
+      },
+      {
+        "article_id": 14454,
+        "count": 1,
+        "context": ". Its structure is almost identical to a multilayer feedforward neural network. Information flows from the input layer through intermediate layers to the final output. With each layer performing specific transformati"
+      },
+      {
+        "article_id": 15182,
+        "count": 1,
+        "context": "es in the data, thanks to the cell state and the gating mechanisms that control information flow over time. | While GRUs also handle long-term dependencies well, they may not be as effective as LSTMs in capturing ver"
+      },
+      {
+        "article_id": 15393,
+        "count": 1,
+        "context": "hich is calculated in both directions, providing a more complete picture of the information flow between the variables. To address potential non-stationarity in the data, the class incorporates a windowing proce"
+      },
+      {
+        "article_id": 15820,
+        "count": 1,
+        "context": "rder. However, there are several nuances associated with the parallel nature of information flow in the model. The method receives, as a parameter, a pointer to the previous layer's object, which will receive the pr"
+      },
+      {
+        "article_id": 15973,
+        "count": 1,
+        "context": "now, gradient distribution is performed in strict reverse order relative to the information flow of the feed-forward pass. I encourage you to explore the implementation of these methods on your own. The full impleme"
+      },
+      {
+        "article_id": 16243,
+        "count": 1,
+        "context": "moothing + 1, iDimension, iUnits)) return false; ``` Next, we handle the information flow of the adaptive coefficients. Here, we propagate the error gradient back to the cosine similarity tensor by calling the"
+      },
+      {
+        "article_id": 16439,
+        "count": 1,
+        "context": "rly, *LSTM* models share weight matrices across time steps, managing memory and information flow. In natural language processing, parameter sharing has been extended to *Transformers* by reusing weights across layers"
+      },
+      {
+        "article_id": 16686,
+        "count": 1,
+        "context": "ll decoder layers. Consequently, we must aggregate the error gradients from all information flows. As usual in such cases, we need an internal buffer for data storage. Since ***no such buffer*** was defined in the ne"
+      },
+      {
+        "article_id": 16850,
+        "count": 1,
+        "context": "This allows us to restructure the model's modules without altering the overall information flow and to integrate individual memory blocks into the corresponding modules. Taking advantage of this property, we incorpo"
+      },
+      {
+        "article_id": 17210,
+        "count": 1,
+        "context": "es separate forward and backward modules along the feature dimension to address information flow limitations. Similar to effective *1D-SSMs*, a data-independent formulation can be interpreted as a convolution with k"
+      },
+      {
+        "article_id": 17371,
+        "count": 1,
+        "context": "ms. Let me remind you that during the feed-forward pass we used 3 data transfer information flows: - State-space model - Direct connections with coefficients - Residual connections First, the error gradient is dist"
+      },
+      {
+        "article_id": 17512,
+        "count": 1,
+        "context": "k than they can handle, leaving niches for clever manual strategies. Third, the information flow during these hours is especially rich and diverse, creating micro-ecosystems of sentiment that are difficult for large"
+      },
+      {
+        "article_id": 17520,
+        "count": 1,
+        "context": "recise moment the bar's formation concluded*, naturally aligning with real-time information flow and preventing intra-bar look-ahead bias. For the reasons stated above, time-bars should be avoided when training ML m"
+      },
+      {
+        "article_id": 17668,
+        "count": 1,
+        "context": "on is performed on the final layer, since Q-values can be any real number. The information flow takes place from state-action pair to hidden-layers to the Q-value estimate. It represents the core of the Q-Learning f"
+      },
+      {
+        "article_id": 18004,
+        "count": 1,
+        "context": "ction of numerous factors. It reflects virtually everything, from macroeconomic information flows and company-specific news to investor's emotional swings and the cold calculations of algorithmic trading strategies."
+      },
+      {
+        "article_id": 18116,
+        "count": 1,
+        "context": "g. This is followed by an additional *causal* convolutional layer that supports information flow along the time axis. The number of such blocks in a stack can vary depending on the desired depth of generalization. L"
+      },
+      {
+        "article_id": 18246,
+        "count": 1,
+        "context": "redirect the error gradient accumulated in the current object along the forward information flow of the source data, using it as a signal for the previous layer. This process is pure deconcatenation without any compu"
+      },
+      {
+        "article_id": 18291,
+        "count": 1,
+        "context": "to make it simpler, we will call it *cascading movement* because, in fact, the information flows like water, line after line. How does it work in practice? The logic is surprisingly simple, but extremely efficient:"
+      },
+      {
+        "article_id": 18354,
+        "count": 1,
+        "context": "cteristics and poor habitats actively adopt them, creates a natural gradient of information flow from better solutions to worse ones. The BBO mutation operator deserves special attention, as it is fundamentally diff"
+      },
+      {
+        "article_id": 18355,
+        "count": 1,
+        "context": "ollects and processes data on central bank balance sheets, transforming chaotic information flows into coherent time series. *ForexLiquidityForecaster* uses this data, enriching it with technical indicators and runni"
+      },
+      {
+        "article_id": 18527,
+        "count": 1,
+        "context": "s paid to the correct distribution of the gradient in the context of a branched information flow. In the next part, we will continue developing the architecture and focus on building and training models that use thi"
+      },
+      {
+        "article_id": 18864,
+        "count": 1,
+        "context": "for ML models. 3. Real-world Alignment: Bar construction matches actual market information flow. With these fundamental data quality issues resolved, we now have clean, unbiased datasets ready for the next critical"
+      },
+      {
+        "article_id": 19047,
+        "count": 1,
+        "context": "es, a selective SSM for long-term memory, and a gating mechanism to control the information flow: ``` struct MambaBlock { Matrix A, B, C, D; // SSM parameters Matrix conv_weights; // 1D con"
+      },
+      {
+        "article_id": 22796,
+        "count": 1,
+        "context": "dom chart artifacts, but structured responses to shifts in liquidity and market information flow. **The Weekend Gap** Financial markets can produce several types of gaps, including breakaway gaps, continuation gaps"
+      },
+      {
+        "article_id": 22938,
+        "count": 1,
+        "context": "ated by bid-ask friction produces a number that reflects transaction costs, not information flow. This article adds two measurement families to MicroStructure\\_Foundation.mqh. First, it introduces a MicrostructureAn"
+      },
+      {
+        "article_id": 8819,
+        "count": 1,
+        "context": "rs. The usage of pointers \"*[in]*\" and \"*[out]*\" will show the direction of the information flow. Cross-references will show the format of the data. ``` ///\\ingroup neuron_base_ff Feed forward process kernel /// Des"
+      }
+    ],
+    "mutual_information": [
+      {
+        "article_id": 16416,
+        "count": 68,
+        "context": "--- id: 16416 source_url: https://www.mql5.com/en/articles/16416 title: \"Mutual information as criteria for Stepwise Feature Selection\" author: \"\" author_url: published: 2024-11-21T09:53Z platform: \"MetaTrader"
+      },
+      {
+        "article_id": 13706,
+        "count": 15,
+        "context": "of certain values or fail to grasp the nuances of feature contributions. ### **Mutual Information:** Mutual Information (MI) is a measure of the amount of information that the presence or absence of one variable prov"
+      },
+      {
+        "article_id": 12739,
+        "count": 13,
+        "context": "mportant to note that correlation does not capture non-linear relationships. **Mutual Information** [Mutual information](https://www.mql5.com/en/articles/12739/129635/editMutual_information) measures statistical depe"
+      },
+      {
+        "article_id": 15393,
+        "count": 8,
+        "context": "### Transfer entropy In the early days of information theory, scientists used mutual information to understand how coupled processes interacted. This concept, based on Claude Shannon's entropy, tells us if the inform"
+      },
+      {
+        "article_id": 15445,
+        "count": 7,
+        "context": "m and \u03c4 is critical for successful reconstruction. Typically, \u03c4 is chosen using mutual information or auto correlation function methods, and m is chosen using the false nearest neighbor method. Analysis of the reconst"
+      },
+      {
+        "article_id": 20317,
+        "count": 7,
+        "context": "blem, classical supervised learning offers little guidance here. This is where Mutual Information (MI) becomes valuable. MI has properties that make it well-suited for comparing regression targets\u2014it\u2019s nonparametric,"
+      },
+      {
+        "article_id": 23488,
+        "count": 6,
+        "context": "Nonlinear autocorrelation. Dependence that a linear correlation cannot see: automutual information at a fixed lag, the first minimum of automutual information over lags, and a time-reversal-asymmetry statistic that det"
+      },
+      {
+        "article_id": 13842,
+        "count": 5,
+        "context": "ou don't have it installed from sklearn.metrics import precision_score #Import mutual information, a black-box explanation technique from sklearn.feature_selection import mutual_info_classif #Import permutation impor"
+      },
+      {
+        "article_id": 15575,
+        "count": 5,
+        "context": "a non-parametric fashion. Furthermore, all 3 VISA data sets have relatively low mutual information scores, which may indicate to us the datasets may be independent or that we have failed to expose the relationship in a"
+      },
+      {
+        "article_id": 15762,
+        "count": 4,
+        "context": "precious metals market will show its value in this test. We will first test the mutual information (MI) levels. MI is a measure of how much certainty you gain about the value of the target, from knowing the value of on"
+      },
+      {
+        "article_id": 13729,
+        "count": 3,
+        "context": "are sensitive to the order of the model inputs while some aren\u2019t. For example, Mutual Information is not sensitive to the order of inputs, but SHAP is! Therefore, it may be possible that a SHAP explainer may fail to a"
+      },
+      {
+        "article_id": 15024,
+        "count": 3,
+        "context": "gy, providing insights into its performance across various market scenarios. ![Mutual information as criteria for Stepwise Feature Selection](https://c.mql5.com/2/102/Mutual_information_as_criteria_for_Stepwise_Featur"
+      },
+      {
+        "article_id": 15927,
+        "count": 3,
+        "context": "guide will help you develop a robust, user-friendly Trade Management Panel. ![Mutual information as criteria for Stepwise Feature Selection](https://c.mql5.com/2/102/Mutual_information_as_criteria_for_Stepwise_Featur"
+      },
+      {
+        "article_id": 16328,
+        "count": 3,
+        "context": "LSTM predictions for volume patterns, and traditional technical indicators. ![Mutual information as criteria for Stepwise Feature Selection](https://c.mql5.com/2/102/Mutual_information_as_criteria_for_Stepwise_Featur"
+      },
+      {
+        "article_id": 16390,
+        "count": 3,
+        "context": "ting from the use of the solutions, strategies or recommendations described. ![Mutual information as criteria for Stepwise Feature Selection](https://c.mql5.com/2/102/Mutual_information_as_criteria_for_Stepwise_Featur"
+      },
+      {
+        "article_id": 13212,
+        "count": 2,
+        "context": "inferior to other categories. Algorithms using competencies strive to maximize mutual information between observed states and a latent vector of skills. This mutual information is estimated through the Discriminator m"
+      },
+      {
+        "article_id": 13551,
+        "count": 2,
+        "context": "at the time of the previous history. Accordingly, a conditional restriction of mutual information between *z* and each Rt and St+1 pair in future is added to the goal. We will use contrast training methods to satisfy"
+      },
+      {
+        "article_id": 15610,
+        "count": 2,
+        "context": "ecessarily prove there is a relationship between the variables being observed. Mutual information is a measure of the potential a predictor has for explaining our target. Let us start off by considering a variable tha"
+      },
+      {
+        "article_id": 15886,
+        "count": 2,
+        "context": "ing the future close price of the NZDJPY pair. The High price obtained the best Mutual Information (MI) score. Furthermore, we also employed scikit-learn\u2019s implementation of the Recursive Feature Elimination (RFE) algo"
+      },
+      {
+        "article_id": 20530,
+        "count": 2,
+        "context": "e diverse variations of the most influential features. To quantify this, we use mutual information regression. Mutual information (MI) is a measure of statistical dependence that captures both linear and nonlinear rela"
+      },
+      {
+        "article_id": 24057,
+        "count": 2,
+        "context": "endence and distance matrices from a feature panel using information variation, mutual information, distance correlation, Spearman's rho, GPR, or GNPR methods. | | correlation.py | afml/codependence/correlation.py | Im"
+      },
+      {
+        "article_id": 12783,
+        "count": 1,
+        "context": "ining the skill model (Agent). Here, the agent learns a strategy that maximizes mutual information between states and hidden variables. The agent is trained using reinforcement learning methods. The formation of the re"
+      },
+      {
+        "article_id": 15781,
+        "count": 1,
+        "context": ".com/2/92/4992364330979.png) Fig 8: Visualizing the feature selection process Mutual information (MI) allows us to gain an understanding of the potential each predictor has. The higher the MI score, generally the mor"
+      },
+      {
+        "article_id": 17803,
+        "count": 1,
+        "context": "ically uncover strong trading strategies using a data-driven approach. By using Mutual Information to prioritize the most learnable signals, we can build smarter and more adaptive models that outperform conventional me"
+      },
+      {
+        "article_id": 18785,
+        "count": 1,
+        "context": "ard deviation, skewness, kurtosis) - correlations between different variables - mutual information - Shannon entropy Block 7.Temporal features (30 features): - hour of the day, day of the week, day of the month - sin"
+      },
+      {
+        "article_id": 19035,
+        "count": 1,
+        "context": "ically uncover strong trading strategies using a data-driven approach. By using Mutual Information to prioritize the most learnable signals, we can build smarter and more adaptive models that outperform conventional me"
+      },
+      {
+        "article_id": 20239,
+        "count": 1,
+        "context": "ically uncover strong trading strategies using a data-driven approach. By using Mutual Information to prioritize the most learnable signals, we can build smarter and more adaptive models that outperform conventional me"
+      },
+      {
+        "article_id": 20309,
+        "count": 1,
+        "context": "ically uncover strong trading strategies using a data-driven approach. By using Mutual Information to prioritize the most learnable signals, we can build smarter and more adaptive models that outperform conventional me"
+      },
+      {
+        "article_id": 23037,
+        "count": 1,
+        "context": "au as the first zero of the autocorrelation or the first minimum of the average mutual information; for our purposes the default value 1 is a reasonable starting point and easy to reason about. The library does not tr"
+      }
+    ],
+    "transfer_entropy": [
+      {
+        "article_id": 15393,
+        "count": 55,
+        "context": "s://www.mql5.com/en/articles/15393 title: \"Causal analysis of time series using transfer entropy\" author: \"\" author_url: published: 2024-07-26T19:26Z platform: \"MetaTrader 5\" section: \"Examples\" tags: [] series_titl"
+      },
+      {
+        "article_id": 14494,
+        "count": 3,
+        "context": "nd tricks for beginners and pros alike. ![Causal analysis of time series using transfer entropy](https://c.mql5.com/2/86/Causal_analysis_of_time_series_using_transfer_entropy___LOGO.png) [Causal analysis of time ser"
+      },
+      {
+        "article_id": 14505,
+        "count": 3,
+        "context": "advantage should exist for a long time. ![Causal analysis of time series using transfer entropy](https://c.mql5.com/2/86/Causal_analysis_of_time_series_using_transfer_entropy___LOGO.png) [Causal analysis of time ser"
+      },
+      {
+        "article_id": 15405,
+        "count": 3,
+        "context": "on, which only identified entry points. ![Causal analysis of time series using transfer entropy](https://c.mql5.com/2/86/Causal_analysis_of_time_series_using_transfer_entropy___LOGO.png) [Causal analysis of time ser"
+      },
+      {
+        "article_id": 15407,
+        "count": 3,
+        "context": "trategies or recommendations described. ![Causal analysis of time series using transfer entropy](https://c.mql5.com/2/86/Causal_analysis_of_time_series_using_transfer_entropy___LOGO.png) [Causal analysis of time ser"
+      }
+    ],
+    "lyapunov": [
+      {
+        "article_id": 15332,
+        "count": 42,
+        "context": "theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent\" author: \"\" author_url: published: 2025-01-16T15:58Z platform: \"MetaTrader 5\" section: \"Tester\" tags: [] seri"
+      },
+      {
+        "article_id": 17706,
+        "count": 20,
+        "context": "ce, there are no ready-made formulas here - only experience and experiments. **Lyapunov exponent: Measuring market randomness** The key component of our updated indicator is the Lyapunov exponent, a measure"
+      },
+      {
+        "article_id": 15255,
+        "count": 2,
+        "context": "theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent](https://c.mql5.com/2/85/Chaos_theory_in_trading_Part_1___LOGO.png) [Chaos theory in trading (Part 1): Introdu"
+      },
+      {
+        "article_id": 15294,
+        "count": 2,
+        "context": "theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent](https://c.mql5.com/2/85/Chaos_theory_in_trading_Part_1___LOGO.png) [Chaos theory in trading (Part 1): Introdu"
+      },
+      {
+        "article_id": 15445,
+        "count": 2,
+        "context": "between the scientific and practical application of these concepts in trading. Lyapunov exponent as a tool for analyzing financial time series took a central stage in the article. We considered both its theo"
+      },
+      {
+        "article_id": 16830,
+        "count": 2,
+        "context": "theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent](https://c.mql5.com/2/85/Chaos_theory_in_trading_Part_1___LOGO.png) [Chaos theory in trading (Part 1): Introdu"
+      },
+      {
+        "article_id": 16866,
+        "count": 2,
+        "context": "theory in trading (Part 1): Introduction, application in financial markets and Lyapunov exponent](https://c.mql5.com/2/85/Chaos_theory_in_trading_Part_1___LOGO.png) [Chaos theory in trading (Part 1): Introdu"
+      },
+      {
+        "article_id": 15794,
+        "count": 1,
+        "context": "l networks to forecast financial markets. The study demonstrates the use of the Lyapunov exponent as a measure of market randomness and the dynamic adaptation of trading signals. The methodology includes an a"
+      },
+      {
+        "article_id": 15802,
+        "count": 1,
+        "context": "l networks to forecast financial markets. The study demonstrates the use of the Lyapunov exponent as a measure of market randomness and the dynamic adaptation of trading signals. The methodology includes an a"
+      },
+      {
+        "article_id": 20908,
+        "count": 1,
+        "context": "l networks to forecast financial markets. The study demonstrates the use of the Lyapunov exponent as a measure of market randomness and the dynamic adaptation of trading signals. The methodology includes an a"
+      },
+      {
+        "article_id": 21197,
+        "count": 1,
+        "context": "l networks to forecast financial markets. The study demonstrates the use of the Lyapunov exponent as a measure of market randomness and the dynamic adaptation of trading signals. The methodology includes an a"
+      },
+      {
+        "article_id": 22288,
+        "count": 1,
+        "context": "nce | DIV | 1 / Lmax | Inverse of the longest diagonal. A proxy for the largest Lyapunov exponent. | | Ratio | RATIO | DET / RR | Determinism normalized by recurrence rate. Filters out the effect of overall r"
+      }
+    ],
+    "econophysics": [
+      {
+        "article_id": 6834,
+        "count": 4,
+        "context": "ble processes, which are determined by the market participants' actions. One of econophysics tasks concerns the description of social interaction processes, which form the price dynamics observed on the exchange."
+      },
+      {
+        "article_id": 8038,
+        "count": 3,
+        "context": "tatistical physics, which led to the emergence of a scientific approach called [econophysics](https://en.wikipedia.org/wiki/Econophysics \"https://en.wikipedia.org/wiki/Econophysics\"). In fact, the topic of such"
+      },
+      {
+        "article_id": 16494,
+        "count": 1,
+        "context": "the three previous oscillators was based on some physical principles and ideas. Econophysics is a useful direction, but it is not at all necessary to follow it at all times. For example, I will add non-linearity"
+      }
+    ],
+    "random_matrix": [
+      {
+        "article_id": 24057,
+        "count": 1,
+        "context": "spread of sample eigenvalues away from 1, purely from finite-sample variation. Random matrix theory gives the exact shape of that spread under the null of no correlation; anything inside it is indistinguishable f"
+      }
+    ]
+  }
+}

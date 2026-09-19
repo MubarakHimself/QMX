@@ -1,0 +1,433 @@
+{
+  "shard_id": "trading_026",
+  "section": "Trading",
+  "n": 47,
+  "series_in_shard": [
+    "automating trading strategies in mql5"
+  ],
+  "articles": [
+    {
+      "id": 16365,
+      "title": "Automating Trading Strategies in MQL5 (Part 1): The Profitunity System (Trading Chaos by Bill Williams)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Profitunity System (Trading Chaos by Bill Williams)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16365.md"
+    },
+    {
+      "id": 16657,
+      "title": "Automating Trading Strategies in MQL5 (Part 2): The Kumo Breakout System with Ichimoku and Awesome Oscillator",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Kumo Breakout System with Ichimoku and Awesome Oscillator",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16657.md"
+    },
+    {
+      "id": 16705,
+      "title": "Automating Trading Strategies in MQL5 (Part 3): The Zone Recovery RSI System for Dynamic Trade Management",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Zone Recovery RSI System for Dynamic Trade Management",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16705.md"
+    },
+    {
+      "id": 17001,
+      "title": "Automating Trading Strategies in MQL5 (Part 4): Building a Multi-Level Zone Recovery System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Multi-Level Zone Recovery System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17001.md"
+    },
+    {
+      "id": 17040,
+      "title": "Automating Trading Strategies in MQL5 (Part 5): Developing the Adaptive Crossover RSI Trading Suite Strategy",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Developing the Adaptive Crossover RSI Trading Suite Strategy",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17040.md"
+    },
+    {
+      "id": 17135,
+      "title": "Automating Trading Strategies in MQL5 (Part 6): Mastering Order Block Detection for Smart Money Trading",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Mastering Order Block Detection for Smart Money Trading",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17135.md"
+    },
+    {
+      "id": 17190,
+      "title": "Automating Trading Strategies in MQL5 (Part 7): Building a Grid Trading EA with Dynamic Lot Scaling",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Grid Trading EA with Dynamic Lot Scaling",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17190.md"
+    },
+    {
+      "id": 17223,
+      "title": "Automating Trading Strategies in MQL5 (Part 8): Building an Expert Advisor with Butterfly Harmonic Patterns",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building an Expert Advisor with Butterfly Harmonic Patterns",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17223.md"
+    },
+    {
+      "id": 17239,
+      "title": "Automating Trading Strategies in MQL5 (Part 9): Building an Expert Advisor for the Asian Breakout Strategy",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building an Expert Advisor for the Asian Breakout Strategy",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17239.md"
+    },
+    {
+      "id": 17247,
+      "title": "Automating Trading Strategies in MQL5 (Part 10): Developing the Trend Flat Momentum Strategy",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Developing the Trend Flat Momentum Strategy",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17247.md"
+    },
+    {
+      "id": 17350,
+      "title": "Automating Trading Strategies in MQL5 (Part 11): Developing a Multi-Level Grid Trading System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Developing a Multi-Level Grid Trading System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17350.md"
+    },
+    {
+      "id": 17547,
+      "title": "Automating Trading Strategies in MQL5 (Part 12): Implementing the Mitigation Order Blocks (MOB) Strategy",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Implementing the Mitigation Order Blocks (MOB) Strategy",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17547.md"
+    },
+    {
+      "id": 17618,
+      "title": "Automating Trading Strategies in MQL5 (Part 13): Building a Head and Shoulders Trading Algorithm",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Head and Shoulders Trading Algorithm",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17618.md"
+    },
+    {
+      "id": 17741,
+      "title": "Automating Trading Strategies in MQL5 (Part 14): Trade Layering Strategy with MACD-RSI Statistical Methods",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trade Layering Strategy with MACD-RSI Statistical Methods",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 14,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17741.md"
+    },
+    {
+      "id": 17865,
+      "title": "Automating Trading Strategies in MQL5 (Part 15): Price Action Harmonic Cypher Pattern with Visualization",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Price Action Harmonic Cypher Pattern with Visualization",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 15,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17865.md"
+    },
+    {
+      "id": 17876,
+      "title": "Automating Trading Strategies in MQL5 (Part 16): Midnight Range Breakout with Break of Structure (BoS) Price Action",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Midnight Range Breakout with Break of Structure (BoS) Price Action",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 16,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17876.md"
+    },
+    {
+      "id": 18038,
+      "title": "Automating Trading Strategies in MQL5 (Part 17): Mastering the Grid-Mart Scalping Strategy with a Dynamic Dashboard",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Mastering the Grid-Mart Scalping Strategy with a Dynamic Dashboard",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 17,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18038.md"
+    },
+    {
+      "id": 18269,
+      "title": "Automating Trading Strategies in MQL5 (Part 18): Envelopes Trend Bounce Scalping - Core Infrastructure and Signal Generation (Part I)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Envelopes Trend Bounce Scalping - Core Infrastructure and Signal Generation (Part I)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 18,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18269.md"
+    },
+    {
+      "id": 18298,
+      "title": "Automating Trading Strategies in MQL5 (Part 19): Envelopes Trend Bounce Scalping \u2014 Trade Execution and Risk Management (Part II)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Envelopes Trend Bounce Scalping \u2014 Trade Execution and Risk Management (Part II)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 19,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18298.md"
+    },
+    {
+      "id": 18604,
+      "title": "Automating Trading Strategies in MQL5 (Part 20): Multi-Symbol Strategy Using CCI and AO",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Multi-Symbol Strategy Using CCI and AO",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 20,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18604.md"
+    },
+    {
+      "id": 18660,
+      "title": "Automating Trading Strategies in MQL5 (Part 21): Enhancing Neural Network Trading with Adaptive Learning Rates",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Enhancing Neural Network Trading with Adaptive Learning Rates",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 21,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18660.md"
+    },
+    {
+      "id": 18720,
+      "title": "Automating Trading Strategies in MQL5 (Part 22): Creating a Zone Recovery System for Envelopes Trend Trading",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Zone Recovery System for Envelopes Trend Trading",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18720.md"
+    },
+    {
+      "id": 18778,
+      "title": "Automating Trading Strategies in MQL5 (Part 23): Zone Recovery with Trailing and Basket Logic",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Zone Recovery with Trailing and Basket Logic",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18778.md"
+    },
+    {
+      "id": 18867,
+      "title": "Automating Trading Strategies in MQL5 (Part 24): London Session Breakout System with Risk Management and Trailing Stops",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): London Session Breakout System with Risk Management and Trailing Stops",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18867.md"
+    },
+    {
+      "id": 19077,
+      "title": "Automating Trading Strategies in MQL5 (Part 25): Trendline Trader with Least Squares Fit and Dynamic Signal Generation",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trendline Trader with Least Squares Fit and Dynamic Signal Generation",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19077.md"
+    },
+    {
+      "id": 19087,
+      "title": "Automating Trading Strategies in MQL5 (Part 26): Building a Pin Bar Averaging System for Multi-Position Trading",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Building a Pin Bar Averaging System for Multi-Position Trading",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 26,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19087.md"
+    },
+    {
+      "id": 19111,
+      "title": "Automating Trading Strategies in MQL5 (Part 29): Creating a price action Gartley Harmonic Pattern system",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a price action Gartley Harmonic Pattern system",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 29,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19111.md"
+    },
+    {
+      "id": 19442,
+      "title": "Automating Trading Strategies in MQL5 (Part 30): Creating a Price Action AB-CD Harmonic Pattern with Visual Feedback",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action AB-CD Harmonic Pattern with Visual Feedback",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19442.md"
+    },
+    {
+      "id": 19449,
+      "title": "Automating Trading Strategies in MQL5 (Part 31): Creating a Price Action 3 Drives Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action 3 Drives Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19449.md"
+    },
+    {
+      "id": 19463,
+      "title": "Automating Trading Strategies in MQL5 (Part 32): Creating a Price Action 5 Drives Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action 5 Drives Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 32,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19463.md"
+    },
+    {
+      "id": 19479,
+      "title": "Automating Trading Strategies in MQL5 (Part 33): Creating a Price Action Shark Harmonic Pattern System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Price Action Shark Harmonic Pattern System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 33,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19479.md"
+    },
+    {
+      "id": 19625,
+      "title": "Automating Trading Strategies in MQL5 (Part 34): Trendline Breakout System with R-Squared Goodness of Fit",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Trendline Breakout System with R-Squared Goodness of Fit",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19625.md"
+    },
+    {
+      "id": 19638,
+      "title": "Automating Trading Strategies in MQL5 (Part 35): Creating a Breaker Block Trading System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Creating a Breaker Block Trading System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 35,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19638.md"
+    },
+    {
+      "id": 19674,
+      "title": "Automating Trading Strategies in MQL5 (Part 36): Supply and Demand Trading with Retest and Impulse Model",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Supply and Demand Trading with Retest and Impulse Model",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 36,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19674.md"
+    },
+    {
+      "id": 20031,
+      "title": "Automating Trading Strategies in MQL5 (Part 37): Regular RSI Divergence Convergence with Visual Indicators",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Regular RSI Divergence Convergence with Visual Indicators",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 37,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20031.md"
+    },
+    {
+      "id": 20157,
+      "title": "Automating Trading Strategies in MQL5 (Part 38): Hidden RSI Divergence Trading with Slope Angle Filters",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Hidden RSI Divergence Trading with Slope Angle Filters",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20157.md"
+    },
+    {
+      "id": 20221,
+      "title": "Automating Trading Strategies in MQL5 (Part 40): Fibonacci Retracement Trading with Custom Levels",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Fibonacci Retracement Trading with Custom Levels",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20221.md"
+    },
+    {
+      "id": 20323,
+      "title": "Automating Trading Strategies in MQL5 (Part 41): Candle Range Theory (CRT) \u2013 Accumulation, Manipulation, Distribution (AMD)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Candle Range Theory (CRT) \u2013 Accumulation, Manipulation, Distribution (AMD)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20323.md"
+    },
+    {
+      "id": 20339,
+      "title": "Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Session-Based Opening Range Breakout (ORB) System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20339.md"
+    },
+    {
+      "id": 20361,
+      "title": "Automating Trading Strategies in MQL5 (Part 45): Inverse Fair Value Gap (IFVG)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Inverse Fair Value Gap (IFVG)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 45,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20361.md"
+    },
+    {
+      "id": 20569,
+      "title": "Automating Trading Strategies in MQL5 (Part 46): Liquidity Sweep on Break of Structure (BoS)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Liquidity Sweep on Break of Structure (BoS)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 46,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20569.md"
+    },
+    {
+      "id": 21096,
+      "title": "Automating Trading Strategies in MQL5 (Part 47): Nick Rypock Trailing Reverse (NRTR) with Hedging Features",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Nick Rypock Trailing Reverse (NRTR) with Hedging Features",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 47,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21096.md"
+    },
+    {
+      "id": 22078,
+      "title": "Automating Trading Strategies in MQL5 (Part 48): Order Blocks, Inducement, Break of Structure",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Order Blocks, Inducement, Break of Structure",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 48,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22078.md"
+    },
+    {
+      "id": 23141,
+      "title": "Automating Trading Strategies in MQL5 (Part 49): The Quasimodo (QM) Reversal Pattern",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Quasimodo (QM) Reversal Pattern",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 49,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23141.md"
+    },
+    {
+      "id": 23155,
+      "title": "Automating Trading Strategies in MQL5 (Part 50): Turtle Soup Liquidity Sweeps",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Turtle Soup Liquidity Sweeps",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 50,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23155.md"
+    },
+    {
+      "id": 23523,
+      "title": "Automating Trading Strategies in MQL5 (Part 51): The Bread and Butter Judas Swing Model with Premium and Discount",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Bread and Butter Judas Swing Model with Premium and Discount",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 51,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23523.md"
+    },
+    {
+      "id": 23549,
+      "title": "Automating Trading Strategies in MQL5 (Part 52): The tCISD Model with SSMT and Quarterly Theory",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The tCISD Model with SSMT and Quarterly Theory",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 52,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23549.md"
+    }
+  ]
+}

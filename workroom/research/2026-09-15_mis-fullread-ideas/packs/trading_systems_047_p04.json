@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_systems_047_p04",
+  "section": "Trading systems",
+  "parent_shard": "trading_systems_047",
+  "part_index": 4,
+  "part_count": 7,
+  "series_in_pack": [
+    "neural networks made easy"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 13982,
+      "title": "Neural networks made easy (Part 70): Closed-Form Policy Improvement Operators (CFPI)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Closed-Form Policy Improvement Operators (CFPI)",
+      "series_key": "neural networks made easy",
+      "series_part": 70,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13982.md"
+    },
+    {
+      "id": 14012,
+      "title": "Neural networks made easy (Part 71): Goal-Conditioned Predictive Coding (GCPC)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Goal-Conditioned Predictive Coding (GCPC)",
+      "series_key": "neural networks made easy",
+      "series_part": 71,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14012.md"
+    },
+    {
+      "id": 14044,
+      "title": "Neural networks made easy (Part 72): Trajectory prediction in noisy environments",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Trajectory prediction in noisy environments",
+      "series_key": "neural networks made easy",
+      "series_part": 72,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14044.md"
+    },
+    {
+      "id": 14095,
+      "title": "Neural networks made easy (Part 73): AutoBots for predicting price movements",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): AutoBots for predicting price movements",
+      "series_key": "neural networks made easy",
+      "series_part": 73,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14095.md"
+    },
+    {
+      "id": 14143,
+      "title": "Neural networks made easy (Part 74): Trajectory prediction with adaptation",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Trajectory prediction with adaptation",
+      "series_key": "neural networks made easy",
+      "series_part": 74,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14143.md"
+    },
+    {
+      "id": 14187,
+      "title": "Neural networks made easy (Part 75): Improving the performance of trajectory prediction models",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Improving the performance of trajectory prediction models",
+      "series_key": "neural networks made easy",
+      "series_part": 75,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14187.md"
+    },
+    {
+      "id": 14226,
+      "title": "Neural networks made easy (Part 76): Exploring diverse interaction patterns with Multi-future Transformer",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Exploring diverse interaction patterns with Multi-future Transformer",
+      "series_key": "neural networks made easy",
+      "series_part": 76,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14226.md"
+    },
+    {
+      "id": 14276,
+      "title": "Neural networks made easy (Part 77): Cross-Covariance Transformer (XCiT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Cross-Covariance Transformer (XCiT)",
+      "series_key": "neural networks made easy",
+      "series_part": 77,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14276.md"
+    },
+    {
+      "id": 14338,
+      "title": "Neural networks made easy (Part 78): Decoder-free Object Detector with Transformer (DFFT)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Decoder-free Object Detector with Transformer (DFFT)",
+      "series_key": "neural networks made easy",
+      "series_part": 78,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14338.md"
+    },
+    {
+      "id": 14394,
+      "title": "Neural networks made easy (Part 79): Feature Aggregated Queries (FAQ) in the context of state",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Feature Aggregated Queries (FAQ) in the context of state",
+      "series_key": "neural networks made easy",
+      "series_part": 79,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14394.md"
+    },
+    {
+      "id": 14445,
+      "title": "Neural networks made easy (Part 80): Graph Transformer Generative Adversarial Model (GTGAN)",
+      "section": "Trading systems",
+      "series_title": "Neural networks made easy (): Graph Transformer Generative Adversarial Model (GTGAN)",
+      "series_key": "neural networks made easy",
+      "series_part": 80,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14445.md"
+    },
+    {
+      "id": 14505,
+      "title": "Neural Networks Made Easy (Part 81): Context-Guided Motion Analysis (CCMR)",
+      "section": "Trading systems",
+      "series_title": "Neural Networks Made Easy (): Context-Guided Motion Analysis (CCMR)",
+      "series_key": "neural networks made easy",
+      "series_part": 81,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14505.md"
+    }
+  ]
+}

@@ -1,0 +1,3239 @@
+[
+  {
+    "id": 23488,
+    "title": "Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes",
+    "author": "",
+    "published": "2026-08-05T12:47Z",
+    "section": "Trading",
+    "total": 162,
+    "title_boost": 65,
+    "score": 227,
+    "counts": {
+      "shannon": 3,
+      "DMI": 2,
+      "DFA": 12,
+      "Catch22": 118,
+      "entropy": 8,
+      "autocorr": 19
+    },
+    "leftover": true,
+    "chars": 68474
+  },
+  {
+    "id": 17910,
+    "title": "MQL5 Wizard Techniques you should know (Part 61): Using Patterns of ADX and CCI with Supervised Learning",
+    "author": "",
+    "published": "2025-04-28T10:11Z",
+    "section": "Trading systems",
+    "total": 157,
+    "title_boost": 65,
+    "score": 222,
+    "counts": {
+      "ADX": 115,
+      "DMI": 42
+    },
+    "leftover": false,
+    "chars": 50328
+  },
+  {
+    "id": 20271,
+    "title": "Market Positioning Codex for VGT with Kendall's Tau and Distance Correlation",
+    "author": "",
+    "published": "2025-11-26T12:03Z",
+    "section": "Integration",
+    "total": 193,
+    "title_boost": 0,
+    "score": 193,
+    "counts": {
+      "ADX": 168,
+      "DMI": 23,
+      "DFA": 2
+    },
+    "leftover": false,
+    "chars": 67714
+  },
+  {
+    "id": 21743,
+    "title": "Developing Market Entropy Indicator: Trading System Based on Information Theory",
+    "author": "",
+    "published": "2026-03-27T11:20Z",
+    "section": "Examples",
+    "total": 124,
+    "title_boost": 65,
+    "score": 189,
+    "counts": {
+      "shannon": 2,
+      "entropy": 122
+    },
+    "leftover": false,
+    "chars": 54554
+  },
+  {
+    "id": 22484,
+    "title": "Beyond GARCH (Part II): Measuring the Fractal Dimension of Markets",
+    "author": "",
+    "published": "2026-05-19T15:16Z",
+    "section": "Trading systems",
+    "total": 123,
+    "title_boost": 65,
+    "score": 188,
+    "counts": {
+      "Hurst": 34,
+      "MFDFA": 70,
+      "fractal_dim": 6,
+      "DMI": 5,
+      "long_memory": 7,
+      "autocorr": 1
+    },
+    "leftover": true,
+    "chars": 45935
+  },
+  {
+    "id": 15393,
+    "title": "Causal analysis of time series using transfer entropy",
+    "author": "",
+    "published": "2024-07-26T19:26Z",
+    "section": "Examples",
+    "total": 103,
+    "title_boost": 65,
+    "score": 168,
+    "counts": {
+      "DMI": 3,
+      "entropy": 100
+    },
+    "leftover": false,
+    "chars": 57292
+  },
+  {
+    "id": 22754,
+    "title": "Meta-Labeling the Classics (Part 2): Filtering and Sizing ADX Trades",
+    "author": "",
+    "published": "2026-06-26T08:12Z",
+    "section": "Trading systems",
+    "total": 100,
+    "title_boost": 65,
+    "score": 165,
+    "counts": {
+      "ADX": 74,
+      "DMI": 26
+    },
+    "leftover": true,
+    "chars": 44506
+  },
+  {
+    "id": 21742,
+    "title": "Automating Market Entropy Indicator: Trading System Based on Information Theory",
+    "author": "",
+    "published": "2026-04-21T08:53Z",
+    "section": "Examples",
+    "total": 91,
+    "title_boost": 65,
+    "score": 156,
+    "counts": {
+      "shannon": 1,
+      "Ehlers": 3,
+      "entropy": 87
+    },
+    "leftover": false,
+    "chars": 56425
+  },
+  {
+    "id": 22220,
+    "title": "Integrating MQL5 with Data Processing Packages (Part 9): Entropy-Based Adaptive Volatility",
+    "author": "",
+    "published": "2026-05-19T11:21Z",
+    "section": "Examples",
+    "total": 91,
+    "title_boost": 65,
+    "score": 156,
+    "counts": {
+      "shannon": 8,
+      "entropy": 83
+    },
+    "leftover": false,
+    "chars": 82904
+  },
+  {
+    "id": 23444,
+    "title": "Digital Signal Processing for Traders (Part 2): The Dominant Cycle, MAMA, and a Regime-Switching Expert Advisor",
+    "author": "",
+    "published": "2026-07-23T11:21Z",
+    "section": "Trading",
+    "total": 121,
+    "title_boost": 25,
+    "score": 146,
+    "counts": {
+      "DMI": 1,
+      "Ehlers": 120
+    },
+    "leftover": false,
+    "chars": 57979
+  },
+  {
+    "id": 18723,
+    "title": "MQL5 Wizard Techniques you should know (Part 73): Using Patterns of Ichimoku and the ADX-Wilder",
+    "author": "",
+    "published": "2025-07-04T14:48Z",
+    "section": "Tester",
+    "total": 78,
+    "title_boost": 65,
+    "score": 143,
+    "counts": {
+      "ADX": 70,
+      "DMI": 8
+    },
+    "leftover": false,
+    "chars": 38201
+  },
+  {
+    "id": 17273,
+    "title": "The Kalman Filter for Forex Mean-Reversion Strategies",
+    "author": "",
+    "published": "2025-02-27T09:47Z",
+    "section": "Examples",
+    "total": 71,
+    "title_boost": 65,
+    "score": 136,
+    "counts": {
+      "Kalman": 71
+    },
+    "leftover": false,
+    "chars": 32353
+  },
+  {
+    "id": 22553,
+    "title": "Market Microstructure in MQL5 (Part 2): Measuring long memory in MQL5 with Hurst estimators",
+    "author": "",
+    "published": "2026-05-25T12:11Z",
+    "section": "Indicators",
+    "total": 43,
+    "title_boost": 90,
+    "score": 133,
+    "counts": {
+      "Hurst": 22,
+      "DMI": 2,
+      "long_memory": 15,
+      "autocorr": 4
+    },
+    "leftover": false,
+    "chars": 41502
+  },
+  {
+    "id": 22756,
+    "title": "Feature Engineering for ML (Part 7): Entropy Features in Python",
+    "author": "",
+    "published": "2026-06-29T12:43Z",
+    "section": "Trading systems",
+    "total": 68,
+    "title_boost": 65,
+    "score": 133,
+    "counts": {
+      "shannon": 12,
+      "DMI": 2,
+      "entropy": 54
+    },
+    "leftover": false,
+    "chars": 24183
+  },
+  {
+    "id": 21339,
+    "title": "MQL5 Trading Tools (Part 26): Integrating Frequency Binning, Entropy, and Chi-Square in Visual Analyzer",
+    "author": "",
+    "published": "2026-03-31T09:23Z",
+    "section": "Trading systems",
+    "total": 64,
+    "title_boost": 65,
+    "score": 129,
+    "counts": {
+      "shannon": 20,
+      "DMI": 1,
+      "entropy": 31,
+      "autocorr": 12
+    },
+    "leftover": false,
+    "chars": 71465
+  },
+  {
+    "id": 23077,
+    "title": "Feature Engineering for ML (Part 8): Entropy Features in MQL5",
+    "author": "",
+    "published": "2026-06-30T14:41Z",
+    "section": "Trading systems",
+    "total": 62,
+    "title_boost": 65,
+    "score": 127,
+    "counts": {
+      "shannon": 7,
+      "DMI": 2,
+      "entropy": 53
+    },
+    "leftover": false,
+    "chars": 37834
+  },
+  {
+    "id": 2930,
+    "title": "Calculating the Hurst exponent",
+    "author": "Dmitriy Piskarev",
+    "published": "2017-04-03T15:20Z",
+    "section": "Trading",
+    "total": 58,
+    "title_boost": 65,
+    "score": 123,
+    "counts": {
+      "Hurst": 45,
+      "fractal_dim": 2,
+      "long_memory": 11
+    },
+    "leftover": true,
+    "chars": 51843
+  },
+  {
+    "id": 15222,
+    "title": "MQL5 Wizard Techniques you should know (Part 26): Moving Averages and the Hurst Exponent",
+    "author": "",
+    "published": "2024-07-05T17:05Z",
+    "section": "Trading systems",
+    "total": 56,
+    "title_boost": 65,
+    "score": 121,
+    "counts": {
+      "Hurst": 50,
+      "long_memory": 1,
+      "autocorr": 5
+    },
+    "leftover": false,
+    "chars": 32524
+  },
+  {
+    "id": 18776,
+    "title": "MQL5 Wizard Techniques you should know (Part 74):  Using Patterns of Ichimoku and the ADX-Wilder with Supervised Learning",
+    "author": "",
+    "published": "2025-07-10T10:21Z",
+    "section": "Trading",
+    "total": 56,
+    "title_boost": 65,
+    "score": 121,
+    "counts": {
+      "ADX": 37,
+      "DMI": 19
+    },
+    "leftover": false,
+    "chars": 39551
+  },
+  {
+    "id": 11061,
+    "title": "Data Science and Machine Learning (Part 05): Decision Trees",
+    "author": "",
+    "published": "2022-06-28T13:09Z",
+    "section": "Trading",
+    "total": 118,
+    "title_boost": 0,
+    "score": 118,
+    "counts": {
+      "entropy": 118
+    },
+    "leftover": false,
+    "chars": 60351
+  },
+  {
+    "id": 3886,
+    "title": "Using the Kalman Filter for price direction prediction",
+    "author": "",
+    "published": "2017-12-13T08:19Z",
+    "section": "Trading systems",
+    "total": 51,
+    "title_boost": 65,
+    "score": 116,
+    "counts": {
+      "Kalman": 50,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 33206
+  },
+  {
+    "id": 6834,
+    "title": "Evaluating the ability of Fractal index and Hurst exponent to predict financial time series",
+    "author": "",
+    "published": "2019-07-11T10:07Z",
+    "section": "Trading systems",
+    "total": 50,
+    "title_boost": 65,
+    "score": 115,
+    "counts": {
+      "Hurst": 27,
+      "fractal_dim": 20,
+      "entropy": 2,
+      "long_memory": 1
+    },
+    "leftover": false,
+    "chars": 33315
+  },
+  {
+    "id": 11487,
+    "title": "MQL5 Wizard techniques you should know (Part 03): Shannon's Entropy",
+    "author": "",
+    "published": "2022-09-26T16:41Z",
+    "section": "Tester",
+    "total": 43,
+    "title_boost": 65,
+    "score": 108,
+    "counts": {
+      "shannon": 6,
+      "entropy": 37
+    },
+    "leftover": false,
+    "chars": 34069
+  },
+  {
+    "id": 6351,
+    "title": "Grokking market \"memory\" through differentiation and entropy analysis",
+    "author": "",
+    "published": "2019-07-17T14:48Z",
+    "section": "Trading",
+    "total": 42,
+    "title_boost": 65,
+    "score": 107,
+    "counts": {
+      "Hurst": 3,
+      "shannon": 1,
+      "Kalman": 1,
+      "entropy": 34,
+      "long_memory": 3
+    },
+    "leftover": false,
+    "chars": 40297
+  },
+  {
+    "id": 13008,
+    "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 1): Indicator Signals based on ADX in combination with Parabolic SAR",
+    "author": "",
+    "published": "2023-08-30T14:08Z",
+    "section": "Examples",
+    "total": 41,
+    "title_boost": 65,
+    "score": 106,
+    "counts": {
+      "ADX": 9,
+      "DMI": 32
+    },
+    "leftover": false,
+    "chars": 51761
+  },
+  {
+    "id": 22519,
+    "title": "Beyond GARCH (Part V): Fitting the Multifractal Spectrum in MQL5",
+    "author": "",
+    "published": "2026-06-09T12:23Z",
+    "section": "Trading systems",
+    "total": 41,
+    "title_boost": 65,
+    "score": 106,
+    "counts": {
+      "Hurst": 3,
+      "GHE": 1,
+      "MFDFA": 18,
+      "fractal_dim": 5,
+      "DMI": 8,
+      "entropy": 6
+    },
+    "leftover": false,
+    "chars": 41067
+  },
+  {
+    "id": 16085,
+    "title": "MQL5 Wizard Techniques you should know (Part 42): ADX Oscillator",
+    "author": "",
+    "published": "2024-10-11T15:50Z",
+    "section": "Trading systems",
+    "total": 38,
+    "title_boost": 65,
+    "score": 103,
+    "counts": {
+      "ADX": 35,
+      "DMI": 3
+    },
+    "leftover": false,
+    "chars": 32239
+  },
+  {
+    "id": 23149,
+    "title": "Digital Signal Processing for Traders: Building Ehlers' Filter Library in MQL5",
+    "author": "",
+    "published": "2026-07-01T13:03Z",
+    "section": "Trading systems",
+    "total": 37,
+    "title_boost": 65,
+    "score": 102,
+    "counts": {
+      "DMI": 1,
+      "Ehlers": 36
+    },
+    "leftover": false,
+    "chars": 42062
+  },
+  {
+    "id": 23351,
+    "title": "Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy",
+    "author": "",
+    "published": "2026-07-17T14:54Z",
+    "section": "Indicators",
+    "total": 32,
+    "title_boost": 65,
+    "score": 97,
+    "counts": {
+      "perm_entropy": 1,
+      "ADX": 1,
+      "DMI": 1,
+      "entropy": 29
+    },
+    "leftover": false,
+    "chars": 61604
+  },
+  {
+    "id": 16747,
+    "title": "Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention",
+    "author": "",
+    "published": "2025-10-07T09:01Z",
+    "section": "Trading systems",
+    "total": 31,
+    "title_boost": 65,
+    "score": 96,
+    "counts": {
+      "ADX": 1,
+      "DMI": 6,
+      "wavelet": 24
+    },
+    "leftover": false,
+    "chars": 35898
+  },
+  {
+    "id": 17938,
+    "title": "MQL5 Wizard Techniques you should know (Part 62): Using Patterns of ADX and CCI with Reinforcement-Learning TRPO",
+    "author": "",
+    "published": "2025-05-02T13:04Z",
+    "section": "Trading systems",
+    "total": 29,
+    "title_boost": 65,
+    "score": 94,
+    "counts": {
+      "ADX": 9,
+      "DMI": 20
+    },
+    "leftover": false,
+    "chars": 43907
+  },
+  {
+    "id": 21299,
+    "title": "Beyond GARCH (Part IV): Partition Analysis in MQL5",
+    "author": "",
+    "published": "2026-05-30T11:42Z",
+    "section": "Trading systems",
+    "total": 94,
+    "title_boost": 0,
+    "score": 94,
+    "counts": {
+      "Hurst": 22,
+      "GHE": 13,
+      "VRT": 1,
+      "MFDFA": 56,
+      "long_memory": 2
+    },
+    "leftover": false,
+    "chars": 56961
+  },
+  {
+    "id": 23013,
+    "title": "MQL5 Wizard Techniques you should know (Part 96): Using Wavelet Thresholding and LSTM Network in a Custom Money Management Class",
+    "author": "",
+    "published": "2026-06-17T11:12Z",
+    "section": "Trading systems",
+    "total": 28,
+    "title_boost": 65,
+    "score": 93,
+    "counts": {
+      "wavelet": 28
+    },
+    "leftover": false,
+    "chars": 35952
+  },
+  {
+    "id": 23171,
+    "title": "Building Volatility Models in MQL5 (Part IV): Implementing Long Memory Volatility Processes, FIGARCH, and HARCH",
+    "author": "",
+    "published": "2026-07-03T08:34Z",
+    "section": "Examples",
+    "total": 68,
+    "title_boost": 25,
+    "score": 93,
+    "counts": {
+      "Hurst": 17,
+      "DMI": 5,
+      "long_memory": 46
+    },
+    "leftover": false,
+    "chars": 125611
+  },
+  {
+    "id": 1297,
+    "title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal Panel, Part 1",
+    "author": "",
+    "published": "2015-03-02T14:25Z",
+    "section": "Trading",
+    "total": 64,
+    "title_boost": 25,
+    "score": 89,
+    "counts": {
+      "DMI": 64
+    },
+    "leftover": false,
+    "chars": 151236
+  },
+  {
+    "id": 1316,
+    "title": "Bi-Directional Trading and Hedging of Positions in MetaTrader 5 Using the HedgeTerminal API, Part 2",
+    "author": "",
+    "published": "2015-04-09T15:50Z",
+    "section": "Trading systems",
+    "total": 63,
+    "title_boost": 25,
+    "score": 88,
+    "counts": {
+      "DMI": 63
+    },
+    "leftover": false,
+    "chars": 160654
+  },
+  {
+    "id": 19781,
+    "title": "MQL5 Wizard Techniques you should know (Part 81):  Using Patterns of Ichimoku and the ADX-Wilder with Beta VAE Inference Learning",
+    "author": "",
+    "published": "2025-10-06T08:31Z",
+    "section": "Integration",
+    "total": 17,
+    "title_boost": 65,
+    "score": 82,
+    "counts": {
+      "ADX": 15,
+      "DMI": 1,
+      "entropy": 1
+    },
+    "leftover": false,
+    "chars": 37047
+  },
+  {
+    "id": 23112,
+    "title": "MQL5 Wizard Techniques you should know (Part 98): Using an Unscented Kalman Filter and a Capsule Network in a Custom Signal Class",
+    "author": "",
+    "published": "2026-06-24T10:30Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 65,
+    "score": 79,
+    "counts": {
+      "DMI": 1,
+      "Kalman": 13
+    },
+    "leftover": false,
+    "chars": 37442
+  },
+  {
+    "id": 16757,
+    "title": "Neural Networks in Trading: Models Using Wavelet Transform and Multi-Task Attention (Final Part)",
+    "author": "",
+    "published": "2025-10-08T09:53Z",
+    "section": "Trading systems",
+    "total": 12,
+    "title_boost": 65,
+    "score": 77,
+    "counts": {
+      "ADX": 1,
+      "wavelet": 11
+    },
+    "leftover": false,
+    "chars": 42375
+  },
+  {
+    "id": 1351,
+    "title": "Fractal Analysis of Joint Currency Movements",
+    "author": "\u0420\u0443\u0441\u043b\u0430\u043d",
+    "published": "2012-03-29T09:35Z",
+    "section": "Examples",
+    "total": 36,
+    "title_boost": 40,
+    "score": 76,
+    "counts": {
+      "fractal_dim": 25,
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 19335
+  },
+  {
+    "id": 18453,
+    "title": "An Introduction to the Study of Fractal Market Structures Using Machine Learning",
+    "author": "",
+    "published": "2026-05-27T11:51Z",
+    "section": "Trading systems",
+    "total": 36,
+    "title_boost": 40,
+    "score": 76,
+    "counts": {
+      "Hurst": 6,
+      "GHE": 1,
+      "MFDFA": 21,
+      "fractal_dim": 3,
+      "DFA": 4,
+      "entropy": 1
+    },
+    "leftover": false,
+    "chars": 28972
+  },
+  {
+    "id": 19627,
+    "title": "MQL5 Wizard Techniques you should know (Part 80): Using Patterns of Ichimoku and the ADX-Wilder with TD3 Reinforcement Learning",
+    "author": "",
+    "published": "2025-09-25T13:13Z",
+    "section": "Trading systems",
+    "total": 7,
+    "title_boost": 65,
+    "score": 72,
+    "counts": {
+      "ADX": 6,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 42550
+  },
+  {
+    "id": 3968,
+    "title": "Resolving entries into indicators",
+    "author": "",
+    "published": "2017-12-13T11:14Z",
+    "section": "Tester",
+    "total": 66,
+    "title_boost": 0,
+    "score": 66,
+    "counts": {
+      "ADX": 35,
+      "DMI": 15,
+      "Kalman": 16
+    },
+    "leftover": false,
+    "chars": 82828
+  },
+  {
+    "id": 23451,
+    "title": "Ordinal Pattern Transition Networks in MQL5",
+    "author": "",
+    "published": "2026-07-28T08:26Z",
+    "section": "Trading",
+    "total": 65,
+    "title_boost": 0,
+    "score": 65,
+    "counts": {
+      "perm_entropy": 25,
+      "shannon": 2,
+      "DMI": 5,
+      "entropy": 33
+    },
+    "leftover": false,
+    "chars": 63485
+  },
+  {
+    "id": 13406,
+    "title": "Ready-made templates for including indicators to Expert Advisors (Part 3): Trend indicators",
+    "author": "",
+    "published": "2024-02-06T14:18Z",
+    "section": "Examples",
+    "total": 58,
+    "title_boost": 0,
+    "score": 58,
+    "counts": {
+      "ADX": 14,
+      "DMI": 44
+    },
+    "leftover": false,
+    "chars": 320150
+  },
+  {
+    "id": 2118,
+    "title": "Enhancing the StrategyTester to Optimize Indicators Solely on the Example of Flat and Trend Markets",
+    "author": "",
+    "published": "2016-04-13T15:27Z",
+    "section": "Examples",
+    "total": 53,
+    "title_boost": 0,
+    "score": 53,
+    "counts": {
+      "ADX": 51,
+      "DMI": 2
+    },
+    "leftover": false,
+    "chars": 46323
+  },
+  {
+    "id": 20173,
+    "title": "Statistical Arbitrage Through Cointegrated Stocks (Part 7): Scoring System 2",
+    "author": "",
+    "published": "2025-11-06T09:52Z",
+    "section": "Trading systems",
+    "total": 53,
+    "title_boost": 0,
+    "score": 53,
+    "counts": {
+      "half_life": 53
+    },
+    "leftover": false,
+    "chars": 46548
+  },
+  {
+    "id": 12129,
+    "title": "Measuring Indicator Information",
+    "author": "",
+    "published": "2023-02-07T15:57Z",
+    "section": "Examples",
+    "total": 51,
+    "title_boost": 0,
+    "score": 51,
+    "counts": {
+      "entropy": 51
+    },
+    "leftover": false,
+    "chars": 30312
+  },
+  {
+    "id": 22438,
+    "title": "Beyond GARCH (Part I): Mandelbrot's MMAR versus Engle's GARCH",
+    "author": "",
+    "published": "2026-05-18T10:51Z",
+    "section": "Trading systems",
+    "total": 51,
+    "title_boost": 0,
+    "score": 51,
+    "counts": {
+      "Hurst": 5,
+      "MFDFA": 26,
+      "DMI": 2,
+      "long_memory": 12,
+      "autocorr": 6
+    },
+    "leftover": false,
+    "chars": 48976
+  },
+  {
+    "id": 5451,
+    "title": "Econometric approach to finding market patterns: Autocorrelation, Heat Maps and Scatter Plots",
+    "author": "",
+    "published": "2020-04-02T10:15Z",
+    "section": "Trading systems",
+    "total": 25,
+    "title_boost": 25,
+    "score": 50,
+    "counts": {
+      "DMI": 1,
+      "autocorr": 24
+    },
+    "leftover": false,
+    "chars": 31471
+  },
+  {
+    "id": 20535,
+    "title": "Combining LLM, CatBoost, and Quantum Computing into a Unified Trading System",
+    "author": "",
+    "published": "2026-09-03T14:05Z",
+    "section": "Trading systems",
+    "total": 49,
+    "title_boost": 0,
+    "score": 49,
+    "counts": {
+      "shannon": 1,
+      "DMI": 2,
+      "entropy": 46
+    },
+    "leftover": false,
+    "chars": 45671
+  },
+  {
+    "id": 15849,
+    "title": "Atmosphere Clouds Model Optimization (ACMO): Theory",
+    "author": "",
+    "published": "2025-04-10T11:32Z",
+    "section": "Tester",
+    "total": 48,
+    "title_boost": 0,
+    "score": 48,
+    "counts": {
+      "DMI": 1,
+      "entropy": 47
+    },
+    "leftover": false,
+    "chars": 40662
+  },
+  {
+    "id": 22476,
+    "title": "Beyond GARCH (Part III): Building the MMAR and the Verdict",
+    "author": "",
+    "published": "2026-05-21T15:20Z",
+    "section": "Trading systems",
+    "total": 47,
+    "title_boost": 0,
+    "score": 47,
+    "counts": {
+      "Hurst": 4,
+      "MFDFA": 26,
+      "DMI": 2,
+      "long_memory": 11,
+      "autocorr": 4
+    },
+    "leftover": false,
+    "chars": 49595
+  },
+  {
+    "id": 17458,
+    "title": "Fractal-Based Algorithm (FBA)",
+    "author": "",
+    "published": "2026-04-17T11:22Z",
+    "section": "Trading",
+    "total": 6,
+    "title_boost": 40,
+    "score": 46,
+    "counts": {
+      "DMI": 6
+    },
+    "leftover": false,
+    "chars": 64721
+  },
+  {
+    "id": 22638,
+    "title": "Market Microstructure in MQL5 (Part 4): Volatility That Remembers",
+    "author": "",
+    "published": "2026-06-05T10:59Z",
+    "section": "Indicators",
+    "total": 46,
+    "title_boost": 0,
+    "score": 46,
+    "counts": {
+      "Hurst": 1,
+      "MFDFA": 33,
+      "entropy": 1,
+      "long_memory": 8,
+      "autocorr": 3
+    },
+    "leftover": false,
+    "chars": 56871
+  },
+  {
+    "id": 23565,
+    "title": "Feature Engineering for ML (Part 11): Fractal Features in Python",
+    "author": "",
+    "published": "2026-08-11T14:42Z",
+    "section": "Statistics and analysis",
+    "total": 5,
+    "title_boost": 40,
+    "score": 45,
+    "counts": {
+      "DMI": 1,
+      "entropy": 3,
+      "long_memory": 1
+    },
+    "leftover": false,
+    "chars": 31343
+  },
+  {
+    "id": 1201,
+    "title": "Plotting trend lines based on fractals using MQL4 and MQL5",
+    "author": "",
+    "published": "2015-05-06T11:00Z",
+    "section": "Trading",
+    "total": 4,
+    "title_boost": 40,
+    "score": 44,
+    "counts": {
+      "DMI": 4
+    },
+    "leftover": false,
+    "chars": 36272
+  },
+  {
+    "id": 18566,
+    "title": "Detecting and Classifying Fractal Patterns Using Machine Learning",
+    "author": "",
+    "published": "2026-05-29T12:06Z",
+    "section": "Trading",
+    "total": 4,
+    "title_boost": 40,
+    "score": 44,
+    "counts": {
+      "MFDFA": 3,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 38832
+  },
+  {
+    "id": 2828,
+    "title": "3D Modeling in MQL5",
+    "author": "",
+    "published": "2017-02-17T09:27Z",
+    "section": "Examples",
+    "total": 42,
+    "title_boost": 0,
+    "score": 42,
+    "counts": {
+      "DMI": 42
+    },
+    "leftover": false,
+    "chars": 50132
+  },
+  {
+    "id": 5703,
+    "title": "A New Approach to Interpreting Classic and Hidden Divergence. Part II",
+    "author": "",
+    "published": "2019-10-16T09:05Z",
+    "section": "Trading systems",
+    "total": 42,
+    "title_boost": 0,
+    "score": 42,
+    "counts": {
+      "ADX": 22,
+      "DMI": 20
+    },
+    "leftover": false,
+    "chars": 78549
+  },
+  {
+    "id": 10091,
+    "title": "Graphics in DoEasy library (Part 88): Graphical object collection \u2014 two-dimensional dynamic array for storing dynamically changing object properties",
+    "author": "",
+    "published": "2021-12-15T10:10Z",
+    "section": "Examples",
+    "total": 17,
+    "title_boost": 25,
+    "score": 42,
+    "counts": {
+      "ADX": 1,
+      "DMI": 16
+    },
+    "leftover": false,
+    "chars": 177290
+  },
+  {
+    "id": 12941,
+    "title": "Neural networks made easy (Part 49): Soft Actor-Critic",
+    "author": "",
+    "published": "2023-11-03T14:43Z",
+    "section": "Trading systems",
+    "total": 42,
+    "title_boost": 0,
+    "score": 42,
+    "counts": {
+      "DMI": 1,
+      "entropy": 41
+    },
+    "leftover": false,
+    "chars": 59264
+  },
+  {
+    "id": 17931,
+    "title": "MQL5 Trading Tools (Part 1): Building an Interactive Visual Pending Orders Trade Assistant Tool",
+    "author": "",
+    "published": "2025-05-07T10:07Z",
+    "section": "Trading",
+    "total": 42,
+    "title_boost": 0,
+    "score": 42,
+    "counts": {
+      "DMI": 42
+    },
+    "leftover": false,
+    "chars": 79965
+  },
+  {
+    "id": 22539,
+    "title": "Beyond GARCH (Part VIII): The MMAR Library And Putting it to Work in an Expert Advisor",
+    "author": "",
+    "published": "2026-07-13T11:41Z",
+    "section": "Trading systems",
+    "total": 42,
+    "title_boost": 0,
+    "score": 42,
+    "counts": {
+      "Hurst": 9,
+      "GHE": 1,
+      "MFDFA": 30,
+      "DMI": 1,
+      "long_memory": 1
+    },
+    "leftover": false,
+    "chars": 35814
+  },
+  {
+    "id": 23657,
+    "title": "Feature Engineering for ML (Part 12): Fractal Features in MQL5",
+    "author": "",
+    "published": "2026-08-17T05:48Z",
+    "section": "Indicators",
+    "total": 2,
+    "title_boost": 40,
+    "score": 42,
+    "counts": {
+      "DMI": 1,
+      "entropy": 1
+    },
+    "leftover": false,
+    "chars": 34414
+  },
+  {
+    "id": 13915,
+    "title": "MQL5 Wizard Techniques you should know (Part 09): Pairing K-Means Clustering with Fractal Waves",
+    "author": "",
+    "published": "2023-12-19T11:51Z",
+    "section": "Trading systems",
+    "total": 1,
+    "title_boost": 40,
+    "score": 41,
+    "counts": {
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 36689
+  },
+  {
+    "id": 17334,
+    "title": "MQL5 Wizard Techniques you should know (Part 56): Bill Williams Fractals",
+    "author": "",
+    "published": "2025-03-04T09:05Z",
+    "section": "Trading systems",
+    "total": 1,
+    "title_boost": 40,
+    "score": 41,
+    "counts": {
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 36060
+  },
+  {
+    "id": 18099,
+    "title": "Hilbert-Schmidt Independence Criterion (HSIC)",
+    "author": "",
+    "published": "2026-04-21T12:12Z",
+    "section": "Statistics and analysis",
+    "total": 16,
+    "title_boost": 25,
+    "score": 41,
+    "counts": {
+      "Ehlers": 11,
+      "entropy": 5
+    },
+    "leftover": false,
+    "chars": 27768
+  },
+  {
+    "id": 22598,
+    "title": "Market Microstructure in MQL5 (Part 3): Estimating ARFIMA d with GPH",
+    "author": "",
+    "published": "2026-05-27T14:17Z",
+    "section": "Indicators",
+    "total": 41,
+    "title_boost": 0,
+    "score": 41,
+    "counts": {
+      "Hurst": 18,
+      "entropy": 1,
+      "long_memory": 16,
+      "autocorr": 6
+    },
+    "leftover": false,
+    "chars": 35175
+  },
+  {
+    "id": 2195,
+    "title": "Fuzzy logic to create manual trading strategies",
+    "author": "",
+    "published": "2016-03-07T13:15Z",
+    "section": "Trading",
+    "total": 39,
+    "title_boost": 0,
+    "score": 39,
+    "counts": {
+      "ADX": 31,
+      "DMI": 8
+    },
+    "leftover": false,
+    "chars": 34818
+  },
+  {
+    "id": 15445,
+    "title": "Chaos theory in trading (Part 2): Diving deeper",
+    "author": "",
+    "published": "2025-02-03T12:26Z",
+    "section": "Trading systems",
+    "total": 39,
+    "title_boost": 0,
+    "score": 39,
+    "counts": {
+      "fractal_dim": 27,
+      "DMI": 7,
+      "entropy": 1,
+      "autocorr": 4
+    },
+    "leftover": false,
+    "chars": 55394
+  },
+  {
+    "id": 21318,
+    "title": "MQL5 Trading Tools (Part 23): Camera-Controlled, DirectX-Enabled 3D Graphs for Distribution Insights",
+    "author": "",
+    "published": "2026-03-11T13:40Z",
+    "section": "Trading systems",
+    "total": 39,
+    "title_boost": 0,
+    "score": 39,
+    "counts": {
+      "DMI": 39
+    },
+    "leftover": false,
+    "chars": 102469
+  },
+  {
+    "id": 17210,
+    "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Chimera)",
+    "author": "",
+    "published": "2026-01-15T07:58Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 25,
+    "score": 38,
+    "counts": {
+      "DMI": 12,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 41437
+  },
+  {
+    "id": 21351,
+    "title": "Neuro-Structural Trading Engine \u2014 NSTE (Part II): Jardine's Gate Six-Gate Quantum Filter",
+    "author": "",
+    "published": "2026-03-31T09:17Z",
+    "section": "Trading systems",
+    "total": 38,
+    "title_boost": 0,
+    "score": 38,
+    "counts": {
+      "entropy": 38
+    },
+    "leftover": false,
+    "chars": 36125
+  },
+  {
+    "id": 4534,
+    "title": "Comparative analysis of 10 flat trading strategies",
+    "author": "",
+    "published": "2018-08-14T15:09Z",
+    "section": "Trading systems",
+    "total": 37,
+    "title_boost": 0,
+    "score": 37,
+    "counts": {
+      "fractal_dim": 13,
+      "ADX": 16,
+      "DMI": 1,
+      "Ehlers": 7
+    },
+    "leftover": false,
+    "chars": 54717
+  },
+  {
+    "id": 22521,
+    "title": "Beyond GARCH (Part VI): Fractional Brownian Motion And The Multiplicative Cascade in MQL5",
+    "author": "",
+    "published": "2026-06-23T08:25Z",
+    "section": "Trading systems",
+    "total": 37,
+    "title_boost": 0,
+    "score": 37,
+    "counts": {
+      "Hurst": 8,
+      "GHE": 1,
+      "VRT": 5,
+      "MFDFA": 11,
+      "DMI": 3,
+      "long_memory": 9
+    },
+    "leftover": false,
+    "chars": 53039
+  },
+  {
+    "id": 15921,
+    "title": "Atmosphere Clouds Model Optimization (ACMO): Practice",
+    "author": "",
+    "published": "2025-04-24T12:35Z",
+    "section": "Tester",
+    "total": 36,
+    "title_boost": 0,
+    "score": 36,
+    "counts": {
+      "entropy": 36
+    },
+    "leftover": false,
+    "chars": 53901
+  },
+  {
+    "id": 13290,
+    "title": "Neural networks made easy (Part 57): Stochastic Marginal Actor-Critic (SMAC)",
+    "author": "",
+    "published": "2024-01-18T12:20Z",
+    "section": "Trading systems",
+    "total": 35,
+    "title_boost": 0,
+    "score": 35,
+    "counts": {
+      "entropy": 35
+    },
+    "leftover": false,
+    "chars": 58899
+  },
+  {
+    "id": 16695,
+    "title": "MQL5 Wizard Techniques you should know (Part 51): Reinforcement Learning with SAC",
+    "author": "",
+    "published": "2024-12-19T12:57Z",
+    "section": "Trading systems",
+    "total": 34,
+    "title_boost": 0,
+    "score": 34,
+    "counts": {
+      "DMI": 1,
+      "entropy": 33
+    },
+    "leftover": false,
+    "chars": 45594
+  },
+  {
+    "id": 17241,
+    "title": "Neural Networks in Trading: Two-Dimensional Connection Space Models (Final Part)",
+    "author": "",
+    "published": "2026-01-16T15:56Z",
+    "section": "Trading systems",
+    "total": 9,
+    "title_boost": 25,
+    "score": 34,
+    "counts": {
+      "DMI": 9
+    },
+    "leftover": false,
+    "chars": 51563
+  },
+  {
+    "id": 2032,
+    "title": "Applying fuzzy logic in trading by means of MQL4",
+    "author": "",
+    "published": "2016-04-26T12:31Z",
+    "section": "Examples",
+    "total": 32,
+    "title_boost": 0,
+    "score": 32,
+    "counts": {
+      "ADX": 27,
+      "DMI": 5
+    },
+    "leftover": false,
+    "chars": 45372
+  },
+  {
+    "id": 1443,
+    "title": "Three-Dimensional Graphs - a Professional Tool of Market Analyzing",
+    "author": "",
+    "published": "2007-09-13T12:27Z",
+    "section": "Examples",
+    "total": 6,
+    "title_boost": 25,
+    "score": 31,
+    "counts": {
+      "DMI": 6
+    },
+    "leftover": false,
+    "chars": 16911
+  },
+  {
+    "id": 16940,
+    "title": "Trend Prediction with LSTM for Trend-Following Strategies",
+    "author": "",
+    "published": "2025-02-05T10:28Z",
+    "section": "Trading systems",
+    "total": 31,
+    "title_boost": 0,
+    "score": 31,
+    "counts": {
+      "ADX": 31
+    },
+    "leftover": false,
+    "chars": 37961
+  },
+  {
+    "id": 13705,
+    "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 3): Added symbols prefixes and/or suffixes and Trading Time Session",
+    "author": "",
+    "published": "2023-11-09T12:49Z",
+    "section": "Trading",
+    "total": 30,
+    "title_boost": 0,
+    "score": 30,
+    "counts": {
+      "DMI": 30
+    },
+    "leftover": false,
+    "chars": 72766
+  },
+  {
+    "id": 14051,
+    "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 6): Two RSI indicators cross each other's lines",
+    "author": "",
+    "published": "2024-01-24T10:02Z",
+    "section": "Examples",
+    "total": 30,
+    "title_boost": 0,
+    "score": 30,
+    "counts": {
+      "DMI": 30
+    },
+    "leftover": false,
+    "chars": 105221
+  },
+  {
+    "id": 14329,
+    "title": "How to create a simple Multi-Currency Expert Advisor using MQL5 (Part 7): ZigZag with Awesome Oscillator Indicators Signal",
+    "author": "",
+    "published": "2024-03-15T10:56Z",
+    "section": "Examples",
+    "total": 30,
+    "title_boost": 0,
+    "score": 30,
+    "counts": {
+      "DMI": 30
+    },
+    "leftover": false,
+    "chars": 134745
+  },
+  {
+    "id": 17845,
+    "title": "One-Dimensional Singular Spectrum Analysis",
+    "author": "",
+    "published": "2026-04-06T12:33Z",
+    "section": "Statistics and analysis",
+    "total": 4,
+    "title_boost": 25,
+    "score": 29,
+    "counts": {
+      "DMI": 4
+    },
+    "leftover": false,
+    "chars": 37263
+  },
+  {
+    "id": 22288,
+    "title": "Recurrence Quantification Analysis (RQA) in MQL5: Building a Complete Analysis Library",
+    "author": "",
+    "published": "2026-05-01T16:18Z",
+    "section": "Indicators",
+    "total": 29,
+    "title_boost": 0,
+    "score": 29,
+    "counts": {
+      "shannon": 8,
+      "DMI": 7,
+      "entropy": 14
+    },
+    "leftover": false,
+    "chars": 54670
+  },
+  {
+    "id": 21833,
+    "title": "Building a Research-Grounded Grid EA in MQL5: Why Most Grid EAs Fail and What Taranto Proved",
+    "author": "",
+    "published": "2026-03-27T10:16Z",
+    "section": "Trading",
+    "total": 28,
+    "title_boost": 0,
+    "score": 28,
+    "counts": {
+      "shannon": 1,
+      "DMI": 22,
+      "entropy": 5
+    },
+    "leftover": false,
+    "chars": 55573
+  },
+  {
+    "id": 2029,
+    "title": "Evaluation and selection of variables for machine learning models",
+    "author": "",
+    "published": "2015-11-10T10:29Z",
+    "section": "Integration",
+    "total": 26,
+    "title_boost": 0,
+    "score": 26,
+    "counts": {
+      "ADX": 22,
+      "DMI": 1,
+      "entropy": 3
+    },
+    "leftover": false,
+    "chars": 74235
+  },
+  {
+    "id": 7569,
+    "title": "Library for easy and quick development of MetaTrader programs (part XXXIV): Pending trading requests - removing and modifying orders and positions under certain conditions",
+    "author": "",
+    "published": "2020-05-06T12:22Z",
+    "section": "Examples",
+    "total": 26,
+    "title_boost": 0,
+    "score": 26,
+    "counts": {
+      "DMI": 26
+    },
+    "leftover": false,
+    "chars": 107344
+  },
+  {
+    "id": 5022,
+    "title": "Combining trend and flat strategies",
+    "author": "",
+    "published": "2018-09-28T15:25Z",
+    "section": "Trading systems",
+    "total": 25,
+    "title_boost": 0,
+    "score": 25,
+    "counts": {
+      "ADX": 25
+    },
+    "leftover": false,
+    "chars": 30988
+  },
+  {
+    "id": 16741,
+    "title": "Analyzing binary code of prices on the exchange (Part I): A new look at technical analysis",
+    "author": "",
+    "published": "2025-08-26T10:17Z",
+    "section": "Indicators",
+    "total": 25,
+    "title_boost": 0,
+    "score": 25,
+    "counts": {
+      "DMI": 1,
+      "entropy": 24
+    },
+    "leftover": false,
+    "chars": 43980
+  },
+  {
+    "id": 18766,
+    "title": "Neural Networks in Trading: Probabilistic Time Series Forecasting (Encoder)",
+    "author": "",
+    "published": "2026-08-21T11:32Z",
+    "section": "Trading systems",
+    "total": 25,
+    "title_boost": 0,
+    "score": 25,
+    "counts": {
+      "DMI": 1,
+      "Kalman": 24
+    },
+    "leftover": false,
+    "chars": 65545
+  },
+  {
+    "id": 13968,
+    "title": "Data Science and Machine Learning (Part 18): The battle of Mastering Market Complexity, Truncated SVD Versus NMF",
+    "author": "",
+    "published": "2024-01-12T09:39Z",
+    "section": "Trading",
+    "total": 24,
+    "title_boost": 0,
+    "score": 24,
+    "counts": {
+      "VRT": 9,
+      "DMI": 15
+    },
+    "leftover": false,
+    "chars": 74711
+  },
+  {
+    "id": 15263,
+    "title": "Creating an Interactive Graphical User Interface in MQL5 (Part 2): Adding Controls and Responsiveness",
+    "author": "",
+    "published": "2024-07-12T13:40Z",
+    "section": "Trading",
+    "total": 24,
+    "title_boost": 0,
+    "score": 24,
+    "counts": {
+      "DMI": 24
+    },
+    "leftover": false,
+    "chars": 87476
+  },
+  {
+    "id": 18319,
+    "title": "MQL5 Trading Tools (Part 3): Building a Multi-Timeframe Scanner Dashboard for Strategic Trading",
+    "author": "",
+    "published": "2025-06-04T08:25Z",
+    "section": "Trading",
+    "total": 24,
+    "title_boost": 0,
+    "score": 24,
+    "counts": {
+      "ADX": 24
+    },
+    "leftover": false,
+    "chars": 58860
+  },
+  {
+    "id": 22263,
+    "title": "Market Microstructure in MQL5 (Part 1): Robust Foundation",
+    "author": "",
+    "published": "2026-05-08T12:10Z",
+    "section": "Trading systems",
+    "total": 24,
+    "title_boost": 0,
+    "score": 24,
+    "counts": {
+      "Hurst": 10,
+      "MFDFA": 7,
+      "fractal_dim": 5,
+      "DMI": 1,
+      "long_memory": 1
+    },
+    "leftover": false,
+    "chars": 36318
+  },
+  {
+    "id": 5061,
+    "title": "Using indicators for optimizing Expert Advisors in real time",
+    "author": "",
+    "published": "2018-10-18T14:45Z",
+    "section": "Tester",
+    "total": 23,
+    "title_boost": 0,
+    "score": 23,
+    "counts": {
+      "ADX": 23
+    },
+    "leftover": false,
+    "chars": 46717
+  },
+  {
+    "id": 22610,
+    "title": "Joint Recurrence Quantification Analysis (JRQA) in MQL5: Detecting Simultaneous Recurrence in Two Series",
+    "author": "",
+    "published": "2026-05-29T10:49Z",
+    "section": "Indicators",
+    "total": 23,
+    "title_boost": 0,
+    "score": 23,
+    "counts": {
+      "DMI": 19,
+      "entropy": 4
+    },
+    "leftover": false,
+    "chars": 48712
+  },
+  {
+    "id": 8292,
+    "title": "Timeseries in DoEasy library (part 49): Multi-period multi-symbol multi-buffer standard indicators",
+    "author": "",
+    "published": "2020-11-18T15:27Z",
+    "section": "Examples",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "ADX": 8,
+      "DMI": 14
+    },
+    "leftover": false,
+    "chars": 126809
+  },
+  {
+    "id": 12583,
+    "title": "Implementing an ARIMA training algorithm in MQL5",
+    "author": "",
+    "published": "2023-05-12T10:02Z",
+    "section": "Examples",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "autocorr": 22
+    },
+    "leftover": false,
+    "chars": 27753
+  },
+  {
+    "id": 16213,
+    "title": "MQL5 Wizard Techniques you should know (Part 44): Average True Range (ATR) technical indicator",
+    "author": "",
+    "published": "2024-10-25T09:50Z",
+    "section": "Tester",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "ADX": 22
+    },
+    "leftover": false,
+    "chars": 38049
+  },
+  {
+    "id": 21335,
+    "title": "MQL5 Trading Tools (Part 24): Depth-Perception Upgrades with 3D Curves, Pan Mode, and ViewCube Navigation",
+    "author": "",
+    "published": "2026-03-19T10:28Z",
+    "section": "Trading systems",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "DMI": 22
+    },
+    "leftover": false,
+    "chars": 93440
+  },
+  {
+    "id": 22755,
+    "title": "Meta-Labeling the Classics (Part 3): Filtering and Sizing Bollinger Band Trades",
+    "author": "",
+    "published": "2026-08-28T08:17Z",
+    "section": "Trading systems",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "ADX": 19,
+      "DMI": 3
+    },
+    "leftover": false,
+    "chars": 35940
+  },
+  {
+    "id": 23310,
+    "title": "Beyond the Clock (Part 4): Efficacy of Bars on Trending and Mean-Reversion Strategies",
+    "author": "",
+    "published": "2026-07-17T14:43Z",
+    "section": "Examples",
+    "total": 22,
+    "title_boost": 0,
+    "score": 22,
+    "counts": {
+      "ADX": 12,
+      "DMI": 2,
+      "entropy": 7,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 33999
+  },
+  {
+    "id": 5008,
+    "title": "Reversing: The holy grail or a dangerous delusion?",
+    "author": "",
+    "published": "2018-10-19T13:54Z",
+    "section": "Trading systems",
+    "total": 21,
+    "title_boost": 0,
+    "score": 21,
+    "counts": {
+      "ADX": 20,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 39911
+  },
+  {
+    "id": 13158,
+    "title": "Neural networks made easy (Part 54): Using random encoder for efficient research (RE3)",
+    "author": "",
+    "published": "2023-12-08T16:36Z",
+    "section": "Trading systems",
+    "total": 21,
+    "title_boost": 0,
+    "score": 21,
+    "counts": {
+      "DMI": 6,
+      "entropy": 15
+    },
+    "leftover": false,
+    "chars": 62131
+  },
+  {
+    "id": 1483,
+    "title": "MQL4 Language for Newbies. Difficult Questions in Simple Phrases.",
+    "author": "",
+    "published": "2007-07-04T09:49Z",
+    "section": "Examples",
+    "total": 20,
+    "title_boost": 0,
+    "score": 20,
+    "counts": {
+      "DMI": 20
+    },
+    "leftover": false,
+    "chars": 32165
+  },
+  {
+    "id": 14858,
+    "title": "Neural networks made easy (Part 89): Frequency Enhanced Decomposition Transformer (FEDformer)",
+    "author": "",
+    "published": "2024-10-23T08:24Z",
+    "section": "Trading systems",
+    "total": 20,
+    "title_boost": 0,
+    "score": 20,
+    "counts": {
+      "wavelet": 20
+    },
+    "leftover": false,
+    "chars": 54921
+  },
+  {
+    "id": 15357,
+    "title": "Master MQL5 from beginner to pro (Part IV): About Arrays, Functions and Global Terminal Variables",
+    "author": "",
+    "published": "2025-02-18T14:53Z",
+    "section": "Examples",
+    "total": 20,
+    "title_boost": 0,
+    "score": 20,
+    "counts": {
+      "DMI": 20
+    },
+    "leftover": false,
+    "chars": 68539
+  },
+  {
+    "id": 17972,
+    "title": "MQL5 Trading Tools (Part 2): Enhancing the Interactive Trade Assistant with Dynamic Visual Feedback",
+    "author": "",
+    "published": "2025-05-09T11:20Z",
+    "section": "Trading",
+    "total": 20,
+    "title_boost": 0,
+    "score": 20,
+    "counts": {
+      "DMI": 20
+    },
+    "leftover": false,
+    "chars": 65521
+  },
+  {
+    "id": 20163,
+    "title": "MCMC Sampling Methods: The Slice Sampling Algorithm",
+    "author": "",
+    "published": "2026-08-11T08:45Z",
+    "section": "Statistics and analysis",
+    "total": 20,
+    "title_boost": 0,
+    "score": 20,
+    "counts": {
+      "DMI": 17,
+      "autocorr": 3
+    },
+    "leftover": false,
+    "chars": 61991
+  },
+  {
+    "id": 23130,
+    "title": "Linear Regression Prediction Channels in MQL5: Constructing Statistically Grounded Confidence and Prediction Bands",
+    "author": "",
+    "published": "2026-06-26T08:23Z",
+    "section": "Indicators",
+    "total": 19,
+    "title_boost": 0,
+    "score": 19,
+    "counts": {
+      "ADX": 3,
+      "DMI": 10,
+      "autocorr": 6
+    },
+    "leftover": false,
+    "chars": 86162
+  },
+  {
+    "id": 23233,
+    "title": "Persistent Homology in MQL5: The Reduction Algorithm and the Persistence Diagram",
+    "author": "",
+    "published": "2026-07-08T11:12Z",
+    "section": "Trading",
+    "total": 19,
+    "title_boost": 0,
+    "score": 19,
+    "counts": {
+      "pers_entropy": 7,
+      "DMI": 5,
+      "entropy": 7
+    },
+    "leftover": false,
+    "chars": 35167
+  },
+  {
+    "id": 3188,
+    "title": "How Long Is the Trend?",
+    "author": "",
+    "published": "2017-05-25T10:03Z",
+    "section": "Tester",
+    "total": 18,
+    "title_boost": 0,
+    "score": 18,
+    "counts": {
+      "ADX": 18
+    },
+    "leftover": false,
+    "chars": 29263
+  },
+  {
+    "id": 22393,
+    "title": "3D Visualization Without External Libraries: How MetaTrader 5 Reveals Optimization Results via MQL5 + DX11",
+    "author": "",
+    "published": "2026-05-26T11:37Z",
+    "section": "Examples",
+    "total": 18,
+    "title_boost": 0,
+    "score": 18,
+    "counts": {
+      "Hurst": 3,
+      "DMI": 12,
+      "long_memory": 3
+    },
+    "leftover": false,
+    "chars": 52248
+  },
+  {
+    "id": 3074,
+    "title": "Comparative Analysis of 10 Trend Strategies",
+    "author": "",
+    "published": "2017-05-24T12:30Z",
+    "section": "Tester",
+    "total": 17,
+    "title_boost": 0,
+    "score": 17,
+    "counts": {
+      "ADX": 10,
+      "DMI": 2,
+      "Ehlers": 5
+    },
+    "leftover": false,
+    "chars": 68385
+  },
+  {
+    "id": 3299,
+    "title": "An Analysis of Why Expert Advisors Fail",
+    "author": "Richard Poster",
+    "published": "2022-02-22T07:41Z",
+    "section": "Expert Advisors",
+    "total": 17,
+    "title_boost": 0,
+    "score": 17,
+    "counts": {
+      "autocorr": 17
+    },
+    "leftover": false,
+    "chars": 18294
+  },
+  {
+    "id": 4192,
+    "title": "Creating a new trading strategy using a technology of resolving entries into indicators",
+    "author": "",
+    "published": "2017-12-19T13:10Z",
+    "section": "Trading systems",
+    "total": 17,
+    "title_boost": 0,
+    "score": 17,
+    "counts": {
+      "ADX": 10,
+      "DMI": 4,
+      "Kalman": 3
+    },
+    "leftover": false,
+    "chars": 49467
+  },
+  {
+    "id": 12998,
+    "title": "Neural networks made easy (Part 50): Soft Actor-Critic (model optimization)",
+    "author": "",
+    "published": "2023-11-17T10:32Z",
+    "section": "Trading systems",
+    "total": 17,
+    "title_boost": 0,
+    "score": 17,
+    "counts": {
+      "DMI": 3,
+      "entropy": 14
+    },
+    "leftover": false,
+    "chars": 53030
+  },
+  {
+    "id": 13347,
+    "title": "Neural networks made easy (Part 58): Decision Transformer (DT)",
+    "author": "",
+    "published": "2024-02-12T16:00Z",
+    "section": "Trading systems",
+    "total": 17,
+    "title_boost": 0,
+    "score": 17,
+    "counts": {
+      "Hurst": 3,
+      "GHE": 3,
+      "VRT": 4,
+      "DMI": 6,
+      "entropy": 1
+    },
+    "leftover": false,
+    "chars": 67763
+  },
+  {
+    "id": 1103,
+    "title": "Third Generation Neural Networks: Deep Networks",
+    "author": "",
+    "published": "2015-02-05T11:17Z",
+    "section": "Indicators",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "ADX": 15,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 97820
+  },
+  {
+    "id": 3146,
+    "title": "Trading with Donchian Channels",
+    "author": "",
+    "published": "2017-06-02T16:49Z",
+    "section": "Tester",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "ADX": 16
+    },
+    "leftover": false,
+    "chars": 38556
+  },
+  {
+    "id": 12252,
+    "title": "Population optimization algorithms: Spiral Dynamics Optimization (SDO) algorithm",
+    "author": "",
+    "published": "2024-03-26T09:25Z",
+    "section": "Examples",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "DMI": 16
+    },
+    "leftover": false,
+    "chars": 38295
+  },
+  {
+    "id": 13862,
+    "title": "Data Science and Machine Learning (Part 16): A Refreshing Look at Decision Trees",
+    "author": "",
+    "published": "2023-12-13T13:12Z",
+    "section": "Trading",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "entropy": 16
+    },
+    "leftover": false,
+    "chars": 57093
+  },
+  {
+    "id": 15614,
+    "title": "Cycles and Forex",
+    "author": "",
+    "published": "2025-03-04T10:42Z",
+    "section": "Examples",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "DMI": 2,
+      "wavelet": 12,
+      "autocorr": 2
+    },
+    "leftover": false,
+    "chars": 22625
+  },
+  {
+    "id": 20933,
+    "title": "Reimagining Classic Strategies (Part 21): Bollinger Bands And RSI Ensemble Strategy Discovery",
+    "author": "",
+    "published": "2026-01-16T14:36Z",
+    "section": "Examples",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "DMI": 16
+    },
+    "leftover": false,
+    "chars": 65040
+  },
+  {
+    "id": 22967,
+    "title": "Building a Compile-Time Unit Testing Framework in MQL5 Using Preprocessor Assertions",
+    "author": "",
+    "published": "2026-08-31T09:26Z",
+    "section": "Trading",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "DMI": 15,
+      "Kalman": 1
+    },
+    "leftover": false,
+    "chars": 73739
+  },
+  {
+    "id": 23037,
+    "title": "Shape of Price: An Introduction to TDA and Takens Embedding in MQL5",
+    "author": "",
+    "published": "2026-06-18T12:07Z",
+    "section": "Trading",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "pers_entropy": 1,
+      "DMI": 13,
+      "entropy": 1,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 39581
+  },
+  {
+    "id": 24057,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 20): Denoising, Detoning, and Clustering the Feature Correlation Matrix",
+    "author": "",
+    "published": "2026-09-03T11:55Z",
+    "section": "Machine learning",
+    "total": 16,
+    "title_boost": 0,
+    "score": 16,
+    "counts": {
+      "entropy": 9,
+      "long_memory": 1,
+      "autocorr": 6
+    },
+    "leftover": false,
+    "chars": 34879
+  },
+  {
+    "id": 1506,
+    "title": "Forecasting Financial Time-Series",
+    "author": "",
+    "published": "2008-08-12T07:33Z",
+    "section": "Trading",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 6,
+      "wavelet": 4,
+      "Ehlers": 1,
+      "entropy": 4
+    },
+    "leftover": false,
+    "chars": 50220
+  },
+  {
+    "id": 3690,
+    "title": "The NRTR indicator and trading modules based on NRTR for the MQL5 Wizard",
+    "author": "",
+    "published": "2017-12-28T06:22Z",
+    "section": "Trading systems",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "ADX": 10,
+      "DMI": 5
+    },
+    "leftover": false,
+    "chars": 38138
+  },
+  {
+    "id": 5427,
+    "title": "Separate optimization of a strategy on trend and flat conditions",
+    "author": "",
+    "published": "2019-02-08T10:01Z",
+    "section": "Tester",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "ADX": 10,
+      "DMI": 3,
+      "Ehlers": 2
+    },
+    "leftover": false,
+    "chars": 38229
+  },
+  {
+    "id": 7554,
+    "title": "Library for easy and quick development of MetaTrader programs (part XXXIII): Pending trading requests - closing positions under certain conditions",
+    "author": "",
+    "published": "2020-04-23T12:27Z",
+    "section": "Examples",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 15
+    },
+    "leftover": false,
+    "chars": 121736
+  },
+  {
+    "id": 14944,
+    "title": "Neural Networks Made Easy (Part 91): Frequency Domain Forecasting (FreDF)",
+    "author": "",
+    "published": "2024-11-01T12:18Z",
+    "section": "Examples",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 1,
+      "autocorr": 14
+    },
+    "leftover": false,
+    "chars": 45544
+  },
+  {
+    "id": 15841,
+    "title": "Gain An Edge Over Any Market (Part IV): CBOE Euro And Gold Volatility Indexes",
+    "author": "",
+    "published": "2024-09-23T13:54Z",
+    "section": "Examples",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 6,
+      "autocorr": 9
+    },
+    "leftover": false,
+    "chars": 57542
+  },
+  {
+    "id": 19154,
+    "title": "Custom Debugging and Profiling Tools for MQL5 Development (Part II): Profiling EAs and Testing Trading Logic",
+    "author": "",
+    "published": "2026-05-31T17:19Z",
+    "section": "Integration",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 15
+    },
+    "leftover": false,
+    "chars": 74169
+  },
+  {
+    "id": 20008,
+    "title": "MCMC Sampling Methods \u2014 The Metropolis-Hastings Algorithm",
+    "author": "",
+    "published": "2026-08-07T11:19Z",
+    "section": "Statistics and analysis",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 2,
+      "autocorr": 13
+    },
+    "leftover": false,
+    "chars": 51043
+  },
+  {
+    "id": 22733,
+    "title": "Feature Engineering for ML (Part 5): Microstructural Features in Python",
+    "author": "",
+    "published": "2026-06-10T11:48Z",
+    "section": "Trading systems",
+    "total": 15,
+    "title_boost": 0,
+    "score": 15,
+    "counts": {
+      "DMI": 1,
+      "Kalman": 1,
+      "entropy": 9,
+      "autocorr": 4
+    },
+    "leftover": false,
+    "chars": 48048
+  },
+  {
+    "id": 3018,
+    "title": "Universal Trend with the Graphical Interface",
+    "author": "",
+    "published": "2017-04-27T17:32Z",
+    "section": "Examples",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "ADX": 13,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 61026
+  },
+  {
+    "id": 15616,
+    "title": "Creating an MQL5-Telegram Integrated Expert Advisor (Part 3): Sending Chart Screenshots with Captions from MQL5 to Telegram",
+    "author": "",
+    "published": "2024-08-22T13:45Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "DMI": 14
+    },
+    "leftover": false,
+    "chars": 75613
+  },
+  {
+    "id": 16142,
+    "title": "Creating a Trading Administrator Panel in MQL5 (Part V): Two-Factor Authentication (2FA)",
+    "author": "",
+    "published": "2024-10-24T10:40Z",
+    "section": "Examples",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "DMI": 14
+    },
+    "leftover": false,
+    "chars": 50163
+  },
+  {
+    "id": 18247,
+    "title": "Data Science and ML (Part 42): Forex Time series Forecasting using ARIMA in Python, Everything you need to Know",
+    "author": "",
+    "published": "2025-06-04T12:26Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "DMI": 3,
+      "autocorr": 11
+    },
+    "leftover": false,
+    "chars": 45243
+  },
+  {
+    "id": 22275,
+    "title": "MetaTrader 5 Machine Learning Blueprint (Part 15): How to Calibrate Profit-Taking and Stop-Loss Targets from Synthetic Data",
+    "author": "",
+    "published": "2026-05-11T15:11Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "half_life": 12,
+      "autocorr": 2
+    },
+    "leftover": false,
+    "chars": 45534
+  },
+  {
+    "id": 22500,
+    "title": "Cross Recurrence Quantification Analysis (CRQA) in MQL5: Building a Complete Analysis Library",
+    "author": "",
+    "published": "2026-05-19T11:41Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "shannon": 1,
+      "DMI": 7,
+      "entropy": 6
+    },
+    "leftover": false,
+    "chars": 64476
+  },
+  {
+    "id": 22856,
+    "title": "MQL5 Trading Tools (Part 36): Adding Shape and Annotation Tools with In-Place Label Editing to the Canvas Drawing Layer",
+    "author": "",
+    "published": "2026-06-16T09:12Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "DMI": 14
+    },
+    "leftover": false,
+    "chars": 129279
+  },
+  {
+    "id": 23304,
+    "title": "Foundation Models for Trading (Part I): Porting Kronos to Native MQL5",
+    "author": "",
+    "published": "2026-07-17T14:56Z",
+    "section": "Trading systems",
+    "total": 14,
+    "title_boost": 0,
+    "score": 14,
+    "counts": {
+      "DMI": 8,
+      "entropy": 6
+    },
+    "leftover": false,
+    "chars": 56871
+  },
+  {
+    "id": 5472,
+    "title": "Practical Use of Kohonen Neural Networks in Algorithmic Trading. Part I. Tools",
+    "author": "",
+    "published": "2019-02-15T12:29Z",
+    "section": "Expert Advisors",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 13
+    },
+    "leftover": false,
+    "chars": 70461
+  },
+  {
+    "id": 13024,
+    "title": "Neural networks made easy (Part 51): Behavior-Guided Actor-Critic (BAC)",
+    "author": "",
+    "published": "2023-11-20T11:14Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "entropy": 13
+    },
+    "leftover": false,
+    "chars": 58290
+  },
+  {
+    "id": 14798,
+    "title": "Neural Networks Made Easy (Part 87): Time Series Patching",
+    "author": "",
+    "published": "2024-09-10T13:02Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 13
+    },
+    "leftover": false,
+    "chars": 55332
+  },
+  {
+    "id": 16631,
+    "title": "Neural Networks in Trading: An Ensemble of Agents with Attention Mechanisms (Final Part)",
+    "author": "",
+    "published": "2025-09-15T12:01Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 13
+    },
+    "leftover": false,
+    "chars": 51349
+  },
+  {
+    "id": 17689,
+    "title": "Introduction to MQL5 (Part 15): A Beginner's Guide to Building Custom Indicators (IV)",
+    "author": "",
+    "published": "2025-04-11T11:12Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 13
+    },
+    "leftover": false,
+    "chars": 81361
+  },
+  {
+    "id": 17818,
+    "title": "MQL5 Wizard Techniques you should know (Part 60): Inference Learning (Wasserstein-VAE) with Moving Average and Stochastic Oscillator Patterns",
+    "author": "",
+    "published": "2025-04-21T07:09Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 11,
+      "Ehlers": 1,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 41800
+  },
+  {
+    "id": 20590,
+    "title": "Markov Chain Monte Carlo Sampling Methods: The HMC Algorithm",
+    "author": "",
+    "published": "2026-09-04T15:37Z",
+    "section": "Statistics and analysis",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 8,
+      "autocorr": 5
+    },
+    "leftover": false,
+    "chars": 43292
+  },
+  {
+    "id": 22537,
+    "title": "Beyond GARCH (Part VII): Monte Carlo Volatility Forecasting in MQL5",
+    "author": "",
+    "published": "2026-07-01T13:08Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "Hurst": 2,
+      "GHE": 1,
+      "MFDFA": 5,
+      "DMI": 2,
+      "Ehlers": 3
+    },
+    "leftover": false,
+    "chars": 32617
+  },
+  {
+    "id": 23096,
+    "title": "Measuring What Matters (Part 1) : Portfolio Risk Decomposition in MQL5",
+    "author": "",
+    "published": "2026-06-30T14:47Z",
+    "section": "Examples",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 10,
+      "entropy": 3
+    },
+    "leftover": false,
+    "chars": 36396
+  },
+  {
+    "id": 23492,
+    "title": "Hierarchical Risk Parity: A Robust Portfolio Allocator and Expert Advisor",
+    "author": "",
+    "published": "2026-08-06T12:06Z",
+    "section": "Trading systems",
+    "total": 13,
+    "title_boost": 0,
+    "score": 13,
+    "counts": {
+      "DMI": 13
+    },
+    "leftover": false,
+    "chars": 48914
+  },
+  {
+    "id": 1341,
+    "title": "Studying the CCanvas Class. How to Draw Transparent Objects",
+    "author": "",
+    "published": "2015-03-05T14:09Z",
+    "section": "Examples",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "DMI": 12
+    },
+    "leftover": false,
+    "chars": 38716
+  },
+  {
+    "id": 3473,
+    "title": "Deep Neural Networks (Part IV). Creating, training and testing a model of neural network",
+    "author": "",
+    "published": "2017-10-04T14:55Z",
+    "section": "Trading",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "entropy": 12
+    },
+    "leftover": false,
+    "chars": 84664
+  },
+  {
+    "id": 5572,
+    "title": "Using MATLAB 2018 computational capabilities in MetaTrader 5",
+    "author": "",
+    "published": "2019-05-10T10:04Z",
+    "section": "Examples",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "Kalman": 12
+    },
+    "leftover": false,
+    "chars": 36910
+  },
+  {
+    "id": 17466,
+    "title": "Exploring Advanced Machine Learning Techniques on the Darvas Box Breakout Strategy",
+    "author": "",
+    "published": "2025-03-20T10:10Z",
+    "section": "Trading",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "ADX": 12
+    },
+    "leftover": false,
+    "chars": 57368
+  },
+  {
+    "id": 17760,
+    "title": "Coral Reefs Optimization (CRO)",
+    "author": "",
+    "published": "2026-03-27T14:55Z",
+    "section": "Trading",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "shannon": 1,
+      "DMI": 6,
+      "entropy": 5
+    },
+    "leftover": false,
+    "chars": 65783
+  },
+  {
+    "id": 19948,
+    "title": "MQL5 Wizard Techniques you should know (Part 85): Using Patterns of Stochastic-Oscillator and the FrAMA with Beta VAE Inference Learning",
+    "author": "",
+    "published": "2025-10-20T09:25Z",
+    "section": "Integration",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "fractal_dim": 5,
+      "DMI": 2,
+      "Ehlers": 3,
+      "entropy": 1,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 51202
+  },
+  {
+    "id": 22290,
+    "title": "Three MACD Filters on US_TECH100: Five Years of Broker Data",
+    "author": "Marcelo Alejandro Borasi",
+    "published": "2026-05-08T11:30Z",
+    "section": "Trading systems",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "ADX": 12
+    },
+    "leftover": false,
+    "chars": 35562
+  },
+  {
+    "id": 23491,
+    "title": "Implementing and Benchmarking Bag-of-SFA-Symbols (BOSS) Against Dynamic Time Warping (DTW)",
+    "author": "",
+    "published": "2026-08-10T10:32Z",
+    "section": "Indicators",
+    "total": 12,
+    "title_boost": 0,
+    "score": 12,
+    "counts": {
+      "DMI": 4,
+      "autocorr": 8
+    },
+    "leftover": false,
+    "chars": 65215
+  },
+  {
+    "id": 7708,
+    "title": "How to create 3D graphics using DirectX in MetaTrader 5",
+    "author": "",
+    "published": "2020-04-24T12:21Z",
+    "section": "Integration",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 53521
+  },
+  {
+    "id": 13432,
+    "title": "Population optimization algorithms: Mind Evolutionary Computation (MEC) algorithm",
+    "author": "",
+    "published": "2024-02-07T13:27Z",
+    "section": "Examples",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "Hurst": 3,
+      "GHE": 3,
+      "VRT": 4,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 39806
+  },
+  {
+    "id": 14569,
+    "title": "Neural networks made easy (Part 82): Ordinary Differential Equation models (NeuralODE)",
+    "author": "",
+    "published": "2024-08-06T11:33Z",
+    "section": "Trading systems",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 91158
+  },
+  {
+    "id": 16388,
+    "title": "Neural Networks in Trading: Enhancing Transformer Efficiency by Reducing Sharpness (SAMformer)",
+    "author": "",
+    "published": "2025-07-21T14:15Z",
+    "section": "Trading systems",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 2,
+      "entropy": 9
+    },
+    "leftover": false,
+    "chars": 38040
+  },
+  {
+    "id": 17030,
+    "title": "Data Science and ML (Part 33): Pandas Dataframe in MQL5, Data Collection for ML Usage made easier",
+    "author": "",
+    "published": "2025-01-31T12:33Z",
+    "section": "Statistics and analysis",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 84916
+  },
+  {
+    "id": 20518,
+    "title": "Quantum Computing and Gradient Boosting in EURUSD Trading",
+    "author": "",
+    "published": "2026-09-01T08:46Z",
+    "section": "Integration",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 1,
+      "entropy": 10
+    },
+    "leftover": false,
+    "chars": 41813
+  },
+  {
+    "id": 21083,
+    "title": "Creating Custom Indicators in MQL5 (Part 6): Evolving RSI Calculations with Smoothing, Hue Shifts, and Multi-Timeframe Support",
+    "author": "",
+    "published": "2026-01-27T12:51Z",
+    "section": "Trading systems",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "Ehlers": 11
+    },
+    "leftover": false,
+    "chars": 78612
+  },
+  {
+    "id": 23673,
+    "title": "Building a Hidden Risk of Ruin Auditor in MQL5",
+    "author": "",
+    "published": "2026-08-21T14:37Z",
+    "section": "Statistics and analysis",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 65584
+  },
+  {
+    "id": 23755,
+    "title": "A Reusable Breakeven Manager in MQL5 with Spread Compensation",
+    "author": "",
+    "published": "2026-09-01T13:13Z",
+    "section": "Trading",
+    "total": 11,
+    "title_boost": 0,
+    "score": 11,
+    "counts": {
+      "DMI": 11
+    },
+    "leftover": false,
+    "chars": 54555
+  },
+  {
+    "id": 4236,
+    "title": "Using OpenCL to test candlestick patterns",
+    "author": "",
+    "published": "2019-01-18T13:21Z",
+    "section": "Examples",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 10
+    },
+    "leftover": false,
+    "chars": 102104
+  },
+  {
+    "id": 8657,
+    "title": "CatBoost machine learning algorithm from Yandex with no Python or R knowledge required",
+    "author": "",
+    "published": "2020-12-01T16:30Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 10
+    },
+    "leftover": false,
+    "chars": 71695
+  },
+  {
+    "id": 11344,
+    "title": "Neural networks made easy (Part 26): Reinforcement Learning",
+    "author": "",
+    "published": "2022-11-07T16:09Z",
+    "section": "Trading",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "entropy": 10
+    },
+    "leftover": false,
+    "chars": 35425
+  },
+  {
+    "id": 12108,
+    "title": "Understand and efficiently use OpenCL API by recreating built-in support as DLL on Linux (Part 1): Motivation and validation",
+    "author": "",
+    "published": "2023-02-24T13:55Z",
+    "section": "Examples",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 8,
+      "wavelet": 2
+    },
+    "leftover": false,
+    "chars": 49329
+  },
+  {
+    "id": 13596,
+    "title": "Neural networks made easy (Part 60): Online Decision Transformer (ODT)",
+    "author": "",
+    "published": "2024-02-26T11:59Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "entropy": 10
+    },
+    "leftover": false,
+    "chars": 58302
+  },
+  {
+    "id": 14169,
+    "title": "Building and testing Keltner Channel trading systems",
+    "author": "",
+    "published": "2024-02-08T17:35Z",
+    "section": "Trading",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "Hurst": 3,
+      "GHE": 3,
+      "VRT": 4
+    },
+    "leftover": false,
+    "chars": 46165
+  },
+  {
+    "id": 15013,
+    "title": "Data Science and Machine Learning (Part 24): Forex Time series Forecasting Using Regular AI Models",
+    "author": "",
+    "published": "2024-06-20T10:42Z",
+    "section": "Trading",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 1,
+      "wavelet": 2,
+      "autocorr": 7
+    },
+    "leftover": false,
+    "chars": 41593
+  },
+  {
+    "id": 17886,
+    "title": "Data Science and ML (Part 38): AI Transfer Learning in Forex Markets",
+    "author": "",
+    "published": "2025-05-06T14:00Z",
+    "section": "Expert Advisors",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "ADX": 9,
+      "autocorr": 1
+    },
+    "leftover": false,
+    "chars": 59096
+  },
+  {
+    "id": 18188,
+    "title": "MQL5 Wizard Techniques you should know (Part 66): Using Patterns of FrAMA and the Force Index with the Dot Product Kernel",
+    "author": "",
+    "published": "2025-05-21T13:35Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "fractal_dim": 9,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 37646
+  },
+  {
+    "id": 18307,
+    "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Building Objects)",
+    "author": "",
+    "published": "2026-08-06T08:33Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 4,
+      "Catch22": 6
+    },
+    "leftover": false,
+    "chars": 41261
+  },
+  {
+    "id": 18734,
+    "title": "Neural Networks in Trading: Probabilistic Time Series Forecasting (K2VAE)",
+    "author": "",
+    "published": "2026-08-20T08:19Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 1,
+      "Kalman": 9
+    },
+    "leftover": false,
+    "chars": 40093
+  },
+  {
+    "id": 22978,
+    "title": "Rolling Sharpe Ratio with Statistical Significance Bands in MQL5",
+    "author": "",
+    "published": "2026-06-22T14:32Z",
+    "section": "Indicators",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "DMI": 1,
+      "Kalman": 5,
+      "autocorr": 4
+    },
+    "leftover": false,
+    "chars": 57407
+  },
+  {
+    "id": 23714,
+    "title": "Measuring Market Efficiency with Lempel-Ziv Complexity",
+    "author": "",
+    "published": "2026-08-25T15:27Z",
+    "section": "Trading systems",
+    "total": 10,
+    "title_boost": 0,
+    "score": 10,
+    "counts": {
+      "Hurst": 1,
+      "perm_entropy": 1,
+      "DMI": 3,
+      "entropy": 3,
+      "autocorr": 2
+    },
+    "leftover": false,
+    "chars": 52533
+  },
+  {
+    "id": 3298,
+    "title": "Custom indicators and infographics in CCanvas",
+    "author": "",
+    "published": "2017-07-28T18:33Z",
+    "section": "Examples",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "ADX": 8,
+      "DMI": 1
+    },
+    "leftover": false,
+    "chars": 54863
+  },
+  {
+    "id": 6947,
+    "title": "Price velocity measurement methods",
+    "author": "",
+    "published": "2019-07-16T11:51Z",
+    "section": "Examples",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "Hurst": 2,
+      "ADX": 4,
+      "DMI": 1,
+      "entropy": 2
+    },
+    "leftover": false,
+    "chars": 35271
+  },
+  {
+    "id": 8231,
+    "title": "A scientific approach to the development of trading algorithms",
+    "author": "",
+    "published": "2020-12-07T09:05Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "entropy": 9
+    },
+    "leftover": false,
+    "chars": 43543
+  },
+  {
+    "id": 8859,
+    "title": "Self-adapting algorithm (Part IV): Additional functionality and tests",
+    "author": "",
+    "published": "2021-04-07T14:25Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "entropy": 9
+    },
+    "leftover": false,
+    "chars": 45224
+  },
+  {
+    "id": 10947,
+    "title": "Neural networks made easy (Part 15): Data clustering using MQL5",
+    "author": "",
+    "published": "2022-07-20T12:58Z",
+    "section": "Trading systems",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 9
+    },
+    "leftover": false,
+    "chars": 52073
+  },
+  {
+    "id": 14407,
+    "title": "Introduction to MQL5 (Part 6): A Beginner's Guide to Array Functions in MQL5 (II)",
+    "author": "",
+    "published": "2024-03-29T11:08Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 9
+    },
+    "leftover": false,
+    "chars": 48056
+  },
+  {
+    "id": 14760,
+    "title": "Data Science and Machine Learning (Part 22): Leveraging Autoencoders Neural Networks for Smarter Trades by Moving from Noise to Signal",
+    "author": "",
+    "published": "2024-05-07T17:07Z",
+    "section": "Indicators",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "VRT": 3,
+      "DMI": 6
+    },
+    "leftover": false,
+    "chars": 42379
+  },
+  {
+    "id": 17917,
+    "title": "Hidden Markov Models in Machine Learning-Based Trading Systems",
+    "author": "",
+    "published": "2026-04-20T13:27Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "autocorr": 9
+    },
+    "leftover": false,
+    "chars": 63365
+  },
+  {
+    "id": 18057,
+    "title": "Camel Algorithm (CA)",
+    "author": "",
+    "published": "2026-04-22T11:42Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 1,
+      "Ehlers": 3,
+      "entropy": 5
+    },
+    "leftover": false,
+    "chars": 52209
+  },
+  {
+    "id": 18227,
+    "title": "Covariance Matrix Adaptation Evolution Strategy (CMA-ES)",
+    "author": "",
+    "published": "2026-05-28T16:05Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 9
+    },
+    "leftover": false,
+    "chars": 69957
+  },
+  {
+    "id": 18246,
+    "title": "Neural Networks in Trading: Effective Feature Extraction for Accurate Classification (Mantis)",
+    "author": "",
+    "published": "2026-08-05T12:40Z",
+    "section": "Trading systems",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 2,
+      "Catch22": 6,
+      "entropy": 1
+    },
+    "leftover": false,
+    "chars": 41891
+  },
+  {
+    "id": 20245,
+    "title": "Bonobo Optimizer (BO)",
+    "author": "",
+    "published": "2026-08-19T08:33Z",
+    "section": "Trading",
+    "total": 9,
+    "title_boost": 0,
+    "score": 9,
+    "counts": {
+      "DMI": 9
+    },
+    "leftover": false,
+    "chars": 58698
+  }
+]

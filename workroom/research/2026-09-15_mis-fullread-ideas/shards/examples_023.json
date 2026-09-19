@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_023",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 3620,
+      "title": "Cross-Platform Expert Advisor: Stops",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3620.md"
+    },
+    {
+      "id": 3621,
+      "title": "Cross-Platform Expert Advisor: Custom Stops, Breakeven and Trailing",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3621.md"
+    },
+    {
+      "id": 3622,
+      "title": "Cross-Platform Expert Advisor: The CExpertAdvisor and CExpertAdvisors Classes",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3622.md"
+    },
+    {
+      "id": 3708,
+      "title": "Developing stock indicators featuring volume control through the example of the delta indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3708.md"
+    },
+    {
+      "id": 3795,
+      "title": "Fuzzy Logic in trading strategies",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3795.md"
+    },
+    {
+      "id": 3856,
+      "title": "Random Decision Forest in Reinforcement learning",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3856.md"
+    },
+    {
+      "id": 4147,
+      "title": "Trading DiNapoli levels",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4147.md"
+    },
+    {
+      "id": 4149,
+      "title": "Creating a custom news feed for MetaTrader 5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4149.md"
+    },
+    {
+      "id": 4222,
+      "title": "Movement continuation model - searching on the chart and execution statistics",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4222.md"
+    },
+    {
+      "id": 4225,
+      "title": "Deep Neural Networks (Part V). Bayesian optimization of DNN hyperparameters",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4225.md"
+    },
+    {
+      "id": 4226,
+      "title": "Custom Strategy Tester based on fast mathematical calculations",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4226.md"
+    },
+    {
+      "id": 4234,
+      "title": "How to make $1,000,000 off algorithmic trading? Use MQL5.com services!",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\4234.md"
+    }
+  ]
+}

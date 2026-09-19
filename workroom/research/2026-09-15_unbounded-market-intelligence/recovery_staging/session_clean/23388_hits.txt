@@ -1,0 +1,131 @@
+4: title: "A Symbol Metadata and Trading Hours Cache in MQL5: Eliminating Redundant SymbolInfo Calls in Multi-Symbol EAs"
+20: # A Symbol Metadata and Trading Hours Cache in MQL5: Eliminating Redundant SymbolInfo Calls in Multi-Symbol EAs
+25: | 23 July 2026 at 04:56
+36: ### Introduction
+44: What is missing is a layer between the EA's per-tick logic and the terminal's SymbolInfo API: something that fetches each monitored symbol's static contract specification and session schedule exactly once, holds it in memory, and serves every subsequent read from that memory rather than from the terminal. This article builds that layer.
+46: The result is a CSymbolMetaCache class with typed getters for every cached field, an IsMarketOpen() method that evaluates trading session windows as a pure in-memory comparison, and a Refresh() method that is the only point after initialization where the cache touches the terminal API again. A benchmark script measures the actual latency difference across a twenty-symbol universe to quantify what 
+52: ### Section 1: The Hidden Cost of Repeated SymbolInfo Calls
+60: ### Section 2: What to Cache and What Not to Cache
+66: Dynamic properties change on every tick by definition. They represent live market state. Caching them would be a correctness bug, not an optimization. A cached bid or spread value becomes stale the instant the next tick arrives.
+68: The safe-to-cache properties include point value ([SYMBOL\_POINT](https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants)), tick size (SYMBOL\_TRADE\_TICK\_SIZE), lot step ([SYMBOL\_VOLUME\_STEP](https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants)), minimum and maximum lot (SYMBOL\_VOLUME\_MIN, SYMBOL\_VOLUME\_MAX), contract size (SYMBOL\_TRADE\_CONT
+70: Properties that must never be cached include bid (SYMBOL\_BID), ask (SYMBOL\_ASK), last price (SYMBOL\_LAST), current spread (SYMBOL\_SPREAD), tick volume (SYMBOL\_VOLUME), and session high/low values.
+74: ### Section 3: Trading Session Schedules in MQL5
+76: Trading session windows are exposed through SymbolInfoSessionTrade(). For a given symbol, day of week, and session index, this function returns the session's start and end time as seconds elapsed since midnight on that day. A symbol can have more than one session window per day — a forex pair commonly shows separate Asian and London sessions with a gap between them.
+78: Fetching the full weekly schedule requires a nested loop. The outer loop iterates over the seven [ENUM\_DAY\_OF\_WEEK](https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants#enum_day_of_week) values from SUNDAY through SATURDAY. For each day, an inner loop starts at session index 0 and increments until SymbolInfoSessionTrade() returns false, which signals no more sessions exi
+80: To evaluate IsMarketOpen() for a given datetime, the computation extracts the day of week from the datetime, converts the time to seconds since midnight, and checks whether that value falls within any cached session window for that day. This is a pure arithmetic comparison requiring no terminal API calls once the schedule has been fetched.
+82: ### Section 4: Cache Invalidation and Refresh Strategy
+84: Three events warrant invalidating and re-fetching cached data. The first is a new trading day beginning, which gives a natural point to re-verify the session schedule against the broker. The second is a broker-side contract specification change, which is rare but possible after corporate actions or platform updates. The third is an explicit operator request, useful for diagnostics or after a known
+88: In MQL5's single-threaded execution model, where OnTick(), OnTimer(), and other event handlers never run concurrently, a manual refresh triggered at a known-safe point is sufficient. The demo EA uses [EventSetTimer()](https://www.mql5.com/en/docs/eventfunctions/eventsettimer) to schedule an hourly callback and calls Refresh() from inside that callback only when the server-time hour equals zero, gi
+90: ### Section 5: Implementation — SymbolMeta.mqh
+92: This file defines the two plain data structures the rest of the system is built around. SSessionWindow represents one contiguous trading window within a single day. SSymbolMeta represents the complete cached snapshot of one symbol's contract specification and weekly session schedule. Both are structs rather than classes because they are flat data containers with no invariants requiring encapsulati
+94: ```
+98: #ifndef SYMBOLMETA_MQH
+99: #define SYMBOLMETA_MQH
+102: //| One contiguous trading session window within a single day        |
+112: //| Cached contract specification and session schedule for a symbol  |
+149:    ::PrintFormat("  sessions=%d  is_valid=%s",
+150:                  ::ArraySize(sessions), (is_valid ? "true" : "false"));
+152:    for(int i = 0; i < ::ArraySize(sessions); i++)
+161: #endif // SYMBOLMETA_MQH
+163: ```
+165: SSessionWindow holds three fields. day\_of\_week identifies which day the window applies to. start\_seconds and end\_seconds give the window's bounds as seconds elapsed since midnight, matching the representation returned by SymbolInfoSessionTrade().
+167: SSymbolMeta holds the full cached snapshot for one symbol. The numeric contract fields cover all the static properties listed in Section 2. The three currency string fields identify the base, profit, and margin currencies. trade\_mode records whether the symbol is fully tradable or in some restricted state. sessions[] is the dynamic array of session windows populated by the nested-loop fetch descr
+171: ### Section 6: Implementation — SymbolMetaCache.mqh
+175: ```
+179: #ifndef SYMBOLMETACACHE_MQH
+180: #define SYMBOLMETACACHE_MQH
+182: #include "SymbolMeta.mqh"
+185: //| Pre-fetches and serves symbol contract specs and session windows |
+206:    double            GetPoint(const string &symbol) const;
+218: ```
+224: ```
+238: ```
+244: ```
+274: //--- fetch session schedule via nested loop
+286:          if(!::SymbolInfoSessionTrade(symbol, dow, session_idx, start_dt, end_dt))
+289:          int slot = ::ArraySize(m_meta[idx].sessions);
+290:          ArrayResize(m_meta[idx].sessions, slot + 1);
+291:          m_meta[idx].sessions[slot].day_of_week    = dow;
+292:          m_meta[idx].sessions[slot].start_seconds  = (int)start_dt;
+293:          m_meta[idx].sessions[slot].end_seconds    = (int)end_dt;
+302: ```
+308: The session schedule is fetched using the nested-loop pattern from Section 3. The outer loop runs over all seven days. For each day, the inner while(true) loop calls SymbolInfoSessionTrade() at increasing session indices, breaking when the call returns false. Each confirmed window is appended to the sessions array by growing it one slot at a time. Once all fields are populated, is\_valid is set tr
+312: ```
+334: ```
+336: Init() is the one-time entry point called from OnInit(). It sizes both parallel arrays, copies each symbol name into m\_symbols[], and immediately calls FetchMeta() for that index. A single all\_ok flag accumulates false if any individual symbol's fetch failed. After all symbols are processed, m\_last\_refresh is stamped with the current server time via TimeTradeServer(). The method returns all\_o
+340: ```
+353: ```
+359: ```
+375: ```
+381: CSymbolMetaCache exposes six plain-value getters: GetPoint(), GetDigits(), GetTickValue(), GetLotStep(), GetContractSize(), and GetTradeMode(). These getters all share one shape: look up the symbol's index with FindIndex(), return a safe default if it is not found, and otherwise return the cached field directly from memory. None of them make a terminal API call. GetPoint() is representative of the
+383: ```
+387: double CSymbolMetaCache::GetPoint(const string &symbol) const
+395: ```
+399: ```
+411: ```
+417: ```
+431:    int seconds_today     = mdt.hour * 3600 + mdt.min * 60 + mdt.sec;
+432:    int session_count     = ::ArraySize(m_meta[idx].sessions);
+436:       if(m_meta[idx].sessions[i].day_of_week != dow)
+439:       if(seconds_today >= m_meta[idx].sessions[i].start_seconds &&
+440:          seconds_today <  m_meta[idx].sessions[i].end_seconds)
+446: ```
+448: This is the pure in-memory computation described in Section 3. The method returns false immediately if the symbol is not cached or its record is invalid. Otherwise it converts the supplied dt into an MqlDateTime struct via TimeToStruct(), extracts the day of week and seconds since midnight, then scans every cached session window. Windows for the wrong day are skipped. For matching days, the method
+450: An important note on the dt parameter: this method evaluates against session windows stored in the broker's server time zone. The caller must supply a server-time datetime. The demo EA consistently uses TimeTradeServer() for this reason. Passing a local machine time from TimeCurrent() will silently produce incorrect results if the server and local time zones differ.
+454: ```
+487: ```
+489: Three small methods round out the class. GetMeta() copies out a symbol's full SSymbolMeta record by value. This suits callers that need more than the individual getters expose, such as code that wants to iterate the session schedule directly. GetLastRefreshTime() returns the timestamp of the most recent full refresh. PrintAll() logs a summary line, then prints every cached symbol's full record. Th
+491: ### Section 7: Implementation — CacheDemo.mq5
+493: ```
+498: #include <SymbolMetaCache\SymbolMeta.mqh>
+499: #include <SymbolMetaCache\SymbolMetaCache.mqh>
+528: //--- fire once per hour; OnTimer checks for midnight boundary
+543: //--- log once per hour to avoid flooding the Experts tab
+549:    double point      = g_cache.GetPoint(_Symbol);
+567: //--- refresh only at the midnight hour boundary
+590: ```
+592: g\_cache is declared at file scope so its lifetime spans the EA's full attachment to the chart. g\_last\_logged\_hour throttles the per-tick log output to once per server-time hour, keeping the Experts tab readable without flooding it.
+594: OnInit() assembles the five input symbols into a local array, calls g\_cache.Init(), and logs a warning if any symbol fails without aborting EA startup. It then calls PrintAll() to dump the complete cached metadata for all five symbols. EventSetTimer(3600) schedules an hourly callback. g\_last\_logged\_hour is initialized to -1 so the first tick always logs regardless of the current hour.
+596: OnTick() converts the current server time into an MqlDateTime struct and compares the hour against the last logged hour. If the hour has not changed, the tick is skipped with no further work. When the hour has changed, four values are read through the cache getters — zero terminal SymbolInfo calls — and logged with PrintFormat().
+598: OnTimer() fires once per hour. It only acts when the server-time hour is zero, checking with the same MqlDateTime approach. At midnight it captures the before and after refresh timestamps and logs both.
+600: OnDeinit() calls [EventKillTimer()](https://www.mql5.com/en/docs/eventfunctions/eventkilltimer) to stop the hourly timer and logs the cache's final refresh timestamp.
+604: Figure 2: CacheDemo.mq5 Experts tab output on startup. The cache prints a complete metadata block for each monitored symbol immediately after OnInit(), confirming that all contract specification fields and session schedules were fetched before the first tick arrived. The is\_valid=true flag on each record confirms successful population.
+606: ### Section 8: Implementation — CacheBenchmark.mq5
+608: ```
+613: #property script_show_inputs
+615: #include <SymbolMetaCache\SymbolMeta.mqh>
+616: #include <SymbolMetaCache\SymbolMetaCache.mqh>
+627: #define TICK_VALUE_TOLERANCE_PCT 0.001
+702:          dummy_double += cache.GetPoint(symbols[s]);
+750:       bool point_ok      = (MathAbs(live_point    - cache.GetPoint(symbols[s]))   < 0.0000001);
+763:                         symbols[s], cache.GetPoint(symbols[s]), live_point);
+783: ```
+793: ### Section 9: Verification — TestSymbolMetaCache.mq5
+795: ```
+800: #include <SymbolMetaCache\SymbolMeta.mqh>
+801: #include <SymbolMetaCache\SymbolMetaCache.mqh>
+803: #define ASSERT(cond, label) \
+827:    ASSERT(MathAbs(cache.GetPoint(_Symbol)        - live_point)      < 0.0000001,
+828:           "GetPoint matches live SymbolInfoDouble");
+851:    ASSERT(cache.GetPoint(unknown)  == 0.0,   "GetPoint returns 0.0 for uncached symbol");
+868: ```
+878: ### Section 10: Expected Benchmark Output
+882: ```
+895: ```
+903: ### Section 11: Extending the Cache
+905: A swap rate extension would add SYMBOL\_SWAP\_LONG, SYMBOL\_SWAP\_SHORT, and SYMBOL\_SWAP\_ROLLOVER3DAYS as additional SSymbolMeta fields. These differ from the existing fields in that brokers can and do adjust swap rates daily, so they would need to be refreshed on the same daily cadence already used for the session-boundary refresh, rather than being treated as permanently static.
+911: ### Section 12: Limitations
+913: The cache does not automatically detect broker-side contract specification changes between sessions. It relies entirely on the caller invoking Refresh() at an appropriate time. A specification change that occurs between two scheduled refreshes will not be reflected until the next refresh runs.
+917: Session window evaluation in IsMarketOpen() assumes the supplied datetime is expressed in the broker's server time zone. Passing a local machine time from TimeCurrent() instead of a server time from TimeTradeServer() will silently produce incorrect results if the two time zones differ. No error is raised because the method has no way to detect the time zone of the input value.
+921: ### Conclusion
+925: The implementation also makes its limitations clear. SYMBOL\_TRADE\_TICK\_VALUE can drift on cross-currency instruments and may require more frequent refreshes or live reads when precise position sizing is required. IsMarketOpen() expects a server-time datetime, and the cache does not automatically detect broker-side specification changes between scheduled refreshes.
+931: | # | Name | Type | Description |
+932: | --- | --- | --- | --- |
+933: | 1 | SymbolMeta.mqh | Include File | Defines the SSessionWindow and SSymbolMeta structs that hold one session window and the full cached contract specification for one symbol. |
+934: | 2 | SymbolMetaCache.mqh | Include File | Implements the CSymbolMetaCache class that fetches symbol metadata once at startup and serves all subsequent reads from memory. |
+935: | 3 | CacheDemo.mq5 | Demo EA | Demonstrates the cache across five monitored symbols with a daily timer-triggered refresh and per-hour logging of cached values read with zero terminal calls. |
+936: | 4 | CacheBenchmark.mq5 | Script | Measures and compares the latency of uncached SymbolInfo calls against cached reads across a configurable symbol universe, and verifies cache correctness against live values using field-specific tolerances. |
+937: | 5 | TestSymbolMetaCache.mq5 | Script | Initializes the cache for the current chart symbol and asserts that every getter matches the corresponding live SymbolInfo value, covering cache population correctness and safe fallback behavior for unknown symbols. |
+938: | 6 | Symbol\_Metadata\_Cache.zip | Zip Archive | Zip archive containing all the attached files and their paths relative to the terminal's root folder. |
+979: Backtests often understate spread, commission, and slippage. This MQL5 analyzer loads closing deals and simulates rising execution costs to measure robustness. It computes the breakeven cost per deal, the cushion over an assumed cost, the net profit and profit factor at that cost, and how many winners turn into losers, then summarizes the result with an A+ to F grade and targeted guidance.
+984: This article introduces ap.mqh, the ALGLIB port for MQL5, and demonstrates its use in multi‑asset workflows that require robust linear algebra. It covers why built-in indicators fall short, then implements polynomial regression, a rolling correlation matrix indicator, and an adaptive hedge ratio estimator using ridge regression with Cholesky. Practical code shows how to compute spread z‑scores and

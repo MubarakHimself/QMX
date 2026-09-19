@@ -1,0 +1,116 @@
+{
+  "shard_id": "integration_003",
+  "section": "Integration",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15407,
+      "title": "Twitter Sentiment Analysis with Sockets",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15407.md"
+    },
+    {
+      "id": 15998,
+      "title": "Economic forecasts: Exploring the Python potential",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15998.md"
+    },
+    {
+      "id": 16060,
+      "title": "Analyzing weather impact on currencies of agricultural countries using Python",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16060.md"
+    },
+    {
+      "id": 16061,
+      "title": "Using association rules in Forex data analysis",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16061.md"
+    },
+    {
+      "id": 16238,
+      "title": "Exploring Cryptography in MQL5: A Step-by-Step Approach",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16238.md"
+    },
+    {
+      "id": 16487,
+      "title": "Utilizing CatBoost Machine Learning model as a Filter for Trend-Following Strategies",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16487.md"
+    },
+    {
+      "id": 16555,
+      "title": "Creating 3D bars based on time, price and volume",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16555.md"
+    },
+    {
+      "id": 16559,
+      "title": "Price Action Analysis Toolkit Development Part (4): Analytics Forecaster EA",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16559.md"
+    },
+    {
+      "id": 16580,
+      "title": "Algorithmic trading based on 3D reversal patterns",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16580.md"
+    },
+    {
+      "id": 16682,
+      "title": "Integrating Discord with MetaTrader 5: Building a Trading Bot with Real-Time Notifications",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16682.md"
+    },
+    {
+      "id": 16791,
+      "title": "Mastering JSON: Create Your Own JSON Reader from Scratch in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16791.md"
+    },
+    {
+      "id": 16971,
+      "title": "Evolutionary trading algorithm with reinforcement learning and extinction of feeble individuals (ETARE)",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16971.md"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "shard_id": "examples_067",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [
+    "build self optimizing expert advisors in mql5",
+    "building a candlestick trend constraint model",
+    "building your personal expert advisor"
+  ],
+  "articles": [
+    {
+      "id": 16643,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 2): USDJPY Scalping Strategy",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): USDJPY Scalping Strategy",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16643.md"
+    },
+    {
+      "id": 16856,
+      "title": "Build Self Optimizing Expert Advisors in MQL5  (Part 3): Dynamic Trend Following and Mean Reversion Strategies",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5  (): Dynamic Trend Following and Mean Reversion Strategies",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16856.md"
+    },
+    {
+      "id": 16925,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 4): Dynamic Position Sizing",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Dynamic Position Sizing",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16925.md"
+    },
+    {
+      "id": 17049,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 5): Self Adapting Trading Rules",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Self Adapting Trading Rules",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17049.md"
+    },
+    {
+      "id": 17213,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 6): Stop Out Prevention",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Stop Out Prevention",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17213.md"
+    },
+    {
+      "id": 17571,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 6): Self Adapting Trading Rules (II)",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Self Adapting Trading Rules (II)",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17571.md"
+    },
+    {
+      "id": 18187,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 7): Trading With Multiple Periods At Once",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Trading With Multiple Periods At Once",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18187.md"
+    },
+    {
+      "id": 18402,
+      "title": "Build Self Optimizing Expert Advisors in MQL5 (Part 8): Multiple Strategy Analysis",
+      "section": "Examples",
+      "series_title": "Build Self Optimizing Expert Advisors in MQL5 (): Multiple Strategy Analysis",
+      "series_key": "build self optimizing expert advisors in mql5",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18402.md"
+    },
+    {
+      "id": 16137,
+      "title": "Building A Candlestick Trend Constraint Model (Part 9): Multiple Strategies Expert Advisor (II)",
+      "section": "Examples",
+      "series_title": "Building A Candlestick Trend Constraint Model (): Multiple Strategies Expert Advisor (II)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16137.md"
+    },
+    {
+      "id": 16549,
+      "title": "Building a Candlestick Trend Constraint Model (Part 9): Multiple Strategies Expert Advisor (III)",
+      "section": "Examples",
+      "series_title": "Building a Candlestick Trend Constraint Model (): Multiple Strategies Expert Advisor (III)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16549.md"
+    },
+    {
+      "id": 16633,
+      "title": "Building a Candlestick Trend Constraint Model (Part 10): Strategic Golden and Death Cross (EA)",
+      "section": "Examples",
+      "series_title": "Building a Candlestick Trend Constraint Model (): Strategic Golden and Death Cross (EA)",
+      "series_key": "building a candlestick trend constraint model",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16633.md"
+    },
+    {
+      "id": 23429,
+      "title": "Building Your Personal Expert Advisor (Part 1): From Fragile Script to Working EA",
+      "section": "Examples",
+      "series_title": "Building Your Personal Expert Advisor (): From Fragile Script to Working EA",
+      "series_key": "building your personal expert advisor",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23429.md"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "pack_id": "integration_000",
+  "section": "Integration",
+  "parent_shard": "integration_000",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 736,
+      "title": "Technical Indicators and Digital Filters",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\736.md"
+    },
+    {
+      "id": 797,
+      "title": "Working with GSM Modem from an MQL5 Expert Advisor",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\797.md"
+    },
+    {
+      "id": 830,
+      "title": "Neural Networks Cheap and Cheerful - Link NeuroPro with MetaTrader 5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\830.md"
+    },
+    {
+      "id": 932,
+      "title": "How to Access the MySQL Database from MQL5 (MQL4)",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\932.md"
+    },
+    {
+      "id": 2029,
+      "title": "Evaluation and selection of variables for machine learning models",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2029.md"
+    },
+    {
+      "id": 2329,
+      "title": "Calculator of signals",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2329.md"
+    },
+    {
+      "id": 2355,
+      "title": "How to create bots for Telegram in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2355.md"
+    },
+    {
+      "id": 2569,
+      "title": "Cross-Platform Expert Advisor: Introduction",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2569.md"
+    },
+    {
+      "id": 2574,
+      "title": "Cross-Platform Expert Advisor: Reuse of Components from the MQL5 Standard Library",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2574.md"
+    },
+    {
+      "id": 2590,
+      "title": "Cross-Platform Expert Advisor: Orders",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2590.md"
+    },
+    {
+      "id": 2961,
+      "title": "Cross-Platform Expert Advisor: Order Manager",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2961.md"
+    },
+    {
+      "id": 2966,
+      "title": "ZUP - universal ZigZag with Pesavento patterns. Graphical interface",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2966.md"
+    }
+  ]
+}

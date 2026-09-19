@@ -1,0 +1,50 @@
+{
+  "id": 18680,
+  "title": "MetaTrader tick info access from MQL5 services to Python application using sockets",
+  "author_guess": "Ramesh Maharjan",
+  "chars": 20957,
+  "n_paras": 79,
+  "headings": [
+    "# MetaTrader tick info access from MQL5 services to Python application using sockets",
+    "### Introduction",
+    "### Program Flow",
+    "### Why services and python?",
+    "### Services Program",
+    "### Python Server Program",
+    "### Python Client Program",
+    "### Demo of Data Flow",
+    "### Conclusion"
+  ],
+  "intro": [
+    "# MetaTrader tick info access from MQL5 services to Python application using sockets",
+    "[MetaTrader 5](https://www.mql5.com/en/articles/mt5)\n—\n[Trading systems](https://www.mql5.com/en/articles/mt5/trading_systems)\n| 28 July 2025 at 10:41",
+    "3 774\n[\n5](https://www.mql5.com/en/forum/492029 \"Comments\")",
+    "[Ramesh Maharjan](https://www.mql5.com/en/users/lazymesh)",
+    "Sometimes everything is not programmable in the MQL5 language. And even if it is possible to convert existing advanced libraries in MQL5, it would be time-consuming. A better option is to integrate or utilize the existing libraries to achieve a task. For example, there are numerous machine-learning-libraries in python. It's not the best option for us to create identical copies in MQL5 form just to achieve a machine learning task for trading. It is better to export the data needed for that python machine learning library, do the necessary process in the python environment and import the result back into the MQL5 program. This article is about transporting such data from the MetaTrader terminal to the python environment.",
+    "There is a python package called MetaTrader 5 which can be used to access MetaTrader’s charts data such as bars info, tick info, user info, trade info etc. But this package is only available for Windows, meaning that if you want to use the package, then you need to have Windows OS. In this article, I am going to show you how you can access tick data from MetaTrader to a python program using sockets.",
+    "With the introduction of Berkeley sockets in the 4.2BSD Unix operating system in 1983, communication between machines became easy and widespread. More advanced application layer libraries and protocols all depend on transport level socket protocols, which we are going to use in this article.",
+    "For demo purpose, I am going to transport only tick data (bid, ask and time of tick data) to the python application through socket ports to be utilized in the python application. We can export all kinds of chart data such as bar info, user info, trade info etc. using the idea presented in this article. And we can use not only services but also scripts, indicators or expert advisors to do the task."
+  ],
+  "keyword_hits": [
+    "Sometimes everything is not programmable in the MQL5 language. And even if it is possible to convert existing advanced libraries in MQL5, it would be time-consuming. A better option is to integrate or utilize the existing libraries to achieve a task. For example, there are numerous machine-learning-libraries in python. It's not the best option for us to create identical copies in MQL5 form just to achieve a machine learning task for trading. It is better to export the data needed for that python machine learning library, do the necessary process in the python environment and import the result back into the MQL5 program. This article is about transporting such data from the MetaTrader terminal to the python environment.",
+    "With the introduction of Berkeley sockets in the 4.2BSD Unix operating system in 1983, communication between machines became easy and widespread. More advanced application layer libraries and protocols all depend on transport level socket protocols, which we are going to use in this article.",
+    "As you can see from the figure, the MetaTrader service program is connected to a python server listening on port 9070. All the tick data of the charts that are open in MetaTrader 5 terminal, will be sent to the python server at port 9070. The Python server then analyzes the data received from MetaTrader 5, does the necessary analysis on the data and distributes or better say broadcasts the tick info to the connected clients. The clients can then use the received data to perform necessary tasks or apply algorithms to achieve the desired result, which can be transmitted back to the MetaTrader services program for further processing.",
+    "I programmed the server in such a way that only one MetaTrader 5 is allowed to connect and communicate. This is done to avoid mismanagement and havoc conditions that may arise for multiple MetaTrader 5 connections. On the other hand, clients are to receive the tick data for further processing, the same data can be utilized by different clients for different algorithms to be applied to achieve the desired result. Thus, there is a need to manage the client connections.",
+    "Sending data to clients is straightforward. If an error occurs while sending data, then the client is removed from the connected clients list assuming the client is not connected and the dictionary is updated.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described."
+  ],
+  "tail": [
+    "[tick\\_client.py](https://www.mql5.com/en/articles/download/18680/tick_client.py \"Download tick_client.py\")\n(1.32 KB)",
+    "**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.",
+    "This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.",
+    "[MQL5 Wizard Techniques you should know (Part 77): Using Gator Oscillator and the Accumulation/Distribution Oscillator](https://www.mql5.com/en/articles/18946)",
+    "The Gator Oscillator by Bill Williams and the Accumulation/Distribution Oscillator are another indicator pairing that could be used harmoniously within an MQL5 Expert Advisor. We use the Gator Oscillator for its ability to affirm trends, while the A/D is used to provide confirmation of the trends via checks on volume. In exploring this indicator pairing, as always, we use the MQL5 wizard to build and test out their potential.",
+    "[Building a Trading System (Part 1): A Quantitative Approach](https://www.mql5.com/en/articles/18587)",
+    "Many traders evaluate strategies based on short-term performance, often abandoning profitable systems too early. Long-term profitability, however, depends on positive expectancy through optimized win rate and risk-reward ratio, along with disciplined position sizing. These principles can be validated using Monte Carlo simulation in Python with back-tested metrics to assess whether a strategy is robust or likely to fail over time.",
+    "[Market Profile indicator (Part 2): Optimization and rendering on canvas](https://www.mql5.com/en/articles/16579)",
+    "The article considers an optimized version of the Market Profile indicator, where rendering with multiple graphical objects is replaced with rendering on a canvas - an object of the CCanvas class.",
+    "[Implementing Practical Modules from Other Languages in MQL5 (Part 03): Schedule Module from Python, the OnTimer Event on Steroids](https://www.mql5.com/en/articles/18913)",
+    "The schedule module in Python offers a simple way to schedule repeated tasks. While MQL5 lacks a built-in equivalent, in this article we’ll implement a similar library to make it easier to set up timed events in MetaTrader 5.",
+    "How AI helps create robots for MetaTrader 5\nLearn from our book \"Neural Networks in Algo Trading with MQL5\"\nRead](https://www.mql5.com/ff/go?link=https://www.mql5.com/en/neurobook%3Futm_source=www.mql5.com%26utm_medium=display%26utm_term=read.neurobook%26utm_content=visit.page%26utm_campaign=neurobook.promo.04.2024&a=ghrobswocqgvhztzjldphupateyllpro&s=9929cb0b8629585b5a42fabc06c525e41f6c0ebdf3045d044a5413b93ea88b47&uid=&ref=https://www.mql5.com/en/articles/18680&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6346153925006734624)"
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "pack_id": "trading_026_p03",
+  "section": "Trading",
+  "parent_shard": "trading_026",
+  "part_index": 3,
+  "part_count": 4,
+  "series_in_pack": [
+    "automating trading strategies in mql5"
+  ],
+  "n": 11,
+  "articles": [
+    {
+      "id": 20221,
+      "title": "Automating Trading Strategies in MQL5 (Part 40): Fibonacci Retracement Trading with Custom Levels",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Fibonacci Retracement Trading with Custom Levels",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20221.md"
+    },
+    {
+      "id": 20323,
+      "title": "Automating Trading Strategies in MQL5 (Part 41): Candle Range Theory (CRT) \u2013 Accumulation, Manipulation, Distribution (AMD)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Candle Range Theory (CRT) \u2013 Accumulation, Manipulation, Distribution (AMD)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20323.md"
+    },
+    {
+      "id": 20339,
+      "title": "Automating Trading Strategies in MQL5 (Part 42): Session-Based Opening Range Breakout (ORB) System",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Session-Based Opening Range Breakout (ORB) System",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 42,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20339.md"
+    },
+    {
+      "id": 20361,
+      "title": "Automating Trading Strategies in MQL5 (Part 45): Inverse Fair Value Gap (IFVG)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Inverse Fair Value Gap (IFVG)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 45,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20361.md"
+    },
+    {
+      "id": 20569,
+      "title": "Automating Trading Strategies in MQL5 (Part 46): Liquidity Sweep on Break of Structure (BoS)",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Liquidity Sweep on Break of Structure (BoS)",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 46,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20569.md"
+    },
+    {
+      "id": 21096,
+      "title": "Automating Trading Strategies in MQL5 (Part 47): Nick Rypock Trailing Reverse (NRTR) with Hedging Features",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Nick Rypock Trailing Reverse (NRTR) with Hedging Features",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 47,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21096.md"
+    },
+    {
+      "id": 22078,
+      "title": "Automating Trading Strategies in MQL5 (Part 48): Order Blocks, Inducement, Break of Structure",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Order Blocks, Inducement, Break of Structure",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 48,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22078.md"
+    },
+    {
+      "id": 23141,
+      "title": "Automating Trading Strategies in MQL5 (Part 49): The Quasimodo (QM) Reversal Pattern",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Quasimodo (QM) Reversal Pattern",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 49,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23141.md"
+    },
+    {
+      "id": 23155,
+      "title": "Automating Trading Strategies in MQL5 (Part 50): Turtle Soup Liquidity Sweeps",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): Turtle Soup Liquidity Sweeps",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 50,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23155.md"
+    },
+    {
+      "id": 23523,
+      "title": "Automating Trading Strategies in MQL5 (Part 51): The Bread and Butter Judas Swing Model with Premium and Discount",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The Bread and Butter Judas Swing Model with Premium and Discount",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 51,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23523.md"
+    },
+    {
+      "id": 23549,
+      "title": "Automating Trading Strategies in MQL5 (Part 52): The tCISD Model with SSMT and Quarterly Theory",
+      "section": "Trading",
+      "series_title": "Automating Trading Strategies in MQL5 (): The tCISD Model with SSMT and Quarterly Theory",
+      "series_key": "automating trading strategies in mql5",
+      "series_part": 52,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23549.md"
+    }
+  ]
+}

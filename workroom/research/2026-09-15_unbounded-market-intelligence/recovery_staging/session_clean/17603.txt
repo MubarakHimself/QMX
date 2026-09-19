@@ -1,0 +1,944 @@
+---
+id: 17603
+source_url: https://www.mql5.com/en/articles/17603
+title: "Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis"
+author: ""
+author_url: 
+published: 2025-04-17T08:56Z
+platform: "MetaTrader 5"
+section: "Tester"
+tags: []
+series_title: "Trading with the MQL5 Economic Calendar (): Preparing for Strategy Testing with Resource-Based News Event Analysis"
+series_part: 7
+source: mql5
+language: en
+---
+
+# Trading with the MQL5 Economic Calendar (Part 7): Preparing for Strategy Testing with Resource-Based News Event Analysis
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Tester](https://www.mql5.com/en/articles/mt5/strategy_tester)
+| 17 April 2025 at 04:56
+
+3 945
+[
+0](https://www.mql5.com/en/forum/484968 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In this article, we advance our [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) series by preparing the trading system for strategy testing in non-live mode, leveraging embedded economic event data for reliable backtesting. Building on [Part 6’s automation of trade entries](https://www.mql5.com/en/articles/17271) with news analysis and countdown timers, we now focus on loading news events from a resource file and applying user-defined filters to simulate live conditions in the [Strategy Tester](https://www.metatrader5.com/en/automated-trading/strategy-tester "https://www.metatrader5.com/en/automated-trading/strategy-tester"). We structure the article with the following topics:
+
+1. [Importance of Static Data Integration](https://www.mql5.com/en/articles/17603#importance_of_static_data_integration)
+2. [Implementation in MQL5](https://www.mql5.com/en/articles/17603#implementation_in_mql5)
+3. [Testing](https://www.mql5.com/en/articles/17603#testing)
+4. [Conclusion](https://www.mql5.com/en/articles/17603#conclusion)
+
+Let's dive in!
+
+### Importance of Static Data Integration
+
+Static data integration is essential for those aiming to develop and test robust strategies, particularly in environments like MQL5, where historical economic event data isn’t retained for long periods. Unlike live trading, where the platform can pull real-time news feeds, the Strategy Tester lacks access to such dynamic updates. It doesn’t store extensive archives of past events, leaving us without a native solution for backtesting news-driven approaches. By downloading this data from external sources and organizing it ourselves—whether as files, databases, or embedded resources—we gain control over a consistent dataset that can be reused across multiple tests, ensuring our strategies face the same conditions each time.
+
+Beyond overcoming platform limitations, static data integration will offer flexibility that live feeds cannot. The [Economic calendar](https://www.mql5.com/en/book/advanced/calendar), as we did see already in the prior versions, often includes critical details like event dates, times, currencies, and impact levels, but these aren’t always preserved in a format suited for algorithmic analysis over long timeframes. By structuring this information manually, we can tailor it to our needs—filtering for specific currencies or high-impact events, for example—allowing for deeper insights into how news influences market behavior without relying on real-time availability.
+
+Additionally, this approach will enhance efficiency and independence. Gathering and storing static data upfront means we’re not tethered to internet connectivity or third-party services during testing, reducing variables that could skew results. It also empowers us to simulate rare or specific scenarios—like major economic announcements—by curating datasets that span years or focus on key moments, something live systems or limited platform storage can’t easily replicate. Ultimately, static data integration bridges the gap between live trading insights and backtesting precision, laying a solid foundation for strategy development.
+
+Data storage will be a key consideration, and MQL5 provides a wide range of variability, from Text (txt) formats, [Comma Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values "https://en.wikipedia.org/wiki/Comma-separated_values") (CSV), American National Standards Institute (ANSI), Binary (bin), Unicode and also database organizations as below.
+
+We will use not the easiest but the most convenient format, which is CSV format. That way, we will have the data with us and will not be required we to wait for hours to backtest our strategy, saving us lots of time and energy. Let's go.
+
+### Implementation in MQL5
+
+As a start off, we will need to structure the data gathering and organization in a manner that mirrors our previous structure. Thus, we will need some inputs that the user can customize, just as we did earlier on as below.
+
+```
+//+------------------------------------------------------------------+
+//|                                    MQL5 NEWS CALENDAR PART 7.mq5 |
+//|                           Copyright 2025, Allan Munene Mutiiria. |
+//|                                   https://t.me/Forex_Algo_Trader |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, Allan Munene Mutiiria."
+#property link      "https://youtube.com/@ForexAlgo-Trader?"
+#property version   "1.00"
+#property strict
+
+//---- Input parameter for start date of event filtering
+input datetime StartDate = D'2025.03.01'; // Download Start Date
+//---- Input parameter for end date of event filtering
+input datetime EndDate = D'2025.03.21'; // Download End Date
+//---- Input parameter to enable/disable time filtering
+input bool ApplyTimeFilter = true;
+//---- Input parameter for hours before event to consider
+input int HoursBefore = 4;
+//---- Input parameter for minutes before event to consider
+input int MinutesBefore = 10;
+//---- Input parameter for hours after event to consider
+input int HoursAfter = 1;
+//---- Input parameter for minutes after event to consider
+input int MinutesAfter = 5;
+//---- Input parameter to enable/disable currency filtering
+input bool ApplyCurrencyFilter = true;
+//---- Input parameter defining currencies to filter (comma-separated)
+input string CurrencyFilter = "USD,EUR,GBP,JPY,AUD,NZD,CAD,CHF"; // All 8 major currencies
+//---- Input parameter to enable/disable impact filtering
+input bool ApplyImpactFilter = true;
+
+//---- Enumeration for event importance filtering options
+enum ENUM_IMPORTANCE {
+   IMP_NONE = 0,                  // None
+   IMP_LOW,                       // Low
+   IMP_MEDIUM,                    // Medium
+   IMP_HIGH,                      // High
+   IMP_NONE_LOW,                  // None,Low
+   IMP_NONE_MEDIUM,               // None,Medium
+   IMP_NONE_HIGH,                 // None,High
+   IMP_LOW_MEDIUM,                // Low,Medium
+   IMP_LOW_HIGH,                  // Low,High
+   IMP_MEDIUM_HIGH,               // Medium,High
+   IMP_NONE_LOW_MEDIUM,           // None,Low,Medium
+   IMP_NONE_LOW_HIGH,             // None,Low,High
+   IMP_NONE_MEDIUM_HIGH,          // None,Medium,High
+   IMP_LOW_MEDIUM_HIGH,           // Low,Medium,High
+   IMP_ALL                        // None,Low,Medium,High (default)
+};
+//---- Input parameter for selecting importance filter
+input ENUM_IMPORTANCE ImportanceFilter = IMP_ALL; // Impact Levels (Default to all)
+```
+
+Here, we set up the foundational input parameters and an enumeration to customize how our trading system processes economic events for strategy testing. We define "StartDate" and "EndDate" as [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variables, set to March 1, 2025, and March 21, 2025, respectively, to specify the range for downloading and analyzing event data. To control time-based filtering around these events, we include "ApplyTimeFilter" as a [boolean](https://www.mql5.com/en/docs/basis/types/integer/boolconst) defaulting to true, alongside "HoursBefore" (4 hours), "MinutesBefore" (10 minutes), "HoursAfter" (1 hour), and "MinutesAfter" (5 minutes), which determine the time window for considering events relative to a given bar.
+
+For currency-specific analysis, we introduce "ApplyCurrencyFilter" (true by default) and "CurrencyFilter", a [string](https://www.mql5.com/en/docs/basis/types/stringconst) listing all eight major currencies—"USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF"—to focus on relevant markets. We also enable impact-based filtering with "ApplyImpactFilter" set to true, supported by the "ENUM\_IMPORTANCE" enumeration, which offers flexible options like "IMP\_NONE", "IMP\_LOW", "IMP\_MEDIUM", "IMP\_HIGH", and combinations up to "IMP\_ALL", with "ImportanceFilter" defaulting to "IMP\_ALL" to include all impact levels. The outcome is as below.
+
+With the inputs, the next thing that we need to do is declare a structure with 8 input fields mimicking the normal and default structure for the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) as below.
+
+We achieve the format via the following logic.
+
+```
+//---- Structure to hold economic event data
+struct EconomicEvent {
+   string eventDate;      //---- Date of the event
+   string eventTime;      //---- Time of the event
+   string currency;       //---- Currency affected by the event
+   string event;          //---- Event description
+   string importance;     //---- Importance level of the event
+   double actual;         //---- Actual value of the event
+   double forecast;       //---- Forecasted value of the event
+   double previous;       //---- Previous value of the event
+};
+
+//---- Array to store all economic events
+EconomicEvent allEvents[];
+//---- Array for currency filter values
+string curr_filter[];
+//---- Array for importance filter values
+string imp_filter[];
+```
+
+First, we define the "EconomicEvent" structure ([struct](https://www.mql5.com/en/book/oop/structs_and_unions/structs_definition)) to encapsulate key event details, including "eventDate" and "eventTime" as strings for the event’s timing, "currency" to identify the affected market, "event" for the description, and "importance" to indicate its impact level, alongside "actual", "forecast", and "previous" as doubles to hold the event’s numerical outcomes.
+
+To store and process these events, we create three arrays: "allEvents", an array of "EconomicEvent" structures to hold all loaded events, "curr\_filter" as a string array to store the currencies specified in the "CurrencyFilter" input, and "imp\_filter" as a string array to manage the importance levels selected via "ImportanceFilter". This mimics the default structure, only that we shift the "Period" section to contain the event dates at the beginning of the structure. Proceeding, we need to get the filters from user input, interpret them in a way the computer understands and initialize them. To keep the code modularized, we will use functions.
+
+```
+//---- Function to initialize currency and impact filters
+void InitializeFilters() {
+   //---- Currency Filter Section
+   //---- Check if currency filter is enabled and has content
+   if (ApplyCurrencyFilter && StringLen(CurrencyFilter) > 0) {
+      //---- Split the currency filter string into array
+      int count = StringSplit(CurrencyFilter, ',', curr_filter);
+      //---- Loop through each currency filter entry
+      for (int i = 0; i < ArraySize(curr_filter); i++) {
+         //---- Temporary variable for trimming
+         string temp = curr_filter[i];
+         //---- Remove leading whitespace
+         StringTrimLeft(temp);
+         //---- Remove trailing whitespace
+         StringTrimRight(temp);
+         //---- Assign trimmed value back to array
+         curr_filter[i] = temp;
+         //---- Print currency filter for debugging
+         Print("Currency filter [", i, "]: '", curr_filter[i], "'");
+      }
+   } else if (ApplyCurrencyFilter) {
+      //---- Warn if currency filter is enabled but empty
+      Print("Warning: CurrencyFilter is empty, no currency filtering applied");
+      //---- Resize array to zero if no filter applied
+      ArrayResize(curr_filter, 0);
+   }
+}
+```
+
+Here, we set up the currency filtering portion of the "InitializeFilters" function in our system to prepare for effective event analysis during strategy testing. We start by checking if the "ApplyCurrencyFilter" variable is true and if the "CurrencyFilter" string has content using the [StringLen](https://www.mql5.com/en/docs/strings/StringLen) function; if so, we split the comma-separated "CurrencyFilter" (like "USD, EUR, GBP") into the "curr\_filter" array using the [StringSplit](https://www.mql5.com/en/docs/strings/stringsplit) function, capturing the number of elements in "count".
+
+Next, we iterate through each element in "curr\_filter" with a [for-loop](https://www.mql5.com/en/docs/basis/operators/for), assigning it to a temporary "temp" [string](https://www.mql5.com/en/docs/strings), cleaning it by removing leading and trailing whitespace with the [StringTrimLeft](https://www.mql5.com/en/docs/strings/stringtrimleft) and [StringTrimRight](https://www.mql5.com/en/docs/strings/stringtrimright) functions, then updating "curr\_filter" with the trimmed value and displaying it via the [Print](https://www.mql5.com/en/docs/common/print) function for debugging purposes (e.g., "Currency filter [0]: 'USD'"). However, if "ApplyCurrencyFilter" is enabled but "CurrencyFilter" is empty, we use the "Print" function to issue a warning—"Warning: CurrencyFilter is empty, no currency filtering applied"—and resize the array to zero with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function to disable filtering. This careful initialization will ensure that the currency filter is reliably derived from user inputs, supporting accurate event processing in the Strategy Tester. For the impact filter, we apply a similar curated logic.
+
+```
+//---- Impact Filter Section (using enum)
+//---- Check if impact filter is enabled
+if (ApplyImpactFilter) {
+   //---- Switch based on selected importance filter
+   switch (ImportanceFilter) {
+      case IMP_NONE:
+         //---- Resize array for single importance level
+         ArrayResize(imp_filter, 1);
+         //---- Set importance to "None"
+         imp_filter[0] = "None";
+         break;
+      case IMP_LOW:
+         //---- Resize array for single importance level
+         ArrayResize(imp_filter, 1);
+         //---- Set importance to "Low"
+         imp_filter[0] = "Low";
+         break;
+      case IMP_MEDIUM:
+         //---- Resize array for single importance level
+         ArrayResize(imp_filter, 1);
+         //---- Set importance to "Medium"
+         imp_filter[0] = "Medium";
+         break;
+      case IMP_HIGH:
+         //---- Resize array for single importance level
+         ArrayResize(imp_filter, 1);
+         //---- Set importance to "High"
+         imp_filter[0] = "High";
+         break;
+      case IMP_NONE_LOW:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Low";
+         break;
+      case IMP_NONE_MEDIUM:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Medium";
+         break;
+      case IMP_NONE_HIGH:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "High";
+         break;
+      case IMP_LOW_MEDIUM:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "Low";
+         //---- Set second importance level
+         imp_filter[1] = "Medium";
+         break;
+      case IMP_LOW_HIGH:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "Low";
+         //---- Set second importance level
+         imp_filter[1] = "High";
+         break;
+      case IMP_MEDIUM_HIGH:
+         //---- Resize array for two importance levels
+         ArrayResize(imp_filter, 2);
+         //---- Set first importance level
+         imp_filter[0] = "Medium";
+         //---- Set second importance level
+         imp_filter[1] = "High";
+         break;
+      case IMP_NONE_LOW_MEDIUM:
+         //---- Resize array for three importance levels
+         ArrayResize(imp_filter, 3);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Low";
+         //---- Set third importance level
+         imp_filter[2] = "Medium";
+         break;
+      case IMP_NONE_LOW_HIGH:
+         //---- Resize array for three importance levels
+         ArrayResize(imp_filter, 3);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Low";
+         //---- Set third importance level
+         imp_filter[2] = "High";
+         break;
+      case IMP_NONE_MEDIUM_HIGH:
+         //---- Resize array for three importance levels
+         ArrayResize(imp_filter, 3);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Medium";
+         //---- Set third importance level
+         imp_filter[2] = "High";
+         break;
+      case IMP_LOW_MEDIUM_HIGH:
+         //---- Resize array for three importance levels
+         ArrayResize(imp_filter, 3);
+         //---- Set first importance level
+         imp_filter[0] = "Low";
+         //---- Set second importance level
+         imp_filter[1] = "Medium";
+         //---- Set third importance level
+         imp_filter[2] = "High";
+         break;
+      case IMP_ALL:
+         //---- Resize array for all importance levels
+         ArrayResize(imp_filter, 4);
+         //---- Set first importance level
+         imp_filter[0] = "None";
+         //---- Set second importance level
+         imp_filter[1] = "Low";
+         //---- Set third importance level
+         imp_filter[2] = "Medium";
+         //---- Set fourth importance level
+         imp_filter[3] = "High";
+         break;
+   }
+   //---- Loop through impact filter array to print values
+   for (int i = 0; i < ArraySize(imp_filter); i++) {
+      //---- Print each impact filter value
+      Print("Impact filter [", i, "]: '", imp_filter[i], "'");
+   }
+} else {
+   //---- Notify if impact filter is disabled
+   Print("Impact filter disabled");
+   //---- Resize impact filter array to zero
+   ArrayResize(imp_filter, 0);
+}
+```
+
+For the impact filtering process, we begin by checking if the "ApplyImpactFilter" variable is true; if so, we use a switch statement based on the "ImportanceFilter" enum to determine which impact levels to include in the "imp\_filter" array. For single-level options like "IMP\_NONE", "IMP\_LOW", "IMP\_MEDIUM", or "IMP\_HIGH", we resize "imp\_filter" to 1 using the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function and assign the corresponding string (e.g., "imp\_filter[0] = 'None'"); for dual-level options like "IMP\_NONE\_LOW" or "IMP\_MEDIUM\_HIGH", we resize it to 2 and set two values (e.g., "imp\_filter[0] = 'None', imp\_filter[1] = 'Low'"); for triple-level options like "IMP\_LOW\_MEDIUM\_HIGH", we resize to 3; and for "IMP\_ALL", we resize to 4, covering "None", "Low", "Medium", and "High".
+
+After setting the array, we [loop](https://www.mql5.com/en/docs/basis/operators/for) through "imp\_filter" using the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function to determine its size, printing each value with the [Print](https://www.mql5.com/en/docs/common/print) function for debugging (e.g., "Impact filter [0]: 'None'"). If "ApplyImpactFilter" is false, we notify the user with the "Print" function—"Impact filter disabled"—and resize "imp\_filter" to zero.
+
+With that, we now need to call the function on the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler.
+
+```
+int OnInit() {
+   //---- Initialize filters
+   InitializeFilters();
+
+   //---- Return successful initialization
+   return(INIT_SUCCEEDED);
+}
+
+void OnDeinit(const int reason) {
+   //---- Print termination reason
+   Print("EA terminated, reason: ", reason);
+}
+```
+
+We call the function in the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler and also print the reason for the program termination in the [OnDeinit](https://www.mql5.com/en/docs/event_handlers/ondeinit) event handler. Here is the outcome.
+
+From the image, we can see that we initialized, and decoded the filter inputs correctly and stored them. All we need to do now is source the data from live stream and store it. Here, the logic is first we need to run the program once in live mode, so it can download the data from the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) database, and then load and use that data in testing mode. Here is the initialization logic.
+
+```
+//---- Check if not running in tester mode
+if (!MQLInfoInteger(MQL_TESTER)) {
+   //---- Validate date range
+   if (StartDate >= EndDate) {
+      //---- Print error for invalid date range
+      Print("Error: StartDate (", TimeToString(StartDate), ") must be earlier than EndDate (", TimeToString(EndDate), ")");
+      //---- Return initialization failure
+      return(INIT_PARAMETERS_INCORRECT);
+   }
+
+   //---- Array to hold calendar values
+   MqlCalendarValue values[];
+   //---- Fetch calendar data for date range
+   if (!CalendarValueHistory(values, StartDate, EndDate)) {
+      //---- Print error if calendar data fetch fails
+      Print("Error fetching calendar data: ", GetLastError());
+      //---- Return initialization failure
+      return(INIT_FAILED);
+   }
+
+   //---- Array to hold economic events
+   EconomicEvent events[];
+   //---- Counter for events
+   int eventCount = 0;
+
+   //---- Loop through calendar values
+   for (int i = 0; i < ArraySize(values); i++) {
+      //---- Structure for event details
+      MqlCalendarEvent eventDetails;
+      //---- Fetch event details by ID
+      if (!CalendarEventById(values[i].event_id, eventDetails)) continue;
+
+      //---- Structure for country details
+      MqlCalendarCountry countryDetails;
+      //---- Fetch country details by ID
+      if (!CalendarCountryById(eventDetails.country_id, countryDetails)) continue;
+
+      //---- Structure for value details
+      MqlCalendarValue value;
+      //---- Fetch value details by ID
+      if (!CalendarValueById(values[i].id, value)) continue;
+
+      //---- Resize events array for new event
+      ArrayResize(events, eventCount + 1);
+      //---- Convert event time to string
+      string dateTimeStr = TimeToString(values[i].time, TIME_DATE | TIME_MINUTES);
+      //---- Extract date from datetime string
+      events[eventCount].eventDate = StringSubstr(dateTimeStr, 0, 10);
+      //---- Extract time from datetime string
+      events[eventCount].eventTime = StringSubstr(dateTimeStr, 11, 5);
+      //---- Assign currency from country details
+      events[eventCount].currency = countryDetails.currency;
+      //---- Assign event name
+      events[eventCount].event = eventDetails.name;
+      //---- Map importance level from enum to string
+      events[eventCount].importance = (eventDetails.importance == 0) ? "None" :    // CALENDAR_IMPORTANCE_NONE
+                                      (eventDetails.importance == 1) ? "Low" :     // CALENDAR_IMPORTANCE_LOW
+                                      (eventDetails.importance == 2) ? "Medium" :  // CALENDAR_IMPORTANCE_MODERATE
+                                      "High";                                      // CALENDAR_IMPORTANCE_HIGH
+      //---- Assign actual value
+      events[eventCount].actual = value.GetActualValue();
+      //---- Assign forecast value
+      events[eventCount].forecast = value.GetForecastValue();
+      //---- Assign previous value
+      events[eventCount].previous = value.GetPreviousValue();
+      //---- Increment event count
+      eventCount++;
+   }
+
+}
+```
+
+Here, we handle the live mode data retrieval within the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) function of our program, ensuring economic event data is collected for later use in strategy testing. We start by checking if the system is not in tester mode using the [MQLInfoInteger](https://www.mql5.com/en/docs/check/mqlinfointeger) function with [MQL\_TESTER](https://www.mql5.com/en/docs/constants/environment_state/mql5_programm_info#enum_mql_info_integer); if true, we validate that "StartDate" is earlier than "EndDate", printing an error and returning [INIT\_PARAMETERS\_INCORRECT](https://www.mql5.com/en/docs/basis/function/events#enum_init_retcode) if invalid. Next, we declare a [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) array named "values" and fetch calendar data between "StartDate" and "EndDate" using the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function, printing an error with [GetLastError](https://www.mql5.com/en/docs/check/getlasterror) and returning "INIT\_FAILED" if it fails.
+
+We then initialize an "EconomicEvent" array "events" and an "eventCount" integer to track events, looping through "values" with the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function. For each iteration, we fetch event details into a [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) structure "eventDetails" using the [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid) function, country details into a [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) structure "countryDetails" with [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid), and value details into a "MqlCalendarValue" structure "value" via "CalendarValueById", skipping if any fetch fails. We resize "events" with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function, convert the event time to a string "dateTimeStr" using the [TimeToString](https://www.mql5.com/en/docs/convert/timetostring) function, and extract "eventDate" and "eventTime" with the [StringSubstr](https://www.mql5.com/en/docs/strings/stringsubstr) function, assigning "currency" from "countryDetails", "event" from "eventDetails.name", and mapping "importance" from numeric values to strings ("None", "Low", "Medium", "High"). Finally, we set "actual", "forecast", and "previous" using "value" methods and increment "eventCount", building a comprehensive event dataset for live mode processing. Now, we need a function to handle the storage of this information in a data file.
+
+```
+//---- Function to write events to a CSV file
+void WriteToCSV(string fileName, EconomicEvent &events[]) {
+   //---- Open file for writing in CSV format
+   int handle = FileOpen(fileName, FILE_WRITE | FILE_CSV, ',');
+   //---- Check if file opening failed
+   if (handle == INVALID_HANDLE) {
+      //---- Print error message with last error code
+      Print("Error creating file: ", GetLastError());
+      //---- Exit function on failure
+      return;
+   }
+
+   //---- Write CSV header row
+   FileWrite(handle, "Date", "Time", "Currency", "Event", "Importance", "Actual", "Forecast", "Previous");
+   //---- Loop through all events to write to file
+   for (int i = 0; i < ArraySize(events); i++) {
+      //---- Write event data to CSV file
+      FileWrite(handle, events[i].eventDate, events[i].eventTime, events[i].currency, events[i].event,
+                events[i].importance, DoubleToString(events[i].actual, 2), DoubleToString(events[i].forecast, 2),
+                DoubleToString(events[i].previous, 2));
+      //---- Print event details for debugging
+      Print("Writing event ", i, ": ", events[i].eventDate, ", ", events[i].eventTime, ", ", events[i].currency, ", ",
+            events[i].event, ", ", events[i].importance, ", ", DoubleToString(events[i].actual, 2), ", ",
+            DoubleToString(events[i].forecast, 2), ", ", DoubleToString(events[i].previous, 2));
+   }
+
+   //---- Flush data to file
+   FileFlush(handle);
+   //---- Close the file handle
+   FileClose(handle);
+   //---- Print confirmation of data written
+   Print("Data written to ", fileName, " with ", ArraySize(events), " events.");
+
+   //---- Verify written file by reading it back
+   int verifyHandle = FileOpen(fileName, FILE_READ | FILE_TXT);
+   //---- Check if verification file opening succeeded
+   if (verifyHandle != INVALID_HANDLE) {
+      //---- Read entire file content
+      string content = FileReadString(verifyHandle, (int)FileSize(verifyHandle));
+      //---- Print file content for verification
+      Print("File content after writing (size: ", FileSize(verifyHandle), " bytes):\n", content);
+      //---- Close verification file handle
+      FileClose(verifyHandle);
+   }
+}
+```
+
+Here, we craft the "WriteToCSV" function to systematically export economic event data into a CSV file. We begin by opening the file specified by "fileName" using the [FileOpen](https://www.mql5.com/en/docs/files/fileopen) function in "[FILE\_WRITE](https://www.mql5.com/en/docs/constants/io_constants/fileflags) | [FILE\_CSV](https://www.mql5.com/en/docs/constants/io_constants/fileflags)" mode with a comma delimiter, storing the result in "handle"; if this fails and "handle" equals "INVALID\_HANDLE", we use the "Print" function to display an error message including the [GetLastError](https://www.mql5.com/en/docs/check/getlasterror) code and exit the function with "return". Once the file is open, we write a header row with the [FileWrite](https://www.mql5.com/en/docs/files/filewrite) function, defining columns as "Date", "Time", "Currency", "Event", "Importance", "Actual", "Forecast", and "Previous" to organize the data.
+
+We then iterate through the "events" array, determining its size with the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function, and for each event, we call "FileWrite" to record its properties—"eventDate", "eventTime", "currency", "event", "importance", and the numeric "actual", "forecast", and "previous" values converted to strings with the [DoubleToString](https://www.mql5.com/en/docs/convert/doubletostring) function (formatted to 2 decimal places)—while simultaneously logging these details with the "Print" function for debugging purposes.
+
+After completing the loop, we ensure all data is written to the file by invoking the [FileFlush](https://www.mql5.com/en/docs/files/fileflush) function on "handle", then close the file using the [FileClose](https://www.mql5.com/en/docs/files/fileclose) function, and confirm the operation’s success with a message.
+
+To verify the output, we reopen the file in read mode using "FILE\_READ | FILE\_TXT", storing this handle in "verifyHandle"; if successful, we read the full content into "content" with the [FileReadString](https://www.mql5.com/en/docs/files/filereadstring) function based on the byte size from [FileSize](https://www.mql5.com/en/docs/files/filesize), print it for inspection (e.g., "File content after writing (size: X bytes):\n"content""), and close. This thorough process guarantees that the event data is accurately saved and can be checked, making it a dependable resource for backtesting in the Strategy Tester. We now can use the function for the data-saving process.
+
+```
+//---- Define file path for CSV
+string fileName = "Database\\EconomicCalendar.csv";
+
+//---- Check if file exists and print appropriate message
+if (!FileExists(fileName)) Print("Creating new file: ", fileName);
+else Print("Overwriting existing file: ", fileName);
+
+//---- Write events to CSV file
+WriteToCSV(fileName, events);
+//---- Print instructions for tester mode
+Print("Live mode: Data written. To use in tester, manually add ", fileName, " as a resource and recompile.");
+```
+
+To wrap up live mode data handling, we set "fileName" to "Database\EconomicCalendar.csv" and used the "FileExists" custom function to check its status. We then call the "WriteToCSV" function with "fileName" and "events" inputs to save the data, and print instructions with "Print"—"Live mode: Data written. To use in tester, add "fileName" as a resource and recompile."—for tester use. The custom function's code snippet to check the existence of the file is as below.
+
+```
+//---- Function to check if a file exists
+bool FileExists(string fileName) {
+   //---- Open file in read mode to check existence
+   int handle = FileOpen(fileName, FILE_READ | FILE_CSV);
+   //---- Check if file opened successfully
+   if (handle != INVALID_HANDLE) {
+      //---- Close the file handle
+      FileClose(handle);
+      //---- Return true if file exists
+      return true;
+   }
+   //---- Return false if file doesn't exist
+   return false;
+}
+```
+
+In the "FileExists" function to check file presence for strategy testing, we open "fileName" with [FileOpen](https://www.mql5.com/en/docs/files/fileopen) function in "FILE\_READ | FILE\_CSV" mode, and if "handle" isn’t "INVALID\_HANDLE", we close it with [FileClose](https://www.mql5.com/en/docs/files/fileclose) and return true; else, we return false. This confirms the file status for data handling. Upon running in live mode, here is the outcome.
+
+From the image, we can see that the data is saved and we can access it.
+
+To use the data in tester mode, we need to save it in the executable. For that, we add it as a resource.
+
+```
+//---- Define resource file for economic calendar data
+#resource "\\Files\\Database\\EconomicCalendar.csv" as string EconomicCalendarData
+```
+
+Here, we integrate the static data resource into our program to support strategy testing. Using the [#resource](https://www.mql5.com/en/docs/runtime/resources) directive, we embed the file located at "\Files\Database\EconomicCalendar.csv" and assign it to the "EconomicCalendarData" string variable. That way, the file is located in the executive so we don't have to worry even if it is deleted. We can now have a function to load the contents from the file.
+
+```
+//---- Function to load events from resource file
+bool LoadEventsFromResource() {
+   //---- Get data from resource
+   string fileData = EconomicCalendarData;
+   //---- Print raw resource content for debugging
+   Print("Raw resource content (size: ", StringLen(fileData), " bytes):\n", fileData);
+
+   //---- Array to hold lines from resource
+   string lines[];
+   //---- Split resource data into lines
+   int lineCount = StringSplit(fileData, '\n', lines);
+   //---- Check if resource has valid data
+   if (lineCount <= 1) {
+      //---- Print error if no data lines found
+      Print("Error: No data lines found in resource! Raw data: ", fileData);
+      //---- Return false on failure
+      return false;
+   }
+
+   //---- Reset events array
+   ArrayResize(allEvents, 0);
+   //---- Index for event array
+   int eventIndex = 0;
+
+   //---- Loop through each line (skip header at i=0)
+   for (int i = 1; i < lineCount; i++) {
+      //---- Check for empty lines
+      if (StringLen(lines[i]) == 0) {
+         //---- Print message for skipped empty line
+         Print("Skipping empty line ", i);
+         //---- Skip to next iteration
+         continue;
+      }
+
+      //---- Array to hold fields from each line
+      string fields[];
+      //---- Split line into fields
+      int fieldCount = StringSplit(lines[i], ',', fields);
+      //---- Print line details for debugging
+      Print("Line ", i, ": ", lines[i], " (field count: ", fieldCount, ")");
+
+      //---- Check if line has minimum required fields
+      if (fieldCount < 8) {
+         //---- Print error for malformed line
+         Print("Malformed line ", i, ": ", lines[i], " (field count: ", fieldCount, ")");
+         //---- Skip to next iteration
+         continue;
+      }
+
+      //---- Extract date from field
+      string dateStr = fields[0];
+      //---- Extract time from field
+      string timeStr = fields[1];
+      //---- Extract currency from field
+      string currency = fields[2];
+      //---- Extract event description (handle commas in event name)
+      string event = fields[3];
+      //---- Combine multiple fields if event name contains commas
+      for (int j = 4; j < fieldCount - 4; j++) {
+         event += "," + fields[j];
+      }
+      //---- Extract importance from field
+      string importance = fields[fieldCount - 4];
+      //---- Extract actual value from field
+      string actualStr = fields[fieldCount - 3];
+      //---- Extract forecast value from field
+      string forecastStr = fields[fieldCount - 2];
+      //---- Extract previous value from field
+      string previousStr = fields[fieldCount - 1];
+
+      //---- Convert date and time to datetime format
+      datetime eventDateTime = StringToTime(dateStr + " " + timeStr);
+      //---- Check if datetime conversion failed
+      if (eventDateTime == 0) {
+         //---- Print error for invalid datetime
+         Print("Error: Invalid datetime conversion for line ", i, ": ", dateStr, " ", timeStr);
+         //---- Skip to next iteration
+         continue;
+      }
+
+      //---- Resize events array for new event
+      ArrayResize(allEvents, eventIndex + 1);
+      //---- Assign event date
+      allEvents[eventIndex].eventDate = dateStr;
+      //---- Assign event time
+      allEvents[eventIndex].eventTime = timeStr;
+      //---- Assign event currency
+      allEvents[eventIndex].currency = currency;
+      //---- Assign event description
+      allEvents[eventIndex].event = event;
+      //---- Assign event importance
+      allEvents[eventIndex].importance = importance;
+      //---- Convert and assign actual value
+      allEvents[eventIndex].actual = StringToDouble(actualStr);
+      //---- Convert and assign forecast value
+      allEvents[eventIndex].forecast = StringToDouble(forecastStr);
+      //---- Convert and assign previous value
+      allEvents[eventIndex].previous = StringToDouble(previousStr);
+      //---- Print loaded event details
+      Print("Loaded event ", eventIndex, ": ", dateStr, " ", timeStr, ", ", currency, ", ", event);
+      //---- Increment event index
+      eventIndex++;
+   }
+
+   //---- Print total events loaded
+   Print("Loaded ", eventIndex, " events from resource into array.");
+   //---- Return success if events were loaded
+   return eventIndex > 0;
+}
+```
+
+We define the "LoadEventsFromResource" function to populate economic event data from the embedded resource for strategy testing. We assign the "EconomicCalendarData" resource to "fileData" and print its raw content with the "Print" function, including its size via the [StringLen](https://www.mql5.com/en/docs/strings/StringLen) function, for debugging. We split "fileData" into the "lines" array using the [StringSplit](https://www.mql5.com/en/docs/strings/stringsplit) function with a newline delimiter, storing the count in "lineCount", and if "lineCount" is 1 or less, we print an error and return false. We reset the "allEvents" array with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function to zero and initialize "eventIndex" at 0, then loop through "lines" starting at index 1 (skipping the header). For each line, we check if it’s empty with StringLen, printing a skip message and continuing if so; otherwise, we split it into "fields" using commas.
+
+If "fieldCount" is less than 8, we print an error and skip; else, we extract "dateStr", "timeStr", and "currency", and build "event" by concatenating fields (handling commas) in a loop, then grab "importance", "actualStr", "forecastStr", and "previousStr". We convert "dateStr" and "timeStr" to "eventDateTime" with the [StringToTime](https://www.mql5.com/en/docs/convert/stringtotime) function, skipping with an error if it fails, then resize "allEvents" with "ArrayResize", assign all values—converting numbers with [StringToDouble](https://www.mql5.com/en/docs/convert/stringtodouble)—print the event and increment "eventIndex". Finally, we print the total "eventIndex" and return true if events were loaded, ensuring data readiness for the Strategy Tester. We can now call this function on initialization in tester mode.
+
+```
+else {
+   //---- Check if resource data is empty in tester mode
+   if (StringLen(EconomicCalendarData) == 0) {
+      //---- Print error for empty resource
+      Print("Error: Resource EconomicCalendarData is empty. Please run in live mode, add the file as a resource, and recompile.");
+      //---- Return initialization failure
+      return(INIT_FAILED);
+   }
+   //---- Print message for tester mode
+   Print("Running in Strategy Tester, using embedded resource: Database\\EconomicCalendar.csv");
+
+   //---- Load events from resource
+   if (!LoadEventsFromResource()) {
+      //---- Print error if loading fails
+      Print("Failed to load events from resource.");
+      //---- Return initialization failure
+      return(INIT_FAILED);
+   }
+}
+```
+
+Here, if "EconomicCalendarData" is empty per [StringLen](https://www.mql5.com/en/docs/strings/StringLen), we print an error and return "INIT\_FAILED"; else, we print a tester mode message with the "Print" function and call "LoadEventsFromResource", returning "INIT\_FAILED" with an error if it fails. This will ensure that our event data loads correctly for backtesting. Here is the outcome.
+
+From the image, we can confirm the data is loaded successfully. The malformation of data and skipping of empty lines is handled correctly too. We can now proceed to the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) event handler and simulate the data processing as if we were in live mode. For this, we want to process the data per bar and not on every tick.
+
+```
+//---- Variable to track last bar time
+datetime lastBarTime = 0;
+
+//---- Tick event handler
+void OnTick() {
+   //---- Get current bar time
+   datetime currentBarTime = iTime(_Symbol, _Period, 0);
+   //---- Check if bar time has changed
+   if (currentBarTime != lastBarTime) {
+      //---- Update last bar time
+      lastBarTime = currentBarTime;
+
+      //----
+   }
+}
+```
+
+We define "lastBarTime" as a "datetime" variable initialized to 0 to track the previous bar’s time. In the [OnTick](https://www.mql5.com/en/docs/event_handlers/ontick) function, we retrieve the current bar’s time with the [iTime](https://www.mql5.com/en/docs/series/itime) function using [\_Symbol](https://www.mql5.com/en/docs/predefined/_symbol), [\_Period](https://www.mql5.com/en/docs/predefined/_period), and bar index 0, storing it in "currentBarTime"; if "currentBarTime" differs from "lastBarTime", we update "lastBarTime" to "currentBarTime", ensuring the system reacts to new bars for event processing. We can then define a function to handle the live simulation data processing in a similar format we did with the prior version as below.
+
+```
+//---- Function to filter and print economic events
+void FilterAndPrintEvents(datetime barTime) {
+   //---- Get total number of events
+   int totalEvents = ArraySize(allEvents);
+   //---- Print total events considered
+   Print("Total considered data size: ", totalEvents, " events");
+
+   //---- Check if there are events to filter
+   if (totalEvents == 0) {
+      //---- Print message if no events loaded
+      Print("No events loaded to filter.");
+      //---- Exit function
+      return;
+   }
+
+   //---- Array to store filtered events
+   EconomicEvent filteredEvents[];
+   //---- Counter for filtered events
+   int filteredCount = 0;
+
+   //---- Variables for time range
+   datetime timeBefore, timeAfter;
+   //---- Apply time filter if enabled
+   if (ApplyTimeFilter) {
+      //---- Structure for bar time
+      MqlDateTime barStruct;
+      //---- Convert bar time to structure
+      TimeToStruct(barTime, barStruct);
+
+      //---- Calculate time before event
+      MqlDateTime timeBeforeStruct = barStruct;
+      //---- Subtract hours before
+      timeBeforeStruct.hour -= HoursBefore;
+      //---- Subtract minutes before
+      timeBeforeStruct.min -= MinutesBefore;
+      //---- Adjust for negative minutes
+      if (timeBeforeStruct.min < 0) {
+         timeBeforeStruct.min += 60;
+         timeBeforeStruct.hour -= 1;
+      }
+      //---- Adjust for negative hours
+      if (timeBeforeStruct.hour < 0) {
+         timeBeforeStruct.hour += 24;
+         timeBeforeStruct.day -= 1;
+      }
+      //---- Convert structure to datetime
+      timeBefore = StructToTime(timeBeforeStruct);
+
+      //---- Calculate time after event
+      MqlDateTime timeAfterStruct = barStruct;
+      //---- Add hours after
+      timeAfterStruct.hour += HoursAfter;
+      //---- Add minutes after
+      timeAfterStruct.min += MinutesAfter;
+      //---- Adjust for minutes overflow
+      if (timeAfterStruct.min >= 60) {
+         timeAfterStruct.min -= 60;
+         timeAfterStruct.hour += 1;
+      }
+      //---- Adjust for hours overflow
+      if (timeAfterStruct.hour >= 24) {
+         timeAfterStruct.hour -= 24;
+         timeAfterStruct.day += 1;
+      }
+      //---- Convert structure to datetime
+      timeAfter = StructToTime(timeAfterStruct);
+
+      //---- Print time range for debugging
+      Print("Bar time: ", TimeToString(barTime), ", Time range: ", TimeToString(timeBefore), " to ", TimeToString(timeAfter));
+   } else {
+      //---- Print message if no time filter applied
+      Print("Bar time: ", TimeToString(barTime), ", No time filter applied, using StartDate to EndDate only.");
+      //---- Set time range to date inputs
+      timeBefore = StartDate;
+      timeAfter = EndDate;
+   }
+
+   //---- Loop through all events for filtering
+   for (int i = 0; i < totalEvents; i++) {
+      //---- Convert event date and time to datetime
+      datetime eventDateTime = StringToTime(allEvents[i].eventDate + " " + allEvents[i].eventTime);
+      //---- Check if event is within date range
+      bool inDateRange = (eventDateTime >= StartDate && eventDateTime <= EndDate);
+      //---- Skip if not in date range
+      if (!inDateRange) continue;
+
+      //---- Time Filter Check
+      //---- Check if event is within time range if filter applied
+      bool timeMatch = !ApplyTimeFilter || (eventDateTime >= timeBefore && eventDateTime <= timeAfter);
+      //---- Skip if time doesn't match
+      if (!timeMatch) continue;
+      //---- Print event details if time passes
+      Print("Event ", i, ": Time passes (", allEvents[i].eventDate, " ", allEvents[i].eventTime, ") - ",
+            "Currency: ", allEvents[i].currency, ", Event: ", allEvents[i].event, ", Importance: ", allEvents[i].importance,
+            ", Actual: ", DoubleToString(allEvents[i].actual, 2), ", Forecast: ", DoubleToString(allEvents[i].forecast, 2),
+            ", Previous: ", DoubleToString(allEvents[i].previous, 2));
+
+      //---- Currency Filter Check
+      //---- Default to match if filter disabled
+      bool currencyMatch = !ApplyCurrencyFilter;
+      //---- Apply currency filter if enabled
+      if (ApplyCurrencyFilter && ArraySize(curr_filter) > 0) {
+         //---- Initially set to no match
+         currencyMatch = false;
+         //---- Check each currency in filter
+         for (int j = 0; j < ArraySize(curr_filter); j++) {
+            //---- Check if event currency matches filter
+            if (allEvents[i].currency == curr_filter[j]) {
+               //---- Set match to true if found
+               currencyMatch = true;
+               //---- Exit loop on match
+               break;
+            }
+         }
+         //---- Skip if currency doesn't match
+         if (!currencyMatch) continue;
+      }
+      //---- Print event details if currency passes
+      Print("Event ", i, ": Currency passes (", allEvents[i].currency, ") - ",
+            "Date: ", allEvents[i].eventDate, " ", allEvents[i].eventTime,
+            ", Event: ", allEvents[i].event, ", Importance: ", allEvents[i].importance,
+            ", Actual: ", DoubleToString(allEvents[i].actual, 2), ", Forecast: ", DoubleToString(allEvents[i].forecast, 2),
+            ", Previous: ", DoubleToString(allEvents[i].previous, 2));
+
+      //---- Impact Filter Check
+      //---- Default to match if filter disabled
+      bool impactMatch = !ApplyImpactFilter;
+      //---- Apply impact filter if enabled
+      if (ApplyImpactFilter && ArraySize(imp_filter) > 0) {
+         //---- Initially set to no match
+         impactMatch = false;
+         //---- Check each importance in filter
+         for (int k = 0; k < ArraySize(imp_filter); k++) {
+            //---- Check if event importance matches filter
+            if (allEvents[i].importance == imp_filter[k]) {
+               //---- Set match to true if found
+               impactMatch = true;
+               //---- Exit loop on match
+               break;
+            }
+         }
+         //---- Skip if importance doesn't match
+         if (!impactMatch) continue;
+      }
+      //---- Print event details if impact passes
+      Print("Event ", i, ": Impact passes (", allEvents[i].importance, ") - ",
+            "Date: ", allEvents[i].eventDate, " ", allEvents[i].eventTime,
+            ", Currency: ", allEvents[i].currency, ", Event: ", allEvents[i].event,
+            ", Actual: ", DoubleToString(allEvents[i].actual, 2), ", Forecast: ", DoubleToString(allEvents[i].forecast, 2),
+            ", Previous: ", DoubleToString(allEvents[i].previous, 2));
+
+      //---- Add event to filtered array
+      ArrayResize(filteredEvents, filteredCount + 1);
+      //---- Assign event to filtered array
+      filteredEvents[filteredCount] = allEvents[i];
+      //---- Increment filtered count
+      filteredCount++;
+   }
+
+   //---- Print summary of filtered events
+   Print("After ", (ApplyTimeFilter ? "time filter" : "date range filter"),
+         ApplyCurrencyFilter ? " and currency filter" : "",
+         ApplyImpactFilter ? " and impact filter" : "",
+         ": ", filteredCount, " events remaining.");
+
+   //---- Check if there are filtered events to print
+   if (filteredCount > 0) {
+      //---- Print header for filtered events
+      Print("Filtered Events at Bar Time: ", TimeToString(barTime));
+      //---- Print filtered events array
+      ArrayPrint(filteredEvents, 2, " | ");
+   } else {
+      //---- Print message if no events found
+      Print("No events found within the specified range.");
+   }
+}
+```
+
+Here, we construct the "FilterAndPrintEvents" function to filter and display economic events relevant to a given bar. We start by calculating "totalEvents" with the ArraySize function on "allEvents" and print it; if zero, we exit with "return". We initialize "filteredEvents" as an "EconomicEvent" array and "filteredCount" at 0, then define "timeBefore" and "timeAfter" for time filtering. If "ApplyTimeFilter" is true, we convert "barTime" to "barStruct" with [TimeToStruct](https://www.mql5.com/en/docs/dateandtime/timetostruct) function, adjust "timeBeforeStruct" by subtracting "HoursBefore" and "MinutesBefore" (correcting negatives), and "timeAfterStruct" by adding "HoursAfter" and "MinutesAfter" (correcting overflows), converting both to "datetime" with [StructToTime](https://www.mql5.com/en/docs/dateandtime/structtotime) function and printing the range; otherwise, we set them to "StartDate" and "EndDate" and print a no-filter message.
+
+We loop through "allEvents" with "totalEvents", converting each "eventDate" and "eventTime" to "eventDateTime" with [StringToTime](https://www.mql5.com/en/docs/convert/stringtotime), checking if it’s within "StartDate" and "EndDate" for "inDateRange", and skipping if not. For time filtering, we test "timeMatch" with "ApplyTimeFilter" and the range, printing details if it passes; for currency, we set "currencyMatch" based on "ApplyCurrencyFilter" and "curr\_filter" via [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function and a loop, printing if matched; and for impact, we set "impactMatch" with "ApplyImpactFilter" and "imp\_filter", printing if matched. Matching events are added to "filteredEvents" with the [ArrayResize](https://www.mql5.com/en/docs/array/arrayresize) function, incrementing "filteredCount".
+
+Finally, we print a summary, and if "filteredCount" is positive, we print the filtered list with [ArrayPrint](https://www.mql5.com/en/docs/array/arrayprint); otherwise, we print a no-events message, ensuring thorough event analysis for testing. We then call the function in the tick event handler.
+
+```
+void OnTick() {
+   //---- Get current bar time
+   datetime currentBarTime = iTime(_Symbol, _Period, 0);
+   //---- Check if bar time has changed
+   if (currentBarTime != lastBarTime) {
+      //---- Update last bar time
+      lastBarTime = currentBarTime;
+      //---- Filter and print events for current bar
+      FilterAndPrintEvents(currentBarTime);
+   }
+}
+```
+
+Upon running the program, we have the following outcome.
+
+From the image, we can see that filtering is enabled and works as anticipated. The only thing that remains is testing our logic, and that is handled in the next section.
+
+### Testing
+
+For a detailed testing, we visualized everything in a video, and you can view it as attached below.
+
+YouTube
+
+Tap to unmute
+
+Video unavailable
+
+Video unavailable
+
+This video is no longer available because the uploader has closed their YouTube account.
+
+  
+
+### Conclusion
+
+In conclusion, we’ve enhanced our MQL5 Economic Calendar series by preparing the system for strategy testing, using static data in a saved file to enable reliable backtesting. This bridges live event analysis to the Strategy Tester with flexible filters, overcoming data limitations for precise strategy validation. Next, we’ll explore optimizing trade execution from these results, and their integration into the dashboard. Keep tuned!
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/17603.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_7.mq5](https://www.mql5.com/en/articles/download/17603/mql5_news_calendar_part_7.mq5 "Download MQL5_NEWS_CALENDAR_PART_7.mq5")
+(29.68 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Reimagining Classic Strategies (Part 14): High Probability Setups](https://www.mql5.com/en/articles/17756)
+
+High probability Setups are well known in our trading community, but regrettably they are not well-defined. In this article, we will aim to find an empirical and algorithmic way of defining exactly what is a high probability setup, identifying and exploiting them. By using Gradient Boosting Trees, we demonstrated how the reader can improve the performance of an arbitrary trading strategy and better communicate the exact job to be done to our computer in a more meaningful and explicit manner.
+
+[From Novice to Expert: Programming Candlesticks](https://www.mql5.com/en/articles/17525)
+
+In this article, we take the first step in MQL5 programming, even for complete beginners. We'll show you how to transform familiar candlestick patterns into a fully functional custom indicator. Candlestick patterns are valuable as they reflect real price action and signal market shifts. Instead of manually scanning charts—an approach prone to errors and inefficiencies—we'll discuss how to automate the process with an indicator that identifies and labels patterns for you. Along the way, we’ll explore key concepts like indexing, time series, Average True Range (for accuracy in varying market volatility), and the development of a custom reusable Candlestick Pattern library for use in future projects.
+
+[Developing a Replay System (Part 65): Playing the service (VI)](https://www.mql5.com/en/articles/12265)
+
+In this article, we will look at how to implement and solve the mouse pointer issue when using it in conjunction with a replay/simulation application. The content presented here is intended solely for educational purposes. Under no circumstances should the application be viewed for any purpose other than to learn and master the concepts presented.
+
+[From Basic to Intermediate: SWITCH Statement](https://www.mql5.com/en/articles/15391)
+
+In this article, we will learn how to use the SWITCH statement in its simplest and most basic form. The content presented here is intended solely for educational purposes. Under no circumstances should the application be viewed for any purpose other than to learn and master the concepts presented.
+
+[
+
+Revised MetaTrader 5 Web Terminal
+
+Trade with no restrictions from any mobile device, OS and web browser
+
+Learn more](https://www.mql5.com/ff/go?link=https://trade.metatrader5.com/&a=fkjlpstbxdmrrwpblfatcsdjyrxbizyj&s=f462f051eb7aaec36d6b31792d312d60d3f5a50c83b12d0d66e85d5d61bd941b&uid=&ref=https://www.mql5.com/en/articles/17603&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&fz_uniq=6349074421163637502)

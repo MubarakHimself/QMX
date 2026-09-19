@@ -1,0 +1,121 @@
+{
+  "pack_id": "trading_029_p00",
+  "section": "Trading",
+  "parent_shard": "trading_029",
+  "part_index": 0,
+  "part_count": 2,
+  "series_in_pack": [
+    "creating an ea that works automatically"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 11223,
+      "title": "Creating an EA that works automatically (Part 02): Getting started with the code",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Getting started with the code",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11223.md"
+    },
+    {
+      "id": 11226,
+      "title": "Creating an EA that works automatically (Part 03): New functions",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): New functions",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11226.md"
+    },
+    {
+      "id": 11232,
+      "title": "Creating an EA that works automatically (Part 04): Manual triggers (I)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Manual triggers (I)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11232.md"
+    },
+    {
+      "id": 11237,
+      "title": "Creating an EA that works automatically (Part 05): Manual triggers (II)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Manual triggers (II)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11237.md"
+    },
+    {
+      "id": 11241,
+      "title": "Creating an EA that works automatically (Part 06): Account types (I)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Account types (I)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11241.md"
+    },
+    {
+      "id": 11256,
+      "title": "Creating an EA that works automatically (Part 07): Account types (II)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Account types (II)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11256.md"
+    },
+    {
+      "id": 11248,
+      "title": "Creating an EA that works automatically (Part 08): OnTradeTransaction",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): OnTradeTransaction",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 8,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11248.md"
+    },
+    {
+      "id": 11281,
+      "title": "Creating an EA that works automatically (Part 09): Automation (I)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (I)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 9,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11281.md"
+    },
+    {
+      "id": 11286,
+      "title": "Creating an EA that works automatically (Part 10): Automation (II)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (II)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11286.md"
+    },
+    {
+      "id": 11293,
+      "title": "Creating an EA that works automatically (Part 11): Automation (III)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (III)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11293.md"
+    },
+    {
+      "id": 11305,
+      "title": "Creating an EA that works automatically (Part 12): Automation (IV)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (IV)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 12,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11305.md"
+    },
+    {
+      "id": 11310,
+      "title": "Creating an EA that works automatically (Part 13): Automation (V)",
+      "section": "Trading",
+      "series_title": "Creating an EA that works automatically (): Automation (V)",
+      "series_key": "creating an ea that works automatically",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11310.md"
+    }
+  ]
+}

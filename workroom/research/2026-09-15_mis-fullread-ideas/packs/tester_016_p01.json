@@ -1,0 +1,49 @@
+{
+  "pack_id": "tester_016_p01",
+  "section": "Tester",
+  "parent_shard": "tester_016",
+  "part_index": 1,
+  "part_count": 2,
+  "series_in_pack": [
+    "developing a replay system \u2014 market simulation"
+  ],
+  "n": 4,
+  "articles": [
+    {
+      "id": 11174,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 22): FOREX (III)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (III)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 22,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11174.md"
+    },
+    {
+      "id": 11177,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 23): FOREX (IV)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (IV)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 23,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11177.md"
+    },
+    {
+      "id": 11189,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 24): FOREX (V)",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): FOREX (V)",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 24,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11189.md"
+    },
+    {
+      "id": 11203,
+      "title": "Developing a Replay System \u2014 Market simulation (Part 25): Preparing for the next phase",
+      "section": "Tester",
+      "series_title": "Developing a Replay System \u2014 Market simulation (): Preparing for the next phase",
+      "series_key": "developing a replay system \u2014 market simulation",
+      "series_part": 25,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11203.md"
+    }
+  ]
+}

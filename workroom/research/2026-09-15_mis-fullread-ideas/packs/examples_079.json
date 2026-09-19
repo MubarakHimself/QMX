@@ -1,0 +1,123 @@
+{
+  "pack_id": "examples_079",
+  "section": "Examples",
+  "parent_shard": "examples_079",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "mql as a markup tool for the graphical interface of mql programs",
+    "mql4 language for newbies. custom indicators",
+    "mql5 trading toolkit"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 7734,
+      "title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs. Part 1",
+      "section": "Examples",
+      "series_title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs.",
+      "series_key": "mql as a markup tool for the graphical interface of mql programs",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7734.md"
+    },
+    {
+      "id": 7739,
+      "title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs. Part 2",
+      "section": "Examples",
+      "series_title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs.",
+      "series_key": "mql as a markup tool for the graphical interface of mql programs",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7739.md"
+    },
+    {
+      "id": 7795,
+      "title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs (Part 3). Form Designer",
+      "section": "Examples",
+      "series_title": "MQL as a Markup Tool for the Graphical Interface of MQL Programs (). Form Designer",
+      "series_key": "mql as a markup tool for the graphical interface of mql programs",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\7795.md"
+    },
+    {
+      "id": 1500,
+      "title": "MQL4 Language for Newbies. Custom Indicators (Part 1)",
+      "section": "Examples",
+      "series_title": "MQL4 Language for Newbies. Custom Indicators ()",
+      "series_key": "mql4 language for newbies. custom indicators",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1500.md"
+    },
+    {
+      "id": 1503,
+      "title": "MQL4 Language for Newbies. Custom Indicators (Part 2)",
+      "section": "Examples",
+      "series_title": "MQL4 Language for Newbies. Custom Indicators ()",
+      "series_key": "mql4 language for newbies. custom indicators",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1503.md"
+    },
+    {
+      "id": 14822,
+      "title": "MQL5 Trading Toolkit (Part 1): Developing A Positions Management EX5 Library",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Developing A Positions Management EX5 Library",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14822.md"
+    },
+    {
+      "id": 15224,
+      "title": "MQL5 Trading Toolkit (Part 2): Expanding and Implementing the Positions Management EX5 Library",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Expanding and Implementing the Positions Management EX5 Library",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15224.md"
+    },
+    {
+      "id": 15888,
+      "title": "MQL5 Trading Toolkit (Part 3): Developing a Pending Orders Management EX5 Library",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Developing a Pending Orders Management EX5 Library",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15888.md"
+    },
+    {
+      "id": 16528,
+      "title": "MQL5 Trading Toolkit (Part 4): Developing a History Management EX5 Library",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Developing a History Management EX5 Library",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16528.md"
+    },
+    {
+      "id": 16681,
+      "title": "MQL5 Trading Toolkit (Part 5): Expanding the History Management EX5 Library with Position Functions",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Expanding the History Management EX5 Library with Position Functions",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16681.md"
+    },
+    {
+      "id": 16742,
+      "title": "MQL5 Trading Toolkit (Part 6): Expanding the History Management EX5 Library with the Last Filled Pending Order Functions",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Expanding the History Management EX5 Library with the Last Filled Pending Order Functions",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16742.md"
+    },
+    {
+      "id": 16906,
+      "title": "MQL5 Trading Toolkit (Part 7): Expanding the History Management EX5 Library with the Last Canceled Pending Order Functions",
+      "section": "Examples",
+      "series_title": "MQL5 Trading Toolkit (): Expanding the History Management EX5 Library with the Last Canceled Pending Order Functions",
+      "series_key": "mql5 trading toolkit",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16906.md"
+    }
+  ]
+}

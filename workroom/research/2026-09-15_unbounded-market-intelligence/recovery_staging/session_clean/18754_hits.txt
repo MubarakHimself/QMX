@@ -1,0 +1,74 @@
+20: # From Novice to Expert: Animated News Headline Using MQL5 (VI) — Pending Order Strategy for News Trading
+25: | 18 July 2025 at 10:16
+36: ### Contents:
+38: - [Introduction](https://www.mql5.com/en/articles/18754#contents)
+39: - [Strategy Overview for Pending Orders Integration](https://www.mql5.com/en/articles/18754#strategy_overview_for_pending_orders_integration)
+40: - [Implementation](https://www.mql5.com/en/articles/18754#implementation)
+41: - [Testing](https://www.mql5.com/en/articles/18754#testing)
+42: - [Conclusion](https://www.mql5.com/en/articles/18754#conclusion)
+43: - [Key Lessons](https://www.mql5.com/en/articles/18754#key_lessons)
+44: - [Attachments](https://www.mql5.com/en/articles/18754#attachments)
+46: ### Introduction
+52: - Convenient Access to News Calendar: Users can view upcoming economic events directly on the chart without disrupting their trading or analysis workflow.
+53: - Real-Time Economic News Headlines: We integrated Alpha Vantage as our news source, providing up-to-date headlines to keep traders informed.
+54: - Inbuilt Indicator Insights: Using the MQL5 API, we were able to fetch technical indicator data and display tailored insights in dedicated chart lanes.
+55: - Artificial Intelligence Insights: We connected local AI models to generate market insights, adding a sophisticated analytical dimension, though this introduced some slowdown affecting the scrolling speed across lanes.
+59: ### Strategy Overview for Pending Orders Integration
+75: In our case, we’re intentionally choosing time-based conditions for executing trades. This is particularly suited to news trading because the timing of news releases is known in advance. Unlike setups that rely purely on chart patterns or indicator signals, this approach uses the scheduled news calendar as the primary trigger for trading activity.
+105: News trading carries unique risks. Unlike traditional setups that evolve gradually, economic news can cause a currency pair to jump dozens of pips in milliseconds. Spreads widen, slippage occurs, and prices gap.
+117: Before placing orders, we calculate the current spread and incorporate it into the pending order’s offset. This prevents the spread from “accidentally” triggering our orders on mere bid-ask fluctuations, preserving the integrity of our intended entry levels.
+133: - Packaging orders with proper structure.
+134: - Checking symbol permissions and margin requirements.
+135: - Handling slippage via deviation settings.
+136: - Tracking ticket numbers for later modifications or deletions.
+137: - Logging and error handling.
+141: ```
+145: ```
+153: 1. Scan economic calendar to identify the next high-impact event.
+159: - Compute the reference price from the nearest M1 open.
+160: - Add or subtract pip offsets, adjusting for spread.
+161: - Calculate stop-loss and take-profit prices.
+167: - As soon as one order triggers, delete the sibling order.
+171: - Apply fixed SL/TP distances.
+172: - Ensure pending orders are canceled if no longer needed.
+186: ### Implementation
+194: ```
+195: #include <Trade/Trade.mqh>
+208: ```
+214: ```
+230: ```
+234: Inside OnTimer(), we compare the current server time (now) against *nextEventTime – InpOrderMinutesBefore\*60*. As soon as the clock enters that window—and only once per event, thanks to our ordersPlaced guard—we proceed to build two pending stops (buy and sell). This separation of “when to trade” from “how to trade” keeps our timing logic clean and prevents repeated re‑entry.
+236: ```
+250: ```
+256: ```
+270:   double offsetP = (spreadPips + InpStopOffsetPips) * pip;
+295: ```
+301: ```
+317: ```
+323: ### Testing
+327: ```
+331: ```
+339: During my testing, I focused on an upcoming high-impact event: the GBP BoE Governor Bailey Speech, which appeared in the EA’s calendar display as a “red news” package. At the time of capturing test images, the EA correctly displayed a “5 minutes remaining” countdown for this event. Knowing that our logic is set to place pending orders 3 minutes before a scheduled release, I deliberately waited ano
+345: The default configuration places orders exactly 3 minutes prior to the event time. However, practical testing of such a news-trading EA presents unique challenges, especially because the MetaTrader 5 Strategy Tester is not fully suitable for simulating live economic calendar events. The strategy tester works by replaying market ticks but it has no knowledge of real-time calendar data, nor does it 
+351: To overcome this limitation, one practical testing technique is to adjust the input parameter defining how many minutes before the news event pending orders are placed. For example, suppose there’s a real news event scheduled 50 minutes away and you want to avoid waiting nearly an hour. Instead, you can temporarily set the pending order lead time from the default 3 minutes to, say, 45 minutes. Thi
+355: ### Conclusion
+371: ### Key Lessons
+373: | Lesson | Description |
+374: | --- | --- |
+375: | Event Handling with OnTimer | Using the OnTimer() function enables your Expert Advisor to perform actions on a fixed schedule, such as checking news times, updating graphics, or managing trades without relying on new ticks. |
+376: | Using CTrade for Order Management | The CTrade class simplifies placing, modifying, and closing orders without writing low-level trade request code, ensuring more stable and maintainable trading logic. |
+377: | Dynamic Array Management | Working with arrays in MQL5, such as resizing and sorting them, is critical for managing lists of events, price data, or other dynamic datasets. |
+378: | String Handling & Parsing | Parsing JSON or text responses, trimming strings, and handling substrings is essential when integrating web APIs or building custom user messages in your EA. |
+379: | Risk Management Principles | Properly calculating lot sizes, stop-loss, and take-profit distances is fundamental for preserving account health and reducing exposure to unpredictable price spikes during news events. |
+380: | WebRequest Integration | MQL5 allows sending HTTP/HTTPS requests to external servers, enabling features like fetching news headlines or AI predictions, which adds powerful external data to trading strategies. |
+381: | Graphical Canvas Drawing | CCanvas and similar classes let you draw custom visuals on charts, from scrolling text to graphics, making it possible to build advanced UI overlays directly in MetaTrader 5 charts. |
+382: | Symbol-Specific Precision | Each symbol may have different point and pip sizes or decimal digits. Always adjust calculations like price offsets and SL/TP to match the symbol’s precision to avoid order errors. |
+383: | Magic Numbers | Magic numbers uniquely identify orders from a specific EA, allowing safe management of positions and avoiding conflicts with other EAs or manual trades. |
+384: | Debugging and Logging | Using Print(), Alert(), and logging mechanisms helps track down bugs and observe EA behavior during development and live trading. |
+386: ### Attachments
+388: | Filename | Version | Description |
+389: | --- | --- | --- |
+390: | News Headline EA.mq5 | 1.10 | MetaTrader 5 Expert Advisor combining economic calendar events, Alpha Vantage news headlines, technical indicator insights, AI-driven market insights, alerts, push notifications, and automatic news-trading execution with dynamic pip handling. |
+391: | download\_model.py |  | Python script that downloads and saves a machine learning model required for generating AI market insights. Ensures the AI component of the EA has the necessary model file available locally for predictions. |
+392: | serve\_insights.py |  | Python web service that runs locally to accept HTTP POST requests from the EA and respond with AI-generated market insights. Acts as the AI backend for real-time insight lane data in the EA. |
+416: In this article, we’ve transitioned from manually coding candlestick‑pattern detection in Python to leveraging TA‑Lib, a library that recognizes over sixty distinct patterns. These formations offer valuable insights into potential market reversals and trend continuations. Follow along to learn more.

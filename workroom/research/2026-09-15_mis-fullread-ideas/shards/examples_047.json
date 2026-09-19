@@ -1,0 +1,116 @@
+{
+  "shard_id": "examples_047",
+  "section": "Examples",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 15733,
+      "title": "From Basic to Intermediate: Events (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15733.md"
+    },
+    {
+      "id": 15748,
+      "title": "Developing a Trading System Based on the Order Book (Part I): Indicator",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15748.md"
+    },
+    {
+      "id": 15762,
+      "title": "Reimagining Classic Strategies (Part VIII): Currency Markets And Precious Metals on the USDCAD",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15762.md"
+    },
+    {
+      "id": 15771,
+      "title": "Reimagining Classic Strategies in MQL5 (Part II): FTSE100 and UK Gilts",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15771.md"
+    },
+    {
+      "id": 15781,
+      "title": "Self Optimizing Expert Advisor with MQL5 And Python (Part III): Cracking The Boom 1000 Algorithm",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15781.md"
+    },
+    {
+      "id": 15794,
+      "title": "From Basic to Intermediate: Indicator (I)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15794.md"
+    },
+    {
+      "id": 15802,
+      "title": "From Basic to Intermediate: Indicator (II)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15802.md"
+    },
+    {
+      "id": 15811,
+      "title": "How to create a trading journal with MetaTrader and Google Sheets",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15811.md"
+    },
+    {
+      "id": 15818,
+      "title": "Reimagining Classic Strategies in MQL5 (Part III): FTSE 100 Forecasting",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15818.md"
+    },
+    {
+      "id": 15819,
+      "title": "Example of CNA (Causality Network Analysis), SMOC (Stochastic Model Optimal Control) and Nash Game Theory with Deep Learning",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15819.md"
+    },
+    {
+      "id": 15828,
+      "title": "From Basic to Intermediate: Indicator (III)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15828.md"
+    },
+    {
+      "id": 15830,
+      "title": "Applying Localized Feature Selection in Python and MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15830.md"
+    }
+  ]
+}

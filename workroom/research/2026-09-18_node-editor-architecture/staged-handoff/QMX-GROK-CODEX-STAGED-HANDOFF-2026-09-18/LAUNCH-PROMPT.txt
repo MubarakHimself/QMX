@@ -1,0 +1,9 @@
+Read 00-START-HERE.md, 01-GROK-ARCHITECTURE-PROMPT.md and the latest exported transcript in the attached QMX staged handoff.
+
+Perform Stage A: independently explore the current QMX repository and references using as many useful subagents/dynamic workflows as available; then use the installed BMAD architecture skill to produce a complete, internally reviewed candidate. Preserve all current working code and reconcile the audit's stale baseline before using absence claims.
+
+Include platform-wide extensibility, cross-app composition/internal interfaces, the two copilot session profiles, data/providers/storage, alternative system policies, QML/QMB/QMA/QMN lifecycle, multi-broker/accounts, local/server/GPU execution, stack decisions and future UI-host contracts. This is the enabling design, not implementation of every example.
+
+Do not ask me routine technical questions or require manual artifact-by-artifact review. Record assumptions and group only genuinely consequential unresolved questions at the end. Use the actual installed skills; do not invent their behavior.
+
+Freeze the architecture candidate with exact files/revisions/hashes, package CODEX-CHALLENGE-INPUTS.zip and its launch prompt, write RESUME-STATE.md, then STOP at AWAITING_CODEX_CHALLENGE. I will run the independent Codex scenario/challenge session and return its output. Do not simulate that review or issue the final Documentation Factory handoff yet. No production coding, deployment, paid jobs or trading in this session.

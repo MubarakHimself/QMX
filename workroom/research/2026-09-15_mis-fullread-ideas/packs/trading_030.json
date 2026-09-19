@@ -1,0 +1,78 @@
+{
+  "pack_id": "trading_030",
+  "section": "Trading",
+  "parent_shard": "trading_030",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [
+    "creating an interactive graphical user interface in mql5",
+    "custom indicators",
+    "data science and ml"
+  ],
+  "n": 7,
+  "articles": [
+    {
+      "id": 15205,
+      "title": "Creating an Interactive Graphical User Interface in MQL5 (Part 1): Making the Panel",
+      "section": "Trading",
+      "series_title": "Creating an Interactive Graphical User Interface in MQL5 (): Making the Panel",
+      "series_key": "creating an interactive graphical user interface in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15205.md"
+    },
+    {
+      "id": 15263,
+      "title": "Creating an Interactive Graphical User Interface in MQL5 (Part 2): Adding Controls and Responsiveness",
+      "section": "Trading",
+      "series_title": "Creating an Interactive Graphical User Interface in MQL5 (): Adding Controls and Responsiveness",
+      "series_key": "creating an interactive graphical user interface in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15263.md"
+    },
+    {
+      "id": 14481,
+      "title": "Custom Indicators (Part 1): A Step-by-Step Introductory Guide to Developing Simple Custom Indicators in MQL5",
+      "section": "Trading",
+      "series_title": "Custom Indicators (): A Step-by-Step Introductory Guide to Developing Simple Custom Indicators in MQL5",
+      "series_key": "custom indicators",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14481.md"
+    },
+    {
+      "id": 15465,
+      "title": "Data Science and ML (Part 28): Predicting Multiple Futures for EURUSD, Using AI",
+      "section": "Trading",
+      "series_title": "Data Science and ML (): Predicting Multiple Futures for EURUSD, Using AI",
+      "series_key": "data science and ml",
+      "series_part": 28,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15465.md"
+    },
+    {
+      "id": 15585,
+      "title": "Data Science and ML(Part 30): The Power Couple for Predicting the Stock Market, Convolutional Neural Networks(CNNs) and Recurrent Neural Networks(RNNs)",
+      "section": "Trading",
+      "series_title": "Data Science and ML(): The Power Couple for Predicting the Stock Market, Convolutional Neural Networks(CNNs) and Recurrent Neural Networks(RNNs)",
+      "series_key": "data science and ml",
+      "series_part": 30,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15585.md"
+    },
+    {
+      "id": 16017,
+      "title": "Data Science and ML (Part 31): Using CatBoost AI Models for Trading",
+      "section": "Trading",
+      "series_title": "Data Science and ML (): Using CatBoost AI Models for Trading",
+      "series_key": "data science and ml",
+      "series_part": 31,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16017.md"
+    },
+    {
+      "id": 18885,
+      "title": "Data Science and ML (Part 48): Are Transformers a Big Deal for Trading?",
+      "section": "Trading",
+      "series_title": "Data Science and ML (): Are Transformers a Big Deal for Trading?",
+      "series_key": "data science and ml",
+      "series_part": 48,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18885.md"
+    }
+  ]
+}

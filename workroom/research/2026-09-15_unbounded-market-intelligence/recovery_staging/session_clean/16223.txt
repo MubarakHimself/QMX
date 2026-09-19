@@ -1,0 +1,503 @@
+---
+id: 16223
+source_url: https://www.mql5.com/en/articles/16223
+title: "Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar"
+author: ""
+author_url: 
+published: 2024-10-30T11:16Z
+platform: "MetaTrader 5"
+section: "Trading"
+tags: []
+series_title: "Trading with the MQL5 Economic Calendar (): Mastering the Functions of the MQL5 Economic Calendar"
+series_part: 1
+source: mql5
+language: en
+---
+
+# Trading with the MQL5 Economic Calendar (Part 1): Mastering the Functions of the MQL5 Economic Calendar
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Trading](https://www.mql5.com/en/articles/mt5/trading)
+| 30 October 2024 at 07:16
+
+10 894
+[
+0](https://www.mql5.com/en/forum/475563 "Comments")
+
+[Allan Munene Mutiiria](https://www.mql5.com/en/users/29210372)
+
+### Introduction
+
+In this article, we explore the powerful features of the [MetaQuotes Language 5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") (MQL5) Economic Calendar and how they can be integrated into algorithmic trading. The [Economic Calendar](https://www.mql5.com/en/book/advanced/calendar), incorporated in the trading terminal, [MetaTrader 5](https://www.metatrader5.com/en "https://www.metatrader5.com/en"), is a crucial tool for traders, providing essential news and data that can significantly impact market movements. By understanding how to retrieve and interpret this information, we can gain an edge in forecasting market reactions to economic events and adjust our trading strategies accordingly.
+
+We will begin with an overview of the MQL5 Economic Calendar, covering its key components and how it works. Next, we will focus on the implementation in MQL5, demonstrating how to access and display news events on the chart programmatically. Finally, we will conclude by summarizing the insights gained and the benefits of incorporating the Economic Calendar into trading systems. Here are the subtopics in which we will cover the article through:
+
+1. Overview of the MQL5 Economic Calendar
+2. Implementation in MQL5
+3. Conclusion
+
+By the end of this article, you will be equipped with the knowledge to develop an MQL5 Expert Advisor that effectively utilizes the MQL5 economic calendar in your trading strategies. Let's get started.
+
+### Overview of the MQL5 Economic Calendar
+
+The MQL5 Economic Calendar is an excellent tool that supplies traders with current, coherent information about the key economic events capable of making a significant impact on the financial markets. It is a useful tool that is even more accessible because it is embedded into the MetaTrader 5 platform.
+
+The economic calendar provides a good overview of the various upcoming events that could affect the financial markets. It shows everything from the interest rate decision-making dates, reports on [inflation](https://www.investopedia.com/ask/answers/what-is-inflation-and-how-should-it-affect-investing/ "https://www.investopedia.com/ask/answers/what-is-inflation-and-how-should-it-affect-investing/"), and [Gross Domestic Product](https://www.investopedia.com/terms/g/gdp.asp "https://www.investopedia.com/terms/g/gdp.asp") (GDP) figures to employment statistics and much more. Because each of these can move the markets in substantial ways—especially in currencies, commodities, and stocks—the calendar is a genuine must-have tool for short- and long-term traders alike.
+
+To open the calendar, navigate to the taskbar and select "View", then "Toolbox". Below is an illustration.
+
+Once the toolbox window is opened, navigate to the "Calendar" tab and click on it. This will open the calendar window, which should depict the one below.
+
+Now, it is worth noting that the [MQL5 Economic Calendar](https://www.mql5.com/en/book/advanced/calendar) lists forthcoming events that hold relevance to the markets in an orderly fashion, sorted by their anticipated impact. It characterizes each one by a clear, non-ambiguous label of "low", "medium", or "high" for its level of potential influence. Thus, it is very easy to quickly glean from the calendar which upcoming events are highly significant and which are not. The calendar also filters events nicely by their currency relevance. Although the events are organized and color-coded for relevance, there are not so many that a trader could be overwhelmed trying to take them all into account. Thus, the filtering mechanism ensures that traders are not overwhelmed with irrelevant data, allowing them to zero in on news that could directly affect their open positions or trading strategies.
+
+One of the core advantages of the MQL5 Economic Calendar is its integration with MQL5, which enables traders to programmatically access economic data and incorporate it into their Expert Advisors (EAs) or automated trading systems. Using its predefined functions, we can retrieve data such as the event's name, scheduled time, country, and forecasted or actual value. This functionality allows traders to develop systems that automatically react to major news events, whether it involves closing positions to avoid volatility, opening trades based on forecasts, or adjusting stop-loss and take-profit levels. This level of automation ensures that trading strategies are always responsive to the latest economic developments, without requiring manual intervention. To wrap up the key functionalities of the MQL5 Economic Calendar, here is a detailed visual representation.
+
+From the image, we can see that there are 8 columns of the data representation. The first contains the time of the event, the second contains the currency symbol, the third contains the name of the event, the fourth contains the priority or importance level of the news data, the fifth contains the data period, while the sixth, seventh and eighth contains the actual, forecast and previous or revised data respectively.
+
+It is of course not all data that is of great importance to a trader, and thus one can filter out the non-required data in four ways. One is by time, for example where one is not interested in the already released data. The second way is filtering by currency and the third is by country. One could be trading the "AUDUSD" pair, and thus the news that is of great impact is the one impacting either Australia or the United States directly. Thus, news in China does not have any significant effect on the pair.
+
+Lastly, it is the importance or priority filter which brings help in sorting the news in levels of impact. To apply any of the filters, just right-click inside the calendar field and apply the filter accordingly. This is again illustrated below.
+
+Thus, by using the MQL5 Economic Calendar, traders can better formulate their trading plans ahead of influential market events. They can do this by either checking the calendar manually in MetaTrader 5 or through automated trading strategies that act on the calendar's data. This setup paves the way for clearly comprehending the MQL5 Economic Calendar and for figuring out how to put it to work inside one's MetaTrader 5 trading system for the sake of having clearer trades and a clearer trading strategy.
+
+### Implementation in MQL5
+
+To create an expert advisor (EA), on your MetaTrader 5 terminal, click the Tools tab and check MetaQuotes Language Editor, or simply press F4 on your keyboard. Alternatively, you can click the IDE (Integrated Development Environment) icon on the tools bar. This will open the [MetaQuotes Language Editor](https://www.mql5.com/en/book/intro/edit_compile_run) environment, which allows the writing of trading robots, technical indicators, scripts, and libraries of functions.
+
+Once the MetaEditor is opened, on the tools bar, navigate to the File tab and check New File, or simply press CTRL + N, to create a new document. Alternatively, you can click on the New icon on the tools tab. This will result in a MQL Wizard pop-up.
+
+On the Wizard that pops, check Expert Advisor (template) and click Next.
+
+On the general properties of the Expert Advisor, under the name section, provide your expert's file name. Note that to specify or create a folder if it doesn't exist, you use the backslash before the name of the EA. For example, here we have "Experts\" by default. That means that our EA will be created in the Experts folder and we can find it there. The other sections are pretty much straightforward, but you can follow the link at the bottom of the Wizard to know how to precisely undertake the process.
+
+After providing your desired Expert Advisor file name, click on Next, click Next, and then click Finish. After doing all that, we are now ready to code and program our strategy.
+
+First, we start by defining some metadata about the Expert Advisor (EA). This includes the name of the EA, the copyright information, and a link to the MetaQuotes website. We also specify the version of the EA, which is set to "1.00".
+
+```
+//+------------------------------------------------------------------+
+//|                                    MQL5 NEWS CALENDAR PART 1.mq5 |
+//|      Copyright 2024, ALLAN MUNENE MUTIIRIA. #@Forex Algo-Trader. |
+//|                                     https://forexalgo-trader.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2024, ALLAN MUNENE MUTIIRIA. #@Forex Algo-Trader"
+#property link      "https://forexalgo-trader.com"
+#property description "MQL5 NEWS CALENDAR PART 1"
+#property version   "1.00"
+```
+
+At this point, the first thing that we need to do is understand the structures for working with the economic calendar. There are three of them; [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry) which sets the country descriptions, [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent) which sets event descriptions and [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue) which sets the event values. Their structure methods are as below.
+
+Calendar country structure:
+
+```
+struct MqlCalendarCountry 
+  { 
+   ulong                               id;                    // country ID (ISO 3166-1) 
+   string                              name;                  // country text name (in the current terminal encoding) 
+   string                              code;                  // country code name (ISO 3166-1 alpha-2) 
+   string                              currency;              // country currency code 
+   string                              currency_symbol;       // country currency symbol 
+   string                              url_name;              // country name used in the mql5.com website URL 
+  };
+```
+
+Calendar events structure:
+
+```
+struct MqlCalendarEvent 
+  { 
+   ulong                               id;                    // event ID 
+   ENUM_CALENDAR_EVENT_TYPE            type;                  // event type from the ENUM_CALENDAR_EVENT_TYPE enumeration 
+   ENUM_CALENDAR_EVENT_SECTOR          sector;                // sector an event is related to 
+   ENUM_CALENDAR_EVENT_FREQUENCY       frequency;             // event frequency 
+   ENUM_CALENDAR_EVENT_TIMEMODE        time_mode;             // event time mode 
+   ulong                               country_id;            // country ID 
+   ENUM_CALENDAR_EVENT_UNIT            unit;                  // economic indicator value's unit of measure 
+   ENUM_CALENDAR_EVENT_IMPORTANCE      importance;            // event importance 
+   ENUM_CALENDAR_EVENT_MULTIPLIER      multiplier;            // economic indicator value multiplier 
+   uint                                digits;                // number of decimal places 
+   string                              source_url;            // URL of a source where an event is published 
+   string                              event_code;            // event code 
+   string                              name;                  // event text name in the terminal language (in the current terminal encoding) 
+  };
+```
+
+Calendar values structure:
+
+```
+struct MqlCalendarValue 
+  { 
+   ulong                               id;                    // value ID 
+   ulong                               event_id;              // event ID 
+   datetime                            time;                  // event date and time 
+   datetime                            period;                // event reporting period 
+   int                                 revision;              // revision of the published indicator relative to the reporting period 
+   long                                actual_value;          // actual value multiplied by 10^6 or LONG_MIN if the value is not set 
+   long                                prev_value;            // previous value multiplied by 10^6 or LONG_MIN if the value is not set 
+   long                                revised_prev_value;    // revised previous value multiplied by 10^6 or LONG_MIN if the value is not set 
+   long                                forecast_value;        // forecast value multiplied by 10^6 or LONG_MIN if the value is not set 
+   ENUM_CALENDAR_EVENT_IMPACT          impact_type;           // potential impact on the currency rate 
+  //--- functions checking the values 
+   bool                         HasActualValue(void) const;   // returns true if actual_value is set 
+   bool                         HasPreviousValue(void) const; // returns true if prev_value is set 
+   bool                         HasRevisedValue(void) const;  // returns true if revised_prev_value is set 
+   bool                         HasForecastValue(void) const; // returns true if forecast_value is set 
+  //--- functions receiving the values 
+   double                       GetActualValue(void) const;   // returns actual_value or nan if the value is no set 
+   double                       GetPreviousValue(void) const; // returns prev_value or nan if the value is no set 
+   double                       GetRevisedValue(void) const;  // returns revised_prev_value or nan if the value is no set 
+   double                       GetForecastValue(void) const; // returns forecast_value or nan if the value is no set 
+  };
+```
+
+Now the first thing that we need to do is gather all the values available within a time range of our selection and sort them specifically by the values that we have seen, eight of them, as well as apply the filters. To get the values, we apply the following logic.
+
+```
+MqlCalendarValue values[];
+datetime startTime = TimeTradeServer() - PeriodSeconds(PERIOD_D1);
+datetime endTime = TimeTradeServer() + PeriodSeconds(PERIOD_D1);
+
+int valuesTotal = CalendarValueHistory(values, startTime, endTime, NULL, NULL);
+
+Print("TOTAL VALUES = ", valuesTotal, " || Array size = ", ArraySize(values));
+```
+
+Here, we declare an array called "values" of the type MqlCalendarValue structure, which will hold the economic calendar data retrieved from the MQL5 Economic Calendar. We then set up two [datetime](https://www.mql5.com/en/docs/basis/types/integer/datetime) variables, "startTime" and "endTime", which define the time range for the data extraction. We calculate the start time of the values as one day before the current server time, retrieved using the [TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver) function and using the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) function to create a 24-hour offset in seconds. The one-day time logic is achieved by using the "PERIOD\_D1" constant. Similarly, "endTime" is set to one day after the current server time, allowing us to capture economic events that occur within two days centered around the present moment.
+
+Next, we use the [CalendarValueHistory](https://www.mql5.com/en/docs/calendar/calendarvaluehistory) function to populate the values array with economic events within this specified time range. This function returns the total number of events, which we store in the "valuesTotal" variable. The parameters for CalendarValueHistory include the "values" array, "startTime", and "endTime", as well as two NULL filters for country and currency type (we leave them NULL here to retrieve all events). Finally, we use the [Print](https://www.mql5.com/en/docs/common/print) function to print out the total values count and the array’s size using the [ArraySize](https://www.mql5.com/en/docs/array/arraysize) function, confirming the total number of events obtained and verifying that the array holds the expected data for further use in our trading logic. When we compile this, we get the following output.
+
+Next, we can print these values to the log so we can confirm what we have.
+
+```
+if (valuesTotal >=0 ){
+   Print("Calendar values as they are: ");
+   ArrayPrint(values);
+}
+```
+
+Here, we first check if the total values are greater than or equal to zero, indicating that the CalendarValueHistory function has successfully retrieved some economic calendar events or returned zero without errors. If this condition is met, we use the Print function to output a message, "Calendar values as they are:", as a header to inform us that the values will now be displayed. Following this, we call the [ArrayPrint](https://www.mql5.com/en/docs/array/arrayprint) function, which prints the entire contents of the "values" array to the log. Upon run, we have the following data.
+
+From the image, we can see that we log all the available events within the selected time frame. However, we can see that the event features are represented by only numerals, which are the feature identifiers to are specific and do not provide much information to us. Thus, we need to select a particular value, and from there we can get the specific features in a structured manner for every event. This means that we need to loop through each value selected.
+
+```
+for (int i = 0; i < valuesTotal; i++){
+
+//---
+
+}
+```
+
+Here, we create a [for loop](https://www.mql5.com/en/docs/basis/operators/for) that iterates over each element in the "values" array, which holds the economic calendar data. The loop initializes an integer variable "i" to zero, representing the starting index, and runs as long as "i" is less than the total values, which is the total number of events retrieved by the CalendarValueHistory function. With each iteration, we increment "i" by one, allowing us to access each economic event in the "values" array sequentially. Now inside the loop, we can process or analyze each event’s data, which provides flexibility for tasks like filtering events, applying specific trading logic based on event details, or printing individual event information. Here is the logic we need to use.
+
+```
+MqlCalendarEvent event;
+CalendarEventById(values[i].event_id,event);
+```
+
+We declare a variable "event" of type [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent), which will store the detailed information for a specific economic event. We then call [CalendarEventById](https://www.mql5.com/en/docs/calendar/calendareventbyid), passing in two parameters. The first parameter retrieves the unique ID of the current economic event from the "values" array (based on the current loop index i), while the second, "event", acts as a container to store the event’s full details. By using the CalendarEventById function, we access comprehensive data about each specific event, such as its name, country, forecast, and actual values, which we can then use for additional analysis or trading decisions. To confirm this, we can print the event ID as follows.
+
+```
+Print("Event ID ",values[i].event_id);
+```
+
+However, this will print too much data to the log, so let us reduce the time range of selection to one hour before and after the current time. All that we need to change is the period section only. We have highlighted them in yellow for easier reference.
+
+```
+datetime startTime = TimeTradeServer() - PeriodSeconds(PERIOD_H1);
+datetime endTime = TimeTradeServer() + PeriodSeconds(PERIOD_H1);
+```
+
+When we run the program, we get the following output.
+
+We can now proceed to get the actual values of the specific event selected other than the numerals of the event values. To achieve this, we just need to type in the event keyword and use the "dot operator" to get access to all the methods and objects of that class or structure. Here is what you should get.
+
+Using the same method, we can retrieve all the information that we filled and stored in the "event" structure that we created.
+
+```
+Print("Event ID ",values[i].event_id);
+Print("Event Name = ",event.name);
+Print("Event Code = ",event.event_code);
+Print("Event Type = ",event.type);
+Print("Event Sector = ",event.sector);
+Print("Event Frequency = ",event.frequency);
+Print("Event Release Mode = ",event.time_mode);
+Print("Event Importance = ",EnumToString(event.importance));
+Print("Event Time = ",values[i].time);
+Print("Event URL = ",event.source_url);
+
+Comment("Event ID ",values[i].event_id,
+        "\nEvent Name = ",event.name,
+        "\nEvent Code = ",event.event_code,
+        "\nEvent Type = ",event.type,
+        "\nEvent Sector = ",event.sector,
+        "\nEvent Frequency = ",event.frequency,
+        "\nEvent Release Mode = ",event.time_mode,
+        "\nEvent Importance = ",EnumToString(event.importance),
+        "\nEvent Time = ",values[i].time,
+        "\nEvent URL = ",event.source_url);
+}
+```
+
+Here, we use [Print](https://www.mql5.com/en/docs/common/print) functions to output details of each economic event in the values array and display this information in the Experts tab for easy review. We start by printing the event ID from values[i], which uniquely identifies the event. Next, we retrieve and print specific details about the event from the "event" variable, including its name, event code, type, sector, frequency, time mode (indicating the release timing mode), importance (converted to a readable string using [EnumToString](https://www.mql5.com/en/docs/convert/enumtostring) function), and the actual scheduled time. Finally, we print the source [Uniform Resource Locator](https://en.wikipedia.org/wiki/URL "https://en.wikipedia.org/wiki/URL") (URL), which provides a link to further information.
+
+Alongside these print statements, we use the [Comment](https://www.mql5.com/en/docs/common/comment) function to display the same details on the chart for immediate reference. The [Comment](https://www.mql5.com/en/docs/common/comment) function outputs each line within the chart’s comments area, making it easier for the trader to view real-time updates directly on the chart. After the program runs, we get the following output.
+
+That was a success. To get access to the country and currency data, we incorporate another structure that handles the country values. Here is the logic that we need to adopt, which is identical to the others we used.
+
+```
+MqlCalendarCountry country;
+CalendarCountryById(event.country_id,country);
+```
+
+Here, we declare a variable "country" of type [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry), which we intended to store the country-specific information related to the economic event. We then use the [CalendarCountryById](https://www.mql5.com/en/docs/calendar/calendarcountrybyid) function to retrieve the country details by passing two parameters.
+
+The first parameter provides the unique identifier of the country associated with the current economic event, while the parameter, which is "country" serves as the container for this country's data. By calling the CalendarCountryById function, we populate our variable "country" with relevant information, such as the country’s name, code, and other characteristics, allowing us to use this data for more context-aware analysis and to display country-specific details along with each economic event.
+
+To display this, we again print the country information.
+
+```
+Print("Country ID ",country.id);
+Print("Country Name ",country.name);
+Print("Country Code ",country.code);
+Print("Country Currency ",country.currency);
+Print("Country Currency Symbol ",country.currency_symbol);
+Print("Country URL ",country.url_name);
+```
+
+This is what we get when we run the program.
+
+That was a success. We now have a complete introduction to the necessary functions in MQL5 that give us access to the calendar data. Now, we can proceed to apply filters to our code block to typically trade specific country data, priority data, currency as well as time-specific news. To achieve this dynamically, we can shift our logic to a function that we can use for the aforementioned purpose.
+
+```
+//+------------------------------------------------------------------+
+//|       FUNCTION TO GET NEWS EVENTS                                |
+//+------------------------------------------------------------------+
+bool isNewsEvent(){
+   int totalNews = 0;
+   bool isNews = false;
+   
+   //---
+   
+   return (isNews);
+}
+```
+
+We define a [boolean](https://www.mql5.com/en/docs/basis/operations/bool) function called "isNewsEvent" that will determine if there are any economic news events available. The function returns a bool value to indicate whether a news event is present (true) or not (false). Inside the function, we declare an integer variable "totalNews" and initialize it to zero. We intend to use the variable to store the total number of relevant news events, which we will retrieve later in the function. We also declare a bool variable, "isNews", and set it to false. This variable will act as a flag, switching to true if we detect any relevant news events during the function’s execution.
+
+Currently, the function simply returns the value of "isNews", which is false by default, as no news events are being processed within the function yet. This function structure provides a foundation for implementing logic that can later retrieve and check for news events, setting "isNews" to true if events are detected. It is to this function that we add our previously already defined logic from the [OnInit](https://www.mql5.com/en/docs/event_handlers/oninit) event handler. However, we call the function on the event handler to affect our function's logic.
+
+```
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit(){
+//---   
+   if (isNewsEvent()){
+      Print("______ ALERT: WE HAVE NEWS EVENT ___");
+   }
+   else if (isNewsEvent()==false){
+      Print("______ ALERT: WE DON'T ANY HAVE NEWS EVENT ___");
+   }
+//---
+   return(INIT_SUCCEEDED);
+}
+```
+
+Here, inside the OnInit event handler, we start by calling the "isNewsEvent" function. If the function returns true, indicating that a news event is available, the if block is triggered, and we print the message "\_\_\_\_\_\_ ALERT: WE HAVE NEWS EVENT \_\_\_". This message alerts us that an economic news event is detected, which we can use to adjust trading strategies if desired.
+
+If it returns false, meaning no news events are present, the else if block is triggered, and we print "\_\_\_\_\_\_ ALERT: WE DON'T HAVE ANY NEWS EVENT \_\_\_". This message alerts us that no current news events have been identified, which can indicate that trading might proceed without expected disruptions from the news. Finally, the function returns [INIT\_SUCCEEDED](https://www.mql5.com/en/docs/basis/function/events#enum_init_retcode), a constant indicating that the EA’s initialization was successful. Now, after this event handler call, we can continue to apply filters to the kind of news that is of importance to us. Currently, we have the program attached to the "AUDUSD" symbol. Let us develop a logic to ensure that only United States news is considered.
+
+```
+string currency_filter = "USD";
+string currency_base = SymbolInfoString(_Symbol,SYMBOL_CURRENCY_BASE);
+string currency_quote = StringSubstr(_Symbol,3,3);
+if (currency_base != currency_filter && currency_quote != currency_filter){
+   Print("Currency (",currency_base," | ",currency_quote,
+         ") is not equal equal to ",currency_filter);
+   return false;
+}
+```
+
+We start by defining two string variables, "currency\_filter" and "currency\_base", to facilitate checking if the current symbol is relevant to the specified currency filter, "USD". The variable "currency\_filter" is initialized with the value "USD", representing the target currency we are interested in monitoring. We then retrieve the base currency of the current symbol (e.g., AUD in the AUDUSD pair) by using the [SymbolInfoString](https://www.mql5.com/en/docs/marketinformation/symbolinfostring) function and store it in "currency\_base".
+
+Next, we define "currency\_quote", extracting the quote currency from the current symbol by taking the last three characters using the [StringSubstr](https://www.mql5.com/en/docs/strings/stringsubstr) function as there is no direct way of accessing the quote currency. For example, in the AUDUSD pair, the StringSubstr function will retrieve "USD", the quote currency.
+
+We then check if both the base and quote currency are different from the filter currency. If they do not match the target currency filter (USD in this case), we print a message indicating that the symbol’s currencies do not match the currency filter. The function then returns false, effectively ending further processing if the symbol is irrelevant to the specified currency. If we run this in different symbols, we get the following output.
+
+From the visualization, we can see that when we load the program to the "AUDUSD" and "USDJPY" charts, we do not get any error, but when we load it up to the "EURJPY" chart, we get an error, indicating that neither of the currency digits matches our predefined filter currency. We can now continue to apply a several filters dynamically by the event importance and time.
+
+```
+if (StringFind(_Symbol,country.currency) >= 0){
+   if (event.importance == CALENDAR_IMPORTANCE_MODERATE){
+      if (values[i].time <= TimeTradeServer() && values[i].time >= timeBefore){
+         Print(event.name," > ", country.currency," > ", EnumToString(event.importance)," Time= ",values[i].time," (ALREADY RELEASED)");
+         totalNews++;
+      }
+            
+      if (values[i].time >= TimeTradeServer() && values[i].time <= timeAfter){
+         Print(event.name," > ", country.currency," > ", EnumToString(event.importance)," Time= ",values[i].time," (NOT YET RELEASED)");
+         totalNews++;
+      }
+   }
+}
+```
+
+We implement a series of nested conditions to identify relevant news events for a specific currency, focusing on events categorized as "moderate importance" and that fall within a certain time range. First, we check if the current trading symbol’s name (represented by [\_Symbol](https://www.mql5.com/en/docs/predefined/_symbol)) contains the currency associated with the event. We do this by using the [StringFind](https://www.mql5.com/en/docs/strings/stringfind) function, which ensures we only consider events tied to the currency of the trading symbol.
+
+This is similar to the other logic we used, only that it is dynamic by automatically checking the currency availability in the selected symbol. If this check is met, we move to the next condition to confirm that the event’s importance level matches [CALENDAR\_IMPORTANCE\_MODERATE](https://www.mql5.com/en/docs/constants/structures/mqlcalendar), meaning we are targeting events with moderate impact only, and excluding those of low or high importance.
+
+Once we’ve identified a moderate-importance event, we evaluate its timing relative to the server’s current time ([TimeTradeServer](https://www.mql5.com/en/docs/dateandtime/timetradeserver)) using two separate checks. In the first check, we determine if the event’s time is earlier than or equal to the current time but later than "timeBefore". If so, this means the event has already been released within our specified past timeframe. We then use the [Print](https://www.mql5.com/en/docs/common/print) function to log details about the event, which includes its name, associated currency, importance, and time, marking it as "(ALREADY RELEASED)". We also increment the "totalNews" variable to keep track of the events matching our criteria. In the second check, we determine if the event’s time is later than or equal to the current time but earlier than or equal to "timeAfter", indicating that the event is upcoming but still within our specified future timeframe.
+
+Again, we log similar event details using the [Print](https://www.mql5.com/en/docs/common/print) function, marking it as "(NOT YET RELEASED)" to indicate its pending status, and increment the "totalNews" variable for this additional relevant event. You might have noticed we used some different time variables in the logic. These are to just make sure the event is within the time range for actioning, and here is their logic.
+
+```
+datetime timeRange = PeriodSeconds(PERIOD_D1);
+datetime timeBefore = TimeTradeServer() - timeRange;
+datetime timeAfter = TimeTradeServer() + timeRange;
+   
+Print("FURTHEST TIME LOOK BACK = ",timeBefore," >>> CURRENT = ",TimeTradeServer());
+```
+
+We declare these logics just before the [for loop](https://www.mql5.com/en/docs/basis/operators/for) to establish a time range around the current server time to define how far back and forward we want to consider news events. We first declare a datetime variable, "timeRange", and assign it the duration of one day by using the [PeriodSeconds](https://www.mql5.com/en/docs/common/periodseconds) function. This allows us to work with a standardized time frame of 24 hours, however, you can just adjust it to your desired range, say 15 minutes before and after the news release. Next, we define two additional datetime variables: "timeBefore" and "timeAfter".
+
+We calculate the variable "timeBefore" by subtracting the time range from the current server time, which gives us the furthest time point we want to look back at. Similarly, "timeAfter" is determined by adding "timeRange" to the current server time, providing the latest time point we want to consider in the future. Together, "timeBefore" and "timeAfter" create a 24-hour window centered around the current time, which helps us capture events that either just occurred or are expected soon. Here is an illustration.
+
+From the image, we can see that when the current time, or rather date since we are considering a one-day scan, is 25, we have the look-back at date 24 and look-fore at 26, which is just one day before and after the current date. We have highlighted them in blue for clarity. Finally, we can analyze the number of news counts recorded from the loop and return the respective boolean flags. We adopt the following logic to achieve that.
+
+```
+if (totalNews > 0){
+   isNews = true;
+   Print(">>>>>>> (FOUND NEWS) TOTAL NEWS = ",totalNews,"/",ArraySize(values));
+}
+else if (totalNews <= 0){
+   isNews = false;
+   Print(">>>>>>> (NOT FOUND NEWS) TOTAL NEWS = ",totalNews,"/",ArraySize(values));
+}
+```
+
+Here, we assess whether any relevant news events have been identified based on the total news recorded. If total news is greater than zero, it indicates that at least one news event matching our criteria was found. In this case, we set the "isNews" variable to true and print a message, displaying the total number of matching news events and the size of the "values" array. The message, labeled "(FOUND NEWS)", also includes the total news identified and all news considered initially, giving a count of how many relevant news events were found out of the total events retrieved.
+
+Conversely, if total news is equal to zero or less, it implies that no relevant news events were found. In this scenario, we set "isNews" to false and print a message labeled "(NOT FOUND NEWS)", showing that total news is zero along with the size of the "values" array. This structure helps us track whether any news events matching our criteria were found and provides a log of results, useful for verifying the outcome of the news-checking process. Upon compilation, we get the following output.
+
+From the image, we can see that there is no relevant news at the moment. We can thus increase our search by expanding the time range or the events search range in this case to one day.
+
+```
+datetime startTime = TimeTradeServer() - PeriodSeconds(PERIOD_D1);
+datetime endTime = TimeTradeServer() + PeriodSeconds(PERIOD_D1);
+```
+
+If we return the news range to one day, we get the following output.
+
+From the image, we can see that we have 5 relevant news out of 81 and we print that there are relevant news events, which we can use to make trading decisions, that is either enter into the market or get out of the market. That is all for this part and the full function responsible for the identification and filtering of news from the MQL5 calendar is as in the following code snippet:
+
+```
+//+------------------------------------------------------------------+
+//|       FUNCTION TO GET NEWS EVENTS                                |
+//+------------------------------------------------------------------+
+bool isNewsEvent(){
+   int totalNews = 0;
+   bool isNews = false;
+   
+   MqlCalendarValue values[];
+   
+   datetime startTime = TimeTradeServer() - PeriodSeconds(PERIOD_D1);
+   datetime endTime = TimeTradeServer() + PeriodSeconds(PERIOD_D1);
+   
+   //string currency_filter = "USD";
+   //string currency_base = SymbolInfoString(_Symbol,SYMBOL_CURRENCY_BASE);
+   //string currency_quote = StringSubstr(_Symbol,3,3);
+   //if (currency_base != currency_filter && currency_quote != currency_filter){
+   //   Print("Currency (",currency_base," | ",currency_quote,
+   //         ") is not equal equal to ",currency_filter);
+   //   return false;
+   //}
+   
+   int valuesTotal = CalendarValueHistory(values,startTime,endTime,NULL,NULL);
+   
+   Print("TOTAL VALUES = ",valuesTotal," || Array size = ",ArraySize(values));
+   
+   //if (valuesTotal >=0 ){
+   //   Print("Calendar values as they are: ");
+   //   ArrayPrint(values);
+   //}
+   
+   datetime timeRange = PeriodSeconds(PERIOD_D1);
+   datetime timeBefore = TimeTradeServer() - timeRange;
+   datetime timeAfter = TimeTradeServer() + timeRange;
+   
+   Print("Current time = ",TimeTradeServer());
+   Print("FURTHEST TIME LOOK BACK = ",timeBefore," >>> LOOK FORE = ",timeAfter);
+   
+   for (int i = 0; i < valuesTotal; i++){
+      MqlCalendarEvent event;
+      CalendarEventById(values[i].event_id,event);
+      
+      
+      MqlCalendarCountry country;
+      CalendarCountryById(event.country_id,country);
+      
+      if (StringFind(_Symbol,country.currency) >= 0){
+         if (event.importance == CALENDAR_IMPORTANCE_MODERATE){
+            if (values[i].time <= TimeTradeServer() && values[i].time >= timeBefore){
+               Print(event.name," > ", country.currency," > ", EnumToString(event.importance)," Time= ",values[i].time," (ALREADY RELEASED)");
+               totalNews++;
+            }
+            
+            if (values[i].time >= TimeTradeServer() && values[i].time <= timeAfter){
+               Print(event.name," > ", country.currency," > ", EnumToString(event.importance)," Time= ",values[i].time," (NOT YET RELEASED)");
+               totalNews++;
+            }
+         }
+      }
+      
+   }
+   
+   if (totalNews > 0){
+      isNews = true;
+      Print(">>>>>>> (FOUND NEWS) TOTAL NEWS = ",totalNews,"/",ArraySize(values));
+   }
+   else if (totalNews <= 0){
+      isNews = false;
+      Print(">>>>>>> (NOT FOUND NEWS) TOTAL NEWS = ",totalNews,"/",ArraySize(values));
+   }
+   
+   return (isNews);
+}
+```
+
+### Conclusion
+
+To sum up, we have put in place the initial steps necessary to explore the [MQL5](https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5 "https://www.metaquotes.net/en/metatrader5/algorithmic-trading/mql5") Economic Calendar. It comes down to extracting information and then judging it according to the importance of the currencies and the significance of the events. We developed a structured process that enables us to pull data from the [Economic Calendar](https://www.mql5.com/en/docs/constants/structures/mqlcalendar), filter it by important criteria such as currency and event significance, and identify whether events are imminent or have already occurred. This approach is essential for automating trading systems that can respond to impactful economic developments, providing us with an edge in navigating market fluctuations.
+
+In the next part of this series, we will expand our functionality to show the filtered economic data right on the chart window, increasing its visibility for real-time trading decisions. We will also improve our Expert Advisor to make it use this information to open up trading positions based on major economic events. With these features integrated, we will move from the analysis of economic news to the actual leveraging of that news for trades. We will be making our systems more responsive by designing around a real-time framework and using the information learned from the economic calendar events to trigger trades in the wake of those events. Keep tuned.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/16223.zip "Download all attachments in the single ZIP archive")
+
+[MQL5\_NEWS\_CALENDAR\_PART\_1.mq5](https://www.mql5.com/en/articles/download/16223/mql5_news_calendar_part_1.mq5 "Download MQL5_NEWS_CALENDAR_PART_1.mq5")
+(4.28 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[Developing a Replay System (Part 50): Things Get Complicated (II)](https://www.mql5.com/en/articles/11871)
+
+We will solve the chart ID problem and at the same time we will begin to provide the user with the ability to use a personal template for the analysis and simulation of the desired asset. The materials presented here are for didactic purposes only and should in no way be considered as an application for any purpose other than studying and mastering the concepts presented.
+
+[News Trading Made Easy (Part 4): Performance Enhancement](https://www.mql5.com/en/articles/15878)
+
+This article will dive into methods to improve the expert's runtime in the strategy tester, the code will be written to divide news event times into hourly categories. These news event times will be accessed within their specified hour. This ensures that the EA can efficiently manage event-driven trades in both high and low-volatility environments.
+
+[Exploring Cryptography in MQL5: A Step-by-Step Approach](https://www.mql5.com/en/articles/16238)
+
+This article explores the integration of cryptography within MQL5, enhancing the security and functionality of trading algorithms. We’ll cover key cryptographic methods and their practical implementation in automated trading.
+
+[Artificial Cooperative Search (ACS) algorithm](https://www.mql5.com/en/articles/15004)
+
+Artificial Cooperative Search (ACS) is an innovative method using a binary matrix and multiple dynamic populations based on mutualistic relationships and cooperation to find optimal solutions quickly and accurately. ACS unique approach to predators and prey enables it to achieve excellent results in numerical optimization problems.
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fmarket%2Fmt5%2Fexpert%3FHasRent%3Don%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Drent.expert%26utm_content%3Drent.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=sorsafcerhkgwrjzwwrpvelbicxjwzon&s=ae91b1eae8acb61167455495742e6cc8eb55ccedb33fd953f8256b68cbe9c3b4&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=qfifganvhizytiznkvczktjzgjfmgxml&ssn=1788793010628607013&ssn_dr=0&ssn_sr=0&fv_date=1788793010&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F16223&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Trading%20with%20the%20MQL5%20Economic%20Calendar%20(Part%201)%3A%20Mastering%20the%20Functions%20of%20the%20MQL5%20Economic%20Calendar%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178879301017418423&fz_uniq=5125436391697302193&sv=2552)

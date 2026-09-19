@@ -1,0 +1,65 @@
+{
+  "shard_id": "examples_091",
+  "section": "Examples",
+  "n": 6,
+  "series_in_shard": [
+    "requesting in connexus",
+    "risk management"
+  ],
+  "articles": [
+    {
+      "id": 16182,
+      "title": "Requesting in Connexus (Part 6): Creating an HTTP Request and Response",
+      "section": "Examples",
+      "series_title": "Requesting in Connexus (): Creating an HTTP Request and Response",
+      "series_key": "requesting in connexus",
+      "series_part": 6,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16182.md"
+    },
+    {
+      "id": 16820,
+      "title": "Risk Management (Part 1): Fundamentals for Building a Risk Management Class",
+      "section": "Examples",
+      "series_title": "Risk Management (): Fundamentals for Building a Risk Management Class",
+      "series_key": "risk management",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16820.md"
+    },
+    {
+      "id": 16985,
+      "title": "Risk Management (Part 2): Implementing Lot Calculation in a Graphical Interface",
+      "section": "Examples",
+      "series_title": "Risk Management (): Implementing Lot Calculation in a Graphical Interface",
+      "series_key": "risk management",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16985.md"
+    },
+    {
+      "id": 17249,
+      "title": "Risk Management (Part 3): Building the Main Class for Risk Management",
+      "section": "Examples",
+      "series_title": "Risk Management (): Building the Main Class for Risk Management",
+      "series_key": "risk management",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17249.md"
+    },
+    {
+      "id": 17508,
+      "title": "Risk Management (Part 4): Completing the Key Class Methods",
+      "section": "Examples",
+      "series_title": "Risk Management (): Completing the Key Class Methods",
+      "series_key": "risk management",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17508.md"
+    },
+    {
+      "id": 17640,
+      "title": "Risk Management (Part 5): Integrating the Risk Management System into an Expert Advisor",
+      "section": "Examples",
+      "series_title": "Risk Management (): Integrating the Risk Management System into an Expert Advisor",
+      "series_key": "risk management",
+      "series_part": 5,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17640.md"
+    }
+  ]
+}

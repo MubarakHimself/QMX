@@ -1,0 +1,167 @@
+{
+  "package": "QMX-GROK-FINAL-HANDOFF-2026-09-17",
+  "status": "final assignment package; architecture not ratified",
+  "date": "2026-09-17",
+  "entrypoint": "01-GROK-ARCHITECTURE-PROMPT.md",
+  "launch_prompt": "LAUNCH-PROMPT.txt",
+  "external_required_input": "The operator's newly exported full session transcript",
+  "stages": "Architecture/diagnostics now; Documentation Factory, epics/stories, production implementation and final visual design later",
+  "evidence_note": "Audit uses an older code baseline; review-delta supplies a historical newer-source correction. Re-resolve revisions.",
+  "files": [
+    {
+      "path": "00-START-HERE.md",
+      "bytes": 4598,
+      "sha256": "34eefc392ec2af6e3cc8f3f19e417384f2bbd621d968ee76f5fdd5007379d8b1"
+    },
+    {
+      "path": "01-GROK-ARCHITECTURE-PROMPT.md",
+      "bytes": 28707,
+      "sha256": "8a1249633fc9a40497b301bdbd9f708d864cc19b17ba8236510524d43a50c0c8"
+    },
+    {
+      "path": "02-OPERATOR-INTENT-AND-SCOPE.md",
+      "bytes": 8949,
+      "sha256": "0bb08e0db32b66f1affc91c8acf8826f48156a9676a6679add8a67b3f95e8dfc"
+    },
+    {
+      "path": "03-EVIDENCE-BASELINE-AND-DELTA.md",
+      "bytes": 5064,
+      "sha256": "ae1217414d99e7e07c5223da896f2f16aab55ac4d902f1d23cba1fd5d2852a1c"
+    },
+    {
+      "path": "04-ARCHITECTURE-WORKSTREAMS.md",
+      "bytes": 11935,
+      "sha256": "6fd61441c0f55f0fe11f68810da89d3d50f8c446bd4e8249a96c8a31f4f17ffc"
+    },
+    {
+      "path": "05-JOURNEYS-AND-FAILURE-COVERAGE.md",
+      "bytes": 17172,
+      "sha256": "6f476b8c0006b9ce0c1aae695bcebf4764f2fba2eb8d76b40175dc3c473fd9ea"
+    },
+    {
+      "path": "06-OPPORTUNITY-SEEDS.md",
+      "bytes": 17511,
+      "sha256": "fb4ce53b40f432f81d2370ac4ef24289a2da02a014adf8f0aa6bb68a8bebeae7"
+    },
+    {
+      "path": "07-COPILOT-SKILLS-AND-EVALUATION.md",
+      "bytes": 8168,
+      "sha256": "699d7ee87949d7151bcd33c35ccf162fb7255687891983a2a97ca1ade774075e"
+    },
+    {
+      "path": "08-REFERENCE-STUDY-PLAN.md",
+      "bytes": 6991,
+      "sha256": "2cc0801f67aa3f982e7597a3985734e8213ccf9949ed8876f973b24cf705a269"
+    },
+    {
+      "path": "09-OUTPUTS-AND-NEXT-STAGE.md",
+      "bytes": 7131,
+      "sha256": "e5f5d929b85096108dbcf1d6688c1d822ed50fe86ffe3e1c5cf0747eae2dd3d6"
+    },
+    {
+      "path": "LAUNCH-PROMPT.txt",
+      "bytes": 1560,
+      "sha256": "291bdd9a6032acfbea85c6c55de1c1528049d271a40062471a9af7a4f4207834"
+    },
+    {
+      "path": "evidence/PROVENANCE.md",
+      "bytes": 2780,
+      "sha256": "3c76d0e0e4e3f89a35400bdff98223f2772ff63e6d3e44bf8ace437c01510a79"
+    },
+    {
+      "path": "evidence/SOURCE-SELECTION.json",
+      "bytes": 3569,
+      "sha256": "4368d60a4ce385eb9b6d16bf1c4c0f5ba8de2d8376b503aaecab99fcfeb6696c"
+    },
+    {
+      "path": "evidence/audit/CAPABILITY-AND-COUPLING-MATRIX.md",
+      "bytes": 14680,
+      "sha256": "924fa310013ab9c051122c9490d67f7eaf7b82ae4775e9bc846de05a4511ab63"
+    },
+    {
+      "path": "evidence/audit/EVIDENCE-MANIFEST.md",
+      "bytes": 10443,
+      "sha256": "c90c33325259b101b390fb9e427a4504e2382b2dec3c7bdbc2afb47ee007e3f0"
+    },
+    {
+      "path": "evidence/audit/INTENT-AND-AUTHORITY-LEDGER.md",
+      "bytes": 10442,
+      "sha256": "7204ac46d2c281642bccfc57eb8a63189753af22be40c197063be85e48a757b8"
+    },
+    {
+      "path": "evidence/audit/RECON-RETURN.md",
+      "bytes": 23090,
+      "sha256": "acddaabf019f5957450d23b37906d56ca5171ea3cc1371dd23c4d50d94697fe4"
+    },
+    {
+      "path": "evidence/audit/SCENARIO-TRACES-AND-RISKS.md",
+      "bytes": 17692,
+      "sha256": "d11aaeef62ad7a9ab1dbcbe2bbd4f190ca79bcfcdf47cc0fa4937c440ebe175c"
+    },
+    {
+      "path": "evidence/audit/diagnostics/ADVERSARIAL-REVIEW.md",
+      "bytes": 5351,
+      "sha256": "11589d756f13e45f87e94574350fc96d90f16e4db6068f23d3199e62d054764c"
+    },
+    {
+      "path": "evidence/audit/diagnostics/FRAMEWORK-PROBE.md",
+      "bytes": 7846,
+      "sha256": "f45d7f0dc18bb9846819dee4ae1c62de17854480117746d816bfc384cb5678f9"
+    },
+    {
+      "path": "evidence/audit/diagnostics/SESSIONS-WORKFLOWS-RESEARCH.md",
+      "bytes": 9139,
+      "sha256": "104a6e06c872721350d06c172d764aa40f3de1548d6f51c24c62a02b46b3d768"
+    },
+    {
+      "path": "evidence/audit/diagnostics/TRANSCRIPT-LEDGER-DRAFT.md",
+      "bytes": 14974,
+      "sha256": "fc0a40939687fb66e4177b449c07bdc6da4d3d1f0ca348484d965dd51d608060"
+    },
+    {
+      "path": "evidence/codex-audit-instructions.md",
+      "bytes": 37996,
+      "sha256": "994ceec59dc5102b799e40749952158d55029fcdc4461eb88aefcae40732cae6"
+    },
+    {
+      "path": "evidence/earlier-session-snapshot.md",
+      "bytes": 227340,
+      "sha256": "aecc0cb41e3b15dd2965071cdab28cf56919f84d6dae012782155876a08a521b"
+    },
+    {
+      "path": "evidence/images/image-001.png",
+      "bytes": 1450738,
+      "sha256": "55521c6fe716a521b21308d390ab225af992b4fa27e3fe2afb3d86ed39a9911e"
+    },
+    {
+      "path": "evidence/images/image-002.png",
+      "bytes": 179566,
+      "sha256": "c4cbd8b55d12e3e959dfd8e052fa808a8c4f83a8cb23f2f81d31fc875a82ef41"
+    },
+    {
+      "path": "evidence/original-workflows-architecture-prompt.md",
+      "bytes": 11186,
+      "sha256": "32283a8d35bf841da6e8e5ce58cb7ed4037c8bcd5ff00e5682bf5fb1fd423e83"
+    },
+    {
+      "path": "evidence/review-delta.md",
+      "bytes": 15073,
+      "sha256": "d3df2dd91934acdc126bdc9edf6b8db9a2b3fba8e62617aef929df1745bc1ba5"
+    },
+    {
+      "path": "reference-images/README.md",
+      "bytes": 825,
+      "sha256": "6c42e3af9daf9ce10705c905647f9a259a0b748ded8ee20afd9ae0651e7c26d5"
+    },
+    {
+      "path": "reference-images/qmx-terminal-inspiration.png",
+      "bytes": 2351506,
+      "sha256": "e3e40eb432a25c8368194f0bef4034145b294f0293e73c0f838c556705abc927"
+    },
+    {
+      "path": "reference-images/taskade-workspace-reference.png",
+      "bytes": 179566,
+      "sha256": "c4cbd8b55d12e3e959dfd8e052fa808a8c4f83a8cb23f2f81d31fc875a82ef41"
+    }
+  ]
+}

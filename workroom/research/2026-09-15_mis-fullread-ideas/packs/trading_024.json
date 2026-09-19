@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_024",
+  "section": "Trading",
+  "parent_shard": "trading_024",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 23245,
+      "title": "Where should your stop-loss really sit? An MAE/MFE excursion analyzer in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23245.md"
+    },
+    {
+      "id": 23286,
+      "title": "Persistence Entropy as a Market Regime Indicator in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23286.md"
+    },
+    {
+      "id": 23385,
+      "title": "From Option Chain to 3D Volatility Surface in MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23385.md"
+    },
+    {
+      "id": 23451,
+      "title": "Ordinal Pattern Transition Networks in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23451.md"
+    },
+    {
+      "id": 23454,
+      "title": "From One Price to Four: Range-Based Volatility Estimators for MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23454.md"
+    },
+    {
+      "id": 23488,
+      "title": "Porting the Canonical Catch22 Time-Series Feature Set and Testing It on Volatility Regimes",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23488.md"
+    },
+    {
+      "id": 23541,
+      "title": "Building a Divergence System (Part III): The Adaptive SuperTrend EA",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23541.md"
+    },
+    {
+      "id": 23618,
+      "title": "A Trailing Stop Engine in MQL5 Supporting Five Trail Methods Simultaneously",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23618.md"
+    },
+    {
+      "id": 23662,
+      "title": "Building a Basket Order Manager in MQL5 for Correlated Position Groups",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23662.md"
+    },
+    {
+      "id": 23665,
+      "title": "Does This Entry Filter Really Add Edge? A Block-Permutation Test in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23665.md"
+    },
+    {
+      "id": 23674,
+      "title": "Foundation Models for Trading (Part II): Decoding, Autoregression, and an Exact KV-Cache",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23674.md"
+    },
+    {
+      "id": 23716,
+      "title": "Designing a Partial Close Engine in MQL5 with Configurable Profit Ladders",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23716.md"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_010",
+  "section": "Trading",
+  "parent_shard": "trading_010",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 10528,
+      "title": "Learn how to design a trading system by RSI",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10528.md"
+    },
+    {
+      "id": 10547,
+      "title": "Learn how to design a trading system by Momentum",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10547.md"
+    },
+    {
+      "id": 10592,
+      "title": "Learn how to design a trading system by CCI",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10592.md"
+    },
+    {
+      "id": 10671,
+      "title": "Automated exchange grid trading using stop pending orders on Moscow Exchange (MOEX)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10671.md"
+    },
+    {
+      "id": 10672,
+      "title": "Automated grid trading using limit orders on Moscow Exchange (MOEX)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10672.md"
+    },
+    {
+      "id": 10674,
+      "title": "Learn how to design a trading system by MACD",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10674.md"
+    },
+    {
+      "id": 10692,
+      "title": "Learn how to design a trading system by Stochastic",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10692.md"
+    },
+    {
+      "id": 10715,
+      "title": "Learn how to design a trading system by ADX",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10715.md"
+    },
+    {
+      "id": 10748,
+      "title": "Learn how to design a trading system by ATR",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10748.md"
+    },
+    {
+      "id": 10920,
+      "title": "Learn how to design a trading system by Parabolic SAR",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10920.md"
+    },
+    {
+      "id": 10941,
+      "title": "Creating a ticker tape panel: Basic version",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10941.md"
+    },
+    {
+      "id": 10961,
+      "title": "Learn how to design a trading system by OBV",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10961.md"
+    }
+  ]
+}

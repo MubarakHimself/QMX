@@ -1,0 +1,121 @@
+{
+  "pack_id": "examples_076_p01",
+  "section": "Examples",
+  "parent_shard": "examples_076",
+  "part_index": 1,
+  "part_count": 3,
+  "series_in_pack": [
+    "graphics in doeasy library"
+  ],
+  "n": 12,
+  "articles": [
+    {
+      "id": 9964,
+      "title": "Graphics in DoEasy library (Part 85): Graphical object collection - adding newly created objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Graphical object collection - adding newly created objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 85,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\9964.md"
+    },
+    {
+      "id": 10018,
+      "title": "Graphics in DoEasy library (Part 86): Graphical object collection - managing property modification",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Graphical object collection - managing property modification",
+      "series_key": "graphics in doeasy library",
+      "series_part": 86,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10018.md"
+    },
+    {
+      "id": 10038,
+      "title": "Graphics in DoEasy library (Part 87): Graphical object collection - managing object property modification on all open charts",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Graphical object collection - managing object property modification on all open charts",
+      "series_key": "graphics in doeasy library",
+      "series_part": 87,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10038.md"
+    },
+    {
+      "id": 10091,
+      "title": "Graphics in DoEasy library (Part 88): Graphical object collection \u2014 two-dimensional dynamic array for storing dynamically changing object properties",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Graphical object collection \u2014 two-dimensional dynamic array for storing dynamically changing object properties",
+      "series_key": "graphics in doeasy library",
+      "series_part": 88,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10091.md"
+    },
+    {
+      "id": 10119,
+      "title": "Graphics in DoEasy library (Part 89): Programming standard graphical objects. Basic functionality",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Programming standard graphical objects. Basic functionality",
+      "series_key": "graphics in doeasy library",
+      "series_part": 89,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10119.md"
+    },
+    {
+      "id": 10139,
+      "title": "Graphics in DoEasy library (Part 90): Standard graphical object events. Basic functionality",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Standard graphical object events. Basic functionality",
+      "series_key": "graphics in doeasy library",
+      "series_part": 90,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10139.md"
+    },
+    {
+      "id": 10184,
+      "title": "Graphics in DoEasy library (Part 91): Standard graphical object events. Object name change history",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Standard graphical object events. Object name change history",
+      "series_key": "graphics in doeasy library",
+      "series_part": 91,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10184.md"
+    },
+    {
+      "id": 10237,
+      "title": "Graphics in DoEasy library (Part 92): Standard graphical object memory class. Object property change history",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Standard graphical object memory class. Object property change history",
+      "series_key": "graphics in doeasy library",
+      "series_part": 92,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10237.md"
+    },
+    {
+      "id": 10331,
+      "title": "Graphics in DoEasy library (Part 93): Preparing functionality for creating composite graphical objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Preparing functionality for creating composite graphical objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 93,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10331.md"
+    },
+    {
+      "id": 10356,
+      "title": "Graphics in DoEasy library (Part 94): Moving and deleting composite graphical objects",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Moving and deleting composite graphical objects",
+      "series_key": "graphics in doeasy library",
+      "series_part": 94,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10356.md"
+    },
+    {
+      "id": 10387,
+      "title": "Graphics in DoEasy library (Part 95): Composite graphical object controls",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Composite graphical object controls",
+      "series_key": "graphics in doeasy library",
+      "series_part": 95,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10387.md"
+    },
+    {
+      "id": 10417,
+      "title": "Graphics in DoEasy library (Part 96): Graphics in form objects and handling mouse events",
+      "section": "Examples",
+      "series_title": "Graphics in DoEasy library (): Graphics in form objects and handling mouse events",
+      "series_key": "graphics in doeasy library",
+      "series_part": 96,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\10417.md"
+    }
+  ]
+}

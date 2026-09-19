@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_021",
+  "section": "Trading",
+  "parent_shard": "trading_021",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 19655,
+      "title": "Automated Risk Management for Passing Prop Firm Challenges",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19655.md"
+    },
+    {
+      "id": 19669,
+      "title": "Crow Search Algorithm (CSA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19669.md"
+    },
+    {
+      "id": 19755,
+      "title": "Optimizing Trend Strength: Trading in Trend Direction and Strength",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19755.md"
+    },
+    {
+      "id": 19756,
+      "title": "Optimizing Long-Term Trades: Engulfing Candles and Liquidity Strategies",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19756.md"
+    },
+    {
+      "id": 19757,
+      "title": "The Blue Monkey (BM) Algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19757.md"
+    },
+    {
+      "id": 20065,
+      "title": "Developing Trading Strategy: Pseudo Pearson Correlation Approach",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20065.md"
+    },
+    {
+      "id": 20113,
+      "title": "Developing a Trading Strategy: The Butterfly Oscillator Method",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20113.md"
+    },
+    {
+      "id": 20183,
+      "title": "Unified Multi-Timeframe Renko: Synthesizing the Market's Temporal Dimensions",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20183.md"
+    },
+    {
+      "id": 20185,
+      "title": "Quick Integration of a Large Language Model into MetaTrader 5 (Part I): Building the Model",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20185.md"
+    },
+    {
+      "id": 20220,
+      "title": "Developing a Trading Strategy: The Triple Sine Mean Reversion Method",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20220.md"
+    },
+    {
+      "id": 20240,
+      "title": "Elite Crystal Evolution Algorithm (CEO-inspired): Practical Implementation",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20240.md"
+    },
+    {
+      "id": 20245,
+      "title": "Bonobo Optimizer (BO)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20245.md"
+    }
+  ]
+}

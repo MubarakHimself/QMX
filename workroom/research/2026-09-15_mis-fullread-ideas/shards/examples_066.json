@@ -1,0 +1,57 @@
+{
+  "shard_id": "examples_066",
+  "section": "Examples",
+  "n": 5,
+  "series_in_shard": [
+    "bivariate copulae in mql5",
+    "body in connexus",
+    "broker reality check"
+  ],
+  "articles": [
+    {
+      "id": 18361,
+      "title": "Bivariate Copulae in MQL5 (Part 1): Implementing Gaussian and Student's t-Copulae for Dependency Modeling",
+      "section": "Examples",
+      "series_title": "Bivariate Copulae in MQL5 (): Implementing Gaussian and Student's t-Copulae for Dependency Modeling",
+      "series_key": "bivariate copulae in mql5",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18361.md"
+    },
+    {
+      "id": 19931,
+      "title": "Bivariate Copulae in MQL5 (Part 2): Implementing Archimedean copulae in MQL5",
+      "section": "Examples",
+      "series_title": "Bivariate Copulae in MQL5 (): Implementing Archimedean copulae in MQL5",
+      "series_key": "bivariate copulae in mql5",
+      "series_part": 2,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19931.md"
+    },
+    {
+      "id": 19930,
+      "title": "Bivariate Copulae in MQL5 (Part 3): Implementation and Tuning of Mixed Copula Models in MQL5",
+      "section": "Examples",
+      "series_title": "Bivariate Copulae in MQL5 (): Implementation and Tuning of Mixed Copula Models in MQL5",
+      "series_key": "bivariate copulae in mql5",
+      "series_part": 3,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19930.md"
+    },
+    {
+      "id": 16098,
+      "title": "Body in Connexus (Part 4): Adding HTTP body support",
+      "section": "Examples",
+      "series_title": "Body in Connexus (): Adding HTTP body support",
+      "series_key": "body in connexus",
+      "series_part": 4,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16098.md"
+    },
+    {
+      "id": 23327,
+      "title": "Broker Reality Check (Part 1): Why Your EA Works on a Demo and Breaks on a Client's Broker",
+      "section": "Examples",
+      "series_title": "Broker Reality Check (): Why Your EA Works on a Demo and Breaks on a Client's Broker",
+      "series_key": "broker reality check",
+      "series_part": 1,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\23327.md"
+    }
+  ]
+}

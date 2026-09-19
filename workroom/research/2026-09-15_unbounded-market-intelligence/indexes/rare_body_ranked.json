@@ -1,0 +1,567 @@
+[
+  {
+    "article_id": 16416,
+    "terms": {
+      "mutual_information": 68
+    },
+    "total": 68
+  },
+  {
+    "article_id": 15393,
+    "terms": {
+      "information_flow": 1,
+      "mutual_information": 8,
+      "transfer_entropy": 55
+    },
+    "total": 64
+  },
+  {
+    "article_id": 15332,
+    "terms": {
+      "lyapunov": 42
+    },
+    "total": 42
+  },
+  {
+    "article_id": 17706,
+    "terms": {
+      "lyapunov": 20
+    },
+    "total": 20
+  },
+  {
+    "article_id": 13706,
+    "terms": {
+      "mutual_information": 15
+    },
+    "total": 15
+  },
+  {
+    "article_id": 12739,
+    "terms": {
+      "mutual_information": 13
+    },
+    "total": 13
+  },
+  {
+    "article_id": 17241,
+    "terms": {
+      "information_flow": 11
+    },
+    "total": 11
+  },
+  {
+    "article_id": 15445,
+    "terms": {
+      "mutual_information": 7,
+      "lyapunov": 2
+    },
+    "total": 9
+  },
+  {
+    "article_id": 15997,
+    "terms": {
+      "information_flow": 8
+    },
+    "total": 8
+  },
+  {
+    "article_id": 20317,
+    "terms": {
+      "mutual_information": 7
+    },
+    "total": 7
+  },
+  {
+    "article_id": 23488,
+    "terms": {
+      "mutual_information": 6
+    },
+    "total": 6
+  },
+  {
+    "article_id": 16867,
+    "terms": {
+      "information_flow": 5
+    },
+    "total": 5
+  },
+  {
+    "article_id": 18447,
+    "terms": {
+      "information_flow": 5
+    },
+    "total": 5
+  },
+  {
+    "article_id": 18499,
+    "terms": {
+      "information_flow": 5
+    },
+    "total": 5
+  },
+  {
+    "article_id": 13842,
+    "terms": {
+      "mutual_information": 5
+    },
+    "total": 5
+  },
+  {
+    "article_id": 15575,
+    "terms": {
+      "mutual_information": 5
+    },
+    "total": 5
+  },
+  {
+    "article_id": 18755,
+    "terms": {
+      "criticality": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 16192,
+    "terms": {
+      "information_flow": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 16916,
+    "terms": {
+      "information_flow": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 17069,
+    "terms": {
+      "information_flow": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 17675,
+    "terms": {
+      "information_flow": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 17739,
+    "terms": {
+      "information_flow": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 15762,
+    "terms": {
+      "mutual_information": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 6834,
+    "terms": {
+      "econophysics": 4
+    },
+    "total": 4
+  },
+  {
+    "article_id": 2041,
+    "terms": {
+      "criticality": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 15498,
+    "terms": {
+      "information_flow": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 16631,
+    "terms": {
+      "information_flow": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 16816,
+    "terms": {
+      "information_flow": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 17104,
+    "terms": {
+      "information_flow": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 18914,
+    "terms": {
+      "information_flow": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 13729,
+    "terms": {
+      "mutual_information": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 15024,
+    "terms": {
+      "mutual_information": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 15927,
+    "terms": {
+      "mutual_information": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 16328,
+    "terms": {
+      "mutual_information": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 16390,
+    "terms": {
+      "mutual_information": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 24057,
+    "terms": {
+      "mutual_information": 2,
+      "random_matrix": 1
+    },
+    "total": 3
+  },
+  {
+    "article_id": 14494,
+    "terms": {
+      "transfer_entropy": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 14505,
+    "terms": {
+      "transfer_entropy": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 15405,
+    "terms": {
+      "transfer_entropy": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 15407,
+    "terms": {
+      "transfer_entropy": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 8038,
+    "terms": {
+      "econophysics": 3
+    },
+    "total": 3
+  },
+  {
+    "article_id": 12309,
+    "terms": {
+      "criticality": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15302,
+    "terms": {
+      "criticality": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 20071,
+    "terms": {
+      "criticality": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 16439,
+    "terms": {
+      "criticality": 1,
+      "information_flow": 1
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15288,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15859,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15882,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15928,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 16570,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 16937,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 17487,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 18453,
+    "terms": {
+      "information_flow": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 13212,
+    "terms": {
+      "mutual_information": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 13551,
+    "terms": {
+      "mutual_information": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15610,
+    "terms": {
+      "mutual_information": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15886,
+    "terms": {
+      "mutual_information": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 20530,
+    "terms": {
+      "mutual_information": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15255,
+    "terms": {
+      "lyapunov": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 15294,
+    "terms": {
+      "lyapunov": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 16830,
+    "terms": {
+      "lyapunov": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 16866,
+    "terms": {
+      "lyapunov": 2
+    },
+    "total": 2
+  },
+  {
+    "article_id": 10664,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 11189,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 12121,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 12140,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 17796,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 18467,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 19285,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 19519,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 19682,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 20535,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22020,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22110,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22613,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22628,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22930,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 22962,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 23125,
+    "terms": {
+      "criticality": 1
+    },
+    "total": 1
+  },
+  {
+    "article_id": 11245,
+    "terms": {
+      "information_flow": 1
+    },
+    "total": 1
+  }
+]

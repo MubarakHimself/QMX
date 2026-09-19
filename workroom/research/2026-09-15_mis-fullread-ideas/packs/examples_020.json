@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_020",
+  "section": "Examples",
+  "parent_shard": "examples_020",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 2820,
+      "title": "How to build and test a Binary Options strategy with the MetaTrader 4 Strategy Tester",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2820.md"
+    },
+    {
+      "id": 2825,
+      "title": "Momentum Pinball trading strategy",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2825.md"
+    },
+    {
+      "id": 2828,
+      "title": "3D Modeling in MQL5",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2828.md"
+    },
+    {
+      "id": 2829,
+      "title": "Graphical Interfaces X: Text Edit box, Picture Slider and simple controls (build 5)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2829.md"
+    },
+    {
+      "id": 2853,
+      "title": "MQL5 Cookbook - Pivot trading signals",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2853.md"
+    },
+    {
+      "id": 2866,
+      "title": "Visualize this! MQL5 graphics library similar to 'plot' of R language",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2866.md"
+    },
+    {
+      "id": 2888,
+      "title": "A Universal Channel with the Graphical Interface",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2888.md"
+    },
+    {
+      "id": 2895,
+      "title": "Integrating MQL-based Expert Advisors and databases (SQL Server, .NET and C#)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2895.md"
+    },
+    {
+      "id": 2897,
+      "title": "Graphical Interfaces X: Time control, List of checkboxes control and table sorting (build 6)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2897.md"
+    },
+    {
+      "id": 2943,
+      "title": "Graphical interfaces X: Advanced management of lists and tables. Code optimization (build 7)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\2943.md"
+    },
+    {
+      "id": 3004,
+      "title": "Graphical Interfaces X: The Multiline Text box control (build 8)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3004.md"
+    },
+    {
+      "id": 3018,
+      "title": "Universal Trend with the Graphical Interface",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\3018.md"
+    }
+  ]
+}

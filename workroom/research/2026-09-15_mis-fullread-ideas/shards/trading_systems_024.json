@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_systems_024",
+  "section": "Trading systems",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 22484,
+      "title": "Beyond GARCH (Part II): Measuring the Fractal Dimension of Markets",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22484.md"
+    },
+    {
+      "id": 22500,
+      "title": "Cross Recurrence Quantification Analysis (CRQA) in MQL5: Building a Complete Analysis Library",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22500.md"
+    },
+    {
+      "id": 22519,
+      "title": "Beyond GARCH (Part V): Fitting the Multifractal Spectrum in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22519.md"
+    },
+    {
+      "id": 22521,
+      "title": "Beyond GARCH (Part VI): Fractional Brownian Motion And The Multiplicative Cascade in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22521.md"
+    },
+    {
+      "id": 22537,
+      "title": "Beyond GARCH (Part VII): Monte Carlo Volatility Forecasting in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22537.md"
+    },
+    {
+      "id": 22539,
+      "title": "Beyond GARCH (Part VIII): The MMAR Library And Putting it to Work in an Expert Advisor",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22539.md"
+    },
+    {
+      "id": 22580,
+      "title": "News Filtering with MetaTrader 5 Economic Calendar and CSV Fallback",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22580.md"
+    },
+    {
+      "id": 22684,
+      "title": "Position Management: Scaling Into Winners With A Falling-Risk Pyramid",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22684.md"
+    },
+    {
+      "id": 22707,
+      "title": "Building an Object-Oriented Z-Score Statistical Arbitrage Engine in MQL5",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22707.md"
+    },
+    {
+      "id": 22936,
+      "title": "Implementing a Fluent Interface Builder Pattern for MQL5 Order Construction",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22936.md"
+    },
+    {
+      "id": 22947,
+      "title": "A Generic Object Pool in MQL5: Eliminating Heap Fragmentation in High-Frequency Indicators",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22947.md"
+    },
+    {
+      "id": 22950,
+      "title": "Designing a Strategy State Machine in MQL5: Replacing Nested If-Else Logic with Formal States",
+      "section": "Trading systems",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22950.md"
+    }
+  ]
+}

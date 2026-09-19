@@ -1,0 +1,119 @@
+{
+  "pack_id": "trading_016",
+  "section": "Trading",
+  "parent_shard": "trading_016",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 15017,
+      "title": "A Step-by-Step Guide on Trading the Break of Structure (BoS) Strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15017.md"
+    },
+    {
+      "id": 15067,
+      "title": "Developing Zone Recovery Martingale strategy in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15067.md"
+    },
+    {
+      "id": 15107,
+      "title": "Mastering Market Dynamics: Creating a Support and Resistance Strategy Expert Advisor (EA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15107.md"
+    },
+    {
+      "id": 15198,
+      "title": "Using PatchTST Machine Learning Algorithm for Predicting Next 24 Hours of Price Action",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15198.md"
+    },
+    {
+      "id": 15199,
+      "title": "Creating a Daily Drawdown Limiter EA in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15199.md"
+    },
+    {
+      "id": 15250,
+      "title": "Cascade Order Trading Strategy Based on EMA Crossovers for MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15250.md"
+    },
+    {
+      "id": 15311,
+      "title": "Developing an Expert Advisor (EA) based on the Consolidation Range Breakout strategy in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15311.md"
+    },
+    {
+      "id": 15394,
+      "title": "Implementing a Bollinger Bands Trading Strategy with MQL5: A Step-by-Step Guide",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15394.md"
+    },
+    {
+      "id": 15431,
+      "title": "Implementing the Deus EA: Automated Trading with RSI and Moving Averages in MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15431.md"
+    },
+    {
+      "id": 15556,
+      "title": "William Gann methods (Part I): Creating Gann Angles indicator",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15556.md"
+    },
+    {
+      "id": 15589,
+      "title": "Automating Trading Strategies with Parabolic SAR Trend Strategy in MQL5: Crafting an Effective Expert Advisor",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15589.md"
+    },
+    {
+      "id": 15622,
+      "title": "Evaluating the Quality of Forex Spread Trading Based on Seasonal Factors in MetaTrader 5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\15622.md"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "shard_id": "expert_advisors_004",
+  "section": "Expert Advisors",
+  "n": 10,
+  "series_in_shard": [
+    "larry williams market secrets",
+    "metatrader 5 machine learning blueprint",
+    "mql5 wizard techniques you should know",
+    "neural networks made easy"
+  ],
+  "articles": [
+    {
+      "id": 21127,
+      "title": "Larry Williams Market Secrets (Part 10): Automating Smash Day Reversal Patterns",
+      "section": "Expert Advisors",
+      "series_title": "Larry Williams Market Secrets (): Automating Smash Day Reversal Patterns",
+      "series_key": "larry williams market secrets",
+      "series_part": 10,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21127.md"
+    },
+    {
+      "id": 21391,
+      "title": "Larry Williams Market Secrets (Part 13): Automating Hidden Smash Day Reversal Patterns",
+      "section": "Expert Advisors",
+      "series_title": "Larry Williams Market Secrets (): Automating Hidden Smash Day Reversal Patterns",
+      "series_key": "larry williams market secrets",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\21391.md"
+    },
+    {
+      "id": 13630,
+      "title": "MQL5 Wizard Techniques you should know (Part 07): Dendrograms",
+      "section": "Expert Advisors",
+      "series_title": "MQL5 Wizard Techniques you should know (): Dendrograms",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 7,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\13630.md"
+    },
+    {
+      "id": 14142,
+      "title": "MQL5 Wizard Techniques you should know (Part 11): Number Walls",
+      "section": "Expert Advisors",
+      "series_title": "MQL5 Wizard Techniques you should know (): Number Walls",
+      "series_key": "mql5 wizard techniques you should know",
+      "series_part": 11,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\14142.md"
+    },
+    {
+      "id": 22047,
+      "title": "MetaTrader 5 Machine Learning Blueprint (Part 13):  Implementing Bet Sizing in MQL5",
+      "section": "Expert Advisors",
+      "series_title": "MetaTrader 5 Machine Learning Blueprint ():  Implementing Bet Sizing in MQL5",
+      "series_key": "metatrader 5 machine learning blueprint",
+      "series_part": 13,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\22047.md"
+    },
+    {
+      "id": 11804,
+      "title": "Neural networks made easy (Part 34): Fully Parameterized Quantile Function",
+      "section": "Expert Advisors",
+      "series_title": "Neural networks made easy (): Fully Parameterized Quantile Function",
+      "series_key": "neural networks made easy",
+      "series_part": 34,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\11804.md"
+    },
+    {
+      "id": 12508,
+      "title": "Neural networks made easy (Part 38): Self-Supervised Exploration via Disagreement",
+      "section": "Expert Advisors",
+      "series_title": "Neural networks made easy (): Self-Supervised Exploration via Disagreement",
+      "series_key": "neural networks made easy",
+      "series_part": 38,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12508.md"
+    },
+    {
+      "id": 12558,
+      "title": "Neural networks made easy (Part 39): Go-Explore, a different approach to exploration",
+      "section": "Expert Advisors",
+      "series_title": "Neural networks made easy (): Go-Explore, a different approach to exploration",
+      "series_key": "neural networks made easy",
+      "series_part": 39,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12558.md"
+    },
+    {
+      "id": 12584,
+      "title": "Neural networks made easy (Part 40): Using Go-Explore on large amounts of data",
+      "section": "Expert Advisors",
+      "series_title": "Neural networks made easy (): Using Go-Explore on large amounts of data",
+      "series_key": "neural networks made easy",
+      "series_part": 40,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12584.md"
+    },
+    {
+      "id": 12605,
+      "title": "Neural networks made easy (Part 41): Hierarchical models",
+      "section": "Expert Advisors",
+      "series_title": "Neural networks made easy (): Hierarchical models",
+      "series_key": "neural networks made easy",
+      "series_part": 41,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\12605.md"
+    }
+  ]
+}

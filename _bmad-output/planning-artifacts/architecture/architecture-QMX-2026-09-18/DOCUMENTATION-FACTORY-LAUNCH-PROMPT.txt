@@ -1,0 +1,49 @@
+Resume as QMX Documentation Factory. Read the installed `documentation-factory` skill first and follow it. Do not invent. Do not write QMX production code. Do not re-run architecture. Do not start epics-and-stories. Do not start the factory coding lanes.
+
+This is a **big feature on an existing knowledge base** after a completed BMad architecture sitting. Use the skill’s front door: route (e) / change-mode after architecture. Existing `docs/` stays the knowledge base; this increment is folded in, not a greenfield rewrite.
+
+## What just finished
+
+Architecture sitting `architecture-QMX-2026-09-18`, reconciled candidate `qmx-workflows-arch-2026-09-19-c`.
+Folder (read all of it):
+`_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/`
+
+Start with:
+- `CHALLENGE-RECONCILIATION.md`
+- `ARCHITECTURE-SPINE.md` (AD-1..AD-31)
+- `OPERATOR-QUESTIONS.md` (OD-01 is CLOSED from the original transcript)
+- `CONTRACTS.md`, `JOURNEYS.md`, `REQUIREMENTS-ADDENDUM.md`, `CONFLICT-REGISTER.md`
+- `RESUME-STATE.md`
+- Codex Stage B package under `codex-challenge-20260919/` (findings + 85 scenarios; BDD is specification, not executed tests)
+- Original intent transcript: `transcript-refresh-20260919/Explore-Node-Editor-Architecture.md`
+- Plus the exported Grok session transcript the operator attaches to this new session
+
+Pins (do not use 8510c03 for absence claims):
+- docs workspace: `b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3`
+- implementation inspected: `270e992995c2378ca63cf6343254ef8140a8c97e`
+
+## Standing operator corrections (riders)
+
+- QMF is one framework. No sixth COMP.
+- Book/BMS is a specific portfolio-management / risk / position-sizing implementation — the **default**, not the ceiling. Never dummy Book/BMS.
+- When that stack is replaced or versioned, QML, QMB, MIS, QMN, paper, and live **adopt** the selected composition. Research/sensing is not a trading system.
+- Data/ML work need not be a bot or trading-wrapped.
+- Sessions own context and grants; tabs do not.
+- App-use cannot edit implementation or apply its own changes.
+- Specialists remain.
+- Trading-floor PM means Portfolio Manager.
+- Sequential cutover, not hot-swap of live positions.
+- BDD/Gherkin is specification, not proof feature files execute.
+- mutmut is optional test-strength only: WSL/POSIX on Windows, disposable copy, never `mutmut apply` on the shared worktree.
+
+## Named constitution work
+
+L36 stays bot → Book → BMS → operator as the **default** authority chain. Documentation Factory must write the named amendment: Book and BMS are the default implementations of accounting and risk/sizing roles, not the only implementations the framework may host. A complete alternative PolicyPair may occupy those roles without dummy records. Human L17 promote and sequential paper-then-live remain. QMN remains the only venue importer.
+
+## Evidence honesty
+
+Do not describe proposed connects as implemented. At 270e992: TaskGraph store is in-memory; ContributionHit is proposed; product sessions are absent; QML→QMB→QMN is unsupported integration. Preserve the 85 Codex scenario IDs as specification oracles.
+
+## Stop
+
+After the skill’s documentation pipeline (and its human gates as the skill defines them), stop. Next session after docs is `bmad-create-epics-and-stories`, not this one.

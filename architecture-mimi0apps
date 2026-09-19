@@ -1,0 +1,1235 @@
+## User
+
+Read 00-START-HERE.md and 01-GROK-ARCHITECTURE-PROMPT.md
+inside the attached staged handoff package. Read the full
+exported conversation and Codex’s reference-discovery results.
+
+Perform Stage A: independently explore the current QMX
+repository, implementation, documentation, and relevant
+references. Use as many useful sub-agents and dynamic
+workflows as your environment supports. Reconcile the
+audit’s older baseline before treating anything as missing.
+
+Then use the installed BMAD architecture skill to produce
+the complete, internally reviewed architecture candidate
+required by the assignment.
+
+Include the Artifact Library, capability discovery, app
+orchestration, and copilot integration—not just the canvas.
+Treat mutation testing as a test-strength principle;
+mutmut is an optional tool, not a mandatory dependency.
+
+Make justified technical recommendations. Do not interrupt
+for routine design questions. Group genuinely consequential
+unresolved choices at the end.
+
+Freeze the candidate with its evidence and revision manifest.
+Produce CODEX-CHALLENGE-INPUTS.zip, its exact launch prompt,
+and RESUME-STATE.md.
+
+STOP at AWAITING_CODEX_CHALLENGE. Do not simulate the
+independent review, launch production implementation, or
+issue the final Documentation Factory handoff yet.
+
+]]]]]
+
+Okay, so above is a prompt given to you by ChatGPT web. Okay, so I want you to read through it carefully. The files you need are attached below: zip files. Okay, most of them are actually zip files. I think I've attached almost everything you need. I really do. Okay, yeah, so begin. Use as many sub-agents, as many dynamic workflows as you need, be thorough, and yeah so begin.For the sub-agent models, I really don't care. And I think it's better to use a more intelligent model. So, like grok 4.6 might be better,Okay, you can also use 4.5 depending. Let me leave the orchestration to you and stop yapping. So begin. Good luck
+
+here is the transcript that is most recent [["C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip"]]] 
+then the other files you need 
+[["C:\Users\Mubarak\Downloads\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18.zip"]] 
+[[["C:\Users\Mubarak\Downloads\QMX-REFERENCE-RECON-20260918T082954Z.zip" ]]]
+
+## Assistant
+
+I'll start by reading the staged handoff package, the architecture skill, and the attached zips so Stage A is grounded in the assignment rather than assumptions.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\SKILL.md
+- Read: C:\Users\Mubarak\.grok\memory-v2\workspaces\qmx-7a9e422e\topics\epics-49-52-and-drain-protocol.md
+- Read: C:\Users\Mubarak\.grok\memory-v2\workspaces\qmx-7a9e422e\topics\qml-research-expansion-standing-rulings.md
+- Read: C:\Users\Mubarak\.grok\memory-v2\workspaces\qmx-7a9e422e\topics\documentation-factory-fold-already-ran-2026-09-16.md
+
+## Assistant
+
+The assignment is a directed Fast-path architecture run. Next I’ll unpack the three zips and load the skill’s headless/reviewer references so we follow that path instead of coaching.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\references\headless.md
+- ListDir: \.agents\skills\bmad-architecture
+- Execute: $ErrorActionPreference = 'Stop'
+$dest = 'C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture'
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+$zips = @(
+  @{ src = 'C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip'; name = 'explore-conversation' },
+  @{ src = 'C:\Users\Mubarak\Downloads\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18.zip'; name = 'staged-handoff' },
+  @{ src = 'C:\Users\Mubarak\Downloads\QMX-REFERENCE-RECON-20260918T082954Z.zip'; name = 'reference-recon' }
+)
+foreach ($z in $zips) {
+  if (-not (Test-Path $z.src)) { Write-Output "MISSING: $($z.src)"; continue }
+  $out = Join-Path $dest $z.name
+  New-Item -ItemType Directory -Force -Path $out | Out-Null
+  Expand-Archive -LiteralPath $z.src -DestinationPath $out -Force
+  Write-Output "EXTRACTED: $($z.name)"
+  Get-ChildItem -LiteralPath $out -Recurse -File | Select-Object -ExpandProperty FullName
+}
+ (Extract three attached zip packages into workroom)
+
+## Assistant
+
+The packages are unpacked. I’ll read the assignment spine first, then fan out into the conversation, recon, and architecture skill files.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\00-START-HERE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\01-GROK-ARCHITECTURE-PROMPT.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\LAUNCH-PROMPT.txt
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\MANIFEST.json
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\customize.toml
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\references\reviewer-gate.md
+
+## User
+
+I think the architecture skill is BMAD architecture......This is a simple nudge. You don't have to respond.  /bmad-architecture
+
+## Assistant
+
+Continuing Stage A through the installed BMAD architecture skill: activating it, finishing the handoff inputs, then exploring the repo in parallel.
+
+## Tools
+
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\resolve_customization.py" --skill "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture" --key workflow (Resolve bmad-architecture workflow customization)
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\resolve_config.py" --project-root "C:\Users\Mubarak\Desktop\QMX" (Resolve BMAD project config)
+- ListDir: \_bmad-output\planning-artifacts\architecture
+- ListDir: \_bmad\custom
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\assets\spine-template.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\10-STAGED-PROCESS-AND-REVIEW-CONTRACT.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\02-OPERATOR-INTENT-AND-SCOPE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\03-EVIDENCE-BASELINE-AND-DELTA.md
+
+## Assistant
+
+Skill activation is in place: Fast path, new `architecture-QMX-2026-09-18` workspace, inherited from the 2026-09-16 platform spine. Next I’ll bind the memlog, load remaining inputs, and start parallel repo exploration.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad\custom\bmad-architecture.toml
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\04-ARCHITECTURE-WORKSTREAMS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\09-OUTPUTS-AND-NEXT-STAGE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\14-REFERENCE-AND-TESTING-ADDENDUM.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\reference-recon\QMX-REFERENCE-RECON-20260918T082954Z\REFERENCE-RECON-RETURN.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\.grok\workflows\create-workflow\SKILL.md
+- Search: project-context
+- Read: C:\Users\Mubarak\.grok\bundled\skills\create-workflow\SKILL.md
+
+## Assistant
+
+Binding the architecture workspace, capturing git freshness, and launching parallel investigations so the spine is grounded in current code rather than the stale audit.
+
+## Tools
+
+- Execute: $ErrorActionPreference = 'Continue'
+Write-Output '=== GIT REV-PARSE ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse --is-inside-work-tree
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse --show-toplevel
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse HEAD
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse --abbrev-ref HEAD
+Write-Output '=== STATUS SHORT ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" status -sb
+Write-Output '=== WORKTREES ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" worktree list
+Write-Output '=== BRANCHES ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" branch -vv
+Write-Output '=== REMOTES ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" remote -v
+Write-Output '=== LOG 20 ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" log -20 --oneline --decorate
+Write-Output '=== COMPARE vs AUDIT BASELINES ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse 8510c032496bb870824ecc5c4f807e8a4e4f167e 2>$null
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse 270e992995c2378ca63cf6343254ef8140a8c97e 2>$null
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3 2>$null
+Write-Output '=== AHEAD/BEHIND origin/main origin/integration ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-list --left-right --count origin/main...HEAD 2>$null
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-list --left-right --count origin/integration...HEAD 2>$null
+Write-Output '=== origin/integration HEAD ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse origin/integration 2>$null
+git -C "C:\Users\Mubarak\Desktop\QMX" log -5 --oneline origin/integration 2>$null
+Write-Output '=== FETCH DATE (no fetch) ==='
+git -C "C:\Users\Mubarak\Desktop\QMX" log -1 --format='%H %ci %s' HEAD
+git -C "C:\Users\Mubarak\Desktop\QMX" log -1 --format='%H %ci %s' origin/main 2>$null
+git -C "C:\Users\Mubarak\Desktop\QMX" log -1 --format='%H %ci %s' origin/integration 2>$null
+Write-Output '=== TOP LEVEL ==='
+Get-ChildItem "C:\Users\Mubarak\Desktop\QMX" -Name | Select-Object -First 80
+ (Capture git freshness, worktrees, package roots)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-16\ARCHITECTURE-SPINE.md (1-200)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\05-JOURNEYS-AND-FAILURE-COVERAGE.md (1-150)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\07-COPILOT-SKILLS-AND-EVALUATION.md
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\evidence\review-delta.md (1-162)
+
+## Assistant
+
+Implementation HEAD is `origin/integration` at `270e992`, not the stale local integration worktree. I’ll bind the architecture run there and fan out investigators against that revision.
+
+## Tools
+
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+New-Item -ItemType Directory -Force -Path "$ws\inputs","$ws\research","$ws\reviews","$ws\contracts","$ws\companions" | Out-Null
+uv run "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py" init --workspace $ws --field "scope=QMX Workflows construction kit: capabilities, extensions, workflows, mini-apps, widgets, copilot sessions, data recipes, alternative trading compositions, Artifact Library, app orchestration" --field "purpose=build-substrate" --field "altitude=feature" --field "topic=QMX extensible composition architecture (Workflows sitting)" --field "goal=Stage A candidate for independent Codex challenge; not ratified"
+Write-Output "MEMLOG INIT OK"
+# commit delta size
+git -C "C:\Users\Mubarak\Desktop\QMX" log --oneline 8510c032496bb870824ecc5c4f807e8a4e4f167e..270e992995c2378ca63cf6343254ef8140a8c97e | Measure-Object -Line
+Write-Output '--- first/last of delta ---'
+git -C "C:\Users\Mubarak\Desktop\QMX" log --oneline 8510c03..270e992 | Select-Object -First 8
+Write-Output '...'
+git -C "C:\Users\Mubarak\Desktop\QMX" log --oneline 8510c03..270e992 | Select-Object -Last 8
+Write-Output '--- packages at 270e992 ---'
+Get-ChildItem "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split" -Name | Select-Object -First 60
+Write-Output '--- pyproject at 270e992 ---'
+if (Test-Path "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\pyproject.toml") { Get-Content "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\pyproject.toml" -TotalCount 80 }
+Write-Output '--- transcript size ---'
+Get-Item "C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md" | Select-Object Length, FullName
+ (Init memlog workspace and inspect implementation tree)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-14\ARCHITECTURE-SPINE.md (1-180)
+- Read: C:\Users\Mubarak\Desktop\QMX\docs\AGENTS.md (1-130)
+- Read: C:\Users\Mubarak\Desktop\QMX\docs\constitution.md (1-95)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md (1-150)
+
+## Assistant
+
+Memlog is bound. Next I’ll log the inherited constraints, extract the latest operator instructions from the transcript, and launch the parallel investigators.
+
+## Tools
+
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+$script = "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py"
+function A($t,$type) { uv run $script append --workspace $ws --type $type --text $t | Out-Null }
+A "Stage A architecture sitting started. Fast/headless path per operator assignment 01-GROK-ARCHITECTURE-PROMPT.md. Coaching path skipped: operator delegated technical decisions and forbade routine questions. Documentation Factory and production implementation are later stages; this sitting stops at AWAITING_CODEX_CHALLENGE." "event"
+A "Parent spines bind read-only: architecture-QMX-2026-09-14 (workbench AD-1..16 / DEC-0269..0285), architecture-QMX-2026-09-16 (QML mill AD-13 defers this Workflows sitting), architecture-QMA-2026-08-28, architecture-QML-2026-08-21, architecture-QMB-2026-08-20, architecture-NODE-2026-08-28, architecture-CONNECT-2026-09-11, architecture-QMX-2026-08-19. Constitution L7-L11 L17 L30-L39. QML mill ADR-0023 remains provisional." "constraint"
+A "Freshness: docs workspace main@b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3 (origin/main, dirty only untracked planning/research). Implementation origin/integration@270e992995c2378ca63cf6343254ef8140a8c97e inspected via worktree C:/Users/Mubarak/Desktop/QMX-worktrees/epic-051-skylos-mill-split. Local .worktrees/integration-inspect still at audit-era 8510c03 (32 commits behind). Do not treat 8510c03 absence claims as current." "constraint"
+A "QMF remains the one framework (L7). No sixth COMP unless spine amendment. QMA never import qmb. No live trading, deployment, paid jobs, or production coding this sitting. Artifact Library remains listed fp1 kinds (Workbench AD-3); this sitting may add discovery of capabilities/packages without minting hypotheses as Library objects." "constraint"
+A "Operator latest: two copilot profiles (authoring vs app-use); Book/BMS is default not ceiling; Artifact Library + capability discovery + app orchestration + copilot in scope not just canvas; mutmut is optional test-strength tool not mandatory dependency; Portfolio Manager not Product Manager in trading floor; Hermes/n8n/video not started as implementation." "constraint"
+A "Altitude=feature (Workflows construction kit). Purpose=build-substrate plus required Stage A companions (requirements addendum, contracts, journeys, stack record, Codex freeze). Paradigm candidate: capability-oriented composition over hexagonal libraries." "direction"
+Write-Output "MEMLOG APPENDED"
+# transcript size
+Get-Item "C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md" | Format-List FullName, Length
+ (Append initial memlog constraints and check transcript size)
+- Search: ^(# you asked|# chatgpt response)
+- Search: Artifact Library|mutmut|authoring vs|app-use|Portfolio Manager|Hermes|JSON Render|MCP Apps
+- Read: C:\Users\Mubarak\Desktop\QMX\docs\architecture\stack.md (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md (1642-1721)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md (1788-1887)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\06-OPPORTUNITY-SEEDS.md (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\08-REFERENCE-STUDY-PLAN.md (1-50)
+- Search: class ResolvedRunConfig|VenueClientKind|class TaskGraphStore|class GraphTemplate
+
+## Assistant
+
+Latest operator intent is locked: Artifact Library, capability discovery, app orchestration, and copilot are in scope. Launching the workstream investigators and a donor-research workflow next.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmb\src\qmb\config\compiler.py (181-260)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmn\src\qmn\venue\port.py (1-90)
+- Read: C:\Users\Mubarak\.grok\bundled\skills\long-running-background-tasks\SKILL.md
+
+## Assistant
+
+Investigators are running. I’ll verify named technologies on the web and inspect the load-bearing implementation files while they work.
+
+## Tools
+
+- WebSearch: mutmut python mutation testing documentation Windows WSL fork 2026
+- WebSearch: json-render vercel catalog actions current documentation
+- WebSearch: MCP Apps modelcontextprotocol extensions apps overview 2026
+- WebFetch: https://hermes-agent.nousresearch.com/docs/developer-guide/plugins
+- WebFetch: https://mutmut.readthedocs.io/en/latest/
+- Search: class MemoryProvider|class GraphTemplate|class TaskGraphStore|class Session
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\src\qma\daemon\discovery\federated.py (1-120)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\src\qma\daemon\taskgraph\dispatcher.py (111-160)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\src\qma\daemon\taskgraph\compiler.py (81-130)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-core\src\qma\core\ports\memory.py (491-540)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-core\src\qma\core\ontology\records.py (161-240)
+- Search: in-memory|InMemory|stand-in
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\reference-recon\QMX-REFERENCE-RECON-20260918T082954Z\QMX-ADAPTATION-OPPORTUNITIES.md (1-80)
+- Search: def validate_graph_template_topology|back-edge|cycle
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qml\src\qml\host\research_store.py (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\src\qma\daemon\memory\admission.py (111-160)
+- Search: class InMemory|bind.*MemoryProvider|SqliteMemory
+- Search: def validate_graph_template_topology
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\reference-recon\QMX-REFERENCE-RECON-20260918T082954Z\CAPABILITY-AND-BACKEND-IMPLICATIONS.md (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMA-2026-08-28\ARCHITECTURE-SPINE.md (2-81)
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\src\qma\daemon\taskgraph\execution.py (173-252)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\CODEX-CHALLENGE-LAUNCH.txt
+- Search: pm-|Portfolio Manager|Product Manager
+
+## Assistant
+
+Confirmed: topology only rejects direct back-edges, MemoryProvider has no default engine, and QMA Session is not a product session. Next I’ll run bounded tests and launch the donor-research workflow.
+
+## Tools
+
+- Execute: $wt = "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split"
+Set-Location $wt
+Write-Output "HEAD=$(git rev-parse HEAD)"
+Write-Output "python=$(uv run python -c 'import sys; print(sys.version)')"
+# Bounded diagnostic tests — not a full suite
+$log = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\research\bounded-pytest-270e992.log"
+New-Item -ItemType Directory -Force -Path (Split-Path $log) | Out-Null
+uv run python -m pytest -q --tb=no `
+  qml/tests/test_mill_graduation.py `
+  qml/tests/test_research_store.py `
+  qml/tests/test_stage0.py `
+  qmx-agents/packages/qma-daemon/tests/test_federated_discovery.py `
+  qmb/tests/test_config_compiler.py `
+  2>&1 | Tee-Object -FilePath $log
+Write-Output "EXIT=$LASTEXITCODE"
+ (Run bounded pytest on 270e992 research/coupling tests)
+- Edit: C:\Users\Mubarak\Desktop\QMX\.grok\workflows\qmx-workflows-stage-a-donors.rhai
+- Search: test_research_store|test_stage0|test_federated
+- Tool: Validating workflow script
+- Search: save_research_hypothesis|research_root
+- ListDir: -worktrees\epic-051-skylos-mill-split\qml\tests
+- ListDir: -worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\tests
+- Execute: $wt = "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split"
+Set-Location $wt
+$log = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\research\bounded-pytest-270e992.log"
+uv run python -m pytest -q --tb=line `
+  qml/tests/test_mill_graduation.py `
+  qml/tests/test_research_host_store.py `
+  qml/tests/test_research_stage0.py `
+  qml/tests/test_legal_entries.py `
+  qml/tests/test_research_projection.py `
+  qmx-agents/packages/qma-daemon/tests/test_federated_discovery_concatenate.py `
+  qmx-agents/packages/qma-daemon/tests/test_federated_discovery_research_surface.py `
+  qmx-agents/packages/qma-daemon/tests/test_qmb_cli_transport.py `
+  qmx-agents/packages/qma-daemon/tests/test_capability_narrowing_permissions.py `
+  qmx-agents/packages/qma-daemon/tests/test_plugin_context.py `
+  qmn/tests/test_qmn_conformance.py `
+  2>&1 | Tee-Object -FilePath $log
+Write-Output "EXIT=$LASTEXITCODE"
+ (Re-run bounded pytest with actual test paths)
+- Search: qma-daemon|qmx-agents
+- Read: C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split\qmx-agents\packages\qma-daemon\pyproject.toml (1-34)
+- Execute: $wt = "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split"
+Set-Location $wt
+$log = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\research\bounded-pytest-270e992.log"
+Write-Output "=== QML ===" | Tee-Object -FilePath $log
+uv run --project qml python -m pytest -q --tb=line `
+  qml/tests/test_mill_graduation.py `
+  qml/tests/test_research_host_store.py `
+  qml/tests/test_research_stage0.py `
+  qml/tests/test_legal_entries.py `
+  qml/tests/test_research_projection.py `
+  2>&1 | Tee-Object -FilePath $log -Append
+Write-Output "QML_EXIT=$LASTEXITCODE" | Tee-Object -FilePath $log -Append
+Write-Output "=== QMA ===" | Tee-Object -FilePath $log -Append
+uv run --project qmx-agents python -m pytest -q --tb=line `
+  qmx-agents/packages/qma-daemon/tests/test_federated_discovery_concatenate.py `
+  qmx-agents/packages/qma-daemon/tests/test_federated_discovery_research_surface.py `
+  qmx-agents/packages/qma-daemon/tests/test_qmb_cli_transport.py `
+  qmx-agents/packages/qma-daemon/tests/test_capability_narrowing_permissions.py `
+  qmx-agents/packages/qma-daemon/tests/test_plugin_context.py `
+  2>&1 | Tee-Object -FilePath $log -Append
+Write-Output "QMA_EXIT=$LASTEXITCODE" | Tee-Object -FilePath $log -Append
+Write-Output "=== QMN venue ===" | Tee-Object -FilePath $log -Append
+uv run --project qmn python -m pytest -q --tb=line qmn/tests/test_qmn_conformance.py 2>&1 | Tee-Object -FilePath $log -Append
+Write-Output "QMN_EXIT=$LASTEXITCODE" | Tee-Object -FilePath $log -Append
+ (Run bounded tests via package-scoped uv projects)
+- Execute: $wt = "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split"
+Set-Location $wt
+# Recreate nested workspace venv without touching other worktrees
+uv sync --project qmx-agents --frozen 2>&1 | Select-Object -Last 30
+Write-Output "SYNC_EXIT=$LASTEXITCODE"
+ (Restore qmx-agents venv at 270e992 worktree)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-16\ARCHITECTURE-SPINE.md (201-280)
+
+## Assistant
+
+Explore agents can't write files, so I'll persist their reports and wait for the remaining investigators.
+
+Investigators confirmed the load-bearing facts. I’ll persist their reports, then distill the spine and Stage A companions from that evidence.
+
+## Tools
+
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+$script = "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py"
+function A($t,$type) { uv run $script append --workspace $ws --type $type --text $t | Out-Null }
+A "Executed bounded tests at epic-051-skylos-mill-split@270e992: qml selected mill/store/stage0/legal/projection 32 passed (5.96s, CPython 3.14.6). qmn test_qmn_conformance 5 passed 1 skipped. qma-daemon pytest blocked: nested qmx-agents/.venv invalid (no Python executable); uv sync --frozen refused same. QMA findings remain source-inspected." "event"
+A "Paradigm: capability-oriented composition over hexagonal libraries. QMF stays toolbox. No sixth COMP. Experimentation Board is UX projection not a registry kind. Four discovery rails: Artifact fp1, Knowledge cite, Contribution plugin_id:local_id, Hypothesis qml.research (off facade)." "decision"
+A "Workflow layers stay distinct: Board draft layout; Graph Template reusable authored procedure; Task Graph one Mission execution; ungoverned library calls never become Missions; Stage 0 graph never executes. Topology must refuse cycles not only direct back-edges (current validate_graph_template_topology is a hole)." "decision"
+A "Product sessions authoring vs app-use are host/wire authority overlays distinct from QMA Session. Copilot discovers host-granted contribution descriptors. App-use cannot edit implementation or self-grant. Change request is a staging artifact into a separate authoring session." "decision"
+A "L36 holds for live money: Book/BMS remains default deployed system. Honest no-Book exists as ungoverned research and QMN sensing-only. Live/paper-on-venue without Book is refused unless operator ratifies constitution amendment. Alternative policy = complete CT-22/CT-27 + analysis.rerun, never dummy wrappers." "decision"
+A "Shared operation interface is transport-independent: typed inputs, effect class, output shape value|artifact-ref|job-handle|stream. Durable files use content identity not machine-local paths. JSON Render and MCP Apps present DTOs only (DEC-0392). mutmut is optional WSL-only test-strength, never a product dependency, never applied on shared worktrees." "decision"
+A "New durable product-session records and Task Graph restart reconstruction live in COMP-QMA-DAEMON sqlite as named amendments to the closed store list; they do not go in qmf-core. Graph Templates remain plugin-contributed and rebuild on load. QMB JSONL ledger stays unmerged." "decision"
+A "Portfolio Manager is a display/Role-label amendment; desk_slug=pm and plugin prefix stay until a GAP-0083 identity-migration sitting. F07 synthetic portfolio stays deferred." "decision"
+Write-Output "DECISIONS LOGGED"
+ (Append architecture decisions to memlog)
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+uv run "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py" append --workspace $ws --type decision --text "Reuse+extend QMA as the Workflows runtime: Graph Templates author, Mission Compiler instantiates, RoutineScheduler schedules, CT-47 places QMB steps. Do not mint a second scheduler. Current holes to close in-place: topology is pairwise reverse-edge not DAG (A-B-C-A admitted); TaskGraph stores no edges and dispatcher does not walk successors; TaskGraphStore/occupancy/Routines are in-memory while ExperimentSpec is sqlite; Loop stopping_condition is opaque string. Skills stay knowledge and never compile to Missions."
+ (Log QMA reuse+extend runtime decision)
+
+## Assistant
+
+Writing the reconciled evidence baseline and the architecture spine next.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RECON-RETURN.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\REQUIREMENTS-ADDENDUM.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\STACK-AND-EVALUATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\JOURNEYS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\COPILOT-AND-APPS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONFLICT-REGISTER.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\IMPLEMENTATION-SEQUENCE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\UI-HOST.md
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py" --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+ (Run mechanical lint_spine on architecture workspace)
+
+## Assistant
+
+Spine lint is clean. Launching the required reviewer gate next: rubric, currency, adversarial, and input reconcile.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-HANDOFF.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\inputs\opportunities-journeys.md (1-40)
+- Read: C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18\12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md (1-5)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\inputs\INDEX.md
+- Execute: $src = "C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\staged-handoff\QMX-GROK-CODEX-STAGED-HANDOFF-2026-09-18"
+$dst = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+Copy-Item "$src\12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md" "$dst\12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md" -Force
+Copy-Item "$src\13-GROK-RESUME-AND-RECONCILE.md" "$dst\13-GROK-RESUME-AND-RECONCILE.md" -Force
+Copy-Item "$src\CODEX-CHALLENGE-LAUNCH.txt" "$dst\CODEX-CHALLENGE-LAUNCH.txt" -Force
+Write-Output "copied"
+ (Copy Codex challenge docs into architecture folder)
+
+## Assistant
+
+Applying the reconcile autofixes to the spine while the remaining reviewers finish.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\review-adversarial.md (1-150)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\review-currency.md (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\review-adversarial.md (151-270)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py" --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+ (Re-lint spine after adversarial fixes)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\gate-summary.md
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+# Hash key files
+$files = @(
+  "ARCHITECTURE-SPINE.md","RECON-RETURN.md","REQUIREMENTS-ADDENDUM.md","CONTRACTS.md",
+  "JOURNEYS.md","STACK-AND-EVALUATION.md","COPILOT-AND-APPS.md","CONFLICT-REGISTER.md",
+  "IMPLEMENTATION-SEQUENCE.md","UI-HOST.md","OPERATOR-QUESTIONS.md","CODEX-CHALLENGE-HANDOFF.md",
+  "12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md","13-GROK-RESUME-AND-RECONCILE.md",
+  "reviews\gate-summary.md","reviews\review-currency.md","reviews\review-adversarial.md",
+  "reviews\review-rubric.md","reviews\reconcile-inputs.md","inputs\opportunities-journeys.md"
+)
+foreach ($f in $files) {
+  $p = Join-Path $ws $f
+  if (Test-Path $p) {
+    $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash.ToLower()
+    $len = (Get-Item -LiteralPath $p).Length
+    Write-Output "$h  $len  $f"
+  } else {
+    Write-Output "MISSING  $f"
+  }
+}
+Write-Output "--- git ---"
+git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse HEAD
+git -C "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split" rev-parse HEAD
+ (SHA256 hash candidate files and record revisions)
+- Execute: Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+Get-FileHash -Algorithm SHA256 -LiteralPath "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md" | ForEach-Object { $_.Hash.ToLower() + "  " + (Get-Item $_.Path).Length }
+ (UTC timestamp and memlog hash)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-CANDIDATE-MANIFEST.json
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-LAUNCH-PROMPT.txt
+- Execute: $ws = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18"
+$stage = Join-Path $ws "_zipstage"
+if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+New-Item -ItemType Directory -Force -Path $stage | Out-Null
+# Copy deliverables (no venv, no huge screenshot trees)
+$names = @(
+  "ARCHITECTURE-SPINE.md","ARCHITECTURE-CANDIDATE-MANIFEST.json","RECON-RETURN.md",
+  "REQUIREMENTS-ADDENDUM.md","CONTRACTS.md","JOURNEYS.md","STACK-AND-EVALUATION.md",
+  "COPILOT-AND-APPS.md","CONFLICT-REGISTER.md","IMPLEMENTATION-SEQUENCE.md","UI-HOST.md",
+  "OPERATOR-QUESTIONS.md","CODEX-CHALLENGE-HANDOFF.md","CODEX-CHALLENGE-LAUNCH-PROMPT.txt",
+  "12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md","13-GROK-RESUME-AND-RECONCILE.md",
+  "RESUME-STATE.md",".memlog.md"
+)
+foreach ($n in $names) { Copy-Item (Join-Path $ws $n) (Join-Path $stage $n) -Force }
+Copy-Item (Join-Path $ws "reviews") (Join-Path $stage "reviews") -Recurse -Force
+Copy-Item (Join-Path $ws "inputs") (Join-Path $stage "inputs") -Recurse -Force
+# transcript + recon summaries
+$tr = "C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\explore-conversation\Explore-Node-Editor-Architecture.md"
+Copy-Item $tr (Join-Path $stage "Explore-Node-Editor-Architecture.md") -Force
+$recon = "C:\Users\Mubarak\Desktop\QMX\workroom\research\2026-09-18_node-editor-architecture\reference-recon\QMX-REFERENCE-RECON-20260918T082954Z"
+New-Item -ItemType Directory -Force -Path (Join-Path $stage "reference-recon") | Out-Null
+Copy-Item "$recon\REFERENCE-RECON-RETURN.md","$recon\QMX-ADAPTATION-OPPORTUNITIES.md","$recon\CAPABILITY-AND-BACKEND-IMPLICATIONS.md","$recon\EVIDENCE-MANIFEST.json" (Join-Path $stage "reference-recon") -Force
+# README
+@"
+# CODEX-CHALLENGE-INPUTS
+
+Candidate: qmx-workflows-arch-2026-09-18-a
+Paste CODEX-CHALLENGE-LAUNCH-PROMPT.txt into a new Codex session.
+Start with 12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md.
+Pass I before reading ARCHITECTURE-SPINE.md.
+"@ | Set-Content (Join-Path $stage "README.md") -Encoding utf8
+$zip = Join-Path $ws "CODEX-CHALLENGE-INPUTS.zip"
+if (Test-Path $zip) { Remove-Item $zip -Force }
+Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force
+$zh = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLower()
+$zb = (Get-Item $zip).Length
+Write-Output "ZIP $zh  $zb  $zip"
+# cleanup stage
+Remove-Item -Recurse -Force $stage
+ (Package CODEX-CHALLENGE-INPUTS.zip without secrets or caches)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-CANDIDATE-MANIFEST.json
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\_bmad\scripts\memlog.py" append --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18" --type event --text "Stage A frozen as qmx-workflows-arch-2026-09-18-a. lint_spine 0 findings. Internal reviews applied (adversarial C-1..C-5). ZIP CODEX-CHALLENGE-INPUTS.zip sha256 4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87. Status AWAITING_CODEX_CHALLENGE. Documentation Factory not issued."
+ (Log Stage A freeze event in memlog)
+
+## Assistant
+
+**AWAITING_CODEX_CHALLENGE**
+
+Stage A is frozen as candidate `qmx-workflows-arch-2026-09-18-a`. This is an internally reviewed architecture candidate, not ratified design and not implementation.
+
+### What was decided
+QMX becomes a **construction kit over the existing libraries**, not a sixth application. The Experimentation Board is layout only. Workflows **reuse and extend QMA** (Graph Templates → Missions → CT-47), with DAG topology and durable Task Graph edges. **Artifact Library kinds stay as they are**; discovery adds a `ContributionHit` (never an `fp1`). Copilot has **authoring vs app-use** product sessions (`psess:`), distinct from QMA execution sessions. Dummy Book/BMS is mechanically refused. Live trading without Book stays refused until you amend L36.
+
+### Evidence baselines
+| Track | Commit |
+|---|---|
+| Docs (`main`) | `b8b4d21` |
+| Implementation (`origin/integration`) | `270e992` |
+
+The audit’s `8510c03` absence claims are stale: Stage 0, research store, mill graduation, and federated discovery exist at `270e992`. QML mill tests: **32 passed**. QMA tests were blocked by a broken nested venv.
+
+### Transfer to Codex
+Folder: `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/`
+
+- **ZIP:** `CODEX-CHALLENGE-INPUTS.zip`  
+  SHA-256 `4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87`
+- **Paste:** `CODEX-CHALLENGE-LAUNCH-PROMPT.txt`
+- **Resume later:** `RESUME-STATE.md`
+
+Codex must derive scenarios **before** reading `ARCHITECTURE-SPINE.md`.
+
+### Only questions that need you
+1. **Live systems with no Book/BMS?** Recommended: no, keep L36; honest no-Book stays research/sensing-only.  
+2. Persist Task Graphs in daemon sqlite — recommended yes.  
+3. Show contributions in Library chrome as a third discovery class — recommended yes.
+
+Do not start Documentation Factory, coding, trading, or deployment from this sitting. When Codex returns its package, hand it back with `13-GROK-RESUME-AND-RECONCILE.md`.
+
+The donor-research workflow finished after the freeze. I’ll save its notes beside the candidate without changing the ZIP hashes or leaving Stage A.
+
+## Tools
+
+- ListDir: C:\Users\Mubarak\.grok\sessions\C%3A%5CUsers%5CMubarak%5CDesktop%5CQMX\01a0b331-e445-72b2-a915-f2b5d61bd333\workflows\wf_01a0b3c99a417113ad6735d5a143d029
+- Read: C:\Users\Mubarak\.grok\sessions\C%3A%5CUsers%5CMubarak%5CDesktop%5CQMX\01a0b331-e445-72b2-a915-f2b5d61bd333\workflows\wf_01a0b3c99a417113ad6735d5a143d029\state.json (1-80)
+- Search: "reference"|complete
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\research\DONOR-NOTES-POST-FREEZE.md
+
+## Assistant
+
+The donor-research workflow finished after the candidate was frozen. Six notes, all aligned with the spine — **Stage A is unchanged** (`AWAITING_CODEX_CHALLENGE`).
+
+| Donor | Takeaway |
+|---|---|
+| Hermes | Borrow manifest / schema / handler split and config vs state. Do **not** copy warning-and-continue missing deps or in-process full-trust. |
+| n8n | Borrow descriptor vs graph vs run, and draft vs published. Do **not** embed n8n (Sustainable Use License / OEM). |
+| JSON Render v0.20.0 | Catalog UI only; host implements actions. Not authority. |
+| MCP Apps | Sandboxed tool HTML; host still grants tools. Native panes stay native. |
+| mutmut 3.8.0 | Fork/WSL; `apply` writes disk. Optional test-strength, not a product dependency. |
+| OpenBB | Providers ≠ widget/app declarations. Do not adopt the runtime. |
+
+Those notes are saved beside the candidate as `research/DONOR-NOTES-POST-FREEZE.md`. They are **not** inside `CODEX-CHALLENGE-INPUTS.zip`, so the ZIP hash is unchanged.
+
+Next step is still yours: attach that ZIP and paste `CODEX-CHALLENGE-LAUNCH-PROMPT.txt` into a new Codex session.
+
+## User
+
+Can you give me a prompt in chat that I can give Codex
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-LAUNCH-PROMPT.txt
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-HANDOFF.md (1-40)
+
+## Assistant
+
+Attach `CODEX-CHALLENGE-INPUTS.zip` to a **new** Codex session, then paste this:
+
+```text
+Read README.md, 12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md,
+CODEX-CHALLENGE-HANDOFF.md, and ARCHITECTURE-CANDIDATE-MANIFEST.json
+from the attached CODEX-CHALLENGE-INPUTS.zip.
+
+If the ZIP is not attached, it is at:
+C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-INPUTS.zip
+SHA-256: 4247e7e84eba458a2d73c696dd2783b0635a36379dd9e3144da87a6cba478b87
+
+You are the independent Stage B scenario and architecture-challenge lead.
+Do not implement, ratify, edit QMX code, or rewrite canonical docs.
+
+Work in two passes:
+
+Pass I — BEFORE reading ARCHITECTURE-SPINE.md, CONTRACTS.md, or the
+proposed ADs. Derive user goals, behavioural requirements, invariants,
+edge cases and failure sequences from operator intent, the transcript,
+RECON-RETURN.md, the reference-recon summaries, and current public
+domain meanings. Treat the audit’s older 8510c03 absence claims as
+stale; implementation baseline is 270e992. Freeze
+INDEPENDENT-SCENARIO-BASELINE.md.
+
+Pass II — Then read the candidate (ARCHITECTURE-SPINE.md AD-1..AD-22,
+REQUIREMENTS-ADDENDUM.md, CONTRACTS.md, JOURNEYS.md,
+CONFLICT-REGISTER.md, reviews/). Challenge that actual design.
+Record what was added only after seeing it.
+
+Use CIS and as many useful subagents as available. No arbitrary
+scenario-count ceiling. Deduplicate; report coverage and holes.
+BDD/Gherkin is specification, not a claim that .feature files execute.
+
+Preserve latest operator corrections: QMF is one framework; Book/BMS
+is default not ceiling; data/ML need not be a bot; sessions own
+context not tabs; app-use cannot edit implementation; specialists
+remain; trading-floor PM means Portfolio Manager; mutmut is a
+test-strength principle, optional, WSL on Windows, never apply on
+the shared worktree.
+
+Candidate ID: qmx-workflows-arch-2026-09-18-a
+Implementation: 270e992995c2378ca63cf6343254ef8140a8c97e
+Docs: b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3
+
+Return the package listed in section 7 of
+12-CODEX-SCENARIO-AND-ARCHITECTURE-CHALLENGE.md, then stop for Grok
+reconciliation. Do not start Documentation Factory or coding.
+```
+
+Give Codex the ZIP. The transcript is already inside it. When it returns the challenge ZIP, bring that back here with `13-GROK-RESUME-AND-RECONCILE.md`.
+
+## User
+
+I'm sorry, I am not understanding the zip file you mean. Can you give me the path for the zip file
+
+## Tools
+
+- Execute: Get-Item -LiteralPath "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-INPUTS.zip" | Select-Object FullName, Length, LastWriteTime (Confirm Codex challenge zip exists on disk)
+
+## Assistant
+
+The zip to attach in Codex is:
+
+`C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-CHALLENGE-INPUTS.zip`
+
+That is the only zip Codex needs for this step. Attach that file, then paste the prompt from the previous message.
+
+## User
+
+so i was given this [[QMX-CODEX-CHALLENGE-20260919T130812Z.zip]]] then  told to give you this [[Resume as the QMX architecture reconciliation lead.
+
+Attached is the independent Codex Stage B challenge package:
+
+QMX-CODEX-CHALLENGE-20260919T130812Z.zip
+SHA-256:
+e9394ed8919665534b37ee97792edae232f75b2b34a3790f8f9de82a5f58a4f5
+
+Candidate ID:
+qmx-workflows-arch-2026-09-18-a
+
+Pinned revisions:
+- Implementation: 270e992995c2378ca63cf6343254ef8140a8c97e
+- Docs: b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3
+- Do not use the older 8510c03 audit for absence claims.
+
+Your job is reconciliation, not a fresh architecture exercise.
+
+Read these package files in this order:
+
+1. CODEX-CHALLENGE-RETURN.md
+2. INDEPENDENT-SCENARIO-BASELINE.md
+3. ARCHITECTURE-FINDINGS.md
+4. COVERAGE-AND-GAPS.md
+5. SCENARIO-CATALOG.jsonl and behavior/
+6. TEST-AND-MUTATION-PLAN.md
+7. EVIDENCE-MANIFEST.json
+8. GROK-RECONCILIATION-HANDOFF.md
+
+Then compare the findings against the original candidate:
+ARCHITECTURE-SPINE.md, CONTRACTS.md, JOURNEYS.md,
+REQUIREMENTS-ADDENDUM.md, CONFLICT-REGISTER.md, and reviews/.
+
+Preserve these operator corrections:
+
+- QMF is one framework.
+- Book/BMS is the default, not the universal ceiling.
+- Never create dummy Book/BMS records.
+- Data and ML work need not be a bot or trading-wrapped.
+- Sessions own context and grants; tabs do not.
+- App-use cannot edit implementation or apply its own changes.
+- Specialists remain available.
+- Trading-floor PM means Portfolio Manager.
+- BDD/Gherkin is specification, not proof that feature files execute.
+- mutmut is optional test-strength evidence only: WSL/POSIX on Windows, disposable copy only, and never `mutmut apply` on the shared worktree.
+
+Start with the foundational conflict in AF-01: the independent baseline requires at least one complete non-Book composition that can be validated, simulated, and deployed, while the candidate defers live/node-paper use without Book pending L36.
+
+Do not disguise sensing or research as a complete alternative trading system. Resolve this by either:
+
+1. preserving the requirement and defining the alternative accounting, risk, command, admission, evidence, and end-to-end journey; or
+2. proposing an explicit operator/constitutional scope amendment and recording its consequences.
+
+Next reconcile the safety and recovery block:
+
+- effect-specific idempotency and uncertain-outcome reconciliation;
+- deployment command-owner fencing and stale predecessor restart;
+- atomic task completion, successor persistence, and dispatch;
+- invocation binding to contribution version, installed instance, and configuration revision;
+- structured grants bound to version, instance, effect, parameters, account scope, audience, and expiry;
+- JobHandle attempts, partial artifacts, cancellation races, and terminal vocabulary;
+- deterministic join and partial-retry semantics;
+- cross-store checkpoint, restore ordering, and orphan reconciliation.
+
+Then reconcile package, session, stream, identity, UI-adapter, headless-routing, and data-recipe contract gaps.
+
+For every AF-01 through AF-20 finding, return a decision-ledger row containing:
+
+- disposition:
+  accept | accept-with-change | reject-with-evidence | defer-with-authority
+- reasoning and counterevidence
+- exact AD, contract, journey, or requirement sections affected
+- inherited parent law and owning component
+- associated scenario IDs
+- implementation classification:
+  existing | connect | amend | new | deferred
+- tests or evidence required before claiming implementation
+- unresolved operator decision, if any
+
+Do not replace the 85 deduplicated scenarios with an arbitrary smaller set. Preserve the 65 Pass-I scenarios as independent requirements. Pass-II additions may be changed or rejected only with evidence.
+
+Clearly distinguish:
+
+- existing implementation behavior;
+- a connection or amendment to existing behavior;
+- newly proposed design;
+- unsupported integration claims;
+- deferred decisions.
+
+Your final response should provide:
+
+1. the reconciliation verdict;
+2. the complete AF-01..AF-20 decision ledger;
+3. the resulting candidate amendments;
+4. remaining contradictions and operator decisions;
+5. revised coverage status;
+6. whether the candidate is ready for a separate operator acceptance gate.
+
+Do not self-ratify the architecture.
+Do not edit QMX code.
+Do not begin Documentation Factory.
+Do not start implementation.
+Stop after producing the reconciliation package and operator decision requests.]]]
+
+## Assistant
+
+I’ll treat this as Stage C reconciliation: locate the Codex package, verify its hash, then walk the required files against the frozen candidate.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\13-GROK-RESUME-AND-RECONCILE.md
+- Execute: $ErrorActionPreference = 'Stop'
+$candidates = @(
+  'C:\Users\Mubarak\Downloads\QMX-CODEX-CHALLENGE-20260919T130812Z.zip',
+  'C:\Users\Mubarak\Desktop\QMX\QMX-CODEX-CHALLENGE-20260919T130812Z.zip',
+  'C:\Users\Mubarak\Desktop\QMX\workroom\research\QMX-CODEX-CHALLENGE-20260919T130812Z.zip'
+)
+Get-ChildItem -LiteralPath 'C:\Users\Mubarak\Downloads' -Filter 'QMX-CODEX-CHALLENGE*.zip' -ErrorAction SilentlyContinue | Select-Object FullName, Length, LastWriteTime
+Get-ChildItem -LiteralPath 'C:\Users\Mubarak\Desktop' -Recurse -Filter 'QMX-CODEX-CHALLENGE-20260919T130812Z.zip' -ErrorAction SilentlyContinue | Select-Object -First 10 FullName, Length
+ (Find Codex challenge ZIP on disk)
+- Execute: $ErrorActionPreference = 'Continue'
+$paths = @(
+  'C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\QMX-CODEX-CHALLENGE-20260919T130812Z.zip',
+  'C:\Users\Mubarak\Downloads\QMX-CODEX-CHALLENGE-20260919T130812Z.zip'
+)
+Get-ChildItem 'C:\Users\Mubarak\Downloads' -Filter '*CODEX-CHALLENGE*' -ErrorAction SilentlyContinue | Format-Table FullName, Length -AutoSize
+Get-ChildItem 'C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18' -Filter '*.zip' | Format-Table Name, Length -AutoSize
+foreach ($p in $paths) {
+  if (Test-Path -LiteralPath $p) {
+    $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash.ToLower()
+    $len = (Get-Item -LiteralPath $p).Length
+    Write-Output "FOUND $p"
+    Write-Output "SIZE $len"
+    Write-Output "SHA256 $h"
+  } else {
+    Write-Output "MISSING $p"
+  }
+}
+ (Hash-verify Codex challenge ZIP against expected SHA-256)
+- Execute: $ErrorActionPreference = 'Stop'
+$zip = 'C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\QMX-CODEX-CHALLENGE-20260919T130812Z.zip'
+$dest = 'C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919'
+if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+Expand-Archive -LiteralPath $zip -DestinationPath $dest -Force
+Get-ChildItem -LiteralPath $dest -Recurse -File | Select-Object FullName, Length | Format-Table -AutoSize
+Write-Output '=== GIT FRESHNESS ==='
+git -C 'C:\Users\Mubarak\Desktop\QMX' rev-parse HEAD
+git -C 'C:\Users\Mubarak\Desktop\QMX' rev-parse --abbrev-ref HEAD
+git -C 'C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split' rev-parse HEAD
+ (Extract Codex ZIP and check git still at pinned revs)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\09-OUTPUTS-AND-NEXT-STAGE.md
+- Execute: Get-ChildItem -LiteralPath 'C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919' -Recurse -File | ForEach-Object { $_.FullName.Replace('C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\','') + '  ' + $_.Length }
+ (List extracted Codex challenge files with sizes)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\CODEX-CHALLENGE-RETURN.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\ARCHITECTURE-FINDINGS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\GROK-RECONCILIATION-HANDOFF.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\COVERAGE-AND-GAPS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\EVIDENCE-MANIFEST.json
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\INDEPENDENT-SCENARIO-BASELINE.md (1-200)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\TEST-AND-MUTATION-PLAN.md (1-80)
+- Search: P1-MKT-002|BR-MKT-02|complete non-Book
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\behavior\catalog-completion.feature (146-185)
+- Search: "id":"P
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (2-31)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (231-310)
+
+## Assistant
+
+Hash matches the pinned revisions. I’ll resolve AF-01 first, then write the safety-envelope amendments and the full AF-01–AF-20 ledger.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (311-329)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md (2-81)
+
+## Assistant
+
+I'll resume Stage C from the compacted session: confirm the architecture folder and Codex package, then finish the AF-01–AF-20 ledger and stop without code, factory, or self-ratification.
+
+## Tools
+
+- ListDir: \_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18
+- Read: C:\Users\Mubarak\.grok\memory-v2\workspaces\qmx-7a9e422e\topics\qml-research-expansion-standing-rulings.md (1-15)
+- ListDir: \_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919
+
+## Assistant
+
+The 20260919 Codex package is in place. I’ll read the challenge return and the frozen candidate so the ledger matches both, not a reconstructed summary.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\13-GROK-RESUME-AND-RECONCILE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\CODEX-CHALLENGE-RETURN.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\GROK-RECONCILIATION-HANDOFF.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-CANDIDATE-MANIFEST.json
+
+## Assistant
+
+Next I’ll pull Codex’s AF-01–AF-20 findings and the candidate’s AD-11, contracts, and journeys so the ledger can cite exact sections.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\ARCHITECTURE-FINDINGS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\COVERAGE-AND-GAPS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\INDEPENDENT-SCENARIO-BASELINE.md (1-200)
+
+## Assistant
+
+I’ll read the candidate’s AD-11, contracts, journeys, and conflict register next so each ledger row can cite the exact sections that change.
+
+## Tools
+
+- Search: ^## |^### |^# AD-|^AD-[0-9]+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\JOURNEYS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\REQUIREMENTS-ADDENDUM.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONFLICT-REGISTER.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (80-329)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\COPILOT-AND-APPS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\IMPLEMENTATION-SEQUENCE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\STACK-AND-EVALUATION.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\UI-HOST.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\SCENARIO-CATALOG.jsonl (1-30)
+- Search: "id":
+- Search: done|aborted|JobHandle|job_state
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md (1-26)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\codex-challenge-20260919\TEST-AND-MUTATION-PLAN.md (1-80)
+- Search: L36|Book.*BMS|dummy
+- Search: "id":"P2-
+- Search: ### AD-17|done|aborted|JobHandle|job
+- ListDir: \_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\contracts
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (2-79)
+- Search: lint_spine
+- Search: ### AD-17
+- ListDir: \.agents\skills\bmad-architecture
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\gate-summary.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMA-2026-08-28\ARCHITECTURE-SPINE.md (243-282)
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py (1-80)
+- Read: C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\references\reviewer-gate.md
+- Search: ^\{"id":
+- Execute: git -C "C:\Users\Mubarak\Desktop\QMX" rev-parse HEAD; git -C "C:\Users\Mubarak\Desktop\QMX-worktrees\epic-051-skylos-mill-split" rev-parse HEAD (Confirm pinned docs and implementation revisions)
+
+## Assistant
+
+Pins still match. I’ll write the reconciliation ledger first, then apply the candidate amendments it records.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+
+## Assistant
+
+The ledger is in place. Next I’ll patch the spine and the companion contracts so the AF-01 and safety decisions are actually written into the candidate.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (331-380)
+- Search: ## Consistency Conventions
+
+## Assistant
+
+I’ll rewrite the contracts file next so the new envelopes, JobHandle vocabulary, and ATC payloads match the spine.
+
+## Tools
+
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\JOURNEYS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\REQUIREMENTS-ADDENDUM.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONFLICT-REGISTER.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CODEX-RECHECK-HANDOFF.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\IMPLEMENTATION-SEQUENCE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\COPILOT-AND-APPS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\UI-HOST.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\STACK-AND-EVALUATION.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md (21-26)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\STACK-AND-EVALUATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\reviews\gate-summary.md
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py" --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18" (Run mechanical spine linter on reconciled architecture)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Search: TBD|TODO|FIXME|succeeded|awaiting_approval|two config types|recipe v1 identity
+- Search: ^### AD-
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py" --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18" (Re-run spine linter after parent-amendment edit)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\STACK-AND-EVALUATION.md
+- Edit: C:\Users\Mubarak\.grok\memory-v2\workspaces\qmx-7a9e422e\observations\_inbox\01a0b331-e445-72b2-a915-f2b5d61bd333__t000004-000004__n000.md
+
+## Assistant
+
+Codex Stage B is reconciled. The architecture is **not ratified** and **not ready** for an operator acceptance gate.
+
+Pins rechecked: docs `b8b4d21`, implementation `270e992`. Return ZIP hash matched. Spine lint: 0 findings. No QMX code was edited. Documentation Factory was not started.
+
+Full package: `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/CHALLENGE-RECONCILIATION.md`
+
+---
+
+## 1. Verdict
+
+Codex was right: Stage A (`qmx-workflows-arch-2026-09-18-a`) was directionally coherent and **not architecture-complete**.
+
+Stage C produced reconciled candidate **`qmx-workflows-arch-2026-09-19-c`**. AF-01 is resolved by **defining** a complete Alternative Trading Composition (option 1). Sensing, research, and `UngovernedWorkConfig` are **not** that system. Dummy Book/BMS stays `INVALID_INPUT`. Venue-touching deploy of the alternative is **not** self-granted; that is **OD-01**.
+
+Safety/recovery contracts (invocation, grants, fencing, outbox, JobHandle parent vocabulary, joins, checkpoint, streams, session CAS, packages, recipe-definition identity) are now specified. They were **not** in the snapshot Codex reviewed, so they need a focused recheck **after** OD-01 — not Documentation Factory.
+
+---
+
+## 2. AF-01 .. AF-20 decision ledger
+
+| ID | Disposition | Classification | Operator |
+|---|---|---|---|
+| **AF-01** complete non-Book composition | **accept-with-change** — define ATC (`AlternativeRunConfig` + `PolicyPair`); venue admission held | default path **existing**; ATC **new**; venue ATC **deferred** | **OD-01** |
+| **AF-02** idempotency / unknown outcome | accept-with-change — `InvocationEnvelope` | **new** + connect to L35 | — |
+| **AF-03** command-owner fencing | accept-with-change — epoch/token state machine | **new**; Book path in-scope now | OD-01 only for ATC seats |
+| **AF-04** atomic successor dispatch | accept-with-change — sqlite outbox | **connect** (named `task_graph_state`; still RAM at pin) | OD-02 if sqlite tables forbidden |
+| **AF-05** bind version/instance/config | accept-with-change — envelope fields | **new** / **amend** AD-3 | — |
+| **AF-06** recipe-definition identity | accept-with-change — definition ≠ release fp1 | **amend** AD-12; output fp1 **existing** | — |
+| **AF-07** JobHandle / partials / cancel | accept-with-change — reuse **QMA AD-17** (`done`/`aborted`/`unknown`); reject sitting `succeeded`/`awaiting_approval` on handles | **amend** contract; parent vocab **existing** | — |
+| **AF-08** stream cutover / leases | accept-with-change — epoch/sequence/refcount; provider ≠ venue | **new** protocol | — |
+| **AF-09** session CAS / reconnect | accept-with-change | **new**; runtime **not existing** | — |
+| **AF-10** structured grants | accept-with-change — `GrantRecord`, not op-id strings | **amend** AD-8 | — |
+| **AF-11** package lifecycle / secret scan | accept-with-change — connect QMA AD-21; scanner is the oracle | **connect** + **new** scanner | — |
+| **AF-12** join / partial retry | accept-with-change — mapping algebra | **new** on existing enum | — |
+| **AF-13** cross-store checkpoint | accept-with-change — owner manifest, not a second evidence DB | **new** manifest | — |
+| **AF-14** change-request base/conflict | accept-with-change | **amend**; app-use still cannot apply | — |
+| **AF-15** pin/invoke race | accept-with-change — tombstone, never other-version | ContributionHit **new**; two-class union **existing** | OD-03 if Library chrome must hide hits |
+| **AF-16** `event` / provider vs venue / complete examples | accept-with-change | **amend** examples | — |
+| **AF-17** UI DTOs without authority | accept-with-change | **new** DTOs; chrome **deferred** | — |
+| **AF-18** headless parity / no extra CLIs | accept-with-change — parity across **supported** doors; QMB only operator CLI | **amend** AD-21 | — |
+| **AF-19** complete recipe policies | accept-with-change | **amend** schema | — |
+| **AF-20** don’t claim integration | **accept** | labels only; P2-INT-001 still unsupported | — |
+
+No finding was rejected without evidence. AF-07 rejects the *Stage A payload dialect*, not Codex. Pass-I lifecycle words are mapped onto JobHandle + Task gates + artifact completeness, not dropped.
+
+**85 scenarios preserved** (65 Pass-I immutable, 20 Pass-II accepted). None replaced with a smaller set.
+
+---
+
+## 3. Candidate amendments
+
+Spine now has **AD-1 .. AD-31**. Material adds: AD-23 ATC; AD-24 envelope/grants; AD-25 fencing; AD-26 outbox + parent JobHandle + joins; AD-27 checkpoint; AD-28 streams; AD-29 session CAS / change-request; AD-30 package/pin/export oracle; AD-31 recipe-definition identity.
+
+Also rewritten: `CONTRACTS.md` (schema-complete payloads, including ATC and door matrix), `JOURNEYS.md` (J03 / **J03b** / J10 / J26 / J27), `REQUIREMENTS-ADDENDUM.md` (WF-R-10 restated; WF-R-19..28), `CONFLICT-REGISTER.md` (C-05 split), `OPERATOR-QUESTIONS.md`, `CODEX-RECHECK-HANDOFF.md`.
+
+---
+
+## 4. Remaining contradiction and operator decisions
+
+**Still contradictory until you answer:** BR-MKT-02 says validate, simulate, **and deploy**. ATC validate/simulate are specified. Venue-touching ATC is designed and **refused at admission** (`venue_requires_book`) until L36 moves.
+
+### OD-01 (required)
+
+**A (recommended):** Amend L36 so a named `AlternativeRunConfig` may take node-paper then live after human L17. Book/BMS stays the default regression path. No dummy Book. QMN stays the only venue importer. One command owner.
+
+**B:** Keep L36. Explicitly narrow BR-MKT-02 so non-Book “deploy” means internal simulate/paper-eval only. Venue command stays Book-only.
+
+**Not offered:** sensing-only or dummy Book as the second trading system.
+
+OD-02 (persist task-graph sqlite/outbox) and OD-03 (ContributionHit on Library chrome) are recommendations, not blockers.
+
+---
+
+## 5. Coverage
+
+BR-MKT is no longer “sensing pretends to be the second system.” It is **contradictory only on venue admission**. Other families are candidate-defined with closed machines. None of that is implemented integration. At `270e992`, Task Graph is still in-memory, ContributionHit is still proposed, product sessions are still absent, QMA tests were not re-run.
+
+---
+
+## 6. Ready for a separate operator acceptance gate?
+
+**No.**
+
+Next step is **OD-01** in `OPERATOR-QUESTIONS.md`. After that: focused Codex recheck (`CODEX-RECHECK-HANDOFF.md`), then a reviewer-gate re-run, then a **separate** acceptance decision. This sitting does not ratify, fold into canonical `docs/`, or start factory work.
+
+## User
+
+Alright, so last time I remember actively thinking about these things was yesterday. So today codecs finished because we hit a usage limit yesterday. And yeah, it has finished. And I remember giving you so actually I gave you the last message I gave you. So can we wrap up the architecture session? I believe the next part is documentation. And you're not the one doing it. Okay, I hope you understand. So, what's open? What do you need from me before you go to Documentation Factory? Because I want to everything is going to run in a fresh session. Okay, so yeah, you are telling me to open up this file. Let me actually open it and I see. But can't you give me these questions in chat with your recommendations? I swear I'm not going to, I don't think I'm helpful in any way, shape, or form. Okay, you try dumbing them down for me and then I answer. Do you have an ask user tool? Okay, because trust me, I don't have direct answers and I don't think I'm technical enough to answer all these or to do all this. You get me
+
+## Assistant
+
+You only need to make one real product call; I’ll take the technical ones. I’ll pull the open questions and put them in plain language with a recommendation on each.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md (1-60)
+- Tool: ask_user_question
+
+## Assistant
+
+You do not need to be technical for this. I will run Documentation Factory in a **fresh session**, not here.
+
+**Already decided for you (no answer needed):**
+- Keep workflow state on disk so a crash does not lose the next step
+- Packs/tools show up in Library search
+- Never fake a Book
+- Research/sensing is not a second live trading system
+- Skip another Codex round unless you later want one
+
+**One real question.** You already said Book/BMS is the **normal** path, not the **only** path.
+
+When you later have a second complete trading system (its own accounting and risk, not research):
+
+1. **Yes, later, after you personally approve (recommended).** Book stays everyday default. The second system can go to a broker only after you say so. Never by faking a Book.
+2. **No.** Broker always requires Book. The second system can be designed and tested on history only.
+
+If you do not want to think about it, reply **go** and I will take **1**, freeze the architecture, and give you the exact paste for the Documentation Factory session.
+
+## User
+
+Okay, for documentation factory, I'll have to manually run it. The way I work is as follows, okay? So I'm going to export this session transcript, start a new Grok build session, unless you convince me that you can do that manually, okay, or on your own, but I have to manually do this on my own. I don't want you to run it in this very session. No, that's conflicting the way I work. I like a fresh session to start from a fresh slate instead of you or even a sub-agent. Okay, simple as that. The most you can do is just give me a prompt in chat that I can use to start the session. The most you can do. Okay, all right, let me look at what you are saying. So, I already decided for you. I think the best way to really look at this book or BMS question is in terms of portfolio management and optimization. What you are looking at is simply that. Nothing more, nothing less. Books and the BMS ideally are simply part of a more or a very specific book, sorry, or a very specific portfolio management or risk management and position sizing system. That's it. What I just requested for, or what we are trying to do, is to make sure that it is not the only way. Because the QMX you're having access to is literally, I don't know, like version 3 or 4, others you don't have access to. Okay, so that's why I'm saying this. Book, the book and BMS system actually came in this very version. Other versions were using very different things, trust me. Okay, and they were still working either way, okay, in theory, okay. So, think of it like that, and I think that's the best way you can really think about it. Okay, but then if we are changing the book, or rather, the risk management and position sizing system or the portfolio optimization system. What does this mean? It means that everything else related to it has to change or has to adopt with it, all right? So, it means live trading has to adopt, backtesting, optimization, and hypothesis generation, testing, so literally everything that comes or that is attached to a book, even the MIS, all that stuff, okay, which obviously is in live trading. Literally, the entire trading node, things that come before live trading, all that stuff has to change or adopt. It's what I was aiming for. So, when we bring in apps, workflows, stuff like that, if you have the conversation, I do recall I did give it to you, the conversation transcript that led to all this. Yeah, in the zip file, the very first message I sent in this session, I believe you can access it. You realized that what we were actually aiming for is just adaptability. And I think OpenBloomberg has this exact same sort of logic, or OpenBB, depending on how you want to call it. Okay, all right, so you're asking me one real question that you are saying, I already said that BMS is the normal path, but not the only path. True, that's what I've been explaining. Then you are saying when I let her have a second complete trading system, its own accounting and risk, not research. Okay, you are saying yes, later your question is not even clear. I'm sorry, your question isn't clear. Number one, you're saying yes, later after I personally approve recommended. what do you mean after I personally approve? I'm sorry, did you read through the transcript? The way you are responding, it's as if you really didn't bother reading through the transcript. I remember this is the first thing I asked you to do yesterday. Seriously, that transcript will explain. By the way, all you needed to do is really read that transcript. There is no question that should have arose from your session. No question at all. Okay, because the question you're asking doesn't add up. What we were talking about is apps, mini apps, workflows, you know, widgets, stuff in that manner. What you're asking is very, very specific to a book and a BMS, which doesn't add up and it doesn't make sense. I don't intend on faking a book. My days, you know what? First, we read through the transcript, then refresh your question. This is very annoying. Very annoying this transcript file [[[C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip  ]]]] For this, you feel free to use sub-agents, workflows, whatever the hell you need. But the question you're asking makes me feel like you really didn't bother reading through a thing. Okay, maybe you did, but after compaction, maybe some stuff was left out. So you get a refresher here
+
+## Assistant
+
+The live-without-Book question was the wrong frame. I’ll re-read the original transcript and recast this around adaptability of the whole trading stack, not a later approval gate.
+
+## Tools
+
+- Execute: Get-Item "C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip" | Select-Object FullName, Length, LastWriteTime; Get-FileHash "C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip" -Algorithm SHA256 | Format-List; if (Test-Path "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\Explore-Node-Editor-Architecture.md") { Get-Item "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\Explore-Node-Editor-Architecture.md" | Select-Object FullName, Length } (Hash the transcript ZIP and check existing copy)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\inputs\INDEX.md (1-21)
+- Search: Book|BMS|live|portfolio|adapt|mini-app|workflow|L36|dummy
+- Execute: $dest = "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919"
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+Expand-Archive -LiteralPath "C:\Users\Mubarak\Downloads\Explore-Node-Editor-Architecture (1).zip" -DestinationPath $dest -Force
+Get-ChildItem -LiteralPath $dest -Recurse -File | Select-Object FullName, Length | Format-Table -AutoSize (Extract operator transcript ZIP into architecture folder)
+- Search: Explore-Node-Editor
+- ListDir: \_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919
+- Search: Book|BMS|portfolio|position siz|risk management|not the only|dummy|fake Book|OpenBB|mini-app|widget|adapt
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919\Explore-Node-Editor-Architecture.md (1-80)
+
+## Assistant
+
+The transcript already has the Book/BMS answer in the operator’s own words. I’ll read that stretch in full so the recast is from the source, not the compacted summary.
+
+## Tools
+
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919\Explore-Node-Editor-Architecture.md (181-230)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919\Explore-Node-Editor-Architecture.md (881-930)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919\Explore-Node-Editor-Architecture.md (1046-1125)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\transcript-refresh-20260919\Explore-Node-Editor-Architecture.md (1119-1158)
+
+## Assistant
+
+The transcript already answered this: Book/BMS is one portfolio/risk/sizing stack, not a live-trading permission question. I’ll close that hold and write the Documentation Factory launch prompt—without running factory here.
+
+## Tools
+
+- Read: C:\Users\Mubarak\.agents\skills\documentation-factory\SKILL.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (149-178)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (221-240)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md (371-390)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\OPERATOR-QUESTIONS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONFLICT-REGISTER.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\REQUIREMENTS-ADDENDUM.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\REQUIREMENTS-ADDENDUM.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\JOURNEYS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CONTRACTS.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\ARCHITECTURE-SPINE.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\DOCUMENTATION-FACTORY-LAUNCH-PROMPT.txt
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\RESUME-STATE.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md (29-53)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md (301-350)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md (71-90)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md (381-430)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md (449-456)
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\.memlog.md
+- Edit: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\CHALLENGE-RECONCILIATION.md
+- Execute: uv run "C:\Users\Mubarak\Desktop\QMX\.agents\skills\bmad-architecture\scripts\lint_spine.py" --workspace "C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18" (Lint spine after OD-01 close)
+- Read: C:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-09-18\DOCUMENTATION-FACTORY-LAUNCH-PROMPT.txt
+
+## Assistant
+
+You were right. That question was the wrong frame. I re-read the original transcript. There is **no remaining architecture question**.
+
+**What you actually said:** Book and BMS are one specific portfolio / risk / position-sizing stack that this QMX version uses. They are not the kit. You want to be able to replace or version that stack (scalping Book v1 vs v2, or no Book at all — Kelly, a different MIS, a neural portfolio). When you do, **the whole chain adopts it**: QML authoring, QMB backtest/optimize, MIS, the trading node, paper, then live. Never fake a Book. Research is not that system. You do **not** swap it and trade tomorrow — paper first, then sequential cutover. That last part is how you already work, not a later “please approve live” architecture ask.
+
+I closed OD-01 on that reading. I am **not** running Documentation Factory in this session.
+
+---
+
+Export this session, start a **new** Grok session, paste this:
+
+```
+Resume as QMX Documentation Factory. Read the installed documentation-factory skill first and follow it. Do not invent. Do not write QMX production code. Do not re-run architecture. Do not start epics-and-stories. Do not start the factory coding lanes.
+
+This is a big feature on an existing knowledge base after a completed BMad architecture sitting. Use the skill’s front door: route (e) / change-mode after architecture. Existing docs/ stays the knowledge base; this increment is folded in, not a greenfield rewrite.
+
+Architecture sitting architecture-QMX-2026-09-18, reconciled candidate qmx-workflows-arch-2026-09-19-c.
+Folder (read all of it):
+_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/
+
+Start with:
+- CHALLENGE-RECONCILIATION.md
+- ARCHITECTURE-SPINE.md (AD-1..AD-31)
+- OPERATOR-QUESTIONS.md (OD-01 is CLOSED from the original transcript)
+- CONTRACTS.md, JOURNEYS.md, REQUIREMENTS-ADDENDUM.md, CONFLICT-REGISTER.md
+- RESUME-STATE.md
+- Codex Stage B package under codex-challenge-20260919/ (findings + 85 scenarios; BDD is specification, not executed tests)
+- Original intent transcript: transcript-refresh-20260919/Explore-Node-Editor-Architecture.md
+- Plus the exported Grok session transcript attached to this new session
+
+Pins (do not use 8510c03 for absence claims):
+- docs workspace: b8b4d21a3d6ec33158254f1827912c8fc0c4dcc3
+- implementation inspected: 270e992995c2378ca63cf6343254ef8140a8c97e
+
+Standing operator corrections:
+- QMF is one framework. No sixth COMP.
+- Book/BMS is a specific portfolio-management / risk / position-sizing implementation — the default, not the ceiling. Never dummy Book/BMS.
+- When that stack is replaced or versioned, QML, QMB, MIS, QMN, paper, and live adopt the selected composition. Research/sensing is not a trading system.
+- Data/ML work need not be a bot or trading-wrapped.
+- Sessions own context and grants; tabs do not.
+- App-use cannot edit implementation or apply its own changes.
+- Specialists remain.
+- Trading-floor PM means Portfolio Manager.
+- Sequential cutover, not hot-swap of live positions.
+- BDD/Gherkin is specification, not proof feature files execute.
+- mutmut is optional test-strength only: WSL/POSIX on Windows, disposable copy, never mutmut apply on the shared worktree.
+
+Named constitution work:
+L36 stays bot → Book → BMS → operator as the default authority chain. Documentation Factory must write the named amendment: Book and BMS are the default implementations of accounting and risk/sizing roles, not the only implementations the framework may host. A complete alternative PolicyPair may occupy those roles without dummy records. Human L17 promote and sequential paper-then-live remain. QMN remains the only venue importer.
+
+Evidence honesty:
+Do not describe proposed connects as implemented. At 270e992: TaskGraph store is in-memory; ContributionHit is proposed; product sessions are absent; QML→QMB→QMN is unsupported integration. Preserve the 85 Codex scenario IDs as specification oracles.
+
+Stop after the skill’s documentation pipeline (and its human gates as the skill defines them). Next session after docs is bmad-create-epics-and-stories, not this one.
+```
+
+Same text is in `DOCUMENTATION-FACTORY-LAUNCH-PROMPT.txt` in that architecture folder. Attach this session’s export when you start the new one.

@@ -1,0 +1,116 @@
+{
+  "shard_id": "trading_018",
+  "section": "Trading",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 16779,
+      "title": "Polynomial models in trading",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16779.md"
+    },
+    {
+      "id": 16830,
+      "title": "Hidden Markov Models for Trend-Following Volatility Prediction",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16830.md"
+    },
+    {
+      "id": 16973,
+      "title": "Integrating AI model into already existing MQL5 trading strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\16973.md"
+    },
+    {
+      "id": 17167,
+      "title": "Central Force Optimization (CFO) algorithm",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17167.md"
+    },
+    {
+      "id": 17282,
+      "title": "Capital management in trading and the trader's home accounting program with a database",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17282.md"
+    },
+    {
+      "id": 17303,
+      "title": "Currency pair strength indicator in pure MQL5",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17303.md"
+    },
+    {
+      "id": 17458,
+      "title": "Fractal-Based Algorithm (FBA)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17458.md"
+    },
+    {
+      "id": 17466,
+      "title": "Exploring Advanced Machine Learning Techniques on the Darvas Box Breakout Strategy",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17466.md"
+    },
+    {
+      "id": 17526,
+      "title": "Developing Trend Trading Strategies Using Machine Learning",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17526.md"
+    },
+    {
+      "id": 17745,
+      "title": "Decoding Opening Range Breakout Intraday Trading Strategies",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17745.md"
+    },
+    {
+      "id": 17760,
+      "title": "Coral Reefs Optimization (CRO)",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17760.md"
+    },
+    {
+      "id": 17892,
+      "title": "Creating Dynamic MQL5 Graphical Interfaces through Resource-Driven Image Scaling with Bicubic Interpolation on Trading Charts",
+      "section": "Trading",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\17892.md"
+    }
+  ]
+}

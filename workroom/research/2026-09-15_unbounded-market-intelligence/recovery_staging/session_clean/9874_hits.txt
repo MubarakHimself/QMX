@@ -1,0 +1,347 @@
+4: title: "MQL5 Cookbook – Economic Calendar"
+20: # MQL5 Cookbook – Economic Calendar
+25: | 12 January 2022 at 10:52
+36: ### Introduction
+38: MetaTrader 5 terminal and MQL5 programming language are constantly evolving, expanding their market analysis features, tools for developing more complex trading robots, etc. One of the new terminal tools is the [Economic Calendar](https://www.mql5.com/en/economic-calendar) that can be handled both manually and with the help of robots.
+40: The built-in calendar is flexible enough. You can configure it on the Calendar terminal tab, install it on your website or download the mobile version. Being an algorithmic trader, I am mostly interested in the tool's programming features.
+44: ### 
+46: ### 1. **Economic Сalendar — what's in the d**ocumentation**?**
+52: The documentation describes 10 calendar [functions](https://www.mql5.com/en/docs/calendar):
+65: These functions generally return either calendar properties (country, event, value), or historical event values.
+69: The developer suggests using three [structures](https://www.mql5.com/en/docs/constants/structures/mqlcalendar): MqlCalendarCountry, MqlCalendarEvent and MqlCalendarValue.
+71: 1.2.1  [MqlCalendarCountry](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarcountry)
+75: Currently, I have verified the website [calendar](https://www.mql5.com/en/economic-calendar) with several brokers:  there is data on 21 countries, the European Union and the whole world (global events).
+77: ```
+102: ```
+106: 1.2.2  [MqlCalendarEvent](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarevent)
+110: 1.2.3  [MqlCalendarValue](https://www.mql5.com/en/docs/constants/structures/mqlcalendar#mqlcalendarvalue)
+118: The MqlCalendarValue structure has its own methods simplifying the work with the values of the specified fields.
+124: ```
+129: ```
+133: ```
+138: ```
+140: Let's see how the MqlCalendarValue structure receives and checks field values. We will focus on the last Bank of Japan (BoJ) Interest Rate Decision. Display the necessary data in the journal using the **Test\_empty\_value.mq5** script featuring three approaches to obtaining the value.
+142: ```
+156: //--- Bank of Japan (BoJ) Interest Rate Decision on 22 Sep 2021 02:47 GMT
+162:    if(::CalendarValueHistoryByEvent(event_id, values, date_from, date_to))
+168:       //--- 2) MqlCalendarValue::GetForecastValue()
+170:       ::PrintFormat("MqlCalendarValue::GetForecastValue(): %g", forecast_val.double_value);
+171:       //--- 3) MqlCalendarValue::HasForecastValue()
+173:          ::PrintFormat("MqlCalendarValue::HasForecastValue(): %s", (string)false);
+177: ```
+179: The first approach simply obtains the forecast value. Since there were no forecast, we get LONG\_MIN (-9223372036854775808). The second approach already applies the MqlCalendarValue::GetForecastValue() structure method. It returns 'nan'. The third approach is the most cautious since it checks whether the forecast value is present at all.
+183: ```
+185: LH      0       21:23:36.080    Test_empty_value (USDCAD,H1)    MqlCalendarValue::GetForecastValue(): nan
+186: HM      0       21:23:36.080    Test_empty_value (USDCAD,H1)    MqlCalendarValue::HasForecastValue(): false
+187: ```
+197: The MqlCalendarCountry structure is linked with MqlCalendarEvent via a country ID. "One-to-many" relationship form (1..\*).
+199: The MqlCalendarEvent structure is linked with MqlCalendarValue via an event ID. "One-to-many" relationship form (1..\*).
+203: The developer allocates the [runtime errors](https://www.mql5.com/en/docs/constants/errorswarnings/errorcodes) group when working with the economic calendar. These are the following requests:
+205: | **Economic Calendar** |  |  |
+206: | --- | --- | --- |
+207: | ERR\_CALENDAR\_MORE\_DATA | 5400 | Array size is insufficient for receiving descriptions of all values |
+208: | ERR\_CALENDAR\_TIMEOUT | 5401 | Request time limit exceeded |
+209: | ERR\_CALENDAR\_NO\_DATA | 5402 | Country is not found |
+211: ### 
+213: ### 2.**Auxiliary structures and the CiCalendarInfo class**
+215: My sympathies are mostly on the OOP side. Therefore, I will present an example of a class that provides access to the calendar properties.
+217: Keep in mind that the calendar is a pretty eclectic thing. I am not a database specialist, but as far as I understand, the calendar is generally a relational database with multiple tables.
+219: Apart from obtaining the properties, the offered implementation of the **CiCalendarInfo** class is also aimed at creating the time series of a selected event.
+227: ```
+256:       bool              GetSeries(datetime &dst_times[], double &dst_values[], string &dst_name);
+257:       bool              GetSeries(SiTsObservation &dst_observations[], string &dst_name);
+270: ```
+286: ```
+290:     MqlCalendarValue curr_nfp_val = nfp_values[v_idx];
+298: ```
+300: Use the MqlCalendarValue::GetActualValue() and MqlCalendarValue::GetForecastValue() functions to immediately receive the necessary values.
+306: ```
+318: ```
+322: ```
+332: ```
+336: ```
+339: ```
+343: I will preserve the continuity by assuming that the class is created for a simplified access to the calendar properties and obtaining the event values (similar to [CAccountInfo](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/caccountinfo), [CSymbolInfo](https://www.mql5.com/en/docs/standardlibrary/tradeclasses/csymbolinfo) and other trading classes).
+347: ```
+349: //| Class CiCalendarInfo.                                            |
+350: //| Appointment: Class for access to calendar info.                  |
+359:       MqlCalendarCountry m_country_description;
+379:       bool           CountryDescription(MqlCalendarCountry &country, const bool to_log = false);
+380:       bool           EventDescription(MqlCalendarEvent &event, const bool to_log = false);
+381:       bool           ValueDescription(ulong value_id, MqlCalendarValue &value,
+383:       bool           EventsByCountryDescription(MqlCalendarEvent &events[], const bool to_log = false);
+384:       bool           EventsByCurrencyDescription(MqlCalendarEvent &events[], const bool to_log = false);
+385:       bool           EventsBySector(const ENUM_CALENDAR_EVENT_SECTOR event_sector,
+386:                                     MqlCalendarEvent &events[], const bool to_log = false);
+388:       string         EventTypeDescription(const ENUM_CALENDAR_EVENT_TYPE event_type);
+389:       string         EventSectorDescription(const ENUM_CALENDAR_EVENT_SECTOR event_sector);
+390:       string         EventFrequencyDescription(const ENUM_CALENDAR_EVENT_FREQUENCY event_frequency);
+391:       string         EventTimeModeDescription(const ENUM_CALENDAR_EVENT_TIMEMODE event_time_mode);
+392:       string         EventUnitDescription(const ENUM_CALENDAR_EVENT_UNIT event_unit);
+393:       string         EventImportanceDescription(const ENUM_CALENDAR_EVENT_IMPORTANCE event_importance);
+394:       string         EventMultiplierDescription(const ENUM_CALENDAR_EVENT_MULTIPLIER event_multiplier);
+395:       string         ValueImpactDescription(const ENUM_CALENDAR_EVENT_IMPACT event_impact);
+399:          MqlCalendarValue &values[], // array for value descriptions
+405:          SiTimeSeries &dst_ts,       // timeseries for value descriptions
+411:          MqlCalendarValue &values[], // array for value descriptions
+417:          SiTimeSeries &dst_ts[],     // array of timeseries for value descriptions
+424:          ulong&               change_id,     // Calendar change ID
+425:          MqlCalendarValue&    values[]       // array for value descriptions
+429:          ulong&               change_id,     // Calendar change ID
+430:          MqlCalendarValue&    values[]       // array for value descriptions
+434:       bool           GetCountries(MqlCalendarCountry &countries[]);
+441:       bool           GetEventsByName(MqlCalendarEvent &events[], const string name = NULL);
+442:       bool           FilterEvents(MqlCalendarEvent &filtered_events[],
+443:                                   MqlCalendarEvent &src_events[], const ulong filter);
+445:       void           PrintCountryDescription(const MqlCalendarCountry &country);
+446:       void           PrintEventDescription(const MqlCalendarEvent &event);
+447:       void           PrintValueDescription(const MqlCalendarValue &value);
+454: MqlCalendarCountry CiCalendarInfo::m_countries[];
+455: ```
+464: 6. m\_countries **—** array of descriptions for countries available in the Calendar;
+467: m\_currency, m\_country\_id and m\_event\_id **member data** is a set of criteria for creating data requests from the calendar database.
+471: m\_countries member data is static. The country data is constant, so there is no need to request it each time when initializing a new CiCalendarInfo object.
+477: The method allows us to start handling the class object. The method is essential for receiving the calendar data. The method takes a set of criteria as parameters (currency code, country ID, event ID) and one parameter enabling displaying initialization data in the journal. The criteria allow making accessing the calendar more specific.
+479: ```
+483: bool CiCalendarInfo::Init(const string currency = NULL,         // country currency code name
+492:       ::PrintFormat(__FUNCTION__ + ": CiCalendarInfo object already initialized!");
+500:       countries_cnt = ::CalendarCountries(m_countries);
+503:          ::PrintFormat(__FUNCTION__ + ": CalendarCountries() returned 0! Error %d",
+510:       MqlCalendarCountry curr_country = m_countries[c_idx];
+534:       ::Print("\n---== New Calendar Info object ==---");
+546: ```
+550: ```
+565:    is_init = calendar_info3.Init("EUR", 276);
+568:    is_init = calendar_info4.Init("EUR", 276, 276010022);
+572:    is_init = calendar_info5.Init("EUR", 276, 840030016);
+575:    is_init = calendar_info6.Init("EUR", 840, 840030016);
+578:    is_init = calendar_info7.Init("EUR", WRONG_VALUE, 840030016);
+581: ```
+585: ```
+586: DO      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+588: LL      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+591: LJ      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+595: PI      0       21:30:19.703    Test_initialization (USDCAD,H1) ---== New Calendar Info object ==---
+599: HR      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Country ids must be the same!
+600: OP      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Currencies must be the same!
+601: GP      0       21:30:19.703    Test_initialization (USDCAD,H1) CiCalendarInfo::ValidateProperties: failed! Currencies must be the same!
+602: ```
+606: At the very beginning of the initialization method, there is a protection against reinitialization. The calendar object can still be reinitialized but first we should call the deinitialization method. For example, we first define that the calendar object gathers data on EUR events. Then the object should be re-oriented to USD. **Test\_reinitialization.mq5** script illustrates both incorrect and co
+608: ```
+616:    bool is_init = calendar_info1.Init("EUR");
+625: ```
+629: ```
+631: FQ      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+633: KI      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       CiCalendarInfo::Init: CiCalendarInfo object already initialized!
+635: NO      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+638: RD      0       21:34:19.397    Test_reinitialization (USDCAD,H1)       ---== New Calendar Info object ==---
+640: ```
+642: 2.3.2 The methods of receiving the calendar structure descriptions
+644: To some degree, these methods are wrappers that allow calling standard calendar functions. The CiCalendarInfo::CountryDescription() and CiCalendarInfo::EventDescription() methods return country and event descriptions if they were confirmed during the calendar object initialization.
+650: ```
+662:       if(calendar_info.EventsByCountryDescription(events))
+675:       if(calendar_info.EventsByCurrencyDescription(events))
+684: ```
+688: ```
+690: DM      0       21:36:35.659    Test_structures_descriptions (USDCAD,H1)        ---== New Calendar Info object ==---
+697: OG      0       21:36:35.793    Test_structures_descriptions (USDCAD,H1)        ---== New Calendar Info object ==---
+703: ```
+707: 2.3.3 The methods of receiving the calendar enumeration descriptions
+709: The calendar structures contain eight enumerations:
+720: The first seven enumerations refer to the MqlCalendarEvent structure, while the last one - to the MqlCalendarValue structure.
+722: The CiCalendarInfo class defines eight methods describing the enumeration value selected from the proposed list. Let's test the methods using the **Test\_enums\_descriptions.mq5** script. The script randomly selects 10 UK events and display data on each criterion in the journal.
+724: ```
+735:       if(calendar_info.EventsByCountryDescription(events))
+752:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+759:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+761:                           calendar_info.EventTypeDescription(curr_event.type));
+767:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+769:                           calendar_info.EventSectorDescription(curr_event.sector));
+775:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+777:                           calendar_info.EventFrequencyDescription(curr_event.frequency));
+783:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+785:                           calendar_info.EventTimeModeDescription(curr_event.time_mode));
+791:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+793:                           calendar_info.EventUnitDescription(curr_event.unit));
+799:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+801:                           calendar_info.EventImportanceDescription(curr_event.importance));
+807:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+809:                           calendar_info.EventMultiplierDescription(curr_event.multiplier));
+819:             MqlCalendarEvent curr_event = events_selected[ev_idx];
+827:                                 calendar_info.ValueImpactDescription(ev_values[--ev_values_size].impact_type));
+834: ```
+851: ```
+947: ```
+973: The methods also use the built-in calendar functions and get data on event values. For example, the [::CalendarValueHistoryByEvent()](https://www.mql5.com/en/docs/calendar/calendarvaluehistorybyevent) function is accessed by two overloaded methods CiCalendarInfo::ValueHistorySelectByEvent(). The first one returns the array of values for all events within the specified time range by an event ID in 
+975: Let's have a look at the CiCalendarInfo::ValueHistorySelectByEvent() method operation in the **Test\_value\_history\_by\_event.mq5** script.
+977: ```
+994: ```
+996: Select the entire history for [United States Nonfarm Payrolls](https://www.mql5.com/en/economic-calendar/united-states/nonfarm-payrolls).
+1000: ```
+1001: PL      0       21:45:03.581    Test_value_history_by_event (USDCAD,H1) ---== New Calendar Info object ==---
+1016: ```
+1020: 2.3.5 Methods for checking the Calendar database status
+1022: The methods also use the appropriate built-in calendar functions. An error is reported only when the number of obtained event values is equal to zero, while the error itself exceeds zero.
+1024: Example of the CiCalendarInfo::ValueLastSelectByEvent() method is considered in the third section "Non-commercial net positions indicator" where we need to detect the appearance of a new value.
+1030: The CiCalendarInfo::GetCountries(CArrayString &countries\_arr) method returns the list of countries obtained during initialization as a dynamic array of string type variables.
+1032: The CiCalendarInfo::GetCountries(MqlCalendarCountry &countries[]) method returns the list of countries obtained during initialization as an array of MqlCalendarCountry type variables.
+1034: The CiCalendarInfo::GetUniqueContinents(string & continents[]) method returns the list of continents the countries are located on. The latter were also obtained during initialization.
+1036: The  CiCalendarInfo:: GetCountriesByContinent(const ENUM\_CONTINENT src\_continent, CArrayString &countries\_arr) method returns the list of countries by a specified continent.
+1038: The CiCalendarInfo::GetCountryNameById(const ulong country\_id) method returns a unique country name by its ID.
+1057: ```
+1068:       if(country_calendar_info.GetCountries(countries_arr))
+1079:       //--- 2) get countries (MqlCalendarCountry)
+1081:       if(country_calendar_info.GetCountries(countries))
+1086:             ::Print("\n---== MqlCalendarCountry array ==---");
+1095:       if(country_calendar_info.GetUniqueContinents(continent_names))
+1119:                if(country_calendar_info.GetCountriesByContinent(curr_continent, countries_arr))
+1148: ```
+1152: ```
+1153: EH      0       23:05:16.492    Test_get_countries (USDCAD,H1)  ---== New Calendar Info object ==---
+1160: GG      0       23:05:16.492    Test_get_countries (USDCAD,H1)  ---== MqlCalendarCountry array ==---
+1167: NK      0       23:05:16.493    Test_get_countries (USDCAD,H1)     [2] - Asia
+1177: NH      0       23:05:18.610    Test_get_countries (USDCAD,H1)     Continent "Asia" includes 6 country(-ies):
+1211: ```
+1213: Thus, the current calendar version describes events related to the economies of 23 countries located on 7 continents (provided that the 'World' constant is taken into account).
+1219: The CiCalendarInfo::GetEventsByName(CArrayString &events\_arr, const string name = NULL) method performs a selection as a dynamic array of string type variables. An event name serves as a selection criterion.
+1221: The CiCalendarInfo::GetEventsByName(MqlCalendarEvent & events[], const string name = NULL) method is similar to the previous one. The only difference is that it forms a selection in the form of the array of MqlCalendarCountry type variables.
+1223: The CiCalendarInfo::FilterEvents(MqlCalendarEvent &filtered\_events[], MqlCalendarEvent &src\_events[], const ulong filter) method also forms a selection as the array of MqlCalendarCountry type variables. There is already a multiple criterion here implemented in a set of flags. There are 49 such criteria in total. They cover all enumeration values: ENUM\_CALENDAR\_EVENT\_TYPE, ENUM\_CALENDAR\_EVEN
+1229: ```
+1232: #define FILTER_BY_TYPE_EVENT           0x1              // 1 by type "event"
+1233: #define FILTER_BY_TYPE_INDICATOR       0x2              // 2 by type "indicator"
+1234: #define FILTER_BY_TYPE_HOLIDAY         0x4              // 3 by type "holiday"
+1236: #define FILTER_BY_SECTOR_NONE          0x8              // 4 by sector "none"
+1237: #define FILTER_BY_SECTOR_MARKET        0x10             // 5 by sector "market"
+1238: #define FILTER_BY_SECTOR_GDP           0x20             // 6 by sector "GDP"
+1239: #define FILTER_BY_SECTOR_JOBS          0x40             // 7 by sector "jobs"
+1240: #define FILTER_BY_SECTOR_PRICES        0x80             // 8 by sector "prices"
+1241: #define FILTER_BY_SECTOR_MONEY         0x100            // 9 by sector "money"
+1242: #define FILTER_BY_SECTOR_TRADE         0x200            // 10 by sector "trade"
+1243: #define FILTER_BY_SECTOR_GOVERNMENT    0x400            // 11 by sector "government"
+1244: #define FILTER_BY_SECTOR_BUSINESS      0x800            // 12 by sector "business"
+1245: #define FILTER_BY_SECTOR_CONSUMER      0x1000           // 13 by sector "consumer"
+1246: #define FILTER_BY_SECTOR_HOUSING       0x2000           // 14 by sector "housing"
+1247: #define FILTER_BY_SECTOR_TAXES         0x4000           // 15 by sector "taxes"
+1248: #define FILTER_BY_SECTOR_HOLIDAYS      0x8000           // 16 by sector "holidays"
+1250: #define FILTER_BY_FREQUENCY_NONE       0x10000          // 17 by frequency "none"
+1251: #define FILTER_BY_FREQUENCY_WEEK       0x20000          // 18 by frequency "week"
+1252: #define FILTER_BY_FREQUENCY_MONTH      0x40000          // 19 by frequency "month"
+1253: #define FILTER_BY_FREQUENCY_QUARTER    0x80000          // 20 by frequency "quarter"
+1254: #define FILTER_BY_FREQUENCY_YEAR       0x100000         // 21 by frequency "year"
+1255: #define FILTER_BY_FREQUENCY_DAY        0x200000         // 22 by frequency "day"
+1257: #define FILTER_BY_IMPORTANCE_NONE      0x400000         // 23 by importance "none"
+1258: #define FILTER_BY_IMPORTANCE_LOW       0x800000         // 24 by importance "low"
+1259: #define FILTER_BY_IMPORTANCE_MODERATE  0x1000000        // 25 by importance "medium"
+1260: #define FILTER_BY_IMPORTANCE_HIGH      0x2000000        // 26 by importance "high"
+1262: #define FILTER_BY_UNIT_NONE            0x4000000        // 27 by unit "none"
+1263: #define FILTER_BY_UNIT_PERCENT         0x8000000        // 28 by unit "percentage"
+1264: #define FILTER_BY_UNIT_CURRENCY        0x10000000       // 29 by unit "currency"
+1265: #define FILTER_BY_UNIT_HOUR            0x20000000       // 30 by unit "hours"
+1266: #define FILTER_BY_UNIT_JOB             0x40000000       // 31 by unit "jobs"
+1267: #define FILTER_BY_UNIT_RIG             0x80000000       // 32 by unit "drilling rigs"
+1268: #define FILTER_BY_UNIT_USD             0x100000000      // 33 by unit "USD"
+1269: #define FILTER_BY_UNIT_PEOPLE          0x200000000      // 34 by unit "people"
+1270: #define FILTER_BY_UNIT_MORTGAGE        0x400000000      // 35 by unit "mortgage loans"
+1271: #define FILTER_BY_UNIT_VOTE            0x800000000      // 36 by unit "votes"
+1272: #define FILTER_BY_UNIT_BARREL          0x1000000000     // 37 by unit "barrels"
+1273: #define FILTER_BY_UNIT_CUBICFEET       0x2000000000     // 38 by unit "cubic feet"
+1274: #define FILTER_BY_UNIT_POSITION        0x4000000000     // 39 by unit "net positions"
+1275: #define FILTER_BY_UNIT_BUILDING        0x8000000000     // 40 by unit "buildings"
+1277: #define FILTER_BY_MULTIPLIER_NONE      0x10000000000    // 41 by multiplier "none"
+1278: #define FILTER_BY_MULTIPLIER_THOUSANDS 0x20000000000    // 42 by multiplier "thousands"
+1279: #define FILTER_BY_MULTIPLIER_MILLIONS  0x40000000000    // 43 by multiplier "millions"
+1280: #define FILTER_BY_MULTIPLIER_BILLIONS  0x80000000000    // 44 by multiplier "billions"
+1281: #define FILTER_BY_MULTIPLIER_TRILLIONS 0x100000000000   // 45 by multiplier "trillions"
+1283: #define FILTER_BY_TIMEMODE_DATETIME    0x200000000000   // 46 by time mode "na"
+1284: #define FILTER_BY_TIMEMODE_DATE        0x400000000000   // 47 by time mode "positive"
+1285: #define FILTER_BY_TIMEMODE_NOTIME      0x800000000000   // 48 by time mode "negative"
+1286: #define FILTER_BY_TIMEMODE_TENTATIVE   0x1000000000000  // 49 by time mode "na"
+1288: #define IS_TYPE_EVENT(filter) ((filter&FILTER_BY_TYPE_EVENT)!=0)
+1289: #define IS_TYPE_INDICATOR(filter) ((filter&FILTER_BY_TYPE_INDICATOR)!=0)
+1290: #define IS_TYPE_HOLIDAY(filter) ((filter&FILTER_BY_TYPE_HOLIDAY)!=0)
+1292: #define IS_SECTOR_NONE(filter) ((filter&FILTER_BY_SECTOR_NONE)!=0)
+1293: #define IS_SECTOR_MARKET(filter) ((filter&FILTER_BY_SECTOR_MARKET)!=0)
+1294: #define IS_SECTOR_GDP(filter) ((filter&FILTER_BY_SECTOR_GDP)!=0)
+1295: #define IS_SECTOR_JOBS(filter) ((filter&FILTER_BY_SECTOR_JOBS)!=0)
+1296: #define IS_SECTOR_PRICES(filter) ((filter&FILTER_BY_SECTOR_PRICES)!=0)
+1297: #define IS_SECTOR_MONEY(filter) ((filter&FILTER_BY_SECTOR_MONEY)!=0)
+1298: #define IS_SECTOR_TRADE(filter) ((filter&FILTER_BY_SECTOR_TRADE)!=0)
+1299: #define IS_SECTOR_CONSUMER(filter) ((filter&FILTER_BY_SECTOR_CONSUMER)!=0)
+1300: #define IS_SECTOR_HOUSING(filter) ((filter&FILTER_BY_SECTOR_HOUSING)!=0)
+1301: #define IS_SECTOR_TAXES(filter) ((filter&FILTER_BY_SECTOR_TAXES)!=0)
+1302: #define IS_SECTOR_HOLIDAYS(filter) ((filter&FILTER_BY_SECTOR_HOLIDAYS)!=0)
+1304: #define IS_FREQUENCY_NONE(filter) ((filter&FILTER_BY_FREQUENCY_NONE)!=0)
+1305: #define IS_FREQUENCY_WEEK(filter) ((filter&FILTER_BY_FREQUENCY_WEEK)!=0)
+1306: #define IS_FREQUENCY_MONTH(filter) ((filter&FILTER_BY_FREQUENCY_MONTH)!=0)
+1307: #define IS_FREQUENCY_QUARTER(filter) ((filter&FILTER_BY_FREQUENCY_QUARTER)!=0)
+1308: #define IS_FREQUENCY_YEAR(filter) ((filter&FILTER_BY_FREQUENCY_YEAR)!=0)
+1309: #define IS_FREQUENCY_DAY(filter) ((filter&FILTER_BY_FREQUENCY_DAY)!=0)
+1311: #define IS_IMPORTANCE_NONE(filter) ((filter&FILTER_BY_IMPORTANCE_NONE)!=0)
+1312: #define IS_IMPORTANCE_LOW(filter) ((filter&FILTER_BY_IMPORTANCE_LOW)!=0)
+1313: #define IS_IMPORTANCE_MODERATE(filter) ((filter&FILTER_BY_IMPORTANCE_MODERATE)!=0)
+1314: #define IS_IMPORTANCE_HIGH(filter) ((filter&FILTER_BY_IMPORTANCE_HIGH)!=0)
+1316: #define IS_UNIT_NONE(filter) ((filter&FILTER_BY_UNIT_NONE)!=0)
+1317: #define IS_UNIT_PERCENT(filter) ((filter&FILTER_BY_UNIT_PERCENT)!=0)
+1318: #define IS_UNIT_CURRENCY(filter) ((filter&FILTER_BY_UNIT_CURRENCY)!=0)
+1319: #define IS_UNIT_HOUR(filter) ((filter&FILTER_BY_UNIT_HOUR)!=0)
+1320: #define IS_UNIT_JOB(filter) ((filter&FILTER_BY_UNIT_JOB)!=0)
+1321: #define IS_UNIT_RIG(filter) ((filter&FILTER_BY_UNIT_RIG)!=0)
+1322: #define IS_UNIT_USD(filter) ((filter&FILTER_BY_UNIT_USD)!=0)
+1323: #define IS_UNIT_PEOPLE(filter) ((filter&FILTER_BY_UNIT_PEOPLE)!=0)
+1324: #define IS_UNIT_MORTGAGE(filter) ((filter&FILTER_BY_UNIT_MORTGAGE)!=0)
+1325: #define IS_UNIT_VOTE(filter) ((filter&FILTER_BY_UNIT_VOTE)!=0)
+1326: #define IS_UNIT_BARREL(filter) ((filter&FILTER_BY_UNIT_BARREL)!=0)
+1327: #define IS_UNIT_CUBICFEET(filter) ((filter&FILTER_BY_UNIT_CUBICFEET)!=0)
+1328: #define IS_UNIT_POSITION(filter) ((filter&FILTER_BY_UNIT_POSITION)!=0)
+1329: #define IS_UNIT_BUILDING(filter) ((filter&FILTER_BY_UNIT_BUILDING)!=0)
+1331: #define IS_MULTIPLIER_NONE(filter) ((filter&FILTER_BY_MULTIPLIER_NONE)!=0)
+1332: #define IS_MULTIPLIER_THOUSANDS(filter) ((filter&FILTER_BY_MULTIPLIER_THOUSANDS)!=0)
+1333: #define IS_MULTIPLIER_MILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_MILLIONS)!=0)
+1334: #define IS_MULTIPLIER_BILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_BILLIONS)!=0)
+1335: #define IS_MULTIPLIER_TRILLIONS(filter) ((filter&FILTER_BY_MULTIPLIER_TRILLIONS)!=0)
+1337: #define IS_TIMEMODE_DATETIME(filter) ((filter&FILTER_BY_TIMEMODE_DATETIME)!=0)
+1338: #define IS_TIMEMODE_DATE(filter) ((filter&FILTER_BY_TIMEMODE_DATE)!=0)
+1339: #define IS_TIMEMODE_NOTIME(filter) ((filter&FILTER_BY_TIMEMODE_NOTIME)!=0)
+1340: #define IS_TIMEMODE_TENTATIVE(filter) ((filter&FILTER_BY_TIMEMODE_TENTATIVE)!=0)
+1341: ```
+1343: Let's have a look at the test example - **Test\_filter\_events****.mq5** script. First, the calendar object is created for the specified EUR currency.
+1347: In the block 2, do the same, while filling in the MqlCalendarEvent type array.
+1349: ```
+1361:       if(event_calendar_info.GetEventsByName(events_arr, ev_name))
+1372:       //--- 2) get events by name (MqlCalendarEvent)
+1374:       if(event_calendar_info.GetEventsByName(events, ev_name))
+1379:             ::Print("\n---== MqlCalendarEvent array ==---");
+1394:       if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+1405:                MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+1407:                event_calendar_info.PrintEventDescription(curr_event);
+1414:       if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+1425:                MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+1427:                event_calendar_info.PrintEventDescription(curr_event);
+1434:       if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+1445:                MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+1447:                event_calendar_info.PrintEventDescription(curr_event);
+1454:       if(event_calendar_info.FilterEvents(filtered_events, events, filter))
+1465:                MqlCalendarEvent curr_event = filtered_events[indices[ind]];
+1467:                event_calendar_info.PrintEventDescription(curr_event);
+1474: ```
+1480: ```
+1482: FM      0       13:18:48.421    Test_filter_events (USDCAD,H1)  ---== New Calendar Info object ==---
+1490: OR      0       13:18:48.635    Test_filter_events (USDCAD,H1)  ---== MqlCalendarEvent array ==---
+1578: ```
+1582: ### 3. Non-commercial net positions indicator
+1584: The economic calendar features many different events. I have chosen one of the most notable events - the weekly report of the Commodity Futures Trading Commission showing the difference between the total volume of long and short positions. 
+1590: ```
+1608: ```
+1612: ```
+1629:                MqlCalendarEvent curr_event = events[ev_idx];
+1697: ```
+1699: Initialize the first calendar object in the block. I will indicate only a country ID  **—** USA. Next, select all country events and detect the necessary asset by an event code set in the input variable. After that, initialize the second calendar object and request history. Next, fill in the indicator buffer.
+1703: ```
+1715:          datetime server_time =::TimeTradeServer();
+1716:          ::PrintFormat("   Release time: %s", ::TimeToString(server_time));
+1724: ```
+1732: In the indicator code, we can see that the calendar objects are created dynamically due to reinitialization of global variables in indicators. 
+1736: ### Conclusion
+1738: In this article, I have created the calendar object class **—** the class for a simplified access to the calendar properties and receiving event values. The calendar database is quite extensive and allows analyzing important economic events without resorting to third-party resources. 
+1740: The archive contains the source code used in the article. On my PC, all files and folders are located in %MQL5\Shared Projects\Testing\Calendar. If you locate the sources differently, pay attention to the correct inclusion of the CalendarInfo.mqh header file using the #include directive.
+1776: [](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&a=kwytixmhbkjqnqsbeidzwauzudobbxqc&s=854bd7dc2245707f8a34c15af1d749f2f3945d4b61c7e96c79f07e6b2d2f6776&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=tyjumsbovgsamsqvtciswdnswlmdbytj&ssn=1788801502767622577&ssn_dr=0&ssn_sr=0&fv_date=1788801502&ref=https%3A%2F%2Fwww.mql5.com%2

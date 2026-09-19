@@ -164,3 +164,23 @@ sources:
   role: primary
   status: harvested
   note: "Operator-direct rider for the 2026-09-16 documentation-factory change-mode session: STRATS is not a QMX language; Stats is a staging mill absorbed as QML two-stage authoring; QMF=framework, QML/QMB/QMA=libraries, QMN=node; no new COMP; no new CT; source_id=strats is adapter key not product copy; architecture package proposed not accepted; do not fill GAP-0085; do not start videos/n8n/Hermes; first epic = AD-14 seed bind + Stage 0 view. Citation surface for the operator's own words (DEC-0380)."
+
+- id: SRC-21
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/
+  kind: rider
+  role: primary
+  status: harvested
+  note: "2026-09-18/19 QMX Workflows construction-kit architecture sitting (candidate qmx-workflows-arch-2026-09-19-c; OD-01 CLOSED): ARCHITECTURE-SPINE.md (local AD-1..AD-31 plus Inherited Invariants, Consistency Conventions, Stack), CHALLENGE-RECONCILIATION.md (prefer §1/§6/§8 over residual AF-01 OD-01 deferred cells), OPERATOR-QUESTIONS.md (OD-01 CLOSED), CONTRACTS.md, JOURNEYS.md, REQUIREMENTS-ADDENDUM.md, CONFLICT-REGISTER.md C-05 row only (footer stale). Citation surface for the Workflows increment (EXT-2246..EXT-2285). Do not fold as current law: ARCHITECTURE-CANDIDATE-MANIFEST.json (still 2026-09-18-a), IMPLEMENTATION-SEQUENCE.md Blockers now, CODEX-RECHECK-HANDOFF.md wait text, empty companions/ and contracts/ dirs, Stage A reviews/review-adversarial.md as judgment of 2026-09-19-c. Parents QMF/QMB/QML/NODE/QMA/CONNECT/Workbench/mill bind read-only. Local AD ids do not renumber parents. Planning on main; implementation inspected on integration@270e992995c2378ca63cf6343254ef8140a8c97e."
+- id: SRC-22
+  path: _docwork/riders/workflows-construction-kit-2026-09-19.md
+  kind: rider
+  role: primary
+  status: harvested
+  note: "Operator-direct rider for the 2026-09-19 documentation-factory change-mode session: standing corrections (no sixth COMP; Book/BMS default not ceiling; sessions≠tabs; app-use cannot edit; sequential paper-then-live; BDD=spec; mutmut optional; n8n/OpenBB/Hermes mental models); L36 named amendment; DEC-0389 named amendment without whole-supersession; wiring honesty @ 270e992; dead-list honors; out-of-pass (no GAP-0085/0063/0061/0062/0058 fill; no new COMP/CT; no production code). Citation surface for operator rulings (DEC-0445..DEC-0451 and standing corrections EXT-2246)."
+- id: SRC-23
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-18/transcript-refresh-20260919/Explore-Node-Editor-Architecture.md
+  kind: transcript
+  role: primary
+  status: harvested
+  no_chunks: "Original Explore-Node-Editor-Architecture transcript harvested for operator words only (OD-01 close ~L1061 Book/BMS replace; Kelly; adopt-the-chain; sequential not tomorrow; sessions not tabs; app-use cannot edit). House treatment: no chunk index; spine/rider remain citation surface for sitting law."
+  note: "Operator-words citation surface for OD-01 close and related dictation (EXT-2247). Not a second spine."

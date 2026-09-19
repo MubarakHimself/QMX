@@ -1,0 +1,200 @@
+# Beyond the Clock (Part 4): Efficacy of Bars on Trending and Mean-Reversion Strategies
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 17 July 2026 at 10:43
+1 436
+[![](https://c.mql5.com/i/icons.svg#comments-usage)
+0](https://www.mql5.com/en/forum/512902 "Comments")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/23310#introduction)
+2. [The Volume Problem on Spot FX](https://www.mql5.com/en/articles/23310#the_volume_problem_on_spot_fx)
+3. [Why Bar Type Is a Confound, Not a Free Choice](https://www.mql5.com/en/articles/23310#why_bar_type_is_a_confound_not_a_free_choice)
+4. [The Theory Being Tested](https://www.mql5.com/en/articles/23310#the_theory_being_tested)
+5. [Experimental Design](https://www.mql5.com/en/articles/23310#experimental_design)
+6. [Building the Bars on a Common Cadence](https://www.mql5.com/en/articles/23310#building_the_bars_on_a_common_cadence)
+7. [Primaries and a Directionality Trap](https://www.mql5.com/en/articles/23310#primaries_and_a_directionality_trap)
+8. [Meta-Labeling the Entries](https://www.mql5.com/en/articles/23310#meta_labeling_the_entries)
+9. [Sampling Uniqueness and the Corrected Forest](https://www.mql5.com/en/articles/23310#sampling_uniqueness_and_the_corrected_forest)
+10. [Scoring Under Purged Cross-Validation](https://www.mql5.com/en/articles/23310#scoring_under_purged_cross_validation)
+11. [Statistical Properties on Real EURUSD](https://www.mql5.com/en/articles/23310#statistical_properties_on_real_eurusd)
+12. [Results](https://www.mql5.com/en/articles/23310#results)
+13. [Statistics Versus Efficacy](https://www.mql5.com/en/articles/23310#statistics_versus_efficacy)
+14. [The Grid Is a Multiple-Testing Problem](https://www.mql5.com/en/articles/23310#the_grid_is_a_multiple_testing_problem)
+15. [From Python to MQL5](https://www.mql5.com/en/articles/23310#from_python_to_mql5)
+16. [Conclusion](https://www.mql5.com/en/articles/23310#conclusion)
+17. [Attached Files](https://www.mql5.com/en/articles/23310#attached_files)
+### Introduction
+The first three articles in this series built the machinery for alternative bars: [Part 1](https://www.mql5.com/en/articles/22063 "Beyond the Clock (Part 1)") constructed activity and imbalance bars, [Part 2](https://www.mql5.com/en/articles/22213 "Beyond the Clock (Part 2)") added runs bars, and [Part 3](https://www.mql5.com/en/articles/22681 "Beyond the Clock (Part 3)") built an indicator to watch them form inside the terminal. Across all three, one claim was taken on trust. López de Prado argues in Section 2.3 of [Advances in Financial Machine Learning](https://www.amazon.com/Advances-Financial-Machine-Learning-Marcos/dp/1119482089 "Advances in Financial Machine Learning") that alternative bars (sampled by trading activity or order-flow imbalance rather than by the clock) have better statistical properties than fixed clock-time bars. The unstated corollary, repeated throughout the retail literature, is that strategies and machine-learning models built on those bars must therefore perform better.
+That corollary is asserted far more often than it is measured. Better-conditioned returns are a property of the *sampling*; they do not automatically become a property of a *strategy* run on top of the sampling. An RSI rule does not know which bar clock produced its inputs. Whether the change of representation helps it is an empirical question that has to be answered with a controlled experiment, not a citation.
+This article runs the experiment on 60.5 million EURUSD quote ticks from 2022–2023. Over that period, EURUSD fell from 1.15 through parity and later moved back above 1.10, covering both trending and mean‑reverting regimes. On each bar representation, three classic primaries are run: RSI and Bollinger Bands (mean-reversion) and an ADX/DI rule (trend-following). Every entry is labeled with the triple-barrier method, and a meta-model is trained to learn when to take the primary's bet. Efficacy is summarized by two numbers per cell: the primary's raw hit rate and the meta-model's out-of-sample AUC under purged cross-validation.
+The corrected experiment reaches a blunt conclusion. No bar family produces a reliable edge for these rules. Every out-of-sample AUC sits in a narrow band from 0.42 to 0.55, the ordering of families by statistical conditioning does not predict their ordering by efficacy, and a Monte Carlo permutation test on the single best-looking cell returns a p-value of 0.10. The apparent structure in the grid is indistinguishable from what random labels would produce. The statistical property López de Prado documents is real, and this article confirms it on real EURUSD, but it does not carry through to strategy efficacy the way the retail corollary assumes.
+### The Volume Problem on Spot FX
+Before any comparison can be trusted, one problem specific to foreign exchange has to be settled. Six of the ten AFML bar types are defined in terms of traded volume: volume bars, dollar bars, and the volume and dollar variants of the imbalance and runs families. Spot FX is decentralized. There is no consolidated tape and no true market volume, and a retail MetaTrader feed or a Tick Data Suite export reports only quotes. The 2022 and 2023 exports used here carry exactly two columns, *bid* and *ask*, with no volume field at all.
+The usual workaround is to substitute a unit of tick count for each trade, so that "volume" becomes the number of quote updates. This quietly destroys the distinction the volume and dollar bars were meant to draw. A volume bar closes after a fixed cumulative volume; with one unit per tick, that is a fixed tick count, which is a tick bar. A dollar bar closes after a fixed cumulative price times volume; with one unit per tick, that is a fixed sum of prices, which is a tick bar modulated only by the slowly-moving price level. The table below reports the coefficient of variation of ticks per bar, where zero means a perfectly regular bar and therefore a tick bar.
+| Bar type (unit volume) | CV of ticks per bar | Meaning |
+| --- | --- | --- |
+| tick | 0.000 | reference (regular by construction) |
+| volume | 0.000 | identical to a tick bar |
+| dollar | 0.040 | a tick bar with a 4% price-level wobble |
+The imbalance and runs families collapse the same way. A tick-imbalance bar uses only the tick-rule sign sequence, so it stays distinct. Its volume and dollar variants multiply that sign by size or by value, and with a unit per tick they reduce back to the tick variant. The ten AFML bar types therefore collapse to four genuinely distinct families on spot-FX quote data: time, tick, tick-imbalance, and tick-runs.
+There is a deeper point here than a missing column. López de Prado motivates dollar bars in Section 2.3.1.4 with two arguments specific to equities: normalizing for large price appreciation, and robustness to changes in shares outstanding from corporate actions. FX spot has neither. There are no shares outstanding, no splits or buybacks, and the price level of a major pair moves within a narrow band. Even with a true volume feed, dollar bars would add little over volume bars for a currency pair. On spot FX the construct is a solution to a problem the market does not have, and the label "dollar bar" describes a price-weighted tick bar.
+### Why Bar Type Is a Confound, Not a Free Choice
+The naive way to compare bar types is to pick a threshold for each, run the strategy, and compare returns. This is broken before it starts, because changing the bar type changes two things at once. A tick bar of one size and a one-hour time bar over the same history produce different *numbers* of bars, and they also produce bars with different serial-correlation structure. Any difference in downstream performance is then a tangle of sample-size effects and representation effects, and the two cannot be separated after the fact.
+The fix is to hold the number of samples constant and vary only the representation. Every family here is calibrated to roughly twelve thousand bars over the two years, so a difference in meta-model AUC between two families can be attributed to representation rather than to one cell training on more data. The realized cadence still fluctuates, and that fluctuation is the phenomenon under study, but its mean is pinned to a shared reference.
+### The Theory Being Tested
+López de Prado's case is statistical, and it pays to be precise about where the book makes that case. Section 2.3.1 covers the standard activity bars (tick, volume, dollar); Section 2.3.2 covers the information-driven bars (imbalance and runs). The explicit evidence for better conditioning sits in the first group. Following Mandelbrot and Taylor (1967) and Ané and Geman (2000), sampling as a function of trading activity yields returns closer to independent and identically distributed Gaussian, with weaker serial correlation than time bars exhibit. For the information-driven bars of Section 2.3.2 the same superiority is asserted and posed as end-of-chapter exercises rather than demonstrated. That gap between what is shown and what is claimed is part of what this article closes.
+None of this is controversial as a statement about *return distributions*. The leap worth scrutinizing is the one to *strategy efficacy*. A meta-model's job is to separate the primary's profitable signals from its unprofitable ones. Whether information-driven sampling makes that separation easier depends on whether the primary's edge, and the features that predict it, survive the change of clock. A trend rule, whose edge lives in price runs, and a mean-reversion rule, whose edge lives in price overshoots, may respond to the same resampling in opposite directions. That is the hypothesis the grid is built to expose.
+### Experimental Design
+The harness holds everything fixed except the one factor under test. Within each (strategy, labeling) cell, the bar representation is the only thing that changes. The feature set, the volatility target, the barrier widths, the meta-model, and the cross-validation protocol are identical across families. This is what makes the comparison interpretable.
+Figure 1. Five-stage illustration of the factorial efficacy pipeline
+- Quote stream: 60.5 million bid/ask ticks with no volume field; they feed everything downstream, so every family sees identical raw information.
+- Four distinct families: time, tick, tick-imbalance, and tick-runs; the volume and dollar variants collapse onto tick and are excluded.
+- Three primaries: RSI and Bollinger (mean-reversion) and ADX/DI (trend-following) generate the side of each bet.
+- Labeling: entries are sampled, run through the triple-barrier method, and reduced to a binary meta-label in {0, 1}.
+- Meta-model and efficacy: a uniqueness-controlled random forest is scored under purged k-fold CV, and its efficacy is compared against the return-conditioning statistics.
+### Building the Bars on a Common Cadence
+The mid-price drives every bar. Time bars close on the hour; tick bars close on a fixed count calibrated to match that cadence; the tick-imbalance and tick-runs thresholds are calibrated to the same target so the four families carry comparable bar counts.
+```
+for bt in BAR_TYPES:  # time, tick, tick_imbalance, tick_runs
+    if bt == "time":
+
+----- METHOD/CLAIM SWEEP -----
+
+
+# Beyond the Clock (Part 4): Efficacy of Bars on Trending and Mean-Reversion Strategies
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+![Patrick Murimi Njoroge](https://c.mql5.com/avatar/2025/8/68acbcc2-2b8d.jpg "Patrick Murimi Njoroge")
+[Patrick Murimi Njoroge](https://www.mql5.com/en/users/patricknjoroge743)
+### Table of Contents
+1. [Introduction](https://www.mql5.com/en/articles/23310#introduction)
+11. [Statistical Properties on Real EURUSD](https://www.mql5.com/en/articles/23310#statistical_properties_on_real_eurusd)
+12. [Results](https://www.mql5.com/en/articles/23310#results)
+13. [Statistics Versus Efficacy](https://www.mql5.com/en/articles/23310#statistics_versus_efficacy)
+14. [The Grid Is a Multiple-Testing Problem](https://www.mql5.com/en/articles/23310#the_grid_is_a_multiple_testing_problem)
+15. [From Python to MQL5](https://www.mql5.com/en/articles/23310#from_python_to_mql5)
+16. [Conclusion](https://www.mql5.com/en/articles/23310#conclusion)
+17. [Attached Files](https://www.mql5.com/en/articles/23310#attached_files)
+### Introduction
+The first three articles in this series built the machinery for alternative bars: [Part 1](https://www.mql5.com/en/articles/22063 "Beyond the Clock (Part 1)") constructed activity and imbalance bars, [Part 2](https://www.mql5.com/en/articles/22213 "Beyond the Clock (Part 2)") added runs bars, and [Part 3](https://www.mql5.com/en/articles/22681 "Beyond the Clock (Part 3)") built an indicator to watch them form inside the terminal. Across all three, one claim was taken on trust. López de Prado argues in Section 2.3 of [Advances in Financial Machine Learning](https://www.amazon.com/Advances-Financial-Machine-Learning-Marcos/dp/1119482089 "Advances in Financial Machine Learning") that alternative bars (sampled by trading activity or order-flow imbalance rather than by the clock) have better statistical properties than fixed clock-time bars. The unstated corollary, repeated throughout the retail literature, is that strategies and machine-learning models built on those bars must therefore perform better.
+This article runs the experiment on 60.5 million EURUSD quote ticks from 2022–2023. Over that period, EURUSD fell from 1.15 through parity and later moved back above 1.10, covering both trending and mean‑reverting regimes. On each bar representation, three classic primaries are run: RSI and Bollinger Bands (mean-reversion) and an ADX/DI rule (trend-following). Every entry is labeled with the triple-barrier method, and a meta-model is trained to learn when to take the primary's bet. Efficacy is summarized by two numbers per cell: the primary's raw hit rate and the meta-model's out-of-sample AUC under purged cross-validation.
+The corrected experiment reaches a blunt conclusion. No bar family produces a reliable edge for these rules. Every out-of-sample AUC sits in a narrow band from 0.42 to 0.55, the ordering of families by statistical conditioning does not predict their ordering by efficacy, and a Monte Carlo permutation test on the single best-looking cell returns a p-value of 0.10. The apparent structure in the grid is indistinguishable from what random labels would produce. The statistical property López de Prado documents is real, and this article confirms it on real EURUSD, but it does not carry through to strategy efficacy the way the retail corollary assumes.
+### The Volume Problem on Spot FX
+
+Before any comparison can be trusted, one problem specific to foreign exchange has to be settled. Six of the ten AFML bar types are defined in terms of traded volume: volume bars, dollar bars, and the volume and dollar variants of the imbalance and runs families. Spot FX is decentralized. There is no consolidated tape and no true market volume, and a retail MetaTrader feed or a Tick Data Suite export reports only quotes. The 2022 and 2023 exports used here carry exactly two columns, *bid* and *ask*, with no volume field at all.
+The usual workaround is to substitute a unit of tick count for each trade, so that "volume" becomes the number of quote updates. This quietly destroys the distinction the volume and dollar bars were meant to draw. A volume bar closes after a fixed cumulative volume; with one unit per tick, that is a fixed tick count, which is a tick bar. A dollar bar closes after a fixed cumulative price times volume; with one unit per tick, that is a fixed sum of prices, which is a tick bar modulated only by the slowly-moving price level. The table below reports the coefficient of variation of ticks per bar, where zero means a perfectly regular bar and therefore a tick bar.
+### Why Bar Type Is a Confound, Not a Free Choice
+The naive way to compare bar types is to pick a threshold for each, run the strategy, and compare returns. This is broken before it starts, because changing the bar type changes two things at once. A tick bar of one size and a one-hour time bar over the same history produce different *numbers* of bars, and they also produce bars with different serial-correlation structure. Any difference in downstream performance is then a tangle of sample-size effects and representation effects, and the two cannot be separated after the fact.
+The fix is to hold the number of samples constant and vary only the representation. Every family here is calibrated to roughly twelve thousand bars over the two years, so a difference in meta-model AUC between two families can be attributed to representation rather than to one cell training on more data. The realized cadence still fluctuates, and that fluctuation is the phenomenon under study, but its mean is pinned to a shared reference.
+### The Theory Being Tested
+López de Prado's case is statistical, and it pays to be precise about where the book makes that case. Section 2.3.1 covers the standard activity bars (tick, volume, dollar); Section 2.3.2 covers the information-driven bars (imbalance and runs). The explicit evidence for better conditioning sits in the first group. Following Mandelbrot and Taylor (1967) and Ané and Geman (2000), sampling as a function of trading activity yields returns closer to independent and identically distributed Gaussian, with weaker serial correlation than time bars exhibit. For the information-driven bars of Section 2.3.2 the same superiority is asserted and posed as end-of-chapter exercises rather than demonstrated. That gap between what is shown and what is claimed is part of what this article closes.
+### Experimental Design
+The harness holds everything fixed except the one factor under test. Within each (strategy, labeling) cell, the bar representation is the only thing that changes. The feature set, the volatility target, the barrier widths, the meta-model, and the cross-validation protocol are identical across families. This is what makes the comparison interpretable.
+- Four distinct families: time, tick, tick-imbalance, and tick-runs; the volume and dollar variants collapse onto tick and are excluded.
+- Three primaries: RSI and Bollinger (mean-reversion) and ADX/DI (trend-following) generate the side of each bet.
+- Labeling: entries are sampled, run through the triple-barrier method, and reduced to a binary meta-label in {0, 1}.
+- Meta-model and efficacy: a uniqueness-controlled random forest is scored under purged k-fold CV, and its efficacy is compared against the return-conditioning statistics.
+### Building the Bars on a Common Cadence
+The mid-price drives every bar. Time bars close on the hour; tick bars close on a fixed count calibrated to match that cadence; the tick-imbalance and tick-runs thresholds are calibrated to the same target so the four families carry comparable bar counts.
+```
+### Primaries and a Directionality Trap
+Two of the three primaries are mean-reversion rules; the third is trend-following. The trend rule hides a trap worth spelling out, because it is a mistake that propagates silently into the meta-model.
+ADX measures trend *strength*, not *direction*. A high ADX says a trend is present; it says nothing about whether to buy or sell. A meta-labeling primary, by contrast, must emit a side, because the meta-model's entire job is to decide whether to take *that side's* bet. Reading an ADX or ADXR crossover as a buy or sell signal, as a naive implementation invites, feeds the meta-model a direction the indicator never actually defined. The correct construction takes the side from the +DI/−DI relationship and uses ADX only as a strength gate. The directional component comes from the Directional Movement System; ADX filters it.
+### Meta-Labeling the Entries
+
+For meta-labeling, events are the rule's own entries. Each onset is included, along with periodic re-assessments while the signal persists. This is applied uniformly across strategies so that cells differ only by representation. Each event is run through the triple-barrier method. *get\_events* walks price forward to the first touch of the volatility-scaled profit-take, stop-loss, or vertical barrier, and *get\_bins*, given the primary's side, returns a label in {0, 1}, one if the bet would have won and zero otherwise. That binary outcome is the meta-model's target.
+The feature set is intentionally small and shared across every cell: RSI, the Bollinger z-score, ADX, the +DI/−DI spread, the last bar return, an EWM volatility estimate, and tick count per bar. Holding the features fixed is what isolates the bar representation as the active variable. If each strategy carried bespoke features, a difference between cells could not be attributed to the bar clock.
+### Sampling Uniqueness and the Corrected Forest
+Triple-barrier labels overlap. An event opened at bar *t* may not resolve until bar *t + 20*, and every event that opens in between shares part of its outcome window. The observations are therefore not independent, and a random forest that draws a full bootstrap of size N from them draws near-duplicate rows. Its trees become correlated, and the covariance term in the AFML §6.2 error decomposition stops shrinking no matter how many trees are added. Bagging only reduces variance when its base learners are decorrelated.
+        n_estimators=300, max_samples=max_samples, class_weight="balanced_subsample",
+        criterion="entropy", max_features="sqrt", n_jobs=-1)
+The uniqueness of a cell is a property of its events, not of the bar type alone, and the values below make one design decision visible. The stateful ADX/DI rule holds a position across the whole trend, so its events overlap heavily and its uniqueness is low, near 0.38. The mean-reversion rules fire in short, separated episodes, so their events overlap little and their uniqueness is high, near 0.63. The forest draws proportionally fewer rows per tree in the ADX/DI cells, which is exactly the correction the overlap calls for.
+| Bar family | RSI | Bollinger | ADX/DI |
+| --- | --- | --- | --- |
+| time | 0.634 | 0.649 | 0.366 |
+### Scoring Under Purged Cross-Validation
+The same overlap that motivates the uniqueness correction also breaks naive cross-validation. A label whose window straddles the boundary between a training fold and a test fold leaks its outcome across the split. PurgedKFold removes training observations whose label window overlaps the test set and applies an embargo after each fold. AUC is scored on *predict\_proba*, the quantity that drives bet sizing downstream.
+### Statistical Properties on Real EURUSD
+The first thing to check is whether López de Prado's statistical claim even holds on this data. It does, and cleanly, for the standard activity bars.
+### Results
+The efficacy grid pairs each of the four families with each of the three primaries.
+### Statistics Versus Efficacy
+Placing the two measurements on the same axes makes the central finding explicit. The horizontal axis is return conditioning, where lower excess kurtosis is what López de Prado's argument calls better. The vertical axis is efficacy, the meta-model AUC averaged over the three strategies.
+### The Grid Is a Multiple-Testing Problem
+Twelve cells were evaluated, four families times three primaries, and the notebook builds all ten AFML bar types, then sets aside the six volume/dollar variants as duplicates on quote-only FX data. The best cell will look good by construction. That is data-mining bias, the central concern of Aronson's *Evidence-Based Technical Analysis* and the reason White devised the Reality Check. The right response is to test the best cell against the distribution of what the same pipeline produces on meaningless labels.
+
+The observed AUC (0.550) lies within the bulk of the null distribution (mean 0.499, SD 0.039). The permutation p-value is 0.10. The best cell in the entire grid is not significant at the 0.05 level even before any correction for the twelve tests, and a Šidák adjustment would push the required threshold below 0.005. Nothing in this grid survives that bar. The honest reading is that bar representation, for these classic rules on spot-FX quote data, produces no efficacy edge that can be distinguished from noise.
+### From Python to MQL5
+The study runs in Python because the factorial sweep is a research task rather than a production workload. Deployment uses the MQL5 machinery built earlier in this series. *BarBuilderEA* constructs the winning bar type live from the tick stream (Parts 1 and 2), and *AlternativeBarsViewer* (Part 3) lets the calibration be watched in the terminal before any model sees the data, so the same degenerate-bar check that protects the offline feature pipeline protects the live one. The meta-model exports to ONNX, and the primary's side and the secondary's probability drive position sizing through *bet\_size\_probability*.
+### Conclusion
+Information-driven bars do have the better statistical properties López de Prado documents, and this article confirmed it on real EURUSD: tick bars cut the excess kurtosis of time bars by more than half. What the article measures is the next link in the chain, whether those properties translate into efficacy for the classic indicators traders actually run. On two years of EURUSD they do not. Every family sits near the no-skill line, conditioning does not predict efficacy, and the best-looking cell fails a permutation test.
+### Attached Files
+The *afml/* folder is a minimal excerpt of the Blueprint Quant afml package: only the subpackages this notebook imports, with empty package markers in place of the full package's loader. It requires numba, scipy, statsmodels, and TA-Lib alongside numpy, pandas, and scikit-learn.
+| 2. | *afml/data\_structures/* | *afml\* | make\_bars and the standard, information, and calibration bar builders that resample ticks into the four families. |
+| 3. | *afml/strategies/* | *afml\* | RSI, Bollinger, ADX, and Directional-Movement primary strategies that generate each cell's side. |
+| 4. | *afml/labeling/* | *afml\* | Triple-barrier labeling (add\_vertical\_barrier, get\_events, get\_bins) and trend scanning. |
+| 5. | *afml/sampling/* | *afml\* | get\_av\_uniqueness\_from\_triple\_barrier for the max\_samples value, plus the sequential bootstrap used in Part 5. |
+![Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy](https://c.mql5.com/2/233/23351-entropy-based-market-efficiency-logo.png)
+[Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy](https://www.mql5.com/en/articles/23351)
+A rolling-window Approximate Entropy oscillator for MQL5, built without external dependencies. Covers the full mathematics of template matching, Chebyshev distance, and the Phi-function derivation before presenting a reusable CApEnCalculator class and a color-zoned subwindow indicator. Includes a synthetic-data verification script and an honest discussion of bias, parameter sensitivity, and computational cost.
+![From Basic to Intermediate: FileSave and FileLoad](https://c.mql5.com/2/160/16211-do-b-sico-ao-intermedi-rio-logo.png)
+
+----- CONCLUSION -----
+
+### Conclusion
+
+Information-driven bars do have the better statistical properties López de Prado documents, and this article confirmed it on real EURUSD: tick bars cut the excess kurtosis of time bars by more than half. What the article measures is the next link in the chain, whether those properties translate into efficacy for the classic indicators traders actually run. On two years of EURUSD they do not. Every family sits near the no-skill line, conditioning does not predict efficacy, and the best-looking cell fails a permutation test.
+
+Two lessons carry beyond EURUSD. The first is that on spot FX, where no traded volume exists, six of the ten AFML bar types collapse onto tick bars, and dollar bars in particular solve an equities problem the currency market does not have. The second is methodological: equalize the sample sizes before comparing, control the bootstrap for label overlap, purge the cross-validation, and account for multiple testing with a permutation test before believing any winner. The statistical case for alternative bars is sound. The efficacy case, for classic rules on spot FX, is not made by the data. The next article turns from the bar representation to the ensemble itself and asks whether sequential bootstrapping, rather than the uniqueness-controlled forest used here, changes that verdict.
+
+### Attached Files
+
+The *afml/* folder is a minimal excerpt of the Blueprint Quant afml package: only the subpackages this notebook imports, with empty package markers in place of the full package's loader. It requires numba, scipy, statsmodels, and TA-Lib alongside numpy, pandas, and scikit-learn.
+
+|  | File | Location | Description |
+| --- | --- | --- | --- |
+| 1. | *BeyondTheClock\_Part4\_Efficacy.ipynb* | *Notebooks\* | Reproducible notebook. Builds the four bar families from the 2022-2023 quote ticks, computes average uniqueness, runs the efficacy grid with the uniqueness-controlled forest, and reproduces the permutation test and every figure in the text. |
+| 2. | *afml/data\_structures/* | *afml\* | make\_bars and the standard, information, and calibration bar builders that resample ticks into the four families. |
+| 3. | *afml/strategies/* | *afml\* | RSI, Bollinger, ADX, and Directional-Movement primary strategies that generate each cell's side. |
+| 4. | *afml/labeling/* | *afml\* | Triple-barrier labeling (add\_vertical\_barrier, get\_events, get\_bins) and trend scanning. |
+| 5. | *afml/sampling/* | *afml\* | get\_av\_uniqueness\_from\_triple\_barrier for the max\_samples value, plus the sequential bootstrap used in Part 5. |
+| 6. | *afml/cross\_validation/* | *afml\* | PurgedKFold and the scoring helpers used to score the meta-model without label leakage. |
+| 7. | *afml/ensemble/, filters/, util/, sample\_weights/* | *afml\* | SequentiallyBootstrappedBaggingClassifier, the CUSUM filter, the volatility target, and sample-weight helpers. |
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/23310.zip "Download all attachments in the single ZIP archive")
+
+[BeyondTheClock\_Part4\_Efficacy.ipynb](https://www.mql5.com/en/articles/download/23310/BeyondTheClock_Part4_Efficacy.ipynb "Download BeyondTheClock_Part4_Efficacy.ipynb")
+(27.6 KB)
+
+[afml.zip](https://www.mql5.com/en/articles/download/23310/afml.zip "Download afml.zip")
+(94.71 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+![Building a Synthetic Custom Symbol in MQL5 Using Multi-Symbol Price Averaging](https://c.mql5.com/2/233/23361-building-a-synthetic-custom-logo.png)
+[Building a Synthetic Custom Symbol in MQL5 Using Multi-Symbol Price Averaging](https://www.mql5.com/en/articles/23361)
+
+This article shows how to build a synthetic custom symbol in MQL5 by averaging OHLC data from multiple instruments into a single derived price series. It covers symbol collection and validation, custom symbol creation and configuration, timestamp alignment, historical reconstruction, and lightweight live updates. The result is a reusable method for creating synthetic instruments suitable for correlation analysis, index-style modeling, indicator development, and strategy testing.
+
+![Market Simulation: Position View (IV)](https://c.mql5.com/2/160/13168-simula-o-de-mercado-position-logo__1.png)
+[Market Simulation: Position View (IV)](https://www.mql5.com/en/articles/13168)
+
+Here we will start bringing together different components or applications that were previously completely isolated from each other. Chart Trade, the mouse indicator, and the Expert Advisor had already been linked to one another, but there was still no way to directly display on the chart the positions open on the trading server, which are often managed using a cross-order system. From this point on, this becomes possible, opening the way for various ideas and future implementations. Although we are only beginning to put these components into operation, we already have a direction for further development.
+
+![Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy](https://c.mql5.com/2/233/23351-entropy-based-market-efficiency-logo.png)
+[Entropy-Based Market Efficiency Indicator in MQL5: Measuring Randomness in Price Returns Using Approximate Entropy](https://www.mql5.com/en/articles/23351)
+
+A rolling-window Approximate Entropy oscillator for MQL5, built without external dependencies. Covers the full mathematics of template matching, Chebyshev distance, and the Phi-function derivation before presenting a reusable CApEnCalculator class and a color-zoned subwindow indicator. Includes a synthetic-data verification script and an honest discussion of bias, parameter sensitivity, and computational cost.
+
+![From Basic to Intermediate: FileSave and FileLoad](https://c.mql5.com/2/160/16211-do-b-sico-ao-intermedi-rio-logo.png)
+[From Basic to Intermediate: FileSave and FileLoad](https://www.mql5.com/en/articles/16211)
+
+In today’s article, we will look at several ways to work with the FileSave and FileLoad library functions. Although many people consider them of limited use because of certain limitations or difficulties they create in specific scenarios, properly understanding how these two functions work can save us a great deal of effort at certain points. They are also an excellent way to work with log files.
+
+[![](https://www.mql5.com/ff/si/x6w0dk14xy0tf97n82.png)](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F586%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Dhow.test.expert%26utm_content%3Dbuy.expert%26utm_campaign%3D0622.MQL5.com.Internal&a=repptjucjbnrxhoeoqbekpbncvsnhylz&s=3da978a0c510a6306b46ee79cdf8418a5c0da5e081f296e18b262b00031a2310&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=heufxpkqpkmqcjkfrilwkgzoygrqgkbr&ssn=1788777127232554324&ssn_dr=0&ssn_sr=0&fv_date=1788777127&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F23310&back_ref=https%3A%2F%2Fwww.google.com%2F&title=Beyond%20the%20Clock%20(Part%204)%3A%20Efficacy%20of%20Bars%20on%20Trending%20and%20Mean-Reversion%20Strategies%20-%20MQL5%20Articles&scr_res=1920x1080&ac=17887771278904434&fz_uniq=6452997322463380647&sv=2552)

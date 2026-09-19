@@ -1,0 +1,116 @@
+{
+  "shard_id": "tester_000",
+  "section": "Tester",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 669,
+      "title": "MQL5 Cloud Network: Are You Still Calculating?",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\669.md"
+    },
+    {
+      "id": 746,
+      "title": "MQL5 Cookbook: Saving Optimization Results of an Expert Advisor Based on Specified Criteria",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\746.md"
+    },
+    {
+      "id": 1347,
+      "title": "Testing (Optimization) Technique and Some Criteria for Selection of the Expert Advisor Parameters",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1347.md"
+    },
+    {
+      "id": 1368,
+      "title": "Testing Expert Advisors on Non-Standard Time Frames",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1368.md"
+    },
+    {
+      "id": 1385,
+      "title": "Testing and Optimization of Expert Advisors",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1385.md"
+    },
+    {
+      "id": 1403,
+      "title": "How to Evaluate the Expert Testing Results",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1403.md"
+    },
+    {
+      "id": 1408,
+      "title": "Genetic Algorithms: Mathematics",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1408.md"
+    },
+    {
+      "id": 1409,
+      "title": "Genetic Algorithms vs. Simple Search in the MetaTrader 4 Optimizer",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1409.md"
+    },
+    {
+      "id": 1413,
+      "title": "My First \"Grail\"",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1413.md"
+    },
+    {
+      "id": 1417,
+      "title": "Testing of Expert Advisors in the MetaTrader 4 Client Terminal: An Outward Glance",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1417.md"
+    },
+    {
+      "id": 1420,
+      "title": "Testing Visualization: Functionality Enhancement",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1420.md"
+    },
+    {
+      "id": 1425,
+      "title": "Testing Visualization: Manual Trading",
+      "section": "Tester",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1425.md"
+    }
+  ]
+}

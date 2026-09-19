@@ -1,0 +1,1864 @@
+---
+id: 14324
+source_url: https://www.mql5.com/en/articles/14324
+title: "News Trading Made Easy (Part 1): Creating a Database"
+author: ""
+author_url: 
+published: 2024-04-19T16:06Z
+platform: "MetaTrader 5"
+section: "Examples"
+tags: []
+series_title: "News Trading Made Easy (): Creating a Database"
+series_part: 1
+source: mql5
+language: en
+---
+
+# News Trading Made Easy (Part 1): Creating a Database
+
+[MetaTrader 5](https://www.mql5.com/en/articles/mt5)
+—
+[Examples](https://www.mql5.com/en/articles/mt5/examples)
+| 19 April 2024 at 12:06
+
+6 431
+[
+1](https://www.mql5.com/en/forum/465864 "Comments")
+
+[Kabelo Frans Mampa](https://www.mql5.com/en/users/kaaiblo)
+
+### Introduction
+
+In this article, we will learn to create a database in which we will store data from the MQL5 Economic Calendar. This data can be used later, in upcoming articles, to trade the news. We will also explore how to execute basic SQL queries to retrieve certain organized information from this database. The entire process will be done in the MQL5 IDE.
+
+Traders keep a close watch on news sources for information that might impact the markets. This includes geopolitical events, corporate earnings announcements, political events, and economic reports such as GDP growth or employment figures. Traders act quickly to respond to significant news releases to profit from resulting market changes. Depending on how the news is interpreted, buying or selling assets may be necessary. In this article, we will focus on economic events, as they are readily available to us through the [MQL5 Economic Calendar](https://www.mql5.com/en/economic-calendar).
+
+### Why Create a Database
+
+A database is a structured collection of data that is electronically stored and accessed. Databases can efficiently manage and store vast amounts of data, enabling various activities like data analysis, storage, and management. In MQL5, we work with SQLite databases which are created and managed by the SQLite database engine. SQLite databases can have any file extension, but usually, they are single disk files with .sqlite, .sqlite3, or .db extensions. These files contain all the data and structure present in databases, including tables, triggers, indexes, and other metadata.
+
+Databases are perfect for handling large datasets and simplify the process of retrieving data from a particular date or event, without the need for complex loops. Moreover, the MQL5 economic calendar is inaccessible in the strategy tester. So, if you want to test your strategy based on news, how would you do that?
+
+The answer is using a database, for more info about databases check out this [lecture slides](https://www2.stat.duke.edu/courses/Summer20/sta323.001-1/lecture_slides/lec-19.html#5 "Lecture Slides about Sqlite and more") and more preferably this  [MQL5 article](https://www.mql5.com/en/articles/7463#database_functions "Mql5 Article about SQLite and its Implementation"). Additionally, I will add an excellent [SQLite tutorial.](https://www.sqlitetutorial.net/ "https://www.sqlitetutorial.net/")
+
+  
+
+### Currencies on the MQL5 Economic Calendar
+
+| No | Symbol | Name |
+| --- | --- | --- |
+| 1. | NZD | New Zealand Dollar |
+| 2. | EUR | Euro |
+| 3. | JPY | Japanese Yen |
+| 4. | CAD | Canadian Dollar |
+| 5. | AUD | Australian Dollar |
+| 6. | CNY | Chinese Yuan |
+| 7. | SGD | Singapore Dollar |
+| 8. | BRL | Brazilian Real |
+| 9. | MXN | Mexican Peso |
+| 10. | ZAR | South African Rand |
+| 11. | HKD | Hong Kong Dollar |
+| 12. | INR | Indian Rupee |
+| 13. | NOK | Norwegian Krone |
+| 14. | USD | United States Dollar |
+| 15. | GBP | Pound sterling |
+| 16. | CHF | Swiss Franc |
+| 17. | KRW | South Korean won |
+| 18. | SEK | Swedish Krona |
+
+The Table above is in no particular order.
+
+There are several currencies available on the MQL5 calendar, but some of them are not commonly used by brokers or easily accessible to traders. For instance, the Brazilian Real and the South Korean Won are not widely available. Even if you manage to find a broker that deals in these exotic currencies, the spreads are usually unfavorable for trading. I speak from personal experience.
+
+  
+
+### Creating the Database
+
+Before we create the database, we first must first consider daylight savings, and why this would affect our back-testing. [Daylight Saving Time (DST)](https://en.wikipedia.org/wiki/Daylight_saving_time "Daylight Savings Wikipedia") is the practice of moving the clock forward by one hour during the warmer months of the year, typically from spring to autumn, to make better use of daylight and to conserve energy.
+
+In areas where DST is observed, the local time may change by one hour during the spring and fall transition periods. This can have an impact on the times when financial markets open and close. For example, if DST starts and clocks are shifted forward by one hour, the market may open earlier in local time. In contrast, when DST ends and clocks are set back an hour(normal time), the market open time may appear later in local time. We also have to recognize that different regions in the world could have their separate DST to accommodate for their own seasons.
+
+For example the [US has it's own DST](https://www.timeanddate.com/time/change/usa "https://www.timeanddate.com/time/change/usa") that usually starts on the second Sunday of March every year and ends on the first Sunday of November in the same year. The European countries are also known to have their own [DST](https://www.timeanddate.com/time/change/uk "https://www.timeanddate.com/time/change/uk") that usually starts on the last Sunday of March every year and ends on the last Sunday of October in the same year. Australia is another country known to practice DST as well, [it's schedule](https://www.timeanddate.com/time/change/australia "https://www.timeanddate.com/time/change/australia") usually starts on the first Sunday of October and ends on the first Sunday of April the following year.
+
+To account for DST adjustments, a few exchanges and financial markets may modify their trading schedules or time zone. Exchanges may release revised trading hours to account for local time changes or adjust their time zone according to the DST schedule they practice, guaranteeing market participants uniformity and clarity.
+
+From what I have observed if a broker for example practices US DST the time zone before DST for illustration would be GMT+2, then when US DST starts the time zone will change to GMT+3. You would not notice the time difference between US news releases on the broker's server time before or during US DST as they would be in sync with one another. So an example we will use is US NFP(Non Farm Payrolls) event to illustrate, lets say that NFP is released at 14pm on the brokers server time before US DST the time would remain the same at 14pm during US DST although the time zone has changed to GMT+3.
+
+On the other hand if the UK employment news release was 8am before UK & US DST when the broker changes the time zone when US DST starts, and the UK employment news release occurs before the UK(EU) DST started the UK employment news release would be at 7am on the broker's time. When the UK DST starts and overlaps with the US DST the UK employment news release will go back to 8am.
+
+I know it is all so confusing, luck for us we will implement this into our database so we have accurate dates of when the events do occur for back-testing later on. We will have to determine whether the broker uses US DST, UK(EU) DST, AU DST or does not use DST at all. We will also create economic calendar tables for each DST type so we can change which timetable to back-test for educational purposes.
+
+### Implementation
+
+We will have three DaylightSavings Classes:
+
+- DaylightSavings\_AU
+- DaylightSavings\_UK
+- DaylightSavings\_US
+
+I will only be working with one in this article as the are very similar to each other, they will all be included in the project files.
+
+```
+class CDaylightSavings_AU:CObject
+  {
+
+private:
+
+   CTimeManagement   Time;
+                     CDaylightSavings_AU(datetime startdate,datetime enddate);
+   CObject           *List() { return savings;}//Gets the list of Daylight savings time
+   datetime          StartDate;
+   datetime          EndDate;
+   CArrayObj         *savings;
+   CArrayObj         *getSavings;
+   CDaylightSavings_AU      *dayLight;
+
+public:
+
+                     CDaylightSavings_AU(void);
+                    ~CDaylightSavings_AU(void);
+   bool              isDaylightSavings(datetime Date);//This function checks if a given date falls within Daylight Savings Time.
+   bool              DaylightSavings(int Year,datetime &startDate,datetime &endDate);//Check if Daylight Savings Dates are available for a certain Year
+   void              adjustDaylightSavings(datetime EventDate,string &AdjustedDate);//Will adjust the date's time zone depending on Daylight Savings
+  };
+```
+
+We will create a class Called :
+
+```
+CDaylightSavings_AU
+```
+
+that inherits from 
+
+```
+CObject
+```
+
+This class will consist of creating a list that will store all the daylight saving dates from 2007 as this is the earliest date stored in the MQL5 economic calendar
+
+```
+CDaylightSavings_AU::CDaylightSavings_AU(void)
+  {
+   savings = new CArrayObj();
+//Daylight savings dates to readjust dates in the database for accurate testing in the strategy tester
+   savings.Add(new CDaylightSavings_AU(D'2006.10.29 03:00:00',D'2007.03.25 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2007.10.28 03:00:00',D'2008.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2008.10.05 03:00:00',D'2009.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2009.10.04 03:00:00',D'2010.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2010.10.03 03:00:00',D'2011.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2011.10.02 03:00:00',D'2012.04.01 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2012.10.07 03:00:00',D'2013.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2013.10.06 03:00:00',D'2014.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2014.10.05 03:00:00',D'2015.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2015.10.04 03:00:00',D'2016.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2016.10.02 03:00:00',D'2017.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2017.10.01 03:00:00',D'2018.04.01 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2018.10.07 03:00:00',D'2019.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2019.10.06 03:00:00',D'2020.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2020.10.04 03:00:00',D'2021.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2021.10.03 03:00:00',D'2022.04.03 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2022.10.02 03:00:00',D'2023.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2023.10.01 03:00:00',D'2024.04.07 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2024.10.06 03:00:00',D'2025.04.06 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2025.10.05 03:00:00',D'2026.04.05 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2026.10.04 03:00:00',D'2027.04.04 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2027.10.03 03:00:00',D'2028.04.02 02:00:00'));
+   savings.Add(new CDaylightSavings_AU(D'2028.10.01 03:00:00',D'2029.04.01 02:00:00'));
+  }
+```
+
+we will then use the boolean function
+
+```
+bool              isDaylightSavings(datetime Date);//This function checks if a given date falls within Daylight Savings Time.
+```
+
+To determine if a date parameter is within the daylight savings dates
+
+```
+bool CDaylightSavings_AU::isDaylightSavings(datetime Date)
+  {
+// Initialize a list to store daylight savings periods.
+   getSavings = List();
+// Iterate through all the periods in the list.
+   for(int i=0; i<getSavings.Total(); i++)
+     {
+      // Access the current daylight savings period.
+      dayLight = getSavings.At(i);
+      // Check if the given date is within the current daylight savings period.
+      if(Time.DateIsInRange(dayLight.StartDate,dayLight.EndDate,Date))
+        {
+         // If yes, return true indicating it is daylight savings time.
+         return true;
+        }
+     }
+// If no period matches, return false indicating it is not daylight savings time.
+   return false;
+  }
+```
+
+we will also make use of another boolean function
+
+```
+bool              DaylightSavings(int Year,datetime &startDate,datetime &endDate);//Adjusts time when it is daylight savings an hour behind if outside
+```
+
+To determine if the Year is found within the List of DaylightSavings Dates we initialized previously above, we will then add the start date and end date to the variables startDate & endDate
+
+```
+bool CDaylightSavings_US::DaylightSavings(int Year,datetime &startDate,datetime &endDate)
+  {
+  // Initialize a list to store daylight savings periods.
+   getSavings = List();
+   bool startDateDetected=false,endDateDetected=false;
+// Iterate through all the periods in the list.
+   for(int i=0; i<getSavings.Total(); i++)
+     {
+      dayLight = getSavings.At(i);
+      if(Year==Time.ReturnYear(dayLight.StartDate))//Check if a certain year's date is available within the Daylight Savings start dates in the List
+        {
+         startDate = dayLight.StartDate;
+         startDateDetected = true;
+        }
+      if(Year==Time.ReturnYear(dayLight.EndDate))//Check if a certain year's date is available within the Daylight Savings end dates in the List
+        {
+         endDate = dayLight.EndDate;
+         endDateDetected = true;
+        }
+      if(startDateDetected&&endDateDetected)//Check if both Daylight Savings start and end dates are found for a certain Year
+        {
+         return true;
+        }
+     }
+
+   startDate = D'1970.01.01 00:00:00';//Set a default start date if no Daylight Saving date is found
+   endDate = D'1970.01.01 00:00:00';//Set a default end date if no Daylight Saving date is found
+   return false;
+  }
+```
+
+Our final public function in this class
+
+```
+void              adjustDaylightSavings(datetime EventDate,string &AdjustedDate);//Will adjust the date's time -zone depending on Daylight Savings
+```
+
+Will modify a string variable AdjustedDate by reference with the EventDate
+
+```
+void CDaylightSavings_AU::adjustDaylightSavings(datetime EventDate,string &AdjustedDate)
+  {
+   if(isDaylightSavings(TimeTradeServer()))//Check if the current trade server time is already within the Daylight Savings Period
+     {
+      if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+        {
+         AdjustedDate = TimeToString(EventDate);//storing normal event time
+        }
+      else
+        {
+         AdjustedDate = TimeToString((datetime)(EventDate-Time.HoursS()));//storing event time and removing an hour for DST
+        }
+     }
+   else
+     {
+      if(isDaylightSavings(EventDate))//Checks if the event time is during daylight savings
+        {
+         AdjustedDate = TimeToString((datetime)(Time.HoursS()+EventDate));//storing event time and adding an hour for DST
+        }
+      else
+        {
+         AdjustedDate = TimeToString(EventDate);//storing normal event time
+        }
+     }
+  }
+```
+
+We will now move onto our next header file in this project dedicated for time manipulations
+
+```
+CTimeManagement
+```
+
+which is a class in the same project
+
+```
+class CTimeManagement
+  {
+
+private:
+
+   MqlDateTime       today;//private variable
+   MqlDateTime       timeFormat;//private variable
+
+public:
+
+   bool              DateIsInRange(datetime FirstTime,datetime SecondTime,datetime compareTime);//Checks if a date is within two other dates
+   bool              DateIsInRange(datetime Start,datetime End,datetime CompareStart,datetime CompareEnd);//Check if two dates(Start&End) are within CompareStart & CompareEnd
+   bool              DateisToday(datetime TimeRepresented);//Checks if a date is within the current day
+   int               SecondsS(int multiple=1);//Returns seconds
+   int               MinutesS(int multiple=1);//Returns Minutes in seconds
+   int               HoursS(int multiple=1);//Returns Hours in seconds
+   int               DaysS(int multiple=1);//Returns Days in seconds
+   int               WeeksS(int multiple=1);//Returns Weeks in seconds
+   int               MonthsS(int multiple=1);//Returns Months in seconds
+   int               YearsS(int multiple=1);//Returns Years in seconds
+   int               ReturnYear(datetime time);//Returns the Year for a specific date
+   datetime          TimeMinusOffset(datetime standardtime,int timeoffset);//Will return a datetime type of a date with an subtraction offset in seconds
+   datetime          TimePlusOffset(datetime standardtime,int timeoffset);//Will return a datetime type of a date with an addition offset in seconds
+  };
+```
+
+the function previously called
+
+```
+Time.DateIsInRange(dayLight.StartDate,dayLight.EndDate,Date)
+```
+
+is a simple function that checks whether a single date is in between two other dates
+
+```
+bool CTimeManagement::DateIsInRange(datetime FirstTime,datetime SecondTime,datetime compareTime)
+  {
+   if(FirstTime<=compareTime&&SecondTime>compareTime)
+     {
+      return true;
+     }
+   return false;
+  }
+```
+
+The same function name with different parameters
+
+```
+bool		DateIsInRange(datetime Start,datetime End,datetime CompareStart,datetime CompareEnd);
+```
+
+is also as simple this function will check if two dates are between to other dates
+
+```
+bool CTimeManagement::DateIsInRange(datetime Start,datetime End,datetime CompareStart,datetime CompareEnd)
+  {
+   if(Start<=CompareStart&&CompareEnd<End)
+     {
+      return true;
+     }
+   return false;
+  }
+```
+
+We will need a function to know if a certain date is today, that's why I have declared
+
+```
+bool              DateisToday(datetime TimeRepresented);//Checks if a date is within the current day
+```
+
+which will compare the year, month and day of the current time and datetime 'TimeRepresented'
+
+```
+bool CTimeManagement::DateisToday(datetime TimeRepresented)
+  {
+   MqlDateTime TiM;
+   TimeToStruct(TimeRepresented,TiM);
+   TimeCurrent(today);
+   if(TiM.year==today.year&&TiM.mon==today.mon&&TiM.day==today.day)
+     {
+      return true;
+     }
+   return false;
+  }
+```
+
+To get a datetime with an offset we have two functions
+
+```
+datetime          TimeMinusOffset(datetime standardtime,int timeoffset);//Will return a datetime type of a date with an subtraction offset in seconds
+```
+
+and
+
+```
+datetime          TimePlusOffset(datetime standardtime,int timeoffset);//Will return a datetime type of a date with an addition offset in seconds
+```
+
+when we want to get a date with a negative offset of an hour(or any unit of time) we will use
+
+```
+datetime CTimeManagement::TimeMinusOffset(datetime standardtime,int timeoffset)
+  {
+   standardtime-=timeoffset;
+   return standardtime;
+  }
+```
+
+on the other hand if we want a date with a positive offset we will use
+
+```
+datetime CTimeManagement::TimePlusOffset(datetime standardtime,int timeoffset)
+  {
+   standardtime+=timeoffset;
+   return standardtime;
+  }
+```
+
+I decided to create an include file that will store global variables and structures as well as enum types in the future to be used across different classes and the expert
+
+this include file is called CommonVariables and will store common variables
+
+```
+string broker=AccountInfoString(ACCOUNT_COMPANY);//Getting brokers name via AccountInfoString
+int Str = StringReplace(broker," ","");//Removing or replacing any spaces in the broker's name with an empty string
+int Str1 = StringReplace(broker,".","");//Removing or replacing any dots in the broker's name with an empty string
+int Str2 = StringReplace(broker,",","");//Removing or replacing any commas in the broker's name with an empty string
+#define BROKER_NAME                    broker//Broker's Name
+#define NEWS_TRADING_FOLDER            "NewsTrading"//Name of main folder in common/files
+#define NEWS_CALENDAR_FOLDER           StringFormat("%s\\NewsCalendar",NEWS_TRADING_FOLDER)//name of subfolder in NewsTrading
+#define NEWS_CALENDAR_BROKER_FOLDER    StringFormat("%s\\%s",NEWS_CALENDAR_FOLDER,BROKER_NAME)//Name of subfolder in NewsCalendar
+#define NEWS_DATABASE_FILE             StringFormat("%s\\Calendar.sqlite",NEWS_CALENDAR_BROKER_FOLDER)//Name of sqlite file in subfolder in "Broker's Name"
+#define NEWS_TEXT_FILE                 StringFormat("%s\\CalendarOpen.txt",NEWS_CALENDAR_BROKER_FOLDER)//Name of text file to indicate Calendar is open.
+
+struct Calendar
+  {
+   ulong             EventId;//Event Id
+   string            CountryName;//Event Country
+   string            EventName;//Event Name
+   string            EventType;//Event Type
+   string            EventImportance;//Event Importance
+   string            EventDate;//Event Date
+   string            EventCurrency;//Event Currency
+   string            EventCode;//Event Code
+   string            EventSector;//Event Sector
+   string            EventForecast;//Event Forecast Value
+   string            EventPreval;//Event Previous Value
+   string            EventImpact;//Event Impact
+   string            EventFrequency;//Event Frequency
+  };
+
+enum DST_type
+  {
+   US_DST,//US Daylight Savings
+   UK_DST,//UK(EU) Daylight Savings
+   AU_DST,//AU Daylight Savings
+   DST_NONE//No Daylight Savings Available
+  };
+```
+
+When we create files in the Common files folder I would like to organize the files by folders, so it is easy to co-ordinate through the Common files folder.
+
+So I have created a class
+
+```
+class CFolders
+```
+
+which will create the folders in the Common files Folder as a sequence NewsTrading/NewsCalendar/Broker. We will have the constructor of the class carry out this task.
+
+```
+class CFolders
+  {
+private:
+   bool              CreateFolder(string FolderPath);//Will create a folder with the FolderPath string parameter
+
+public:
+                     CFolders(void);//Class's constructor
+  };
+```
+
+within the constructor
+
+```
+CFolders::CFolders(void)
+  {
+   if(CreateFolder(NEWS_TRADING_FOLDER))//Will create the NewsTrading Folder
+     {
+      if(CreateFolder(NEWS_CALENDAR_FOLDER))//Will create the NewsCalendar Folder
+        {
+         if(!CreateFolder(NEWS_CALENDAR_BROKER_FOLDER))//Will create the Broker Folder
+           {
+            Print("Something went wrong with creating folder: ",NEWS_CALENDAR_BROKER_FOLDER);
+           }
+        }
+     }
+  }
+```
+
+Function being called in the constructor to create the individual folders
+
+```
+bool CFolders::CreateFolder(string FolderPath)
+  {
+//--- attempt to create a folder relative to the MQL5\Files path
+   if(FolderCreate(FolderPath,FILE_COMMON))
+     {
+      //--- successful execution
+      return true;
+     }
+   else
+     {
+      PrintFormat("Failed to create the folder %s. Error code %d",FolderPath,GetLastError());
+     }
+//--- execution failed
+   return false;
+  }
+```
+
+Candlesticks are very important, we will need to gather information about particular candle's High, Low, Open and Close prices. To do this we will create another class to gather this information for us when needed in any other programs in the project. The classes name will be
+
+```
+class CCandleProperties
+```
+
+We will now declare the functions in this class.
+
+```
+class CCandleProperties
+  {
+private:
+   CTimeManagement   Time;
+
+public:
+   double            Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle OpenPrice
+   double            Close(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle ClosePrice
+   double            High(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle HighPrice
+   double            Low(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle LowPrice
+   bool              IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL);//Determine if one candle is larger than two others
+  };
+```
+
+We will take a quick look at
+
+```
+double            Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL);//Retrieve Candle Open Price
+```
+
+In this function we will return a candle's open price based on the integer CandleIndex parameter and timeframe of the candle as well as the symbol of the candle.
+
+```
+double CCandleProperties::Open(int CandleIndex,ENUM_TIMEFRAMES Period=PERIOD_CURRENT,string SYMBOL=NULL)
+  {
+   return iOpen(((SYMBOL==NULL)?Symbol():SYMBOL),Period,CandleIndex);//return candle open price
+  }
+```
+
+In order to verify whether an economic event happened on a specific date, since brokers may shift their time zones. We will get an economic event date and with this date we will look at the M15 candle for that time, then calculate the candle's height(iHigh-iLow) and compare this height with the M15 candle an hour before the event and an hour after. Since economic events are normally very [volatile](https://dictionary.cambridge.org/dictionary/english/volatile#:~:text=volatile%20adjective%20(CHANGING)&text=likely%20to%20change%20suddenly%20and,volatile%20in%20a%20war%20situation. "https://dictionary.cambridge.org/dictionary/english/volatile#:~:text=volatile%20adjective%20(CHANGING)&text=likely%20to%20change%20suddenly%20and,volatile%20in%20a%20war%20situation.") in the market's prices, we should notice a very long candle when the event does occur. We will use M15 candle, to likely give the market enough time to form this long candle. If the broker did shift it's time zone the event date stored in the MQL5 Economic Calendar may not match the candle's volatility on the specific time on the broker's candle, but this volatility may be present and hour later or an hour before the specified date. The function we will use to do this validation check will be
+
+```
+bool              IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL);//Determine if one candle is larger than two others
+```
+
+This function will check if the Candle's Height on a specific date is larger than the candle with a time offset before and after this specified date.
+
+```
+bool CCandleProperties::IsLargerThanPreviousAndNext(datetime CandleTime,int Offset,string SYMBOL)
+  {
+   int CandleIndex = iBarShift(SYMBOL,PERIOD_M15,CandleTime);//Assign candle index of candletime
+   int CandleIndexMinusOffset = iBarShift(SYMBOL,PERIOD_M15,Time.TimeMinusOffset(CandleTime,Offset));//Assign candle index of candletime minus time offset 
+   int CandleIndexPlusOffset = iBarShift(SYMBOL,PERIOD_M15,Time.TimePlusOffset(CandleTime,Offset));//Assign candle index of candletime plus time offset
+   double CandleHeight = High(CandleIndex,PERIOD_M15,SYMBOL)-Low(CandleIndex,PERIOD_M15,SYMBOL);//Assign height of M15 candletime in pips
+   double CandleHeightMinusOffset = High(CandleIndexMinusOffset,PERIOD_M15,SYMBOL)-Low(CandleIndexMinusOffset,PERIOD_M15,SYMBOL);//Assign height of M15 candletime  minus offset in Pips
+   double CandleHeightPlusOffset = High(CandleIndexPlusOffset,PERIOD_M15,SYMBOL)-Low(CandleIndexPlusOffset,PERIOD_M15,SYMBOL);//Assign height of M15 candletime plus offset in Pips
+   //--Determine if candletime height is greater than candletime height minus offset and candletime height plus offset
+   if(CandleHeight>CandleHeightMinusOffset&&CandleHeight>CandleHeightPlusOffset)
+     {
+      return true;//Candletime is likely when the news event occurred
+     }
+   return false;//Candletime is unlikely when the real news data was released
+  }
+```
+
+We will move onto the News class this class will work directly with obtaining values from the MQL5 economic calendar and storing
+
+the values into a database for testing and eventually trading.
+
+```
+class CNews
+  {
+   //Private Declarations Only accessible by this class/header file
+private:
+   CTimeManagement   Time;//TimeManagement Object declaration
+   CDaylightSavings_UK  Savings_UK;//DaylightSavings Object for the UK and EU
+   CDaylightSavings_US  Savings_US;//DaylightSavings Object for the US
+   CDaylightSavings_AU  Savings_AU;//DaylightSavings Object for the AU
+   CCandleProperties Candle;//CandleProperties Object
+   string            CurrencyBase,CurrencyProfit,EURUSD;//String variables declarations for working with EURUSD
+   bool              EurusdIsSelected,EurusdIsFound,is_Custom;//Boolean variables declarations for working with EURUSD
+   bool              timeIsShifted;//Boolean variable declaration will be used to determine if the broker changes it's time zone
+   datetime          DaylightStart,DaylightEnd;//Datetime variables declarations for start and end dates for Daylight Savings
+   //Structure Declaration for DST
+   struct DST
+     {
+      bool           result;
+      datetime       date;
+     };
+   bool              AutoDetectDST(DST_type &dstType);//Function will determine Broker DST
+   DST_type          DSTType;//variable of DST_type enumeration declared in the CommonVariables class/header file
+   bool              InsertIntoTable(int db,DST_type Type,Calendar &Evalues[]);//Function for inserting Economic Data in to a database's table
+   void              CreateAutoDST(int db);//Function for creating and inserting Recommend DST for the Broker into a table
+   bool              CreateTable(int db,string tableName,bool &tableExists);//Function for creating a table in a database
+   void              CreateRecords(int db);//Creates a table to store records of when last the Calendar database was updated/created
+   bool              UpdateRecords();//Checks if the main Calendar database needs an update or not
+   void              EconomicDetails(Calendar &NewsTime[]);//Gets values from the MQL5 economic Calendar
+
+   //Public declarations accessable via a class's Object
+public:
+                    ~CNews(void);//Deletes a text file created when the Calendar database is being worked on
+   void              CreateEconomicDatabase();//Creates the Calendar database for a specific Broker
+   datetime          GetLastestNewsDate();//Gets the latest/newest date in the Calendar database
+  };
+```
+
+There is a lot to unpack here, we will first take a look at
+
+```
+bool              AutoDetectDST(DST_type &dstType);//Function will determine Broker DST
+```
+
+By the name of this function, its main purpose is to get the DST schedule that the broker uses, we will retrieve this information through the [enumeration](https://www.simplilearn.com/tutorials/cpp-tutorial/cpp-enum#:~:text=Enum%2C%20which%20is%20also%20known,from%20the%20set%20of%20values. "https://www.simplilearn.com/tutorials/cpp-tutorial/cpp-enum#:~:text=Enum%2C%20which%20is%20also%20known,from%20the%20set%20of%20values.")
+
+```
+enum DST_type
+  {
+   US_DST,//US Daylight Savings
+   UK_DST,//UK(EU) Daylight Savings
+   AU_DST,//AU Daylight Savings
+   DST_NONE//No Daylight Savings Available
+  };
+```
+
+passed by reference in the Function AutoDectectDST, this function will return false if the broker's DST schedule is known or failed to be recognized.
+
+```
+bool CNews::AutoDetectDST(DST_type &dstType)
+  {
+   MqlCalendarValue values[];//Single array of MqlCalendarValue type
+   string eventtime[];//Single string array variable to store NFP(Nonfarm Payrolls) dates for the 'United States' from the previous year
+   int lastyear = Time.ReturnYear(Time.TimeMinusOffset(iTime(Symbol(),PERIOD_CURRENT,0),Time.YearsS()));//Will store the previous year into an integer
+   datetime lastyearstart = StringToTime(StringFormat("%s.01.01 00:00:00",(string)lastyear));//Will store the start date for the previous year
+   datetime lastyearend = StringToTime(StringFormat("%s.12.31 23:59:59",(string)lastyear));//Will store the end date for the previous year
+
+   if(CalendarValueHistory(values,lastyearstart,lastyearend,"US"))//Getting last year's calendar values for CountryCode = 'US'
+     {
+      for(int x=0; x<(int)ArraySize(values); x++)
+        {
+         if(values[x].event_id==840030016)//Get only NFP Event Dates
+           {
+            ArrayResize(eventtime,eventtime.Size()+1,eventtime.Size()+2);//Increasing the size of eventtime array by 1
+            eventtime[eventtime.Size()-1] = TimeToString(values[x].time);//Storing the dates in an array of type string
+           }
+        }
+     }
+
+   datetime ShiftStart=D'1970.01.01 00:00:00',ShiftEnd=D'1970.01.01 00:00:00';//datetime variables to store the broker's time zone shift(change)
+   DST previousresult,currentresult;//Variables of structure type DST declared at the beginning of the class
+
+   EURUSD="";//String variable assigned empty string
+   EurusdIsSelected = false;//Boolean variable assigned value false
+   EurusdIsFound = false;//Boolean variable assigned value false
+
+   for(int i=0;i<SymbolsTotal(true);i++)//Will loop through all the Symbols inside the Market Watch
+     {
+      string SymName = SymbolName(i,true);//Assign the Symbol Name of index 'i' from the list of Symbols inside the Market Watch
+      CurrencyBase = SymbolInfoString(SymName,SYMBOL_CURRENCY_BASE);//Assign the Symbol's Currency Base
+      CurrencyProfit = SymbolInfoString(SymName,SYMBOL_CURRENCY_PROFIT);//Assign the Symbol's Currency Profit
+      SymbolExist(SymName,is_Custom);//Get the boolean value into 'is_Custom' for whether the Symbol Name is a Custom Symbol(Is not from the broker)
+
+      //-- Check if the Symbol outside the Market Watch has a SYMBOL_CURRENCY_BASE of EUR
+      //-- and a SYMBOL_CURRENCY_PROFIT of USD, and this Symbol is not a Custom Symbol(Is not from the broker)
+      if(CurrencyBase=="EUR"&&CurrencyProfit=="USD"&&!is_Custom)
+        {
+         EURUSD = SymName;//Assigning the name of the EURUSD Symbol found inside the Market Watch
+         EurusdIsFound = true;//EURUSD Symbol was found in the Trading Terminal for your Broker
+         break;//Will end the for loop
+        }
+     }
+
+   if(!EurusdIsFound)//Check if EURUSD Symbol was already Found in the Market Watch
+     {
+      for(int i=0; i<SymbolsTotal(false); i++)//Will loop through all the available Symbols outside the Market Watch
+        {
+         string SymName = SymbolName(i,false);//Assign the Symbol Name of index 'i' from the list of Symbols outside the Market Watch
+         CurrencyBase = SymbolInfoString(SymName,SYMBOL_CURRENCY_BASE);
+         CurrencyProfit = SymbolInfoString(SymName,SYMBOL_CURRENCY_PROFIT);
+         SymbolExist(SymName,is_Custom);//Get the boolean value into 'is_Custom' for whether the Symbol Name is a Custom Symbol(Is not from the broker)
+
+         //-- Check if the Symbol outside the Market Watch has a SYMBOL_CURRENCY_BASE of EUR
+         //-- and a SYMBOL_CURRENCY_PROFIT of USD, and this Symbol is not a Custom Symbol(Is not from the broker)
+         if(CurrencyBase=="EUR"&&CurrencyProfit=="USD"&&!is_Custom)
+           {
+            EurusdIsSelected = SymbolSelect(SymName,true);//Adding the EURUSD Symbol to the Market Watch
+            if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+              {
+               EURUSD = SymName;//Assigning the name of the EURUSD Symbol found outside the Market Watch
+               EurusdIsFound = true;//EURUSD Symbol was found in the Trading Terminal for your Broker
+               break;//Will end the for loop
+              }
+           }
+        }
+     }
+
+   if(!EurusdIsFound)//Check if EURUSD Symbol was Found in the Trading Terminal for your Broker
+     {
+      Print("Cannot Find EURUSD!");
+      Print("Cannot Create Database!");
+      Print("Server DST Cannot be Detected!");
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   for(uint i=0;i<eventtime.Size();i++)
+     {
+      currentresult.result = Candle.IsLargerThanPreviousAndNext((datetime)eventtime[i],Time.HoursS(),EURUSD);//Store the result of if the event date is the larger candlestick
+      currentresult.date = (datetime)eventtime[i];//Store the eventdate from eventtime[i]
+      timeIsShifted = ((currentresult.result!=previousresult.result&&i>0)?true:false);//Check if there is a difference between the previous result and the current result
+
+      //--- Print Event Dates and if the event date's candle is larger than the previous candle an hour ago and the next candle an hour ahead
+      Print("Date: ",eventtime[i]," is Larger: ",Candle.IsLargerThanPreviousAndNext((datetime)eventtime[i],Time.HoursS(),EURUSD)," Shifted: ",timeIsShifted);
+
+      if(timeIsShifted)//Check if the Larger candle has shifted from the previous event date to the current event date in eventtime[i] array
+        {
+         if(ShiftStart==D'1970.01.01 00:00:00')//Check if the ShiftStart variable has not been assigned a relevant value yet
+           {
+            ShiftStart=currentresult.date;//Store the event date for when the time shift began
+           }
+         ShiftEnd=previousresult.date;//Store the event date timeshift
+        }
+      previousresult.result = currentresult.result;//Store the previous result of if the event date is the larger candlestick
+      previousresult.date = currentresult.date;//Store the event date from eventtime[i]
+     }
+
+   if(ShiftStart==D'1970.01.01 00:00:00'&&eventtime.Size()>0)//Check if the ShiftStart variable has not been assigned a relevant value and the event dates are more than zero
+     {
+      Print("Broker ServerTime unchanged!");
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return true;//Returning True, Broker's DST schedule was found successfully
+     }
+
+   if(Savings_AU.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For AU DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = AU_DST;//Assigning enumeration value AU_DST, Broker has AU DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For AU");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(Savings_UK.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For UK DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = UK_DST;//Assigning enumeration value UK_DST, Broker has UK/EU DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For UK");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(Savings_US.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For US DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = US_DST;//Assigning enumeration value US_DST, Broker has US DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For US");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+     {
+      SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+     }
+   Print("Cannot Detect Broker ServerTime Configuration!");
+   dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+   return false;//Returning False, Broker's DST schedule was not found
+  }
+```
+
+Ok the function above is lengthy, let's break it down. In the first portion we will gather the economic event dates for [NFP](https://www.investing.com/economic-calendar/nonfarm-payrolls-227 "https://www.investing.com/economic-calendar/nonfarm-payrolls-227") from the previous year, so if the current year is 2024, we will gather all the dates for 2023 as we need to analyze the whole year to successfully get the broker's likely DST schedule. These dates will be stored in our single string array eventtime.
+
+```
+MqlCalendarValue values[];//Single array of MqlCalendarValue type
+   string eventtime[];//Single string array variable to store NFP(Nonfarm Payrolls) dates for the 'United States' from the previous year
+   int lastyear = Time.ReturnYear(Time.TimeMinusOffset(iTime(Symbol(),PERIOD_CURRENT,0),Time.YearsS()));//Will store the previous year into an integer
+   datetime lastyearstart = StringToTime(StringFormat("%s.01.01 00:00:00",(string)lastyear));//Will store the start date for the previous year
+   datetime lastyearend = StringToTime(StringFormat("%s.12.31 23:59:59",(string)lastyear));//Will store the end date for the previous year
+
+   if(CalendarValueHistory(values,lastyearstart,lastyearend,"US"))//Getting last year's calendar values for CountryCode = 'US'
+     {
+      for(int x=0; x<(int)ArraySize(values); x++)
+        {
+         if(values[x].event_id==840030016)//Get only NFP Event Dates
+           {
+            ArrayResize(eventtime,eventtime.Size()+1,eventtime.Size()+2);//Increasing the size of event time array by 1
+            eventtime[eventtime.Size()-1] = TimeToString(values[x].time);//Storing the dates in an array of type string
+           }
+        }
+     }
+```
+
+We will then need to use these dates on the EURUSD symbol, because XAUUSD(GOLD) and other indices like US30(Dow Jones) are very volatile even without news events, EURUSD is mostly stable and becomes really volatile during economic events this makes it easier to detect when an economic event did occur as the market would likely [spike](https://www.investopedia.com/terms/s/spike.asp "https://www.investopedia.com/terms/s/spike.asp") due to the event. This is also the reason we will focus on NFP events as they regularly create these market spikes in prices. So with this information we will need the EURUSD symbol, first we will check through all available symbols in the broker to see and find EURUSD and select it. If we do not find EURUSD we will return false.
+
+```
+   EURUSD="";//String variable assigned empty string
+   EurusdIsSelected = false;//Boolean variable assigned value false
+   EurusdIsFound = false;//Boolean variable assigned value false
+
+   for(int i=0;i<SymbolsTotal(true);i++)//Will loop through all the Symbols inside the Market Watch
+     {
+      string SymName = SymbolName(i,true);//Assign the Symbol Name of index 'i' from the list of Symbols inside the Market Watch
+      CurrencyBase = SymbolInfoString(SymName,SYMBOL_CURRENCY_BASE);//Assign the Symbol's Currency Base
+      CurrencyProfit = SymbolInfoString(SymName,SYMBOL_CURRENCY_PROFIT);//Assign the Symbol's Currency Profit
+      SymbolExist(SymName,is_Custom);//Get the boolean value into 'is_Custom' for whether the Symbol Name is a Custom Symbol(Is not from the broker)
+
+      //-- Check if the Symbol outside the Market Watch has a SYMBOL_CURRENCY_BASE of EUR
+      //-- and a SYMBOL_CURRENCY_PROFIT of USD, and this Symbol is not a Custom Symbol(Is not from the broker)
+      if(CurrencyBase=="EUR"&&CurrencyProfit=="USD"&&!is_Custom)
+        {
+         EURUSD = SymName;//Assigning the name of the EURUSD Symbol found inside the Market Watch
+         EurusdIsFound = true;//EURUSD Symbol was found in the Trading Terminal for your Broker
+         break;//Will end the for loop
+        }
+     }
+
+   if(!EurusdIsFound)//Check if EURUSD Symbol was already Found in the Market Watch
+     {
+      for(int i=0; i<SymbolsTotal(false); i++)//Will loop through all the available Symbols outside the Market Watch
+        {
+         string SymName = SymbolName(i,false);//Assign the Symbol Name of index 'i' from the list of Symbols outside the Market Watch
+         CurrencyBase = SymbolInfoString(SymName,SYMBOL_CURRENCY_BASE);
+         CurrencyProfit = SymbolInfoString(SymName,SYMBOL_CURRENCY_PROFIT);
+         SymbolExist(SymName,is_Custom);//Get the boolean value into 'is_Custom' for whether the Symbol Name is a Custom Symbol(Is not from the broker)
+
+         //-- Check if the Symbol outside the Market Watch has a SYMBOL_CURRENCY_BASE of EUR
+         //-- and a SYMBOL_CURRENCY_PROFIT of USD, and this Symbol is not a Custom Symbol(Is not from the broker)
+         if(CurrencyBase=="EUR"&&CurrencyProfit=="USD"&&!is_Custom)
+           {
+            EurusdIsSelected = SymbolSelect(SymName,true);//Adding the EURUSD Symbol to the Market Watch
+            if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+              {
+               EURUSD = SymName;//Assigning the name of the EURUSD Symbol found outside the Market Watch
+               EurusdIsFound = true;//EURUSD Symbol was found in the Trading Terminal for your Broker
+               break;//Will end the for loop
+              }
+           }
+        }
+     }
+
+   if(!EurusdIsFound)//Check if EURUSD Symbol was Found in the Trading Terminal for your Broker
+     {
+      Print("Cannot Find EURUSD!");
+      Print("Cannot Create Database!");
+      Print("Server DST Cannot be Detected!");
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+```
+
+After finding EURUSD we will then iterate through all the NFP dates and find the M15 candlesticks for each individual dates and compare the candle's height with the offset dates from an hour before and after the event to detect we the event likely occurred. If the event dates do not match the volatility in the candlesticks we will store the first event date when this mismatch occurs and when it ends into the variables ShiftStart and ShiftEnd.
+
+```
+for(uint i=0;i<eventtime.Size();i++)
+     {
+      currentresult.result = Candle.IsLargerThanPreviousAndNext((datetime)eventtime[i],Time.HoursS(),EURUSD);//Store the result of if the event date is the larger candlestick
+      currentresult.date = (datetime)eventtime[i];//Store the event date from eventtime[i]
+      timeIsShifted = ((currentresult.result!=previousresult.result&&i>0)?true:false);//Check if there is a difference between the previous result and the current result
+
+      //--- Print Event Dates and if the event date's candle is larger than the previous candle an hour ago and the next candle an hour ahead
+      Print("Date: ",eventtime[i]," is Larger: ",Candle.IsLargerThanPreviousAndNext((datetime)eventtime[i],Time.HoursS(),EURUSD)," Shifted: ",timeIsShifted);
+
+      if(timeIsShifted)//Check if the Larger candle has shifted from the previous event date to the current event date in eventtime[i] array
+        {
+         if(ShiftStart==D'1970.01.01 00:00:00')//Check if the ShiftStart variable has not been assigned a relevant value yet
+           {
+            ShiftStart=currentresult.date;//Store the event date for when the time shift began
+           }
+         ShiftEnd=previousresult.date;//Store the event date timeshift
+        }
+      previousresult.result = currentresult.result;//Store the previous result of if the event date is the larger candlestick
+      previousresult.date = currentresult.date;//Store the event date from eventtime[i]
+     }
+```
+
+Once we have the ShiftStart and ShiftEnd dates we will then check if the dates correspond with the any of the DST start and end dates, if there is a match we will assign the DST schedule in the variable dstType and return true. If we do not have a ShiftStart date(ShiftStart=D'1970.01.01 00:00:00') and the size of the array eventtime is more than zero, we know the the broker does not follow any DST schedule.
+
+```
+if(ShiftStart==D'1970.01.01 00:00:00'&&eventtime.Size()>0)//Check if the ShiftStart variable has not been assigned a relevant value and the event dates are more than zero
+     {
+      Print("Broker ServerTime unchanged!");
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return true;//Returning True, Broker's DST schedule was found successfully
+     }
+
+   if(Savings_AU.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For AU DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = AU_DST;//Assigning enumeration value AU_DST, Broker has AU DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For AU");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(Savings_UK.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For UK DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = UK_DST;//Assigning enumeration value UK_DST, Broker has UK/EU DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For UK");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(Savings_US.DaylightSavings(lastyear,DaylightStart,DaylightEnd))
+     {
+      if(Time.DateIsInRange(DaylightStart,DaylightEnd,ShiftStart,ShiftEnd))
+        {
+         Print("Broker ServerTime Adjusted For US DST");
+         if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+           {
+            SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+           }
+         dstType = US_DST;//Assigning enumeration value US_DST, Broker has US DST(Daylight Savings Time)
+         return true;//Returning True, Broker's DST schedule was found successfully
+        }
+     }
+   else
+     {
+      Print("Something went wrong!");
+      Print("Cannot Find Daylight-Savings Date For US");
+      Print("Year: %d Cannot Be Found!",lastyear);
+      if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+        {
+         SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+        }
+      dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+      return false;//Returning False, Broker's DST schedule was not found
+     }
+
+   if(EurusdIsSelected)//Check if this program added EURUSD Symbol to Market Watch
+     {
+      SymbolSelect(EURUSD,false);//Remove EURUSD Symbol from Market Watch
+     }
+   Print("Cannot Detect Broker ServerTime Configuration!");
+   dstType = DST_NONE;//Assigning enumeration value DST_NONE, Broker has no DST(Daylight Savings Time)
+   return false;//Returning False, Broker's DST schedule was not found
+  }
+```
+
+Once we have Detected the DST schedule we have to store this information for later implementation when testing on the economic events we will know which calendar to use.
+
+```
+void              CreateAutoDST(int db);//Function for creating and inserting Recommend DST for the Broker into a table
+```
+
+A single record will be store into the table AutoDST.
+
+```
+void CNews::CreateAutoDST(int db)
+  {
+   bool failed=false;//boolean variable
+
+   if(!DatabaseTableExists(db,"AutoDST"))//Checks if the table 'AutoDST' exists in the databse 'Calendar'
+     {
+      //--- create the table AutoDST
+      if(!DatabaseExecute(db,"CREATE TABLE AutoDST(DST STRING NOT NULL);"))//Will attempt to create the table 'AutoDST'
+        {
+         Print("DB: create the AutoDST table failed with code ", GetLastError());
+         DatabaseClose(db);//Close the database
+         return;//Exits the function if creating the table failed
+        }
+     }
+   else
+     {
+      return;//Exits the function if the table AutoDST table already exists
+     }
+
+//Sql query/request to insert the recommend DST for the Broker using the DSTType variable to determine which string data to insert
+   string request_text=StringFormat("INSERT INTO 'AutoDST'(DST) VALUES ('%s')",((DSTType==US_DST)?"Data_US":
+                                    (DSTType==UK_DST)?"Data_UK":(DSTType==AU_DST)?"Data_AU":"Data_None"));
+
+   if(!DatabaseExecute(db, request_text))//Will attempt to run this sql request/query
+     {
+      Print(GetLastError());
+      PrintFormat("INSERT INTO 'AutoDST'(DST) VALUES ('%s')",((DSTType==US_DST)?"Data_US":
+                  (DSTType==UK_DST)?"Data_UK":(DSTType==AU_DST)?"Data_AU":"Data_None"));//Will print the sql query if failed
+      failed=true;//assign true if the request failed
+     }
+
+   if(failed)
+     {
+      //--- roll back all transactions and unlock the database
+      DatabaseTransactionRollback(db);
+      PrintFormat("%s: DatabaseExecute() failed with code %d", __FUNCTION__, GetLastError());
+     }
+  }
+```
+
+We need a function that will create our calendar tables, so we can reuse this function to make our individual calendars adjusted for different DST schedules.
+
+```
+bool              CreateTable(int db,string tableName,bool &tableExists);//Function for creating a table in a database
+```
+
+In this function CreateTable we will just create the tables 'Data\_UK' for UK DST ,'Data\_US' for US DST,'Data\_AU' for AU DST  and 'Data\_None' for None DST. The string tableName will be the parameter for the table's suffix name example 'US'.
+
+```
+bool CNews::CreateTable(int db,string tableName,bool &tableExists)
+  {
+   if(DatabaseTableExists(db,StringFormat("Data_%s",tableName)))//Checks if a table 'Data_%s' exists in the database 'Calendar'
+     {
+      tableExists=true;//Assigns true to tableExists variable
+
+      if(!DatabaseExecute(db,StringFormat("DROP TABLE Data_%s",tableName)))//We will drop the table if the table already exists
+        {
+         //If the table failed to be dropped/deleted
+         PrintFormat("Failed to drop table Data_%s with code %d",tableName,GetLastError());
+         DatabaseClose(db);//Close the database
+         return false;//will terminate execution of the rest of the code below and return false, when the table cannot be dropped
+        }
+     }
+
+   if(!DatabaseTableExists(db,StringFormat("Data_%s",tableName)))//If the database table 'Data_%s' doesn't exist
+     {
+      //--- create the table 'Data' with the following columns
+      if(!DatabaseExecute(db,StringFormat("CREATE TABLE Data_%s("
+                                          "ID INT NOT NULL,"
+                                          "EVENTID  INT   NOT NULL,"
+                                          "COUNTRY  STRING   NOT NULL,"
+                                          "EVENTNAME   STRING   NOT NULL,"
+                                          "EVENTTYPE   STRING   NOT NULL,"
+                                          "EVENTIMPORTANCE   STRING   NOT NULL,"
+                                          "EVENTDATE   STRING   NOT NULL,"
+                                          "EVENTCURRENCY  STRING   NOT NULL,"
+                                          "EVENTCODE   STRING   NOT NULL,"
+                                          "EVENTSECTOR STRING   NOT NULL,"
+                                          "EVENTFORECAST  STRING   NOT NULL,"
+                                          "EVENTPREVALUE  STRING   NOT NULL,"
+                                          "EVENTIMPACT STRING   NOT NULL,"
+                                          "EVENTFREQUENCY STRING   NOT NULL,"
+                                          "PRIMARY KEY(ID));",tableName)))//Checks if the table was successfully created
+        {
+         Print("DB: create the Calendar table failed with code ", GetLastError());
+         DatabaseClose(db);//Close the database
+         return false;//Function returns false if creating the table failed
+        }
+     }
+   return true;//Function returns true if creating the table was successful
+  }
+```
+
+We now need to insert data into these tables we created, but first we need to get this data. Our next Function
+
+```
+void              EconomicDetails(Calendar &NewsTime[]);//Gets values from the MQL5 economic Calendar
+```
+
+Will retrieve all the available economic events by reference in the NewsTime Calendar array
+
+```
+void CNews::EconomicDetails(Calendar &NewsTime[])
+  {
+   int Size=0;//to keep track of the size of the events in the NewsTime array
+   MqlCalendarCountry countries[];
+   int count=CalendarCountries(countries);//Get the array of country names available in the Calendar
+   string Country_code="";
+
+   for(int i=0; i<count; i++)
+     {
+      MqlCalendarValue values[];
+      datetime date_from=0;//Get date from the beginning
+      datetime date_to=(datetime)(Time.MonthsS()+iTime(Symbol(),PERIOD_D1,0));//Date of the next month from the current day
+
+      if(CalendarValueHistory(values,date_from,date_to,countries[i].code))
+        {
+         for(int x=0; x<(int)ArraySize(values); x++)
+           {
+            MqlCalendarEvent event;
+            ulong event_id=values[x].event_id;//Get the event id
+
+            if(CalendarEventById(event_id,event))
+              {
+               ArrayResize(NewsTime,Size+1,Size+2);//Readjust the size of the array to +1 of the array size
+               StringReplace(event.name,"'","");//Removing or replacing single quotes(') from event name with an empty string
+
+               NewsTime[Size].CountryName = countries[i].name;//storing the country's name from the specific event
+               NewsTime[Size].EventName = event.name;//storing the event's name
+               NewsTime[Size].EventType = EnumToString(event.type);//storing the event type from (ENUM_CALENDAR_EVENT_TYPE) to a string
+               NewsTime[Size].EventImportance = EnumToString(event.importance);//storing the event importance from (ENUM_CALENDAR_EVENT_IMPORTANCE) to a string
+               NewsTime[Size].EventId = event.id;//storing the event id
+               NewsTime[Size].EventDate = TimeToString(values[x].time);//storing normal event time
+               NewsTime[Size].EventCurrency = countries[i].currency;//storing event currency
+               NewsTime[Size].EventCode = countries[i].code;//storing event code
+               NewsTime[Size].EventSector = EnumToString(event.sector);//storing event sector from (ENUM_CALENDAR_EVENT_SECTOR) to a string
+
+               if(values[x].HasForecastValue())//Checks if the event has a forecast value
+                 {
+                  NewsTime[Size].EventForecast = (string)values[x].forecast_value;//storing the forecast value into a string
+                 }
+               else
+                 {
+                  NewsTime[Size].EventForecast = "None";//storing 'None' as the forecast value
+                 }
+
+               if(values[x].HasPreviousValue())//Checks if the event has a previous value
+                 {
+                  NewsTime[Size].EventPreval = (string)values[x].prev_value;//storing the previous value into a string
+                 }
+               else
+                 {
+                  NewsTime[Size].EventPreval = "None";//storing 'None' as the previous value
+                 }
+
+               NewsTime[Size].EventImpact =  EnumToString(values[x].impact_type);//storing the event impact from (ENUM_CALENDAR_EVENT_IMPACT) to a string
+               NewsTime[Size].EventFrequency =  EnumToString(event.frequency);//storing the event frequency from (ENUM_CALENDAR_EVENT_FREQUENCY) to a string
+               Size++;//incrementing the Calendar array NewsTime
+              }
+           }
+        }
+     }
+  }
+```
+
+Once we have our data, we now need to insert it into the calendar tables.
+
+```
+bool              InsertIntoTable(int db,DST_type Type,Calendar &Evalues[]);//Function for inserting Economic Data in to a database's table
+```
+
+The Function InsertIntoTable will help perform this task. It has three parameters.
+
+1. This input parameter is the database integer value.
+
+```
+int db
+```
+
+2. This input parameter is the DST schedule.
+
+```
+DST_type Type
+```
+
+3. This array reference is an input of the calendar events we would have retrieved from our previous function EconomicDetails.
+
+```
+Calendar &Evalues[]
+```
+
+ In this function we will change the individual event dates if they are within the DST schedule we will add an hour to the event date, if the server current time is in the DST schedule we will remove an hour from the event date. Then store all the economic event data into the calendar table Data\_%s.
+
+```
+bool CNews::InsertIntoTable(int db,DST_type Type,Calendar &Evalues[])
+  {
+   string tableName;//will store the table name suffix
+   for(uint i=0; i<Evalues.Size(); i++)//Looping through all the Economic Events
+     {
+      string Date;//Will store the date for the economic event
+      switch(Type)//Switch statement to check all possible 'case' scenarios for the variable Type
+        {
+         case DST_NONE://if(Type==DST_NONE) then run code below
+            Date = Evalues[i].EventDate;//Assign the normal Economic EventDate
+            tableName = "None";//Full table name will be 'Data_None'
+            break;//End switch statement
+         case US_DST://if(Type==US_DST) then run code below
+            Savings_US.adjustDaylightSavings(StringToTime(Evalues[i].EventDate),Date);//Assign by Reference the Economic EventDate adjusted for US DST(Daylight Savings Time)
+            tableName = "US";//Full table name will be 'Data_US'
+            break;//End switch statement
+         case UK_DST://if(Type==UK_DST) then run code below
+            Savings_UK.adjustDaylightSavings(StringToTime(Evalues[i].EventDate),Date);//Assign by Reference the Economic EventDate adjusted for UK DST(Daylight Savings Time)
+            tableName = "UK";//Full table name will be 'Data_UK'
+            break;//End switch statement
+         case AU_DST://if(Type==AU_DST) then run code below
+            Savings_AU.adjustDaylightSavings(StringToTime(Evalues[i].EventDate),Date);//Assign by Reference the Economic EventDate adjusted for AU DST(Daylight Savings Time)
+            tableName = "AU";//Full table name will be 'Data_AU'
+            break;//End switch statement
+         default://if(Type==(Unknown value)) then run code below
+            Date = Evalues[i].EventDate;//Assign the normal Economic EventDate
+            tableName = "None";//Full table name will be 'Data_None'
+            break;//End switch statement
+        }
+
+      string request_text =
+         StringFormat("INSERT INTO 'Data_%s'(ID,EVENTID,COUNTRY,EVENTNAME,EVENTTYPE,EVENTIMPORTANCE,EVENTDATE,EVENTCURRENCY,EVENTCODE,"
+                      "EVENTSECTOR,EVENTFORECAST,EVENTPREVALUE,EVENTIMPACT,EVENTFREQUENCY)"
+                      "VALUES (%d,%d,'%s','%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s')",
+                      tableName,
+                      i,
+                      Evalues[i].EventId,
+                      Evalues[i].CountryName,
+                      Evalues[i].EventName,
+                      Evalues[i].EventType,
+                      Evalues[i].EventImportance,
+                      Date,
+                      Evalues[i].EventCurrency,
+                      Evalues[i].EventCode,
+                      Evalues[i].EventSector,
+                      Evalues[i].EventForecast,
+                      Evalues[i].EventPreval,
+                      Evalues[i].EventImpact,
+                      Evalues[i].EventFrequency);//Inserting all the columns for each event record
+
+      if(!DatabaseExecute(db, request_text))//Checks whether the event was inserted into the table 'Data_%s'
+        {
+         Print(GetLastError());
+         PrintFormat("INSERT INTO 'Data_%s'(ID,EVENTID,COUNTRY,EVENTNAME,EVENTTYPE,EVENTIMPORTANCE,EVENTDATE,EVENTCURRENCY,EVENTCODE,"
+                      "EVENTSECTOR,EVENTFORECAST,EVENTPREVALUE,EVENTIMPACT,EVENTFREQUENCY)"
+                      "VALUES (%d,%d,'%s','%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s')",
+                      tableName,
+                      i,
+                      Evalues[i].EventId,
+                      Evalues[i].CountryName,
+                      Evalues[i].EventName,
+                      Evalues[i].EventType,
+                      Evalues[i].EventImportance,
+                      Date,
+                      Evalues[i].EventCurrency,
+                      Evalues[i].EventCode,
+                      Evalues[i].EventSector,
+                      Evalues[i].EventForecast,
+                      Evalues[i].EventPreval,
+                      Evalues[i].EventImpact,
+                      Evalues[i].EventFrequency);//Will print the sql query to check for any errors or possible defaults in the query/request
+
+         return false;//Will end the loop and return false, as values failed to be inserted into the table
+        }
+     }
+   return true;//Will return true, all values were inserted into the table successfully
+  }
+```
+
+  
+
+Once we have created our tables and inserted economic data into them, when need a timestamp of when this action was performed. This is to know when to update the table.
+
+```
+void              CreateRecords(int db);//Creates a table to store records of when last the Calendar database was updated/created
+```
+
+We will create a table called Records and store the current server time into this table every time we create or update the calendar tables.
+
+```
+void CNews::CreateRecords(int db)
+  {
+   bool failed=false;
+
+   if(!DatabaseTableExists(db,"Records"))//Checks if the table 'Records' exists in the databse 'Calendar'
+     {
+      //--- create the table
+      if(!DatabaseExecute(db,"CREATE TABLE Records(RECORDEDTIME INT NOT NULL);"))//Will attempt to create the table 'Records'
+        {
+         Print("DB: create the Records table failed with code ", GetLastError());
+         DatabaseClose(db);//Close the database
+         return;//Exits the function if creating the table failed
+        }
+     }
+
+//Sql query/request to insert the current time into the 'RECORDEDTIME' column in the table 'Records'
+   string request_text=StringFormat("INSERT INTO 'Records'(RECORDEDTIME) VALUES (%d)",(int)TimeCurrent());
+
+   if(!DatabaseExecute(db, request_text))//Will attempt to run this sql request/query
+     {
+      Print(GetLastError());
+      PrintFormat("INSERT INTO 'Records'(RECORDEDTIME) VALUES (%d)",(int)TimeCurrent());
+      failed=true;//assign true if the request failed
+     }
+
+   if(failed)
+     {
+      //--- roll back all transactions and unlock the database
+      DatabaseTransactionRollback(db);
+      PrintFormat("%s: DatabaseExecute() failed with code %d", __FUNCTION__, GetLastError());
+     }
+  }
+```
+
+Now we basically have all our functions ready, there are three more left I want to focus on. The first one
+
+```
+bool              UpdateRecords();//Checks if the main Calendar database needs an update or not
+```
+
+This function will return false, when the maximum record in the table called Records is within the current date(meaning the calendar tables were already created or updated in the current day and no further updates have to be performed today). The function will then return true if the calendar tables do not exist or the calendar database does not exist or the maximum record in the table called Records is not within the current date(day).
+
+```
+bool CNews::UpdateRecords()
+  {
+//--- open/create
+   int db=DatabaseOpen(NEWS_DATABASE_FILE, DATABASE_OPEN_READONLY|DATABASE_OPEN_COMMON);//try to open database Calendar
+
+   if(db==INVALID_HANDLE)//Checks if the database was able to be opened
+     {
+      //if opening the database failed
+      if(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))//Checks if the database Calendar exists in the common folder
+        {
+         return true;//Returns true when the database was failed to be opened and the file doesn't exist in the common folder
+        }
+     }
+
+   if(!DatabaseTableExists(db,"Records"))//If the database table 'Records' doesn't exist
+     {
+      DatabaseClose(db);
+      return true;
+     }
+
+   int recordtime=0;//will store the maximum date recorded in the database table 'Records'
+   string request_text="SELECT MAX(RECORDEDTIME) FROM Records";//Sql query to determine the lastest or maximum date recorded
+   int request=DatabasePrepare(db,request_text);//Creates a handle of a request, which can then be executed using DatabaseRead()
+   if(request==INVALID_HANDLE)//Checks if the request failed to be completed
+     {
+      Print("DB: ",NEWS_DATABASE_FILE, " request failed with code ", GetLastError());
+      DatabaseClose(db);
+      return true;
+     }
+
+   for(int i=0; DatabaseRead(request); i++)//Will read all the results from the sql query/request
+     {
+      if(!DatabaseColumnInteger(request, 0, recordtime))//Will assign the first column value to the variable 'recordtime'
+        {
+         Print(i, ": DatabaseRead() failed with code ", GetLastError());
+         DatabaseFinalize(request);//Removes a request created in DatabasePrepare()
+         DatabaseClose(db);//Closes the database
+         return true;
+        }
+     }
+
+   DatabaseFinalize(request);//Removes a request created in DatabasePrepare()
+   DatabaseClose(db);//Closes the database
+
+   if(!Time.DateisToday((datetime)recordtime))//Checks if the recorded time/date is today(current day)
+     {
+      return true;
+     }
+
+   return false;
+  }
+```
+
+The Second Function I want to focus on is
+
+```
+datetime          GetLastestNewsDate();//Gets the lastest/newest date in the Calendar database
+```
+
+This Function is similar to the last one called UpdateRecords, but the difference is the GetLastestNewsDate will just return the maximum recorded time in the table Records, this will be used later to notify the user if they were to try a test a date in the strategy tester that would be greater than this date. We would tell the user/trader that their are no economic events to test past this date.
+
+```
+datetime CNews::GetLastestNewsDate()
+  {
+//--- open the database 'Calendar' in the common folder
+   int db=DatabaseOpen(NEWS_DATABASE_FILE, DATABASE_OPEN_READONLY|DATABASE_OPEN_COMMON);
+
+   if(db==INVALID_HANDLE)//Checks if 'Calendar' failed to be opened
+     {
+
+      if(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))//Checks if 'Calendar' database exists
+        {
+         return 0;//Will return the earliest date which is 1970.01.01 00:00:00
+        }
+     }
+
+   string eventtime="1970.01.01 00:00:00";//string variable with the first/earliest possible date in MQL5
+//Sql query to determine the lastest or maximum recorded time from which the database was updated.
+   string request_text="SELECT MAX(RECORDEDTIME) FROM Records";
+   int request=DatabasePrepare(db,request_text);
+
+   if(request==INVALID_HANDLE)
+     {
+
+      Print("DB: ",NEWS_DATABASE_FILE, " request failed with code ", GetLastError());
+      DatabaseClose(db);
+      return true;
+
+     }
+
+   for(int i=0; DatabaseRead(request); i++)//Will read all the results from the sql query/request
+     {
+      if(!DatabaseColumnText(request, 0,eventtime))//Will assign the first column(column 0) value to the variable 'eventtime'
+        {
+
+         Print(i, ": DatabaseRead() failed with code ", GetLastError());
+         DatabaseFinalize(request);//Finalize request
+         DatabaseClose(db);//Closes the database 'Calendar'
+         return 0;//Will end the for loop and will return the earliest date which is 1970.01.01 00:00:00
+        }
+     }
+
+   DatabaseFinalize(request);
+   DatabaseClose(db);//Closes the database 'Calendar'
+
+   return StringToTime(eventtime);//Returns the string eventtime converted to datetime
+  }
+```
+
+And we will now move onto the Function the will create the Calendar database as well as call all the other functions we have created before to create the tables in this database and insert values into these tables.
+
+```
+void              CreateEconomicDatabase();//Creates the Calendar database for a specific Broker
+```
+
+This is the Function we will call when the expert advisor is attached to the chart, to create our database.
+
+```
+void CNews::CreateEconomicDatabase()
+  {
+   Print("Please wait...");
+
+   if(FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))//Check if the database exists
+     {
+      if(!UpdateRecords())//Check if the database is up to date
+        {
+         return;//will terminate execution of the rest of the code below
+        }
+     }
+   else
+     {
+      if(!AutoDetectDST(DSTType))//Check if AutoDetectDST went through all the right procedures
+        {
+         return;//will terminate execution of the rest of the code below
+        }
+     }
+
+   if(FileIsExist(NEWS_TEXT_FILE,FILE_COMMON))//Check if the database is open
+     {
+      return;//will terminate execution of the rest of the code below
+     }
+
+   Calendar Evalues[];//Creating a Calendar array variable
+   bool failed=false,tableExists=false;
+   int file=INVALID_HANDLE;
+   datetime lastestdate=D'1970.01.01 00:00:00';
+//--- open/create the database 'Calendar'
+   int db=DatabaseOpen(NEWS_DATABASE_FILE, DATABASE_OPEN_READWRITE | DATABASE_OPEN_CREATE| DATABASE_OPEN_COMMON);//will try to open/create in the common folder
+
+   if(db==INVALID_HANDLE)//Checks if the database 'Calendar' failed to open/create
+     {
+      Print("DB: ",NEWS_DATABASE_FILE, " open failed with code ", GetLastError());
+      return;//will terminate execution of the rest of the code below
+     }
+   else
+     {
+      file=FileOpen(NEWS_TEXT_FILE,FILE_WRITE|FILE_ANSI|FILE_TXT|FILE_COMMON);//try to create a text file 'NewsDatabaseOpen' in common folder
+      if(file==INVALID_HANDLE)
+        {
+         DatabaseClose(db);//Closes the database 'Calendar' if the News text file failed to be created
+         return;//will terminate execution of the rest of the code below
+        }
+     }
+
+   DatabaseTransactionBegin(db);//Starts transaction execution
+   Print("Please wait...");
+
+//-- attempt to create the calendar tables
+   if(!CreateTable(db,"None",tableExists)||!CreateTable(db,"US",tableExists)
+      ||!CreateTable(db,"UK",tableExists)||!CreateTable(db,"AU",tableExists))
+     {
+      FileClose(file);//Closing the file 'NewsDatabaseOpen.txt'
+      FileDelete(NEWS_TEXT_FILE,FILE_COMMON);//Deleting the file 'NewsDatabaseOpen.txt'
+      return;//
+     }
+
+   EconomicDetails(Evalues);//Retrieving the data from the Economic Calendar
+
+   if(tableExists)//Checks if there is an existing table within the Calendar Database
+     {
+      //if there is an existing table we will notify the user that we are updating the table.
+      PrintFormat("Updating %s",NEWS_DATABASE_FILE);
+     }
+   else
+     {
+      //if there isn't an existing table we will notify the user that we about to create one
+      PrintFormat("Creating %s",NEWS_DATABASE_FILE);
+     }
+
+//-- attempt to insert economic event data into the calendar tables
+   if(!InsertIntoTable(db,DST_NONE,Evalues)||!InsertIntoTable(db,US_DST,Evalues)
+      ||!InsertIntoTable(db,UK_DST,Evalues)||!InsertIntoTable(db,AU_DST,Evalues))
+     {
+      failed=true;//Will assign true if inserting economic vaules failed in any of the Data tables
+     }
+
+   if(failed)//Checks if the event/s failed to be recorded/inserted into the database table 'Data_%s'
+     {
+      //--- roll back all transactions and unlock the database
+      DatabaseTransactionRollback(db);
+      PrintFormat("%s: DatabaseExecute() failed with code %d", __FUNCTION__, GetLastError());
+      FileClose(file);//Close the text file 'NEWS_TEXT_FILE'
+      FileDelete(NEWS_TEXT_FILE,FILE_COMMON);//Delete the text file, as we are reverted/rolled-back the database
+      ArrayRemove(Evalues,0,WHOLE_ARRAY);//Removes the values in the array
+
+     }
+   else//if all the events were recorded or inserted into the tables 'Data_%s'
+     {
+      if(tableExists)
+        {
+         //Let the user/trader know that the database was updated
+         PrintFormat("%s Updated",NEWS_DATABASE_FILE);
+        }
+      else
+        {
+         //Let the user/trader know that the database was created
+         PrintFormat("%s Created",NEWS_DATABASE_FILE);
+        }
+
+      CreateRecords(db);//Will create the 'Records' table and insert the  current time
+      CreateAutoDST(db);//Will create the 'AutoDST' table and insert the broker's DST schedule
+      FileClose(file);//Close the text file 'NEWS_TEXT_FILE'
+      FileDelete(NEWS_TEXT_FILE,FILE_COMMON);//Delete the text file, as we are about to close the database
+      ArrayRemove(Evalues,0,WHOLE_ARRAY);//Removes the values in the array
+     }
+//--- all transactions have been performed successfully - record changes and unlock the database
+   DatabaseTransactionCommit(db);
+   DatabaseClose(db);//Close the database
+  }
+```
+
+We now move onto the expert advisor which will run all the code we created in all the different classes and files we created in this NewsTrading Project
+
+```
+//+------------------------------------------------------------------+
+//|                                                  NewsTrading.mq5 |
+//|                                  Copyright 2024, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#include "News.mqh"
+CNews NewsObject;
+#include "TimeManagement.mqh"
+CTimeManagement CTM;
+#include "WorkingWithFolders.mqh"
+CFolders Folder();//Calling the class's constructor
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+   if(!MQLInfoInteger(MQL_TESTER))//Checks whether the program is in the strategy tester
+     {
+      //Checks whether the database file exists and whether it has been modified in the current date
+      if((!CTM.DateisToday((datetime)FileGetInteger(NEWS_DATABASE_FILE,FILE_MODIFY_DATE,true)))||(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON)))
+        {
+         /*
+         In the Do while loop below, the code will check if the terminal is connected to the internet.
+         If the the program is stopped the loop will break, if the program is not stopped and the terminal
+         is connected to the internet the function CreateEconomicDatabase will be called from the News.mqh header file's
+         object called NewsObject and the loop will break once called.
+         */
+         bool done=false;
+         do
+           {
+            if(IsStopped())
+              {
+               done=true;
+              }
+
+            if(!TerminalInfoInteger(TERMINAL_CONNECTED))
+              {
+               Print("Waiting for connection...");
+               Sleep(500);
+               continue;
+              }
+            else
+              {
+               Print("Connection Successful!");
+               NewsObject.CreateEconomicDatabase();//calling the database create function
+               done=true;
+              }
+           }
+         while(!done);
+        }
+     }
+   else
+     {
+      //Checks whether the database file exists
+      if(!FileIsExist(NEWS_DATABASE_FILE,FILE_COMMON))
+        {
+         Print("Necessary Files Do not Exist!");
+         Print("Run Program outside of the Strategy Tester");
+         Print("Necessary Files Should be Created First");
+         return(INIT_FAILED);
+        }
+      //Checks whether the lastest database date includes the time and date being tested
+      datetime lastestdate = CTM.TimePlusOffset(NewsObject.GetLastestNewsDate(),CTM.DaysS());//Day after the lastest recorded time in the database
+      if(lastestdate<TimeCurrent())
+        {
+         Print("Necessary Files OutDated!");
+         Print("Database Dates End at: ",lastestdate);
+         Print("Dates after %s will not be available for backtest",lastestdate);
+         Print("To Update Files:");
+         Print("Run Program outside of the Strategy Tester");
+        }
+     }
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+
+  }
+//+------------------------------------------------------------------+
+```
+
+ All that is left now is to compile the files as well as the expert advisor and add the expert advisor on to a chart and begin analysis on what we have coded.
+
+And most importantly see what the Economic calendar has to offer.
+
+These are our project files
+
+### MQL5 Economic Calendar Breakdown
+
+Once everything is compiled we will now open the trading terminal and locate the Navigator window and open our NewsTrading Folder.
+
+We will now attach the Expert Advisor onto a chart of your choice, we will not enable "Allow Algo Trading" in this article because no trading will be done. Well just press OK and attach the Expert.
+
+Once the Expert is attached to the chart, you should see printed text in the Experts tab at the bottom of the terminal informing the user that the database was successfully created.
+
+Now you will have to locate the IDE button on the upper section of the trading terminal, once you have located the button press the button and you will see another window open separate to
+
+the trading terminal. Locate the File button on the upper left section of the IDE and select the Open MetaQuotes Common Data Folder.
+
+Your file directory should look similar to this image above, which will show you the files in this folder called Files.
+
+You will see that the NewsTrading Folder was created and many others
+
+Once all the folders have been open you will find your broker's separated Calendar SQLite database.
+
+We will now go back to the MQL5 IDE.
+
+Select the Folder icon on the upper left of the IDE and you should be located to the Common Folder.
+
+We will then locate the broker's Calendar SQLite Database and open it.
+
+You should see the database's contents in the Navigator window, we will right click on the first table and select "Open Table"
+
+The table will open and all the records(\*) from 'AutoDST' will be displayed, there will only ever be one record in this table as this will be our broker's recommend DST calendar table.
+
+Once we open the table 'Data\_AU' the table will display all the records in this table as well as all the columns.
+
+SQL query:
+
+```
+SELECT  None.EVENTNAME, DATE(REPLACE(None.EVENTDATE,'.','-')) as Date, TIME(REPLACE(None.EVENTDATE,'.','-')) as Time_None,
+
+TIME(REPLACE(US.EVENTDATE,'.','-')) as Time_US, TIME(REPLACE(UK.EVENTDATE,'.','-')) as Time_UK, TIME(REPLACE(AU.EVENTDATE,'.','-')) as Time_AU
+
+FROM 'Data_None' None
+
+INNER JOIN 'Data_US' US on US.ID=None.ID
+
+INNER JOIN 'Data_UK' UK on UK.ID=None.ID
+
+INNER JOIN 'Data_AU' AU on AU.ID=None.ID
+
+WHERE Date BETWEEN '2023-01-01' AND '2024-01-01' AND None.EVENTID='840100001';
+```
+
+Purpose: This query is to display the event name of the event id = '840100001' and the event date as 'Date' and time as 'Time\_None' by the dates between '2023-01-01' and '2024-01-01' from the table 'Data\_None', as well as selecting the same event id from the tables 'Data\_UK', 'Data\_US', 'Data\_AU' but only displaying the time of the events from these tables as 'Time\_UK', 'Time\_US', 'Time\_AU'. In this query we want to show the difference in time between the different calendar tables for the same event for the whole year of 2023.
+
+In SQL query above we give the table 'Data\_None' an alias called None, we give table 'Data\_US' an alias called US, we also give table 'Data\_UK' an alias called UK, and table 'Data\_AU' is given an alias AU.
+
+We SELECT
+
+```
+None.EVENTNAME
+```
+
+from the table 'Data\_None'.
+
+On the [SQL Function](https://www.studysmarter.co.uk/explanations/computer-science/databases/sql-functions/#:~:text=SQL%20Function%3A%20A%20function%20is,retrieving%20data%20in%20the%20database. "https://www.studysmarter.co.uk/explanations/computer-science/databases/sql-functions/#:~:text=SQL%20Function%3A%20A%20function%20is,retrieving%20data%20in%20the%20database.")
+
+```
+REPLACE(None.EVENTDATE,'.','-')
+```
+
+The dot characters('.') in the value from None.EVENTDATE are replaced with dash characters('-'). This is because the SQL
+
+```
+DATE()
+```
+
+Function only accepts dates in datetime with a dash as a character separator and not dates in datetime with a dots as a character separator. This function converts datetime into date.
+
+```
+TIME()
+```
+
+This SQL Function above converts datetime to time.
+
+SQL query:
+
+```
+SELECT Distinct(COUNTRY) FROM 'Data_None';
+```
+
+Purpose: This Query provides us with all the unique countries that have records in the calendar table 'Data\_None'.
+
+If you want to keep the results from your SQL queries for later analysis you can simply right click of one of the results and Export the CSV file, which can be converted to an excel file
+
+for more effect analysis.
+
+SQL query:
+
+```
+SELECT * FROM 'Data_None' where COUNTRY='New Zealand';
+```
+
+Purpose: This Query provides us with all the records for a specific country. In this case that is New Zealand.
+
+SQL query:
+
+```
+SELECT Distinct(EVENTID), COUNTRY, EVENTNAME,EVENTTYPE, EVENTSECTOR, EVENTIMPORTANCE, EVENTFREQUENCY,
+EVENTCURRENCY, EVENTCODE FROM 'Data_None' 
+where COUNTRY='New Zealand';
+```
+
+Purpose: This query retrieves all the unique Event IDs for a specific country and selects specific columns such as the " EVENTNAME " and " EVENTSECTOR " and so on.
+
+But Specifically not "EVENTDATE" as each "EVENTID" has a different "EVENTDATE". Trying to include the "EVENTDATE" in this query will returns errors.
+
+SQL query:
+
+```
+SELECT Distinct(EVENTID), COUNTRY, EVENTNAME, EVENTTYPE, EVENTIMPORTANCE FROM 'Data_None' 
+where COUNTRY='New Zealand' and EVENTSECTOR='CALENDAR_SECTOR_PRICES';
+```
+
+Purpose: This query retrieves all the unique Event IDs for a specific "COUNTRY" and "EVENTSECTOR"
+
+SQL query:
+
+```
+SELECT COUNTRY,EVENTNAME, EVENTIMPORTANCE FROM 'Data_None' 
+where EVENTIMPORTANCE='CALENDAR_IMPORTANCE_HIGH'
+UNION
+SELECT COUNTRY,EVENTNAME, EVENTIMPORTANCE FROM 'Data_None' 
+where EVENTIMPORTANCE='CALENDAR_IMPORTANCE_HIGH';
+```
+
+Purpose: This query retrieves all the unique records for Event Importance that is "CALENDAR\_IMPORTANCE\_HIGH"
+
+### Conclusion
+
+There is a lot to take away from this article, I hope your learnt something new and got some new ideas after reading this article. In this article we went through why using a database was the right choice and some benefits of using a database. We also went through all the currencies provided by the MQL5 economic calendar, and the concept of DST(Daylight savings). Additionally we coded various essential files to create the Calendar database and check whether to update or create the database.
+
+Finally we went through finding the database files once they were created and extracting specific data using basic SQL queries to manipulate the table. In the next article we will go through risk management. Bye for now.
+
+**Attached files** |
+
+[Download ZIP](https://www.mql5.com/en/articles/download/14324.zip "Download all attachments in the single ZIP archive")
+
+[NewsTradingProjectFiles\_Part1.zip](https://www.mql5.com/en/articles/download/14324/newstradingprojectfiles_part1.zip "Download NewsTradingProjectFiles_Part1.zip")
+(644.02 KB)
+
+**Warning:** All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.
+
+This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.
+
+[MQL5 Wizard Techniques you should know (Part 16): Principal Component Analysis with Eigen Vectors](https://www.mql5.com/en/articles/14743)
+
+Principal Component Analysis, a dimensionality reducing technique in data analysis, is looked at in this article, with how it could be implemented with Eigen values and vectors. As always, we aim to develop a prototype expert-signal-class usable in the MQL5 wizard.
+
+[Population optimization algorithms: Changing shape, shifting probability distributions and testing on Smart Cephalopod (SC)](https://www.mql5.com/en/articles/13893)
+
+The article examines the impact of changing the shape of probability distributions on the performance of optimization algorithms. We will conduct experiments using the Smart Cephalopod (SC) test algorithm to evaluate the efficiency of various probability distributions in the context of optimization problems.
+
+[Color buffers in multi-symbol multi-period indicators](https://www.mql5.com/en/articles/13824)
+
+In this article, we will review the structure of the indicator buffer in multi-symbol, multi-period indicators and organize the display of colored buffers of these indicators on the chart.
+
+[Population optimization algorithms: Simulated Isotropic Annealing (SIA) algorithm. Part II](https://www.mql5.com/en/articles/13870)
+
+The first part was devoted to the well-known and popular algorithm - simulated annealing. We have thoroughly considered its pros and cons. The second part of the article is devoted to the radical transformation of the algorithm, which turns it into a new optimization algorithm - Simulated Isotropic Annealing (SIA).
+
+[](https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fvps%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.footer%26utm_term%3Duse.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&a=rktadgjlwhobyedohbrepzshvpcqrlpo&s=a93cef75a53eb5da24c98e0068b3c2b96015191a0af0d1857f5b4dd22e55e7bf&v=1&host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&uid=gdjwngfgyxnwqintepcxxrulmjoayimp&ssn=1788796213337446779&ssn_dr=0&ssn_sr=0&fv_date=1788796213&ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F14324&back_ref=https%3A%2F%2Fwww.google.com%2F&title=News%20Trading%20Made%20Easy%20(Part%201)%3A%20Creating%20a%20Database%20-%20MQL5%20Articles&scr_res=1920x1080&ac=178879621393535101&fz_uniq=5126148922476744501&sv=2552)

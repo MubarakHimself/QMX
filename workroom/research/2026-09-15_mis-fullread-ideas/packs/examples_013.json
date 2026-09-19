@@ -1,0 +1,119 @@
+{
+  "pack_id": "examples_013",
+  "section": "Examples",
+  "parent_shard": "examples_013",
+  "part_index": 0,
+  "part_count": 1,
+  "series_in_pack": [],
+  "n": 12,
+  "articles": [
+    {
+      "id": 1566,
+      "title": "Easy Stock Market Trading with MetaTrader",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1566.md"
+    },
+    {
+      "id": 1567,
+      "title": "Interaction between M\u0435taTrader 4 and MATLAB Engine (Virtual MATLAB Machine)",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1567.md"
+    },
+    {
+      "id": 1568,
+      "title": "Alert and Comment for External Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1568.md"
+    },
+    {
+      "id": 1569,
+      "title": "Trader's Kit: Decorating Indicators",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1569.md"
+    },
+    {
+      "id": 1570,
+      "title": "Superposition and Interference of Financial Securities",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1570.md"
+    },
+    {
+      "id": 1572,
+      "title": "Protect Yourselves, Developers!",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1572.md"
+    },
+    {
+      "id": 1573,
+      "title": "Meta COT Project - New Horizons for CFTC Report Analysis in MetaTrader 4",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1573.md"
+    },
+    {
+      "id": 1574,
+      "title": "FANN2MQL Neural Network Tutorial",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1574.md"
+    },
+    {
+      "id": 1576,
+      "title": "Research of Statistical Recurrences of Candle Directions",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1576.md"
+    },
+    {
+      "id": 1579,
+      "title": "Enhancing the Quality of the Code with the Help of Unit Test",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1579.md"
+    },
+    {
+      "id": 1582,
+      "title": "MQL5 Cookbook: \u041e\u0421\u041e Orders",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1582.md"
+    },
+    {
+      "id": 1612,
+      "title": "Studying the CCanvas Class. Anti-aliasing and Shadows",
+      "section": "Examples",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\1612.md"
+    }
+  ]
+}

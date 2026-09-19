@@ -1,0 +1,116 @@
+{
+  "shard_id": "integration_005",
+  "section": "Integration",
+  "n": 12,
+  "series_in_shard": [],
+  "articles": [
+    {
+      "id": 18603,
+      "title": "Exploring Regression Models for Causal Inference and Trading",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\18603.md"
+    },
+    {
+      "id": 19154,
+      "title": "Custom Debugging and Profiling Tools for MQL5 Development (Part II): Profiling EAs and Testing Trading Logic",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19154.md"
+    },
+    {
+      "id": 19175,
+      "title": "MetaTrader Meets Google Sheets with Pythonanywhere: A Guide to Secure Data Flow",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19175.md"
+    },
+    {
+      "id": 19462,
+      "title": "Algorithmic Arbitrage Trading Using Graph Theory",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19462.md"
+    },
+    {
+      "id": 19519,
+      "title": "Symbolic Price Forecasting Equation Using SymPy",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19519.md"
+    },
+    {
+      "id": 19530,
+      "title": "Analysis of the Impact of Solar and Lunar Cycles on Currency Exchange Rates",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19530.md"
+    },
+    {
+      "id": 19544,
+      "title": "Pipelines in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\19544.md"
+    },
+    {
+      "id": 20271,
+      "title": "Market Positioning Codex for VGT with Kendall's Tau and Distance Correlation",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20271.md"
+    },
+    {
+      "id": 20273,
+      "title": "Pure implementation of RSA encryption in MQL5",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20273.md"
+    },
+    {
+      "id": 20329,
+      "title": "Fast Integration of a Large Language Model with MetaTrader 5 (Part II): Fine-Tuning on Real Data, Backtesting, and Live Trading by the Model",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20329.md"
+    },
+    {
+      "id": 20518,
+      "title": "Quantum Computing and Gradient Boosting in EURUSD Trading",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20518.md"
+    },
+    {
+      "id": 20595,
+      "title": "Codex Pipelines, from Python to MQL5, for Indicator Selection: A Multi-Quarter Analysis of the XLF ETF with Machine Learning",
+      "section": "Integration",
+      "series_title": "",
+      "series_key": "",
+      "series_part": null,
+      "path": "C:\\Users\\Mubarak\\Desktop\\QMX\\.worktrees\\mql5-library\\data\\mql5-library\\md\\20595.md"
+    }
+  ]
+}
