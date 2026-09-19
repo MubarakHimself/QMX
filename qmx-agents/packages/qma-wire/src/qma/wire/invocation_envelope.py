@@ -18,6 +18,7 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from qma.core.operations.descriptor import OperationDescriptor
+from qma.core.ports.permissions import nested_invocation_permissions
 from qma.core.refusals.variants import (
     AmbiguousResolution,
     EnvelopeMismatch,
@@ -29,6 +30,7 @@ from qma.core.vocabulary.enums import EffectClass, ReconcilePolicy
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.wire.auth import FORBIDDEN_SECRET_SURFACE_KEYS, assert_no_secret_on_wire_surface
 from qma.wire.envelope import WireEnvelope
+from qma.wire.invocation_idempotency import assert_child_logical_invocation_id
 from qma.wire.schemas import validate_instance
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import (
@@ -166,6 +168,26 @@ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
         context=context,
         after_condition_descriptor="the contribution is enabled on the live roster",
     )
+
+
+def _as_str_tokens(field: str, value: object) -> Result[list[str]]:
+    collected: list[object]
+    if isinstance(value, list):
+        collected = cast(list[object], value)
+    elif isinstance(value, tuple):
+        collected = list(cast(tuple[object, ...], value))
+    elif isinstance(value, set):
+        collected = list(cast(set[object], value))
+    elif isinstance(value, frozenset):
+        collected = list(cast(frozenset[object], value))
+    else:
+        return _invalid(field, f"{field} is a sequence of permission tokens", given=repr(value))
+    tokens: list[str] = []
+    for raw in collected:
+        if not isinstance(raw, str) or raw.strip() == "":
+            return _invalid(field, f"{field} is a sequence of permission tokens", given=repr(raw))
+        tokens.append(raw)
+    return Ok(tokens)
 
 
 def _as_mapping(field: str, value: object) -> Result[dict[str, object]]:
@@ -870,6 +892,7 @@ def dispatch_public_call(
     payload: object,
     stores: AuthoritativeStores,
     execute: Callable[[BoundInvocation], None] | None = None,
+    parent_permissions: object | None = None,
 ) -> Result[BoundInvocation]:
     """Dispatch a public call. Missing envelope is a typed refusal; no execute."""
     parsed_transport = _parse_transport(transport)
@@ -888,6 +911,15 @@ def dispatch_public_call(
                 "call_depth",
                 "nested public calls carry parent_logical_invocation_id and call_depth",
             )
+        child_id = assert_child_logical_invocation_id(
+            logical_invocation_id=env.logical_invocation_id,
+            parent_logical_invocation_id=env.parent_logical_invocation_id,
+            call_depth=env.call_depth,
+            child_op_id=env.op_id,
+            child_canonical_input_hash=env.input_hash,
+        )
+        if is_refusal(child_id):
+            return child_id
     elif env.call_depth != 0:
         return _invalid(
             "call_depth",
@@ -898,6 +930,20 @@ def dispatch_public_call(
     if is_refusal(bound_parts):
         return bound_parts
     contribution, descriptor, grant, instance, validated = bound_parts.value
+    if door is PublicCallTransport.NESTED:
+        if parent_permissions is None:
+            parent_tokens: tuple[str, ...] | list[str] = descriptor.permission_requests
+        else:
+            parsed_parent = _as_str_tokens("parent_permissions", parent_permissions)
+            if is_refusal(parsed_parent):
+                return parsed_parent
+            parent_tokens = parsed_parent.value
+        permitted = nested_invocation_permissions(
+            parent_tokens,
+            descriptor.permission_requests,
+        )
+        if is_refusal(permitted):
+            return permitted
     bound = BoundInvocation(
         envelope=env,
         contribution=contribution,
@@ -1000,12 +1046,14 @@ def public_call_nested(
     stores: AuthoritativeStores,
     *,
     execute: Callable[[BoundInvocation], None] | None = None,
+    parent_permissions: object | None = None,
 ) -> Result[BoundInvocation]:
-    """Nested public call; parent id + depth required. Child id derivation is 54.3."""
+    """Nested public call. Child id derives from parent; permissions do not union."""
     return dispatch_public_call(
         transport=PublicCallTransport.NESTED,
         envelope=envelope,
         payload=payload,
         stores=stores,
         execute=execute,
+        parent_permissions=parent_permissions,
     )

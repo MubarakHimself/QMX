@@ -361,6 +361,7 @@ from qma.core.ports.paper import (
 )
 from qma.core.ports.permissions import (
     AGENT_PATH_ENFORCEMENT_EVENTS,
+    NESTED_INVOCATION_UNIONS_PERMISSIONS,
     PermissionMode,
     PermissionPolicy,
     assert_agent_path_enforcement_event,
@@ -369,6 +370,7 @@ from qma.core.ports.permissions import (
     deny_binds_under_mode,
     is_agent_path_enforcement_event,
     narrow_permissions,
+    nested_invocation_permissions,
     resolve_enforcement_decision,
 )
 from qma.core.ports.qmb import (
@@ -576,6 +578,7 @@ __all__ = [
     "MODEL_FAMILY_ASSIGN_COMMAND",
     "MONEY_PATH_FIELD_DIFF_SCHEMA",
     "MULTI_CONTRIBUTION_POINTS",
+    "NESTED_INVOCATION_UNIONS_PERMISSIONS",
     "NODE_PAPER_ACCOUNT_ROLE",
     "NODE_PAPER_OWNER",
     "NODE_PAPER_WORLD",
@@ -817,6 +820,7 @@ __all__ = [
     "named_lease_kind",
     "narrow_permissions",
     "narrow_toolset_ids",
+    "nested_invocation_permissions",
     "notebook_joins_undertaking",
     "occupancy_from_invocation",
     "occupying_qmb_job",

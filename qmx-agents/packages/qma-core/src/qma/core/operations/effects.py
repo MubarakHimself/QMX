@@ -1,0 +1,342 @@
+"""Effect-specific retry and reconcile outcomes (Story 54.3; FR-WF-22).
+
+``none`` / ``read`` may retry. ``append-evidence`` dedupes on the key.
+``mutate-config`` is compare-and-set on ``config_revision``. ``place-run``
+treats ``logical_invocation_id`` as the run identity. ``external-egress`` MUST
+obtain a receipt or become ``unknown`` and MUST NOT blind-retry (SCN-0021
+Then 3). ``reconcile_policy`` is the closed AD-24 set.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Final, Literal
+
+from qma.core.refusals.variants import BlindRetryRefused, StaleObservation
+from qma.core.vocabulary.enums import (
+    EffectClass,
+    EffectRetryOutcome,
+    JobHandleState,
+    ReconcilePolicy,
+)
+from qma.core.vocabulary.registry import VocabularyError, parse_closed
+from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal
+
+__all__ = [
+    "EFFECT_RETRY_BY_CLASS",
+    "RECONCILE_POLICIES",
+    "EffectOutcome",
+    "apply_effect_outcome",
+    "cas_config_revision",
+    "effect_retry_kind",
+    "may_retry_effect",
+    "parse_reconcile_policy",
+    "place_run_identity",
+    "reconcile_external_egress",
+]
+
+
+RECONCILE_POLICIES: Final[frozenset[str]] = frozenset(member.value for member in ReconcilePolicy)
+
+EFFECT_RETRY_BY_CLASS: Final[Mapping[EffectClass, EffectRetryOutcome]] = MappingProxyType(
+    {
+        EffectClass.NONE: EffectRetryOutcome.MAY_RETRY,
+        EffectClass.READ: EffectRetryOutcome.MAY_RETRY,
+        EffectClass.APPEND_EVIDENCE: EffectRetryOutcome.DEDUPE,
+        EffectClass.MUTATE_CONFIG: EffectRetryOutcome.CAS,
+        EffectClass.PLACE_RUN: EffectRetryOutcome.RUN_IDENTITY,
+        EffectClass.EXTERNAL_EGRESS: EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
+    }
+)
+
+_Disposition = Literal[
+    "retry",
+    "dedupe",
+    "cas-apply",
+    "run-identity",
+    "receipt",
+    "unknown",
+    "replay",
+]
+
+
+def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def _parse_effect(value: object) -> Result[EffectClass]:
+    try:
+        return Ok(parse_closed(EffectClass, value))
+    except VocabularyError as exc:
+        return _invalid("effect_class", str(exc), given=repr(value))
+
+
+def parse_reconcile_policy(value: object) -> Result[ReconcilePolicy]:
+    """Parse the closed AD-24 reconcile policy. ``blind-retry`` is not a member."""
+    try:
+        return Ok(parse_closed(ReconcilePolicy, value))
+    except VocabularyError as exc:
+        return _invalid("reconcile_policy", str(exc), given=repr(value))
+
+
+def effect_retry_kind(effect_class: object) -> Result[EffectRetryOutcome]:
+    """Map a closed ``effect_class`` onto its Story 54.3 retry outcome."""
+    parsed = _parse_effect(effect_class)
+    if not isinstance(parsed, Ok):
+        return parsed
+    return Ok(EFFECT_RETRY_BY_CLASS[parsed.value])
+
+
+def may_retry_effect(effect_class: object) -> Result[bool]:
+    """True only for ``none`` and ``read`` (FR-WF-22)."""
+    kind = effect_retry_kind(effect_class)
+    if not isinstance(kind, Ok):
+        return kind
+    return Ok(kind.value is EffectRetryOutcome.MAY_RETRY)
+
+
+def cas_config_revision(*, bound: object, live: object) -> Result[int]:
+    """Compare-and-set on ``config_revision`` (``mutate-config``)."""
+    if isinstance(bound, bool) or not isinstance(bound, int):
+        return _invalid("config_revision", "config_revision must be an integer", given=repr(bound))
+    if isinstance(live, bool) or not isinstance(live, int):
+        return _invalid(
+            "config_revision",
+            "live config_revision must be an integer",
+            given=repr(live),
+        )
+    if bound != live:
+        return StaleObservation.of(
+            field="config_revision",
+            bound=bound,
+            live=live,
+            cas=True,
+            reason="cas_mismatch",
+        )
+    return Ok(bound)
+
+
+def place_run_identity(logical_invocation_id: object) -> Result[str]:
+    """``place-run`` uses ``logical_invocation_id`` as the run identity."""
+    if not isinstance(logical_invocation_id, str) or logical_invocation_id.strip() == "":
+        return _invalid(
+            "logical_invocation_id",
+            "place-run run identity is a non-empty logical_invocation_id",
+            given=repr(logical_invocation_id),
+        )
+    return Ok(logical_invocation_id.strip())
+
+
+def reconcile_external_egress(
+    *,
+    logical_invocation_id: object,
+    reconcile_policy: object,
+    receipt: object | None = None,
+    prior_result: Mapping[str, object] | None = None,
+    is_retry: bool = False,
+) -> Result[EffectOutcome]:
+    """Uncertain external effect stays ``unknown`` until reconcile (SCN-0021 Then 3)."""
+    identity = place_run_identity(logical_invocation_id)
+    if not isinstance(identity, Ok):
+        return identity
+    policy = parse_reconcile_policy(reconcile_policy)
+    if not isinstance(policy, Ok):
+        return policy
+    if prior_result is not None:
+        return Ok(
+            EffectOutcome(
+                effect_class=EffectClass.EXTERNAL_EGRESS,
+                retry_kind=EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
+                disposition="replay",
+                reconcile_policy=policy.value,
+                logical_invocation_id=identity.value,
+                handle_state=JobHandleState.UNKNOWN if receipt is None else JobHandleState.DONE,
+                prior_result=prior_result,
+                duplicated=False,
+            )
+        )
+    if receipt is not None:
+        return Ok(
+            EffectOutcome(
+                effect_class=EffectClass.EXTERNAL_EGRESS,
+                retry_kind=EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
+                disposition="receipt",
+                reconcile_policy=policy.value,
+                logical_invocation_id=identity.value,
+                handle_state=JobHandleState.DONE,
+                receipt=True,
+            )
+        )
+    if is_retry:
+        return BlindRetryRefused.of(
+            logical_invocation_id=identity.value,
+            reconcile_policy=policy.value.value,
+        )
+    return Ok(
+        EffectOutcome(
+            effect_class=EffectClass.EXTERNAL_EGRESS,
+            retry_kind=EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
+            disposition="unknown",
+            reconcile_policy=policy.value,
+            logical_invocation_id=identity.value,
+            handle_state=JobHandleState.UNKNOWN,
+            receipt=False,
+        )
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class EffectOutcome:
+    """Decided retry/reconcile outcome for one public invocation."""
+
+    effect_class: EffectClass
+    retry_kind: EffectRetryOutcome
+    disposition: _Disposition
+    reconcile_policy: ReconcilePolicy
+    logical_invocation_id: str
+    handle_state: JobHandleState | None = None
+    run_identity: str | None = None
+    receipt: bool | None = None
+    duplicated: bool = False
+    prior_result: Mapping[str, object] | None = None
+    config_revision: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.prior_result is not None:
+            object.__setattr__(self, "prior_result", MappingProxyType(dict(self.prior_result)))
+
+    def to_payload(self) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "disposition": self.disposition,
+            "duplicated": self.duplicated,
+            "effect_class": self.effect_class.value,
+            "logical_invocation_id": self.logical_invocation_id,
+            "reconcile_policy": self.reconcile_policy.value,
+            "retry_kind": self.retry_kind.value,
+        }
+        if self.handle_state is not None:
+            payload["handle_state"] = self.handle_state.value
+        if self.run_identity is not None:
+            payload["run_identity"] = self.run_identity
+        if self.receipt is not None:
+            payload["receipt"] = self.receipt
+        if self.config_revision is not None:
+            payload["config_revision"] = self.config_revision
+        if self.prior_result is not None:
+            payload["prior_result"] = dict(self.prior_result)
+        return MappingProxyType(payload)
+
+
+def apply_effect_outcome(
+    *,
+    effect_class: object,
+    reconcile_policy: object,
+    logical_invocation_id: object,
+    config_revision: object | None = None,
+    live_config_revision: object | None = None,
+    receipt: object | None = None,
+    prior_result: Mapping[str, object] | None = None,
+    is_retry: bool = False,
+) -> Result[EffectOutcome]:
+    """Apply FR-WF-22 effect-specific outcomes and the closed reconcile policy."""
+    effect = _parse_effect(effect_class)
+    if not isinstance(effect, Ok):
+        return effect
+    policy = parse_reconcile_policy(reconcile_policy)
+    if not isinstance(policy, Ok):
+        return policy
+    identity = place_run_identity(logical_invocation_id)
+    if not isinstance(identity, Ok):
+        return identity
+    kind = EFFECT_RETRY_BY_CLASS[effect.value]
+
+    if effect.value is EffectClass.EXTERNAL_EGRESS:
+        return reconcile_external_egress(
+            logical_invocation_id=identity.value,
+            reconcile_policy=policy.value,
+            receipt=receipt,
+            prior_result=prior_result,
+            is_retry=is_retry,
+        )
+
+    if effect.value is EffectClass.APPEND_EVIDENCE:
+        if prior_result is not None:
+            return Ok(
+                EffectOutcome(
+                    effect_class=effect.value,
+                    retry_kind=kind,
+                    disposition="dedupe",
+                    reconcile_policy=policy.value,
+                    logical_invocation_id=identity.value,
+                    prior_result=prior_result,
+                    duplicated=False,
+                )
+            )
+        return Ok(
+            EffectOutcome(
+                effect_class=effect.value,
+                retry_kind=kind,
+                disposition="dedupe",
+                reconcile_policy=policy.value,
+                logical_invocation_id=identity.value,
+                duplicated=False,
+            )
+        )
+
+    if effect.value is EffectClass.MUTATE_CONFIG:
+        bound = 0 if config_revision is None else config_revision
+        live = bound if live_config_revision is None else live_config_revision
+        cas = cas_config_revision(bound=bound, live=live)
+        if not isinstance(cas, Ok):
+            return cas
+        return Ok(
+            EffectOutcome(
+                effect_class=effect.value,
+                retry_kind=kind,
+                disposition="cas-apply",
+                reconcile_policy=policy.value,
+                logical_invocation_id=identity.value,
+                config_revision=cas.value,
+            )
+        )
+
+    if effect.value is EffectClass.PLACE_RUN:
+        return Ok(
+            EffectOutcome(
+                effect_class=effect.value,
+                retry_kind=kind,
+                disposition="run-identity",
+                reconcile_policy=policy.value,
+                logical_invocation_id=identity.value,
+                run_identity=identity.value,
+                prior_result=prior_result,
+                duplicated=False,
+            )
+        )
+
+    if is_retry and policy.value is ReconcilePolicy.NEVER_RETRY:
+        return _invalid(
+            "reconcile_policy",
+            "never-retry forbids a second attempt",
+            reconcile_policy=policy.value.value,
+            effect_class=effect.value.value,
+        )
+
+    return Ok(
+        EffectOutcome(
+            effect_class=effect.value,
+            retry_kind=kind,
+            disposition="retry",
+            reconcile_policy=policy.value,
+            logical_invocation_id=identity.value,
+            prior_result=prior_result,
+        )
+    )

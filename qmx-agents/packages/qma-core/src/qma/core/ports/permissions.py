@@ -16,6 +16,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from qma.core.refusals.variants import NestedPermissionUnionRefused
 from qma.core.vocabulary.enums import HookControl, HookResultDecision
 from qma.core.vocabulary.hooks import (
     HOOK_RESULT_PRECEDENCE,
@@ -27,6 +28,7 @@ from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
+    "NESTED_INVOCATION_UNIONS_PERMISSIONS",
     "PermissionMode",
     "PermissionPolicy",
     "assert_agent_path_enforcement_event",
@@ -35,8 +37,11 @@ __all__ = [
     "deny_binds_under_mode",
     "is_agent_path_enforcement_event",
     "narrow_permissions",
+    "nested_invocation_permissions",
     "resolve_enforcement_decision",
 ]
+
+NESTED_INVOCATION_UNIONS_PERMISSIONS: Final[bool] = False
 
 # Single agent-path enforcement surface (FR-Q44; AD-10; AD-24).
 AGENT_PATH_ENFORCEMENT_EVENTS: Final[frozenset[str]] = frozenset(
@@ -141,6 +146,30 @@ def narrow_permissions(
             extras=sorted(extras),
         )
     return Ok(asked)
+
+
+def nested_invocation_permissions(
+    parent: Iterable[str],
+    child: Iterable[str],
+    *,
+    union: bool = False,
+) -> Result[frozenset[str]]:
+    """Nested public calls may only narrow parent permissions (FR-WF-20; AD-10).
+
+    Union is refused. Child extras versus the parent ceiling are extras, not a
+    merged grant.
+    """
+    parent_set = frozenset(item for item in parent if str(item).strip())
+    child_set = frozenset(item for item in child if str(item).strip())
+    extras = child_set - parent_set
+    if union or extras:
+        return NestedPermissionUnionRefused.of(
+            parent=tuple(sorted(parent_set)),
+            child=tuple(sorted(child_set)),
+            extras=tuple(sorted(extras)),
+            union=False,
+        )
+    return Ok(child_set)
 
 
 def compute_effective_permissions(

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import cast
+
 import pytest
 from qma.core.operations import (
     ERROR_REFUSAL_FAMILY,
@@ -34,6 +37,7 @@ from qma.core.vocabulary import (
     CLOSED_VOCABULARIES,
     DoorAdapter,
     EffectClass,
+    EffectRetryOutcome,
     EmptyPolicy,
     LifecycleVerb,
     OperationCardinality,
@@ -44,6 +48,16 @@ from qma.core.vocabulary import (
     parse_closed,
 )
 from qmf.core import is_ok, is_refusal
+
+
+def _refusal_codes(payload: Mapping[str, object]) -> set[str]:
+    shape = payload.get("error_refusal_shape")
+    assert isinstance(shape, dict)
+    typed = cast(dict[str, object], shape)
+    raw = typed.get("codes")
+    assert isinstance(raw, list)
+    return {str(item) for item in cast(list[object], raw)}
+
 
 _CONTRACTS_PROJECT = {
     "op_id": "qmb.analysis.project",
@@ -121,7 +135,7 @@ def test_contracts_section_1_example_is_complete() -> None:
     assert payload["effect_class"] == "read"
     assert payload["placement"] == "local-library"
     assert payload["lifecycle_verbs"] == ["start", "query-state", "cancel", "await"]
-    assert set(payload["error_refusal_shape"]["codes"]) >= REQUIRED_REFUSAL_CODES
+    assert _refusal_codes(payload) >= set(REQUIRED_REFUSAL_CODES)
     assert descriptor.door_key == ("qmb.analysis.project", 1)
     round_trip = parse_operation_descriptor(payload)
     assert is_ok(round_trip)
@@ -159,6 +173,7 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     assert "lifecycle_verb" in names
     assert "door_adapter" in names
     assert "reconcile_policy" in names
+    assert "effect_retry_outcome" in names
     assert {member.value for member in OutputShape} == {
         "value",
         "artifact_ref",
@@ -210,6 +225,15 @@ def test_closed_vocabularies_reject_invented_values() -> None:
         parse_closed(DoorAdapter, "qmn-cli")
     with pytest.raises(VocabularyError):
         parse_closed(ReconcilePolicy, "blind-retry")
+    assert {member.value for member in EffectRetryOutcome} == {
+        "may-retry",
+        "dedupe",
+        "cas",
+        "run-identity",
+        "receipt-or-unknown",
+    }
+    with pytest.raises(VocabularyError):
+        parse_closed(EffectRetryOutcome, "blind-retry")
 
 
 def test_missing_refusal_codes_are_refused() -> None:
@@ -236,8 +260,10 @@ def test_fragment_descriptor_is_refused() -> None:
     refused = parse_operation_descriptor({"op_id": "qmb.analysis.project", "version": 1})
     assert is_refusal(refused)
     assert refused.context["field"] == "descriptor"
-    assert "input_cardinality" in refused.context["missing"]
-    assert "supported_doors" in refused.context["missing"]
+    missing = refused.context["missing"]
+    assert isinstance(missing, (list, tuple))
+    assert "input_cardinality" in missing
+    assert "supported_doors" in missing
 
 
 def test_public_operations_publish_complete_descriptors() -> None:
@@ -254,7 +280,7 @@ def test_public_operations_publish_complete_descriptors() -> None:
     for descriptor in descriptors:
         payload = descriptor.to_payload()
         assert list(payload) == list(OPERATION_DESCRIPTOR_FIELDS)
-        assert set(payload["error_refusal_shape"]["codes"]) >= REQUIRED_REFUSAL_CODES
+        assert _refusal_codes(payload) >= set(REQUIRED_REFUSAL_CODES)
         assert descriptor.door_key == (descriptor.op_id, descriptor.version)
 
 

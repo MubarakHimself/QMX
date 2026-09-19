@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 54.3: Idempotency domain, nested identity, and effect-specific outcomes
+
+Caller issues `idempotency_key`. Uniqueness domain is `(principal, op_id, op_version, instance_id, config_revision, grant_id, target, canonical_input_hash)` with retention at least the journal lifetime of the invocation. Collision with a different payload hash is a typed refusal; replay of the same key within retention returns the prior result. Nested public calls carry `parent_logical_invocation_id` and `call_depth`; child `logical_invocation_id` derives from `(parent, depth, child_op_id, child_canonical_input_hash)` and nested invocation does not union permissions. Effect-class outcomes: `none`/`read` may retry; `append-evidence` dedupes; `mutate-config` is CAS on `config_revision`; `place-run` treats `logical_invocation_id` as run identity; `external-egress` must obtain a receipt or become `unknown` and must not blind-retry. `reconcile_policy` is `query-then-decide` | `unknown-manual` | `never-retry` (SCN-0021 Then 3).
+
+Touched: [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-20 — Story 54.2: InvocationEnvelope is bound request context, not authority
 
 Every public call (in-process, CLI, wire, nested) carries an additive CT-40 `InvocationEnvelope` with the cheap-veto A3 / CONTRACTS §1b field set. Transport never bypasses it. The envelope is signed/bound request context: the host resolves contribution, descriptor, and `GrantRecord` from authoritative stores, compares every bound field, and emits typed `stale` / `mismatch` / `GRANT_MISMATCH` before execution. Ambiguous `instance_id` or `config_revision` is a typed refusal — never silent latest. `input_hash` is canonical JSON of the `input_schema`-validated payload (sorted keys); secrets are never inlined. The signature algorithm remains `GAP-DESK-ENVELOPE-CRYPTO`; mismatch refuse is still required. GrantRecord minting/revocation is Story 54.4. At inspect SHA `270e992` this envelope was not on the wire.

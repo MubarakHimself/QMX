@@ -41,6 +41,7 @@ from qma.wire import (
     PublicCallTransport,
     WireEnvelope,
     compute_input_hash,
+    derive_child_logical_invocation_id,
     parse_invocation_envelope,
     public_call_from_cli,
     public_call_from_wire,
@@ -363,8 +364,15 @@ def test_wire_and_nested_transports_carry_the_envelope() -> None:
     assert is_ok(bound)
     assert bound.value.transport is PublicCallTransport.WIRE
 
+    child_id = derive_child_logical_invocation_id(
+        parent_logical_invocation_id="inv:1",
+        call_depth=1,
+        child_op_id="qmb.analysis.project",
+        child_canonical_input_hash=_hash(),
+    )
+    assert is_ok(child_id)
     nested_payload = _envelope_payload(
-        logical_invocation_id="inv:child",
+        logical_invocation_id=child_id.value,
         parent_logical_invocation_id="inv:1",
         call_depth=1,
     )
@@ -372,6 +380,7 @@ def test_wire_and_nested_transports_carry_the_envelope() -> None:
     assert is_ok(nested)
     assert nested.value.envelope.call_depth == 1
     assert nested.value.envelope.parent_logical_invocation_id == "inv:1"
+    assert nested.value.envelope.logical_invocation_id == child_id.value
 
     top_level_depth = public_call_in_process(
         _envelope_payload(call_depth=1, parent_logical_invocation_id="inv:1"),

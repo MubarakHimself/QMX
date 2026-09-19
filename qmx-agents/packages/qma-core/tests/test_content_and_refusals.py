@@ -22,13 +22,16 @@ from qma.core.foundation import (
 from qma.core.refusals import (
     NAMED_REFUSAL_VARIANTS,
     AmbiguousResolution,
+    BlindRetryRefused,
     CredentialOutOfScope,
     CursorScopeMismatch,
     EnvelopeMismatch,
     ExtensionSurfaceRefused,
     GrantMismatch,
+    IdempotencyCollision,
     InvocationEnvelopeRequired,
     LaptopOffContinuationRefused,
+    NestedPermissionUnionRefused,
     NoCodeAuthoringRefused,
     NoEligibleDeployment,
     NoEligibleReviewer,
@@ -87,6 +90,9 @@ EXPECTED_VARIANTS = (
     "GrantMismatch",
     "AmbiguousResolution",
     "InvocationEnvelopeRequired",
+    "IdempotencyCollision",
+    "BlindRetryRefused",
+    "NestedPermissionUnionRefused",
 )
 
 
@@ -220,6 +226,17 @@ def test_all_variant_factories_carry_structured_context() -> None:
         GrantMismatch.of(field="instance_id", grant_id="grant:1"),
         AmbiguousResolution.of(field="instance_id", given="latest"),
         InvocationEnvelopeRequired.of(transport="wire"),
+        IdempotencyCollision.of(
+            idempotency_key="idem:1",
+            stored_hash="fp1:sha256:" + ("00" * 32),
+            given_hash="fp1:sha256:" + ("11" * 32),
+        ),
+        BlindRetryRefused.of(logical_invocation_id="inv:egress"),
+        NestedPermissionUnionRefused.of(
+            parent=("library.read",),
+            child=("library.read", "library.run"),
+            extras=("library.run",),
+        ),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:

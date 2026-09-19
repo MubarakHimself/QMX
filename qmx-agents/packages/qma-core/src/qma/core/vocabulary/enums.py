@@ -18,6 +18,7 @@ __all__ = [
     "DeliveryState",
     "DoorAdapter",
     "EffectClass",
+    "EffectRetryOutcome",
     "EmptyPolicy",
     "EnvironmentLifecycle",
     "ExecutionEnvironmentKind",
@@ -552,10 +553,25 @@ class DoorAdapter(StrEnum):
 class ReconcilePolicy(StrEnum):
     """Closed invocation reconcile policies (Workflows AD-24; DEC-0437; FR-WF-22).
 
-    Effect-specific retry outcomes are Story 54.3. This enum only closes the
-    ``reconcile_policy`` field on ``InvocationEnvelope``.
+    ``query-then-decide`` may query a receipt then decide. ``unknown-manual``
+    stays ``unknown`` until an operator reconciles. ``never-retry`` forbids a
+    second attempt. Blind retry of ``external-egress`` is never a member.
     """
 
     QUERY_THEN_DECIDE = "query-then-decide"
     UNKNOWN_MANUAL = "unknown-manual"
     NEVER_RETRY = "never-retry"
+
+
+class EffectRetryOutcome(StrEnum):
+    """Closed effect-class retry outcomes (Workflows AD-24; FR-WF-22; Story 54.3).
+
+    ``none`` and ``read`` share ``may-retry``. ``external-egress`` is
+    ``receipt-or-unknown`` and MUST NOT blind-retry (SCN-0021 Then 3).
+    """
+
+    MAY_RETRY = "may-retry"
+    DEDUPE = "dedupe"
+    CAS = "cas"
+    RUN_IDENTITY = "run-identity"
+    RECEIPT_OR_UNKNOWN = "receipt-or-unknown"

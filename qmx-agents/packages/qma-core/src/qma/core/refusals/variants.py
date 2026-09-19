@@ -15,13 +15,16 @@ from qmf.core.refusal import RefusalCategory, Retryability
 __all__ = [
     "NAMED_REFUSAL_VARIANTS",
     "AmbiguousResolution",
+    "BlindRetryRefused",
     "CredentialOutOfScope",
     "CursorScopeMismatch",
     "EnvelopeMismatch",
     "ExtensionSurfaceRefused",
     "GrantMismatch",
+    "IdempotencyCollision",
     "InvocationEnvelopeRequired",
     "LaptopOffContinuationRefused",
+    "NestedPermissionUnionRefused",
     "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
     "NoEligibleReviewer",
@@ -569,6 +572,104 @@ class AmbiguousResolution(QmaRefusal):
         return cls.create(context=context)
 
 
+class IdempotencyCollision(QmaRefusal):
+    """Same caller ``idempotency_key`` reused with a different payload hash.
+
+    Uniqueness domain is ``(principal, op_id, op_version, instance_id,
+    config_revision, grant_id, target, canonical_input_hash)`` (FR-WF-19; RC-04).
+    """
+
+    VARIANT: ClassVar[str] = "IdempotencyCollision"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        idempotency_key: str,
+        stored_hash: str,
+        given_hash: str,
+        **extra: object,
+    ) -> IdempotencyCollision:
+        context: dict[str, object] = {
+            "field": "idempotency_key",
+            "idempotency_key": idempotency_key,
+            "stored_hash": stored_hash,
+            "given_hash": given_hash,
+            "code": "IDEMPOTENCY_COLLISION",
+            "reason": "payload_hash_collision",
+            "issuer": "caller",
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class BlindRetryRefused(QmaRefusal):
+    """``external-egress`` retried without a receipt (FR-WF-22; SCN-0021 Then 3).
+
+    Lost acknowledgement stays ``unknown`` until reconcile. A second attempt
+    must not duplicate the side effect. Blind retry is forbidden (Branch D).
+    """
+
+    VARIANT: ClassVar[str] = "BlindRetryRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        logical_invocation_id: str,
+        reconcile_policy: str | None = None,
+        **extra: object,
+    ) -> BlindRetryRefused:
+        context: dict[str, object] = {
+            "field": "effect_class",
+            "effect_class": "external-egress",
+            "logical_invocation_id": logical_invocation_id,
+            "receipt": False,
+            "code": "BLIND_RETRY_REFUSED",
+            "reason": "external_egress_must_not_blind_retry",
+            "handle_state": "unknown",
+        }
+        if reconcile_policy is not None:
+            context["reconcile_policy"] = reconcile_policy
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class NestedPermissionUnionRefused(QmaRefusal):
+    """Nested public call tried to union parent and child permissions (FR-WF-20).
+
+    Child permissions may only narrow the parent. Nested invocation does not
+    union permissions (AD-10).
+    """
+
+    VARIANT: ClassVar[str] = "NestedPermissionUnionRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        parent: tuple[str, ...] | list[str],
+        child: tuple[str, ...] | list[str],
+        extras: tuple[str, ...] | list[str] | None = None,
+        **extra: object,
+    ) -> NestedPermissionUnionRefused:
+        context: dict[str, object] = {
+            "field": "nested_permissions",
+            "parent": list(parent),
+            "child": list(child),
+            "union": False,
+            "code": "NESTED_PERMISSION_UNION",
+            "reason": "nested_invocation_does_not_union_permissions",
+        }
+        if extras is not None:
+            context["extras"] = list(extras)
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class InvocationEnvelopeRequired(QmaRefusal):
     """A public call omitted ``InvocationEnvelope`` (FR-WF-17; FR-WF-25).
 
@@ -645,4 +746,7 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     GrantMismatch,
     AmbiguousResolution,
     InvocationEnvelopeRequired,
+    IdempotencyCollision,
+    BlindRetryRefused,
+    NestedPermissionUnionRefused,
 )

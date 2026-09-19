@@ -11,6 +11,7 @@ from qma.core.vocabulary.enums import (
     DeliveryState,
     DoorAdapter,
     EffectClass,
+    EffectRetryOutcome,
     EmptyPolicy,
     EnvironmentLifecycle,
     ExecutionEnvironmentKind,
@@ -112,6 +113,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("empty_policy", "AD-5", EmptyPolicy, "DEC-0418"),
     ClosedVocabulary("door_adapter", "AD-21", DoorAdapter, "DEC-0434"),
     ClosedVocabulary("reconcile_policy", "AD-24", ReconcilePolicy, "DEC-0437"),
+    ClosedVocabulary("effect_retry_outcome", "AD-24", EffectRetryOutcome, "DEC-0437"),
 )
 
 
