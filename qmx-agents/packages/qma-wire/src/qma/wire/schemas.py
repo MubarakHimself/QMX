@@ -54,6 +54,7 @@ SCHEMA_FILES: Final[dict[str, str]] = {
     "principal_record": "principal_record.v1.schema.json",
     "money_path_field_diff": "money_path_field_diff.v1.schema.json",
     "federated_hit": "federated_hit.v1.schema.json",
+    "contribution_pin": "contribution_pin.v1.schema.json",
 }
 
 

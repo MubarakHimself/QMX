@@ -409,6 +409,10 @@ class PluginLoader:
                         return excluded
         return trust
 
+    def require_operator(self, command: LoadCommand, principal: object) -> Result[PrincipalClass]:
+        """Operator-principal gate for install / enable / reload / uninstall."""
+        return self._require_operator(command, principal)
+
     def _require_operator(self, command: LoadCommand, principal: object) -> Result[PrincipalClass]:
         parsed = parse_principal_class(principal)
         if not is_ok(parsed):
@@ -993,6 +997,22 @@ class PluginLoader:
             self._singleton_owners[key] = plugin_id
         for key in cast_mapping(snap["multis"]):
             self._multi_owners[key] = plugin_id
+
+    def dependants_of(self, plugin_id: str) -> tuple[str, ...]:
+        """Live loaded plugins that list ``plugin_id`` as a dependency (FR-WF-11)."""
+        found: list[str] = []
+        for loaded in self._loaded.values():
+            if plugin_id in loaded.manifest.dependencies:
+                found.append(loaded.manifest.id)
+        return tuple(found)
+
+    def detach_keep_bytes(
+        self, plugin_id: str
+    ) -> tuple[LoadedPlugin, tuple[PublishedContribution, ...]] | None:
+        """Drop the live roster without disposing started bytes (pin_leases)."""
+        if plugin_id not in self._loaded:
+            return None
+        return self._park_loaded(plugin_id)
 
     def unload(self, plugin_id: str) -> int:
         """Close the plugin scope LIFO and remove every published contribution."""

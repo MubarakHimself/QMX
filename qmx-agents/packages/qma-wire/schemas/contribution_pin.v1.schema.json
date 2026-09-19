@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/contribution_pin.v1.schema.json",
+  "title": "QMA ContributionHit pin tuple (CT-40 additive; FR-WF-07)",
+  "description": "Pin of a ContributionHit stores exactly (qualified_id, package_version, availability_revision). Never a descriptor digest, never fp1, never a grant. No new CT number — do not mint CT-52. Persistence uses existing plugin_install_records pin_leases (DEC-0429; AR-WF-05). Not on the wire at inspect SHA 270e992 (DEC-0415, DEC-0443, DEC-0450; SCN-0018).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["qualified_id", "package_version", "availability_revision"],
+  "properties": {
+    "qualified_id": { "type": "string", "minLength": 1 },
+    "package_version": { "type": "string", "minLength": 1 },
+    "availability_revision": { "type": "integer", "minimum": 0 }
+  }
+}

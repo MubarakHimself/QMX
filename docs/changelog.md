@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-19 — Story 53.3: Pin tuple, invoke revalidation, and disable yields tombstone
+
+A ContributionHit pin stores `(qualified_id, package_version, availability_revision)` — not a descriptor digest and not fp1. Invoke revalidates that exact tuple against the live published roster and `availability_revision`. A matching live tuple may proceed to grant checks later (Stories 54/55); the pin alone is not a grant. After disable, uninstall, or leave-roster, a later invoke of that pin is typed `unavailable` or `tombstone` — never another `package_version`, never another contribution, never a stale fp1. In-flight `pin_leases` keep the bytes they started with; GC only when leases are empty and no dependant remains. Side-by-side versions remain allowed. Pin leases live on the existing `plugin_install_records` projection (no sixth sqlite class). At inspect SHA `270e992` this pin/tombstone path was not wired.
+
+Touched: COMP-QMA-WIRE pin DTO on additive CT-40; COMP-QMA-DAEMON pin/invoke/lease over `published_contributions()`.
+
 ## 2026-09-19 — Story 53.2: Concatenate live published_contributions(); pack contributes expand at enable
 
 Federated search concatenates CT-44 Knowledge search, COMP-QMB `library.search`, and COMP-QMA-DAEMON `published_contributions()`. It is never a fourth store and never a door run; occupancy remains none. QMB never opens daemon sqlite; the daemon never `import qmb`. Pack `contributes` are `{point, local_id}` objects (never opaque strings); `qualified_id` defaults to `package_id + ":" + local_id`. Colliding `(point, qualified_id)` on enable refuses and the previous roster stays consistent. Successful enable publishes `availability_revision` atomically with the roster swap so ContributionHits appear on the next concatenate. Ranked/semantic/hybrid stays `unsupported-capability` (GAP-0073).

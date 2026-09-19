@@ -734,6 +734,10 @@ class ContributionHit:
             self.availability,
         )
 
+    def pin_tuple(self) -> tuple[str, str, int]:
+        """Pin stores this triple — never a descriptor digest or fp1 (FR-WF-07)."""
+        return (self.qualified_id, self.package_version, self.availability_revision)
+
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
             {
