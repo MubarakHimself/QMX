@@ -35,6 +35,7 @@ __all__ = [
     "UnauthenticatedProxy",
     "UnauthorizedCancelWriter",
     "UnknownHostRequest",
+    "UnsupportedDoor",
 ]
 
 
@@ -435,6 +436,42 @@ class UnauthorizedCancelWriter(QmaRefusal):
         return cls.create(context=context)
 
 
+class UnsupportedDoor(QmaRefusal):
+    """Door is not in the operation's supported set (Workflows AD-21; FR-WF-26).
+
+    Never mint a ``qma`` / ``qmn`` operator CLI. QMB remains the only operator
+    CLI. Context stamps the typed ``unsupported_door`` token.
+    """
+
+    VARIANT: ClassVar[str] = "UnsupportedDoor"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.UNSUPPORTED_CAPABILITY
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        op_id: str,
+        version: int,
+        adapter: str,
+        door: str | None = None,
+        owner: str | None = None,
+    ) -> UnsupportedDoor:
+        context: dict[str, object] = {
+            "op_id": op_id,
+            "version": version,
+            "adapter": adapter,
+            "code": "UNSUPPORTED_DOOR",
+            "unsupported_door": True,
+            "reason": "unsupported_door",
+            "operator_cli": "qmb",
+        }
+        if door is not None:
+            context["door"] = door
+        if owner is not None:
+            context["owner"] = owner
+        return cls.create(context=context)
+
+
 class StoreVersionMismatch(QmaRefusal):
     """Store lifecycle refused an unknown ``store_schema_version`` (AD-27).
 
@@ -484,4 +521,5 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     UiContributionDeferred,
     NoCodeAuthoringRefused,
     ExtensionSurfaceRefused,
+    UnsupportedDoor,
 )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import qma.core
 import qma.core.barriers
 import qma.core.ontology
+import qma.core.operations
 import qma.core.plugins
 import qma.core.ports
 import qma.core.refusals
@@ -22,3 +23,4 @@ def test_subpackages_importable() -> None:
     assert qma.core.refusals.__doc__
     assert qma.core.vocabulary.__doc__
     assert qma.core.barriers.__doc__
+    assert qma.core.operations.__doc__

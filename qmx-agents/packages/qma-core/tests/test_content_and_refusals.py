@@ -43,6 +43,7 @@ from qma.core.refusals import (
     UnauthenticatedProxy,
     UnauthorizedCancelWriter,
     UnknownHostRequest,
+    UnsupportedDoor,
     variant_name,
 )
 from qmf.core.chrono import Instant as QmfInstant
@@ -75,6 +76,7 @@ EXPECTED_VARIANTS = (
     "UiContributionDeferred",
     "NoCodeAuthoringRefused",
     "ExtensionSurfaceRefused",
+    "UnsupportedDoor",
 )
 
 
@@ -197,6 +199,11 @@ def test_all_variant_factories_carry_structured_context() -> None:
         ExtensionSurfaceRefused.of(
             reason="work_environment_roster_kind",
             surface="work_environment_roster",
+        ),
+        UnsupportedDoor.of(
+            op_id="qma.procedure.start",
+            version=1,
+            adapter="qma-cli",
         ),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)

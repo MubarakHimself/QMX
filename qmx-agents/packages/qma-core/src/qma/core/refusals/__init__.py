@@ -30,6 +30,7 @@ from qma.core.refusals.variants import (
     UnauthenticatedProxy,
     UnauthorizedCancelWriter,
     UnknownHostRequest,
+    UnsupportedDoor,
 )
 
 __all__ = [
@@ -56,5 +57,6 @@ __all__ = [
     "UnauthenticatedProxy",
     "UnauthorizedCancelWriter",
     "UnknownHostRequest",
+    "UnsupportedDoor",
     "variant_name",
 ]

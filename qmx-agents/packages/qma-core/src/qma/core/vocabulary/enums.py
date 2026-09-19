@@ -16,6 +16,9 @@ __all__ = [
     "TASK_MISSION_TERMINAL_STATES",
     "AskOnTimeout",
     "DeliveryState",
+    "DoorAdapter",
+    "EffectClass",
+    "EmptyPolicy",
     "EnvironmentLifecycle",
     "ExecutionEnvironmentKind",
     "ExecutionModel",
@@ -28,11 +31,15 @@ __all__ = [
     "IsolationMode",
     "JobHandleState",
     "LeaseKind",
+    "LifecycleVerb",
     "MemoryValidationState",
     "MessageKind",
     "ModelClass",
     "NetworkPolicy",
     "NodeKind",
+    "OperationCardinality",
+    "OperationPlacement",
+    "OutputShape",
     "PrincipalClass",
     "QuantLedgerEntryKind",
     "RefinementEditKind",
@@ -463,3 +470,79 @@ class GovernedAct(StrEnum):
     ADMIT = "admit"
     APPLY = "apply"
     PROMOTE = "promote"
+
+
+class OutputShape(StrEnum):
+    """Closed operation output shapes (Workflows AD-3; DEC-0416; FR-WF-15).
+
+    Finite ``event`` is not a persistent ``stream``.
+    """
+
+    VALUE = "value"
+    ARTIFACT_REF = "artifact_ref"
+    JOB_HANDLE = "job_handle"
+    EVENT = "event"
+    STREAM = "stream"
+
+
+class EffectClass(StrEnum):
+    """Closed operation effect classes (Workflows AD-3; DEC-0416; FR-WF-15)."""
+
+    NONE = "none"
+    READ = "read"
+    APPEND_EVIDENCE = "append-evidence"
+    MUTATE_CONFIG = "mutate-config"
+    PLACE_RUN = "place-run"
+    EXTERNAL_EGRESS = "external-egress"
+
+
+class OperationPlacement(StrEnum):
+    """Closed execution placement (Workflows AD-3; DEC-0416; FR-WF-15)."""
+
+    LOCAL_LIBRARY = "local-library"
+    DAEMON = "daemon"
+    WORKER = "worker"
+    NODE = "node"
+
+
+class OperationCardinality(StrEnum):
+    """Per-side descriptor cardinality (Workflows AD-3; RC-16; FR-WF-15).
+
+    ``input_cardinality`` and ``output_cardinality`` are each ``one`` or
+    ``many``. A merged ``cardinality`` field is refused. This is not port
+    contribution ``Cardinality`` (``singleton`` / ``multi``).
+    """
+
+    ONE = "one"
+    MANY = "many"
+
+
+class LifecycleVerb(StrEnum):
+    """Closed operation lifecycle verbs (Workflows AD-3; FR-WF-16)."""
+
+    START = "start"
+    QUERY_STATE = "query-state"
+    CANCEL = "cancel"
+    AWAIT = "await"
+
+
+class EmptyPolicy(StrEnum):
+    """Empty-collection policy on the descriptor (Workflows AD-5; FR-WF-15)."""
+
+    REFUSE = "refuse"
+    SKIP = "skip"
+
+
+class DoorAdapter(StrEnum):
+    """Supported door adapters (Workflows AD-21; DEC-0434; FR-WF-26).
+
+    ``qmb-cli`` is the only operator CLI. ``qma-cli`` and ``qmn-cli`` are not
+    members and never become doors.
+    """
+
+    LIBRARY = "library"
+    QMB_CLI = "qmb-cli"
+    QMA_WIRE = "qma-wire"
+    NODE = "node"
+    EVIDENCE_HTTP = "evidence-http"
+    QMN_RUN_SLICE = "qmn-run-slice"
