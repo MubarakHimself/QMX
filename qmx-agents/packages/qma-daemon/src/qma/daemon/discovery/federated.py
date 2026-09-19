@@ -1,13 +1,14 @@
-"""Concatenate CT-44 Knowledge search and QMB ``library.search`` (Stories 52.2–52.3).
+"""Concatenate CT-44, QMB ``library.search``, and live contributions (53.2).
 
-Federated discovery is a read-time concatenate of two existing queries — never a
-fourth store, never a door **run**, and Workbench AD-8 occupancy is unchanged
-(this path consumes none). COMP-QMA-DAEMON owns Knowledge search; COMP-QMB owns
-Artifact search via an injected port (the daemon never imports ``qmb`` and QMB
-never opens daemon sqlite). Locators are not ``fp1``. Unified row caches,
-copied-row Library indexes, and QMA staging reads are refused. Ranked /
-semantic / hybrid retrieval stays ``unsupported-capability`` (GAP-0073).
-Stage 0 hypotheses stay on ``qml.research`` and are refused as federated hits.
+Federated discovery is a read-time concatenate of three existing queries —
+never a fourth store, never a door **run**, and Workbench AD-8 occupancy is
+unchanged (this path consumes none). COMP-QMA-DAEMON owns Knowledge search and
+``published_contributions()``; COMP-QMB owns Artifact search via an injected
+port (the daemon never imports ``qmb`` and QMB never opens daemon sqlite).
+Locators are not ``fp1``. Unified row caches, copied-row Library indexes, and
+QMA staging reads are refused. Ranked / semantic / hybrid retrieval stays
+``unsupported-capability`` (GAP-0073). Stage 0 hypotheses stay on
+``qml.research`` and are refused as federated hits.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Protocol, runtime_checkable
+from typing import Final, Protocol, cast, runtime_checkable
 
 from qma.core.ports.knowledge import (
     GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
@@ -34,6 +35,7 @@ from qma.daemon.knowledge.service import KnowledgeService
 from qma.wire.federated_discovery import (
     ARTIFACT_HIT_KINDS,
     ArtifactHit,
+    ContributionHit,
     FederatedHit,
     KnowledgeHit,
     library_kind_to_artifact_hit_kind,
@@ -54,9 +56,11 @@ __all__ = [
     "FEDERATED_SEARCH_SURFACES",
     "SURFACE_ARTIFACT_LIBRARY",
     "SURFACE_KNOWLEDGE",
+    "SURFACE_PUBLISHED_CONTRIBUTIONS",
     "ArtifactLibrarySearchPort",
     "FederatedDiscoveryService",
     "FederatedSearch",
+    "PublishedContributionsPort",
     "federated_search_identity",
     "refuse_copied_row_library_index",
     "refuse_federated_fourth_store",
@@ -77,9 +81,11 @@ FEDERATED_SEARCH_QMB_OPENS_DAEMON_SQLITE: Final[bool] = QMB_OPENS_DAEMON_SQLITE
 
 SURFACE_KNOWLEDGE: Final[str] = "ct-44-knowledge"
 SURFACE_ARTIFACT_LIBRARY: Final[str] = "qmb-library-search"
+SURFACE_PUBLISHED_CONTRIBUTIONS: Final[str] = "qma-published-contributions"
 FEDERATED_SEARCH_SURFACES: Final[tuple[str, ...]] = (
     SURFACE_KNOWLEDGE,
     SURFACE_ARTIFACT_LIBRARY,
+    SURFACE_PUBLISHED_CONTRIBUTIONS,
 )
 
 _FOURTH_STORE_FIELDS: Final[tuple[str, ...]] = (
@@ -129,9 +135,10 @@ def refuse_federated_fourth_store(**extra: object) -> TypedRefusal:
     field = str(extra.pop("field", "fourth_store"))
     return policy_rejection(
         field,
-        "federated discovery concatenates CT-44 Knowledge search and QMB "
-        "library.search over existing surfaces; it never opens a fourth store "
-        "(FR-RES-07; DEC-0389; Workbench AD-14)",
+        "federated discovery concatenates CT-44 Knowledge search, QMB "
+        "library.search, and live published_contributions() over existing "
+        "surfaces; it never opens a fourth store "
+        "(FR-WF-01; FR-WF-05; DEC-0389; DEC-0449)",
         opens_fourth_store=False,
         occupancy=FEDERATED_SEARCH_OCCUPANCY,
         surfaces=list(FEDERATED_SEARCH_SURFACES),
@@ -246,9 +253,22 @@ class ArtifactLibrarySearchPort(Protocol):
         ...
 
 
+@runtime_checkable
+class PublishedContributionsPort(Protocol):
+    """Injected COMP-QMA-DAEMON ``published_contributions()`` surface.
+
+    Live in-memory roster query — never a fourth store, never daemon sqlite
+    opened by QMB, and the daemon never imports the qmb package.
+    """
+
+    def published_contributions(self) -> Sequence[object]:
+        """Return live published contribution rows (Story 53.2)."""
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class FederatedSearch:
-    """Concatenated KnowledgeHit + ArtifactHit result. Occupancy is none."""
+    """Concatenated KnowledgeHit + ArtifactHit + ContributionHit. Occupancy none."""
 
     hits: tuple[FederatedHit, ...]
     query: str
@@ -296,16 +316,13 @@ def _map_artifact_row(row: Mapping[str, object]) -> Result[ArtifactHit]:
         )
     if "locator" in row and "fp1" not in row:
         return refuse_locator_as_fp1(given=repr(row.get("locator")))
-    if "locator" in row and row.get("locator") is not None and row.get("fp1") == row.get(
-        "locator"
-    ):
+    if "locator" in row and row.get("locator") is not None and row.get("fp1") == row.get("locator"):
         return refuse_locator_as_fp1(given=repr(row.get("locator")))
     raw_kind = row.get("kind")
     if not isinstance(raw_kind, str) or raw_kind.strip() == "":
         return invalid_input(
             "kind",
-            "artifact library.search rows carry a Workbench AD-3 kind or "
-            "query-hit tag (FR-RES-07)",
+            "artifact library.search rows carry a Workbench AD-3 kind or query-hit tag (FR-RES-07)",
             given=repr(raw_kind),
         )
     kind_fold = raw_kind.strip().casefold().replace("_", "-")
@@ -327,12 +344,44 @@ def _map_artifact_row(row: Mapping[str, object]) -> Result[ArtifactHit]:
     return ArtifactHit.try_create(fp1=row.get("fp1"), kind=mapped)
 
 
+def _row_field(row: object, name: str) -> object:
+    if isinstance(row, Mapping):
+        return cast("Mapping[str, object]", row).get(name)
+    return getattr(row, name, None)
+
+
+def _map_published_row(row: object) -> Result[ContributionHit | None]:
+    """Map a live ``published_contributions()`` row to ContributionHit.
+
+    Singleton rows (no ``qualified_id``) are not ContributionHits.
+    """
+    qualified = _row_field(row, "qualified_id")
+    if not isinstance(qualified, str) or qualified.strip() == "":
+        return Ok(None)
+    package_id = _row_field(row, "package_id")
+    plugin_id = _row_field(row, "plugin_id")
+    built = ContributionHit.try_create(
+        plugin_id=plugin_id,
+        point=_row_field(row, "point"),
+        qualified_id=qualified,
+        package_id=package_id if package_id is not None else plugin_id,
+        package_version=_row_field(row, "package_version"),
+        availability_revision=_row_field(row, "availability_revision"),
+        availability=_row_field(row, "availability") or "enabled",
+    )
+    if is_refusal(built):
+        return built
+    hit: ContributionHit | None = built.value
+    return Ok(hit)
+
+
 @dataclass(slots=True)
 class FederatedDiscoveryService:
-    """Daemon-side concatenate of CT-44 search and injected library.search."""
+    """Daemon-side concatenate of CT-44, library.search, published_contributions."""
 
     knowledge: KnowledgeService
     artifacts: ArtifactLibrarySearchPort
+    contributions: PublishedContributionsPort | None = None
 
     def search(
         self,
@@ -365,10 +414,11 @@ class FederatedDiscoveryService:
         stage0_hypothesis: object = None,
         research_ref: object = None,
     ) -> Result[FederatedSearch]:
-        """Concatenate Knowledge locators and Artifact ``fp1`` hits.
+        """Concatenate Knowledge locators, Artifact ``fp1``, and contributions.
 
         Occupancy is ``none`` — never a door run. QMB never opens daemon sqlite.
         Stage 0 hypotheses are refused here; they list on ``qml.research``.
+        Ranked / semantic / hybrid stays ``unsupported-capability`` (GAP-0073).
         """
         hypothesis_refusal = refuse_federated_hypothesis_kwargs(
             {
@@ -505,6 +555,15 @@ class FederatedDiscoveryService:
             if is_refusal(mapped):
                 return mapped
             hits.append(mapped.value)
+
+        if self.contributions is not None:
+            for row in self.contributions.published_contributions():
+                mapped_contrib = _map_published_row(row)
+                if is_refusal(mapped_contrib):
+                    return mapped_contrib
+                contribution = mapped_contrib.value
+                if contribution is not None:
+                    hits.append(contribution)
 
         return Ok(
             FederatedSearch(

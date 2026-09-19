@@ -1,4 +1,4 @@
-"""Federated discovery — concatenate CT-44 + QMB library.search (Stories 52.2–52.3)."""
+"""Federated discovery — concatenate CT-44 + library.search + contributions."""
 
 from __future__ import annotations
 
@@ -12,9 +12,13 @@ from qma.daemon.discovery.federated import (
     FEDERATED_SEARCH_QMB_OPENS_DAEMON_SQLITE,
     FEDERATED_SEARCH_READS_STAGING,
     FEDERATED_SEARCH_SURFACES,
+    SURFACE_ARTIFACT_LIBRARY,
+    SURFACE_KNOWLEDGE,
+    SURFACE_PUBLISHED_CONTRIBUTIONS,
     ArtifactLibrarySearchPort,
     FederatedDiscoveryService,
     FederatedSearch,
+    PublishedContributionsPort,
     federated_search_identity,
     refuse_copied_row_library_index,
     refuse_federated_fourth_store,
@@ -81,10 +85,14 @@ __all__ = [
     "MCP_APPS_STORES",
     "PRESENTATION_CANDIDATES",
     "REFUSED_HYPOTHESIS_KIND_TOKENS",
+    "SURFACE_ARTIFACT_LIBRARY",
+    "SURFACE_KNOWLEDGE",
+    "SURFACE_PUBLISHED_CONTRIBUTIONS",
     "ArtifactLibrarySearchPort",
     "FederatedDiscoveryService",
     "FederatedSearch",
     "LibrarianContribution",
+    "PublishedContributionsPort",
     "federated_in_flight_on_tab_close",
     "federated_search_identity",
     "hypotheses_are_federated_hits",

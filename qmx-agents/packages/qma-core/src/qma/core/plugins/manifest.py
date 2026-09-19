@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from typing import Final, Literal, cast
 
 from qma.core.ontology.desks import DESK_PREFIX_TOKENS
+from qma.core.plugins.contributes import (
+    PackContribute,
+    PackContributeError,
+    parse_pack_contributes,
+)
 from qma.core.ports.cardinality import (
     HANDLE_KIND_CONTRIBUTION_POINTS,
     PORT_CONTRACT_BY_NAME,
@@ -22,6 +27,7 @@ __all__ = [
     "OPERATOR_ASSIGNED_MANIFEST_FIELDS",
     "ContributionDecl",
     "ManifestError",
+    "PackContribute",
     "PluginManifest",
     "PluginRosterEntry",
     "RollbackMode",
@@ -77,6 +83,7 @@ class PluginManifest:
     permissions: tuple[str, ...] = ()
     migrations: tuple[Mapping[str, object], ...] = ()
     rollback: RollbackMode | None = None
+    contributes: tuple[PackContribute, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,6 +271,15 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
 
     validate_migration_rollback_contract(tuple(migrations), rollback)
 
+    try:
+        contributes = _parse_manifest_contributes(
+            raw,
+            plugin_id=plugin_id,
+            contributions=tuple(contributions),
+        )
+    except PackContributeError as exc:
+        raise ManifestError(str(exc)) from exc
+
     return PluginManifest(
         id=plugin_id,
         version=version,
@@ -275,6 +291,23 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
         permissions=permissions,
         migrations=tuple(migrations),
         rollback=rollback,
+        contributes=contributes,
+    )
+
+
+def _parse_manifest_contributes(
+    raw: Mapping[str, object],
+    *,
+    plugin_id: str,
+    contributions: tuple[ContributionDecl, ...],
+) -> tuple[PackContribute, ...]:
+    """Parse declared ``contributes`` or derive from multi ``contributions``."""
+    if "contributes" in raw:
+        return parse_pack_contributes(raw["contributes"], package_id=plugin_id)
+    return tuple(
+        PackContribute(point=decl.point, local_id=decl.local_id)
+        for decl in contributions
+        if decl.cardinality is Cardinality.MULTI and decl.local_id is not None
     )
 
 
@@ -291,16 +324,13 @@ def validate_migration_rollback_contract(
     if not migrations:
         if rollback is not None:
             raise ManifestError(
-                "empty migration set must not declare rollback; omit the key "
-                "(CT-42; FR-Q69)"
+                "empty migration set must not declare rollback; omit the key (CT-42; FR-Q69)"
             )
         return
     if rollback == "forward_only":
         return
     if rollback is not None:
-        raise ManifestError(
-            f"rollback must be 'forward_only' or omitted; got {rollback!r}"
-        )
+        raise ManifestError(f"rollback must be 'forward_only' or omitted; got {rollback!r}")
     for index, migration in enumerate(migrations):
         if "down" not in migration:
             raise ManifestError(

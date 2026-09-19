@@ -18,12 +18,16 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Literal, cast
 
 from qma.core.plugins.context import Disposer, PluginContext
+from qma.core.plugins.contributes import (
+    PackContributeError,
+    qualify_pack_contribute,
+)
 from qma.core.plugins.manifest import (
     ManifestError,
     PluginManifest,
@@ -219,20 +223,33 @@ def topological_plugin_order(manifests: Sequence[PluginManifest]) -> tuple[str, 
 
 @dataclass(frozen=True, slots=True)
 class PublishedContribution:
-    """One contribution published for clients over the qma-wire surface."""
+    """One contribution published for clients over the qma-wire surface.
+
+    Multi rows carry the live ``published_contributions()`` tuple used by
+    ContributionHit (plugin_id, point, qualified_id, package_id,
+    package_version, availability_revision, availability).
+    """
 
     plugin_id: str
     point: str
     cardinality: str
+    package_id: str
+    package_version: str
+    availability_revision: int
+    availability: str = "enabled"
     qualified_id: str | None = None
     scope_key: str | None = None
     scope_value: str | None = None
 
     def to_payload(self) -> Mapping[str, object]:
         payload: dict[str, object] = {
+            "availability": self.availability,
+            "availability_revision": self.availability_revision,
+            "cardinality": self.cardinality,
+            "package_id": self.package_id,
+            "package_version": self.package_version,
             "plugin_id": self.plugin_id,
             "point": self.point,
-            "cardinality": self.cardinality,
         }
         if self.qualified_id is not None:
             payload["qualified_id"] = self.qualified_id
@@ -280,6 +297,7 @@ class PluginLoader:
     _published: list[PublishedContribution] = field(
         default_factory=list[PublishedContribution], init=False
     )
+    _availability_revision: int = field(default=0, init=False)
     _disabled_data_intact: set[str] = field(default_factory=set[str], init=False)
 
     @property
@@ -299,6 +317,10 @@ class PluginLoader:
 
     def published_contributions(self) -> tuple[PublishedContribution, ...]:
         return tuple(self._published)
+
+    def availability_revision(self) -> int:
+        """Roster generation stamped onto ContributionHits at the last swap."""
+        return self._availability_revision
 
     def continuity_snapshot(self) -> DaemonContinuitySnapshot:
         """Return the continuity markers the loader must leave untouched."""
@@ -549,9 +571,63 @@ class PluginLoader:
 
         return claims
 
-    def _publish(self, context: DaemonPluginContext) -> tuple[PublishedContribution, ...]:
+    def _live_contribution_keys(self) -> dict[tuple[str, str], str]:
+        """Map live published ``(point, qualified_id)`` to owning plugin_id."""
+        keys: dict[tuple[str, str], str] = {}
+        for row in self._published:
+            if row.qualified_id is None:
+                continue
+            keys[(row.point, row.qualified_id)] = row.plugin_id
+        return keys
+
+    def _refuse_contribute_collisions(self, manifest: PluginManifest) -> TypedRefusal | None:
+        """Refuse enable when ``(point, qualified_id)`` collides with the live roster."""
+        live = self._live_contribution_keys()
+        seen: set[tuple[str, str]] = set()
+        for contrib in manifest.contributes:
+            try:
+                qualified = qualify_pack_contribute(manifest.id, contrib)
+            except PackContributeError as exc:
+                return self._refuse(
+                    "contributes",
+                    str(exc),
+                    plugin_id=manifest.id,
+                )
+            key = (contrib.point, qualified)
+            if key in seen:
+                return self._refuse(
+                    "contributes",
+                    f"colliding (point, qualified_id) {key!r} refuses enable; "
+                    "previous roster stays consistent (FR-WF-09; SCN-0022)",
+                    plugin_id=manifest.id,
+                    point=contrib.point,
+                    qualified_id=qualified,
+                )
+            seen.add(key)
+            owner = live.get(key)
+            if owner is not None and owner != manifest.id:
+                return self._refuse(
+                    "contributes",
+                    f"colliding (point, qualified_id) {key!r} owned by {owner!r} "
+                    "refuses enable; previous roster stays consistent "
+                    "(FR-WF-09; SCN-0022)",
+                    plugin_id=manifest.id,
+                    point=contrib.point,
+                    qualified_id=qualified,
+                    colliding_plugin_id=owner,
+                    conflicting_plugin_ids=(owner, manifest.id),
+                )
+        return None
+
+    def _stage_published(
+        self,
+        context: DaemonPluginContext,
+        manifest: PluginManifest,
+    ) -> tuple[PublishedContribution, ...]:
+        """Build published rows without mutating the live roster."""
         snap = context.snapshot()
         published: list[PublishedContribution] = []
+        seen: set[tuple[str, str | None]] = set()
         for key, _value in cast_mapping(snap["singletons"]).items():
             port, scope_value = key
             scope_key = {
@@ -565,22 +641,79 @@ class PluginLoader:
                 plugin_id=context.plugin_id,
                 point=port,
                 cardinality=Cardinality.SINGLETON.value,
+                package_id=manifest.id,
+                package_version=manifest.version,
+                availability_revision=0,
+                availability="enabled",
                 scope_key=scope_key,
                 scope_value=scope_value,
             )
             published.append(row)
-            self._published.append(row)
+            seen.add((port, None))
         for key, _value in cast_mapping(snap["multis"]).items():
             point, qualified = key
             row = PublishedContribution(
                 plugin_id=context.plugin_id,
                 point=point,
                 cardinality=Cardinality.MULTI.value,
+                package_id=manifest.id,
+                package_version=manifest.version,
+                availability_revision=0,
+                availability="enabled",
                 qualified_id=qualified,
             )
             published.append(row)
-            self._published.append(row)
+            seen.add((point, qualified))
+        for contrib in manifest.contributes:
+            try:
+                qualified = qualify_pack_contribute(manifest.id, contrib)
+            except PackContributeError as exc:
+                raise PluginLoadError(
+                    str(exc),
+                    plugin_id=manifest.id,
+                    field="contributes",
+                ) from exc
+            key = (contrib.point, qualified)
+            if key in seen:
+                continue
+            published.append(
+                PublishedContribution(
+                    plugin_id=manifest.id,
+                    point=contrib.point,
+                    cardinality=Cardinality.MULTI.value,
+                    package_id=manifest.id,
+                    package_version=manifest.version,
+                    availability_revision=0,
+                    availability="enabled",
+                    qualified_id=qualified,
+                )
+            )
+            seen.add(key)
         return tuple(published)
+
+    def _commit_roster(
+        self,
+        staged: tuple[PublishedContribution, ...],
+    ) -> tuple[PublishedContribution, ...]:
+        """Swap staged rows onto the live roster and publish availability_revision."""
+        next_rev = self._availability_revision + 1
+        stamped = tuple(replace(row, availability_revision=next_rev) for row in staged)
+        self._published.extend(stamped)
+        self._availability_revision = next_rev
+        return stamped
+
+    def _roster_snapshot(
+        self,
+    ) -> tuple[tuple[PublishedContribution, ...], int]:
+        return tuple(self._published), self._availability_revision
+
+    def _restore_roster(
+        self,
+        snapshot: tuple[tuple[PublishedContribution, ...], int],
+    ) -> None:
+        published, revision = snapshot
+        self._published = list(published)
+        self._availability_revision = revision
 
     def _drop_published(self, plugin_id: str) -> None:
         self._published = [row for row in self._published if row.plugin_id != plugin_id]
@@ -611,11 +744,12 @@ class PluginLoader:
             "dependencies",
             "migrations",
         ]
+        staged: tuple[PublishedContribution, ...] = ()
         try:
             activator(context)
             self._claim_bindings(context)
             phases.append("topological_activation")
-            published = self._publish(context)
+            staged = self._stage_published(context, manifest)
             phases.append("publication")
         except (PluginContextError, PluginLoadError, ManifestError) as exc:
             exit_stack.close()
@@ -636,6 +770,7 @@ class PluginLoader:
                 field="entrypoint",
             ) from exc
 
+        published = self._commit_roster(staged)
         loaded = LoadedPlugin(
             manifest=manifest,
             context=context,
@@ -658,6 +793,9 @@ class PluginLoader:
         prepared = self._validate_manifest_phases(raw)
         if not is_ok(prepared):
             return prepared
+        collided = self._refuse_contribute_collisions(prepared.value)
+        if collided is not None:
+            return collided
         migrated = self._execute_migrations(prepared.value, correlation_id=correlation_id)
         if not is_ok(migrated):
             return migrated
@@ -770,11 +908,22 @@ class PluginLoader:
         principal: object = PrincipalClass.OPERATOR,
         correlation_id: object = "plugin-enable",
     ) -> Result[LoadedPlugin]:
-        """Operator-principal enable — same load order as install (FR-Q68)."""
+        """Operator-principal enable — same load order as install (FR-Q68).
+
+        Pack ``contributes`` expand to live published rows at enable. A colliding
+        ``(point, qualified_id)`` refuses and the previous roster stays
+        consistent. ``availability_revision`` publishes atomically with the
+        roster swap (AD-30; FR-WF-09; FR-WF-10).
+        """
         gated = self._require_operator("plugin.enable", principal)
         if not is_ok(gated):
             return gated
-        return self._load_with_migrations(raw, activator=activator, correlation_id=correlation_id)
+        snapshot = self._roster_snapshot()
+        loaded = self._load_with_migrations(raw, activator=activator, correlation_id=correlation_id)
+        if not is_ok(loaded):
+            self._restore_roster(snapshot)
+            return loaded
+        return loaded
 
     def reload(
         self,
@@ -914,6 +1063,32 @@ class PluginLoader:
             if not is_ok(prepared):
                 return prepared
             parsed.append(prepared.value)
+        claimed = self._live_contribution_keys()
+        for manifest in parsed:
+            for contrib in manifest.contributes:
+                try:
+                    qualified = qualify_pack_contribute(manifest.id, contrib)
+                except PackContributeError as exc:
+                    return self._refuse(
+                        "contributes",
+                        str(exc),
+                        plugin_id=manifest.id,
+                    )
+                key = (contrib.point, qualified)
+                owner = claimed.get(key)
+                if owner is not None and owner != manifest.id:
+                    return self._refuse(
+                        "contributes",
+                        f"colliding (point, qualified_id) {key!r} owned by {owner!r} "
+                        "refuses enable; previous roster stays consistent "
+                        "(FR-WF-09; SCN-0022)",
+                        plugin_id=manifest.id,
+                        point=contrib.point,
+                        qualified_id=qualified,
+                        colliding_plugin_id=owner,
+                        conflicting_plugin_ids=(owner, manifest.id),
+                    )
+                claimed[key] = manifest.id
         try:
             order = topological_plugin_order(parsed)
         except PluginLoadError as exc:

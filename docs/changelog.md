@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-19 — Story 53.2: Concatenate live published_contributions(); pack contributes expand at enable
+
+Federated search concatenates CT-44 Knowledge search, COMP-QMB `library.search`, and COMP-QMA-DAEMON `published_contributions()`. It is never a fourth store and never a door run; occupancy remains none. QMB never opens daemon sqlite; the daemon never `import qmb`. Pack `contributes` are `{point, local_id}` objects (never opaque strings); `qualified_id` defaults to `package_id + ":" + local_id`. Colliding `(point, qualified_id)` on enable refuses and the previous roster stays consistent. Successful enable publishes `availability_revision` atomically with the roster swap so ContributionHits appear on the next concatenate. Ranked/semantic/hybrid stays `unsupported-capability` (GAP-0073).
+
+Touched: COMP-QMA-CORE pack `contributes` parsing; COMP-QMA-DAEMON federated concatenate and plugin enable.
+
 ## 2026-09-19 — Story 53.1: Federated DTO gains ContributionHit on additive CT-40
 
 COMP-QMA-WIRE format-mints ContributionHit on the existing CT-40 federated hit family. A hit is exactly one of KnowledgeHit, ArtifactHit, or ContributionHit. ContributionHit identity is the live `published_contributions()` tuple (`hit_class=contribution`, `plugin_id`, `point`, `qualified_id`, `package_id`, `package_version`, `availability_revision`, `availability`) and is never fp1, never a registry kind, and never `ArtifactHit.kind`. No new CT number (do not mint CT-52). `facade_search` / `facade_get` remain the discovery query names. `view:*` is not a ContributionHit (GAP-0081). `hit_class` `strats` / `qml_candidate` / hypothesis kinds stay refused (DEC-0412). At inspect SHA `270e992` the third class was not on the wire.

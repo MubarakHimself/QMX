@@ -15,6 +15,13 @@ from qma.core.plugins.boundaries import (
     scan_forbidden_runtime_calls,
 )
 from qma.core.plugins.context import Disposer, HookHandler, PluginContext
+from qma.core.plugins.contributes import (
+    DEFAULT_QUALIFIED_ID_RULE,
+    PackContribute,
+    PackContributeError,
+    parse_pack_contributes,
+    qualify_pack_contribute,
+)
 from qma.core.plugins.credential import (
     CredentialRef,
     CredentialRefError,
@@ -84,6 +91,7 @@ from qma.core.vocabulary.handles import (
 __all__ = [
     "ANALYSIS_BACKTEST_PLUGIN_ID",
     "CLOSED_HANDLE_KINDS",
+    "DEFAULT_QUALIFIED_ID_RULE",
     "DESK_PLUGIN_PACK_DESKS",
     "DESK_PLUGIN_PACK_IDS",
     "DESK_PREFIX_TOKENS",
@@ -117,6 +125,8 @@ __all__ = [
     "HookResult",
     "HookSource",
     "ManifestError",
+    "PackContribute",
+    "PackContributeError",
     "PluginContext",
     "PluginManifest",
     "PluginRosterEntry",
@@ -135,7 +145,9 @@ __all__ = [
     "is_handle_kind_contribution_point",
     "parse_credential_ref",
     "parse_hook_implementation_kind",
+    "parse_pack_contributes",
     "parse_plugin_manifest",
+    "qualify_pack_contribute",
     "refuse_plugin_handle_kind_extension",
     "require_desk_plugin_pack_id",
     "require_desk_prefix_plugin_id",
