@@ -47,6 +47,8 @@ live-readiness verdict packet. It does not run the unattended paper week,
 does not procure a VPS, invents no KSA/latency numbers, never opens a live
 binding, and never admits profit, loss, win rate, or paper performance
 (AD-32 / FR-076 / DEC-0261).
+Story 59.3 is the AD-25 fencing machine: UNKNOWN blocks handover;
+``unknown-blocked`` is terminal for the attempt.
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -107,6 +109,26 @@ from qmn.host.failure_campaign import (
     FailureCampaignReport,
     refuse_live_demo_account_required,
     run_paper_milestone_failure_campaign,
+)
+from qmn.host.fencing import (
+    FENCING_AUTO_RETRY,
+    FENCING_GAP_0100,
+    FENCING_HAPPY_PATH,
+    FENCING_ISSUER_ATC_SIMULATE,
+    FENCING_ISSUER_VENUE,
+    FENCING_OWNER,
+    FENCING_PAYLOAD_FIELDS,
+    FENCING_PROTOCOL,
+    FENCING_SURFACE,
+    FENCING_TERMINAL_BRANCH,
+    UNKNOWN_BLOCKED_IS_TERMINAL,
+    FencingAttempt,
+    FencingRegistry,
+    FencingState,
+    fencing_machine_identity,
+    record_fencing_payload,
+    refuse_automatic_retry,
+    refuse_gap_0100_readiness_dashboard,
 )
 from qmn.host.golden_scenarios import (
     GOLDEN_PROOF_KEYS,
@@ -408,6 +430,16 @@ __all__ = [
     "FAILURE_CAMPAIGN_CLASS",
     "FAILURE_CAMPAIGN_FORMAT_VERSION",
     "FAILURE_CAMPAIGN_SURFACE",
+    "FENCING_AUTO_RETRY",
+    "FENCING_GAP_0100",
+    "FENCING_HAPPY_PATH",
+    "FENCING_ISSUER_ATC_SIMULATE",
+    "FENCING_ISSUER_VENUE",
+    "FENCING_OWNER",
+    "FENCING_PAYLOAD_FIELDS",
+    "FENCING_PROTOCOL",
+    "FENCING_SURFACE",
+    "FENCING_TERMINAL_BRANCH",
     "FORBIDDEN_VERDICT_KEYS",
     "FOUNDATION_DEBT_IDS",
     "FTR07_UNSETTABLE_NAMES",
@@ -487,6 +519,7 @@ __all__ = [
     "SUPERVISOR_STREAM",
     "TN23_CHECKLIST_ITEMS",
     "TRADING_EDGE_IS_PROOF",
+    "UNKNOWN_BLOCKED_IS_TERMINAL",
     "VERDICT_PACKET_CLASS",
     "VERDICT_PACKET_FORMAT_VERSION",
     "VERDICT_SURFACE",
@@ -523,6 +556,9 @@ __all__ = [
     "DrainOutcome",
     "FailureCampaignInputs",
     "FailureCampaignReport",
+    "FencingAttempt",
+    "FencingRegistry",
+    "FencingState",
     "FourBoundDeclaration",
     "GateResult",
     "GoldenFixtureProof",
@@ -608,6 +644,7 @@ __all__ = [
     "evaluate_runtime_risk_coverage",
     "evaluate_safe_point",
     "evaluate_workload_claim",
+    "fencing_machine_identity",
     "fold_tn23_checklist",
     "guard_synchronous_placement",
     "install_compose_kinds",
@@ -624,8 +661,11 @@ __all__ = [
     "prove_seat_concurrency",
     "publish_live_readiness_verdict",
     "qmn_production_src_root",
+    "record_fencing_payload",
     "record_operator_proceed",
+    "refuse_automatic_retry",
     "refuse_foundation_reclassified",
+    "refuse_gap_0100_readiness_dashboard",
     "refuse_golden_invented_ksa_or_latency",
     "refuse_golden_trading_edge_claim",
     "refuse_inherited_or_implicit",
