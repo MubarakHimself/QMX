@@ -79,6 +79,10 @@ from qma.daemon.taskgraph import (
     refuse_qmb_occupancy_write,
     refuse_second_scheduler,
 )
+from qma.daemon.taskgraph.restart_fixture import (
+    OutboxRestartFixture,
+    refuse_second_logical_b,
+)
 from qma.daemon.telemetry import RetentionJob, TelemetryStore
 
 __all__ = [
@@ -113,6 +117,7 @@ __all__ = [
     "MemoryAdmissionGate",
     "MemoryProviderRegistry",
     "MissionCompiler",
+    "OutboxRestartFixture",
     "PackLifecycleFixture",
     "PackTransition",
     "PermissionPolicyEnforcer",
@@ -134,6 +139,7 @@ __all__ = [
     "order_by_announcement_journal_seq",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
+    "refuse_second_logical_b",
     "refuse_second_scheduler",
     "spawn_agent",
 ]
