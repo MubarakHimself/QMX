@@ -172,7 +172,14 @@ def validate_no_daemon_graph_template(qualified_id: str) -> Result[str]:
 def validate_graph_template_topology(
     template: GraphTemplate,
 ) -> Result[GraphTemplate]:
-    """Reject back-edges at registration; keep Graph Template ≠ Task Graph."""
+    """Refuse self-loops and any directed cycle (AD-6; FR-WF-40).
+
+    Pairwise reverse-edge checks are insufficient — a template ``A→B→C→A``
+    must refuse. Cycle detection reuses the plugin-loader DFS pattern
+    (temporary / permanent marks). Runtime Loops remain node state and are
+    never an excuse for a template cycle. Compile identity stays
+    ``(qualified_id, version)`` on the authored template.
+    """
     owned = validate_no_daemon_graph_template(template.qualified_id)
     if not is_ok(owned):
         return owned
@@ -184,8 +191,17 @@ def validate_graph_template_topology(
             given=template.artifact_kind.value,
         )
 
-    node_ids = {str(n.get("id")) for n in template.nodes if isinstance(n.get("id"), str)}
-    forward: set[tuple[str, str]] = set()
+    node_ids: set[str] = set()
+    for node in template.nodes:
+        node_id = node.get("id")
+        if not isinstance(node_id, str) or not node_id:
+            return invalid_input(
+                "node.id",
+                "graph template nodes require a non-empty string id",
+            )
+        node_ids.add(node_id)
+
+    adjacency: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
     for edge in template.edges:
         src = edge.get("from")
         dst = edge.get("to")
@@ -197,14 +213,44 @@ def validate_graph_template_topology(
                 "graph template edge endpoints must name declared nodes",
                 given=f"{src}->{dst}",
             )
-        if (dst, src) in forward:
+        if src == dst:
             return policy_rejection(
                 "graph_template",
-                "back-edges are rejected at Graph Template registration (AD-13; FR-Q29)",
+                "self-loops are refused at Graph Template registration "
+                "(AD-6; FR-WF-40)",
                 from_node=src,
                 to_node=dst,
             )
-        forward.add((src, dst))
+        adjacency[src].append(dst)
+
+    # DFS cycle detection — same temporary/permanent marks as
+    # topological_plugin_order (AD-6: pairwise reverse-edge is insufficient).
+    temporary: set[str] = set()
+    permanent: set[str] = set()
+
+    def visit(node_id: str) -> Result[None] | None:
+        if node_id in permanent:
+            return None
+        if node_id in temporary:
+            return policy_rejection(
+                "graph_template",
+                "directed cycles are refused at Graph Template registration "
+                "(AD-6; FR-WF-40); pairwise reverse-edge checks are insufficient",
+                node_id=node_id,
+            )
+        temporary.add(node_id)
+        for successor in adjacency[node_id]:
+            refused = visit(successor)
+            if refused is not None:
+                return refused
+        temporary.remove(node_id)
+        permanent.add(node_id)
+        return None
+
+    for node_id in node_ids:
+        cycle = visit(node_id)
+        if cycle is not None:
+            return cycle
     return Ok(template)
 
 

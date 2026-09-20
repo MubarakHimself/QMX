@@ -369,7 +369,7 @@ def test_back_edge_in_template_refused_at_registration() -> None:
             {"from": "b", "to": "a"},
         ),
     )
-    # AD-13 / FR-Q29: back-edges are refused at registration (not best-effort).
+    # AD-6 / FR-WF-40: directed cycles (incl. reverse edges) refuse at registration.
     refused = catalog.register(template)
     assert is_refusal(refused)
     assert "dev-factory:cycle" not in catalog

@@ -273,6 +273,107 @@ def test_back_edge_refused_at_registration() -> None:
     assert is_refusal(direct)
 
 
+def test_directed_triangle_cycle_refused_at_registration() -> None:
+    """Story 56.1 / FR-WF-40 — A→B→C→A must refuse; reverse-edge-only is a hole."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:triangle-cycle",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task"},
+            {"id": "c", "kind": "task"},
+        ),
+        edges=(
+            {"from": "a", "to": "b"},
+            {"from": "b", "to": "c"},
+            {"from": "c", "to": "a"},
+        ),
+    )
+    direct = validate_graph_template_topology(template)
+    assert is_refusal(direct)
+
+    catalog = GraphTemplateCatalog()
+    refused = catalog.register(template)
+    assert is_refusal(refused)
+    assert "dev-factory:triangle-cycle" not in catalog
+
+
+def test_self_loop_refused_at_registration() -> None:
+    template = GraphTemplate(
+        qualified_id="dev-factory:self-loop",
+        version="1",
+        nodes=({"id": "a", "kind": "task"},),
+        edges=({"from": "a", "to": "a"},),
+    )
+    direct = validate_graph_template_topology(template)
+    assert is_refusal(direct)
+    catalog = GraphTemplateCatalog()
+    assert is_refusal(catalog.register(template))
+    assert "dev-factory:self-loop" not in catalog
+
+
+def test_dag_template_keeps_compile_identity_qualified_id_version() -> None:
+    """FR-WF-39 — compile identity is (qualified_id, version), not Artifact rail."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:linear",
+        version="3",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task"},
+        ),
+        edges=({"from": "a", "to": "b"},),
+    )
+    validated = validate_graph_template_topology(template)
+    assert is_ok(validated)
+    assert validated.value.qualified_id == "dev-factory:linear"
+    assert validated.value.version == "3"
+    catalog = GraphTemplateCatalog()
+    assert is_ok(catalog.register(template))
+    stored = catalog.get("dev-factory:linear")
+    assert stored is not None
+    assert (stored.qualified_id, stored.version) == ("dev-factory:linear", "3")
+
+
+def test_loop_node_state_is_not_a_template_cycle() -> None:
+    """Runtime Loop controls stay on node state; template edges still must be a DAG."""
+    # A valid DAG that includes a loop *node* registers; iteration is node state.
+    template = GraphTemplate(
+        qualified_id="dev-factory:with-loop-node",
+        version="1",
+        nodes=(
+            {"id": "seed", "kind": "task"},
+            {
+                "id": "retry",
+                "kind": "loop",
+                "config": {"stopping_condition": "max_iterations", "budget": {"max": 3}},
+            },
+            {"id": "done", "kind": "task"},
+        ),
+        edges=(
+            {"from": "seed", "to": "retry"},
+            {"from": "retry", "to": "done"},
+        ),
+    )
+    assert is_ok(validate_graph_template_topology(template))
+
+    # A template that cycles through a loop node is still an illegal template cycle.
+    cyclic = GraphTemplate(
+        qualified_id="dev-factory:loop-as-cycle",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "loop", "kind": "loop"},
+            {"id": "b", "kind": "task"},
+        ),
+        edges=(
+            {"from": "a", "to": "loop"},
+            {"from": "loop", "to": "b"},
+            {"from": "b", "to": "a"},
+        ),
+    )
+    assert is_refusal(validate_graph_template_topology(cyclic))
+
+
 def test_daemon_contributes_no_graph_template_and_gaps_deferred() -> None:
     assert DAEMON_CONTRIBUTED_GRAPH_TEMPLATES == ()
     assert MISSION_TEMPLATE_REGISTRY is None

@@ -87,10 +87,11 @@ class CompileResult:
 class GraphTemplateCatalog:
     """In-memory definition-store stand-in for plugin-contributed templates.
 
-    Registration validates topology (back-edges refused) and refuses any
-    daemon-claimed template id. Stored templates are the authored, versioned,
-    stateless artifacts — a run never mutates or interchanges them with a
-    Task Graph (AD-13; FR-Q29).
+    Registration validates topology (self-loops and any directed cycle refused
+    via DFS; AD-6 / FR-WF-40) and refuses any daemon-claimed template id.
+    Stored templates are the authored, versioned, stateless artifacts —
+    compile identity is ``(qualified_id, version)``; a run never mutates or
+    interchanges them with a Task Graph (AD-13; FR-Q29; FR-WF-39).
     """
 
     def __init__(self) -> None:
