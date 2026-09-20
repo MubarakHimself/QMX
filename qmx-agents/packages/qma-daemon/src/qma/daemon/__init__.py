@@ -57,7 +57,12 @@ from qma.daemon.sessions import (
     ProductSessionContext,
     ProductSessionService,
 )
-from qma.daemon.staging import AdmissionPipeline, ProposalGate
+from qma.daemon.staging import (
+    AdmissionPipeline,
+    ChangeRequest,
+    ChangeRequestFixture,
+    ProposalGate,
+)
 from qma.daemon.taskgraph import (
     CompileRequest,
     MissionCompiler,
@@ -82,6 +87,8 @@ __all__ = [
     "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
+    "ChangeRequest",
+    "ChangeRequestFixture",
     "CompileRequest",
     "ContributionListingService",
     "DaemonClock",

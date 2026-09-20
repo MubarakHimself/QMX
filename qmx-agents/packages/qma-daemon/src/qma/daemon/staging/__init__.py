@@ -2,6 +2,22 @@
 
 from __future__ import annotations
 
+from qma.daemon.staging.change_request import (
+    ALLOWED_PATCH_KINDS,
+    CHANGE_APPLY_OUTCOMES,
+    CHANGE_REQUEST_HASH_FIELDS,
+    CHANGE_REQUEST_ID_PREFIX,
+    CHANGE_REQUEST_SIXTH_STORE_MINTED,
+    CHANGE_REQUEST_STAGING_KIND,
+    CHANGE_VALIDATION_VERDICTS,
+    ChangeApplyRecord,
+    ChangeRequest,
+    ChangeRequestFixture,
+    ChangeTarget,
+    ChangeValidationRecord,
+    InstalledAppSnapshot,
+    hash_change_request,
+)
 from qma.daemon.staging.pipeline import (
     FINISHED_MISSION_TRAJECTORY_COUNT_KEY,
     GAP_0074_SELF_IMPROVEMENT_EVALUATION_GATES,
@@ -25,12 +41,25 @@ from qma.daemon.staging.proposal import (
 
 __all__ = [
     "AGENT_DIRECT_DEFINITION_EXCEPTION",
+    "ALLOWED_PATCH_KINDS",
+    "CHANGE_APPLY_OUTCOMES",
+    "CHANGE_REQUEST_HASH_FIELDS",
+    "CHANGE_REQUEST_ID_PREFIX",
+    "CHANGE_REQUEST_SIXTH_STORE_MINTED",
+    "CHANGE_REQUEST_STAGING_KIND",
+    "CHANGE_VALIDATION_VERDICTS",
     "CLOSED_EDIT_KINDS",
     "FINISHED_MISSION_TRAJECTORY_COUNT_KEY",
     "GAP_0074_SELF_IMPROVEMENT_EVALUATION_GATES",
     "PIPELINE_STAGES",
     "STAGING_STORE_RECORD_TYPE",
     "AdmissionPipeline",
+    "ChangeApplyRecord",
+    "ChangeRequest",
+    "ChangeRequestFixture",
+    "ChangeTarget",
+    "ChangeValidationRecord",
+    "InstalledAppSnapshot",
     "PipelineOutcome",
     "ProposalApprovalRequest",
     "ProposalEdit",
@@ -39,5 +68,6 @@ __all__ = [
     "RefinementProposal",
     "accept_definition_store_proposal",
     "apply_refinement_proposal",
+    "hash_change_request",
     "register_mission_scoped_hook_exception",
 ]
