@@ -48,7 +48,8 @@ does not procure a VPS, invents no KSA/latency numbers, never opens a live
 binding, and never admits profit, loss, win rate, or paper performance
 (AD-32 / FR-076 / DEC-0261).
 Story 59.3 is the AD-25 fencing machine: UNKNOWN blocks handover;
-``unknown-blocked`` is terminal for the attempt.
+``unknown-blocked`` is terminal for the attempt. Story 59.4 refuses a stale
+predecessor restart without the current token; software rollback cannot unfill.
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -112,6 +113,7 @@ from qmn.host.failure_campaign import (
 )
 from qmn.host.fencing import (
     FENCING_AUTO_RETRY,
+    FENCING_GAP_0058,
     FENCING_GAP_0100,
     FENCING_HAPPY_PATH,
     FENCING_ISSUER_ATC_SIMULATE,
@@ -119,16 +121,26 @@ from qmn.host.fencing import (
     FENCING_OWNER,
     FENCING_PAYLOAD_FIELDS,
     FENCING_PROTOCOL,
+    FENCING_SEPARATE_DRAIN_CASES,
     FENCING_SURFACE,
     FENCING_TERMINAL_BRANCH,
+    SOFTWARE_ROLLBACK_CAN_UNFILL,
     UNKNOWN_BLOCKED_IS_TERMINAL,
     FencingAttempt,
     FencingRegistry,
     FencingState,
+    OwnerFill,
     fencing_machine_identity,
     record_fencing_payload,
     refuse_automatic_retry,
+    refuse_gap_0058_single_machine,
     refuse_gap_0100_readiness_dashboard,
+    refuse_merged_residual_positions,
+    refuse_outstanding_positions,
+    refuse_shared_account_concurrency,
+    refuse_software_unfill,
+    refuse_stale_predecessor_restart,
+    refuse_unknown_commands_drain,
 )
 from qmn.host.golden_scenarios import (
     GOLDEN_PROOF_KEYS,
@@ -431,6 +443,7 @@ __all__ = [
     "FAILURE_CAMPAIGN_FORMAT_VERSION",
     "FAILURE_CAMPAIGN_SURFACE",
     "FENCING_AUTO_RETRY",
+    "FENCING_GAP_0058",
     "FENCING_GAP_0100",
     "FENCING_HAPPY_PATH",
     "FENCING_ISSUER_ATC_SIMULATE",
@@ -438,6 +451,7 @@ __all__ = [
     "FENCING_OWNER",
     "FENCING_PAYLOAD_FIELDS",
     "FENCING_PROTOCOL",
+    "FENCING_SEPARATE_DRAIN_CASES",
     "FENCING_SURFACE",
     "FENCING_TERMINAL_BRANCH",
     "FORBIDDEN_VERDICT_KEYS",
@@ -513,6 +527,7 @@ __all__ = [
     "SHAKEDOWN_IS_PERFORMANCE_PROOF",
     "SHAKEDOWN_SURFACE",
     "SOAK_LOCAL_HUMAN_INPUTS",
+    "SOFTWARE_ROLLBACK_CAN_UNFILL",
     "SOURCE_CLASS_SYNTHETIC",
     "SUPERVISION_SURFACE",
     "SUPERVISOR_ROLE",
@@ -578,6 +593,7 @@ __all__ = [
     "MutationStatus",
     "NotifyTransport",
     "OperatorProceeding",
+    "OwnerFill",
     "PairedTargetRecord",
     "PopulationBindingRecord",
     "PopulationBmsRecord",
@@ -665,6 +681,7 @@ __all__ = [
     "record_operator_proceed",
     "refuse_automatic_retry",
     "refuse_foundation_reclassified",
+    "refuse_gap_0058_single_machine",
     "refuse_gap_0100_readiness_dashboard",
     "refuse_golden_invented_ksa_or_latency",
     "refuse_golden_trading_edge_claim",
@@ -678,14 +695,20 @@ __all__ = [
     "refuse_live_vps_firewall_probe",
     "refuse_manual_observation_as_proof",
     "refuse_merged_promotion_activation",
+    "refuse_merged_residual_positions",
     "refuse_missing_qa_debt_link",
+    "refuse_outstanding_positions",
     "refuse_paper_profit_as_proof",
     "refuse_procure_vps",
     "refuse_profit_in_verdict",
     "refuse_ratified_vps_minimum",
     "refuse_same_day_activation",
     "refuse_shakedown_as_performance_proof",
+    "refuse_shared_account_concurrency",
+    "refuse_software_unfill",
+    "refuse_stale_predecessor_restart",
     "refuse_unattended_paper_week",
+    "refuse_unknown_commands_drain",
     "refuse_unrelated_epic_blocker",
     "refuse_zero_classified_mutants",
     "reserved_supervisor_writer",

@@ -1,12 +1,17 @@
-"""AD-25 sequential fencing (Story 59.3 / SCN-0020 Then 5).
+"""AD-25 sequential fencing (Stories 59.3–59.4 / SCN-0020 Then 5).
 
 One command owner per ``(account, venue, role)``. Happy path is idle through
 retired. UNKNOWN during drain or residual attribution enters ``unknown-blocked``,
 a terminal branch of this attempt — it does not continue to ``predecessor-acked``.
 Operator reconcile mints a new ``attempt_id`` / epoch with immutable evidence;
 automatic retry is refused. Dual writers cannot open a second command owner.
+After ``fenced-activate``, a predecessor restart without the current
+``(epoch, token)`` is refused; CAS guards refuse mismatched epoch/token.
+Software rollback cannot unfill a new-owner fill. Outstanding positions,
+UNKNOWN commands, and shared-account concurrency stay separate drain cases.
 QMN issues venue tokens; QMB issues internal ATC-simulate tokens. GAP-0100
-readiness-dashboard chrome is refused. AD-25 stays the transition machine.
+readiness-dashboard chrome is refused. GAP-0058 stays its own increment.
+AD-25 stays the transition machine.
 """
 
 from __future__ import annotations
@@ -25,6 +30,7 @@ __all__ = [
     "FENCING_ACTIVATION",
     "FENCING_AUTO_RETRY",
     "FENCING_COMPOSITION_CLASSES",
+    "FENCING_GAP_0058",
     "FENCING_GAP_0100",
     "FENCING_HAPPY_PATH",
     "FENCING_ISSUER_ATC_SIMULATE",
@@ -33,10 +39,12 @@ __all__ = [
     "FENCING_PAYLOAD_FIELDS",
     "FENCING_PROTOCOL",
     "FENCING_RESIDUAL_DISPOSITIONS",
+    "FENCING_SEPARATE_DRAIN_CASES",
     "FENCING_STATES",
     "FENCING_SURFACE",
     "FENCING_TERMINAL_BRANCH",
     "FENCING_TOKEN_UNIQUE_UNDER",
+    "SOFTWARE_ROLLBACK_CAN_UNFILL",
     "UNKNOWN_BLOCKED_IS_TERMINAL",
     "FenceCasGuard",
     "FenceKey",
@@ -44,11 +52,19 @@ __all__ = [
     "FencingAttempt",
     "FencingRegistry",
     "FencingState",
+    "OwnerFill",
     "ResidualDisposition",
     "fencing_machine_identity",
     "record_fencing_payload",
     "refuse_automatic_retry",
+    "refuse_gap_0058_single_machine",
     "refuse_gap_0100_readiness_dashboard",
+    "refuse_merged_residual_positions",
+    "refuse_outstanding_positions",
+    "refuse_shared_account_concurrency",
+    "refuse_software_unfill",
+    "refuse_stale_predecessor_restart",
+    "refuse_unknown_commands_drain",
 ]
 
 FENCING_SURFACE: Final[str] = "qmn.host.fencing"
@@ -59,8 +75,15 @@ FENCING_ISSUER_VENUE: Final[str] = "COMP-QMN"
 FENCING_ISSUER_ATC_SIMULATE: Final[str] = "COMP-QMB"
 FENCING_ACTIVATION: Final[str] = "operator-second-act"
 FENCING_AUTO_RETRY: Final[bool] = False
+FENCING_GAP_0058: Final[bool] = False
 FENCING_GAP_0100: Final[bool] = False
+SOFTWARE_ROLLBACK_CAN_UNFILL: Final[bool] = False
 UNKNOWN_BLOCKED_IS_TERMINAL: Final[bool] = True
+FENCING_SEPARATE_DRAIN_CASES: Final[tuple[str, ...]] = (
+    "outstanding-positions",
+    "unknown-commands",
+    "shared-account-concurrency",
+)
 FENCING_HAPPY_PATH: Final[tuple[str, ...]] = (
     "idle",
     "drain-requested",
@@ -114,6 +137,22 @@ _CHROME_FIELDS: Final[frozenset[str]] = frozenset(
         "ui_view",
     }
 )
+_GAP_0058_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "gap-0058",
+        "gap_0058",
+        "single_machine",
+        "single_machine_placement",
+        "single-machine",
+        "single-machine-placement",
+    }
+)
+_MERGED_RESIDUAL_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "has_residual_positions",
+        "residual_positions",
+    }
+)
 _RECORD_REASON: Final[str] = (
     "deploy payload records from_composition_fp, to_composition_fp, "
     "composition_class, account_id, venue_kind, role, command_owner_epoch, "
@@ -139,6 +178,25 @@ _CHROME_REASON: Final[str] = (
 )
 _ISSUER_REASON: Final[str] = (
     "QMN issues venue tokens; QMB issues internal ATC-simulate tokens (FR-WF-71; CONTRACTS §10)"
+)
+_STALE_REASON: Final[str] = (
+    "stale predecessor restart without the current (epoch, token) is refused; "
+    "CAS guards refuse mismatched epoch/token (FR-WF-72; RC-06; SCN-0020 Then 5)"
+)
+_AUTHORITY_REASON: Final[str] = (
+    "a stale predecessor restart cannot recover command authority from local state "
+    "(FR-WF-72; AD-14; DEC-0438)"
+)
+_UNFILL_REASON: Final[str] = (
+    "software rollback after a new-owner fill cannot unfill (FR-WF-72; AD-14; SCN-0020 Then 5)"
+)
+_MERGED_REASON: Final[str] = (
+    "outstanding positions, UNKNOWN commands, and shared-account concurrency "
+    "are separate refusal/drain cases, not a boolean residual_positions string "
+    "(FR-WF-72; AD-14)"
+)
+_GAP_0058_REASON: Final[str] = (
+    "GAP-0058 single-machine placement stays its own increment (FR-WF-72; AD-14)"
 )
 _VENUE_FENCE_CLASS: Final[str] = "venue-fencing-token"
 
@@ -235,6 +293,32 @@ class FenceCasGuard:
 
 
 @dataclass(frozen=True, slots=True)
+class OwnerFill:
+    """A fill recorded under the post-``fenced-activate`` command owner."""
+
+    fill_id: str
+    fence_key: FenceKey
+    command_owner_epoch: int
+    fencing_token: str
+    composition_fp: Fingerprint
+    content: Mapping[str, object]
+
+    def as_record(self) -> dict[str, object]:
+        """Immutable fill record. Software rollback cannot unfill it."""
+        return {
+            "account_id": self.fence_key.account_id,
+            "command_owner_epoch": self.command_owner_epoch,
+            "composition_fp": self.composition_fp.value,
+            "content": dict(self.content),
+            "fencing_token": self.fencing_token,
+            "fill_id": self.fill_id,
+            "role": self.fence_key.role,
+            "unfillable": True,
+            "venue_kind": self.fence_key.venue_kind,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class FencingAttempt:
     """One sequential fencing attempt. ``unknown-blocked`` does not continue."""
 
@@ -323,6 +407,7 @@ def fencing_machine_identity() -> dict[str, object]:
     return {
         "fencing_auto_retry": FENCING_AUTO_RETRY,
         "fencing_composition_classes": FENCING_COMPOSITION_CLASSES,
+        "fencing_gap_0058": FENCING_GAP_0058,
         "fencing_gap_0100": FENCING_GAP_0100,
         "fencing_happy_path": FENCING_HAPPY_PATH,
         "fencing_issuer_atc_simulate": FENCING_ISSUER_ATC_SIMULATE,
@@ -331,10 +416,12 @@ def fencing_machine_identity() -> dict[str, object]:
         "fencing_payload_fields": FENCING_PAYLOAD_FIELDS,
         "fencing_protocol": FENCING_PROTOCOL,
         "fencing_residual_dispositions": FENCING_RESIDUAL_DISPOSITIONS,
+        "fencing_separate_drain_cases": FENCING_SEPARATE_DRAIN_CASES,
         "fencing_states": FENCING_STATES,
         "fencing_surface": FENCING_SURFACE,
         "fencing_terminal_branch": FENCING_TERMINAL_BRANCH,
         "fencing_token_unique_under": FENCING_TOKEN_UNIQUE_UNDER,
+        "software_rollback_can_unfill": SOFTWARE_ROLLBACK_CAN_UNFILL,
         "unknown_blocked_is_terminal": UNKNOWN_BLOCKED_IS_TERMINAL,
     }
 
@@ -366,6 +453,84 @@ def refuse_automatic_retry(attempt: object) -> TypedRefusal:
     )
 
 
+def refuse_stale_predecessor_restart(
+    *,
+    expected_epoch: object,
+    expected_token: object,
+    presented_epoch: object,
+    presented_token: object,
+) -> TypedRefusal:
+    """CAS mismatch: predecessor restart lacks the current epoch/token."""
+    return policy(
+        "cas_guard",
+        _STALE_REASON,
+        expected_epoch=expected_epoch,
+        expected_token=expected_token,
+        presented_epoch=presented_epoch,
+        presented_token=presented_token,
+    )
+
+
+def refuse_software_unfill(fill: object = None) -> TypedRefusal:
+    """Software rollback cannot unwind a recorded new-owner fill."""
+    extra: dict[str, object] = {
+        "software_rollback_can_unfill": SOFTWARE_ROLLBACK_CAN_UNFILL,
+        "unfill": False,
+    }
+    if isinstance(fill, OwnerFill):
+        extra["command_owner_epoch"] = fill.command_owner_epoch
+        extra["fill_id"] = fill.fill_id
+    return policy("software_rollback", _UNFILL_REASON, **extra)
+
+
+def refuse_merged_residual_positions(field: object = "residual_positions") -> TypedRefusal:
+    """Boolean residual marker is not a drain case (AD-14)."""
+    token = clean_token(field) or "residual_positions"
+    return policy(
+        token,
+        _MERGED_REASON,
+        drain_cases=FENCING_SEPARATE_DRAIN_CASES,
+    )
+
+
+def refuse_outstanding_positions() -> TypedRefusal:
+    """Outstanding positions are their own drain case."""
+    return policy(
+        "outstanding-positions",
+        _MERGED_REASON,
+        drain_case="outstanding-positions",
+        drain_cases=FENCING_SEPARATE_DRAIN_CASES,
+    )
+
+
+def refuse_unknown_commands_drain() -> TypedRefusal:
+    """UNKNOWN commands are their own drain case, distinct from positions."""
+    return policy(
+        "unknown-commands",
+        _MERGED_REASON,
+        drain_case="unknown-commands",
+        drain_cases=FENCING_SEPARATE_DRAIN_CASES,
+    )
+
+
+def refuse_shared_account_concurrency() -> TypedRefusal:
+    """Shared-account concurrency is its own drain case, not a residual boolean."""
+    return policy(
+        "shared-account-concurrency",
+        _MERGED_REASON,
+        drain_case="shared-account-concurrency",
+        drain_cases=FENCING_SEPARATE_DRAIN_CASES,
+    )
+
+
+def refuse_gap_0058_single_machine(
+    field: object = "single-machine-placement",
+) -> TypedRefusal:
+    """GAP-0058 single-machine placement is not this story."""
+    token = clean_token(field) or "single-machine-placement"
+    return unsupported(token, _GAP_0058_REASON, gap="GAP-0058")
+
+
 def record_fencing_payload(payload: object) -> Result[FencingAttempt]:
     """Record one deploy payload as an idle attempt. Does not claim the fence."""
     if not isinstance(payload, Mapping):
@@ -378,6 +543,12 @@ def record_fencing_payload(payload: object) -> Result[FencingAttempt]:
     chrome = _refuse_chrome(body)
     if chrome is not None:
         return chrome
+    gap_0058 = _refuse_gap_0058(body)
+    if gap_0058 is not None:
+        return gap_0058
+    merged = _refuse_merged_residual(body)
+    if merged is not None:
+        return merged
     from_fp = _parse_fp(body.get("from_composition_fp"), "from_composition_fp")
     if is_refusal(from_fp):
         return from_fp
@@ -517,6 +688,8 @@ class FencingRegistry:
         self._tokens: dict[tuple[str, str, str, int], str] = {}
         self._blocked: dict[tuple[str, str, str], FencingAttempt] = {}
         self._needs_reconcile: set[tuple[str, str, str]] = set()
+        self._new_owner: set[tuple[str, str, str]] = set()
+        self._fills: dict[tuple[str, str, str], list[OwnerFill]] = {}
 
     def command_owner(self, key: FenceKey) -> Mapping[str, object] | None:
         """Current command owner for ``key``, or ``None`` before the first owner."""
@@ -531,6 +704,13 @@ class FencingRegistry:
                 "writer": owner.writer,
             }
         )
+
+    def owner_fills(self, key: object) -> tuple[OwnerFill, ...]:
+        """Fills recorded under this fence key. Software rollback cannot drop them."""
+        parsed = _parse_fence_key(key)
+        if is_refusal(parsed):
+            return ()
+        return tuple(self._fills.get(parsed.value.as_tuple(), ()))
 
     def start(self, payload: object) -> Result[FencingAttempt]:
         """Record an idle attempt and claim the fence. Dual writers are refused."""
@@ -701,6 +881,175 @@ class FencingRegistry:
             return claimed
         return Ok(replace(claimed.value, predecessor_attempt_id=blocked.attempt_id))
 
+    def restart_predecessor(
+        self,
+        presented: object,
+        *,
+        command_owner_epoch: object | None = None,
+        fencing_token: object | None = None,
+    ) -> Result[Mapping[str, object]]:
+        """Refuse a predecessor restart that lacks the current ``(epoch, token)``."""
+        if isinstance(presented, FencingAttempt):
+            key = presented.fence_key
+            epoch_raw: object = (
+                presented.command_owner_epoch
+                if command_owner_epoch is None
+                else command_owner_epoch
+            )
+            token_raw: object = presented.fencing_token if fencing_token is None else fencing_token
+        else:
+            parsed_key = _parse_fence_key(presented)
+            if is_refusal(parsed_key):
+                return parsed_key
+            key = parsed_key.value
+            epoch_raw = command_owner_epoch
+            token_raw = fencing_token
+        epoch = _positive_int(epoch_raw, "command_owner_epoch")
+        if is_refusal(epoch):
+            return epoch
+        token = clean_token(token_raw)
+        if token is None:
+            return invalid(
+                "fencing_token",
+                _STALE_REASON,
+                given=repr(token_raw),
+            )
+        owner = self._owners.get(key.as_tuple())
+        if owner is None:
+            return policy(
+                "command_owner",
+                "no command owner on this fence key",
+                fence_key=key.as_record(),
+            )
+        if epoch.value != owner.command_owner_epoch or token != owner.fencing_token:
+            return refuse_stale_predecessor_restart(
+                expected_epoch=owner.command_owner_epoch,
+                expected_token=owner.fencing_token,
+                presented_epoch=epoch.value,
+                presented_token=token,
+            )
+        if owner.writer == "successor":
+            return policy(
+                "stale_predecessor",
+                _AUTHORITY_REASON,
+                command_owner_epoch=owner.command_owner_epoch,
+                writer=owner.writer,
+            )
+        return Ok(
+            MappingProxyType(
+                {
+                    "command_owner_epoch": owner.command_owner_epoch,
+                    "composition_fp": owner.composition_fp.value,
+                    "fencing_token": owner.fencing_token,
+                    "writer": owner.writer,
+                }
+            )
+        )
+
+    def record_owner_fill(
+        self,
+        key: object,
+        *,
+        command_owner_epoch: object,
+        fencing_token: object,
+        fill: object,
+    ) -> Result[OwnerFill]:
+        """Record a fill under the current owner after ``fenced-activate``."""
+        parsed_key = _parse_fence_key(key)
+        if is_refusal(parsed_key):
+            return parsed_key
+        fence = parsed_key.value
+        tuple_key = fence.as_tuple()
+        if tuple_key not in self._new_owner:
+            return policy(
+                "state",
+                "new-owner fills are recorded after fenced-activate",
+            )
+        owner = self._owners.get(tuple_key)
+        if owner is None:
+            return policy(
+                "command_owner",
+                "no command owner on this fence key",
+                fence_key=fence.as_record(),
+            )
+        epoch = _positive_int(command_owner_epoch, "command_owner_epoch")
+        if is_refusal(epoch):
+            return epoch
+        token = clean_token(fencing_token)
+        if token is None:
+            return invalid("fencing_token", _STALE_REASON, given=repr(fencing_token))
+        if epoch.value != owner.command_owner_epoch or token != owner.fencing_token:
+            return refuse_stale_predecessor_restart(
+                expected_epoch=owner.command_owner_epoch,
+                expected_token=owner.fencing_token,
+                presented_epoch=epoch.value,
+                presented_token=token,
+            )
+        parsed_fill = _parse_fill(fill)
+        if is_refusal(parsed_fill):
+            return parsed_fill
+        body = parsed_fill.value
+        fill_id = clean_token(body.get("fill_id"))
+        if fill_id is None:
+            return invalid("fill_id", "a new-owner fill carries fill_id")
+        recorded = OwnerFill(
+            fill_id=fill_id,
+            fence_key=fence,
+            command_owner_epoch=owner.command_owner_epoch,
+            fencing_token=owner.fencing_token,
+            composition_fp=owner.composition_fp,
+            content=body,
+        )
+        held = self._fills.setdefault(tuple_key, [])
+        for existing in held:
+            if existing.fill_id != fill_id:
+                continue
+            if dict(existing.content) != dict(body):
+                return policy(
+                    "fill_id",
+                    _UNFILL_REASON,
+                    fill_id=fill_id,
+                    unfill=False,
+                )
+            return Ok(existing)
+        held.append(recorded)
+        return Ok(recorded)
+
+    def software_rollback(
+        self,
+        key: object,
+        *,
+        fill_id: object = None,
+    ) -> Result[OwnerFill]:
+        """Refuse to unwind fills. Recorded fills stay."""
+        parsed_key = _parse_fence_key(key)
+        if is_refusal(parsed_key):
+            return parsed_key
+        fills = self._fills.get(parsed_key.value.as_tuple(), [])
+        if fill_id is not None:
+            token = clean_token(fill_id)
+            if token is None:
+                return invalid("fill_id", "software rollback names a fill_id", given=repr(fill_id))
+            match = [item for item in fills if item.fill_id == token]
+            if not match:
+                return invalid(
+                    "fill_id",
+                    "no such new-owner fill",
+                    given=token,
+                    remaining=len(fills),
+                    unfill=False,
+                )
+            return refuse_software_unfill(match[0])
+        if fills:
+            return refuse_software_unfill(fills[-1])
+        return policy(
+            "software_rollback",
+            _UNFILL_REASON,
+            remaining=0,
+            software_rollback_can_unfill=SOFTWARE_ROLLBACK_CAN_UNFILL,
+            unfill=False,
+        )
+
     def _claim(
         self,
         attempt: FencingAttempt,
@@ -737,6 +1086,7 @@ class FencingRegistry:
                         token_unique_under=list(FENCING_TOKEN_UNIQUE_UNDER),
                     )
             self._tokens[token_key] = attempt.fencing_token
+        self._new_owner.discard(key)
         claimed = replace(attempt, predecessor_attempt_id=predecessor_attempt_id)
         self._inflight[key] = claimed
         if owner is None:
@@ -827,6 +1177,7 @@ class FencingRegistry:
                 fencing_token=nxt.fencing_token,
                 writer="successor",
             )
+            self._new_owner.add(key)
         if target is FencingState.RETIRED:
             self._inflight.pop(key, None)
             owner = self._owners.get(key)
@@ -847,6 +1198,56 @@ def _refuse_chrome(body: Mapping[str, object]) -> Result[FencingAttempt] | None:
         if field in _CHROME_FIELDS or field.lower() == "gap-0100":
             return unsupported(field, _CHROME_REASON, gap="GAP-0100")
     return None
+
+
+def _refuse_gap_0058(body: Mapping[str, object]) -> Result[FencingAttempt] | None:
+    for field in body:
+        normalized = field.lower().replace("_", "-")
+        if field in _GAP_0058_FIELDS or normalized in _GAP_0058_FIELDS:
+            return refuse_gap_0058_single_machine(field)
+    return None
+
+
+def _refuse_merged_residual(body: Mapping[str, object]) -> Result[FencingAttempt] | None:
+    for field in body:
+        if field in _MERGED_RESIDUAL_FIELDS:
+            return refuse_merged_residual_positions(field)
+    return None
+
+
+def _parse_fence_key(raw: object) -> Result[FenceKey]:
+    if isinstance(raw, FenceKey):
+        return Ok(raw)
+    if isinstance(raw, FencingAttempt):
+        return Ok(raw.fence_key)
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "fence_key",
+            "fence key is (account, venue, role)",
+            given=repr(type(raw).__name__),
+        )
+    body = cast("Mapping[str, object]", raw)
+    account_id = clean_token(body.get("account_id"))
+    role = clean_token(body.get("role"))
+    if account_id is None or role is None:
+        return invalid("fence_key", "fence key is (account, venue, role)")
+    venue_kind = _optional_token(body.get("venue_kind"), "venue_kind")
+    if is_refusal(venue_kind):
+        return venue_kind
+    return Ok(FenceKey(account_id, venue_kind.value, role))
+
+
+def _parse_fill(raw: object) -> Result[Mapping[str, object]]:
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "fill",
+            "a new-owner fill is a key->value mapping",
+            given=repr(type(raw).__name__),
+        )
+    body = dict(cast("Mapping[str, object]", raw))
+    if clean_token(body.get("fill_id")) is None:
+        return invalid("fill_id", "a new-owner fill carries fill_id")
+    return Ok(MappingProxyType(body))
 
 
 def _parse_fp(raw: object, field: str) -> Result[Fingerprint]:

@@ -1,14 +1,16 @@
-"""Story 59.3 — UNKNOWN blocks handover; unknown-blocked is terminal."""
+"""Stories 59.3–59.4 — AD-25 fencing: UNKNOWN, stale restart, no unfill."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import TypeVar, cast
 
 from qmf.core.refusal import RefusalCategory, Result, TypedRefusal, is_ok, is_refusal
 from qmn.host.fencing import (
     FENCING_ACTIVATION,
     FENCING_AUTO_RETRY,
+    FENCING_GAP_0058,
     FENCING_GAP_0100,
     FENCING_HAPPY_PATH,
     FENCING_ISSUER_ATC_SIMULATE,
@@ -17,9 +19,11 @@ from qmn.host.fencing import (
     FENCING_PAYLOAD_FIELDS,
     FENCING_PROTOCOL,
     FENCING_RESIDUAL_DISPOSITIONS,
+    FENCING_SEPARATE_DRAIN_CASES,
     FENCING_STATES,
     FENCING_TERMINAL_BRANCH,
     FENCING_TOKEN_UNIQUE_UNDER,
+    SOFTWARE_ROLLBACK_CAN_UNFILL,
     UNKNOWN_BLOCKED_IS_TERMINAL,
     FencingAttempt,
     FencingRegistry,
@@ -27,14 +31,23 @@ from qmn.host.fencing import (
     fencing_machine_identity,
     record_fencing_payload,
     refuse_automatic_retry,
+    refuse_gap_0058_single_machine,
     refuse_gap_0100_readiness_dashboard,
+    refuse_merged_residual_positions,
+    refuse_outstanding_positions,
+    refuse_shared_account_concurrency,
+    refuse_software_unfill,
+    refuse_stale_predecessor_restart,
+    refuse_unknown_commands_drain,
 )
 
 T = TypeVar("T")
 
 _FROM_FP = "fp1:sha256:" + "ab" * 32
 _TO_FP = "fp1:sha256:" + "cd" * 32
+_THIRD_FP = "fp1:sha256:" + "ef" * 32
 _QMB_TOKEN = "fp1:sha256:" + "11" * 32
+_STALE_TOKEN = "fp1:sha256:" + "99" * 32
 
 
 def _ok(result: Result[T]) -> T:
@@ -100,14 +113,30 @@ def _payload(**overrides: object) -> dict[str, object]:
     return body
 
 
-def _walk_happy(registry: FencingRegistry, start: object) -> FencingAttempt:
+def _walk_to_fenced(registry: FencingRegistry, start: object) -> FencingAttempt:
     attempt = _ok(registry.request_drain(start))
     attempt = _ok(registry.begin_drain(attempt))
     attempt = _ok(registry.attribute_residuals(attempt))
     attempt = _ok(registry.ack_predecessor(attempt))
-    attempt = _ok(registry.fenced_activate(attempt))
+    return _ok(registry.fenced_activate(attempt))
+
+
+def _walk_happy(registry: FencingRegistry, start: object) -> FencingAttempt:
+    attempt = _walk_to_fenced(registry, start)
     attempt = _ok(registry.activate(attempt))
     return _ok(registry.retire(attempt))
+
+
+def _fill(**overrides: object) -> dict[str, object]:
+    body: dict[str, object] = {
+        "deal_id": "deal:1",
+        "fill_id": "fill:1",
+        "instrument": "EURUSD",
+        "qty": "10000",
+        "side": "buy",
+    }
+    body.update(overrides)
+    return body
 
 
 def test_happy_path_one_command_owner_per_key() -> None:
@@ -326,3 +355,171 @@ def test_gap_0100_readiness_dashboard_is_refused() -> None:
     assert named.context["gap"] == "GAP-0100"
     assert FENCING_PROTOCOL == "AD-25"
     assert FENCING_GAP_0100 is False
+
+
+def test_stale_predecessor_restart_after_fenced_activate_is_refused() -> None:
+    registry = FencingRegistry()
+    first = _ok(registry.start(_payload()))
+    done = _walk_happy(registry, first)
+    assert done.state is FencingState.RETIRED
+    nxt = _ok(
+        registry.start(
+            _payload(
+                attempt_id=2,
+                command_owner_epoch=19,
+                from_composition_fp=_TO_FP,
+                to_composition_fp=_THIRD_FP,
+            )
+        )
+    )
+    fenced = _walk_to_fenced(registry, nxt)
+    assert fenced.state is FencingState.FENCED_ACTIVATE
+    owner = registry.command_owner(fenced.fence_key)
+    assert owner is not None
+    assert owner["writer"] == "successor"
+    assert owner["command_owner_epoch"] == 19
+    assert owner["fencing_token"] != first.fencing_token
+    stale_epoch = _refusal(
+        registry.restart_predecessor(
+            fenced.fence_key,
+            command_owner_epoch=first.command_owner_epoch,
+            fencing_token=first.fencing_token,
+        )
+    )
+    assert stale_epoch.category is RefusalCategory.POLICY_REJECTION
+    assert stale_epoch.context["field"] == "cas_guard"
+    assert stale_epoch.context["expected_epoch"] == 19
+    assert stale_epoch.context["presented_epoch"] == first.command_owner_epoch
+    stale_token = _refusal(
+        registry.restart_predecessor(
+            fenced.fence_key,
+            command_owner_epoch=19,
+            fencing_token=first.fencing_token,
+        )
+    )
+    _assert_policy(stale_token, field="cas_guard")
+    presented = _refusal(registry.restart_predecessor(first))
+    _assert_policy(presented, field="cas_guard")
+    copied = _refusal(registry.restart_predecessor(fenced))
+    _assert_policy(copied, field="stale_predecessor")
+    still = registry.command_owner(fenced.fence_key)
+    assert still is not None
+    assert still["writer"] == "successor"
+    assert still["command_owner_epoch"] == 19
+    assert still["fencing_token"] == fenced.fencing_token
+
+
+def test_cas_guards_refuse_mismatched_epoch_token() -> None:
+    registry = FencingRegistry()
+    idle = _ok(registry.start(_payload()))
+    fenced = _walk_to_fenced(registry, idle)
+    wrong_epoch = _refusal(registry.activate(replace(fenced, command_owner_epoch=17)))
+    _assert_policy(wrong_epoch, field="cas_guard")
+    wrong_token = _refusal(registry.activate(replace(fenced, fencing_token=_STALE_TOKEN)))
+    _assert_policy(wrong_token, field="cas_guard")
+    named = refuse_stale_predecessor_restart(
+        expected_epoch=18,
+        expected_token=fenced.fencing_token,
+        presented_epoch=17,
+        presented_token=_STALE_TOKEN,
+    )
+    assert named.category is RefusalCategory.POLICY_REJECTION
+    assert named.context["field"] == "cas_guard"
+    assert named.context["expected_epoch"] == 18
+    assert named.context["presented_token"] == _STALE_TOKEN
+    first_stale = _refusal(
+        registry.restart_predecessor(
+            fenced.fence_key,
+            command_owner_epoch=17,
+            fencing_token=_STALE_TOKEN,
+        )
+    )
+    _assert_policy(first_stale, field="cas_guard")
+    active = _ok(registry.activate(fenced))
+    assert active.state is FencingState.ACTIVE
+
+
+def test_software_rollback_cannot_unfill_new_owner_fill() -> None:
+    registry = FencingRegistry()
+    idle = _ok(registry.start(_payload()))
+    too_early = registry.record_owner_fill(
+        idle.fence_key,
+        command_owner_epoch=idle.command_owner_epoch,
+        fencing_token=idle.fencing_token,
+        fill=_fill(),
+    )
+    _assert_policy(too_early, field="state")
+    fenced = _walk_to_fenced(registry, idle)
+    stale_fill = registry.record_owner_fill(
+        fenced.fence_key,
+        command_owner_epoch=17,
+        fencing_token=_STALE_TOKEN,
+        fill=_fill(),
+    )
+    _assert_policy(stale_fill, field="cas_guard")
+    recorded = _ok(
+        registry.record_owner_fill(
+            fenced.fence_key,
+            command_owner_epoch=fenced.command_owner_epoch,
+            fencing_token=fenced.fencing_token,
+            fill=_fill(),
+        )
+    )
+    assert recorded.fill_id == "fill:1"
+    assert recorded.as_record()["unfillable"] is True
+    assert SOFTWARE_ROLLBACK_CAN_UNFILL is False
+    again = _ok(
+        registry.record_owner_fill(
+            fenced.fence_key,
+            command_owner_epoch=fenced.command_owner_epoch,
+            fencing_token=fenced.fencing_token,
+            fill=_fill(),
+        )
+    )
+    assert again.fill_id == recorded.fill_id
+    clash = registry.record_owner_fill(
+        fenced.fence_key,
+        command_owner_epoch=fenced.command_owner_epoch,
+        fencing_token=fenced.fencing_token,
+        fill=_fill(qty="1"),
+    )
+    _assert_policy(clash, field="fill_id")
+    rolled = _refusal(registry.software_rollback(fenced.fence_key, fill_id="fill:1"))
+    assert rolled.category is RefusalCategory.POLICY_REJECTION
+    assert rolled.context["field"] == "software_rollback"
+    assert rolled.context["unfill"] is False
+    assert rolled.context["fill_id"] == "fill:1"
+    named = refuse_software_unfill(recorded)
+    assert named.context["unfill"] is False
+    remaining = registry.owner_fills(fenced.fence_key)
+    assert len(remaining) == 1
+    assert remaining[0].fill_id == "fill:1"
+    assert remaining[0].content["qty"] == "10000"
+
+
+def test_drain_cases_stay_separate_and_gap_0058_is_refused() -> None:
+    merged = _refusal(record_fencing_payload(_payload(residual_positions=True)))
+    assert merged.category is RefusalCategory.POLICY_REJECTION
+    assert merged.context["field"] == "residual_positions"
+    assert merged.context["drain_cases"] == FENCING_SEPARATE_DRAIN_CASES
+    named_merged = refuse_merged_residual_positions()
+    assert named_merged.context["field"] == "residual_positions"
+    outstanding = refuse_outstanding_positions()
+    unknown = refuse_unknown_commands_drain()
+    shared = refuse_shared_account_concurrency()
+    fields = {
+        outstanding.context["field"],
+        unknown.context["field"],
+        shared.context["field"],
+    }
+    assert fields == set(FENCING_SEPARATE_DRAIN_CASES)
+    gap = _refusal(record_fencing_payload(_payload(single_machine_placement=True)))
+    assert gap.category is RefusalCategory.UNSUPPORTED_CAPABILITY
+    assert gap.context["gap"] == "GAP-0058"
+    named_gap = refuse_gap_0058_single_machine()
+    assert named_gap.context["gap"] == "GAP-0058"
+    assert FENCING_GAP_0058 is False
+    schema = fencing_machine_identity()
+    assert schema["fencing_gap_0058"] is False
+    assert schema["software_rollback_can_unfill"] is False
+    assert schema["fencing_separate_drain_cases"] == FENCING_SEPARATE_DRAIN_CASES
