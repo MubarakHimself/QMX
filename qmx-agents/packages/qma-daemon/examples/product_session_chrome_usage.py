@@ -16,7 +16,7 @@ from qmf.core import is_ok, is_refusal
 
 _AS_OF = "2026-09-20T00:00:00Z"
 _CONTRIBUTION = {"package_version": "0.1.0", "qualified_id": "analysis-backtest:qmb"}
-_VIEW = {
+_VIEW: dict[str, object] = {
     "view_id": "view:heatmap",
     "view_version": 1,
     "op_id": "sector-intel.inspect",

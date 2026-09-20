@@ -47,7 +47,7 @@ _EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "product_session_c
 
 _AS_OF = "2026-09-20T00:00:00Z"
 _CONTRIBUTION = {"package_version": "0.1.0", "qualified_id": "analysis-backtest:qmb"}
-_VIEW = {
+_VIEW: dict[str, object] = {
     "view_id": "view:heatmap",
     "view_version": 1,
     "op_id": "sector-intel.inspect",

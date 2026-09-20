@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 import pytest
 from qma.core.control import (
@@ -464,8 +465,11 @@ def _assert_topology_typed_refusal(
     assert refused.context["code"] == code
     shape = refused.context["error_refusal_shape"]
     assert isinstance(shape, Mapping)
-    assert shape["family"] == TOPOLOGY_REFUSAL_FAMILY
-    assert set(shape["codes"]) == set(TOPOLOGY_REFUSAL_CODES)
+    typed_shape = cast(Mapping[str, object], shape)
+    assert typed_shape["family"] == TOPOLOGY_REFUSAL_FAMILY
+    codes = typed_shape["codes"]
+    assert isinstance(codes, tuple)
+    assert set(cast("tuple[str, ...]", codes)) == set(TOPOLOGY_REFUSAL_CODES)
     assert code in TOPOLOGY_REFUSAL_CODES
     return refused
 
@@ -773,7 +777,9 @@ def test_conditional_skip_is_node_kind_not_dropped_edges() -> None:
     typed = _assert_topology_typed_refusal(
         refused, illegal_shape="dropped_edge_skip", code="INVALID_INPUT"
     )
-    assert "drop_on_empty" in typed.context["forbidden_keys"]
+    forbidden = typed.context["forbidden_keys"]
+    assert isinstance(forbidden, tuple)
+    assert "drop_on_empty" in cast("tuple[str, ...]", forbidden)
 
     # Conditional as a node kind with declared mapping/ports is legal.
     legal = GraphTemplate(
