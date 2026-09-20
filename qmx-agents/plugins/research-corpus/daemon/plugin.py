@@ -181,7 +181,15 @@ def activate(ctx: PluginContext) -> None:
                 {"id": "search", "kind": "task"},
                 {"id": "cite", "kind": "task"},
             ),
-            edges=({"from": "search", "to": "cite"},),
+            edges=(
+                {
+                    "from": "search",
+                    "to": "cite",
+                    "mapping": "one",
+                    "from_port": "data",
+                    "to_port": "data",
+                },
+            ),
         ),
     )
     ctx.register_model_deployment(

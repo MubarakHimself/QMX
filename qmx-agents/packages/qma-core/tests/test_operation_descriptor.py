@@ -36,6 +36,7 @@ from qma.core.refusals import UnsupportedDoor
 from qma.core.vocabulary import (
     CLOSED_VOCABULARIES,
     DoorAdapter,
+    EdgeMapping,
     EffectClass,
     EffectRetryOutcome,
     EmptyPolicy,
@@ -44,6 +45,7 @@ from qma.core.vocabulary import (
     OperationCardinality,
     OperationPlacement,
     OutputShape,
+    PortKind,
     ReconcilePolicy,
     VocabularyError,
     parse_closed,
@@ -172,6 +174,9 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     assert "operation_placement" in names
     assert "operation_cardinality" in names
     assert "lifecycle_verb" in names
+    assert "empty_policy" in names
+    assert "edge_mapping" in names
+    assert "port_kind" in names
     assert "door_adapter" in names
     assert "reconcile_policy" in names
     assert "effect_retry_outcome" in names
@@ -205,6 +210,19 @@ def test_closed_vocabularies_reject_invented_values() -> None:
         "await",
     }
     assert {member.value for member in EmptyPolicy} == {"refuse", "skip"}
+    assert {member.value for member in EdgeMapping} == {
+        "one",
+        "zip",
+        "broadcast",
+        "keyed-join",
+        "cartesian",
+    }
+    assert {member.value for member in PortKind} == {
+        "reference",
+        "data",
+        "event",
+        "control",
+    }
     assert {member.value for member in ReconcilePolicy} == {
         "query-then-decide",
         "unknown-manual",

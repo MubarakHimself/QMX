@@ -159,19 +159,30 @@ def _graph_template_from_mapping(payload: Mapping[str, object]) -> GraphTemplate
     nodes: tuple[Mapping[str, object], ...]
     edges: tuple[Mapping[str, object], ...]
     if isinstance(nodes_raw, Sequence) and not isinstance(nodes_raw, (str, bytes)):
-        nodes = tuple(
-            dict(cast(Mapping[str, object], item))
-            for item in cast(Sequence[object], nodes_raw)
-            if isinstance(item, Mapping)
-        )
+        built_nodes: list[Mapping[str, object]] = []
+        for item in cast(Sequence[object], nodes_raw):
+            if not isinstance(item, Mapping):
+                msg = (
+                    "graph_template nodes must be mappings; refusing silent drop "
+                    "(AD-5; FR-WF-42)"
+                )
+                raise PluginLoadError(msg, field="graph_template.nodes")
+            built_nodes.append(dict(cast(Mapping[str, object], item)))
+        nodes = tuple(built_nodes)
     else:
         nodes = ()
     if isinstance(edges_raw, Sequence) and not isinstance(edges_raw, (str, bytes)):
-        edges = tuple(
-            dict(cast(Mapping[str, object], item))
-            for item in cast(Sequence[object], edges_raw)
-            if isinstance(item, Mapping)
-        )
+        built_edges: list[Mapping[str, object]] = []
+        for item in cast(Sequence[object], edges_raw):
+            if not isinstance(item, Mapping):
+                # Do not silently drop malformed edges (AD-5; Story 56.3).
+                msg = (
+                    "graph_template edges must be mappings; refusing silent drop "
+                    "(AD-5; FR-WF-42)"
+                )
+                raise PluginLoadError(msg, field="graph_template.edges")
+            built_edges.append(dict(cast(Mapping[str, object], item)))
+        edges = tuple(built_edges)
     else:
         edges = ()
     qualified = payload.get("qualified_id")

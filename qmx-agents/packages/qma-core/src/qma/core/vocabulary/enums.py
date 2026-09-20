@@ -17,6 +17,7 @@ __all__ = [
     "AskOnTimeout",
     "DeliveryState",
     "DoorAdapter",
+    "EdgeMapping",
     "EffectClass",
     "EffectRetryOutcome",
     "EmptyPolicy",
@@ -42,6 +43,7 @@ __all__ = [
     "OperationCardinality",
     "OperationPlacement",
     "OutputShape",
+    "PortKind",
     "PrincipalClass",
     "QuantLedgerEntryKind",
     "ReconcilePolicy",
@@ -534,6 +536,29 @@ class EmptyPolicy(StrEnum):
 
     REFUSE = "refuse"
     SKIP = "skip"
+
+
+class EdgeMapping(StrEnum):
+    """Collection mapping declared on Graph Template edges (AD-5; DEC-0418).
+
+    Cartesian is never guessed from JSON shape — ``mapping="cartesian"`` plus
+    an explicit ``cartesian: true`` flag is required (FR-WF-42).
+    """
+
+    ONE = "one"
+    ZIP = "zip"
+    BROADCAST = "broadcast"
+    KEYED_JOIN = "keyed-join"
+    CARTESIAN = "cartesian"
+
+
+class PortKind(StrEnum):
+    """Port kinds declared on Graph Template edge endpoints (AD-5; DEC-0418)."""
+
+    REFERENCE = "reference"
+    DATA = "data"
+    EVENT = "event"
+    CONTROL = "control"
 
 
 class DoorAdapter(StrEnum):

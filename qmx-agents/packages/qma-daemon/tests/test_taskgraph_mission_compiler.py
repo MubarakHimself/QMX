@@ -365,8 +365,20 @@ def test_back_edge_in_template_refused_at_registration() -> None:
             {"id": "b", "kind": "task"},
         ),
         edges=(
-            {"from": "a", "to": "b"},
-            {"from": "b", "to": "a"},
+            {
+                "from": "a",
+                "to": "b",
+                "mapping": "one",
+                "from_port": "data",
+                "to_port": "data",
+            },
+            {
+                "from": "b",
+                "to": "a",
+                "mapping": "one",
+                "from_port": "data",
+                "to_port": "data",
+            },
         ),
     )
     # AD-6 / FR-WF-40: directed cycles (incl. reverse edges) refuse at registration.

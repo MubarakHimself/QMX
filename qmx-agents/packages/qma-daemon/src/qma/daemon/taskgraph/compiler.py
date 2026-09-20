@@ -87,11 +87,13 @@ class CompileResult:
 class GraphTemplateCatalog:
     """In-memory definition-store stand-in for plugin-contributed templates.
 
-    Registration validates topology (self-loops and any directed cycle refused
-    via DFS; AD-6 / FR-WF-40) and refuses any daemon-claimed template id.
-    Stored templates are the authored, versioned, stateless artifacts —
-    compile identity is ``(qualified_id, version)``; a run never mutates or
-    interchanges them with a Task Graph (AD-13; FR-Q29; FR-WF-39).
+    Registration validates topology (self-loops / directed cycles; explicit
+    AD-5 edge mapping + port kinds; no silent Cartesian — FR-WF-40 / FR-WF-42)
+    and refuses any daemon-claimed template id. A refused register leaves the
+    previous roster unchanged and consumes no occupancy. Stored templates are
+    the authored, versioned, stateless artifacts — compile identity is
+    ``(qualified_id, version)``; a run never mutates or interchanges them with
+    a Task Graph (AD-13; FR-Q29; FR-WF-39).
     """
 
     def __init__(self) -> None:

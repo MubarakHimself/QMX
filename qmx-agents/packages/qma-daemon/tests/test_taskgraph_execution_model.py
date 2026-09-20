@@ -45,6 +45,30 @@ from qma.daemon.taskgraph import (
 from qmf.core import RefusalCategory, TypedRefusal, is_ok, is_refusal
 
 
+def _edge(
+    src: str,
+    dst: str,
+    *,
+    mapping: str = "one",
+    from_port: str = "data",
+    to_port: str = "data",
+    cartesian: bool | None = None,
+    **extra: object,
+) -> dict[str, object]:
+    """Story 56.3 — edges declare mapping + port kinds (AD-5; FR-WF-42)."""
+    payload: dict[str, object] = {
+        "from": src,
+        "to": dst,
+        "mapping": mapping,
+        "from_port": from_port,
+        "to_port": to_port,
+    }
+    if cartesian is not None:
+        payload["cartesian"] = cartesian
+    payload.update(extra)
+    return payload
+
+
 def _quant(*, slug: str = "alpha", desk: DeskSlug = DeskSlug.RESEARCH) -> Quant:
     minted = ActorId.mint(desk, slug)
     assert is_ok(minted)
@@ -265,10 +289,7 @@ def test_back_edge_refused_at_registration() -> None:
             {"id": "a", "kind": "task"},
             {"id": "b", "kind": "task"},
         ),
-        edges=(
-            {"from": "a", "to": "b"},
-            {"from": "b", "to": "a"},
-        ),
+        edges=(_edge("a", "b"), _edge("b", "a")),
     )
     refused = catalog.register(template)
     assert is_refusal(refused)
@@ -288,11 +309,7 @@ def test_directed_triangle_cycle_refused_at_registration() -> None:
             {"id": "b", "kind": "task"},
             {"id": "c", "kind": "task"},
         ),
-        edges=(
-            {"from": "a", "to": "b"},
-            {"from": "b", "to": "c"},
-            {"from": "c", "to": "a"},
-        ),
+        edges=(_edge("a", "b"), _edge("b", "c"), _edge("c", "a")),
     )
     direct = validate_graph_template_topology(template)
     assert is_refusal(direct)
@@ -308,7 +325,7 @@ def test_self_loop_refused_at_registration() -> None:
         qualified_id="dev-factory:self-loop",
         version="1",
         nodes=({"id": "a", "kind": "task"},),
-        edges=({"from": "a", "to": "a"},),
+        edges=(_edge("a", "a"),),
     )
     direct = validate_graph_template_topology(template)
     assert is_refusal(direct)
@@ -326,7 +343,7 @@ def test_dag_template_keeps_compile_identity_qualified_id_version() -> None:
             {"id": "a", "kind": "task"},
             {"id": "b", "kind": "task"},
         ),
-        edges=({"from": "a", "to": "b"},),
+        edges=(_edge("a", "b"),),
     )
     validated = validate_graph_template_topology(template)
     assert is_ok(validated)
@@ -354,10 +371,7 @@ def test_loop_node_state_is_not_a_template_cycle() -> None:
             },
             {"id": "done", "kind": "task"},
         ),
-        edges=(
-            {"from": "seed", "to": "retry"},
-            {"from": "retry", "to": "done"},
-        ),
+        edges=(_edge("seed", "retry"), _edge("retry", "done")),
     )
     assert is_ok(validate_graph_template_topology(template))
 
@@ -370,11 +384,7 @@ def test_loop_node_state_is_not_a_template_cycle() -> None:
             {"id": "loop", "kind": "loop"},
             {"id": "b", "kind": "task"},
         ),
-        edges=(
-            {"from": "a", "to": "loop"},
-            {"from": "loop", "to": "b"},
-            {"from": "b", "to": "a"},
-        ),
+        edges=(_edge("a", "loop"), _edge("loop", "b"), _edge("b", "a")),
     )
     assert is_refusal(validate_graph_template_topology(cyclic))
 
@@ -412,9 +422,9 @@ def test_non_emitting_kinds_materialize_without_tasks() -> None:
             {"id": "work", "kind": "task", "intent": "do work", "seed": True},
         ),
         edges=(
-            {"from": "check", "to": "approve"},
-            {"from": "approve", "to": "work"},
-            {"from": "work", "to": "join"},
+            _edge("check", "approve", from_port="control", to_port="control"),
+            _edge("approve", "work", from_port="control", to_port="data"),
+            _edge("work", "join", from_port="data", to_port="control"),
         ),
     )
     assert is_ok(catalog.register(template))
@@ -486,11 +496,7 @@ def test_cycle_is_typed_invalid_input_refusal_not_crash() -> None:
             {"id": "b", "kind": "task"},
             {"id": "c", "kind": "task"},
         ),
-        edges=(
-            {"from": "a", "to": "b"},
-            {"from": "b", "to": "c"},
-            {"from": "c", "to": "a"},
-        ),
+        edges=(_edge("a", "b"), _edge("b", "c"), _edge("c", "a")),
     )
     refused = validate_graph_template_topology(template)
     assert is_refusal(refused)
@@ -509,7 +515,7 @@ def test_missing_dependency_edge_endpoint_is_typed_refusal() -> None:
         qualified_id="dev-factory:missing-edge-dep",
         version="1",
         nodes=({"id": "a", "kind": "task"},),
-        edges=({"from": "a", "to": "ghost"},),
+        edges=(_edge("a", "ghost"),),
     )
     refused = validate_graph_template_topology(template)
     assert is_refusal(refused)
@@ -528,7 +534,7 @@ def test_missing_dependency_depends_on_is_typed_refusal() -> None:
             {"id": "a", "kind": "task"},
             {"id": "b", "kind": "task", "depends_on": ["missing-node"]},
         ),
-        edges=({"from": "a", "to": "b"},),
+        edges=(_edge("a", "b"),),
     )
     refused = validate_graph_template_topology(template)
     assert is_refusal(refused)
@@ -575,7 +581,7 @@ def test_missing_operation_dependency_is_typed_unavailable() -> None:
             {"id": "p", "kind": "task", "op_id": "test.producer"},
             {"id": "c", "kind": "task", "op_id": "test.consumer"},
         ),
-        edges=({"from": "p", "to": "c", "mapping": "one"},),
+        edges=(_edge("p", "c"),),
     )
     assert is_ok(validate_graph_template_topology(satisfied, descriptors=catalog))
 
@@ -618,7 +624,8 @@ def test_cardinality_mismatch_many_to_one_is_typed_refusal() -> None:
             {"id": "src", "kind": "task", "op_id": "test.many_out"},
             {"id": "dst", "kind": "task", "op_id": "test.one_in"},
         ),
-        edges=({"from": "src", "to": "dst"},),
+        # broadcast expands; it is not a reducing many→one mapping.
+        edges=(_edge("src", "dst", mapping="broadcast"),),
     )
     refused = validate_graph_template_topology(template, descriptors=catalog)
     assert is_refusal(refused)
@@ -637,7 +644,7 @@ def test_cardinality_mismatch_many_to_one_is_typed_refusal() -> None:
             {"id": "src", "kind": "task", "op_id": "test.many_out"},
             {"id": "dst", "kind": "task", "op_id": "test.one_in"},
         ),
-        edges=({"from": "src", "to": "dst", "mapping": "zip"},),
+        edges=(_edge("src", "dst", mapping="zip"),),
     )
     assert is_ok(validate_graph_template_topology(fixed, descriptors=catalog))
 
@@ -649,13 +656,13 @@ def test_illegal_topology_public_boundary_never_raises() -> None:
             qualified_id="dev-factory:raise-cycle",
             version="1",
             nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
-            edges=({"from": "a", "to": "b"}, {"from": "b", "to": "a"}),
+            edges=(_edge("a", "b"), _edge("b", "a")),
         ),
         GraphTemplate(
             qualified_id="dev-factory:raise-missing",
             version="1",
             nodes=({"id": "a", "kind": "task"},),
-            edges=({"from": "a", "to": "nope"},),
+            edges=(_edge("a", "nope"),),
         ),
         GraphTemplate(
             qualified_id="dev-factory:raise-unknown-op",
@@ -673,3 +680,144 @@ def test_illegal_topology_public_boundary_never_raises() -> None:
         registered = catalog.register(template)
         assert is_refusal(registered)
         assert isinstance(registered, TypedRefusal)
+
+
+def test_edge_mapping_required_no_silent_cartesian() -> None:
+    """Story 56.3 / FR-WF-42 — mapping must be declared; silent Cartesian refuses."""
+    missing = GraphTemplate(
+        qualified_id="dev-factory:missing-mapping",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=({"from": "a", "to": "b", "from_port": "data", "to_port": "data"},),
+    )
+    refused = validate_graph_template_topology(missing)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="silent_cartesian", code="INVALID_INPUT"
+    )
+    assert typed.category is RefusalCategory.INVALID_INPUT
+
+    silent = GraphTemplate(
+        qualified_id="dev-factory:silent-cartesian",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=(
+            {
+                "from": "a",
+                "to": "b",
+                "mapping": "cartesian",
+                "from_port": "data",
+                "to_port": "data",
+            },
+        ),
+    )
+    refused_cartesian = validate_graph_template_topology(silent)
+    assert is_refusal(refused_cartesian)
+    _assert_topology_typed_refusal(
+        refused_cartesian, illegal_shape="silent_cartesian", code="INVALID_INPUT"
+    )
+
+    explicit = GraphTemplate(
+        qualified_id="dev-factory:explicit-cartesian",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=(_edge("a", "b", mapping="cartesian", cartesian=True),),
+    )
+    assert is_ok(validate_graph_template_topology(explicit))
+
+
+def test_edge_ports_declare_closed_kinds() -> None:
+    """Story 56.3 — each port declares reference|data|event|control."""
+    missing_ports = GraphTemplate(
+        qualified_id="dev-factory:missing-ports",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=({"from": "a", "to": "b", "mapping": "one"},),
+    )
+    refused = validate_graph_template_topology(missing_ports)
+    assert is_refusal(refused)
+    _assert_topology_typed_refusal(
+        refused, illegal_shape="missing_port_kind", code="INVALID_INPUT"
+    )
+
+    bad_kind = GraphTemplate(
+        qualified_id="dev-factory:bad-port-kind",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=(_edge("a", "b", from_port="payload", to_port="data"),),
+    )
+    refused_kind = validate_graph_template_topology(bad_kind)
+    assert is_refusal(refused_kind)
+    _assert_topology_typed_refusal(
+        refused_kind, illegal_shape="unknown_port_kind", code="INVALID_INPUT"
+    )
+
+
+def test_conditional_skip_is_node_kind_not_dropped_edges() -> None:
+    """Story 56.3 — refuse drop_on_empty / conditional_skip edge keys."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:drop-edge-skip",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task"},
+            {"id": "gate", "kind": "conditional"},
+        ),
+        edges=(
+            _edge("a", "gate", from_port="data", to_port="control", drop_on_empty=True),
+            _edge("gate", "b", from_port="control", to_port="data"),
+        ),
+    )
+    refused = validate_graph_template_topology(template)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="dropped_edge_skip", code="INVALID_INPUT"
+    )
+    assert "drop_on_empty" in typed.context["forbidden_keys"]
+
+    # Conditional as a node kind with declared mapping/ports is legal.
+    legal = GraphTemplate(
+        qualified_id="dev-factory:conditional-node",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "gate", "kind": "conditional"},
+            {"id": "b", "kind": "task"},
+        ),
+        edges=(
+            _edge("a", "gate", from_port="data", to_port="control"),
+            _edge("gate", "b", from_port="control", to_port="data"),
+        ),
+    )
+    assert is_ok(validate_graph_template_topology(legal))
+
+
+def test_illegal_graph_register_keeps_previous_roster_no_occupancy() -> None:
+    """Story 56.3 — refused register leaves prior roster; consumes no occupancy."""
+    catalog = GraphTemplateCatalog()
+    good = GraphTemplate(
+        qualified_id="dev-factory:good-linear",
+        version="1",
+        nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+        edges=(_edge("a", "b"),),
+    )
+    assert is_ok(catalog.register(good))
+    before = catalog.ids()
+
+    illegal = GraphTemplate(
+        qualified_id="dev-factory:illegal-cycle",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task"},
+            {"id": "c", "kind": "task"},
+        ),
+        edges=(_edge("a", "b"), _edge("b", "c"), _edge("c", "a")),
+    )
+    refused = catalog.register(illegal)
+    assert is_refusal(refused)
+    assert isinstance(refused, TypedRefusal)
+    assert catalog.ids() == before
+    assert "dev-factory:illegal-cycle" not in catalog
+    # Topology registration is not a door run — no occupancy field is minted.
+    assert "occupancy" not in refused.context

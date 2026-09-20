@@ -35,9 +35,12 @@ from qma.core.operations.descriptor import (
     OperationDescriptor,
 )
 from qma.core.vocabulary.enums import (
+    EdgeMapping,
+    EmptyPolicy,
     GraphArtifactKind,
     NodeKind,
     OperationCardinality,
+    PortKind,
     TaskMissionState,
 )
 from qma.daemon.taskgraph.records import (
@@ -53,7 +56,9 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 __all__ = [
     "DAEMON_CONTRIBUTED_GRAPH_TEMPLATES",
     "DEFERRED_GRAPH_EXCLUSIONS",
+    "EDGE_MAPPINGS",
     "MISSION_TEMPLATE_REGISTRY",
+    "PORT_KINDS",
     "REDUCING_EDGE_MAPPINGS",
     "TOPOLOGY_REFUSAL_CODES",
     "TOPOLOGY_REFUSAL_FAMILY",
@@ -82,11 +87,34 @@ MISSION_TEMPLATE_REGISTRY: Final[None] = None
 TOPOLOGY_REFUSAL_FAMILY: Final[str] = ERROR_REFUSAL_FAMILY
 TOPOLOGY_REFUSAL_CODES: Final[frozenset[str]] = REQUIRED_REFUSAL_CODES
 
+# Closed AD-5 / FR-WF-42 sets (Story 56.3).
+EDGE_MAPPINGS: Final[frozenset[str]] = frozenset(member.value for member in EdgeMapping)
+PORT_KINDS: Final[frozenset[str]] = frozenset(member.value for member in PortKind)
+
 # Edge mappings that may legally reduce many→one (AD-5; Story 56.3 declares the set).
 REDUCING_EDGE_MAPPINGS: Final[frozenset[str]] = frozenset(
-    {"one", "zip", "keyed-join", "cartesian"}
+    {
+        EdgeMapping.ONE.value,
+        EdgeMapping.ZIP.value,
+        EdgeMapping.KEYED_JOIN.value,
+        EdgeMapping.CARTESIAN.value,
+    }
 )
-_EXPANDING_EDGE_MAPPINGS: Final[frozenset[str]] = frozenset({"broadcast", "cartesian"})
+_EXPANDING_EDGE_MAPPINGS: Final[frozenset[str]] = frozenset(
+    {EdgeMapping.BROADCAST.value, EdgeMapping.CARTESIAN.value}
+)
+
+# Edge keys that try to encode conditional skip / empty handling by dropping edges.
+_FORBIDDEN_EDGE_SKIP_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "conditional_skip",
+        "drop_if",
+        "drop_on_empty",
+        "omit_on_empty",
+        "skip_on_empty",
+        "drop_edges",
+    }
+)
 
 
 def _topology_refusal(
@@ -247,7 +275,7 @@ def validate_graph_template_topology(
     | Sequence[OperationDescriptor]
     | None = None,
 ) -> Result[GraphTemplate]:
-    """Refuse illegal topology shapes as typed CT-04 refusals (AD-6; Story 56.2).
+    """Refuse illegal topology shapes as typed CT-04 refusals (AD-5/AD-6).
 
     Public boundary returns value-or-refusal — never an untyped exception.
     Illegal shapes covered:
@@ -260,9 +288,19 @@ def validate_graph_template_topology(
     * **cardinality mismatch** — predecessor ``output_cardinality`` cannot
       feed successor ``input_cardinality`` under the edge mapping —
       ``INVALID_INPUT``
+    * **missing / unknown mapping** — every edge must declare AD-5 mapping
+      ``one|zip|broadcast|keyed-join|cartesian`` (Story 56.3; FR-WF-42)
+    * **silent Cartesian** — ``mapping="cartesian"`` without ``cartesian:
+      true``, or guessing Cartesian from JSON shape — ``INVALID_INPUT``
+    * **port kind** — each edge ``from_port`` / ``to_port`` must be
+      ``reference|data|event|control``
+    * **dropped-edge skip** — conditional skip is ``NodeKind.CONDITIONAL``,
+      never edge omission / ``drop_on_empty`` keys
 
     Pairwise reverse-edge checks are insufficient — ``A→B→C→A`` must refuse.
     Runtime Loops remain node state and never excuse a template cycle.
+    Registration/enable of a failing template is refused; the previous
+    roster stays consistent and no occupancy is consumed.
     """
     owned = validate_no_daemon_graph_template(template.qualified_id)
     if not is_ok(owned):
@@ -404,8 +442,30 @@ def validate_graph_template_topology(
                 to_node=dst,
             )
 
-        mapping_raw = edge.get("mapping")
-        mapping = mapping_raw if isinstance(mapping_raw, str) else None
+        mapping_or_refusal = _require_explicit_edge_mapping(
+            edge, from_node=src, to_node=dst
+        )
+        if not isinstance(mapping_or_refusal, str):
+            return mapping_or_refusal
+        mapping = mapping_or_refusal
+
+        ports = _require_edge_port_kinds(edge, from_node=src, to_node=dst)
+        if ports is not None:
+            return ports
+
+        skip_keys = _FORBIDDEN_EDGE_SKIP_KEYS.intersection(edge)
+        if skip_keys:
+            return _topology_refusal(
+                "edge",
+                "conditional skip is a node kind (conditional), never dropped "
+                "edges or empty-drop keys (AD-5; FR-WF-42)",
+                code="INVALID_INPUT",
+                illegal_shape="dropped_edge_skip",
+                from_node=src,
+                to_node=dst,
+                forbidden_keys=sorted(skip_keys),
+            )
+
         src_op = op_by_node.get(src)
         dst_op = op_by_node.get(dst)
         if src_op is not None and dst_op is not None and catalog:
@@ -421,6 +481,15 @@ def validate_graph_template_topology(
                 )
                 if refused is not None:
                     return refused
+                empty = _refuse_empty_policy_override(
+                    edge,
+                    src_desc=src_desc,
+                    dst_desc=dst_desc,
+                    from_node=src,
+                    to_node=dst,
+                )
+                if empty is not None:
+                    return empty
 
         adjacency[src].append(dst)
 
@@ -455,6 +524,154 @@ def validate_graph_template_topology(
         if cycle is not None:
             return cycle
     return Ok(template)
+
+
+def _require_explicit_edge_mapping(
+    edge: Mapping[str, object],
+    *,
+    from_node: str,
+    to_node: str,
+) -> str | TypedRefusal:
+    """Every edge must declare a closed AD-5 mapping; Cartesian needs a flag."""
+    mapping_raw = edge.get("mapping")
+    if mapping_raw is None:
+        return _topology_refusal(
+            "edge.mapping",
+            "collection mapping must be declared on the edge "
+            "(one|zip|broadcast|keyed-join|cartesian); silent Cartesian / "
+            "guessed mapping is refused (AD-5; FR-WF-42; Story 56.3)",
+            code="INVALID_INPUT",
+            illegal_shape="silent_cartesian",
+            from_node=from_node,
+            to_node=to_node,
+        )
+    if not isinstance(mapping_raw, str) or mapping_raw not in EDGE_MAPPINGS:
+        return _topology_refusal(
+            "edge.mapping",
+            "edge mapping must be one of one|zip|broadcast|keyed-join|cartesian",
+            code="INVALID_INPUT",
+            illegal_shape="unknown_mapping",
+            from_node=from_node,
+            to_node=to_node,
+            given=repr(mapping_raw),
+        )
+    if mapping_raw == EdgeMapping.CARTESIAN.value and edge.get("cartesian") is not True:
+        return _topology_refusal(
+            "edge.cartesian",
+            "Cartesian mapping requires an explicit cartesian: true flag; "
+            "silent Cartesian is refused (AD-5; FR-WF-42; Story 56.3)",
+            code="INVALID_INPUT",
+            illegal_shape="silent_cartesian",
+            from_node=from_node,
+            to_node=to_node,
+            mapping=mapping_raw,
+        )
+    return mapping_raw
+
+
+def _port_kind_value(raw: object) -> str | None:
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, Mapping):
+        kind = cast("Mapping[str, object]", raw).get("kind")
+        return kind if isinstance(kind, str) else None
+    return None
+
+
+def _require_edge_port_kinds(
+    edge: Mapping[str, object],
+    *,
+    from_node: str,
+    to_node: str,
+) -> TypedRefusal | None:
+    """Each edge port declares kind reference|data|event|control (AD-5)."""
+    from_raw: object | None = edge.get("from_port", edge.get("from_port_kind"))
+    to_raw: object | None = edge.get("to_port", edge.get("to_port_kind"))
+    ports_raw = edge.get("ports")
+    if isinstance(ports_raw, Mapping):
+        ports = cast("Mapping[str, object]", ports_raw)
+        if from_raw is None:
+            from_raw = ports.get("from", ports.get("from_port"))
+        if to_raw is None:
+            to_raw = ports.get("to", ports.get("to_port"))
+
+    if from_raw is None or to_raw is None:
+        return _topology_refusal(
+            "edge.port",
+            "each edge port must declare kind reference|data|event|control "
+            "(AD-5; FR-WF-42; Story 56.3)",
+            code="INVALID_INPUT",
+            illegal_shape="missing_port_kind",
+            from_node=from_node,
+            to_node=to_node,
+        )
+
+    from_kind = _port_kind_value(from_raw)
+    to_kind = _port_kind_value(to_raw)
+    if from_kind not in PORT_KINDS or to_kind not in PORT_KINDS:
+        return _topology_refusal(
+            "edge.port",
+            "port kind must be one of reference|data|event|control",
+            code="INVALID_INPUT",
+            illegal_shape="unknown_port_kind",
+            from_node=from_node,
+            to_node=to_node,
+            from_port=from_kind,
+            to_port=to_kind,
+        )
+    return None
+
+
+def _refuse_empty_policy_override(
+    edge: Mapping[str, object],
+    *,
+    src_desc: OperationDescriptor,
+    dst_desc: OperationDescriptor,
+    from_node: str,
+    to_node: str,
+) -> TypedRefusal | None:
+    """Empty collections follow the operation empty_policy — never edge drop."""
+    override = edge.get("empty_policy")
+    if override is None:
+        return None
+    if not isinstance(override, str):
+        return _topology_refusal(
+            "edge.empty_policy",
+            "empty collections skip or refuse per the operation's declared "
+            "empty_policy; edge overrides must be refuse|skip strings "
+            "(AD-5; FR-WF-42)",
+            code="INVALID_INPUT",
+            illegal_shape="empty_policy",
+            from_node=from_node,
+            to_node=to_node,
+        )
+    legal = {EmptyPolicy.REFUSE.value, EmptyPolicy.SKIP.value}
+    if override not in legal:
+        return _topology_refusal(
+            "edge.empty_policy",
+            "empty_policy must be refuse|skip; conditional skip is a node kind, "
+            "not dropped edges (AD-5; FR-WF-42)",
+            code="INVALID_INPUT",
+            illegal_shape="empty_policy",
+            from_node=from_node,
+            to_node=to_node,
+            given=override,
+        )
+    # Edge may only restate a declared policy; inventing a different one refuses.
+    declared = {src_desc.empty_policy.value, dst_desc.empty_policy.value}
+    if override not in declared:
+        return _topology_refusal(
+            "edge.empty_policy",
+            "empty collections follow the operation's declared empty_policy; "
+            "edge override that disagrees is refused (AD-5; FR-WF-42)",
+            code="INVALID_INPUT",
+            illegal_shape="empty_policy",
+            from_node=from_node,
+            to_node=to_node,
+            given=override,
+            declared=sorted(declared),
+        )
+    return None
 
 
 def _refuse_cardinality_mismatch(

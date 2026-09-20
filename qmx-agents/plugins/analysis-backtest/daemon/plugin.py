@@ -61,8 +61,20 @@ def activate(ctx: PluginContext) -> None:
                 {"id": "review", "kind": "task"},
             ),
             edges=(
-                {"from": "prepare", "to": "replay"},
-                {"from": "replay", "to": "review"},
+                {
+                    "from": "prepare",
+                    "to": "replay",
+                    "mapping": "one",
+                    "from_port": "data",
+                    "to_port": "data",
+                },
+                {
+                    "from": "replay",
+                    "to": "review",
+                    "mapping": "one",
+                    "from_port": "data",
+                    "to_port": "data",
+                },
             ),
         ),
     )

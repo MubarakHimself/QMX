@@ -47,7 +47,15 @@ def activate(ctx: PluginContext) -> None:
                 {"id": "collect", "kind": "task"},
                 {"id": "summarize", "kind": "task"},
             ),
-            edges=({"from": "collect", "to": "summarize"},),
+            edges=(
+                {
+                    "from": "collect",
+                    "to": "summarize",
+                    "mapping": "one",
+                    "from_port": "data",
+                    "to_port": "data",
+                },
+            ),
         ),
     )
     ctx.register_worker_template(
