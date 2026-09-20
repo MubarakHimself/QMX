@@ -5,6 +5,11 @@ Graph Templates stay authored and stateless. Loop runtime controls
 Graph *node* state. Skill definitions stay in ``qma-core`` and never become
 Loops. ``qma-daemon`` contributes no ``graph_template`` in v1. Mission Template
 registry and graph-engine selection remain Deferred (GAP-0084 / GAP-0086).
+
+Illegal topology shapes (cycle, missing dependency, unknown ``op_id``,
+cardinality mismatch) return CT-04 typed refusals with the same closed
+``error_refusal_shape`` codes as other public calls — never an untyped
+exception at the public boundary (Story 56.2; AD-6; FR-WF-40).
 """
 
 from __future__ import annotations
@@ -23,9 +28,16 @@ from qma.core.control import (
     node_carries_ledger,
 )
 from qma.core.ontology import ActorId
+from qma.core.operations import public_operation_descriptors
+from qma.core.operations.descriptor import (
+    ERROR_REFUSAL_FAMILY,
+    REQUIRED_REFUSAL_CODES,
+    OperationDescriptor,
+)
 from qma.core.vocabulary.enums import (
     GraphArtifactKind,
     NodeKind,
+    OperationCardinality,
     TaskMissionState,
 )
 from qma.daemon.taskgraph.records import (
@@ -35,13 +47,16 @@ from qma.daemon.taskgraph.records import (
     TaskLedger,
     TaskRecord,
 )
-from qmf.core import Ok, Result, is_ok
+from qmf.core import Ok, RefusalCategory, Result, Retryability, TypedRefusal, is_ok
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
     "DAEMON_CONTRIBUTED_GRAPH_TEMPLATES",
     "DEFERRED_GRAPH_EXCLUSIONS",
     "MISSION_TEMPLATE_REGISTRY",
+    "REDUCING_EDGE_MAPPINGS",
+    "TOPOLOGY_REFUSAL_CODES",
+    "TOPOLOGY_REFUSAL_FAMILY",
     "ControlPrimitive",
     "LoopNodeState",
     "Skill",
@@ -62,6 +77,62 @@ DAEMON_CONTRIBUTED_GRAPH_TEMPLATES: Final[tuple[GraphTemplate, ...]] = ()
 
 # Mission Template registry is Deferred (GAP-0084) — deliberately absent.
 MISSION_TEMPLATE_REGISTRY: Final[None] = None
+
+# Same closed codes as OperationDescriptor.error_refusal_shape (AD-3; FR-WF-16).
+TOPOLOGY_REFUSAL_FAMILY: Final[str] = ERROR_REFUSAL_FAMILY
+TOPOLOGY_REFUSAL_CODES: Final[frozenset[str]] = REQUIRED_REFUSAL_CODES
+
+# Edge mappings that may legally reduce many→one (AD-5; Story 56.3 declares the set).
+REDUCING_EDGE_MAPPINGS: Final[frozenset[str]] = frozenset(
+    {"one", "zip", "keyed-join", "cartesian"}
+)
+_EXPANDING_EDGE_MAPPINGS: Final[frozenset[str]] = frozenset({"broadcast", "cartesian"})
+
+
+def _topology_refusal(
+    field: str,
+    reason: str,
+    *,
+    code: str,
+    category: RefusalCategory = RefusalCategory.INVALID_INPUT,
+    **extra: object,
+) -> TypedRefusal:
+    """Typed refusal carrying a closed error_refusal_shape code (Story 56.2)."""
+    resolved_code = code if code in TOPOLOGY_REFUSAL_CODES else "INVALID_INPUT"
+    context: dict[str, object] = {
+        "field": field,
+        "reason": reason,
+        "code": resolved_code,
+        "error_refusal_shape": {
+            "family": TOPOLOGY_REFUSAL_FAMILY,
+            "codes": sorted(TOPOLOGY_REFUSAL_CODES),
+        },
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=category,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def _index_descriptors(
+    descriptors: Mapping[str, OperationDescriptor]
+    | Sequence[OperationDescriptor]
+    | None,
+    *,
+    default_public: bool,
+) -> dict[str, OperationDescriptor]:
+    if descriptors is None:
+        if not default_public:
+            return {}
+        return {item.op_id: item for item in public_operation_descriptors()}
+    if isinstance(descriptors, Mapping):
+        return dict(descriptors)
+    indexed: dict[str, OperationDescriptor] = {}
+    for item in descriptors:
+        indexed[item.op_id] = item
+    return indexed
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,56 +242,186 @@ def validate_no_daemon_graph_template(qualified_id: str) -> Result[str]:
 
 def validate_graph_template_topology(
     template: GraphTemplate,
+    *,
+    descriptors: Mapping[str, OperationDescriptor]
+    | Sequence[OperationDescriptor]
+    | None = None,
 ) -> Result[GraphTemplate]:
-    """Refuse self-loops and any directed cycle (AD-6; FR-WF-40).
+    """Refuse illegal topology shapes as typed CT-04 refusals (AD-6; Story 56.2).
 
-    Pairwise reverse-edge checks are insufficient — a template ``A→B→C→A``
-    must refuse. Cycle detection reuses the plugin-loader DFS pattern
-    (temporary / permanent marks). Runtime Loops remain node state and are
-    never an excuse for a template cycle. Compile identity stays
-    ``(qualified_id, version)`` on the authored template.
+    Public boundary returns value-or-refusal — never an untyped exception.
+    Illegal shapes covered:
+
+    * **cycle** / self-loop — ``INVALID_INPUT``
+    * **missing dependency** — edge endpoint or ``depends_on`` / declared
+      operation dependency absent — ``INVALID_INPUT`` / ``UNAVAILABLE``
+    * **unknown op_id** — node cites an op not in the descriptor catalog —
+      ``INVALID_INPUT``
+    * **cardinality mismatch** — predecessor ``output_cardinality`` cannot
+      feed successor ``input_cardinality`` under the edge mapping —
+      ``INVALID_INPUT``
+
+    Pairwise reverse-edge checks are insufficient — ``A→B→C→A`` must refuse.
+    Runtime Loops remain node state and never excuse a template cycle.
     """
     owned = validate_no_daemon_graph_template(template.qualified_id)
     if not is_ok(owned):
         return owned
 
     if template.artifact_kind is not GraphArtifactKind.GRAPH_TEMPLATE:
-        return invalid_input(
+        return _topology_refusal(
             "artifact_kind",
             "Graph Template artifact_kind must be graph_template, never task_graph",
+            code="INVALID_INPUT",
             given=template.artifact_kind.value,
         )
 
     node_ids: set[str] = set()
+    node_by_id: dict[str, Mapping[str, object]] = {}
+    cites_op = any(node.get("op_id") is not None for node in template.nodes)
+    catalog = _index_descriptors(descriptors, default_public=cites_op)
+
     for node in template.nodes:
         node_id = node.get("id")
         if not isinstance(node_id, str) or not node_id:
-            return invalid_input(
+            return _topology_refusal(
                 "node.id",
                 "graph template nodes require a non-empty string id",
+                code="INVALID_INPUT",
+            )
+        if node_id in node_ids:
+            return _topology_refusal(
+                "node.id",
+                "duplicate node id in Graph Template",
+                code="INVALID_INPUT",
+                given=node_id,
             )
         node_ids.add(node_id)
+        node_by_id[node_id] = node
+
+    op_by_node: dict[str, str] = {}
+    for node_id, node in node_by_id.items():
+        op_raw = node.get("op_id")
+        if op_raw is None:
+            continue
+        if not isinstance(op_raw, str) or not op_raw:
+            return _topology_refusal(
+                "node.op_id",
+                "node op_id must be a non-empty string when present",
+                code="INVALID_INPUT",
+                node_id=node_id,
+            )
+        if op_raw not in catalog:
+            return _topology_refusal(
+                "node.op_id",
+                "unknown op_id — not present in the operation descriptor catalog",
+                code="INVALID_INPUT",
+                illegal_shape="unknown_op_id",
+                node_id=node_id,
+                op_id=op_raw,
+            )
+        op_by_node[node_id] = op_raw
+
+    # Missing operation dependencies (declared on the descriptor, or node-local).
+    for node_id, op_id in op_by_node.items():
+        descriptor = catalog.get(op_id)
+        if descriptor is None:
+            continue
+        graph_ops = set(op_by_node.values())
+        for dep in descriptor.declared_operation_dependencies:
+            if dep not in graph_ops:
+                return _topology_refusal(
+                    "declared_operation_dependencies",
+                    "missing operation dependency — required op_id is not "
+                    "present on any node in this Graph Template",
+                    code="UNAVAILABLE",
+                    category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                    illegal_shape="missing_dependency",
+                    node_id=node_id,
+                    op_id=op_id,
+                    missing=dep,
+                )
+
+    for node_id, node in node_by_id.items():
+        depends_raw = node.get("depends_on")
+        if depends_raw is None:
+            continue
+        if isinstance(depends_raw, str):
+            deps: tuple[object, ...] = (depends_raw,)
+        elif isinstance(depends_raw, Sequence) and not isinstance(depends_raw, (str, bytes)):
+            deps = tuple(cast("Sequence[object]", depends_raw))
+        else:
+            return _topology_refusal(
+                "node.depends_on",
+                "depends_on must be a string or sequence of node ids",
+                code="INVALID_INPUT",
+                node_id=node_id,
+            )
+        for dep in deps:
+            if not isinstance(dep, str) or not dep:
+                return _topology_refusal(
+                    "node.depends_on",
+                    "depends_on entries must be non-empty strings",
+                    code="INVALID_INPUT",
+                    node_id=node_id,
+                )
+            if dep not in node_ids:
+                return _topology_refusal(
+                    "node.depends_on",
+                    "missing dependency — depends_on names an undeclared node",
+                    code="INVALID_INPUT",
+                    illegal_shape="missing_dependency",
+                    node_id=node_id,
+                    missing=dep,
+                )
 
     adjacency: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
     for edge in template.edges:
         src = edge.get("from")
         dst = edge.get("to")
         if not isinstance(src, str) or not isinstance(dst, str):
-            return invalid_input("edge", "graph template edges require from/to strings")
-        if src not in node_ids or dst not in node_ids:
-            return invalid_input(
+            return _topology_refusal(
                 "edge",
-                "graph template edge endpoints must name declared nodes",
+                "graph template edges require from/to strings",
+                code="INVALID_INPUT",
+            )
+        if src not in node_ids or dst not in node_ids:
+            return _topology_refusal(
+                "edge",
+                "missing dependency — edge endpoints must name declared nodes",
+                code="INVALID_INPUT",
+                illegal_shape="missing_dependency",
                 given=f"{src}->{dst}",
             )
         if src == dst:
-            return policy_rejection(
+            return _topology_refusal(
                 "graph_template",
                 "self-loops are refused at Graph Template registration "
                 "(AD-6; FR-WF-40)",
+                code="INVALID_INPUT",
+                illegal_shape="cycle",
                 from_node=src,
                 to_node=dst,
             )
+
+        mapping_raw = edge.get("mapping")
+        mapping = mapping_raw if isinstance(mapping_raw, str) else None
+        src_op = op_by_node.get(src)
+        dst_op = op_by_node.get(dst)
+        if src_op is not None and dst_op is not None and catalog:
+            src_desc = catalog.get(src_op)
+            dst_desc = catalog.get(dst_op)
+            if src_desc is not None and dst_desc is not None:
+                refused = _refuse_cardinality_mismatch(
+                    src_desc,
+                    dst_desc,
+                    mapping=mapping,
+                    from_node=src,
+                    to_node=dst,
+                )
+                if refused is not None:
+                    return refused
+
         adjacency[src].append(dst)
 
     # DFS cycle detection — same temporary/permanent marks as
@@ -228,14 +429,16 @@ def validate_graph_template_topology(
     temporary: set[str] = set()
     permanent: set[str] = set()
 
-    def visit(node_id: str) -> Result[None] | None:
+    def visit(node_id: str) -> TypedRefusal | None:
         if node_id in permanent:
             return None
         if node_id in temporary:
-            return policy_rejection(
+            return _topology_refusal(
                 "graph_template",
                 "directed cycles are refused at Graph Template registration "
                 "(AD-6; FR-WF-40); pairwise reverse-edge checks are insufficient",
+                code="INVALID_INPUT",
+                illegal_shape="cycle",
                 node_id=node_id,
             )
         temporary.add(node_id)
@@ -252,6 +455,55 @@ def validate_graph_template_topology(
         if cycle is not None:
             return cycle
     return Ok(template)
+
+
+def _refuse_cardinality_mismatch(
+    src: OperationDescriptor,
+    dst: OperationDescriptor,
+    *,
+    mapping: str | None,
+    from_node: str,
+    to_node: str,
+) -> TypedRefusal | None:
+    """Refuse many→one without a reducing mapping, or one→many without expand."""
+    out_c = src.output_cardinality
+    in_c = dst.input_cardinality
+    if (
+        out_c is OperationCardinality.MANY
+        and in_c is OperationCardinality.ONE
+        and (mapping is None or mapping not in REDUCING_EDGE_MAPPINGS)
+    ):
+        return _topology_refusal(
+            "edge.mapping",
+            "cardinality mismatch — many output cannot feed one input "
+            "without an explicit reducing mapping "
+            "(one|zip|keyed-join|cartesian)",
+            code="INVALID_INPUT",
+            illegal_shape="cardinality_mismatch",
+            from_node=from_node,
+            to_node=to_node,
+            output_cardinality=out_c.value,
+            input_cardinality=in_c.value,
+            mapping=mapping,
+        )
+    if (
+        out_c is OperationCardinality.ONE
+        and in_c is OperationCardinality.MANY
+        and (mapping is None or mapping not in _EXPANDING_EDGE_MAPPINGS)
+    ):
+        return _topology_refusal(
+            "edge.mapping",
+            "cardinality mismatch — one output cannot feed many input "
+            "without an explicit expanding mapping (broadcast|cartesian)",
+            code="INVALID_INPUT",
+            illegal_shape="cardinality_mismatch",
+            from_node=from_node,
+            to_node=to_node,
+            output_cardinality=out_c.value,
+            input_cardinality=in_c.value,
+            mapping=mapping,
+        )
+    return None
 
 
 def assert_template_not_interchanged(

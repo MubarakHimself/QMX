@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 from qma.core.control import (
     DAEMON_EVALUATED_NODE_KINDS,
@@ -14,6 +16,7 @@ from qma.core.control import (
     node_carries_ledger,
 )
 from qma.core.ontology import ActorId, DeskSlug, Goal, Quant, RoleName
+from qma.core.operations import parse_operation_descriptor, public_operation_descriptors
 from qma.core.vocabulary.enums import (
     TASK_EMITTING_NODE_KINDS,
     GraphArtifactKind,
@@ -23,6 +26,8 @@ from qma.core.vocabulary.enums import (
 from qma.daemon.taskgraph import (
     DAEMON_CONTRIBUTED_GRAPH_TEMPLATES,
     MISSION_TEMPLATE_REGISTRY,
+    TOPOLOGY_REFUSAL_CODES,
+    TOPOLOGY_REFUSAL_FAMILY,
     CompileRequest,
     GraphTemplate,
     GraphTemplateCatalog,
@@ -37,7 +42,7 @@ from qma.daemon.taskgraph import (
     validate_graph_template_topology,
     validate_no_daemon_graph_template,
 )
-from qmf.core import is_ok, is_refusal
+from qmf.core import RefusalCategory, TypedRefusal, is_ok, is_refusal
 
 
 def _quant(*, slug: str = "alpha", desk: DeskSlug = DeskSlug.RESEARCH) -> Quant:
@@ -435,3 +440,236 @@ def test_non_emitting_kinds_materialize_without_tasks() -> None:
     assert all(not n.carries_ledger for n in graph.nodes if not n.emits_task)
     assert len(graph.tasks) == 1
     assert graph.tasks[0].node_kind is NodeKind.TASK
+
+
+def _assert_topology_typed_refusal(
+    refused: object,
+    *,
+    illegal_shape: str,
+    code: str,
+) -> TypedRefusal:
+    """Story 56.2 — illegal topology is a typed refusal, never a crash."""
+    assert isinstance(refused, TypedRefusal)
+    assert refused.context["illegal_shape"] == illegal_shape
+    assert refused.context["code"] == code
+    shape = refused.context["error_refusal_shape"]
+    assert isinstance(shape, Mapping)
+    assert shape["family"] == TOPOLOGY_REFUSAL_FAMILY
+    assert set(shape["codes"]) == set(TOPOLOGY_REFUSAL_CODES)
+    assert code in TOPOLOGY_REFUSAL_CODES
+    return refused
+
+
+def _descriptor_payload(
+    *,
+    op_id: str,
+    input_cardinality: str = "one",
+    output_cardinality: str = "one",
+    dependencies: list[str] | None = None,
+) -> dict[str, object]:
+    base = dict(public_operation_descriptors()[0].to_payload())
+    base["op_id"] = op_id
+    base["input_schema"] = f"{op_id}.v1"
+    base["input_cardinality"] = input_cardinality
+    base["output_cardinality"] = output_cardinality
+    base["declared_operation_dependencies"] = list(dependencies or [])
+    return base
+
+
+def test_cycle_is_typed_invalid_input_refusal_not_crash() -> None:
+    """Story 56.2 — cycle → INVALID_INPUT typed refusal, never an exception."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:typed-cycle",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task"},
+            {"id": "c", "kind": "task"},
+        ),
+        edges=(
+            {"from": "a", "to": "b"},
+            {"from": "b", "to": "c"},
+            {"from": "c", "to": "a"},
+        ),
+    )
+    refused = validate_graph_template_topology(template)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="cycle", code="INVALID_INPUT"
+    )
+    assert typed.category is RefusalCategory.INVALID_INPUT
+    catalog = GraphTemplateCatalog()
+    assert is_refusal(catalog.register(template))
+    assert "dev-factory:typed-cycle" not in catalog
+
+
+def test_missing_dependency_edge_endpoint_is_typed_refusal() -> None:
+    """Story 56.2 — missing dependency (undeclared edge endpoint) → typed refusal."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:missing-edge-dep",
+        version="1",
+        nodes=({"id": "a", "kind": "task"},),
+        edges=({"from": "a", "to": "ghost"},),
+    )
+    refused = validate_graph_template_topology(template)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="missing_dependency", code="INVALID_INPUT"
+    )
+    assert typed.category is RefusalCategory.INVALID_INPUT
+
+
+def test_missing_dependency_depends_on_is_typed_refusal() -> None:
+    """Story 56.2 — missing dependency via node depends_on → typed refusal."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:missing-depends-on",
+        version="1",
+        nodes=(
+            {"id": "a", "kind": "task"},
+            {"id": "b", "kind": "task", "depends_on": ["missing-node"]},
+        ),
+        edges=({"from": "a", "to": "b"},),
+    )
+    refused = validate_graph_template_topology(template)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="missing_dependency", code="INVALID_INPUT"
+    )
+    assert typed.context["missing"] == "missing-node"
+
+
+def test_missing_operation_dependency_is_typed_unavailable() -> None:
+    """Story 56.2 — declared operation dependency absent from the graph."""
+    producer = parse_operation_descriptor(
+        _descriptor_payload(op_id="test.producer", output_cardinality="one")
+    )
+    consumer = parse_operation_descriptor(
+        _descriptor_payload(
+            op_id="test.consumer",
+            dependencies=["test.producer"],
+        )
+    )
+    assert is_ok(producer) and is_ok(consumer)
+    catalog = {producer.value.op_id: producer.value, consumer.value.op_id: consumer.value}
+
+    # Consumer alone — producer dependency missing from the template.
+    template = GraphTemplate(
+        qualified_id="dev-factory:missing-op-dep",
+        version="1",
+        nodes=({"id": "only", "kind": "task", "op_id": "test.consumer"},),
+        edges=(),
+    )
+    refused = validate_graph_template_topology(template, descriptors=catalog)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="missing_dependency", code="UNAVAILABLE"
+    )
+    assert typed.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+    assert typed.context["missing"] == "test.producer"
+
+    # Satisfied when both ops appear on nodes.
+    satisfied = GraphTemplate(
+        qualified_id="dev-factory:satisfied-op-dep",
+        version="1",
+        nodes=(
+            {"id": "p", "kind": "task", "op_id": "test.producer"},
+            {"id": "c", "kind": "task", "op_id": "test.consumer"},
+        ),
+        edges=({"from": "p", "to": "c", "mapping": "one"},),
+    )
+    assert is_ok(validate_graph_template_topology(satisfied, descriptors=catalog))
+
+
+def test_unknown_op_id_is_typed_invalid_input_refusal() -> None:
+    """Story 56.2 — unknown op_id → INVALID_INPUT typed refusal."""
+    template = GraphTemplate(
+        qualified_id="dev-factory:unknown-op",
+        version="1",
+        nodes=({"id": "a", "kind": "task", "op_id": "totally.unknown.op"},),
+        edges=(),
+    )
+    refused = validate_graph_template_topology(template)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="unknown_op_id", code="INVALID_INPUT"
+    )
+    assert typed.category is RefusalCategory.INVALID_INPUT
+    assert typed.context["op_id"] == "totally.unknown.op"
+    assert is_refusal(GraphTemplateCatalog().register(template))
+
+
+def test_cardinality_mismatch_many_to_one_is_typed_refusal() -> None:
+    """Story 56.2 — many→one without reducing mapping → INVALID_INPUT."""
+    many_out = parse_operation_descriptor(
+        _descriptor_payload(op_id="test.many_out", output_cardinality="many")
+    )
+    one_in = parse_operation_descriptor(
+        _descriptor_payload(op_id="test.one_in", input_cardinality="one")
+    )
+    assert is_ok(many_out) and is_ok(one_in)
+    catalog = {
+        many_out.value.op_id: many_out.value,
+        one_in.value.op_id: one_in.value,
+    }
+    template = GraphTemplate(
+        qualified_id="dev-factory:card-mismatch",
+        version="1",
+        nodes=(
+            {"id": "src", "kind": "task", "op_id": "test.many_out"},
+            {"id": "dst", "kind": "task", "op_id": "test.one_in"},
+        ),
+        edges=({"from": "src", "to": "dst"},),
+    )
+    refused = validate_graph_template_topology(template, descriptors=catalog)
+    assert is_refusal(refused)
+    typed = _assert_topology_typed_refusal(
+        refused, illegal_shape="cardinality_mismatch", code="INVALID_INPUT"
+    )
+    assert typed.category is RefusalCategory.INVALID_INPUT
+    assert typed.context["output_cardinality"] == "many"
+    assert typed.context["input_cardinality"] == "one"
+
+    # Explicit reducing mapping admits the edge.
+    fixed = GraphTemplate(
+        qualified_id="dev-factory:card-ok",
+        version="1",
+        nodes=(
+            {"id": "src", "kind": "task", "op_id": "test.many_out"},
+            {"id": "dst", "kind": "task", "op_id": "test.one_in"},
+        ),
+        edges=({"from": "src", "to": "dst", "mapping": "zip"},),
+    )
+    assert is_ok(validate_graph_template_topology(fixed, descriptors=catalog))
+
+
+def test_illegal_topology_public_boundary_never_raises() -> None:
+    """Story 56.2 — public validate/register return refusals; never raise."""
+    shapes: list[GraphTemplate] = [
+        GraphTemplate(
+            qualified_id="dev-factory:raise-cycle",
+            version="1",
+            nodes=({"id": "a", "kind": "task"}, {"id": "b", "kind": "task"}),
+            edges=({"from": "a", "to": "b"}, {"from": "b", "to": "a"}),
+        ),
+        GraphTemplate(
+            qualified_id="dev-factory:raise-missing",
+            version="1",
+            nodes=({"id": "a", "kind": "task"},),
+            edges=({"from": "a", "to": "nope"},),
+        ),
+        GraphTemplate(
+            qualified_id="dev-factory:raise-unknown-op",
+            version="1",
+            nodes=({"id": "a", "kind": "task", "op_id": "no.such.op"},),
+        ),
+    ]
+    catalog = GraphTemplateCatalog()
+    for template in shapes:
+        direct = validate_graph_template_topology(template)
+        assert is_refusal(direct)
+        assert isinstance(direct, TypedRefusal)
+        assert "code" in direct.context
+        assert direct.context["code"] in TOPOLOGY_REFUSAL_CODES
+        registered = catalog.register(template)
+        assert is_refusal(registered)
+        assert isinstance(registered, TypedRefusal)
