@@ -26,6 +26,7 @@ from qma.core.vocabulary.enums import (
 )
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
 from qma.daemon.envs.router import ComputeRouter, PlacementDecision, QueuedPlacement
+from qma.daemon.taskgraph.projection import TaskGraphStateService
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
     DispatchLease,
@@ -116,7 +117,11 @@ class TaskTransitionResult:
 
 @dataclass
 class TaskGraphStore:
-    """In-memory Task Graph projection keyed by mission / graph id (AD-12)."""
+    """Task Graph projection keyed by mission / graph id (AD-12).
+
+    In-memory maps are a cache. When ``durable`` is bound, edges persist in
+    daemon sqlite as the named ``task_graph_state`` projection (FR-WF-45).
+    """
 
     _by_graph_id: dict[str, TaskGraph] = field(default_factory=dict[str, TaskGraph])
     _by_mission_id: dict[str, str] = field(default_factory=dict[str, str])
@@ -128,11 +133,21 @@ class TaskGraphStore:
     _job_handles: dict[str, JobHandleEvidence] = field(default_factory=dict[str, JobHandleEvidence])
     _dispatched: set[str] = field(default_factory=set[str])
     slot_router: ComputeRouter | None = None
+    durable: TaskGraphStateService | None = None
+
+    def _persist(self, graph: TaskGraph) -> None:
+        if self.durable is None:
+            return
+        persisted = self.durable.persist(graph)
+        if is_refusal(persisted):
+            msg = "task_graph_state persist refused"
+            raise RuntimeError(msg)
 
     def materialize(self, graph: TaskGraph) -> TaskGraph:
         """Persist the compiled Task Graph projection for its Mission."""
         self._by_graph_id[graph.id] = graph
         self._by_mission_id[graph.mission_id] = graph.id
+        self._persist(graph)
         return graph
 
     def put_mission(self, mission: MissionRecord) -> MissionRecord:
@@ -154,6 +169,7 @@ class TaskGraphStore:
     def put(self, graph: TaskGraph) -> None:
         self._by_graph_id[graph.id] = graph
         self._by_mission_id[graph.mission_id] = graph.id
+        self._persist(graph)
 
     def lease_for(self, task_id: str) -> DispatchLease | None:
         return self._dispatch_leases.get(task_id)
@@ -173,6 +189,18 @@ class TaskGraphStore:
 
     def record_environment_lease(self, lease: EnvironmentLease) -> None:
         self._environment_leases[lease.task_id] = lease
+        if self.durable is None:
+            return
+        located = self.find_task(lease.task_id)
+        if located is None:
+            return
+        graph, _task = located
+        occupied = self.durable.occupy_run_step(graph, lease)
+        if is_refusal(occupied):
+            msg = "task_graph_state occupancy fold refused"
+            raise RuntimeError(msg)
+        self._by_graph_id[graph.id] = occupied.value
+        self._by_mission_id[graph.mission_id] = graph.id
 
     def record_job_handle(self, evidence: JobHandleEvidence) -> None:
         self._job_handles[evidence.task_id] = evidence
@@ -259,9 +287,12 @@ class TaskGraphDispatcher:
         environments: ExecutionEnvironmentRegistry | None = None,
         router: ComputeRouter | None = None,
         ledgers: TaskLedgerStore | None = None,
+        durable: TaskGraphStateService | None = None,
         default_environment_kind: ExecutionEnvironmentKind | str = ExecutionEnvironmentKind.DOCKER,
     ) -> None:
         self._store = store if store is not None else TaskGraphStore()
+        if durable is not None:
+            self._store.durable = durable
         self._environments = (
             environments if environments is not None else ExecutionEnvironmentRegistry()
         )

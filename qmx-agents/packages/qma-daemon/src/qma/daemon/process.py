@@ -41,6 +41,10 @@ from qma.daemon.ledgers.experiment import ExperimentLedgerStore
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
 from qma.daemon.persistence.substrate import PersistenceSubstrate
 from qma.daemon.plugins.packs import DeskPluginRoster
+from qma.daemon.taskgraph.projection import (
+    TASK_GRAPH_STATE_SQLITE_TABLES,
+    TaskGraphStateService,
+)
 from qma.wire.listener import (
     DEFAULT_BIND_HOST,
     ListenerBindConfig,
@@ -111,6 +115,7 @@ class DaemonProcess:
         bind_port: int,
         journal: AuthoritativeJournal,
         experiments: ExperimentSpecService,
+        task_graphs: TaskGraphStateService,
     ) -> None:
         self._substrate = substrate
         self._roster = roster
@@ -118,6 +123,7 @@ class DaemonProcess:
         self._bind_port = bind_port
         self._journal = journal
         self._experiments = experiments
+        self._task_graphs = task_graphs
         self._server: asyncio.Server | None = None
         self._bound: BoundListener | None = None
         self._accepted = 0
@@ -214,6 +220,16 @@ class DaemonProcess:
                 substrate.close()
                 return restored
 
+            task_graphs = TaskGraphStateService()
+            restored_graphs = task_graphs.bind_durable(
+                sqlite=substrate.sqlite,
+                journal=journal,
+            )
+            if is_refusal(restored_graphs):
+                journal.close()
+                substrate.close()
+                return restored_graphs
+
             roster = DeskPluginRoster(
                 plugins_root=plugins_root,
                 plugin_load_configs=plugin_load_configs,
@@ -235,6 +251,7 @@ class DaemonProcess:
                 bind_port=port,
                 journal=journal,
                 experiments=experiments,
+                task_graphs=task_graphs,
             )
             _process_gate.holder = process
             return Ok(process)
@@ -258,6 +275,10 @@ class DaemonProcess:
     @property
     def experiments(self) -> ExperimentSpecService:
         return self._experiments
+
+    @property
+    def task_graphs(self) -> TaskGraphStateService:
+        return self._task_graphs
 
     @property
     def roster(self) -> DeskPluginRoster:
@@ -439,6 +460,12 @@ class DaemonProcess:
                     self.sqlite_table_names() & EXPERIMENT_SQLITE_TABLES
                 ),
                 "experiment_product_truth": self._experiments.product_truth,
+                "task_graph_state_tables": sorted(
+                    self.sqlite_table_names() & TASK_GRAPH_STATE_SQLITE_TABLES
+                ),
+                "task_graph_state_product_truth": self._task_graphs.product_truth,
+                "occupancy_table_minted": self._task_graphs.occupancy_table_minted,
+                "second_scheduler_minted": self._task_graphs.second_scheduler_minted,
                 "pack_ids": list(self._roster.loader.loaded_ids()),
                 "expected_pack_ids": list(DESK_PLUGIN_PACK_IDS),
                 "analysis_backtest_plugin_id": self.backtesting.plugin_id,

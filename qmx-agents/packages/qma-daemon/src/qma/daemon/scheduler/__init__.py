@@ -53,6 +53,11 @@ from qma.daemon.scheduler.wake import (
     routine_fire_suppressed_by_quiet_hours,
     running_agent_paused_by_quiet_hours,
 )
+from qma.daemon.taskgraph.projection import (
+    PROCEDURE_RUNTIME,
+    SECOND_SCHEDULER_MINTED,
+    refuse_second_scheduler,
+)
 
 __all__ = [
     "AUTOMATIC_BACKFILL",
@@ -62,11 +67,13 @@ __all__ = [
     "CONTINUATION_MAX_CONSECUTIVE_KEY",
     "MAX_CONCURRENT_REGISTRY_KEY",
     "MISSED_FIRE_DISPOSITION",
+    "PROCEDURE_RUNTIME",
     "ROUTINE_CATCH_UP_COMMAND",
     "ROUTINE_FIRE_PRINCIPAL",
     "ROUTINE_RECORDS_FOLD_ID",
     "ROUTINE_RECORDS_STORE_NAME",
     "ROUTINE_WRITE_COMMAND",
+    "SECOND_SCHEDULER_MINTED",
     "WAKE_EXEMPTIONS",
     "AgentContinuation",
     "AgentRunState",
@@ -86,6 +93,7 @@ __all__ = [
     "machine_principal_may_answer_human_gate",
     "next_occurrence_after",
     "next_quiet_hours_end",
+    "refuse_second_scheduler",
     "resolve_iana_zone",
     "routine_fire_suppressed_by_quiet_hours",
     "running_agent_paused_by_quiet_hours",

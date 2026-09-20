@@ -16,16 +16,19 @@ from typing import Final, cast
 from qma.core.ontology import ActorId, Goal, Quant
 from qma.core.vocabulary.enums import (
     TASK_EMITTING_NODE_KINDS,
+    EdgeMapping,
     NodeKind,
     TaskMissionState,
 )
 from qma.daemon.taskgraph.execution import validate_graph_template_topology
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
+    NODE_SUCCESSOR_KEYS,
     RESERVED_APPROVAL_ROUTE_OPERATOR,
     GraphTemplate,
     MissionRecord,
     TaskGraph,
+    TaskGraphEdge,
     TaskGraphNode,
     TaskLedger,
     TaskRecord,
@@ -365,6 +368,15 @@ class MissionCompiler:
                     given=node_id_raw,
                 )
             seen_ids.add(node_id_raw)
+            stolen = sorted(key for key in raw if key in NODE_SUCCESSOR_KEYS)
+            if stolen:
+                return policy_rejection(
+                    "node",
+                    "Task Graph nodes do not carry successor lists; successors "
+                    "are walked from persisted edges (FR-WF-45; GAP-0095)",
+                    node_id=node_id_raw,
+                    fields=stolen,
+                )
             kind = _parse_node_kind(raw.get("kind", NodeKind.TASK.value))
             if not is_ok(kind):
                 return kind
@@ -423,13 +435,22 @@ class MissionCompiler:
                 )
             )
 
-        # Reject back-edges at compile/registration time (AD-13).
+        # Reject back-edges at compile/registration time (AD-13). Persist
+        # {from, to, mapping} on the Task Graph — do not drop them (FR-WF-45).
         forward: set[tuple[str, str]] = set()
+        edges: list[TaskGraphEdge] = []
         for edge in template.edges:
             src = edge.get("from")
             dst = edge.get("to")
             if not isinstance(src, str) or not isinstance(dst, str):
                 return invalid_input("edge", "graph template edges require from/to strings")
+            if (src, dst) in forward:
+                return invalid_input(
+                    "edge",
+                    "duplicate from/to edge is refused; mapping lives on the unique edge",
+                    from_node=src,
+                    to_node=dst,
+                )
             if (dst, src) in forward:
                 return policy_rejection(
                     "graph_template",
@@ -438,7 +459,25 @@ class MissionCompiler:
                     from_node=src,
                     to_node=dst,
                 )
+            mapping_raw = edge.get("mapping")
+            if not isinstance(mapping_raw, str):
+                return invalid_input(
+                    "edge.mapping",
+                    "persisted Task Graph edges require an explicit mapping "
+                    "(one|zip|broadcast|keyed-join|cartesian)",
+                    from_node=src,
+                    to_node=dst,
+                )
+            try:
+                mapping = EdgeMapping(mapping_raw)
+            except ValueError:
+                return invalid_input(
+                    "edge.mapping",
+                    "edge mapping must be one of one|zip|broadcast|keyed-join|cartesian",
+                    given=mapping_raw,
+                )
             forward.add((src, dst))
+            edges.append(TaskGraphEdge(from_node=src, to_node=dst, mapping=mapping))
 
         initial_state = (
             TaskMissionState.READY
@@ -451,6 +490,7 @@ class MissionCompiler:
                 mission_id=mission_id,
                 nodes=tuple(nodes),
                 tasks=tuple(tasks),
+                edges=tuple(edges),
                 graph_template_ref=template.qualified_id,
                 state=initial_state,
             )

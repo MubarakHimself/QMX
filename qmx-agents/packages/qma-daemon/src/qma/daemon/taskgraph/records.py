@@ -13,6 +13,7 @@ from typing import Final, Literal
 
 from qma.core.ontology import ActorId, DeskSlug, Goal, Quant
 from qma.core.vocabulary.enums import (
+    EdgeMapping,
     GraphArtifactKind,
     NodeKind,
     TaskMissionState,
@@ -20,12 +21,14 @@ from qma.core.vocabulary.enums import (
 
 __all__ = [
     "MISSION_DIRECTOR_ROLE",
+    "NODE_SUCCESSOR_KEYS",
     "RESERVED_APPROVAL_ROUTE_OPERATOR",
     "DispatchLease",
     "GraphTemplate",
     "MissionRecord",
     "ProposedTransition",
     "TaskGraph",
+    "TaskGraphEdge",
     "TaskGraphNode",
     "TaskLedger",
     "TaskRecord",
@@ -36,6 +39,17 @@ __all__ = [
 
 RESERVED_APPROVAL_ROUTE_OPERATOR: Final[str] = "operator"
 MISSION_DIRECTOR_ROLE: Final[str] = "mission_director"
+# Successors live on persisted edges, never as a node-owned list (FR-WF-45).
+NODE_SUCCESSOR_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "next",
+        "next_ids",
+        "next_nodes",
+        "successor_ids",
+        "successor_list",
+        "successors",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -296,6 +310,13 @@ class TaskGraphNode:
     config: Mapping[str, object] = field(default_factory=dict[str, object])
 
     def __post_init__(self) -> None:
+        stolen = sorted(key for key in self.config if key in NODE_SUCCESSOR_KEYS)
+        if stolen:
+            msg = (
+                "Task Graph nodes do not carry successor lists; walk "
+                f"task_graph_state edges (FR-WF-45): {stolen}"
+            )
+            raise ValueError(msg)
         object.__setattr__(self, "config", MappingProxyType(dict(self.config)))
 
     @property
@@ -314,6 +335,42 @@ class TaskGraphNode:
     def is_daemon_evaluated(self) -> bool:
         return not self.emits_task
 
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "id": self.id,
+                "kind": self.kind.value,
+                "state": self.state.value,
+                "config": dict(self.config),
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TaskGraphEdge:
+    """Persisted Task Graph edge — ``{from, to, mapping}`` (FR-WF-45).
+
+    Successors are walked from this record, never from a node-owned list.
+    """
+
+    from_node: str
+    to_node: str
+    mapping: EdgeMapping
+
+    def __post_init__(self) -> None:
+        if not self.from_node or not self.to_node:
+            msg = "TaskGraphEdge requires from and to node ids (FR-WF-45)"
+            raise ValueError(msg)
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "from": self.from_node,
+                "to": self.to_node,
+                "mapping": self.mapping.value,
+            }
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class TaskGraph:
@@ -323,6 +380,7 @@ class TaskGraph:
     mission_id: str
     nodes: tuple[TaskGraphNode, ...] = ()
     tasks: tuple[TaskRecord, ...] = ()
+    edges: tuple[TaskGraphEdge, ...] = ()
     artifact_kind: GraphArtifactKind = GraphArtifactKind.TASK_GRAPH
     graph_template_ref: str | None = None
     state: TaskMissionState = TaskMissionState.PENDING
@@ -341,30 +399,36 @@ class TaskGraph:
     def ready_tasks(self) -> tuple[TaskRecord, ...]:
         return tuple(t for t in self.tasks if t.state is TaskMissionState.READY)
 
-    def replace_task(self, task: TaskRecord) -> TaskGraph:
-        updated = tuple(task if existing.id == task.id else existing for existing in self.tasks)
+    def _copy(
+        self,
+        *,
+        nodes: tuple[TaskGraphNode, ...] | None = None,
+        tasks: tuple[TaskRecord, ...] | None = None,
+        edges: tuple[TaskGraphEdge, ...] | None = None,
+        state: TaskMissionState | None = None,
+    ) -> TaskGraph:
         return TaskGraph(
             id=self.id,
             mission_id=self.mission_id,
-            nodes=self.nodes,
-            tasks=updated,
+            nodes=self.nodes if nodes is None else nodes,
+            tasks=self.tasks if tasks is None else tasks,
+            edges=self.edges if edges is None else edges,
             artifact_kind=self.artifact_kind,
             graph_template_ref=self.graph_template_ref,
-            state=self.state,
+            state=self.state if state is None else state,
         )
+
+    def replace_task(self, task: TaskRecord) -> TaskGraph:
+        updated = tuple(task if existing.id == task.id else existing for existing in self.tasks)
+        return self._copy(tasks=updated)
 
     def append_task(self, task: TaskRecord) -> TaskGraph:
         """Attach a newly minted Task (e.g. a loop iteration) without mutation."""
         if self.task_by_id(task.id) is not None:
             msg = f"Task {task.id!r} already present on Task Graph {self.id!r}"
             raise ValueError(msg)
-        return TaskGraph(
-            id=self.id,
-            mission_id=self.mission_id,
-            nodes=self.nodes,
+        return self._copy(
             tasks=(*self.tasks, task),
-            artifact_kind=self.artifact_kind,
-            graph_template_ref=self.graph_template_ref,
             state=(
                 self.state if self.state is not TaskMissionState.PENDING else TaskMissionState.READY
             ),
@@ -376,6 +440,13 @@ class TaskGraph:
                 return node
         return None
 
+    def outgoing_edges(self, node_id: str) -> tuple[TaskGraphEdge, ...]:
+        """Walk persisted edges; nodes do not carry successor lists (FR-WF-45)."""
+        return tuple(edge for edge in self.edges if edge.from_node == node_id)
+
+    def successor_ids(self, node_id: str) -> tuple[str, ...]:
+        return tuple(edge.to_node for edge in self.outgoing_edges(node_id))
+
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
             {
@@ -384,16 +455,9 @@ class TaskGraph:
                 "artifact_kind": self.artifact_kind.value,
                 "graph_template_ref": self.graph_template_ref,
                 "state": self.state.value,
-                "nodes": [
-                    {
-                        "id": n.id,
-                        "kind": n.kind.value,
-                        "state": n.state.value,
-                        "config": dict(n.config),
-                    }
-                    for n in self.nodes
-                ],
+                "nodes": [dict(n.to_payload()) for n in self.nodes],
                 "tasks": [dict(t.to_payload()) for t in self.tasks],
+                "edges": [dict(edge.to_payload()) for edge in self.edges],
             }
         )
 

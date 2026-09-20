@@ -62,6 +62,10 @@ from qma.daemon.taskgraph import (
     CompileRequest,
     MissionCompiler,
     TaskGraphDispatcher,
+    TaskGraphStateService,
+    claim_durable_edges_at_inspect_sha,
+    refuse_qmb_occupancy_write,
+    refuse_second_scheduler,
 )
 from qma.daemon.telemetry import RetentionJob, TelemetryStore
 
@@ -105,9 +109,13 @@ __all__ = [
     "StoreOwnershipRegistry",
     "StoreRegistry",
     "TaskGraphDispatcher",
+    "TaskGraphStateService",
     "TelemetryStore",
     "__version__",
+    "claim_durable_edges_at_inspect_sha",
     "order_by_announcement_journal_seq",
+    "refuse_qmb_occupancy_write",
+    "refuse_second_scheduler",
     "spawn_agent",
 ]
 
