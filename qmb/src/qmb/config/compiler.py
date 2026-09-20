@@ -8,7 +8,10 @@ overlap BMS outranks Book (DEC-0160, DEC-0143, FM-1). The artifact cites Book,
 BMS, bot, and any binding by ``fp1`` never ``name@version``. Its fingerprint is
 the run-id root and the ledger key (DEC-0160). A replay clock bound to
 synthetic-tainted data is ``invalid input`` because world is provenance-derived
-and B-7 wins (FM-3, DEC-0164). Same inputs yield a byte-identical artifact.
+and B-7 wins (FM-3, DEC-0164). Dummy Book/BMS/bot (identity / no-op / unlimited /
+pass-through / sentinel fps including ``NULL_BOOK``, empty-object Book,
+``mis_ref: null``) is ``invalid input``; ATC cannot sneak through this type
+(DEC-0424, DEC-0448). Same inputs yield a byte-identical artifact.
 """
 
 from __future__ import annotations
@@ -24,6 +27,12 @@ from qmf.core.identity import VenueId
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 
 from qmb._refuse import clean_token, invalid, unsupported
+from qmb.config.dummy import (
+    refuse_dummy_cite,
+    refuse_dummy_fragments,
+    refuse_dummy_mapping,
+    refuse_sensing_as_atc,
+)
 from qmb.config.fragments import (
     SOURCE_BMS,
     SOURCE_BOOK,
@@ -416,6 +425,12 @@ class ResolvedRunConfig:
                 given=repr(type(keys).__name__),
             )
         keys_map = cast("Mapping[str, object]", keys)
+        dummy_keys = refuse_dummy_mapping(keys_map, field="keys")
+        if dummy_keys is not None:
+            return dummy_keys
+        dummy_identity = refuse_dummy_mapping(body, field="identity")
+        if dummy_identity is not None:
+            return dummy_identity
         special = [key for key in keys_map if key in _SPECIAL_KEYS]
         if special:
             return invalid(
@@ -499,6 +514,9 @@ def compile_run_config(
     bms = _require_fragment(bms_fragment, SOURCE_BMS, "bms_fragment")
     if is_refusal(bms):
         return bms
+    dummy_fragments = refuse_dummy_fragments(book.value, bms.value)
+    if dummy_fragments is not None:
+        return dummy_fragments
     spec = _as_mapping(run_spec, "run_spec")
     if is_refusal(spec):
         return spec
@@ -558,9 +576,22 @@ def compile_run_config(
             "the run spec (bot layer) cites a bot by fp1 or a human alias; "
             "the resolved artifact cites fp1, never name@version",
         )
+    dummy_bot = refuse_dummy_cite("bot", bot_ref)
+    if dummy_bot is not None:
+        return dummy_bot
+    sensing = refuse_sensing_as_atc(acc)
+    if is_refusal(sensing):
+        return sensing
+    dummy_layers = refuse_dummy_mapping(acc, field="keys")
+    if dummy_layers is not None:
+        return dummy_layers
     bot = _resolve_cite(resolved_port.value, "bot", bot_ref)
     if is_refusal(bot):
         return bot
+    if bot.value.record is not None:
+        dummy_ct33 = refuse_dummy_mapping(bot.value.record.body, field="bot")
+        if dummy_ct33 is not None:
+            return dummy_ct33
     if "binding" in acc:
         return invalid(
             "binding",
@@ -823,6 +854,9 @@ def _resolve_cite(port: RegistryReadPort, field: str, value: object) -> Result[R
 
 def _parse_cite(value: object, field: str) -> Result[Fingerprint | str]:
     """Split a cite into fp1 or alias. ``name@version`` is always refused."""
+    dummy = refuse_dummy_cite(field, value)
+    if dummy is not None:
+        return dummy
     if isinstance(value, Fingerprint):
         return Ok(value)
     token = clean_token(value)
@@ -1009,6 +1043,9 @@ def _overlay(base: dict[str, object], incoming: Mapping[str, object]) -> dict[st
 
 
 def _require_fingerprint(value: object, field: str) -> Result[Fingerprint]:
+    dummy = refuse_dummy_cite(field, value)
+    if dummy is not None:
+        return dummy
     parsed = _coerce_fingerprint(value)
     if parsed is None:
         return invalid(

@@ -32,6 +32,7 @@ from qmf.risk.templates import BmsDefinition, BookDefinition
 from qmb._refuse import clean_token, invalid, policy, unavailable
 from qmb.analysis.rerun import RerunOutcome, rerun
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.config.dummy import refuse_dummy_definition
 from qmb.config.fragments import (
     BMS_RECORD_KIND,
     BOOK_RECORD_KIND,
@@ -230,6 +231,9 @@ def register_book_bms_variant(
     chosen = _one_definition(definition=definition, book=book, bms=bms, fragment=fragment)
     if is_refusal(chosen):
         return chosen
+    dummy = refuse_dummy_definition(chosen.value)
+    if dummy is not None:
+        return dummy
     if not isinstance(writer, WriterId):
         return invalid(
             "writer",

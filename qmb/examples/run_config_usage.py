@@ -19,6 +19,8 @@ Shows the things B-3 / Story 13.4 pin down:
    named by the run id.
 5. A replay clock bound to synthetic-tainted data is invalid input — world is
    provenance-derived and B-7 wins.
+6. A dummy Book/bot cite (``NULL_BOT`` / ``NULL_BOOK``) is invalid input on
+   ``ResolvedRunConfig`` (DEC-0424).
 """
 
 from __future__ import annotations
@@ -303,6 +305,17 @@ def main() -> None:
     assert is_refusal(tainted)
     assert tainted.category is RefusalCategory.INVALID_INPUT
     print("replay clock + synthetic-tainted data: invalid input")
+
+    dummy = compile_run_config(
+        port,
+        book_fragment=book_fragment,
+        bms_fragment=bms_fragment,
+        run_spec={"bot": "NULL_BOT"},
+        workspace_defaults=_DEFAULTS,
+    )
+    assert is_refusal(dummy)
+    assert dummy.category is RefusalCategory.INVALID_INPUT
+    print("dummy Book/bot cite (NULL_BOT) is invalid input")
 
     print(f"qmb {qmb.__version__}")
     print("resolved run-config ok")
