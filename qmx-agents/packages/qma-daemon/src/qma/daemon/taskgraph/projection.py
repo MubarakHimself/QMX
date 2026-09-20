@@ -33,6 +33,25 @@ from qma.daemon.envs.registry import EnvironmentLease
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.stores import StoreClass
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
+from qma.daemon.taskgraph.join import (
+    JOIN_LATE_EVENT_TABLE,
+    JOIN_PARTITION_TABLE,
+    JOIN_SCHEMA_SQL,
+    JOIN_STATE_TABLE,
+    DuplicateKeyPolicy,
+    JoinArrival,
+    JoinRetryPlan,
+    JoinState,
+    WatermarkKind,
+    load_join_states,
+    plan_partial_retry,
+    refuse_guessed_join_from_json,
+    write_join_state,
+)
+from qma.daemon.taskgraph.join import apply_join_arrival as fold_join_arrival
+from qma.daemon.taskgraph.join import apply_retry_result as fold_retry_result
+from qma.daemon.taskgraph.join import close_join_watermark as fold_close_watermark
+from qma.daemon.taskgraph.join import open_join as mint_join_state
 from qma.daemon.taskgraph.outbox import (
     DEFAULT_PARTITION_ID,
     OUTBOX_SCHEMA_SQL,
@@ -97,6 +116,7 @@ __all__ = [
     "claim_durable_edges_at_inspect_sha",
     "empty_occupancy",
     "parse_task_graph_edge",
+    "refuse_guessed_join_from_json",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
     "refuse_second_scheduler",
@@ -125,11 +145,15 @@ TASK_GRAPH_STATE_SQLITE_TABLES: Final[frozenset[str]] = frozenset(
         TASK_GRAPH_OUTBOX_TABLE,
         TASK_GRAPH_ELIGIBILITY_TABLE,
         TASK_GRAPH_RECEIVER_TABLE,
+        JOIN_STATE_TABLE,
+        JOIN_PARTITION_TABLE,
+        JOIN_LATE_EVENT_TABLE,
     }
 )
 _MATERIALIZED_EVENT: Final[str] = "task.graph_materialized"
 _PREDECESSOR_COMPLETED_EVENT: Final[str] = "task.predecessor_completed"
 _OCCUPANCY_EVENT: Final[str] = "task.occupancy_recorded"
+_JOIN_EVENT: Final[str] = "task.join_state_recorded"
 _OCCUPANCY_TABLE_NAMES: Final[frozenset[str]] = frozenset(
     {
         "occupancy",
@@ -160,6 +184,7 @@ CREATE INDEX IF NOT EXISTS task_graph_state_edge_from
     ON task_graph_state_edge (graph_id, from_node);
 """
     + OUTBOX_SCHEMA_SQL
+    + JOIN_SCHEMA_SQL
 )
 
 
@@ -693,10 +718,26 @@ class TaskGraphStateSqliteStore:
                 snapshots.append(loaded.value)
         return Ok(tuple(snapshots))
 
+    def put_join(self, state: JoinState) -> None:
+        self.ensure_schema()
+
+        def _write(conn: sqlite3.Connection) -> None:
+            write_join_state(conn, state)
+
+        self._sqlite.run(_write)
+
+    def load_joins(self, graph_run_id: str | None = None) -> Result[tuple[JoinState, ...]]:
+        self.ensure_schema()
+
+        def _load(conn: sqlite3.Connection) -> Result[tuple[JoinState, ...]]:
+            return load_join_states(conn, graph_run_id=graph_run_id)
+
+        return self._sqlite.run(_load)
+
 
 @dataclass
 class TaskGraphStateService:
-    """Persist Task Graph edges and the AD-26 successor outbox (Stories 57.1–57.2)."""
+    """Persist Task Graph edges, outbox, and AD-26 join algebra (Stories 57.1–57.4)."""
 
     journal: AuthoritativeJournal | None = None
     sqlite: SingleSqliteWriter | None = None
@@ -715,6 +756,7 @@ class TaskGraphStateService:
     _receiver: dict[str, ReceiverAcceptance] = field(
         default_factory=dict[str, ReceiverAcceptance], init=False
     )
+    _joins: dict[str, JoinState] = field(default_factory=dict[str, JoinState], init=False)
     _sqlite_store: TaskGraphStateSqliteStore | None = field(default=None, init=False)
     _restored: bool = field(default=False, init=False)
 
@@ -771,6 +813,7 @@ class TaskGraphStateService:
         self._outbox.clear()
         self._eligibility.clear()
         self._receiver.clear()
+        self._joins.clear()
         self._restored = False
 
     def reload(self) -> Result[int]:
@@ -788,6 +831,9 @@ class TaskGraphStateService:
         restored = self._reload_outbox()
         if is_refusal(restored):
             return restored
+        restored_joins = self._reload_joins()
+        if is_refusal(restored_joins):
+            return restored_joins
         self._restored = True
         return Ok(len(loaded.value))
 
@@ -823,6 +869,16 @@ class TaskGraphStateService:
         self._outbox = {row.unique_key(): row for row in outbox_rows}
         self._eligibility = {row.unique_key(): row for row in eligibility_rows}
         self._receiver = {row.logical_invocation_id: row for row in receiver_rows}
+        return Ok(None)
+
+    def _reload_joins(self) -> Result[None]:
+        store = self._sqlite_store
+        if store is None:
+            return Ok(None)
+        loaded = store.load_joins()
+        if is_refusal(loaded):
+            return loaded
+        self._joins = {item.join_id: item for item in loaded.value}
         return Ok(None)
 
     def occupancy_table_present(self) -> bool:
@@ -1218,6 +1274,174 @@ class TaskGraphStateService:
                 given=logical_invocation_id,
             )
         return Ok(matched[0])
+
+    def persist_join(
+        self,
+        state: JoinState,
+        *,
+        scope_path: object = (),
+    ) -> Result[JoinState]:
+        """Persist typed JoinState into the named task_graph_state projection."""
+        declared = self._ensure_declared()
+        if is_refusal(declared):
+            return declared
+        if self.journal is not None:
+            journal_payload: dict[str, object] = {
+                "join_id": state.join_id,
+                "graph_run_id": state.graph_run_id,
+                "node_id": state.node_id,
+                "edge_id": state.edge_id,
+                "definition_revision": state.definition_revision,
+                "join_revision": state.join_revision,
+                "mapping": state.mapping.value,
+                "expected_cardinality": state.expected_cardinality,
+                "duplicate_key_policy": state.duplicate_key_policy.value,
+                "first_wins_order": list(state.first_wins_order),
+                "watermark_kind": state.watermark.kind.value,
+                "partition_ids": [item.partition_id for item in state.partitions],
+                "late_event_count": len(state.late_events),
+            }
+            if state.watermark.cause is not None:
+                journal_payload["watermark_cause"] = state.watermark.cause
+            if state.watermark.closed_at is not None:
+                journal_payload["watermark_closed_at"] = state.watermark.closed_at
+            appended = self.journal.append_event(
+                _JOIN_EVENT,
+                scope_path=scope_path,
+                payload=journal_payload,
+            )
+            if is_refusal(appended):
+                return appended
+        if self._sqlite_store is not None:
+            self._sqlite_store.put_join(state)
+            reloaded = self._reload_joins()
+            if is_refusal(reloaded):
+                return reloaded
+            stored = self._joins.get(state.join_id)
+            if stored is not None:
+                return Ok(stored)
+        self._joins[state.join_id] = state
+        return Ok(state)
+
+    def open_join(
+        self,
+        *,
+        graph_run_id: str,
+        node_id: str,
+        edge_id: str,
+        definition_revision: int,
+        join_revision: int,
+        mapping: EdgeMapping | str,
+        expected_cardinality: int,
+        duplicate_key_policy: DuplicateKeyPolicy | str,
+        watermark_kind: WatermarkKind | str = WatermarkKind.ALL_EXPECTED,
+        join_id: str | None = None,
+    ) -> Result[JoinState]:
+        opened = mint_join_state(
+            graph_run_id=graph_run_id,
+            node_id=node_id,
+            edge_id=edge_id,
+            definition_revision=definition_revision,
+            join_revision=join_revision,
+            mapping=mapping,
+            expected_cardinality=expected_cardinality,
+            duplicate_key_policy=duplicate_key_policy,
+            watermark_kind=watermark_kind,
+            join_id=join_id,
+        )
+        if is_refusal(opened):
+            return opened
+        return self.persist_join(opened.value)
+
+    def join_states(self, graph_run_id: str | None = None) -> tuple[JoinState, ...]:
+        rows = tuple(self._joins.values())
+        if graph_run_id is None:
+            return rows
+        return tuple(item for item in rows if item.graph_run_id == graph_run_id)
+
+    def get_join(self, join_id: str) -> Result[JoinState]:
+        cached = self._joins.get(join_id)
+        if cached is not None:
+            return Ok(cached)
+        return _invalid("join_id", "task_graph_state has no JoinState", given=join_id)
+
+    def apply_join_arrival(
+        self,
+        join_id: str,
+        arrival: JoinArrival,
+        *,
+        detected_at: str | None = None,
+    ) -> Result[JoinState]:
+        loaded = self.get_join(join_id)
+        if is_refusal(loaded):
+            return loaded
+        applied = fold_join_arrival(loaded.value, arrival, detected_at=detected_at)
+        if is_refusal(applied):
+            return applied
+        return self.persist_join(applied.value)
+
+    def close_join_watermark(
+        self,
+        join_id: str,
+        *,
+        kind: WatermarkKind | str,
+        closed_at: str,
+        cause: str | None = None,
+    ) -> Result[JoinState]:
+        loaded = self.get_join(join_id)
+        if is_refusal(loaded):
+            return loaded
+        closed = fold_close_watermark(loaded.value, kind=kind, closed_at=closed_at, cause=cause)
+        if is_refusal(closed):
+            return closed
+        return self.persist_join(closed.value)
+
+    def retry_failed_join(
+        self,
+        join_id: str,
+        *,
+        definition_revision: int,
+        join_revision: int,
+    ) -> Result[JoinRetryPlan]:
+        loaded = self.get_join(join_id)
+        if is_refusal(loaded):
+            return loaded
+        return plan_partial_retry(
+            loaded.value,
+            definition_revision=definition_revision,
+            join_revision=join_revision,
+        )
+
+    def apply_join_retry_result(
+        self,
+        join_id: str,
+        *,
+        partition_id: str,
+        result_identity: str,
+        definition_revision: int,
+        join_revision: int,
+        source_event_id: str | None = None,
+        event_time: str | None = None,
+        receive_time: str | None = None,
+        logical_invocation_id: str | None = None,
+    ) -> Result[JoinState]:
+        loaded = self.get_join(join_id)
+        if is_refusal(loaded):
+            return loaded
+        applied = fold_retry_result(
+            loaded.value,
+            partition_id=partition_id,
+            result_identity=result_identity,
+            definition_revision=definition_revision,
+            join_revision=join_revision,
+            source_event_id=source_event_id,
+            event_time=event_time,
+            receive_time=receive_time,
+            logical_invocation_id=logical_invocation_id,
+        )
+        if is_refusal(applied):
+            return applied
+        return self.persist_join(applied.value)
 
     def occupy_run_step(
         self,
