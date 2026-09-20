@@ -247,7 +247,7 @@ class StreamSubscription:
     as_of: Instant
 
     def as_record(self) -> dict[str, object]:
-        """Recorded subscription fields. ``refcount`` is the derived snapshot."""
+        """Recorded subscription fields. ``refcount`` is the derived live-lease count."""
         watermark: dict[str, object] | None = None
         if self.cutover_watermark is not None:
             watermark = self.cutover_watermark.as_record()
