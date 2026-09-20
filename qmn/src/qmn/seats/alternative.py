@@ -2,8 +2,8 @@
 
 Story 58.2 / SCN-0020: when AlternativeRunConfig is selected the node does not
 stay secretly Book-shaped. This epic stays at simulate. QMB issues internal
-ATC-simulate tokens. QMN remains the only qmf-venue importer and does not
-import venue on this path. Sensing is not a seat.
+ATC-simulate tokens. QMN remains the only ``qmf-venue`` importer; this ATC
+simulate path must not load that package. Sensing is not a seat.
 """
 
 from __future__ import annotations
@@ -134,7 +134,7 @@ def adopt_atc_seat(
         if config.command.adapter_capability != ADAPTER_INTERNAL_SIMULATE:
             return invalid(
                 "adapter_capability",
-                "ATC simulate stays on the QMB internal token; QMN does not import venue here",
+                "ATC simulate stays on the QMB internal token; this path must not load qmf-venue",
             )
         if simulate_token is None:
             return invalid(
