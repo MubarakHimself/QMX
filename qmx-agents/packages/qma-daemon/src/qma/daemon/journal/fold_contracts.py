@@ -92,6 +92,7 @@ _CORE_V1_FOLDS: Final[dict[str, FoldContract]] = {
     "task_state": _contract("task_state", "task.*"),
     "mission_state": _contract("mission_state", "mission.*"),
     "session_state": _contract("session_state", "session.*"),
+    "product_session_state": _contract("product_session_state", "product_session.*"),
     "agent_state": _contract("agent_state", "agent.*"),
     "mailbox_delivery_state": _contract("mailbox_delivery_state", "message.*"),
     "deployment_provider_health": _contract(
@@ -144,6 +145,7 @@ _STORE_TO_FOLD: Final[Mapping[str, str]] = MappingProxyType(
         "desk_ledger_views": "desk_ledger_views",
         "task_graph_state": "task_state",
         "session_records": "session_state",
+        "product_session": "product_session_state",
         "agent_records": "agent_state",
         "mailboxes_and_delivery_state": "mailbox_delivery_state",
         "operator_approval_queue": "mailbox_delivery_state",

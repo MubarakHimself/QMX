@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 55.1: product_session.context is the bound request context
+
+COMP-QMA-DAEMON mints `product_session` as a journal-derived projection on the existing daemon sqlite (`psess:` ids, not QMA Session `sess:`). `product_session.context` holds principal, nullable `account_scope`, occupancy `none` (not live-adjacent), contribution `(qualified_id, package_version)`, `instance_id`, `config_revision`, and `as_of`. A public call missing or stale versus that context is typed `mismatch`. Occupancy remains none. A tab is not this row; `scope_path` does not gain a segment. No sixth COMP and no new CT. At inspect SHA `270e992` this row did not exist.
+
+Touched: COMP-QMA-DAEMON `product_session` journal projection; [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-20 — Story 54.4: GrantRecord is immutable; revocation is a separate record
 
 `GrantRecord` is immutable after mint and does not carry `revoked_at`. Fields follow CONTRACTS §3b: `grant_id`, `principal`, `audience`, contribution `(qualified_id, package_version)`, `instance_id`, `config_revision`, `op_id`, `op_version`, `effect_class`, `parameter_ceiling.allow_keys`, `account_scope` (null unless granted), `expires_at`. Revocation is append-only `GrantRevocation` `{grant_id, revoked_at, principal, reason}`; minted GrantRecord bytes do not change. Evaluation moments are accept, dispatch, nested call, retry, and external commit: already-accepted work may finish under the grant that accepted it; new dispatch after revoke or `expires_at` is refused. Upgrade cannot widen or retarget without an explicit re-grant that bumps `context_revision`. Manifests request; the host grants. `product_session.granted_ops` stores `grant_id`s, not bare op-id strings — this story does not mint `product_session` rows (Epic 55). Additive CT-40; no new CT.

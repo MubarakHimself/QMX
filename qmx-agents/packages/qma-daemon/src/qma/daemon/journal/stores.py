@@ -91,6 +91,7 @@ CLOSED_PROJECTIONS: Final[frozenset[str]] = frozenset(
         "operator_approval_queue",
         "task_graph_state",
         "session_records",
+        "product_session",
         "agent_records",
         "desk_ledger_views",
         "ledger_quarantine_stream",

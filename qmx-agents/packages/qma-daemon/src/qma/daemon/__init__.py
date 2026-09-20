@@ -49,6 +49,14 @@ from qma.daemon.persistence import (
 )
 from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
 from qma.daemon.process import DaemonProcess
+from qma.daemon.sessions import (
+    PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA,
+    PRODUCT_SESSION_OCCUPANCY,
+    PRODUCT_SESSION_OWNER,
+    ProductSession,
+    ProductSessionContext,
+    ProductSessionService,
+)
 from qma.daemon.staging import AdmissionPipeline, ProposalGate
 from qma.daemon.taskgraph import (
     CompileRequest,
@@ -63,6 +71,9 @@ __all__ = [
     "BYPASS_WRITE_PATHS",
     "CONTRIBUTION_LISTING_OCCUPANCY",
     "FEDERATED_SEARCH_OCCUPANCY",
+    "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
+    "PRODUCT_SESSION_OCCUPANCY",
+    "PRODUCT_SESSION_OWNER",
     "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
@@ -86,6 +97,9 @@ __all__ = [
     "PermissionPolicyEnforcer",
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
+    "ProductSession",
+    "ProductSessionContext",
+    "ProductSessionService",
     "ProposalGate",
     "RetentionJob",
     "StoreOwnershipRegistry",

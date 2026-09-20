@@ -22,6 +22,7 @@ import qma.daemon.plugins
 import qma.daemon.process
 import qma.daemon.proxy
 import qma.daemon.scheduler
+import qma.daemon.sessions
 import qma.daemon.staging
 import qma.daemon.taskgraph
 import qma.daemon.telemetry
@@ -42,6 +43,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.capabilities,
         qma.daemon.bus,
         qma.daemon.scheduler,
+        qma.daemon.sessions,
         qma.daemon.staging,
         qma.daemon.memory,
         qma.daemon.knowledge,
