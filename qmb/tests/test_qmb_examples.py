@@ -65,6 +65,22 @@ def test_recipe_definition_usage_example_runs_clean() -> None:
     assert "CT-06 recipe kind stays deferred" in completed.stdout
 
 
+def test_stream_cancel_cutover_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "stream_cancel_cutover_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "stream cancel cutover ok" in completed.stdout
+    assert "cancelling A leaves B running" in completed.stdout
+    assert "replay provenance cannot authorize a live command" in completed.stdout
+    assert "missing watermark holds in cutover" in completed.stdout
+    assert "a stream subscription is not trading permission" in completed.stdout
+
+
 def test_run_config_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "run_config_usage.py")],

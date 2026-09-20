@@ -59,6 +59,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.compare_runs_identity(),
         qmb.alternative_run_config_identity(),
         qmb.recipe_identity(),
+        qmb.stream_protocol_identity(),
     )
     for payload in payloads:
         assert qmb.__version__ not in payload.values()
@@ -132,6 +133,9 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert qmb.TIME_LIMIT_KEY == "qmb_run_time_limit"
     assert qmb.MEMORY_LIMIT_KEY == "qmb_run_memory_limit"
     assert api.CancelToken is qmb.CancelToken
+    assert api.record_stream_subscription is qmb.record_stream_subscription
+    assert api.STREAM_WRAP_OWNER == qmb.STREAM_WRAP_OWNER == "COMP-QMB"
+    assert api.STREAM_GAP_0081_CHROME is False
     assert api.ProgressSink is qmb.ProgressSink
     assert api.ScriptedLimitProbe is qmb.ScriptedLimitProbe
     assert api.check_slice_boundary is qmb.check_slice_boundary
