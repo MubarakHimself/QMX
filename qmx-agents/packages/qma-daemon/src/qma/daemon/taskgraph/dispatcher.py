@@ -26,6 +26,7 @@ from qma.core.vocabulary.enums import (
 )
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
 from qma.daemon.envs.router import ComputeRouter, PlacementDecision, QueuedPlacement
+from qma.daemon.taskgraph.outbox import apply_successor_eligibility, newly_ready_successors
 from qma.daemon.taskgraph.projection import TaskGraphStateService
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
@@ -170,6 +171,11 @@ class TaskGraphStore:
         self._by_graph_id[graph.id] = graph
         self._by_mission_id[graph.mission_id] = graph.id
         self._persist(graph)
+
+    def remember(self, graph: TaskGraph) -> None:
+        """Update the in-memory cache after a durable completion transaction."""
+        self._by_graph_id[graph.id] = graph
+        self._by_mission_id[graph.mission_id] = graph.id
 
     def lease_for(self, task_id: str) -> DispatchLease | None:
         return self._dispatch_leases.get(task_id)
@@ -441,6 +447,7 @@ class TaskGraphDispatcher:
             running = running.with_ledger(seeded)
         updated_graph = graph.replace_task(running)
         self._store.put(updated_graph)
+        self._ack_successor_dispatch(updated_graph, running)
         self._refresh_mission(task.mission_id, updated_graph)
 
         return Ok(
@@ -666,8 +673,17 @@ class TaskGraphDispatcher:
             env_retained = self._store.environment_lease_for(task.id) is not None
 
         updated_graph = graph.replace_task(updated)
-        self._store.put(updated_graph)
+        if is_task_mission_terminal(new_state):
+            published = self._publish_predecessor_completion(updated_graph, updated)
+            if is_refusal(published):
+                return published
+            updated_graph = published.value
+        else:
+            self._store.put(updated_graph)
         mission = self._refresh_mission(task.mission_id, updated_graph)
+        located_after = self._store.find_task(updated.id)
+        if located_after is not None:
+            updated = located_after[1]
         return Ok(
             TaskTransitionResult(
                 task=updated,
@@ -719,6 +735,32 @@ class TaskGraphDispatcher:
         if decision is None or decision.lease is None:
             return
         self._store.record_environment_lease(decision.lease)
+
+    def _publish_predecessor_completion(
+        self,
+        graph: TaskGraph,
+        predecessor: TaskRecord,
+    ) -> Result[TaskGraph]:
+        durable = self._store.durable
+        if durable is not None:
+            completed = durable.complete_predecessor(graph, predecessor)
+            if is_refusal(completed):
+                return completed
+            self._store.remember(completed.value.graph)
+            return Ok(completed.value.graph)
+        ready = newly_ready_successors(graph, predecessor)
+        updated = apply_successor_eligibility(graph, predecessor=predecessor, ready=ready)
+        self._store.put(updated)
+        return Ok(updated)
+
+    def _ack_successor_dispatch(self, graph: TaskGraph, task: TaskRecord) -> None:
+        durable = self._store.durable
+        if durable is None or task.node_id is None:
+            return
+        acked = durable.ack_dispatch(graph_run_id=graph.id, successor_node_id=task.node_id)
+        if is_refusal(acked):
+            msg = "task_graph_outbox dispatch ack refused"
+            raise RuntimeError(msg)
 
     def mission_state_for(self, mission_id: str) -> Result[TaskMissionState]:
         """Compute Mission state from its Tasks (never from a JobHandle)."""

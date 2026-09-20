@@ -198,9 +198,13 @@ class SingleSqliteWriter:
 
         def _work() -> _T:
             conn = self._require_conn()
-            result = fn(conn)
-            conn.commit()
-            return result
+            try:
+                result = fn(conn)
+                conn.commit()
+                return result
+            except BaseException:
+                conn.rollback()
+                raise
 
         return self._submit(_work)
 

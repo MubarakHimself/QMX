@@ -64,6 +64,7 @@ from qma.daemon.taskgraph import (
     TaskGraphDispatcher,
     TaskGraphStateService,
     claim_durable_edges_at_inspect_sha,
+    refuse_merge_remote_worker_outbox,
     refuse_qmb_occupancy_write,
     refuse_second_scheduler,
 )
@@ -114,6 +115,7 @@ __all__ = [
     "__version__",
     "claim_durable_edges_at_inspect_sha",
     "order_by_announcement_journal_seq",
+    "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
     "refuse_second_scheduler",
     "spawn_agent",

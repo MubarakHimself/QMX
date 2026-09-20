@@ -335,6 +335,14 @@ class TaskGraphNode:
     def is_daemon_evaluated(self) -> bool:
         return not self.emits_task
 
+    def with_state(self, state: TaskMissionState) -> TaskGraphNode:
+        return TaskGraphNode(
+            id=self.id,
+            kind=self.kind,
+            state=state,
+            config=dict(self.config),
+        )
+
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
             {
@@ -422,6 +430,26 @@ class TaskGraph:
         updated = tuple(task if existing.id == task.id else existing for existing in self.tasks)
         return self._copy(tasks=updated)
 
+    def replace_tasks(self, tasks: Sequence[TaskRecord]) -> TaskGraph:
+        by_id = {task.id: task for task in tasks}
+        updated = tuple(by_id.get(existing.id, existing) for existing in self.tasks)
+        return self._copy(tasks=updated)
+
+    def replace_node(self, node: TaskGraphNode) -> TaskGraph:
+        updated = tuple(node if existing.id == node.id else existing for existing in self.nodes)
+        return self._copy(nodes=updated)
+
+    def replace_nodes(self, nodes: Sequence[TaskGraphNode]) -> TaskGraph:
+        by_id = {node.id: node for node in nodes}
+        updated = tuple(by_id.get(existing.id, existing) for existing in self.nodes)
+        return self._copy(nodes=updated)
+
+    def task_for_node(self, node_id: str) -> TaskRecord | None:
+        for task in self.tasks:
+            if task.node_id == node_id:
+                return task
+        return None
+
     def append_task(self, task: TaskRecord) -> TaskGraph:
         """Attach a newly minted Task (e.g. a loop iteration) without mutation."""
         if self.task_by_id(task.id) is not None:
@@ -446,6 +474,12 @@ class TaskGraph:
 
     def successor_ids(self, node_id: str) -> tuple[str, ...]:
         return tuple(edge.to_node for edge in self.outgoing_edges(node_id))
+
+    def incoming_edges(self, node_id: str) -> tuple[TaskGraphEdge, ...]:
+        return tuple(edge for edge in self.edges if edge.to_node == node_id)
+
+    def predecessor_ids(self, node_id: str) -> tuple[str, ...]:
+        return tuple(edge.from_node for edge in self.incoming_edges(node_id))
 
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(

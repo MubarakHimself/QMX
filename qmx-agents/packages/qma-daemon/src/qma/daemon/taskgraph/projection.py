@@ -33,6 +33,35 @@ from qma.daemon.envs.registry import EnvironmentLease
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.stores import StoreClass
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
+from qma.daemon.taskgraph.outbox import (
+    DEFAULT_PARTITION_ID,
+    OUTBOX_SCHEMA_SQL,
+    TASK_GRAPH_ELIGIBILITY_TABLE,
+    TASK_GRAPH_OUTBOX_TABLE,
+    TASK_GRAPH_RECEIVER_TABLE,
+    CompletionCrash,
+    OutboxAcceptanceState,
+    OutboxEffectState,
+    OutboxTransportState,
+    PredecessorCompletion,
+    ReceiverAcceptance,
+    SuccessorEligibility,
+    TaskGraphOutboxRow,
+    ack_outbox_dispatch,
+    apply_successor_eligibility,
+    build_outbox_row,
+    load_eligibility_rows,
+    load_outbox_rows,
+    load_receiver_rows,
+    maybe_crash,
+    newly_ready_successors,
+    next_predecessor_revision,
+    refuse_merge_remote_worker_outbox,
+    replayable_outbox,
+    write_eligibility_rows,
+    write_outbox_rows,
+    write_receiver_row,
+)
 from qma.daemon.taskgraph.records import (
     NODE_SUCCESSOR_KEYS,
     TaskGraph,
@@ -68,6 +97,7 @@ __all__ = [
     "claim_durable_edges_at_inspect_sha",
     "empty_occupancy",
     "parse_task_graph_edge",
+    "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
     "refuse_second_scheduler",
 ]
@@ -89,9 +119,16 @@ QMB_WRITES_DAEMON_OCCUPANCY: Final[bool] = False
 SECOND_SCHEDULER_MINTED: Final[bool] = False
 PROCEDURE_RUNTIME: Final[tuple[str, ...]] = ("RoutineScheduler", "MissionCompiler")
 TASK_GRAPH_STATE_SQLITE_TABLES: Final[frozenset[str]] = frozenset(
-    {TASK_GRAPH_STATE_TABLE, TASK_GRAPH_STATE_EDGE_TABLE}
+    {
+        TASK_GRAPH_STATE_TABLE,
+        TASK_GRAPH_STATE_EDGE_TABLE,
+        TASK_GRAPH_OUTBOX_TABLE,
+        TASK_GRAPH_ELIGIBILITY_TABLE,
+        TASK_GRAPH_RECEIVER_TABLE,
+    }
 )
 _MATERIALIZED_EVENT: Final[str] = "task.graph_materialized"
+_PREDECESSOR_COMPLETED_EVENT: Final[str] = "task.predecessor_completed"
 _OCCUPANCY_EVENT: Final[str] = "task.occupancy_recorded"
 _OCCUPANCY_TABLE_NAMES: Final[frozenset[str]] = frozenset(
     {
@@ -102,7 +139,8 @@ _OCCUPANCY_TABLE_NAMES: Final[frozenset[str]] = frozenset(
     }
 )
 
-_SCHEMA_SQL: Final[str] = """
+_SCHEMA_SQL: Final[str] = (
+    """
 CREATE TABLE IF NOT EXISTS task_graph_state (
     graph_id TEXT PRIMARY KEY NOT NULL,
     mission_id TEXT NOT NULL,
@@ -121,6 +159,8 @@ CREATE TABLE IF NOT EXISTS task_graph_state_edge (
 CREATE INDEX IF NOT EXISTS task_graph_state_edge_from
     ON task_graph_state_edge (graph_id, from_node);
 """
+    + OUTBOX_SCHEMA_SQL
+)
 
 
 def empty_occupancy() -> dict[str, object]:
@@ -453,12 +493,46 @@ class TaskGraphStateSnapshot:
     recorded_at: int
 
 
+def _write_graph_rows(
+    conn: sqlite3.Connection,
+    graph: TaskGraph,
+    *,
+    occupancy_json: str,
+    payload: str,
+    journal_seq: int,
+    recorded_at: int,
+) -> None:
+    conn.execute(
+        "INSERT OR REPLACE INTO task_graph_state "
+        "(graph_id, mission_id, payload, occupancy, journal_seq, recorded_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            graph.id,
+            graph.mission_id,
+            payload,
+            occupancy_json,
+            journal_seq,
+            recorded_at,
+        ),
+    )
+    conn.execute(
+        "DELETE FROM task_graph_state_edge WHERE graph_id = ?",
+        (graph.id,),
+    )
+    conn.executemany(
+        "INSERT INTO task_graph_state_edge "
+        "(graph_id, from_node, to_node, mapping) VALUES (?, ?, ?, ?)",
+        tuple((graph.id, edge.from_node, edge.to_node, edge.mapping.value) for edge in graph.edges),
+    )
+
+
 class TaskGraphStateSqliteStore:
     """Sqlite fold for the named ``task_graph_state`` projection (NFR-WF-04)."""
 
     def __init__(self, sqlite: SingleSqliteWriter) -> None:
         self._sqlite = sqlite
         self._ensured = False
+        self._crash_after: str | None = None
 
     def ensure_schema(self) -> None:
         if self._ensured:
@@ -491,33 +565,56 @@ class TaskGraphStateSqliteStore:
         payload = _dump(graph.to_payload())
 
         def _write(conn: sqlite3.Connection) -> None:
-            conn.execute(
-                "INSERT OR REPLACE INTO task_graph_state "
-                "(graph_id, mission_id, payload, occupancy, journal_seq, recorded_at) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    graph.id,
-                    graph.mission_id,
-                    payload,
-                    occupancy_json,
-                    journal_seq,
-                    recorded_at,
-                ),
-            )
-            conn.execute(
-                "DELETE FROM task_graph_state_edge WHERE graph_id = ?",
-                (graph.id,),
-            )
-            conn.executemany(
-                "INSERT INTO task_graph_state_edge "
-                "(graph_id, from_node, to_node, mapping) VALUES (?, ?, ?, ?)",
-                tuple(
-                    (graph.id, edge.from_node, edge.to_node, edge.mapping.value)
-                    for edge in graph.edges
-                ),
+            _write_graph_rows(
+                conn,
+                graph,
+                occupancy_json=occupancy_json,
+                payload=payload,
+                journal_seq=journal_seq,
+                recorded_at=recorded_at,
             )
 
         self._sqlite.run(_write)
+
+    def arm_completion_crash(self, after: str) -> None:
+        """Test seam: raise inside the one sqlite completion transaction."""
+        self._crash_after = after
+
+    def put_completion(
+        self,
+        graph: TaskGraph,
+        *,
+        occupancy: Mapping[str, object],
+        journal_seq: int,
+        recorded_at: int,
+        eligibility: Sequence[SuccessorEligibility],
+        outbox: Sequence[TaskGraphOutboxRow],
+    ) -> None:
+        """One transaction: A terminal, B eligibility, outbox rows (FR-WF-46)."""
+        self.ensure_schema()
+        occupancy_json = _dump(occupancy)
+        payload = _dump(graph.to_payload())
+        crash_after = self._crash_after
+
+        def _write(conn: sqlite3.Connection) -> None:
+            _write_graph_rows(
+                conn,
+                graph,
+                occupancy_json=occupancy_json,
+                payload=payload,
+                journal_seq=journal_seq,
+                recorded_at=recorded_at,
+            )
+            maybe_crash(crash_after, "terminal")
+            write_eligibility_rows(conn, eligibility)
+            maybe_crash(crash_after, "eligibility")
+            write_outbox_rows(conn, outbox)
+            maybe_crash(crash_after, "outbox")
+
+        try:
+            self._sqlite.run(_write)
+        finally:
+            self._crash_after = None
 
     def load_edges(self, graph_id: str) -> Result[tuple[TaskGraphEdge, ...]]:
         self.ensure_schema()
@@ -528,9 +625,7 @@ class TaskGraphStateSqliteStore:
         )
         edges: list[TaskGraphEdge] = []
         for row in rows:
-            parsed = parse_task_graph_edge(
-                {"from": row[0], "to": row[1], "mapping": row[2]}
-            )
+            parsed = parse_task_graph_edge({"from": row[0], "to": row[1], "mapping": row[2]})
             if is_refusal(parsed):
                 return parsed
             edges.append(parsed.value)
@@ -601,13 +696,24 @@ class TaskGraphStateSqliteStore:
 
 @dataclass
 class TaskGraphStateService:
-    """Persist Task Graph edges in daemon sqlite and fold occupancy (Story 57.1)."""
+    """Persist Task Graph edges and the AD-26 successor outbox (Stories 57.1–57.2)."""
 
     journal: AuthoritativeJournal | None = None
     sqlite: SingleSqliteWriter | None = None
     _rows: dict[str, TaskGraph] = field(default_factory=dict[str, TaskGraph], init=False)
     _occupancy: dict[str, dict[str, object]] = field(
         default_factory=dict[str, dict[str, object]], init=False
+    )
+    _outbox: dict[tuple[str, str, int, str], TaskGraphOutboxRow] = field(
+        default_factory=dict[tuple[str, str, int, str], TaskGraphOutboxRow],
+        init=False,
+    )
+    _eligibility: dict[tuple[str, str, int, str], SuccessorEligibility] = field(
+        default_factory=dict[tuple[str, str, int, str], SuccessorEligibility],
+        init=False,
+    )
+    _receiver: dict[str, ReceiverAcceptance] = field(
+        default_factory=dict[str, ReceiverAcceptance], init=False
     )
     _sqlite_store: TaskGraphStateSqliteStore | None = field(default=None, init=False)
     _restored: bool = field(default=False, init=False)
@@ -662,6 +768,9 @@ class TaskGraphStateService:
     def drop_memory_cache(self) -> None:
         self._rows.clear()
         self._occupancy.clear()
+        self._outbox.clear()
+        self._eligibility.clear()
+        self._receiver.clear()
         self._restored = False
 
     def reload(self) -> Result[int]:
@@ -676,8 +785,45 @@ class TaskGraphStateService:
         for snapshot in loaded.value:
             self._rows[snapshot.graph.id] = snapshot.graph
             self._occupancy[snapshot.graph.id] = dict(snapshot.occupancy)
+        restored = self._reload_outbox()
+        if is_refusal(restored):
+            return restored
         self._restored = True
         return Ok(len(loaded.value))
+
+    def _reload_outbox(self) -> Result[None]:
+        if self.sqlite is None or self._sqlite_store is None:
+            return Ok(None)
+        self._sqlite_store.ensure_schema()
+
+        def _load(
+            conn: sqlite3.Connection,
+        ) -> Result[
+            tuple[
+                tuple[TaskGraphOutboxRow, ...],
+                tuple[SuccessorEligibility, ...],
+                tuple[ReceiverAcceptance, ...],
+            ]
+        ]:
+            outbox = load_outbox_rows(conn)
+            if is_refusal(outbox):
+                return outbox
+            eligibility = load_eligibility_rows(conn)
+            if is_refusal(eligibility):
+                return eligibility
+            receiver = load_receiver_rows(conn)
+            if is_refusal(receiver):
+                return receiver
+            return Ok((outbox.value, eligibility.value, receiver.value))
+
+        loaded = self.sqlite.run(_load)
+        if is_refusal(loaded):
+            return loaded
+        outbox_rows, eligibility_rows, receiver_rows = loaded.value
+        self._outbox = {row.unique_key(): row for row in outbox_rows}
+        self._eligibility = {row.unique_key(): row for row in eligibility_rows}
+        self._receiver = {row.logical_invocation_id: row for row in receiver_rows}
+        return Ok(None)
 
     def occupancy_table_present(self) -> bool:
         if self._sqlite_store is None:
@@ -726,8 +872,10 @@ class TaskGraphStateService:
         declared = self._ensure_declared()
         if is_refusal(declared):
             return declared
-        occupancy_body = dict(occupancy) if occupancy is not None else dict(
-            self._occupancy.get(graph.id, empty_occupancy())
+        occupancy_body = (
+            dict(occupancy)
+            if occupancy is not None
+            else dict(self._occupancy.get(graph.id, empty_occupancy()))
         )
         occupancy_body["law"] = TASK_GRAPH_STATE_OCCUPANCY_LAW
         occupancy_body["separate_table"] = False
@@ -764,6 +912,312 @@ class TaskGraphStateService:
         self._rows[graph.id] = graph
         self._occupancy[graph.id] = occupancy_body
         return Ok(graph)
+
+    def arm_completion_crash(self, after: str) -> Result[None]:
+        """Arm an in-transaction crash so tests can prove rollback (FR-WF-46)."""
+        if self._sqlite_store is None:
+            return policy_rejection(
+                "outbox",
+                "completion-crash injection requires daemon sqlite",
+            )
+        self._sqlite_store.arm_completion_crash(after)
+        return Ok(None)
+
+    def _occupancy_body(
+        self,
+        graph: TaskGraph,
+        occupancy: Mapping[str, object] | None,
+    ) -> dict[str, object]:
+        occupancy_body = (
+            dict(occupancy)
+            if occupancy is not None
+            else dict(self._occupancy.get(graph.id, empty_occupancy()))
+        )
+        occupancy_body["law"] = TASK_GRAPH_STATE_OCCUPANCY_LAW
+        occupancy_body["separate_table"] = False
+        occupancy_body["qmb_writes"] = False
+        occupancy_body.setdefault("slots", {})
+        return occupancy_body
+
+    def complete_predecessor(
+        self,
+        graph: TaskGraph,
+        predecessor: TaskRecord,
+        *,
+        partition_id: str = DEFAULT_PARTITION_ID,
+        occupancy: Mapping[str, object] | None = None,
+        scope_path: object = (),
+    ) -> Result[PredecessorCompletion]:
+        """One sqlite transaction: A terminal, B ready, outbox row (FR-WF-46)."""
+        if not partition_id:
+            return _invalid("partition_id", "outbox partition_id is required")
+        declared = self._ensure_declared()
+        if is_refusal(declared):
+            return declared
+        ready = newly_ready_successors(graph, predecessor)
+        updated = apply_successor_eligibility(graph, predecessor=predecessor, ready=ready)
+        revision = next_predecessor_revision(
+            (*self._eligibility.values(), *self._outbox.values()),
+            graph_run_id=graph.id,
+            predecessor_node_id=predecessor.node_id or predecessor.id,
+        )
+        eligibility_rows: list[SuccessorEligibility] = []
+        outbox_rows: list[TaskGraphOutboxRow] = []
+        for successor in ready:
+            if successor.node_id is None or predecessor.node_id is None:
+                return _invalid(
+                    "node_id",
+                    "eligible successors require node ids on both ends",
+                )
+            eligibility_rows.append(
+                SuccessorEligibility(
+                    graph_run_id=graph.id,
+                    successor_node_id=successor.node_id,
+                    predecessor_node_id=predecessor.node_id,
+                    predecessor_revision=revision,
+                    partition_id=partition_id,
+                )
+            )
+            built = build_outbox_row(
+                graph=graph,
+                predecessor=predecessor,
+                successor=successor,
+                predecessor_revision=revision,
+                partition_id=partition_id,
+            )
+            if is_refusal(built):
+                return built
+            outbox_rows.append(built.value)
+        occupancy_body = self._occupancy_body(updated, occupancy)
+        journal_seq = 0
+        recorded_at = 0
+        if self.journal is not None:
+            journal_payload: dict[str, object] = {
+                "graph_id": updated.id,
+                "predecessor_task_id": predecessor.id,
+                "predecessor_state": predecessor.state.value,
+                "predecessor_revision": revision,
+                "ready_successor_ids": [task.id for task in ready],
+                "outbox_keys": [list(row.unique_key()) for row in outbox_rows],
+            }
+            appended = self.journal.append_event(
+                _PREDECESSOR_COMPLETED_EVENT,
+                scope_path=scope_path,
+                payload=journal_payload,
+            )
+            if is_refusal(appended):
+                return appended
+            journal_seq = appended.value.record.journal_seq
+            recorded_at = appended.value.record.recorded_at
+        if self._sqlite_store is not None:
+            try:
+                self._sqlite_store.put_completion(
+                    updated,
+                    occupancy=occupancy_body,
+                    journal_seq=journal_seq,
+                    recorded_at=recorded_at,
+                    eligibility=eligibility_rows,
+                    outbox=outbox_rows,
+                )
+            except CompletionCrash:
+                return storage_failure(
+                    "injected crash inside A-terminal/B-ready/outbox transaction",
+                    context={
+                        "field": "outbox",
+                        "graph_id": graph.id,
+                        "rolled_back": True,
+                    },
+                )
+            reloaded = self._reload_outbox()
+            if is_refusal(reloaded):
+                return reloaded
+        else:
+            for row in eligibility_rows:
+                self._eligibility[row.unique_key()] = row
+            for row in outbox_rows:
+                self._outbox[row.unique_key()] = row
+        ready_updated = tuple(
+            task for task in updated.tasks if task.id in {item.id for item in ready}
+        )
+        self._rows[updated.id] = updated
+        self._occupancy[updated.id] = occupancy_body
+        return Ok(
+            PredecessorCompletion(
+                graph=updated,
+                predecessor=predecessor,
+                predecessor_revision=revision,
+                ready_successors=ready_updated,
+                eligibility=tuple(eligibility_rows),
+                outbox=tuple(outbox_rows),
+            )
+        )
+
+    def outbox_rows(self, graph_run_id: str | None = None) -> tuple[TaskGraphOutboxRow, ...]:
+        rows = tuple(self._outbox.values())
+        if graph_run_id is None:
+            return rows
+        return tuple(row for row in rows if row.graph_run_id == graph_run_id)
+
+    def eligibility_rows(self, graph_run_id: str | None = None) -> tuple[SuccessorEligibility, ...]:
+        rows = tuple(self._eligibility.values())
+        if graph_run_id is None:
+            return rows
+        return tuple(row for row in rows if row.graph_run_id == graph_run_id)
+
+    def replayable_rows(self, graph_run_id: str | None = None) -> tuple[TaskGraphOutboxRow, ...]:
+        return replayable_outbox(self.outbox_rows(graph_run_id))
+
+    def ack_dispatch(
+        self,
+        *,
+        graph_run_id: str | None = None,
+        successor_node_id: str | None = None,
+        logical_invocation_id: str | None = None,
+    ) -> Result[tuple[TaskGraphOutboxRow, ...]]:
+        """Ack transport dispatch. Does not record acceptance or effect."""
+        if logical_invocation_id is None and (graph_run_id is None or successor_node_id is None):
+            return _invalid(
+                "outbox",
+                "dispatch ack requires logical_invocation_id or graph_run_id+successor_node_id",
+            )
+        if self.sqlite is not None and self._sqlite_store is not None:
+            self._sqlite_store.ensure_schema()
+
+            def _ack(conn: sqlite3.Connection) -> int:
+                return ack_outbox_dispatch(
+                    conn,
+                    logical_invocation_id=logical_invocation_id,
+                    graph_run_id=graph_run_id,
+                    successor_node_id=successor_node_id,
+                )
+
+            self.sqlite.run(_ack)
+            reloaded = self._reload_outbox()
+            if is_refusal(reloaded):
+                return reloaded
+        else:
+            updated: dict[tuple[str, str, int, str], TaskGraphOutboxRow] = {}
+            for key, row in self._outbox.items():
+                match_logical = (
+                    logical_invocation_id is None
+                    or row.logical_invocation_id == logical_invocation_id
+                )
+                match_successor = successor_node_id is None or (
+                    row.graph_run_id == graph_run_id and row.successor_node_id == successor_node_id
+                )
+                if (
+                    match_logical
+                    and match_successor
+                    and row.transport_state is OutboxTransportState.PENDING
+                ):
+                    updated[key] = row.with_transport(OutboxTransportState.DISPATCHED)
+            self._outbox.update(updated)
+        if logical_invocation_id is not None:
+            return Ok(
+                tuple(
+                    row
+                    for row in self._outbox.values()
+                    if row.logical_invocation_id == logical_invocation_id
+                )
+            )
+        if graph_run_id is not None and successor_node_id is not None:
+            return Ok(
+                tuple(
+                    row
+                    for row in self._outbox.values()
+                    if row.graph_run_id == graph_run_id
+                    and row.successor_node_id == successor_node_id
+                )
+            )
+        return Ok(self.replayable_rows(graph_run_id))
+
+    def accept_logical(
+        self,
+        logical_invocation_id: str,
+        *,
+        result: Mapping[str, object] | None = None,
+    ) -> Result[ReceiverAcceptance]:
+        """Exactly-once logical acceptance under the receiver ledger (FR-WF-48)."""
+        if not logical_invocation_id:
+            return _invalid("logical_invocation_id", "receiver dedupe requires an id")
+        prior = self._receiver.get(logical_invocation_id)
+        if prior is not None:
+            return Ok(
+                ReceiverAcceptance(
+                    logical_invocation_id=prior.logical_invocation_id,
+                    receiver_acceptance_id=prior.receiver_acceptance_id,
+                    result=dict(prior.result),
+                    replayed=True,
+                )
+            )
+        payload = dict(result) if result is not None else {"accepted": True}
+        acceptance_id = f"recv:{logical_invocation_id}"
+        accepted = ReceiverAcceptance(
+            logical_invocation_id=logical_invocation_id,
+            receiver_acceptance_id=acceptance_id,
+            result=payload,
+        )
+        if self.sqlite is not None and self._sqlite_store is not None:
+            self._sqlite_store.ensure_schema()
+
+            def _accept(conn: sqlite3.Connection) -> None:
+                write_receiver_row(conn, accepted)
+                conn.execute(
+                    "UPDATE task_graph_outbox SET acceptance_state = ?, "
+                    "receiver_acceptance_id = ? WHERE logical_invocation_id = ?",
+                    (
+                        OutboxAcceptanceState.ACCEPTED.value,
+                        acceptance_id,
+                        logical_invocation_id,
+                    ),
+                )
+
+            self.sqlite.run(_accept)
+            reloaded = self._reload_outbox()
+            if is_refusal(reloaded):
+                return reloaded
+            stored = self._receiver.get(logical_invocation_id)
+            if stored is not None:
+                return Ok(stored)
+        self._receiver[logical_invocation_id] = accepted
+        for key, row in list(self._outbox.items()):
+            if row.logical_invocation_id == logical_invocation_id:
+                self._outbox[key] = row.with_acceptance(receiver_acceptance_id=acceptance_id)
+        return Ok(accepted)
+
+    def mark_effected(self, logical_invocation_id: str) -> Result[TaskGraphOutboxRow]:
+        """Record effect completion. The outbox still does not prove exactly-once."""
+        if not logical_invocation_id:
+            return _invalid("logical_invocation_id", "effect recording requires an id")
+        if self.sqlite is not None and self._sqlite_store is not None:
+            self._sqlite_store.ensure_schema()
+
+            def _effect(conn: sqlite3.Connection) -> None:
+                conn.execute(
+                    "UPDATE task_graph_outbox SET effect_state = ? WHERE logical_invocation_id = ?",
+                    (OutboxEffectState.EFFECTED.value, logical_invocation_id),
+                )
+
+            self.sqlite.run(_effect)
+            reloaded = self._reload_outbox()
+            if is_refusal(reloaded):
+                return reloaded
+        else:
+            for key, row in list(self._outbox.items()):
+                if row.logical_invocation_id == logical_invocation_id:
+                    self._outbox[key] = row.with_effect()
+        matched = tuple(
+            row
+            for row in self._outbox.values()
+            if row.logical_invocation_id == logical_invocation_id
+        )
+        if not matched:
+            return _invalid(
+                "logical_invocation_id",
+                "no outbox row for effect recording",
+                given=logical_invocation_id,
+            )
+        return Ok(matched[0])
 
     def occupy_run_step(
         self,
