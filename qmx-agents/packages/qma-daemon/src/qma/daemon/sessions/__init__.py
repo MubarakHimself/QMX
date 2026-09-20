@@ -1,15 +1,17 @@
-"""Product-session journal projection (Workflows AD-8; Stories 55.1–55.3).
+"""Product-session journal projection (Workflows AD-8; Stories 55.1–55.4).
 
-``product_session`` is not a QMA Session fold and not a tab. Occupancy stays
-none until a live-adjacent story. Public calls are compared to
-``product_session.context``. ``granted_ops`` are grant_ids resolved to
+``product_session`` is not a QMA Session fold and not a tab/window/view.
+Occupancy stays none until a live-adjacent story. Public calls are compared
+to ``product_session.context``. ``granted_ops`` are grant_ids resolved to
 host GrantRecords; mismatch and revoke refuse before execution.
 Restart/reconnect restores bound context from the journal; tabs share it
-and never mint or close it.
+and never mint or close it. ``view:*`` remains an AD-17 wire DTO only
+(GAP-0081; SCN-0018 Branch B).
 """
 
 from __future__ import annotations
 
+from qma.daemon.sessions.chrome import ProductSessionChrome
 from qma.daemon.sessions.grant_binding import (
     GRANT_ACCEPTED_TABLE,
     GRANT_RECORD_TABLE,
@@ -20,6 +22,10 @@ from qma.daemon.sessions.grant_binding import (
     compare_envelope_to_grant,
 )
 from qma.daemon.sessions.product_session import (
+    CHROME_KINDS,
+    CHROME_OWNS_GRANTS,
+    CHROME_OWNS_OCCUPANCY,
+    GAP_0081_CHROME_FILLED,
     PRODUCT_SESSION_CONTEXT_FIELDS,
     PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA,
     PRODUCT_SESSION_FOLD_ID,
@@ -49,13 +55,20 @@ from qma.daemon.sessions.product_session import (
     SelectedRef,
     bind_public_call_to_context,
     claim_product_session_at_inspect_sha,
+    looks_like_chrome_id,
     parse_product_session_profile,
+    refuse_chrome_owns_grants,
+    refuse_chrome_owns_occupancy,
     refuse_reconnect_replays_intent,
     refuse_tab_as_product_session,
     refuse_tab_mints_session,
 )
 
 __all__ = [
+    "CHROME_KINDS",
+    "CHROME_OWNS_GRANTS",
+    "CHROME_OWNS_OCCUPANCY",
+    "GAP_0081_CHROME_FILLED",
     "GRANT_ACCEPTED_TABLE",
     "GRANT_RECORD_TABLE",
     "GRANT_REVOCATION_TABLE",
@@ -84,6 +97,7 @@ __all__ = [
     "BoundProductSessionCall",
     "BoundSessionGrant",
     "ProductSession",
+    "ProductSessionChrome",
     "ProductSessionContext",
     "ProductSessionProfile",
     "ProductSessionService",
@@ -92,7 +106,10 @@ __all__ = [
     "bind_public_call_to_context",
     "claim_product_session_at_inspect_sha",
     "compare_envelope_to_grant",
+    "looks_like_chrome_id",
     "parse_product_session_profile",
+    "refuse_chrome_owns_grants",
+    "refuse_chrome_owns_occupancy",
     "refuse_reconnect_replays_intent",
     "refuse_tab_as_product_session",
     "refuse_tab_mints_session",

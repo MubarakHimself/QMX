@@ -5,8 +5,12 @@ from __future__ import annotations
 from qma.wire import (
     CONTRIBUTION_HIT_IS_GRANT,
     SCHEMA_FILES,
+    VIEW_FILLS_GAP_0081_CHROME,
     VIEW_IS_CONTRIBUTION_HIT,
     VIEW_IS_PLUGIN_CONTRIBUTION_POINT,
+    VIEW_IS_PRODUCT_SESSION,
+    VIEW_OWNS_GRANTS,
+    VIEW_OWNS_OCCUPANCY,
     VIEW_PRESENTATION_CONTRACT,
     VIEW_PRESENTATION_DTO_OWNER,
     VIEW_PRESENTATION_GAP,
@@ -22,8 +26,10 @@ from qma.wire import (
     parse_federated_hit,
     parse_view_presentation,
     refuse_view_as_contribution_hit,
+    refuse_view_as_product_session,
     refuse_view_contribution_hit,
     refuse_view_durable_work,
+    refuse_view_owns_grants,
     validate_view_presentation,
 )
 from qmf.core import is_ok, is_refusal
@@ -53,6 +59,10 @@ def test_view_dto_identity_is_not_a_contribution() -> None:
     assert VIEW_PRESENTATION_GAP == "GAP-0081"
     assert VIEW_IS_CONTRIBUTION_HIT is False
     assert VIEW_IS_PLUGIN_CONTRIBUTION_POINT is False
+    assert VIEW_IS_PRODUCT_SESSION is False
+    assert VIEW_OWNS_GRANTS is False
+    assert VIEW_OWNS_OCCUPANCY is False
+    assert VIEW_FILLS_GAP_0081_CHROME is False
     assert VIEW_UI_CONTRIBUTION_POINT_MINTED is False
     assert VIEW_PRESENTATION_OCCUPANCY == "none"
     assert CONTRIBUTION_HIT_IS_GRANT is False
@@ -135,3 +145,12 @@ def test_ui_view_point_and_durable_work_refuse() -> None:
     grant = parse_view_presentation({**_VIEW, "authorizes_invoke": True})
     assert is_refusal(grant)
     assert grant.context["hit_is_grant"] is False
+
+    session = parse_view_presentation({**_VIEW, "product_session_id": "psess:desk-1"})
+    assert is_refusal(session)
+    assert session.context["is_product_session"] is False
+    owned = parse_view_presentation({**_VIEW, "grant_id": "grant:1"})
+    assert is_refusal(owned)
+    assert owned.context["chrome_owns_grants"] is False
+    assert is_refusal(refuse_view_as_product_session())
+    assert is_refusal(refuse_view_owns_grants())

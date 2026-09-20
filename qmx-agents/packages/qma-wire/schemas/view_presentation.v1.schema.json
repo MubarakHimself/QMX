@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/view_presentation.v1.schema.json",
   "title": "QMA AD-17 view:* presentation DTO (CT-40 additive; GAP-0081)",
-  "description": "Pack view:* is a wire-owned presentation DTO (CONTRACTS §14; AD-17). It is not a plugin contribution point and not a ContributionHit until a named GAP-0081 ui_view increment. Occupancy is none. Mount/dispose must not start or kill durable work. No new CT number — do not mint CT-52.",
+  "description": "Pack view:* is a wire-owned presentation DTO (CONTRACTS §14; AD-17; Story 55.4). It is not a plugin contribution point, not a ContributionHit, and not a product_session until a named GAP-0081 ui_view increment. A tab/window/view does not own grants or occupancy. Occupancy is none. GAP-0081 chrome is not filled. Mount/dispose must not start or kill durable work. No new CT number — do not mint CT-52.",
   "type": "object",
   "additionalProperties": false,
   "required": [

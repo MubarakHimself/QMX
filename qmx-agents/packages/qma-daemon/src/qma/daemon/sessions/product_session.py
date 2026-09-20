@@ -1,4 +1,4 @@
-"""``product_session`` journal projection — bound request context (Stories 55.1–55.3).
+"""``product_session`` journal projection — bound request context (Stories 55.1–55.4).
 
 COMP-QMA-DAEMON owns the sqlite fold over ``product_session.*``. Ids are
 ``psess:``; QMA Session ids remain ``sess:``. ``product_session.context`` is
@@ -17,6 +17,11 @@ a tab. Restart/reconnect restores the same bound context by folding
 ``product_session.*`` events — not in-process RAM. Two tabs of one product
 share one ``psess:``. Closing a tab writes nothing and does not close the
 session. A new tab does not mint a new product_session.
+
+Story 55.4: a tab/window/view is not a product_session and does not own
+grants or occupancy. ``view:*`` remains an AD-17 wire DTO only — not a
+plugin contribution point and not a ContributionHit (GAP-0081;
+SCN-0018 Branch B). Occupancy stays none. GAP-0081 chrome is not filled.
 """
 
 from __future__ import annotations
@@ -72,6 +77,10 @@ from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRef
 from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
+    "CHROME_KINDS",
+    "CHROME_OWNS_GRANTS",
+    "CHROME_OWNS_OCCUPANCY",
+    "GAP_0081_CHROME_FILLED",
     "GRANT_SIXTH_STORE_MINTED",
     "PRODUCT_SESSION_CONTEXT_FIELDS",
     "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
@@ -105,7 +114,10 @@ __all__ = [
     "bind_public_call_to_context",
     "claim_product_session_at_inspect_sha",
     "compare_envelope_to_grant",
+    "looks_like_chrome_id",
     "parse_product_session_profile",
+    "refuse_chrome_owns_grants",
+    "refuse_chrome_owns_occupancy",
     "refuse_reconnect_replays_intent",
     "refuse_tab_as_product_session",
     "refuse_tab_mints_session",
@@ -128,6 +140,21 @@ PRODUCT_SESSION_SIXTH_COMP_MINTED: Final[bool] = False
 PRODUCT_SESSION_SIXTH_STORE_MINTED: Final[bool] = False
 PRODUCT_SESSION_NEW_CT_MINTED: Final[bool] = False
 PRODUCT_SESSION_TAB_WRITES: Final[bool] = False
+CHROME_KINDS: Final[frozenset[str]] = frozenset({"tab", "window", "view"})
+CHROME_OWNS_GRANTS: Final[bool] = False
+CHROME_OWNS_OCCUPANCY: Final[bool] = False
+GAP_0081_CHROME_FILLED: Final[bool] = False
+_CHROME_ID_PREFIXES: Final[tuple[str, ...]] = (
+    "tab:",
+    "tab/",
+    "window:",
+    "window/",
+    "view:",
+    "view/",
+    "ui-tab",
+    "ui_view",
+    "ui-view",
+)
 PRODUCT_SESSION_MINT_EVENT: Final[str] = "product_session.minted"
 PRODUCT_SESSION_GRANT_MINTED_EVENT: Final[str] = "product_session.grant_minted"
 PRODUCT_SESSION_GRANT_REVOKED_EVENT: Final[str] = "product_session.grant_revoked"
@@ -176,6 +203,14 @@ NOT_DURABLE_FIELDS: Final[frozenset[str]] = frozenset(
         "tab",
         "tab_id",
         "ui_tab",
+        "window",
+        "window_id",
+        "ui_window",
+        "view",
+        "view_id",
+        "ui_view",
+        "pane",
+        "pane_id",
         "attachment",
         "layout",
         "board_layout",
@@ -206,7 +241,22 @@ _FORBIDDEN_SELECTED_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 _TAB_FIELD_TOKENS: Final[frozenset[str]] = frozenset(
-    {"tab", "tab_id", "ui_tab", "client_tab", "dashboard_tab"}
+    {
+        "tab",
+        "tab_id",
+        "ui_tab",
+        "client_tab",
+        "dashboard_tab",
+        "window",
+        "window_id",
+        "ui_window",
+        "client_window",
+        "view",
+        "view_id",
+        "ui_view",
+        "pane",
+        "pane_id",
+    }
 )
 _SCHEMA_SQL: Final[str] = """
 CREATE TABLE IF NOT EXISTS product_session (
@@ -232,17 +282,69 @@ def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
     return invalid_input(field, reason, **extra)
 
 
+def looks_like_chrome_id(value: object) -> bool:
+    """True when ``value`` names a tab/window/view rather than a ``psess:`` row."""
+    if not isinstance(value, str):
+        return False
+    folded = value.strip().casefold()
+    if folded.startswith(_CHROME_ID_PREFIXES):
+        return True
+    if folded.startswith(("tab-", "window-", "view-", "pane-")):
+        return True
+    return folded in CHROME_KINDS or folded in {"pane", "ui_tab", "ui_window"}
+
+
 def refuse_tab_as_product_session(**extra: object) -> TypedRefusal:
-    """A UI tab is not a product_session row (SCN-0019 Branch D; FR-WF-33)."""
+    """A tab/window/view is not a product_session row (Story 55.4; AD-8)."""
     context: dict[str, object] = {
         "field": "tab",
-        "reason": "a tab is not a product_session row; sessions own context",
+        "reason": "a tab/window/view is not a product_session row; "
+        "sessions own context and grants (AD-8; Story 55.4)",
         "tab_writes": False,
+        "chrome_owns_grants": False,
+        "chrome_owns_occupancy": False,
         "store": PRODUCT_SESSION_STORE,
     }
     context.update(extra)
     return TypedRefusal(
         category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=MappingProxyType(context),
+    )
+
+
+def refuse_chrome_owns_grants(**extra: object) -> TypedRefusal:
+    """Chrome does not own grants; product_session.granted_ops does (AD-8)."""
+    context: dict[str, object] = {
+        "field": extra.pop("field", "grant"),
+        "reason": "a tab/window/view does not own grants; "
+        "product_session.granted_ops does (AD-8; Story 55.4)",
+        "chrome_owns_grants": False,
+        "occupancy": PRODUCT_SESSION_OCCUPANCY,
+        "store": PRODUCT_SESSION_STORE,
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.NO,
+        context=MappingProxyType(context),
+    )
+
+
+def refuse_chrome_owns_occupancy(**extra: object) -> TypedRefusal:
+    """Chrome does not own occupancy; occupancy stays none (AD-8; AD-17)."""
+    context: dict[str, object] = {
+        "field": extra.pop("field", "occupancy"),
+        "reason": "a tab/window/view does not own occupancy; occupancy stays none "
+        "(AD-8; AD-17; Story 55.4)",
+        "chrome_owns_occupancy": False,
+        "occupancy": PRODUCT_SESSION_OCCUPANCY,
+        "live_adjacent": False,
+        "store": PRODUCT_SESSION_STORE,
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
         retryability=Retryability.NO,
         context=MappingProxyType(context),
     )
@@ -367,7 +469,7 @@ def _parse_psess_id(value: object) -> Result[str]:
             "product_session ids are psess:, never QMA Session sess: ids",
             given=raw,
         )
-    if any(part in folded for part in ("tab:", "tab/", "ui-tab")):
+    if looks_like_chrome_id(raw):
         return refuse_tab_as_product_session(given=raw)
     if not raw.startswith(PRODUCT_SESSION_ID_PREFIX) or raw == PRODUCT_SESSION_ID_PREFIX:
         return _invalid(
@@ -1056,6 +1158,8 @@ class ProductSessionService:
 
     Story 55.2 binds ``granted_ops`` to host GrantRecords on the same sqlite.
     Story 55.3 restores bound context from the journal, not RAM or a tab.
+    Story 55.4: tab/window/view is not this row and does not own grants or
+    occupancy; ``view:*`` is AD-17 wire DTO only (GAP-0081).
     """
 
     journal: AuthoritativeJournal | None = None
@@ -1792,6 +1896,8 @@ class ProductSessionService:
         session = loaded.value
         if audience is None:
             audience = session.product_session_id
+        elif looks_like_chrome_id(audience):
+            return refuse_chrome_owns_grants(field="audience", given=audience)
         elif audience != session.product_session_id:
             return GrantMismatch.of(
                 field="audience",

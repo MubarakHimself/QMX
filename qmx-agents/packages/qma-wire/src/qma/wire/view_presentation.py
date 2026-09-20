@@ -1,10 +1,12 @@
-"""AD-17 ``view:*`` presentation DTO — wire only (Story 53.4; GAP-0081).
+"""AD-17 ``view:*`` presentation DTO — wire only (Stories 53.4 / 55.4; GAP-0081).
 
 Pack ``view:*`` is a wire-owned presentation DTO (CONTRACTS §14). It is not a
 plugin contribution point and not a ContributionHit until a named GAP-0081
-``ui_view`` increment (AD-17; FR-WF-12). JSON Render / MCP Apps are presentation
-adapters — not identity, not persistence, not a runtime, and not authority.
-Mount/dispose must not start or kill durable backend work. Occupancy none.
+``ui_view`` increment (AD-17; FR-WF-12). A tab/window/view is not a
+``product_session`` and does not own grants or occupancy (Story 55.4; AD-8).
+JSON Render / MCP Apps are presentation adapters — not identity, not
+persistence, not a runtime, and not authority. Mount/dispose must not start
+or kill durable backend work. Occupancy none. GAP-0081 chrome is not filled.
 """
 
 from __future__ import annotations
@@ -34,8 +36,12 @@ from qmf.core.refusal import (
 )
 
 __all__ = [
+    "VIEW_FILLS_GAP_0081_CHROME",
     "VIEW_IS_CONTRIBUTION_HIT",
     "VIEW_IS_PLUGIN_CONTRIBUTION_POINT",
+    "VIEW_IS_PRODUCT_SESSION",
+    "VIEW_OWNS_GRANTS",
+    "VIEW_OWNS_OCCUPANCY",
     "VIEW_PRESENTATION_CONTRACT",
     "VIEW_PRESENTATION_DTO_OWNER",
     "VIEW_PRESENTATION_GAP",
@@ -50,7 +56,9 @@ __all__ = [
     "ViewPresentation",
     "parse_view_presentation",
     "refuse_view_as_contribution_hit",
+    "refuse_view_as_product_session",
     "refuse_view_durable_work",
+    "refuse_view_owns_grants",
     "validate_view_presentation",
 ]
 
@@ -66,8 +74,15 @@ VIEW_PRESENTATION_GAP: Final[str] = "GAP-0081"
 VIEW_PRESENTATION_OCCUPANCY: Final[str] = CONTRIBUTION_LISTING_OCCUPANCY
 VIEW_IS_CONTRIBUTION_HIT: Final[bool] = False
 VIEW_IS_PLUGIN_CONTRIBUTION_POINT: Final[bool] = False
+VIEW_IS_PRODUCT_SESSION: Final[bool] = False
+VIEW_OWNS_GRANTS: Final[bool] = False
+VIEW_OWNS_OCCUPANCY: Final[bool] = False
+VIEW_FILLS_GAP_0081_CHROME: Final[bool] = False
 VIEW_UI_CONTRIBUTION_POINT_MINTED: Final[bool] = ui_view_contribution_point_minted()
 VIEW_PRESENTATION_MOUNTS: Final[frozenset[str]] = frozenset({"mounted", "unmounted"})
+_GRANT_IDENTITY_KEYS: Final[frozenset[str]] = frozenset({"grant_id", "granted_ops"})
+_SESSION_IDENTITY_KEYS: Final[frozenset[str]] = frozenset({"product_session", "product_session_id"})
+_CHROME_IDENTITY_KEYS: Final[frozenset[str]] = frozenset({"tab_id", "window_id", "pane_id"})
 
 _FORBIDDEN_VIEW_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -88,6 +103,9 @@ _FORBIDDEN_VIEW_KEYS: Final[frozenset[str]] = frozenset(
         "product_session",
         "product_session_id",
         "authorizes_invoke",
+        "tab_id",
+        "window_id",
+        "pane_id",
     }
 )
 
@@ -116,10 +134,44 @@ def refuse_view_as_contribution_hit(**extra: object) -> TypedRefusal:
     """``view:*`` is AD-17 wire DTO only — not a ContributionHit (GAP-0081)."""
     extra.setdefault("is_contribution_hit", False)
     extra.setdefault("is_plugin_contribution_point", False)
+    extra.setdefault("is_product_session", False)
     extra.setdefault("gap_status", GAP_0081_STATUS)
     extra.setdefault("ui_contribution_minted", VIEW_UI_CONTRIBUTION_POINT_MINTED)
     extra.setdefault("plugin_contribution_point", UI_VIEW_CONTRIBUTION_POINT)
+    extra.setdefault("fills_gap_0081_chrome", False)
     return refuse_view_contribution_hit(**extra)
+
+
+def refuse_view_as_product_session(**extra: object) -> TypedRefusal:
+    """A tab/window/view is not a product_session (Story 55.4; AD-8; AD-17)."""
+    field = str(extra.pop("field", "view"))
+    return _policy(
+        field,
+        "a tab/window/view is not a product_session and does not own grants "
+        "or occupancy (AD-8; AD-17; Story 55.4)",
+        is_product_session=False,
+        occupancy=VIEW_PRESENTATION_OCCUPANCY,
+        gap="GAP-0081",
+        fills_gap_0081_chrome=False,
+        **extra,
+    )
+
+
+def refuse_view_owns_grants(**extra: object) -> TypedRefusal:
+    """view:* does not own grants (AD-8; SCN-0018 Branch B; Story 55.4)."""
+    field = str(extra.pop("field", "grant_id"))
+    return _policy(
+        field,
+        "view:* does not own grants; product_session.granted_ops and GrantRecord "
+        "do (AD-8; SCN-0018 Branch B; Story 55.4)",
+        chrome_owns_grants=False,
+        hit_is_grant=False,
+        authorizes_invoke=False,
+        branch="B",
+        scn="SCN-0018",
+        occupancy=VIEW_PRESENTATION_OCCUPANCY,
+        **extra,
+    )
 
 
 def refuse_view_durable_work(**extra: object) -> TypedRefusal:
@@ -277,8 +329,13 @@ class ViewPresentation:
         """Validate a view:* DTO. Refuses contribution-hit / plugin-point identity."""
         stolen = tuple(sorted(name for name in extra if name in _FORBIDDEN_VIEW_KEYS))
         if stolen:
-            if "authorizes_invoke" in stolen or extra.get("authorizes_invoke") is True:
+            names = frozenset(stolen)
+            if "authorizes_invoke" in names or extra.get("authorizes_invoke") is True:
                 return refuse_hit_as_grant(fields=stolen, given=stolen)
+            if names & _GRANT_IDENTITY_KEYS:
+                return refuse_view_owns_grants(fields=stolen, given=stolen)
+            if names & (_SESSION_IDENTITY_KEYS | _CHROME_IDENTITY_KEYS):
+                return refuse_view_as_product_session(fields=stolen, given=stolen)
             return refuse_view_as_contribution_hit(fields=stolen, given=stolen)
         if authorizes_invoke is True:
             return refuse_hit_as_grant(field="authorizes_invoke", given=True)
