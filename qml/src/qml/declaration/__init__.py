@@ -17,6 +17,13 @@ from qmf.core.refusal import Ok, Result
 from qmf.registry.records import CONTRACT_FORMAT_VERSION as REGISTRY_ENVELOPE_FORMAT_VERSION
 
 from qml._refuse import invalid, unsupported
+from qml.declaration.alternative import (
+    ACCOUNTING_POLICY_FIELDS,
+    BOOK_KEYS,
+    RISK_POLICY_FIELDS,
+    AuthoredPolicyPair,
+    author_policy_pair,
+)
 from qml.declaration.bot import (
     BOT_DEFINITION_KIND_FORMAT_VERSION,
     FORBIDDEN_BOT_FIELDS,
@@ -63,6 +70,8 @@ from qml.declaration.versioning import (
 )
 
 __all__ = [
+    "ACCOUNTING_POLICY_FIELDS",
+    "BOOK_KEYS",
     "BOT_DEFINITION_KIND_FORMAT_VERSION",
     "CONFLUENCE_KIND_FORMAT_VERSION",
     "CONSTRAINT_OPS",
@@ -74,8 +83,10 @@ __all__ = [
     "PARAMETER_TYPES",
     "PERMITTED_EXIT_INTENT_VOCABULARY",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
+    "RISK_POLICY_FIELDS",
     "AuthoredArtifact",
     "AuthoredKind",
+    "AuthoredPolicyPair",
     "BotDefinition",
     "BotVersionGraph",
     "Confluence",
@@ -88,6 +99,7 @@ __all__ = [
     "ParameterSpec",
     "ParameterType",
     "UiFlag",
+    "author_policy_pair",
     "bot_definition_kind_contract",
     "branches_from_edge",
     "confluence_kind_contract",

@@ -37,6 +37,15 @@ from qmn.seats.admission import (
     scan_production_src_for_ungoverned_tunnel,
     ungoverned_tunnel_names_in_tree,
 )
+from qmn.seats.alternative import (
+    ATC_SEAT_ISSUES_VENUE_TOKEN,
+    ATC_SIMULATE_TOKEN_ISSUER,
+    AtcSeatAdoption,
+    adopt_atc_seat,
+)
+from qmn.seats.alternative import (
+    VENUE_IMPORTER as ATC_VENUE_IMPORTER,
+)
 from qmn.seats.containment_limit import (
     COMPENSATING_CONTROLS,
     CONTAINMENT_LIMIT_SURFACE,
@@ -90,6 +99,9 @@ from qmn.seats.state import (
 
 __all__ = [
     "ADMISSION_LAYER_NAMES",
+    "ATC_SEAT_ISSUES_VENUE_TOKEN",
+    "ATC_SIMULATE_TOKEN_ISSUER",
+    "ATC_VENUE_IMPORTER",
     "COMPENSATING_CONTROLS",
     "CONTAINMENT_LIMIT_SURFACE",
     "FORBIDDEN_SEAT_SURFACE_KEYS",
@@ -109,6 +121,7 @@ __all__ = [
     "UNGOVERNED_TUNNEL_NAMES",
     "V1_HARDENED_OS_CONFINEMENT",
     "AdmittedNodeSeat",
+    "AtcSeatAdoption",
     "BookPathContext",
     "ContainmentInjection",
     "EnforcementClass",
@@ -124,6 +137,7 @@ __all__ = [
     "SeatTransitionRecord",
     "SeatTransitionStream",
     "V1ContainmentDocsReport",
+    "adopt_atc_seat",
     "apply_operator_seat_reinstate",
     "cite_governed_seat_occurrence",
     "construct_governed_seat",

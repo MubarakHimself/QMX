@@ -29,6 +29,24 @@ def test_replay_binding_usage_example_runs_clean() -> None:
     assert "CT-29" in completed.stdout
 
 
+def test_alternative_run_config_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "alternative_run_config_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "alternative run-config ok" in completed.stdout
+    assert "Book keys absent, not null" in completed.stdout
+    assert "JSONL composition_class alternative" in completed.stdout
+    assert "dummy PolicyPair is invalid input" in completed.stdout
+    assert "claiming ATC at 270e992 fails" in completed.stdout
+    assert "live without paper+L17 is not_promoted" in completed.stdout
+    assert "GAP-0098 stays open" in completed.stdout
+
+
 def test_run_config_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "run_config_usage.py")],

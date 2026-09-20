@@ -31,6 +31,7 @@ __all__ = [
     "refuse_dummy_definition",
     "refuse_dummy_fragments",
     "refuse_dummy_mapping",
+    "refuse_dummy_policy_pair",
     "refuse_sensing_as_atc",
 ]
 
@@ -175,6 +176,53 @@ def refuse_dummy_mapping(
     if class_hit is not None:
         return class_hit
     return _walk(mapping, field=field, path=())
+
+
+def refuse_dummy_policy_pair(
+    value: object,
+    *,
+    field: str = "policy_pair",
+) -> TypedRefusal | None:
+    """Refuse an identity / no-op / unlimited / pass-through ATC PolicyPair."""
+    if value is None:
+        return invalid(field, _DUMMY_REASON, dummy="absent")
+    if not isinstance(value, Mapping):
+        return invalid(
+            field,
+            "a PolicyPair is a key->value mapping of accounting and risk fields",
+            given=repr(type(value).__name__),
+        )
+    mapping = cast("Mapping[str, object]", value)
+    cited = refuse_dummy_cite(field, mapping.get("policy_pair_id"))
+    if cited is not None:
+        return cited
+    cited_hash = refuse_dummy_cite("policy_pair_hash", mapping.get("policy_pair_hash"))
+    if cited_hash is not None:
+        return cited_hash
+    accounting = mapping.get("accounting")
+    risk = mapping.get("risk")
+    if not isinstance(accounting, Mapping) or not accounting:
+        return invalid("accounting", _DUMMY_REASON, dummy="empty-object")
+    if not isinstance(risk, Mapping) or not risk:
+        return invalid("risk", _DUMMY_REASON, dummy="empty-object")
+    acc_map = cast("Mapping[str, object]", accounting)
+    risk_map = cast("Mapping[str, object]", risk)
+    for section_name, section in (("accounting", acc_map), ("risk", risk_map)):
+        if not section:
+            return invalid(section_name, _DUMMY_REASON, dummy="empty-object")
+        for raw_key, item in section.items():
+            token = clean_token(item)
+            if token is None:
+                continue
+            folded = token.strip().casefold().replace("_", "-")
+            if (
+                token in DUMMY_SENTINEL_TOKENS
+                or token.casefold() in _DUMMY_SENTINEL_FOLD
+                or folded in DUMMY_POLICY_TOKENS
+                or token.casefold() in DUMMY_POLICY_TOKENS
+            ):
+                return invalid(raw_key, _DUMMY_REASON, policy=token, section=section_name)
+    return None
 
 
 def refuse_sensing_as_atc(payload: object) -> Result[None]:
