@@ -36,6 +36,8 @@ def test_skill_may_invoke_loop_but_is_never_a_loop() -> None:
     assert skill.is_loop is False
     assert is_skill_distinct_from_loop(skill)
     assert skill.to_payload()["grants_capability"] is False
+    assert skill.to_payload()["grants_tools"] is False
+    assert skill.to_payload()["compiles_to_mission"] is False
 
     with pytest.raises(ValueError, match="fully-qualified"):
         Skill(qualified_id="bare", version="1", summary="x")

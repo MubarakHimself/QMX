@@ -114,6 +114,8 @@ def skill_payload(
         "control_primitive": "skill",
         "is_loop": False,
         "grants_capability": False,
+        "grants_tools": False,
+        "compiles_to_mission": False,
         "composition": "non_linear",
         "is_experiment_spec": False,
     }

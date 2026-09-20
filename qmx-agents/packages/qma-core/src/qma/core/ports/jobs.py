@@ -9,7 +9,7 @@ only by the daemon (DEC-0316; FR-Q51). Coordinated cancel authority is
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
@@ -17,6 +17,7 @@ from typing import Final, cast
 from qma.core.ontology import ActorId, Quant
 from qma.core.vocabulary.enums import (
     JOB_HANDLE_TERMINAL_STATES,
+    ArtifactCompleteness,
     JobHandleState,
     TaskMissionState,
     is_job_handle_terminal,
@@ -27,14 +28,20 @@ from qmf.core import Ok, Result
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "AWAITING_APPROVAL_GATE",
+    "AWAITING_APPROVAL_IS_HANDLE_STATE",
     "JOB_HANDLE_ABORT_TRIGGERS",
+    "JOB_HANDLE_FORBIDDEN_STATES",
     "JOB_HANDLE_OPERATIONS",
     "JOB_HANDLE_UNKNOWN_RESOLVE_COMMAND",
     "JOB_HANDLE_UNKNOWN_TRIGGERS",
+    "JobArtifact",
     "JobHandle",
     "is_abort_trigger",
+    "is_forbidden_job_handle_state",
     "is_unknown_trigger",
     "outcome_for_trigger",
+    "parse_job_artifact",
     "parse_job_handle",
     "wake_mailbox_for",
 ]
@@ -73,6 +80,16 @@ JOB_HANDLE_ABORT_TRIGGERS: Final[frozenset[str]] = frozenset(
 
 JOB_HANDLE_UNKNOWN_RESOLVE_COMMAND: Final[str] = "unknown.resolve"
 
+# Parent AD-17 never grows sitting aliases (FR-WF-49; SCN-0021 Branch C).
+JOB_HANDLE_FORBIDDEN_STATES: Final[frozenset[str]] = frozenset(
+    {
+        "succeeded",
+        "awaiting_approval",
+    }
+)
+AWAITING_APPROVAL_GATE: Final[str] = "awaiting_approval"
+AWAITING_APPROVAL_IS_HANDLE_STATE: Final[bool] = False
+
 
 def wake_mailbox_for(owner: ActorId | str) -> str:
     """Wake target stored on the handle at submit — owning Quant mailbox."""
@@ -86,6 +103,11 @@ def is_unknown_trigger(trigger: object) -> bool:
 
 def is_abort_trigger(trigger: object) -> bool:
     return isinstance(trigger, str) and trigger in JOB_HANDLE_ABORT_TRIGGERS
+
+
+def is_forbidden_job_handle_state(state: object) -> bool:
+    token = state.value if isinstance(state, JobHandleState) else state
+    return isinstance(token, str) and token in JOB_HANDLE_FORBIDDEN_STATES
 
 
 def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
@@ -133,12 +155,119 @@ def _parse_owner(owner: object) -> Result[ActorId]:
     return ActorId.try_create(owner)
 
 
+def _forbidden_state_refusal(state: str) -> TypedRefusal:
+    if state == AWAITING_APPROVAL_GATE:
+        return _policy(
+            "state",
+            "awaiting_approval is a Mission/Task gate, not a JobHandle state "
+            "(FR-WF-49; SCN-0021 Branch C)",
+            given=state,
+            surface="mission_task_gate",
+        )
+    return _policy(
+        "state",
+        "JobHandle state is never succeeded; parent AD-17 vocabulary only "
+        "(FR-WF-49; SCN-0021 Branch C)",
+        given=state,
+    )
+
+
+def _parse_attempt_id(value: object) -> Result[int]:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return _invalid(
+            "attempt_id",
+            "attempt_id is a positive integer starting at 1 (FR-WF-50)",
+            given=repr(value),
+        )
+    if value < 1:
+        return _invalid(
+            "attempt_id",
+            "attempt_id is a positive integer starting at 1 (FR-WF-50)",
+            given=value,
+        )
+    return Ok(value)
+
+
+@dataclass(frozen=True, slots=True)
+class JobArtifact:
+    """One JobHandle inventory row with closed completeness (AD-26)."""
+
+    fp1: str
+    completeness: ArtifactCompleteness
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "fp1": self.fp1,
+                "completeness": self.completeness.value,
+            }
+        )
+
+
+def parse_job_artifact(payload: object) -> Result[JobArtifact]:
+    """Parse one artifact inventory row with closed completeness."""
+    if isinstance(payload, JobArtifact):
+        return Ok(payload)
+    if not isinstance(payload, Mapping):
+        return _invalid(
+            "artifacts",
+            "artifact inventory entries are objects with fp1 and completeness",
+            given=repr(payload),
+        )
+    mapping = cast("Mapping[object, object]", payload)
+    fp1 = mapping.get("fp1")
+    if not isinstance(fp1, str) or fp1.strip() == "":
+        return _invalid("fp1", "artifact inventory requires a non-empty fp1")
+    try:
+        completeness = parse_closed(ArtifactCompleteness, mapping.get("completeness"))
+    except VocabularyError as exc:
+        return _invalid("completeness", str(exc), given=repr(mapping.get("completeness")))
+    return Ok(JobArtifact(fp1=fp1.strip(), completeness=completeness))
+
+
+def _parse_artifacts(value: object) -> Result[tuple[JobArtifact, ...]]:
+    if value in (None, ()):
+        return Ok(())
+    if isinstance(value, JobArtifact):
+        return Ok((value,))
+    if isinstance(value, Mapping):
+        parsed = parse_job_artifact(cast("Mapping[object, object]", value))
+        if not isinstance(parsed, Ok):
+            return parsed
+        return Ok((parsed.value,))
+    if not isinstance(value, Sequence) or isinstance(value, str | bytes):
+        return _invalid("artifacts", "artifact inventory is a list of objects")
+    rows: list[JobArtifact] = []
+    for item in cast("Sequence[object]", value):
+        parsed = parse_job_artifact(item)
+        if not isinstance(parsed, Ok):
+            return parsed
+        rows.append(parsed.value)
+    return Ok(tuple(rows))
+
+
+def _parse_later_commands(value: object) -> Result[tuple[Mapping[str, object], ...]]:
+    if value in (None, ()):
+        return Ok(())
+    if not isinstance(value, Sequence) or isinstance(value, str | bytes):
+        return _invalid("later_commands", "later_commands is a list of recorded no-ops")
+    recorded: list[Mapping[str, object]] = []
+    for item in cast("Sequence[object]", value):
+        if not isinstance(item, Mapping):
+            return _invalid("later_commands", "each later command is an object")
+        mapping = cast("Mapping[object, object]", item)
+        recorded.append({str(key): payload for key, payload in mapping.items()})
+    return Ok(tuple(recorded))
+
+
 @dataclass(frozen=True, slots=True)
 class JobHandle:
-    """Durable job reference: id, owning Quant, exactly one closed state.
+    """Durable job reference: id, owning Quant, exactly one closed AD-17 state.
 
     Operations live on the daemon service. ``mapped_task_state`` is the AD-17
     definition; only the daemon applies it to a Task (DEC-0316; FR-Q51).
+    Each handle records ``logical_run_id``, ``attempt_id``, and artifact
+    inventory completeness (FR-WF-50; SCN-0021 Then 6).
     """
 
     job_id: str
@@ -151,6 +280,10 @@ class JobHandle:
     correlation_id: str = ""
     wake_armed: bool = False
     recorded_resolution: Mapping[str, object] | None = None
+    logical_run_id: str = ""
+    attempt_id: int = 1
+    artifacts: tuple[JobArtifact, ...] = ()
+    later_commands: tuple[Mapping[str, object], ...] = ()
 
     def __post_init__(self) -> None:
         if self.recorded_resolution is not None:
@@ -159,10 +292,21 @@ class JobHandle:
                 "recorded_resolution",
                 MappingProxyType(dict(self.recorded_resolution)),
             )
+        object.__setattr__(self, "artifacts", tuple(self.artifacts))
+        object.__setattr__(
+            self,
+            "later_commands",
+            tuple(MappingProxyType(dict(item)) for item in self.later_commands),
+        )
 
     @property
     def is_terminal(self) -> bool:
         return is_job_handle_terminal(self.state)
+
+    @property
+    def holds_environment_lease(self) -> bool:
+        """Timeout / lost supervisor stays unknown and holds the lease."""
+        return self.state is JobHandleState.UNKNOWN
 
     @property
     def mapped_task_state(self) -> TaskMissionState:
@@ -180,6 +324,11 @@ class JobHandle:
             "mapped_task_state": self.mapped_task_state.value,
             "wake_armed": self.wake_armed,
             "operations": list(JOB_HANDLE_OPERATIONS),
+            "logical_run_id": self.logical_run_id,
+            "attempt_id": self.attempt_id,
+            "artifacts": [dict(item.to_payload()) for item in self.artifacts],
+            "holds_environment_lease": self.holds_environment_lease,
+            "later_commands": [dict(item) for item in self.later_commands],
         }
         if self.abort_reason is not None:
             payload["abort_reason"] = self.abort_reason
@@ -190,6 +339,25 @@ class JobHandle:
         if self.recorded_resolution is not None:
             payload["recorded_resolution"] = dict(self.recorded_resolution)
         return MappingProxyType(payload)
+
+    def record_later_command(self, command: Mapping[str, object]) -> JobHandle:
+        """Append a no-op against the first durable terminal (FR-WF-50)."""
+        return JobHandle(
+            job_id=self.job_id,
+            owner=self.owner,
+            state=self.state,
+            task_id=self.task_id,
+            wake_mailbox=self.wake_mailbox,
+            abort_reason=self.abort_reason,
+            unknown_trigger=self.unknown_trigger,
+            correlation_id=self.correlation_id,
+            wake_armed=self.wake_armed,
+            recorded_resolution=self.recorded_resolution,
+            logical_run_id=self.logical_run_id,
+            attempt_id=self.attempt_id,
+            artifacts=self.artifacts,
+            later_commands=(*self.later_commands, dict(command)),
+        )
 
     def with_state(
         self,
@@ -213,6 +381,10 @@ class JobHandle:
             recorded_resolution=(
                 self.recorded_resolution if recorded_resolution is None else recorded_resolution
             ),
+            logical_run_id=self.logical_run_id,
+            attempt_id=self.attempt_id,
+            artifacts=self.artifacts,
+            later_commands=self.later_commands,
         )
 
     @classmethod
@@ -229,6 +401,10 @@ class JobHandle:
         correlation_id: object = "",
         wake_armed: bool = False,
         recorded_resolution: Mapping[str, object] | None = None,
+        logical_run_id: object = "",
+        attempt_id: object = 1,
+        artifacts: object = (),
+        later_commands: object = (),
     ) -> Result[JobHandle]:
         if not isinstance(job_id, str) or job_id.strip() == "":
             return _invalid("job_id", "JobHandle requires a durable job id")
@@ -237,6 +413,9 @@ class JobHandle:
         parsed_owner = _parse_owner(owner)
         if not isinstance(parsed_owner, Ok):
             return parsed_owner
+        raw_state = state.value if isinstance(state, JobHandleState) else state
+        if is_forbidden_job_handle_state(raw_state):
+            return _forbidden_state_refusal(str(raw_state))
         try:
             resolved_state = (
                 state if isinstance(state, JobHandleState) else parse_closed(JobHandleState, state)
@@ -300,9 +479,22 @@ class JobHandle:
             if resolved_state is JobHandleState.ABORTED and isinstance(abort_reason, str)
             else None
         )
+        durable_id = job_id.strip()
+        run_id = logical_run_id.strip() if isinstance(logical_run_id, str) else ""
+        if run_id == "":
+            run_id = corr if corr else durable_id
+        parsed_attempt = _parse_attempt_id(attempt_id)
+        if not isinstance(parsed_attempt, Ok):
+            return parsed_attempt
+        parsed_artifacts = _parse_artifacts(artifacts)
+        if not isinstance(parsed_artifacts, Ok):
+            return parsed_artifacts
+        parsed_later = _parse_later_commands(later_commands)
+        if not isinstance(parsed_later, Ok):
+            return parsed_later
         return Ok(
             cls(
-                job_id=job_id.strip(),
+                job_id=durable_id,
                 owner=parsed_owner.value,
                 state=resolved_state,
                 task_id=task_id.strip(),
@@ -312,6 +504,10 @@ class JobHandle:
                 correlation_id=corr,
                 wake_armed=wake_armed,
                 recorded_resolution=recorded_resolution,
+                logical_run_id=run_id,
+                attempt_id=parsed_attempt.value,
+                artifacts=parsed_artifacts.value,
+                later_commands=parsed_later.value,
             )
         )
 
@@ -337,6 +533,10 @@ class JobHandle:
             correlation_id=payload.get("correlation_id", ""),
             wake_armed=bool(payload.get("wake_armed", False)),
             recorded_resolution=resolution,
+            logical_run_id=payload.get("logical_run_id", ""),
+            attempt_id=payload.get("attempt_id", 1),
+            artifacts=payload.get("artifacts", ()),
+            later_commands=payload.get("later_commands", ()),
         )
 
 
@@ -362,4 +562,8 @@ def parse_job_handle(**fields: object) -> Result[JobHandle]:
         correlation_id=fields.get("correlation_id", ""),
         wake_armed=bool(fields.get("wake_armed", False)),
         recorded_resolution=resolution,
+        logical_run_id=fields.get("logical_run_id", ""),
+        attempt_id=fields.get("attempt_id", 1),
+        artifacts=fields.get("artifacts", ()),
+        later_commands=fields.get("later_commands", ()),
     )

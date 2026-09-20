@@ -163,6 +163,12 @@ def assert_skill_is_not_capability_grant(skill: Skill) -> Result[str]:
             "(FR-Q43; AD-16; AD-22)",
             given=skill.qualified_id,
         )
+    if payload.get("compiles_to_mission"):
+        return _policy_rejection(
+            "skill",
+            "a Skill never compiles to a Mission (FR-WF-53; AD-13)",
+            given=skill.qualified_id,
+        )
     return Ok(skill.qualified_id)
 
 

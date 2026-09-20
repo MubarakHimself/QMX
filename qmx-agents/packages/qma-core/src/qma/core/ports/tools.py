@@ -43,6 +43,7 @@ __all__ = [
     "narrow_toolset_ids",
     "parse_tool_kind",
     "select_lowest_capable",
+    "skill_compiles_to_mission",
     "skill_grants_tool_or_capability",
     "subagent_inherited_tool_ids",
     "write_tool_adapter_binding",
@@ -114,6 +115,11 @@ def default_rung_for_kind(kind: ToolKind | str) -> CapabilityRung:
 
 def skill_grants_tool_or_capability() -> bool:
     """An appended Skill is knowledge only — never a tool or capability grant."""
+    return False
+
+
+def skill_compiles_to_mission() -> bool:
+    """Skills remain knowledge and never compile to Missions (FR-WF-53)."""
     return False
 
 

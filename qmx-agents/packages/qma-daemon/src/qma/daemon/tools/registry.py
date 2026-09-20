@@ -462,10 +462,17 @@ class ToolRegistry:
                 "Skill must not grant a tool or capability (AD-16; FR-Q41)",
             )
         for skill in appended_skills:
-            if skill.to_payload().get("grants_capability"):
+            payload = skill.to_payload()
+            if payload.get("grants_capability") or payload.get("grants_tools"):
                 return invalid_input(
                     "skill",
                     "appended Skill supplies knowledge only (AD-16; FR-Q41)",
+                    given=skill.qualified_id,
+                )
+            if payload.get("compiles_to_mission"):
+                return invalid_input(
+                    "skill",
+                    "a Skill never compiles to a Mission (FR-WF-53; AD-13)",
                     given=skill.qualified_id,
                 )
 

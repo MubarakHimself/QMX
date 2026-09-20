@@ -104,6 +104,8 @@ class Skill:
                 "is_loop": False,
                 "invokes_loop": self.invokes_loop,
                 "grants_capability": False,
+                "grants_tools": False,
+                "compiles_to_mission": False,
             }
         )
 

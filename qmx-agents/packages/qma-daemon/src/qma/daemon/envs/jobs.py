@@ -26,6 +26,7 @@ from qma.core.ports.compute import ComputeRequirement
 from qma.core.ports.jobs import (
     JOB_HANDLE_OPERATIONS,
     JOB_HANDLE_UNKNOWN_RESOLVE_COMMAND,
+    JobArtifact,
     JobHandle,
     is_abort_trigger,
     is_unknown_trigger,
@@ -267,6 +268,9 @@ class JobHandleService:
         kind: ExecutionEnvironmentKind | str | None = None,
         requirement: ComputeRequirement | None = None,
         correlation_id: str = "",
+        logical_run_id: str = "",
+        attempt_id: int = 1,
+        artifacts: Sequence[JobArtifact | Mapping[str, object]] | None = None,
     ) -> Result[JobHandle]:
         """Queue work and return immediately with a durable JobHandle."""
         if not task_id:
@@ -304,6 +308,9 @@ class JobHandleService:
             task_id=task_id,
             wake_mailbox=wake_mailbox_for(parsed_owner.value),
             correlation_id=correlation_id,
+            logical_run_id=logical_run_id or correlation_id or durable_id,
+            attempt_id=attempt_id,
+            artifacts=() if artifacts is None else artifacts,
         )
         if is_refusal(minted):
             return minted
@@ -734,17 +741,10 @@ class JobHandleService:
         recorded_resolution: Mapping[str, object] | None = None,
         resolving_unknown: bool = False,
     ) -> Result[JobHandle]:
+        if handle.is_terminal:
+            return self._record_terminal_noop(handle, nxt, event)
         if handle.state is nxt and not resolving_unknown:
             return Ok(handle)
-        if handle.is_terminal:
-            return policy_rejection(
-                "job_handle",
-                "terminal JobHandle states are done, failed, cancelled, and aborted; "
-                "further transitions are refused (CT-46; FR-Q51)",
-                job_id=handle.job_id,
-                current_state=handle.state.value,
-                to_state=nxt.value,
-            )
         if handle.state is JobHandleState.UNKNOWN and not resolving_unknown:
             return policy_rejection(
                 "job_handle",
@@ -772,6 +772,10 @@ class JobHandleService:
             correlation_id=handle.correlation_id,
             wake_armed=handle.wake_armed,
             recorded_resolution=recorded_resolution,
+            logical_run_id=handle.logical_run_id,
+            attempt_id=handle.attempt_id,
+            artifacts=handle.artifacts,
+            later_commands=handle.later_commands,
         )
         if is_refusal(minted):
             return minted
@@ -850,6 +854,34 @@ class JobHandleService:
         if current is not None and current.state is JobHandleState.UNKNOWN and handle.is_terminal:
             return dispatcher.resolve_unknown_job_handle(evidence)
         return dispatcher.apply_job_handle_evidence(evidence)
+
+    def _record_terminal_noop(
+        self,
+        handle: JobHandle,
+        nxt: JobHandleState,
+        event: str,
+    ) -> Result[JobHandle]:
+        """First durable terminal wins; later commands are recorded no-ops."""
+        recorded = handle.record_later_command(
+            {
+                "command": event,
+                "ignored_state": nxt.value,
+                "noop": True,
+                "terminal_state": handle.state.value,
+            }
+        )
+        self._store.put(recorded)
+        self._append_stream(
+            handle.job_id,
+            "terminal_noop",
+            {
+                "command": event,
+                "ignored_state": nxt.value,
+                "noop": True,
+                "terminal_state": handle.state.value,
+            },
+        )
+        return Ok(recorded)
 
     def _append_stream(self, job_id: str, kind: str, body: Mapping[str, object]) -> None:
         self._streams.setdefault(job_id, []).append(

@@ -7,6 +7,7 @@ from enum import StrEnum
 from typing import Final
 
 from qma.core.vocabulary.enums import (
+    ArtifactCompleteness,
     AskOnTimeout,
     DeliveryState,
     DoorAdapter,
@@ -120,6 +121,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("reconcile_policy", "AD-24", ReconcilePolicy, "DEC-0437"),
     ClosedVocabulary("effect_retry_outcome", "AD-24", EffectRetryOutcome, "DEC-0437"),
     ClosedVocabulary("grant_evaluation_moment", "AD-24", GrantEvaluationMoment, "DEC-0437"),
+    ClosedVocabulary("artifact_completeness", "AD-26", ArtifactCompleteness, "DEC-0439"),
 )
 
 

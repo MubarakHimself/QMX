@@ -14,6 +14,7 @@ __all__ = [
     "TASK_EMITTING_NODE_KINDS",
     "TASK_MISSION_NONTERMINAL_STATES",
     "TASK_MISSION_TERMINAL_STATES",
+    "ArtifactCompleteness",
     "AskOnTimeout",
     "DeliveryState",
     "DoorAdapter",
@@ -169,6 +170,8 @@ class JobHandleState(StrEnum):
     """Seven JobHandle states (AD-17; DEC-0316).
 
     Terminal states: ``done``, ``failed``, ``cancelled``, ``aborted``.
+    Never ``succeeded``. ``awaiting_approval`` is a Mission/Task gate, not a
+    handle member (FR-WF-49; SCN-0021 Branch C).
     """
 
     QUEUED = "queued"
@@ -178,6 +181,15 @@ class JobHandleState(StrEnum):
     CANCELLED = "cancelled"
     ABORTED = "aborted"
     UNKNOWN = "unknown"
+
+
+class ArtifactCompleteness(StrEnum):
+    """JobHandle artifact inventory completeness (AD-26; DEC-0439)."""
+
+    COMPLETE = "complete"
+    PARTIAL = "partial"
+    MISSING = "missing"
+    EXPIRED = "expired"
 
 
 class TaskMissionState(StrEnum):
