@@ -1,9 +1,11 @@
-"""Product-session journal projection (Workflows AD-8; Stories 55.1–55.2).
+"""Product-session journal projection (Workflows AD-8; Stories 55.1–55.3).
 
 ``product_session`` is not a QMA Session fold and not a tab. Occupancy stays
 none until a live-adjacent story. Public calls are compared to
 ``product_session.context``. ``granted_ops`` are grant_ids resolved to
 host GrantRecords; mismatch and revoke refuse before execution.
+Restart/reconnect restores bound context from the journal; tabs share it
+and never mint or close it.
 """
 
 from __future__ import annotations
@@ -31,20 +33,26 @@ from qma.daemon.sessions.product_session import (
     PRODUCT_SESSION_SIXTH_STORE_MINTED,
     PRODUCT_SESSION_STORE,
     PRODUCT_SESSION_STORE_CLASS,
+    PRODUCT_SESSION_TAB_WRITES,
     PRODUCT_SESSION_TABLE,
     PRODUCT_SESSION_WIRED_AT_INSPECT_SHA,
     QMA_SESSION_ID_PREFIX,
+    RECONNECT_KIND_QUERY,
+    RECONNECT_KIND_RESYNC,
     SELECTED_REF_KINDS,
     BoundProductSessionCall,
     ProductSession,
     ProductSessionContext,
     ProductSessionProfile,
     ProductSessionService,
+    ReconnectSnapshot,
     SelectedRef,
     bind_public_call_to_context,
     claim_product_session_at_inspect_sha,
     parse_product_session_profile,
+    refuse_reconnect_replays_intent,
     refuse_tab_as_product_session,
+    refuse_tab_mints_session,
 )
 
 __all__ = [
@@ -66,8 +74,11 @@ __all__ = [
     "PRODUCT_SESSION_STORE",
     "PRODUCT_SESSION_STORE_CLASS",
     "PRODUCT_SESSION_TABLE",
+    "PRODUCT_SESSION_TAB_WRITES",
     "PRODUCT_SESSION_WIRED_AT_INSPECT_SHA",
     "QMA_SESSION_ID_PREFIX",
+    "RECONNECT_KIND_QUERY",
+    "RECONNECT_KIND_RESYNC",
     "SELECTED_REF_KINDS",
     "TOOL_REGISTRY_REWRITTEN",
     "BoundProductSessionCall",
@@ -76,10 +87,13 @@ __all__ = [
     "ProductSessionContext",
     "ProductSessionProfile",
     "ProductSessionService",
+    "ReconnectSnapshot",
     "SelectedRef",
     "bind_public_call_to_context",
     "claim_product_session_at_inspect_sha",
     "compare_envelope_to_grant",
     "parse_product_session_profile",
+    "refuse_reconnect_replays_intent",
     "refuse_tab_as_product_session",
+    "refuse_tab_mints_session",
 ]

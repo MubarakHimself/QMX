@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 55.3: session context lives in the journal, not a tab
+
+`product_session` is a journaled COMP-QMA-DAEMON projection on the existing daemon journal / CAS (not a sixth store class). Restart/reconnect restores the same bound `product_session.context` by folding `product_session.*` events — tests prove journal restore, not in-process RAM. Two tabs of the same product (`app_instance_id`) share one `psess:`. Closing a tab writes nothing and does not close the session. A new tab does not mint a new `product_session`. Reconnect is a query from `(resume_cursor, cursor_generation)`; compacted history past the cursor yields snapshot/resync with a new `cursor_generation`, never a silent empty replay. Occupancy remains none. Additive CT-40; no new CT.
+
+Touched: COMP-QMA-DAEMON `product_session` journal restore and tab sharing; [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-20 — Story 55.2: granted_ops are GrantRecords; mismatch and revoke refuse
 
 `product_session.granted_ops` stores `grant_id`s, never bare op-id strings. COMP-QMA-DAEMON resolves each id to the host `GrantRecord` persisted beside the product_session projection on the existing daemon sqlite (not a new store class). Envelope `grant_id` / op / effect / contribution / instance that do not match the bound GrantRecord are typed `GRANT_MISMATCH` before execution. Revoke or `expires_at`: already-accepted work may finish; new dispatch is refused. Upgrade cannot widen or retarget without an explicit re-grant that bumps `context_revision`. Manifests request; the host grants. Story 44.3 Tool Registry is not rewritten. Additive CT-40; no new CT.

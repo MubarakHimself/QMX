@@ -1,4 +1,4 @@
-"""``product_session`` journal projection — bound request context (Story 55.1).
+"""``product_session`` journal projection — bound request context (Stories 55.1–55.3).
 
 COMP-QMA-DAEMON owns the sqlite fold over ``product_session.*``. Ids are
 ``psess:``; QMA Session ids remain ``sess:``. ``product_session.context`` is
@@ -11,6 +11,12 @@ from the ledger beside this projection. Envelope mismatch is GRANT_MISMATCH
 before execution. Revoke/expiry refuse new dispatch; already-accepted work
 may finish. Upgrade cannot widen without an explicit re-grant that bumps
 ``context_revision``. Manifests request; the host grants.
+
+Story 55.3: session context lives on the existing daemon journal (CAS), not
+a tab. Restart/reconnect restores the same bound context by folding
+``product_session.*`` events — not in-process RAM. Two tabs of one product
+share one ``psess:``. Closing a tab writes nothing and does not close the
+session. A new tab does not mint a new product_session.
 """
 
 from __future__ import annotations
@@ -81,8 +87,11 @@ __all__ = [
     "PRODUCT_SESSION_STORE",
     "PRODUCT_SESSION_STORE_CLASS",
     "PRODUCT_SESSION_TABLE",
+    "PRODUCT_SESSION_TAB_WRITES",
     "PRODUCT_SESSION_WIRED_AT_INSPECT_SHA",
     "QMA_SESSION_ID_PREFIX",
+    "RECONNECT_KIND_QUERY",
+    "RECONNECT_KIND_RESYNC",
     "SELECTED_REF_KINDS",
     "TOOL_REGISTRY_REWRITTEN",
     "BoundProductSessionCall",
@@ -91,12 +100,15 @@ __all__ = [
     "ProductSessionContext",
     "ProductSessionProfile",
     "ProductSessionService",
+    "ReconnectSnapshot",
     "SelectedRef",
     "bind_public_call_to_context",
     "claim_product_session_at_inspect_sha",
     "compare_envelope_to_grant",
     "parse_product_session_profile",
+    "refuse_reconnect_replays_intent",
     "refuse_tab_as_product_session",
+    "refuse_tab_mints_session",
 ]
 
 
@@ -115,12 +127,26 @@ PRODUCT_SESSION_WIRED_AT_INSPECT_SHA: Final[bool] = False
 PRODUCT_SESSION_SIXTH_COMP_MINTED: Final[bool] = False
 PRODUCT_SESSION_SIXTH_STORE_MINTED: Final[bool] = False
 PRODUCT_SESSION_NEW_CT_MINTED: Final[bool] = False
+PRODUCT_SESSION_TAB_WRITES: Final[bool] = False
 PRODUCT_SESSION_MINT_EVENT: Final[str] = "product_session.minted"
 PRODUCT_SESSION_GRANT_MINTED_EVENT: Final[str] = "product_session.grant_minted"
 PRODUCT_SESSION_GRANT_REVOKED_EVENT: Final[str] = "product_session.grant_revoked"
 PRODUCT_SESSION_GRANT_REGRANTED_EVENT: Final[str] = "product_session.grant_regranted"
 PRODUCT_SESSION_GRANT_ACCEPTED_EVENT: Final[str] = "product_session.grant_accepted"
+PRODUCT_SESSION_CURSOR_RESYNC_EVENT: Final[str] = "product_session.cursor_resync"
+RECONNECT_KIND_QUERY: Final[str] = "query"
+RECONNECT_KIND_RESYNC: Final[str] = "snapshot/resync"
 _HOST_ISSUER: Final[str] = "host"
+_RECONNECT_INTENT_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "command_id",
+        "payload",
+        "payload_hash",
+        "expected_revision",
+        "unacked",
+        "intent",
+    }
+)
 
 PRODUCT_SESSION_CONTEXT_FIELDS: Final[tuple[str, ...]] = (
     "principal",
@@ -213,6 +239,42 @@ def refuse_tab_as_product_session(**extra: object) -> TypedRefusal:
         "reason": "a tab is not a product_session row; sessions own context",
         "tab_writes": False,
         "store": PRODUCT_SESSION_STORE,
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=MappingProxyType(context),
+    )
+
+
+def refuse_tab_mints_session(**extra: object) -> TypedRefusal:
+    """A new tab does not mint a product_session (Story 55.3; FR-WF-33; AD-8)."""
+    context: dict[str, object] = {
+        "field": "tab",
+        "reason": "a new tab does not mint a new product_session; tabs share the journaled session",
+        "tab_mints": False,
+        "tab_writes": False,
+        "session_closed": False,
+        "store": PRODUCT_SESSION_STORE,
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=MappingProxyType(context),
+    )
+
+
+def refuse_reconnect_replays_intent(**extra: object) -> TypedRefusal:
+    """Reconnect is a query and never replays unacked intent (FR-WF-33; AD-8)."""
+    context: dict[str, object] = {
+        "field": "reconnect",
+        "reason": "reconnect is a query from (resume_cursor, cursor_generation) "
+        "and never replays unacked intent",
+        "replays_unacked_intent": False,
+        "is_query": True,
+        "tab_writes": False,
     }
     context.update(extra)
     return TypedRefusal(
@@ -636,6 +698,70 @@ class BoundProductSessionCall:
         object.__setattr__(self, "is_authority", False)
 
 
+@dataclass(frozen=True, slots=True)
+class ReconnectSnapshot:
+    """Reconnect query result. Never replays unacked intent (FR-WF-33)."""
+
+    session: ProductSession
+    context: ProductSessionContext
+    resume_cursor: int
+    cursor_generation: int
+    kind: str
+    replays_unacked_intent: bool = False
+    writes: bool = False
+    tab_writes: bool = False
+    is_query: bool = True
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "replays_unacked_intent", False)
+        object.__setattr__(self, "tab_writes", False)
+        if self.kind == RECONNECT_KIND_QUERY:
+            object.__setattr__(self, "writes", False)
+            object.__setattr__(self, "is_query", True)
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "context": dict(self.context.to_payload()),
+                "cursor_generation": self.cursor_generation,
+                "is_query": self.is_query,
+                "kind": self.kind,
+                "product_session_id": self.session.product_session_id,
+                "replays_unacked_intent": False,
+                "resume_cursor": self.resume_cursor,
+                "tab_writes": False,
+                "writes": self.writes,
+            }
+        )
+
+
+def _is_session_payload(payload: Mapping[str, object]) -> bool:
+    return (
+        "product_session_id" in payload
+        and "context" in payload
+        and "profile" in payload
+        and "app_instance_id" in payload
+    )
+
+
+def _parse_tab_id(value: object) -> Result[str]:
+    token = _require_str("tab_id", value)
+    if is_refusal(token):
+        return token
+    raw = token.value
+    folded = raw.casefold()
+    if raw.startswith(PRODUCT_SESSION_ID_PREFIX) or folded.startswith(QMA_SESSION_ID_PREFIX):
+        return refuse_tab_as_product_session(given=raw, field="tab_id")
+    return Ok(raw)
+
+
+def _event_int(row: Mapping[str, object], field: str) -> int | None:
+    raw = row.get(field)
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        return None
+    return raw
+
+
 def _call_field(call: Mapping[str, object], field: str) -> object:
     if field in call:
         return call[field]
@@ -929,6 +1055,7 @@ class ProductSessionService:
     """Mint and query the product_session journal projection (Story 55.1).
 
     Story 55.2 binds ``granted_ops`` to host GrantRecords on the same sqlite.
+    Story 55.3 restores bound context from the journal, not RAM or a tab.
     """
 
     journal: AuthoritativeJournal | None = None
@@ -938,9 +1065,16 @@ class ProductSessionService:
     _attachments: dict[str, tuple[str, ...]] = field(
         default_factory=dict[str, tuple[str, ...]], init=False
     )
+    _tabs: dict[str, tuple[str, ...]] = field(
+        default_factory=dict[str, tuple[str, ...]], init=False
+    )
+    _tab_index: dict[str, str] = field(default_factory=dict[str, str], init=False)
+    _by_instance: dict[str, str] = field(default_factory=dict[str, str], init=False)
     _sqlite_store: ProductSessionSqliteStore | None = field(default=None, init=False)
     _grant_store: GrantSqliteStore | None = field(default=None, init=False)
     _grants_hydrated: bool = field(default=False, init=False)
+    _compacted_through: int = field(default=0, init=False)
+    _restored_from_journal: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.sqlite is not None:
@@ -970,6 +1104,18 @@ class ProductSessionService:
     @property
     def existed_at_inspect_sha(self) -> bool:
         return PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA
+
+    @property
+    def tab_writes(self) -> bool:
+        return PRODUCT_SESSION_TAB_WRITES
+
+    @property
+    def restored_from_journal(self) -> bool:
+        return self._restored_from_journal
+
+    def _index(self, session: ProductSession) -> None:
+        self._rows[session.product_session_id] = session
+        self._by_instance[session.app_instance_id] = session.product_session_id
 
     def _ensure_declared(self) -> Result[None]:
         journal = self.journal
@@ -1100,6 +1246,18 @@ class ProductSessionService:
                 bound=existing.profile.value,
                 given=parsed_profile.value,
             )
+        owner = self._by_instance.get(parsed_instance.value)
+        if owner is None:
+            for row in self._rows.values():
+                if row.app_instance_id == parsed_instance.value:
+                    owner = row.product_session_id
+                    break
+        if owner is not None and owner != session_id.value:
+            return refuse_tab_mints_session(
+                app_instance_id=parsed_instance.value,
+                bound=owner,
+                given=session_id.value,
+            )
         context = ProductSessionContext(
             principal=parsed_principal.value,
             occupancy=occupancy_parsed.value,
@@ -1147,14 +1305,14 @@ class ProductSessionService:
                 granted_ops=session.granted_ops,
                 selected_refs=session.selected_refs,
                 account_scope=session.account_scope,
-                resume_cursor=session.resume_cursor,
+                resume_cursor=journal_seq,
                 cursor_generation=session.cursor_generation,
                 journal_seq=journal_seq,
                 recorded_at=recorded_at,
             )
         if self._sqlite_store is not None:
             self._sqlite_store.put(session, journal_seq=journal_seq, recorded_at=recorded_at)
-        self._rows[session.product_session_id] = session
+        self._index(session)
         return Ok(session)
 
     def get(self, product_session_id: object) -> Result[ProductSession]:
@@ -1169,7 +1327,7 @@ class ProductSessionService:
             if is_refusal(loaded):
                 return loaded
             if loaded.value is not None:
-                self._rows[parsed.value] = loaded.value
+                self._index(loaded.value)
                 return Ok(loaded.value)
         return _invalid(
             "product_session_id",
@@ -1213,6 +1371,252 @@ class ProductSessionService:
                 "current sess: attachment is a query, not a durable field",
             )
         return Ok(current)
+
+    def attached_tabs(self, product_session_id: object) -> Result[tuple[str, ...]]:
+        """Current UI tabs are a query. Tabs are not durable and write nothing."""
+        parsed = _parse_psess_id(product_session_id)
+        if is_refusal(parsed):
+            return parsed
+        loaded = self.get(parsed.value)
+        if is_refusal(loaded):
+            return loaded
+        payload = loaded.value.to_payload()
+        stolen = sorted(key for key in payload if key.casefold() in _TAB_FIELD_TOKENS)
+        if stolen:
+            return refuse_tab_as_product_session(fields=stolen)
+        return Ok(self._tabs.get(parsed.value, ()))
+
+    def attach_tab(
+        self,
+        product_session_id: object,
+        tab_id: object,
+    ) -> Result[ProductSession]:
+        """Attach a UI tab to an existing journaled session. Writes nothing."""
+        parsed = _parse_psess_id(product_session_id)
+        if is_refusal(parsed):
+            return parsed
+        loaded = self.get(parsed.value)
+        if is_refusal(loaded):
+            return loaded
+        tab = _parse_tab_id(tab_id)
+        if is_refusal(tab):
+            return tab
+        previous = self._tab_index.get(tab.value)
+        if previous is not None and previous != parsed.value:
+            current = tuple(item for item in self._tabs.get(previous, ()) if item != tab.value)
+            if current:
+                self._tabs[previous] = current
+            else:
+                self._tabs.pop(previous, None)
+        attached = self._tabs.get(parsed.value, ())
+        if tab.value not in attached:
+            attached = (*attached, tab.value)
+        self._tabs[parsed.value] = attached
+        self._tab_index[tab.value] = parsed.value
+        return Ok(loaded.value)
+
+    def close_tab(
+        self,
+        tab_id: object,
+        *,
+        product_session_id: object | None = None,
+    ) -> Result[ProductSession]:
+        """Close a tab. The product_session stays; nothing durable is written."""
+        tab = _parse_tab_id(tab_id)
+        if is_refusal(tab):
+            return tab
+        owner = self._tab_index.get(tab.value)
+        if product_session_id is not None:
+            parsed = _parse_psess_id(product_session_id)
+            if is_refusal(parsed):
+                return parsed
+            if owner is not None and owner != parsed.value:
+                return refuse_tab_as_product_session(
+                    given=tab.value,
+                    bound=owner,
+                    field="tab_id",
+                )
+            owner = parsed.value
+        if owner is None:
+            return _invalid("tab_id", "tab is not attached to a product_session", given=tab.value)
+        loaded = self.get(owner)
+        if is_refusal(loaded):
+            return loaded
+        remaining = tuple(item for item in self._tabs.get(owner, ()) if item != tab.value)
+        if remaining:
+            self._tabs[owner] = remaining
+        else:
+            self._tabs.pop(owner, None)
+        self._tab_index.pop(tab.value, None)
+        return Ok(loaded.value)
+
+    def session_for_instance(self, app_instance_id: object) -> Result[ProductSession]:
+        """The one product_session bound to an installed app instance."""
+        parsed = _require_str("app_instance_id", app_instance_id)
+        if is_refusal(parsed):
+            return parsed
+        token = self._by_instance.get(parsed.value)
+        if token is None:
+            for row in self._rows.values():
+                if row.app_instance_id == parsed.value:
+                    self._by_instance[parsed.value] = row.product_session_id
+                    return Ok(row)
+            return refuse_tab_mints_session(app_instance_id=parsed.value)
+        return self.get(token)
+
+    def open_tab(
+        self,
+        *,
+        tab_id: object,
+        app_instance_id: object | None = None,
+        product_session_id: object | None = None,
+    ) -> Result[ProductSession]:
+        """Open a tab onto the existing product session. Never mints."""
+        if product_session_id is not None:
+            loaded = self.get(product_session_id)
+            if is_refusal(loaded):
+                return loaded
+            if app_instance_id is not None:
+                instance = _require_str("app_instance_id", app_instance_id)
+                if is_refusal(instance):
+                    return instance
+                if instance.value != loaded.value.app_instance_id:
+                    return EnvelopeMismatch.of(
+                        field="app_instance_id",
+                        bound=loaded.value.app_instance_id,
+                        given=instance.value,
+                        cause="stale",
+                    )
+            return self.attach_tab(loaded.value.product_session_id, tab_id)
+        if app_instance_id is None:
+            return refuse_tab_mints_session(field="app_instance_id")
+        existing = self.session_for_instance(app_instance_id)
+        if is_refusal(existing):
+            return existing
+        return self.attach_tab(existing.value.product_session_id, tab_id)
+
+    def restore_from_journal(self) -> Result[tuple[ProductSession, ...]]:
+        """Rebuild product_session rows from journal events, not RAM."""
+        if self.journal is None:
+            return _invalid(
+                "journal",
+                "journal restore requires the daemon journal (Story 55.3; AD-8)",
+            )
+        declared = self._ensure_declared()
+        if is_refusal(declared):
+            return declared
+        rows = self.journal.read_all()
+        if is_refusal(rows):
+            return rows
+        folded: dict[str, ProductSession] = {}
+        for raw in rows.value:
+            event = raw.get("event")
+            if not isinstance(event, str) or not event.startswith("product_session."):
+                continue
+            payload = raw.get("payload")
+            if not isinstance(payload, Mapping):
+                continue
+            body = cast("Mapping[str, object]", payload)
+            if not _is_session_payload(body):
+                continue
+            parsed = parse_product_session(dict(body))
+            if is_refusal(parsed):
+                return parsed
+            seq = _event_int(raw, "journal_seq")
+            recorded = _event_int(raw, "recorded_at")
+            resume = seq if seq is not None else parsed.value.resume_cursor
+            session = replace(
+                parsed.value,
+                journal_seq=seq,
+                recorded_at=recorded,
+                resume_cursor=resume,
+            )
+            folded[session.product_session_id] = session
+        self._rows = folded
+        self._by_instance = {
+            session.app_instance_id: session.product_session_id for session in folded.values()
+        }
+        self._restored_from_journal = True
+        if self._sqlite_store is not None:
+            for session in folded.values():
+                seq = session.journal_seq if session.journal_seq is not None else 0
+                recorded = session.recorded_at if session.recorded_at is not None else 0
+                self._sqlite_store.put(session, journal_seq=seq, recorded_at=recorded)
+        return Ok(tuple(folded.values()))
+
+    def compact_history(self, through_seq: object) -> Result[int]:
+        """Mark journal history compacted through ``through_seq`` (host-side)."""
+        parsed = _require_int("through_seq", through_seq, minimum=0)
+        if is_refusal(parsed):
+            return parsed
+        self._compacted_through = parsed.value
+        return Ok(parsed.value)
+
+    def reconnect(
+        self,
+        product_session_id: object,
+        *,
+        resume_cursor: object,
+        cursor_generation: object,
+        **extra: object,
+    ) -> Result[ReconnectSnapshot]:
+        """Query bound context from ``(resume_cursor, cursor_generation)``.
+
+        Never replays unacked intent. Tab fields write nothing. Compacted
+        history past the cursor yields snapshot/resync with a new generation.
+        """
+        stolen = sorted(key for key in extra if key.casefold() in _TAB_FIELD_TOKENS)
+        if stolen:
+            return refuse_tab_as_product_session(fields=stolen)
+        intent = sorted(key for key in extra if key.casefold() in _RECONNECT_INTENT_KEYS)
+        if intent or extra:
+            return refuse_reconnect_replays_intent(
+                fields=intent or sorted(extra),
+            )
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        cursor = _require_int("resume_cursor", resume_cursor, minimum=0)
+        if is_refusal(cursor):
+            return cursor
+        generation = _require_int("cursor_generation", cursor_generation, minimum=1)
+        if is_refusal(generation):
+            return generation
+        session = loaded.value
+        compacted = self._compacted_through > 0 and cursor.value <= self._compacted_through
+        stale_generation = generation.value != session.cursor_generation
+        if compacted or stale_generation:
+            bumped = session.cursor_generation + 1
+            next_cursor = session.resume_cursor
+            rewritten = replace(session, cursor_generation=bumped, resume_cursor=next_cursor)
+            persisted = self._persist_session(
+                rewritten,
+                event=PRODUCT_SESSION_CURSOR_RESYNC_EVENT,
+                payload=dict(rewritten.to_payload()),
+            )
+            if is_refusal(persisted):
+                return persisted
+            live = persisted.value
+            return Ok(
+                ReconnectSnapshot(
+                    session=live,
+                    context=live.context,
+                    resume_cursor=live.resume_cursor,
+                    cursor_generation=live.cursor_generation,
+                    kind=RECONNECT_KIND_RESYNC,
+                    writes=True,
+                    is_query=True,
+                )
+            )
+        return Ok(
+            ReconnectSnapshot(
+                session=session,
+                context=session.context,
+                resume_cursor=session.resume_cursor,
+                cursor_generation=session.cursor_generation,
+                kind=RECONNECT_KIND_QUERY,
+            )
+        )
 
     def bind_public_call(
         self,
@@ -1292,17 +1696,26 @@ class ProductSessionService:
         session: ProductSession,
         *,
         event: str,
-        payload: Mapping[str, object],
+        payload: Mapping[str, object] | None = None,
         scope_path: object = (),
     ) -> Result[ProductSession]:
-        stamped = self._append_event(event, payload, scope_path=scope_path)
+        if payload is not None and _is_session_payload(payload):
+            body = dict(payload)
+        else:
+            body = dict(session.to_payload())
+        stamped = self._append_event(event, body, scope_path=scope_path)
         if is_refusal(stamped):
             return stamped
         journal_seq, recorded_at = stamped.value
-        written = replace(session, journal_seq=journal_seq, recorded_at=recorded_at)
+        written = replace(
+            session,
+            journal_seq=journal_seq,
+            recorded_at=recorded_at,
+            resume_cursor=journal_seq if journal_seq else session.resume_cursor,
+        )
         if self._sqlite_store is not None:
             self._sqlite_store.put(written, journal_seq=journal_seq, recorded_at=recorded_at)
-        self._rows[written.product_session_id] = written
+        self._index(written)
         return Ok(written)
 
     def resolve_grant(
