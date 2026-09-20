@@ -5,36 +5,68 @@ COMP-QMA-DAEMON owns the sqlite fold over ``product_session.*``. Ids are
 the bound request context a public call must match. Occupancy stays none
 until a live-adjacent story. A tab is not this row. No sixth COMP, no new
 CT, no new sqlite class. Absent at inspect SHA 270e992 (DEC-0450; GAP-0093).
+
+Story 55.2: ``granted_ops`` stores grant_ids. The host resolves GrantRecord
+from the ledger beside this projection. Envelope mismatch is GRANT_MISMATCH
+before execution. Revoke/expiry refuse new dispatch; already-accepted work
+may finish. Upgrade cannot widen without an explicit re-grant that bumps
+``context_revision``. Manifests request; the host grants.
 """
 
 from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, cast
 
 from qma.core.ontology.records import Profile, Session
-from qma.core.refusals.variants import EnvelopeMismatch
+from qma.core.operations.descriptor import OperationDescriptor
+from qma.core.refusals.variants import EnvelopeMismatch, GrantMismatch, GrantWidenRefused
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.stores import StoreClass
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
+from qma.daemon.sessions.grant_binding import (
+    GRANT_SIXTH_STORE_MINTED,
+    TOOL_REGISTRY_REWRITTEN,
+    BoundSessionGrant,
+    GrantSqliteStore,
+    compare_envelope_to_grant,
+    moment_for_transport,
+    require_session_grant_id,
+)
 from qma.wire.envelope import SCOPE_KIND_ORDER
-from qma.wire.grant_record import parse_granted_ops
+from qma.wire.grant_record import (
+    AcceptedGrantWork,
+    GrantRecord,
+    GrantRevocation,
+    HostGrantLedger,
+    RegrantResult,
+    parse_granted_ops,
+    refuse_in_place_upgrade,
+    refuse_manifest_grant,
+)
 from qma.wire.invocation_envelope import (
+    AuthoritativeStores,
+    BoundInvocation,
     ContributionBinding,
+    ContributionRecord,
+    InstanceRecord,
     InvocationEnvelope,
+    dispatch_public_call,
+    parse_invocation_envelope,
     parse_utc_iso_z,
 )
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
+    "GRANT_SIXTH_STORE_MINTED",
     "PRODUCT_SESSION_CONTEXT_FIELDS",
     "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
     "PRODUCT_SESSION_FOLD_ID",
@@ -52,7 +84,9 @@ __all__ = [
     "PRODUCT_SESSION_WIRED_AT_INSPECT_SHA",
     "QMA_SESSION_ID_PREFIX",
     "SELECTED_REF_KINDS",
+    "TOOL_REGISTRY_REWRITTEN",
     "BoundProductSessionCall",
+    "BoundSessionGrant",
     "ProductSession",
     "ProductSessionContext",
     "ProductSessionProfile",
@@ -60,6 +94,7 @@ __all__ = [
     "SelectedRef",
     "bind_public_call_to_context",
     "claim_product_session_at_inspect_sha",
+    "compare_envelope_to_grant",
     "parse_product_session_profile",
     "refuse_tab_as_product_session",
 ]
@@ -81,6 +116,11 @@ PRODUCT_SESSION_SIXTH_COMP_MINTED: Final[bool] = False
 PRODUCT_SESSION_SIXTH_STORE_MINTED: Final[bool] = False
 PRODUCT_SESSION_NEW_CT_MINTED: Final[bool] = False
 PRODUCT_SESSION_MINT_EVENT: Final[str] = "product_session.minted"
+PRODUCT_SESSION_GRANT_MINTED_EVENT: Final[str] = "product_session.grant_minted"
+PRODUCT_SESSION_GRANT_REVOKED_EVENT: Final[str] = "product_session.grant_revoked"
+PRODUCT_SESSION_GRANT_REGRANTED_EVENT: Final[str] = "product_session.grant_regranted"
+PRODUCT_SESSION_GRANT_ACCEPTED_EVENT: Final[str] = "product_session.grant_accepted"
+_HOST_ISSUER: Final[str] = "host"
 
 PRODUCT_SESSION_CONTEXT_FIELDS: Final[tuple[str, ...]] = (
     "principal",
@@ -886,19 +926,26 @@ def parse_product_session(value: object) -> Result[ProductSession]:
 
 @dataclass
 class ProductSessionService:
-    """Mint and query the product_session journal projection (Story 55.1)."""
+    """Mint and query the product_session journal projection (Story 55.1).
+
+    Story 55.2 binds ``granted_ops`` to host GrantRecords on the same sqlite.
+    """
 
     journal: AuthoritativeJournal | None = None
     sqlite: SingleSqliteWriter | None = None
+    ledger: HostGrantLedger = field(default_factory=HostGrantLedger)
     _rows: dict[str, ProductSession] = field(default_factory=dict[str, ProductSession], init=False)
     _attachments: dict[str, tuple[str, ...]] = field(
         default_factory=dict[str, tuple[str, ...]], init=False
     )
     _sqlite_store: ProductSessionSqliteStore | None = field(default=None, init=False)
+    _grant_store: GrantSqliteStore | None = field(default=None, init=False)
+    _grants_hydrated: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.sqlite is not None:
             self._sqlite_store = ProductSessionSqliteStore(self.sqlite)
+            self._grant_store = GrantSqliteStore(self.sqlite)
 
     @property
     def occupancy(self) -> str:
@@ -1183,5 +1230,432 @@ class ProductSessionService:
                 session=loaded.value,
                 context=loaded.value.context,
                 call=compared.value,
+            )
+        )
+
+    def _hydrate_grants(self) -> Result[None]:
+        if self._grants_hydrated:
+            return Ok(None)
+        self._grants_hydrated = True
+        store = self._grant_store
+        if store is None or self.ledger.grants:
+            return Ok(None)
+        grants = store.list_grants()
+        if is_refusal(grants):
+            return grants
+        for record in grants.value:
+            imported = self.ledger.import_grant(record)
+            if is_refusal(imported):
+                return imported
+        revocations = store.list_revocations()
+        if is_refusal(revocations):
+            return revocations
+        for revocation in revocations.value:
+            imported_rev = self.ledger.import_revocation(revocation)
+            if is_refusal(imported_rev):
+                return imported_rev
+        accepted = store.list_accepted()
+        if is_refusal(accepted):
+            return accepted
+        for invocation, grant_id in accepted.value:
+            imported_acc = self.ledger.import_accepted(
+                grant_id=grant_id,
+                logical_invocation_id=invocation,
+            )
+            if is_refusal(imported_acc):
+                return imported_acc
+        return Ok(None)
+
+    def _append_event(
+        self,
+        event: str,
+        payload: Mapping[str, object],
+        *,
+        scope_path: object = (),
+    ) -> Result[tuple[int, int]]:
+        declared = self._ensure_declared()
+        if is_refusal(declared):
+            return declared
+        if self.journal is None:
+            return Ok((0, 0))
+        appended = self.journal.append_event(
+            event,
+            scope_path=scope_path,
+            payload=dict(payload),
+        )
+        if is_refusal(appended):
+            return appended
+        return Ok((appended.value.record.journal_seq, appended.value.record.recorded_at))
+
+    def _persist_session(
+        self,
+        session: ProductSession,
+        *,
+        event: str,
+        payload: Mapping[str, object],
+        scope_path: object = (),
+    ) -> Result[ProductSession]:
+        stamped = self._append_event(event, payload, scope_path=scope_path)
+        if is_refusal(stamped):
+            return stamped
+        journal_seq, recorded_at = stamped.value
+        written = replace(session, journal_seq=journal_seq, recorded_at=recorded_at)
+        if self._sqlite_store is not None:
+            self._sqlite_store.put(written, journal_seq=journal_seq, recorded_at=recorded_at)
+        self._rows[written.product_session_id] = written
+        return Ok(written)
+
+    def resolve_grant(
+        self,
+        product_session_id: object,
+        grant_id: object,
+    ) -> Result[GrantRecord]:
+        """Resolve a session grant_id to the host GrantRecord."""
+        hydrated = self._hydrate_grants()
+        if is_refusal(hydrated):
+            return hydrated
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        token = require_session_grant_id(loaded.value.granted_ops, grant_id)
+        if is_refusal(token):
+            return token
+        record = self.ledger.grants.get(token.value)
+        if record is None:
+            return GrantMismatch.of(field="grant_id", grant_id=token.value, live=False)
+        if record.audience != loaded.value.product_session_id:
+            return GrantMismatch.of(
+                field="audience",
+                grant_id=token.value,
+                bound=loaded.value.product_session_id,
+                granted=record.audience,
+            )
+        return Ok(record)
+
+    def granted_records(
+        self,
+        product_session_id: object,
+    ) -> Result[tuple[GrantRecord, ...]]:
+        """Host-resolved GrantRecords for ``product_session.granted_ops``."""
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        collected: list[GrantRecord] = []
+        for token in loaded.value.granted_ops:
+            resolved = self.resolve_grant(loaded.value.product_session_id, token)
+            if is_refusal(resolved):
+                return resolved
+            collected.append(resolved.value)
+        return Ok(tuple(collected))
+
+    def host_grant(
+        self,
+        product_session_id: object,
+        *,
+        issuer: object = _HOST_ISSUER,
+        grant_id: object | None = None,
+        principal: object | None = None,
+        audience: object | None = None,
+        contribution: object | None = None,
+        instance_id: object | None = None,
+        config_revision: object | None = None,
+        op_id: object,
+        op_version: object,
+        effect_class: object,
+        parameter_ceiling: object,
+        expires_at: object,
+        account_scope: object | None = None,
+        scope_path: object = (),
+    ) -> Result[GrantRecord]:
+        """Host-mint a GrantRecord and store its grant_id on granted_ops."""
+        if issuer != _HOST_ISSUER:
+            return refuse_manifest_grant(issuer=issuer)
+        hydrated = self._hydrate_grants()
+        if is_refusal(hydrated):
+            return hydrated
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        session = loaded.value
+        if audience is None:
+            audience = session.product_session_id
+        elif audience != session.product_session_id:
+            return GrantMismatch.of(
+                field="audience",
+                grant_id=str(grant_id) if grant_id is not None else "",
+                bound=session.product_session_id,
+                granted=audience,
+            )
+        minted = self.ledger.mint(
+            issuer=_HOST_ISSUER,
+            grant_id=grant_id,
+            principal=session.principal if principal is None else principal,
+            audience=audience,
+            contribution=(
+                dict(session.context.contribution.to_payload())
+                if contribution is None
+                else contribution
+            ),
+            instance_id=session.context.instance_id if instance_id is None else instance_id,
+            config_revision=(
+                session.context.config_revision if config_revision is None else config_revision
+            ),
+            op_id=op_id,
+            op_version=op_version,
+            effect_class=effect_class,
+            parameter_ceiling=parameter_ceiling,
+            expires_at=expires_at,
+            account_scope=(session.account_scope if account_scope is None else account_scope),
+        )
+        if is_refusal(minted):
+            return minted
+        record = minted.value
+        stamped = self._append_event(
+            PRODUCT_SESSION_GRANT_MINTED_EVENT,
+            dict(record.to_payload()),
+            scope_path=scope_path,
+        )
+        if is_refusal(stamped):
+            return stamped
+        journal_seq, recorded_at = stamped.value
+        if self._grant_store is not None:
+            self._grant_store.put_grant(record, journal_seq=journal_seq, recorded_at=recorded_at)
+        if record.grant_id not in session.granted_ops:
+            session = replace(session, granted_ops=(*session.granted_ops, record.grant_id))
+            persisted = self._persist_session(
+                session,
+                event=PRODUCT_SESSION_GRANT_MINTED_EVENT,
+                payload=dict(session.to_payload()),
+                scope_path=scope_path,
+            )
+            if is_refusal(persisted):
+                return persisted
+        return Ok(record)
+
+    def accept_work(
+        self,
+        product_session_id: object,
+        *,
+        grant_id: object,
+        logical_invocation_id: object,
+        now: object,
+        scope_path: object = (),
+    ) -> Result[AcceptedGrantWork]:
+        """Accept work under a live session grant. Later revoke does not unwind it."""
+        resolved = self.resolve_grant(product_session_id, grant_id)
+        if is_refusal(resolved):
+            return resolved
+        accepted = self.ledger.accept(
+            grant_id=resolved.value.grant_id,
+            logical_invocation_id=logical_invocation_id,
+            now=now,
+        )
+        if is_refusal(accepted):
+            return accepted
+        work = accepted.value
+        stamped = self._append_event(
+            PRODUCT_SESSION_GRANT_ACCEPTED_EVENT,
+            {
+                "grant_id": work.grant_id,
+                "logical_invocation_id": work.logical_invocation_id,
+                "moment": work.moment.value,
+            },
+            scope_path=scope_path,
+        )
+        if is_refusal(stamped):
+            return stamped
+        if self._grant_store is not None:
+            self._grant_store.put_accepted(
+                logical_invocation_id=work.logical_invocation_id,
+                grant_id=work.grant_id,
+            )
+        return Ok(work)
+
+    def revoke_grant(
+        self,
+        product_session_id: object,
+        *,
+        grant_id: object,
+        principal: object,
+        reason: object,
+        revoked_at: object,
+        scope_path: object = (),
+    ) -> Result[GrantRevocation]:
+        """Append GrantRevocation. Minted GrantRecord bytes and granted_ops stay."""
+        resolved = self.resolve_grant(product_session_id, grant_id)
+        if is_refusal(resolved):
+            return resolved
+        revoked = self.ledger.revoke(
+            grant_id=resolved.value.grant_id,
+            principal=principal,
+            reason=reason,
+            revoked_at=revoked_at,
+        )
+        if is_refusal(revoked):
+            return revoked
+        revocation = revoked.value
+        stamped = self._append_event(
+            PRODUCT_SESSION_GRANT_REVOKED_EVENT,
+            dict(revocation.to_payload()),
+            scope_path=scope_path,
+        )
+        if is_refusal(stamped):
+            return stamped
+        journal_seq, recorded_at = stamped.value
+        if self._grant_store is not None:
+            self._grant_store.append_revocation(
+                revocation,
+                journal_seq=journal_seq,
+                recorded_at=recorded_at,
+            )
+        return Ok(revocation)
+
+    def apply_upgrade(
+        self,
+        product_session_id: object,
+        grant_id: object,
+        **changes: object,
+    ) -> GrantWidenRefused | Result[GrantRecord]:
+        """In-place upgrade/widen/retarget is refused. Re-grant instead."""
+        resolved = self.resolve_grant(product_session_id, grant_id)
+        if is_refusal(resolved):
+            return resolved
+        token = resolved.value.grant_id
+        return refuse_in_place_upgrade(grant_id=token, changes=sorted(changes), in_place=True)
+
+    def regrant(
+        self,
+        product_session_id: object,
+        previous_grant_id: object,
+        *,
+        context_revision: object,
+        issuer: object = _HOST_ISSUER,
+        scope_path: object = (),
+        **changes: object,
+    ) -> Result[RegrantResult]:
+        """Mint a new GrantRecord and bump product_session.context_revision."""
+        if issuer != _HOST_ISSUER:
+            return refuse_manifest_grant(issuer=issuer)
+        resolved = self.resolve_grant(product_session_id, previous_grant_id)
+        if is_refusal(resolved):
+            return resolved
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        session = loaded.value
+        regranted = self.ledger.regrant(
+            resolved.value.grant_id,
+            context_revision=context_revision,
+            from_revision=session.context_revision,
+            issuer=issuer,
+            **changes,
+        )
+        if is_refusal(regranted):
+            return regranted
+        result = regranted.value
+        stamped = self._append_event(
+            PRODUCT_SESSION_GRANT_REGRANTED_EVENT,
+            dict(result.to_payload()),
+            scope_path=scope_path,
+        )
+        if is_refusal(stamped):
+            return stamped
+        journal_seq, recorded_at = stamped.value
+        if self._grant_store is not None:
+            self._grant_store.put_grant(
+                result.grant,
+                journal_seq=journal_seq,
+                recorded_at=recorded_at,
+            )
+        ops = session.granted_ops
+        if result.grant.grant_id not in ops:
+            ops = (*ops, result.grant.grant_id)
+        persisted = self._persist_session(
+            replace(session, granted_ops=ops, context_revision=result.context_revision),
+            event=PRODUCT_SESSION_GRANT_REGRANTED_EVENT,
+            payload=dict(result.to_payload()),
+            scope_path=scope_path,
+        )
+        if is_refusal(persisted):
+            return persisted
+        return Ok(result)
+
+    def dispatch_public_call(
+        self,
+        product_session_id: object,
+        *,
+        transport: object,
+        envelope: object,
+        payload: object,
+        now: object,
+        occupancy: object = PRODUCT_SESSION_OCCUPANCY,
+        principal: object | None = None,
+        as_of: object | None = None,
+        contributions: Mapping[tuple[str, str], ContributionRecord] | None = None,
+        descriptors: Mapping[tuple[str, int], OperationDescriptor] | None = None,
+        instances: Mapping[tuple[str, int], InstanceRecord] | None = None,
+        execute: Callable[[BoundInvocation], None] | None = None,
+        parent_permissions: object | None = None,
+    ) -> Result[BoundSessionGrant]:
+        """Bind context, resolve GrantRecord, GRANT_MISMATCH / revoke refuse."""
+        parsed = parse_invocation_envelope(envelope)
+        if is_refusal(parsed):
+            return parsed
+        env = parsed.value
+        loaded = self.get(product_session_id)
+        if is_refusal(loaded):
+            return loaded
+        session = loaded.value
+        call: dict[str, object] = {
+            "as_of": session.context.as_of if as_of is None else as_of,
+            "envelope": env,
+            "occupancy": occupancy,
+            "principal": session.principal if principal is None else principal,
+        }
+        if session.account_scope is not None:
+            call["account_scope"] = session.account_scope
+        bound = self.bind_public_call(session.product_session_id, call)
+        if is_refusal(bound):
+            return bound
+        resolved = self.resolve_grant(session.product_session_id, env.grant_id)
+        if is_refusal(resolved):
+            return resolved
+        compared = compare_envelope_to_grant(env, resolved.value)
+        if is_refusal(compared):
+            return compared
+        evaluated = self.ledger.evaluate(
+            grant_id=compared.value.grant_id,
+            moment=moment_for_transport(transport),
+            now=now,
+            logical_invocation_id=env.logical_invocation_id,
+            parent_logical_invocation_id=env.parent_logical_invocation_id,
+        )
+        if is_refusal(evaluated):
+            return evaluated
+        invocation: BoundInvocation | None = None
+        if contributions is not None and descriptors is not None and instances is not None:
+            stores = AuthoritativeStores(
+                contributions=contributions,
+                descriptors=descriptors,
+                grants={evaluated.value.grant_id: evaluated.value},
+                instances=instances,
+            )
+            dispatched = dispatch_public_call(
+                transport=transport,
+                envelope=env,
+                payload=payload,
+                stores=stores,
+                execute=execute,
+                parent_permissions=parent_permissions,
+            )
+            if is_refusal(dispatched):
+                return dispatched
+            invocation = dispatched.value
+        return Ok(
+            BoundSessionGrant(
+                grant=evaluated.value,
+                envelope=env,
+                grant_ids=session.granted_ops,
+                invocation=invocation,
             )
         )

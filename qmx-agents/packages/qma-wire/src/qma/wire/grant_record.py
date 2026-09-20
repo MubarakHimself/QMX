@@ -418,6 +418,13 @@ def _parse_moment(value: object) -> Result[GrantEvaluationMoment]:
         return _invalid("moment", str(exc), given=repr(value))
 
 
+def _serial_from_grant_id(grant_id: str) -> int | None:
+    rest = grant_id[len(GRANT_ID_PREFIX) :] if grant_id.startswith(GRANT_ID_PREFIX) else ""
+    if rest.isdigit():
+        return int(rest)
+    return None
+
+
 def _inactive_reason(*, revoked: bool, expired: bool) -> str:
     if revoked and expired:
         return "revoked"
@@ -431,8 +438,8 @@ class HostGrantLedger:
     """In-memory host grant authority. Manifests request; the host grants.
 
     GrantRecord rows are immutable. Revocations append. Persistence beside
-    product_session is Epic 55 — this ledger does not mint those rows or a
-    new sqlite class.
+    product_session is COMP-QMA-DAEMON (Story 55.2) — this ledger does not
+    mint a new sqlite class.
     """
 
     _grants: dict[str, GrantRecord] = field(default_factory=dict[str, GrantRecord])
@@ -458,8 +465,76 @@ class HostGrantLedger:
         return self._minted_bytes.get(grant_id)
 
     def granted_ops(self) -> Result[ProductSessionGrantedOps]:
-        """grant_ids for a later product_session.granted_ops array (Epic 55)."""
+        """grant_ids for product_session.granted_ops (Story 55.2)."""
         return ProductSessionGrantedOps.try_create(tuple(self._grants))
+
+    def import_grant(self, record: GrantRecord) -> Result[GrantRecord]:
+        """Hydrate an already-minted GrantRecord. Does not re-issue."""
+        if record.grant_id in self._grants:
+            return _invalid(
+                "grant_id",
+                "grant_id is unique; minted GrantRecord bytes do not change",
+                grant_id=record.grant_id,
+            )
+        minted = record.canonical_bytes()
+        if is_refusal(minted):
+            return minted
+        self._grants[record.grant_id] = record
+        self._minted_bytes[record.grant_id] = minted.value
+        serial = _serial_from_grant_id(record.grant_id)
+        if serial is not None and serial >= self._next_serial:
+            self._next_serial = serial + 1
+        return Ok(record)
+
+    def import_revocation(self, revocation: GrantRevocation) -> Result[GrantRevocation]:
+        """Hydrate an append-only GrantRevocation. Minted bytes stay."""
+        record = self._grants.get(revocation.grant_id)
+        if record is None:
+            return _invalid(
+                "grant_id",
+                "grant_id is not a minted GrantRecord",
+                grant_id=revocation.grant_id,
+            )
+        self._revocations.append(revocation)
+        current = record.canonical_bytes()
+        if is_refusal(current):
+            return current
+        minted = self._minted_bytes[revocation.grant_id]
+        if current.value != minted:
+            return _invalid(
+                "grant_id",
+                "minted GrantRecord bytes must not change on revocation",
+                grant_id=revocation.grant_id,
+            )
+        return Ok(revocation)
+
+    def import_accepted(
+        self,
+        *,
+        grant_id: object,
+        logical_invocation_id: object,
+    ) -> Result[AcceptedGrantWork]:
+        """Hydrate already-accepted work. Does not re-evaluate liveness."""
+        gid = _require_str("grant_id", grant_id)
+        if is_refusal(gid):
+            return gid
+        if gid.value not in self._grants:
+            return _invalid(
+                "grant_id",
+                "grant_id is not a minted GrantRecord",
+                grant_id=gid.value,
+            )
+        invocation = _require_str("logical_invocation_id", logical_invocation_id)
+        if is_refusal(invocation):
+            return invocation
+        self._accepted[invocation.value] = gid.value
+        return Ok(
+            AcceptedGrantWork(
+                grant_id=gid.value,
+                logical_invocation_id=invocation.value,
+                moment=GrantEvaluationMoment.ACCEPT,
+            )
+        )
 
     def authoritative_stores(
         self,
@@ -700,6 +775,7 @@ class HostGrantLedger:
         previous_grant_id: object,
         *,
         context_revision: object,
+        from_revision: object | None = None,
         issuer: object = _HOST_ISSUER,
         principal: object | None = None,
         audience: object | None = None,
@@ -733,7 +809,17 @@ class HostGrantLedger:
                 "explicit re-grant bumps context_revision",
                 given=repr(context_revision),
             )
-        expected = self._context_revision + 1
+        if from_revision is None:
+            base = self._context_revision
+        elif isinstance(from_revision, bool) or not isinstance(from_revision, int):
+            return _invalid(
+                "from_revision",
+                "explicit re-grant bumps context_revision",
+                given=repr(from_revision),
+            )
+        else:
+            base = from_revision
+        expected = base + 1
         if context_revision != expected:
             return _invalid(
                 "context_revision",

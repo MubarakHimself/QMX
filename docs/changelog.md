@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 55.2: granted_ops are GrantRecords; mismatch and revoke refuse
+
+`product_session.granted_ops` stores `grant_id`s, never bare op-id strings. COMP-QMA-DAEMON resolves each id to the host `GrantRecord` persisted beside the product_session projection on the existing daemon sqlite (not a new store class). Envelope `grant_id` / op / effect / contribution / instance that do not match the bound GrantRecord are typed `GRANT_MISMATCH` before execution. Revoke or `expires_at`: already-accepted work may finish; new dispatch is refused. Upgrade cannot widen or retarget without an explicit re-grant that bumps `context_revision`. Manifests request; the host grants. Story 44.3 Tool Registry is not rewritten. Additive CT-40; no new CT.
+
+Touched: COMP-QMA-DAEMON `product_session` grant binding; [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-20 — Story 55.1: product_session.context is the bound request context
 
 COMP-QMA-DAEMON mints `product_session` as a journal-derived projection on the existing daemon sqlite (`psess:` ids, not QMA Session `sess:`). `product_session.context` holds principal, nullable `account_scope`, occupancy `none` (not live-adjacent), contribution `(qualified_id, package_version)`, `instance_id`, `config_revision`, and `as_of`. A public call missing or stale versus that context is typed `mismatch`. Occupancy remains none. A tab is not this row; `scope_path` does not gain a segment. No sixth COMP and no new CT. At inspect SHA `270e992` this row did not exist.
