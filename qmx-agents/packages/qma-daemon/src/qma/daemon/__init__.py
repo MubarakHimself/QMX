@@ -48,6 +48,12 @@ from qma.daemon.persistence import (
     PersistenceSubstrate,
 )
 from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
+from qma.daemon.plugins import (
+    ExportScanReport,
+    PackLifecycleFixture,
+    PackTransition,
+    claim_gap_0098_closed,
+)
 from qma.daemon.process import DaemonProcess
 from qma.daemon.sessions import (
     PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA,
@@ -94,6 +100,7 @@ __all__ = [
     "DaemonClock",
     "DaemonProcess",
     "DaemonStoreLifecycle",
+    "ExportScanReport",
     "FederatedDiscoveryService",
     "FederatedSearch",
     "FoldContract",
@@ -106,6 +113,8 @@ __all__ = [
     "MemoryAdmissionGate",
     "MemoryProviderRegistry",
     "MissionCompiler",
+    "PackLifecycleFixture",
+    "PackTransition",
     "PermissionPolicyEnforcer",
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
@@ -121,6 +130,7 @@ __all__ = [
     "TelemetryStore",
     "__version__",
     "claim_durable_edges_at_inspect_sha",
+    "claim_gap_0098_closed",
     "order_by_announcement_journal_seq",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",

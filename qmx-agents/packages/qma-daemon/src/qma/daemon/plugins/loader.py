@@ -702,22 +702,36 @@ class PluginLoader:
         """Swap staged rows onto the live roster and publish availability_revision."""
         next_rev = self._availability_revision + 1
         stamped = tuple(replace(row, availability_revision=next_rev) for row in staged)
-        self._published.extend(stamped)
+        published = [*self._published, *stamped]
+        self._published = published
         self._availability_revision = next_rev
         return stamped
+
+    def snapshot_published_roster(
+        self,
+    ) -> tuple[tuple[PublishedContribution, ...], int]:
+        """Live published rows plus availability_revision, for atomic restore."""
+        return tuple(self._published), self._availability_revision
+
+    def restore_published_roster(
+        self,
+        snapshot: tuple[tuple[PublishedContribution, ...], int],
+    ) -> None:
+        """Restore the last usable published roster after a failed swap."""
+        published, revision = snapshot
+        self._published = list(published)
+        self._availability_revision = revision
 
     def _roster_snapshot(
         self,
     ) -> tuple[tuple[PublishedContribution, ...], int]:
-        return tuple(self._published), self._availability_revision
+        return self.snapshot_published_roster()
 
     def _restore_roster(
         self,
         snapshot: tuple[tuple[PublishedContribution, ...], int],
     ) -> None:
-        published, revision = snapshot
-        self._published = list(published)
-        self._availability_revision = revision
+        self.restore_published_roster(snapshot)
 
     def _drop_published(self, plugin_id: str) -> None:
         self._published = [row for row in self._published if row.plugin_id != plugin_id]
