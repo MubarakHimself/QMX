@@ -1,5 +1,9 @@
 """InvocationEnvelope — additive CT-40 bound request context (Story 54.2).
 
+GrantRecord minting, immutability, and GrantRevocation live in
+``grant_record`` (Story 54.4). This module still owns the hop-compare
+GrantRecord shape used on every public call.
+
 Every public call carries the CONTRACTS §1b / cheap-veto A3 field set.
 The envelope is signed/bound request context, not authority by assertion
 (RC-03; FR-WF-17; FR-WF-18). Transport never bypasses it. Host resolve +
@@ -11,8 +15,10 @@ refuse is still required (NFR-WF-16). Not on the wire at inspect SHA
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, cast
@@ -32,7 +38,8 @@ from qma.wire.auth import FORBIDDEN_SECRET_SURFACE_KEYS, assert_no_secret_on_wir
 from qma.wire.envelope import WireEnvelope
 from qma.wire.invocation_idempotency import assert_child_logical_invocation_id
 from qma.wire.schemas import validate_instance
-from qmf.core.fingerprint import Fingerprint, fingerprint
+from qmf.core.chrono import Instant
+from qmf.core.fingerprint import Fingerprint, canonical_bytes, fingerprint
 from qmf.core.refusal import (
     Ok,
     RefusalCategory,
@@ -46,6 +53,8 @@ __all__ = [
     "AMBIGUOUS_RESOLUTION_TOKENS",
     "ENVELOPE_CRYPTO_ALGORITHM_SELECTED",
     "ENVELOPE_CRYPTO_GAP",
+    "GRANT_RECORD_FIELDS",
+    "GRANT_RECORD_FORBIDDEN_FIELDS",
     "INVOCATION_ENVELOPE_CONTRACT",
     "INVOCATION_ENVELOPE_DTO_OWNER",
     "INVOCATION_ENVELOPE_FIELDS",
@@ -67,11 +76,14 @@ __all__ = [
     "GrantRecord",
     "InstanceRecord",
     "InvocationEnvelope",
+    "ParameterCeiling",
     "PublicCallTransport",
     "bind_invocation_envelope",
     "compute_input_hash",
     "dispatch_public_call",
+    "format_utc_iso_z",
     "parse_invocation_envelope",
+    "parse_utc_iso_z",
     "public_call_from_cli",
     "public_call_from_wire",
     "public_call_in_process",
@@ -315,33 +327,207 @@ def _parse_contribution(value: object) -> Result[ContributionBinding]:
     return Ok(ContributionBinding(qualified_id=qualified.value, package_version=version.value))
 
 
+_GRANT_ID_PREFIX: Final[str] = "grant:"
+_ISO_Z: Final[re.Pattern[str]] = re.compile(
+    r"\A(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?Z\Z"
+)
+_EPOCH_UTC: Final[datetime] = datetime(1970, 1, 1, tzinfo=UTC)
+_NANOS_PER_SECOND: Final[int] = 1_000_000_000
+
+GRANT_RECORD_FIELDS: Final[tuple[str, ...]] = (
+    "grant_id",
+    "principal",
+    "audience",
+    "contribution",
+    "instance_id",
+    "config_revision",
+    "op_id",
+    "op_version",
+    "effect_class",
+    "parameter_ceiling",
+    "account_scope",
+    "expires_at",
+)
+GRANT_RECORD_FORBIDDEN_FIELDS: Final[frozenset[str]] = frozenset({"revoked_at"})
+_PARAMETER_CEILING_KEYS: Final[frozenset[str]] = frozenset({"allow_keys"})
+
+
+def format_utc_iso_z(instant: Instant) -> str:
+    """UTC ISO-8601 Z token for GrantRecord / GrantRevocation timestamps."""
+    seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+    moment = _EPOCH_UTC + timedelta(seconds=seconds)
+    if nanos == 0:
+        return (
+            f"{moment.year:04d}-{moment.month:02d}-{moment.day:02d}"
+            f"T{moment.hour:02d}:{moment.minute:02d}:{moment.second:02d}Z"
+        )
+    return (
+        f"{moment.year:04d}-{moment.month:02d}-{moment.day:02d}"
+        f"T{moment.hour:02d}:{moment.minute:02d}:{moment.second:02d}"
+        f".{nanos:09d}Z"
+    )
+
+
+def parse_utc_iso_z(field: str, value: object) -> Result[tuple[Instant, str]]:
+    """Parse Instant or UTC ISO-8601 Z into ``(Instant, minted ISO text)``."""
+    if isinstance(value, Instant):
+        return Ok((value, format_utc_iso_z(value)))
+    if isinstance(value, int) and not isinstance(value, bool):
+        instant = Instant.try_create(value)
+        if is_refusal(instant):
+            return instant
+        return Ok((instant.value, format_utc_iso_z(instant.value)))
+    token = _require_str(field, value)
+    if is_refusal(token):
+        return token
+    matched = _ISO_Z.match(token.value)
+    if matched is None:
+        return _invalid(field, f"{field} is a UTC ISO-8601 instant ending in Z", given=token.value)
+    year, month, day, hour, minute, second, frac = matched.groups()
+    try:
+        moment = datetime(
+            int(year),
+            int(month),
+            int(day),
+            int(hour),
+            int(minute),
+            int(second),
+            tzinfo=UTC,
+        )
+    except ValueError:
+        return _invalid(field, f"{field} is a UTC ISO-8601 instant ending in Z", given=token.value)
+    nanos = 0 if frac is None else int(frac.ljust(9, "0"))
+    delta = moment - _EPOCH_UTC
+    value_ns = int(delta.total_seconds()) * _NANOS_PER_SECOND + nanos
+    instant = Instant.try_create(value_ns)
+    if is_refusal(instant):
+        return instant
+    return Ok((instant.value, token.value))
+
+
+def _require_grant_id(value: object) -> Result[str]:
+    token = _require_str("grant_id", value)
+    if is_refusal(token):
+        return token
+    if not token.value.startswith(_GRANT_ID_PREFIX) or token.value == _GRANT_ID_PREFIX:
+        return _invalid(
+            "grant_id",
+            "grant_id is a grant: token, never a bare op-id string",
+            given=token.value,
+        )
+    return Ok(token.value)
+
+
+def _parse_allow_keys(value: object) -> Result[tuple[str, ...]]:
+    return _as_str_tokens_tuple("parameter_ceiling.allow_keys", value)
+
+
+def _as_str_tokens_tuple(field: str, value: object) -> Result[tuple[str, ...]]:
+    tokens = _as_str_tokens(field, value)
+    if is_refusal(tokens):
+        return tokens
+    return Ok(tuple(tokens.value))
+
+
+def _parse_parameter_ceiling(value: object) -> Result[ParameterCeiling]:
+    if isinstance(value, ParameterCeiling):
+        return Ok(value)
+    mapped = _as_mapping("parameter_ceiling", value)
+    if is_refusal(mapped):
+        return mapped
+    body = mapped.value
+    extra = sorted(set(body) - _PARAMETER_CEILING_KEYS)
+    if extra:
+        return _invalid(
+            "parameter_ceiling",
+            "parameter_ceiling is {allow_keys}",
+            extra=extra,
+        )
+    if "allow_keys" not in body:
+        return _invalid("parameter_ceiling.allow_keys", "parameter_ceiling.allow_keys is required")
+    keys = _parse_allow_keys(body["allow_keys"])
+    if is_refusal(keys):
+        return keys
+    return Ok(ParameterCeiling(allow_keys=keys.value))
+
+
+def _parse_account_scope(value: object) -> Result[str | None]:
+    if value is None:
+        return Ok(None)
+    token = _require_str("account_scope", value)
+    if is_refusal(token):
+        return token
+    return Ok(token.value)
+
+
+@dataclass(frozen=True, slots=True)
+class ParameterCeiling:
+    """Granted parameter ceiling: allow_keys only (CONTRACTS §3b)."""
+
+    allow_keys: tuple[str, ...]
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType({"allow_keys": list(self.allow_keys)})
+
+
 @dataclass(frozen=True, slots=True)
 class GrantRecord:
-    """Authoritative grant snapshot used for hop compare (Story 54.2).
+    """Immutable host GrantRecord (Story 54.4; CONTRACTS §3b; FR-WF-23).
 
-    Minting, immutability, and GrantRevocation are Story 54.4. This record is
-    what the host resolves from the grant store and compares to bound fields.
+    ``revoked_at`` is not a field. Revocation is a separate append-only
+    GrantRevocation. Minted bytes do not change.
     """
 
     grant_id: str
+    principal: str
+    audience: str
     contribution: ContributionBinding
     instance_id: str
     config_revision: int
     op_id: str
     op_version: int
     effect_class: EffectClass
+    parameter_ceiling: ParameterCeiling
+    expires_at: Instant
+    expires_at_iso: str
+    account_scope: str | None = None
 
     def to_payload(self) -> Mapping[str, object]:
-        return MappingProxyType(
-            {
-                "config_revision": self.config_revision,
-                "contribution": dict(self.contribution.to_payload()),
-                "effect_class": self.effect_class.value,
-                "grant_id": self.grant_id,
-                "instance_id": self.instance_id,
-                "op_id": self.op_id,
-                "op_version": self.op_version,
-            }
+        payload: dict[str, object] = {
+            "audience": self.audience,
+            "config_revision": self.config_revision,
+            "contribution": dict(self.contribution.to_payload()),
+            "effect_class": self.effect_class.value,
+            "expires_at": self.expires_at_iso,
+            "grant_id": self.grant_id,
+            "instance_id": self.instance_id,
+            "op_id": self.op_id,
+            "op_version": self.op_version,
+            "parameter_ceiling": dict(self.parameter_ceiling.to_payload()),
+            "principal": self.principal,
+        }
+        if self.account_scope is not None:
+            payload["account_scope"] = self.account_scope
+        return MappingProxyType(payload)
+
+    def canonical_bytes(self) -> Result[bytes]:
+        """Minted GrantRecord bytes (fp1 canonical JSON). Immutable after mint."""
+        return canonical_bytes(dict(self.to_payload()))
+
+    def binding_tuple(
+        self,
+    ) -> tuple[str, str, str, int, str, int, tuple[str, str], tuple[str, ...], str | None]:
+        """Identity that upgrade may not silently widen or retarget."""
+        return (
+            self.audience,
+            self.op_id,
+            self.instance_id,
+            self.config_revision,
+            self.effect_class.value,
+            self.op_version,
+            self.contribution.as_tuple(),
+            self.parameter_ceiling.allow_keys,
+            self.account_scope,
         )
 
     @classmethod
@@ -349,16 +535,47 @@ class GrantRecord:
         cls,
         *,
         grant_id: object,
+        principal: object,
+        audience: object,
         contribution: object,
         instance_id: object,
         config_revision: object,
         op_id: object,
         op_version: object,
         effect_class: object,
+        parameter_ceiling: object,
+        expires_at: object,
+        account_scope: object | None = None,
+        revoked_at: object | None = None,
+        **extra: object,
     ) -> Result[GrantRecord]:
-        gid = _require_str("grant_id", grant_id)
+        if revoked_at is not None or "revoked_at" in extra:
+            return _invalid(
+                "revoked_at",
+                "revoked_at is not a GrantRecord field; revocation is append-only "
+                "GrantRevocation (FR-WF-23; RC-05)",
+            )
+        extra_keys = sorted(set(extra) - set(GRANT_RECORD_FIELDS))
+        if extra_keys:
+            forbidden = [key for key in extra_keys if key in GRANT_RECORD_FORBIDDEN_FIELDS]
+            if forbidden:
+                return _invalid(
+                    forbidden[0],
+                    "revoked_at is not a GrantRecord field",
+                    extra=extra_keys,
+                )
+            return _invalid("grant_record", "unknown GrantRecord fields", extra=extra_keys)
+        gid = _require_grant_id(grant_id)
         if is_refusal(gid):
             return gid
+        who = _require_str("principal", principal)
+        if is_refusal(who):
+            return who
+        aud = _parse_session_ref("audience", audience)
+        if is_refusal(aud):
+            return aud
+        if aud.value is None:
+            return _invalid("audience", "audience is a psess: product-session ref")
         bound = _parse_contribution(contribution)
         if is_refusal(bound):
             return bound
@@ -377,15 +594,31 @@ class GrantRecord:
         effect = _parse_effect(effect_class)
         if is_refusal(effect):
             return effect
+        ceiling = _parse_parameter_ceiling(parameter_ceiling)
+        if is_refusal(ceiling):
+            return ceiling
+        expiry = parse_utc_iso_z("expires_at", expires_at)
+        if is_refusal(expiry):
+            return expiry
+        scope = _parse_account_scope(account_scope)
+        if is_refusal(scope):
+            return scope
+        instant, iso_text = expiry.value
         return Ok(
             cls(
                 grant_id=gid.value,
+                principal=who.value,
+                audience=aud.value,
                 contribution=bound.value,
                 instance_id=instance.value,
                 config_revision=revision.value,
                 op_id=op.value,
                 op_version=version.value,
                 effect_class=effect.value,
+                parameter_ceiling=ceiling.value,
+                expires_at=instant,
+                expires_at_iso=iso_text,
+                account_scope=scope.value,
             )
         )
 

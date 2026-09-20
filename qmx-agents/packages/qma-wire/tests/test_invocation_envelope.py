@@ -101,6 +101,8 @@ def _envelope_payload(**overrides: object) -> dict[str, object]:
 def _grant(**overrides: object) -> GrantRecord:
     fields: dict[str, object] = {
         "grant_id": "grant:1",
+        "principal": "operator",
+        "audience": "psess:caller",
         "contribution": {
             "qualified_id": "analysis-backtest:qmb",
             "package_version": "0.1.0",
@@ -110,6 +112,8 @@ def _grant(**overrides: object) -> GrantRecord:
         "op_id": "qmb.analysis.project",
         "op_version": 1,
         "effect_class": "read",
+        "parameter_ceiling": {"allow_keys": ["run_fp1", "as_of"]},
+        "expires_at": "2099-01-01T00:00:00Z",
     }
     fields.update(overrides)
     built = GrantRecord.try_create(**fields)

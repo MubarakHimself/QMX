@@ -20,10 +20,13 @@ __all__ = [
     "CursorScopeMismatch",
     "EnvelopeMismatch",
     "ExtensionSurfaceRefused",
+    "GrantInactive",
     "GrantMismatch",
+    "GrantWidenRefused",
     "IdempotencyCollision",
     "InvocationEnvelopeRequired",
     "LaptopOffContinuationRefused",
+    "ManifestIsNotGrant",
     "NestedPermissionUnionRefused",
     "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
@@ -637,6 +640,81 @@ class BlindRetryRefused(QmaRefusal):
         return cls.create(context=context)
 
 
+class GrantInactive(QmaRefusal):
+    """Grant is revoked or past ``expires_at`` at a new-dispatch moment (FR-WF-24).
+
+    Already-accepted work may finish under the grant that accepted it. New
+    dispatch after revoke or expiry is refused (RC-05).
+    """
+
+    VARIANT: ClassVar[str] = "GrantInactive"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        grant_id: str,
+        reason: str,
+        moment: str,
+        **extra: object,
+    ) -> GrantInactive:
+        context: dict[str, object] = {
+            "field": "grant_id",
+            "grant_id": grant_id,
+            "code": "GRANT_INACTIVE",
+            "reason": reason,
+            "moment": moment,
+            "already_accepted_may_finish": True,
+            "new_dispatch_refused": True,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class GrantWidenRefused(QmaRefusal):
+    """Upgrade cannot widen or retarget a minted GrantRecord (FR-WF-24).
+
+    An existing grant stays bound. Widening or retargeting requires an explicit
+    re-grant that bumps ``context_revision``.
+    """
+
+    VARIANT: ClassVar[str] = "GrantWidenRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(cls, *, grant_id: str, **extra: object) -> GrantWidenRefused:
+        context: dict[str, object] = {
+            "field": "grant_id",
+            "grant_id": grant_id,
+            "code": "GRANT_WIDEN_REFUSED",
+            "reason": "upgrade_cannot_widen_or_retarget",
+            "requires_regrant": True,
+            "bumps_context_revision": True,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class ManifestIsNotGrant(QmaRefusal):
+    """Manifests request permissions; the host grants (FR-WF-25)."""
+
+    VARIANT: ClassVar[str] = "ManifestIsNotGrant"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(cls, **extra: object) -> ManifestIsNotGrant:
+        context: dict[str, object] = {
+            "field": "issuer",
+            "code": "MANIFEST_IS_NOT_GRANT",
+            "reason": "manifests_request_host_grants",
+            "manifests_grant": False,
+            "host_grants": True,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class NestedPermissionUnionRefused(QmaRefusal):
     """Nested public call tried to union parent and child permissions (FR-WF-20).
 
@@ -749,4 +827,7 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     IdempotencyCollision,
     BlindRetryRefused,
     NestedPermissionUnionRefused,
+    GrantInactive,
+    GrantWidenRefused,
+    ManifestIsNotGrant,
 )

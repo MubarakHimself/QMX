@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 54.4: GrantRecord is immutable; revocation is a separate record
+
+`GrantRecord` is immutable after mint and does not carry `revoked_at`. Fields follow CONTRACTS §3b: `grant_id`, `principal`, `audience`, contribution `(qualified_id, package_version)`, `instance_id`, `config_revision`, `op_id`, `op_version`, `effect_class`, `parameter_ceiling.allow_keys`, `account_scope` (null unless granted), `expires_at`. Revocation is append-only `GrantRevocation` `{grant_id, revoked_at, principal, reason}`; minted GrantRecord bytes do not change. Evaluation moments are accept, dispatch, nested call, retry, and external commit: already-accepted work may finish under the grant that accepted it; new dispatch after revoke or `expires_at` is refused. Upgrade cannot widen or retarget without an explicit re-grant that bumps `context_revision`. Manifests request; the host grants. `product_session.granted_ops` stores `grant_id`s, not bare op-id strings — this story does not mint `product_session` rows (Epic 55). Additive CT-40; no new CT.
+
+Touched: [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-20 — Story 54.3: Idempotency domain, nested identity, and effect-specific outcomes
 
 Caller issues `idempotency_key`. Uniqueness domain is `(principal, op_id, op_version, instance_id, config_revision, grant_id, target, canonical_input_hash)` with retention at least the journal lifetime of the invocation. Collision with a different payload hash is a typed refusal; replay of the same key within retention returns the prior result. Nested public calls carry `parent_logical_invocation_id` and `call_depth`; child `logical_invocation_id` derives from `(parent, depth, child_op_id, child_canonical_input_hash)` and nested invocation does not union permissions. Effect-class outcomes: `none`/`read` may retry; `append-evidence` dedupes; `mutate-config` is CAS on `config_revision`; `place-run` treats `logical_invocation_id` as run identity; `external-egress` must obtain a receipt or become `unknown` and must not blind-retry. `reconcile_policy` is `query-then-decide` | `unknown-manual` | `never-retry` (SCN-0021 Then 3).

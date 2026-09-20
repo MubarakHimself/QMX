@@ -24,6 +24,7 @@ __all__ = [
     "ExecutionEnvironmentKind",
     "ExecutionModel",
     "GovernedAct",
+    "GrantEvaluationMoment",
     "GraphArtifactKind",
     "HandleKind",
     "HookControl",
@@ -575,3 +576,17 @@ class EffectRetryOutcome(StrEnum):
     CAS = "cas"
     RUN_IDENTITY = "run-identity"
     RECEIPT_OR_UNKNOWN = "receipt-or-unknown"
+
+
+class GrantEvaluationMoment(StrEnum):
+    """Closed GrantRecord evaluation moments (Workflows AD-24; FR-WF-24; RC-05).
+
+    Already-accepted work may finish under the grant that accepted it. New
+    dispatch after revoke or ``expires_at`` is refused.
+    """
+
+    ACCEPT = "accept"
+    DISPATCH = "dispatch"
+    NESTED_CALL = "nested_call"
+    RETRY = "retry"
+    EXTERNAL_COMMIT = "external_commit"

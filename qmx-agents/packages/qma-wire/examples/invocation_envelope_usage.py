@@ -57,12 +57,16 @@ def main() -> None:
     }
     grant = GrantRecord.try_create(
         grant_id="grant:1",
+        principal="operator",
+        audience="psess:caller",
         contribution=envelope["contribution"],
         instance_id="inst:1",
         config_revision=4,
         op_id="qmb.analysis.project",
         op_version=1,
         effect_class="read",
+        parameter_ceiling={"allow_keys": ["run_fp1", "as_of"]},
+        expires_at="2099-01-01T00:00:00Z",
     )
     assert is_ok(grant)
     contribution = ContributionRecord(

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/grant_record.v1.schema.json",
+  "title": "QMA GrantRecord (CT-40 additive; FR-WF-23; CONTRACTS §3b)",
+  "description": "Immutable host GrantRecord. revoked_at is not a field; revocation is append-only GrantRevocation. Manifests request; the host grants. No new CT number — do not mint CT-52. Not a product_session row (Epic 55).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "principal",
+    "audience",
+    "contribution",
+    "instance_id",
+    "config_revision",
+    "op_id",
+    "op_version",
+    "effect_class",
+    "parameter_ceiling",
+    "expires_at"
+  ],
+  "properties": {
+    "grant_id": { "type": "string", "minLength": 1 },
+    "principal": { "type": "string", "minLength": 1 },
+    "audience": { "type": "string", "minLength": 1 },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qualified_id", "package_version"],
+      "properties": {
+        "qualified_id": { "type": "string", "minLength": 1 },
+        "package_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "config_revision": { "type": "integer", "minimum": 0 },
+    "op_id": { "type": "string", "minLength": 1 },
+    "op_version": { "type": "integer", "minimum": 1 },
+    "effect_class": {
+      "type": "string",
+      "enum": [
+        "none",
+        "read",
+        "append-evidence",
+        "mutate-config",
+        "place-run",
+        "external-egress"
+      ]
+    },
+    "parameter_ceiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow_keys"],
+      "properties": {
+        "allow_keys": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "account_scope": { "type": "string", "minLength": 1 },
+    "expires_at": { "type": "string", "minLength": 1 }
+  }
+}

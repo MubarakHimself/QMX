@@ -39,6 +39,7 @@ from qma.core.vocabulary import (
     EffectClass,
     EffectRetryOutcome,
     EmptyPolicy,
+    GrantEvaluationMoment,
     LifecycleVerb,
     OperationCardinality,
     OperationPlacement,
@@ -234,6 +235,15 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     }
     with pytest.raises(VocabularyError):
         parse_closed(EffectRetryOutcome, "blind-retry")
+    assert {member.value for member in GrantEvaluationMoment} == {
+        "accept",
+        "dispatch",
+        "nested_call",
+        "retry",
+        "external_commit",
+    }
+    with pytest.raises(VocabularyError):
+        parse_closed(GrantEvaluationMoment, "silent-latest")
 
 
 def test_missing_refusal_codes_are_refused() -> None:

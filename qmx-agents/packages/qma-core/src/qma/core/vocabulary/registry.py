@@ -17,6 +17,7 @@ from qma.core.vocabulary.enums import (
     ExecutionEnvironmentKind,
     ExecutionModel,
     GovernedAct,
+    GrantEvaluationMoment,
     GraphArtifactKind,
     HandleKind,
     HookControl,
@@ -114,6 +115,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("door_adapter", "AD-21", DoorAdapter, "DEC-0434"),
     ClosedVocabulary("reconcile_policy", "AD-24", ReconcilePolicy, "DEC-0437"),
     ClosedVocabulary("effect_retry_outcome", "AD-24", EffectRetryOutcome, "DEC-0437"),
+    ClosedVocabulary("grant_evaluation_moment", "AD-24", GrantEvaluationMoment, "DEC-0437"),
 )
 
 

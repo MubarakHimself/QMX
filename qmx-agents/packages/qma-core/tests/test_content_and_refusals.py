@@ -27,10 +27,13 @@ from qma.core.refusals import (
     CursorScopeMismatch,
     EnvelopeMismatch,
     ExtensionSurfaceRefused,
+    GrantInactive,
     GrantMismatch,
+    GrantWidenRefused,
     IdempotencyCollision,
     InvocationEnvelopeRequired,
     LaptopOffContinuationRefused,
+    ManifestIsNotGrant,
     NestedPermissionUnionRefused,
     NoCodeAuthoringRefused,
     NoEligibleDeployment,
@@ -93,6 +96,9 @@ EXPECTED_VARIANTS = (
     "IdempotencyCollision",
     "BlindRetryRefused",
     "NestedPermissionUnionRefused",
+    "GrantInactive",
+    "GrantWidenRefused",
+    "ManifestIsNotGrant",
 )
 
 
@@ -237,6 +243,13 @@ def test_all_variant_factories_carry_structured_context() -> None:
             child=("library.read", "library.run"),
             extras=("library.run",),
         ),
+        GrantInactive.of(
+            grant_id="grant:1",
+            reason="revoked",
+            moment="dispatch",
+        ),
+        GrantWidenRefused.of(grant_id="grant:1", field="parameter_ceiling"),
+        ManifestIsNotGrant.of(issuer="manifest"),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:
