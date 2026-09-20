@@ -47,6 +47,24 @@ def test_alternative_run_config_usage_example_runs_clean() -> None:
     assert "GAP-0098 stays open" in completed.stdout
 
 
+def test_recipe_definition_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "recipe_definition_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "recipe definition ok" in completed.stdout
+    assert "display recipe_id is not identity" in completed.stdout
+    assert "display rename does not change recipe_def_hash" in completed.stdout
+    assert "two runs of one definition are two releases, not two recipes" in completed.stdout
+    assert "preview ≠ export ≠ stream" in completed.stdout
+    assert "non-trading output needs no Book wrap" in completed.stdout
+    assert "CT-06 recipe kind stays deferred" in completed.stdout
+
+
 def test_run_config_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "run_config_usage.py")],
