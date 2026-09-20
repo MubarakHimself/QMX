@@ -1000,6 +1000,8 @@ def _compare_grant(envelope: InvocationEnvelope, grant: GrantRecord) -> Result[G
             grant_id=envelope.grant_id,
             bound=envelope.instance_id,
             granted=grant.instance_id,
+            retargeted=False,
+            substituted=False,
         )
     if grant.config_revision != envelope.config_revision:
         return GrantMismatch.of(
@@ -1007,6 +1009,8 @@ def _compare_grant(envelope: InvocationEnvelope, grant: GrantRecord) -> Result[G
             grant_id=envelope.grant_id,
             bound=envelope.config_revision,
             granted=grant.config_revision,
+            retargeted=False,
+            substituted=False,
         )
     if grant.contribution.as_tuple() != envelope.contribution.as_tuple():
         return GrantMismatch.of(
@@ -1021,6 +1025,43 @@ def _compare_grant(envelope: InvocationEnvelope, grant: GrantRecord) -> Result[G
             grant_id=envelope.grant_id,
             bound=envelope.effect_class.value,
             granted=grant.effect_class.value,
+        )
+    return Ok(grant)
+
+
+def _pin_grant_to_instance(
+    grant: GrantRecord,
+    envelope: InvocationEnvelope,
+    instance: InstanceRecord,
+) -> Result[GrantRecord]:
+    """A valid grant cannot be pointed at another instance or config revision."""
+    if (
+        instance.instance_id != envelope.instance_id
+        or grant.instance_id != instance.instance_id
+        or grant.instance_id != envelope.instance_id
+    ):
+        return GrantMismatch.of(
+            field="instance_id",
+            grant_id=envelope.grant_id,
+            bound=envelope.instance_id,
+            granted=grant.instance_id,
+            live=instance.instance_id,
+            retargeted=False,
+            substituted=False,
+        )
+    if (
+        instance.config_revision != envelope.config_revision
+        or grant.config_revision != instance.config_revision
+        or grant.config_revision != envelope.config_revision
+    ):
+        return GrantMismatch.of(
+            field="config_revision",
+            grant_id=envelope.grant_id,
+            bound=envelope.config_revision,
+            granted=grant.config_revision,
+            live=instance.config_revision,
+            retargeted=False,
+            substituted=False,
         )
     return Ok(grant)
 
@@ -1078,6 +1119,9 @@ def bind_invocation_envelope(
     )
     if is_refusal(instance):
         return instance
+    pinned = _pin_grant_to_instance(compared.value, envelope, instance.value)
+    if is_refusal(pinned):
+        return pinned
     validated = validate_input_payload(descriptor.value, payload)
     if is_refusal(validated):
         return validated
@@ -1096,7 +1140,7 @@ def bind_invocation_envelope(
         (
             contribution.value,
             descriptor.value,
-            compared.value,
+            pinned.value,
             instance.value,
             validated.value,
         )

@@ -157,6 +157,8 @@ def compare_envelope_to_grant(
             grant_id=env.grant_id,
             bound=env.instance_id,
             granted=grant.instance_id,
+            retargeted=False,
+            substituted=False,
         )
     if grant.config_revision != env.config_revision:
         return GrantMismatch.of(
@@ -164,6 +166,8 @@ def compare_envelope_to_grant(
             grant_id=env.grant_id,
             bound=env.config_revision,
             granted=grant.config_revision,
+            retargeted=False,
+            substituted=False,
         )
     return Ok(grant)
 
