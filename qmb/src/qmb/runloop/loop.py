@@ -23,7 +23,7 @@ from typing import Final, Protocol, cast, runtime_checkable
 
 from qmf.core.chrono import Clock, Duration, Instant, Interval
 from qmf.core.fingerprint import Fingerprint, fingerprint
-from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 from qmf.risk.performance import PerformanceResult
 
 from qmb._refuse import clean_token, invalid, policy
@@ -813,6 +813,42 @@ def run_slice(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _RunBound:
+    declared: StreamSet
+    events: tuple[EventSlice, ...]
+    ports: SliceHandler
+    clock: object
+    resting: tuple[RestingIntent, ...]
+    warmup: WarmupProgress
+    cancel: CancelToken | None
+    sink: ProgressObserver | None
+    limits: RunLimits
+    meter: LimitProbe | None
+    current: Instant | None
+
+
+@dataclass(frozen=True, slots=True)
+class _RunWalk:
+    outcomes: tuple[SliceOutcome, ...]
+    resting: tuple[RestingIntent, ...]
+    filled: tuple[str, ...]
+    warmup: WarmupProgress
+    data_points: int
+    stream_ids: tuple[str, ...]
+
+
+@dataclass(slots=True)
+class _SliceCursor:
+    current: Instant | None
+    resting: tuple[RestingIntent, ...]
+    warmup: WarmupProgress
+    watching: RunProgress
+    data_points: int
+    outcomes: list[SliceOutcome]
+    filled: list[str]
+
+
 def run(
     *,
     slices: object,
@@ -848,6 +884,42 @@ def run(
     only and does not enter identity. This door is ungoverned: a returned
     CT-32-shaped value is not a Library object (DEC-0270).
     """
+    blocked = _refuse_ungoverned_run(
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+        experiment_spec=experiment_spec,
+    )
+    if blocked is not None:
+        return blocked
+    bound = _bind_run(
+        slices=slices,
+        stream_set=stream_set,
+        config=config,
+        clock=clock,
+        handler=handler,
+        initial_resting=initial_resting,
+        embargo=embargo,
+        cancel=cancel,
+        observer=observer,
+        limits=limits,
+        probe=probe,
+    )
+    if is_refusal(bound):
+        return bound
+    walked = _walk_slices(bound.value, series=series, bar_plan=bar_plan)
+    if is_refusal(walked):
+        return walked
+    return _finish_run(walked.value, config=config)
+
+
+def _refuse_ungoverned_run(
+    *,
+    analysis_method: object,
+    lane: object,
+    workbench_lane: object,
+    experiment_spec: object,
+) -> TypedRefusal | None:
     blocked = refuse_caller_declared_lane_fields(
         analysis_method=analysis_method,
         lane=lane,
@@ -855,17 +927,101 @@ def run(
     )
     if blocked is not None:
         return blocked
-    if experiment_spec is not None:
-        return policy(
-            "experiment_spec",
-            "ungoverned qmb.run() writes no ExperimentSpec; L33 graduation is "
-            "a separate two-artifact registration act, not this spawn "
-            "(FR-W04; DEC-0270)",
-            mints_experiment_spec=False,
-            writes_qmb_ledger=False,
-            writes_ct32_registry_record=False,
-            is_library_object=False,
-        )
+    if experiment_spec is None:
+        return None
+    return policy(
+        "experiment_spec",
+        "ungoverned qmb.run() writes no ExperimentSpec; L33 graduation is "
+        "a separate two-artifact registration act, not this spawn "
+        "(FR-W04; DEC-0270)",
+        mints_experiment_spec=False,
+        writes_qmb_ledger=False,
+        writes_ct32_registry_record=False,
+        is_library_object=False,
+    )
+
+
+def _bind_run(
+    *,
+    slices: object,
+    stream_set: object,
+    config: object,
+    clock: object,
+    handler: object,
+    initial_resting: object,
+    embargo: object,
+    cancel: object,
+    observer: object,
+    limits: object,
+    probe: object,
+) -> Result[_RunBound]:
+    ports = _bind_run_ports(
+        slices=slices,
+        stream_set=stream_set,
+        config=config,
+        clock=clock,
+        handler=handler,
+    )
+    if is_refusal(ports):
+        return ports
+    controls = _bind_run_controls(
+        declared=ports.value.declared,
+        config=config,
+        initial_resting=initial_resting,
+        embargo=embargo,
+        cancel=cancel,
+        observer=observer,
+        limits=limits,
+        probe=probe,
+    )
+    if is_refusal(controls):
+        return controls
+    return Ok(_combine_run_bound(ports.value, controls.value))
+
+
+def _combine_run_bound(ports: _RunPorts, controls: _RunControls) -> _RunBound:
+    return _RunBound(
+        declared=ports.declared,
+        events=ports.events,
+        ports=ports.handler,
+        clock=ports.clock,
+        resting=controls.resting,
+        warmup=controls.warmup,
+        cancel=controls.cancel,
+        sink=controls.sink,
+        limits=controls.limits,
+        meter=controls.meter,
+        current=ports.current,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _RunPorts:
+    declared: StreamSet
+    events: tuple[EventSlice, ...]
+    handler: SliceHandler
+    clock: object
+    current: Instant | None
+
+
+@dataclass(frozen=True, slots=True)
+class _RunControls:
+    resting: tuple[RestingIntent, ...]
+    warmup: WarmupProgress
+    cancel: CancelToken | None
+    sink: ProgressObserver | None
+    limits: RunLimits
+    meter: LimitProbe | None
+
+
+def _bind_run_ports(
+    *,
+    slices: object,
+    stream_set: object,
+    config: object,
+    clock: object,
+    handler: object,
+) -> Result[_RunPorts]:
     declared = _resolve_stream_set(stream_set=stream_set, config=config)
     if is_refusal(declared):
         return declared
@@ -882,7 +1038,30 @@ def run(
             "advance_frontier pull when clock is omitted (B-2)",
             given=repr(type(clock).__name__),
         )
-    resting_tokens = _as_resting_tuple(initial_resting, declared.value)
+    current: Instant | None = None if clock is None else clock.current
+    return Ok(
+        _RunPorts(
+            declared=declared.value,
+            events=events.value,
+            handler=ports.value,
+            clock=clock,
+            current=current,
+        )
+    )
+
+
+def _bind_run_controls(
+    *,
+    declared: StreamSet,
+    config: object,
+    initial_resting: object,
+    embargo: object,
+    cancel: object,
+    observer: object,
+    limits: object,
+    probe: object,
+) -> Result[_RunControls]:
+    resting_tokens = _as_resting_tuple(initial_resting, declared)
     if is_refusal(resting_tokens):
         return resting_tokens
     progress = _resolve_warmup(embargo=embargo, warmup=None, config=config)
@@ -900,82 +1079,148 @@ def run(
     meter = _as_probe(probe, bound_limits.value)
     if is_refusal(meter):
         return meter
-    current: Instant | None = None if clock is None else clock.current
-    resting = resting_tokens.value
-    outcomes: list[SliceOutcome] = []
-    filled: list[str] = []
-    warmup = progress.value
-    data_points = 0
+    return Ok(
+        _RunControls(
+            resting=resting_tokens.value,
+            warmup=progress.value,
+            cancel=token.value,
+            sink=sink.value,
+            limits=bound_limits.value,
+            meter=meter.value,
+        )
+    )
+
+
+def _start_run_progress(bound: _RunBound) -> Result[RunProgress]:
     published = _progress_at(
         data_points_processed=0,
         slices_completed=0,
-        is_warming_up=warmup.is_warming_up,
+        is_warming_up=bound.warmup.is_warming_up,
         frontier=None,
         elapsed=None,
     )
     if is_refusal(published):
         return published
-    watching = published.value
-    noted = _publish(sink.value, watching)
+    noted = _publish(bound.sink, published.value)
     if is_refusal(noted):
         return noted
-    for event in events.value:
-        boundary = check_slice_boundary(
-            cancel=token.value,
-            limits=bound_limits.value,
-            probe=meter.value,
-            progress=watching,
+    return published
+
+
+def _walk_slices(
+    bound: _RunBound,
+    *,
+    series: object,
+    bar_plan: object,
+) -> Result[_RunWalk]:
+    started = _start_run_progress(bound)
+    if is_refusal(started):
+        return started
+    cursor = _SliceCursor(
+        current=bound.current,
+        resting=bound.resting,
+        warmup=bound.warmup,
+        watching=started.value,
+        data_points=0,
+        outcomes=[],
+        filled=[],
+    )
+    for event in bound.events:
+        stepped = _advance_one_slice(
+            bound, cursor, event, series=series, bar_plan=bar_plan
         )
-        if is_refusal(boundary):
-            return boundary
-        outcome = run_slice(
-            event,
-            stream_set=declared.value,
-            current_frontier=current,
-            clock=clock,
-            handler=ports.value,
-            resting=resting,
-            series=series,
-            bar_plan=bar_plan,
-            warmup=warmup,
+        if is_refusal(stepped):
+            return stepped
+    return Ok(
+        _RunWalk(
+            outcomes=tuple(cursor.outcomes),
+            resting=cursor.resting,
+            filled=tuple(cursor.filled),
+            warmup=cursor.warmup,
+            data_points=cursor.data_points,
+            stream_ids=bound.declared.stream_ids,
         )
-        if is_refusal(outcome):
-            return outcome
-        done = outcome.value
-        outcomes.append(done)
-        current = done.frontier
-        resting = done.resting
-        filled.extend(done.filled)
-        if done.warmup is not None:
-            warmup = done.warmup
-        data_points += len(event.observations)
-        published = _progress_at(
-            data_points_processed=data_points,
-            slices_completed=len(outcomes),
-            is_warming_up=warmup.is_warming_up,
-            frontier=done.frontier,
-            elapsed=boundary.value,
-        )
-        if is_refusal(published):
-            return published
-        watching = published.value
-        noted = _publish(sink.value, watching)
-        if is_refusal(noted):
-            return noted
+    )
+
+
+def _advance_one_slice(
+    bound: _RunBound,
+    cursor: _SliceCursor,
+    event: EventSlice,
+    *,
+    series: object,
+    bar_plan: object,
+) -> Result[None]:
+    boundary = check_slice_boundary(
+        cancel=bound.cancel,
+        limits=bound.limits,
+        probe=bound.meter,
+        progress=cursor.watching,
+    )
+    if is_refusal(boundary):
+        return boundary
+    outcome = run_slice(
+        event,
+        stream_set=bound.declared,
+        current_frontier=cursor.current,
+        clock=bound.clock,
+        handler=bound.ports,
+        resting=cursor.resting,
+        series=series,
+        bar_plan=bar_plan,
+        warmup=cursor.warmup,
+    )
+    if is_refusal(outcome):
+        return outcome
+    return _record_slice_progress(bound, cursor, event, outcome.value, elapsed=boundary.value)
+
+
+def _record_slice_progress(
+    bound: _RunBound,
+    cursor: _SliceCursor,
+    event: EventSlice,
+    done: SliceOutcome,
+    *,
+    elapsed: Duration | None,
+) -> Result[None]:
+    cursor.outcomes.append(done)
+    cursor.current = done.frontier
+    cursor.resting = done.resting
+    cursor.filled.extend(done.filled)
+    if done.warmup is not None:
+        cursor.warmup = done.warmup
+    cursor.data_points += len(event.observations)
+    published = _progress_at(
+        data_points_processed=cursor.data_points,
+        slices_completed=len(cursor.outcomes),
+        is_warming_up=cursor.warmup.is_warming_up,
+        frontier=done.frontier,
+        elapsed=elapsed,
+    )
+    if is_refusal(published):
+        return published
+    cursor.watching = published.value
+    noted = _publish(bound.sink, cursor.watching)
+    if is_refusal(noted):
+        return noted
+    return Ok(None)
+
+
+def _finish_run(walked: _RunWalk, config: object) -> Result[LoopOutcome]:
     spanned = trading_evidence_range(
-        tuple(item.frontier for item in outcomes if not item.is_warming_up),
-        empty_at=outcomes[-1].frontier,
+        tuple(item.frontier for item in walked.outcomes if not item.is_warming_up),
+        empty_at=walked.outcomes[-1].frontier,
     )
     if is_refusal(spanned):
         return spanned
     outcome = LoopOutcome(
-        slices=tuple(outcomes),
-        resting=resting,
-        filled=tuple(filled),
-        stream_order=declared.value.stream_ids,
-        warmup=warmup,
+        slices=walked.outcomes,
+        resting=walked.resting,
+        filled=walked.filled,
+        stream_order=walked.stream_ids,
+        warmup=walked.warmup,
         evidence_range=spanned.value,
-        data_points_processed=data_points,
+        data_points_processed=walked.data_points,
     )
     if not isinstance(config, ResolvedRunConfig):
         return Ok(outcome)
