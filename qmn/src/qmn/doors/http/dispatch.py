@@ -25,6 +25,7 @@ from qmn.doors.wire import WIRE_FORMAT_VERSION, refusal_wire_shape
 
 __all__ = [
     "POWERS_DISPATCH_SURFACE",
+    "closed_power_names",
     "handle_powers_call",
     "powers_capability_surface",
     "render_powers_response",

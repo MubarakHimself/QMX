@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from qmn.doors.http.dispatch import (
     POWERS_DISPATCH_SURFACE,
+    closed_power_names,
     handle_powers_call,
     powers_capability_surface,
     render_powers_response,
@@ -76,6 +77,7 @@ __all__ = [
     "PowersCallAuthorization",
     "RecordingPowersJournal",
     "authorize_powers_call",
+    "closed_power_names",
     "declare_principals",
     "evaluate_unit_principals",
     "evidence_capability_surface",

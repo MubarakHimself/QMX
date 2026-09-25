@@ -497,7 +497,7 @@ class OffMachineRestore:
         Raw originals and lineage are kept forever under this component's authority;
         retention deletion of the only local copy does not proceed (DEC-0118).
         """
-        del store
+        _ = store
         return policy_rejection(
             "local_raw",
             "discarding the only local raw evidence copy is refused under "

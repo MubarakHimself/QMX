@@ -976,6 +976,7 @@ def _apply_transition(
     event: InboundVenueEvent,
 ) -> tuple[OrderState, Fraction]:
     """Apply one legal observation to the running fold state (CT-20; DEC-0137)."""
+    _ = running
     kind = event.observation_kind
     if kind is ObservationKind.SUBMISSION_ACKNOWLEDGEMENT:
         return OrderState.VENUE_ACCEPTED, cumulative

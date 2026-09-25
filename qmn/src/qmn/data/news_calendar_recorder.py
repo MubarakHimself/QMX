@@ -48,7 +48,7 @@ class HttpsForexFactoryTransport:
         self._opener = opener if opener is not None else urllib_open_weekly_file
 
     def fetch_snapshot(self, bounds: Mapping[str, object], /) -> Result[bytes]:
-        del bounds
+        _ = bounds
         pinned = require_weekly_file_url(self.url)
         if is_refusal(pinned):
             return pinned
@@ -93,7 +93,7 @@ def urllib_open_weekly_file(url: str) -> Result[bytes]:
 
 def main(argv: list[str] | None = None) -> int:
     """Systemd oneshot. Factory tests drive :class:`NewsCalendarRecorder.fire`."""
-    del argv
+    _ = argv
     # Unbound oneshot refuses rather than inventing a live skip or a second
     # source; ``news_calendar_max_staleness`` then fail-closes entries.
     _ = (FOREX_FACTORY_WEEKLY_JSON, NEWS_CALENDAR_ALARM_CLASS, FAILED_REFRESH_FAILURE_ID)

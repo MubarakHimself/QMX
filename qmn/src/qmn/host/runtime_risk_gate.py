@@ -582,29 +582,29 @@ def _scan_source_tokens(root: Path) -> tuple[frozenset[str], frozenset[str]]:
 
 class _SecretStore:
     def read(self, ref: object, /) -> Result[object]:
-        del ref
+        _ = ref
         return unpersistable("no such credential")
 
     def atomic_replace(self, ref: object, new_value: object, /) -> Result[object]:
-        del new_value
+        _ = new_value
         return Ok(ref)
 
 
 class _ObsSink:
     def emit(self, observation: object, /) -> SinkResult:
-        del observation
+        _ = observation
         return Ok(SinkAck())
 
 
 class _JournalSink:
     def append(self, event: object, /) -> SinkResult:
-        del event
+        _ = event
         return Ok(SinkAck())
 
 
 class _RecordSink:
     def write(self, record: object, /) -> SinkResult:
-        del record
+        _ = record
         return Ok(SinkAck())
 
 
@@ -616,7 +616,7 @@ class _OffsetStopModule:
         direction: Direction,
         cited_evidence: CitedEvidence,
     ) -> Result[Price]:
-        del cited_evidence
+        _ = cited_evidence
         if direction is Direction.LONG:
             value = entry_price.value - 1_000
         else:
@@ -632,7 +632,7 @@ class _NoStopModule:
         direction: Direction,
         cited_evidence: CitedEvidence,
     ) -> Result[Price]:
-        del entry_price, direction, cited_evidence
+        _ = (entry_price, direction, cited_evidence)
         return refuse_no_full_loss_price(module="no-stop")
 
 
@@ -642,14 +642,14 @@ class _DayBoundary:
     next_ns: int
 
     def trading_date_for(self, instant: Instant) -> Result[TradingDate]:
-        del instant
+        _ = instant
         civil = CivilDate.try_create(2026, 9, 1)
         if is_refusal(civil):
             return civil
         return TradingDate.try_create(self.calendar_identity, civil.value)
 
     def next_boundary_after(self, instant: Instant) -> Result[Instant]:
-        del instant
+        _ = instant
         return Instant.try_create(self.next_ns)
 
     @property
@@ -1351,7 +1351,7 @@ def _exercise_unknown(fx: _Fixtures) -> Result[Mapping[str, object]]:
 
 
 def _exercise_four_verdicts(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    del fx
+    _ = fx
     qty = _qty(100)
     drifted = _qty(150)
     cash = _money(50_000_00)

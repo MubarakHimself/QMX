@@ -72,7 +72,7 @@ def refuse_cross_world_write(*, target_world: object = None) -> TypedRefusal:
 
 def refuse_fill_simulation(*, reason: object = None) -> TypedRefusal:
     """GAP-0056 remains deferred — replay diffs decisions, never fills."""
-    del reason
+    _ = reason
     return policy(
         "fill",
         "replay has no fill simulation in V1; GAP-0056 remains deferred (DEC-0206, DEC-0229)",
@@ -364,7 +364,7 @@ class ReplayImportPort:
         payload: object = None,
     ) -> Result[None]:
         """Always refuse — there is no write exception."""
-        del payload
+        _ = payload
         return refuse_cross_world_write(target_world=target_world)
 
     def write_to_live(self, payload: object = None) -> Result[None]:

@@ -61,6 +61,7 @@ __all__ = [
     "RcloneCommand",
     "RcloneExecution",
     "RecordingRcloneRunner",
+    "SubprocessRcloneRunner",
     "apply_backup_retention",
     "build_rclone_command",
     "generate_test_payload_key",
@@ -674,6 +675,7 @@ def push_committed_prefixes(
     dest_name: str = "objects",
 ) -> Result[BackupPushReport]:
     """Encrypt committed prefixes, stage ciphertext, rclone copy, journal retention."""
+    _ = remote_root
     gated = refuse_live_b2_without_soak(
         backend=backend, soak_local=soak_local, has_account=has_account
     )

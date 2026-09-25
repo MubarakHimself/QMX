@@ -194,7 +194,7 @@ _PROCESS_REQUIRED_PARAMS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyTyp
 )
 
 _NANOS: Final[int] = 1_000_000_000
-_HOUR_NS: Final[int] = 3_600_000_000_000
+_HOUR_NS: Final[int] = 3_600 * _NANOS
 
 
 # --- the OHLC integrity gate (R6, R8) ----------------------------------------
@@ -1629,6 +1629,7 @@ def _store_taint(
     record as a partition sidecar (not merely a filename). Returns the partition
     namespace, the record mapping, its relative path, and whether it was written.
     """
+    _ = run_id
     from qmb.data.store_taint import (  # noqa: PLC0415 — import-cycle with store_taint
         ARTIFACT_SERIES,
         route_synthetic_persist,
@@ -1874,6 +1875,7 @@ def _resolve_rounding(value: object) -> Result[RoundingMode]:
 def _resolve_process_params(
     body: Mapping[str, object], process: str, *, scale: int
 ) -> Result[Mapping[str, str]]:
+    _ = scale
     raw = body.get("process_params")
     supplied: dict[str, object] = {}
     if isinstance(raw, Mapping):

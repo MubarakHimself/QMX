@@ -61,6 +61,7 @@ __all__ = [
     "WRITER_NAME",
     "ReplayLedgerSink",
     "ReplayTerminalRecord",
+    "TerminalStatus",
     "mint_data_fingerprint",
     "mint_run_fingerprint",
     "read_intent",
@@ -68,20 +69,6 @@ __all__ = [
     "write_intent",
 ]
 
-TERMINAL_COMPLETE: Final[str] = "complete"
-TERMINAL_REFUSE: Final[str] = "refuse"
-TERMINAL_ABORT: Final[str] = "abort"
-TERMINAL_CANCEL: Final[str] = "cancel"
-TERMINAL_BOUND: Final[str] = "bound"
-TERMINAL_TEARDOWN: Final[str] = "teardown"
-TERMINAL_STATUSES: Final[tuple[str, ...]] = (
-    TERMINAL_COMPLETE,
-    TERMINAL_REFUSE,
-    TERMINAL_ABORT,
-    TERMINAL_CANCEL,
-    TERMINAL_BOUND,
-    TERMINAL_TEARDOWN,
-)
 TerminalStatus = Literal[
     "complete",
     "refuse",
@@ -90,6 +77,20 @@ TerminalStatus = Literal[
     "bound",
     "teardown",
 ]
+TERMINAL_COMPLETE: Final[TerminalStatus] = "complete"
+TERMINAL_REFUSE: Final[TerminalStatus] = "refuse"
+TERMINAL_ABORT: Final[TerminalStatus] = "abort"
+TERMINAL_CANCEL: Final[TerminalStatus] = "cancel"
+TERMINAL_BOUND: Final[TerminalStatus] = "bound"
+TERMINAL_TEARDOWN: Final[TerminalStatus] = "teardown"
+TERMINAL_STATUSES: Final[tuple[TerminalStatus, ...]] = (
+    TERMINAL_COMPLETE,
+    TERMINAL_REFUSE,
+    TERMINAL_ABORT,
+    TERMINAL_CANCEL,
+    TERMINAL_BOUND,
+    TERMINAL_TEARDOWN,
+)
 
 REPLAY_TERMINAL_CLASS: Final[str] = "qmn-replay-terminal-line"
 REPLAY_TERMINAL_FORMAT_VERSION: Final[int] = 1

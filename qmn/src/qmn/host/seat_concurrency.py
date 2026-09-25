@@ -1330,7 +1330,7 @@ def _probe_for(role: str, containment: SeatContainment) -> ScriptedLimitProbe:
 
 
 def _silent_logic(evidence: object) -> object:
-    del evidence
+    _ = evidence
     return ()
 
 

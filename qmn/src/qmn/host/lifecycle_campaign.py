@@ -902,7 +902,7 @@ def _exercise_recovery_and_monitoring(
     now: Instant,
     started_ns: int,
 ) -> Result[Mapping[str, object]]:
-    del inputs
+    _ = inputs
     watcher = WatcherDouble(cadence_ns=1_000_000_000)
     missing = watcher.evaluate(now.value_ns + 2_000_000_000)
     if is_refusal(missing):

@@ -96,6 +96,7 @@ class DuckDbAnalyticsEngine:
         engine contract; identity is the canonical bytes. A row that genuinely cannot be
         serialized is refused **non-retryably** — a retry cannot make it decode.
         """
+        _ = rows
         conn = self._connect()
         try:
             payloads = _canonical_row_payloads(key, canonical)

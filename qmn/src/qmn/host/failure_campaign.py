@@ -471,11 +471,11 @@ class _Fixtures:
 
 class _SecretStore:
     def read(self, ref: object, /) -> Result[object]:
-        del ref
+        _ = ref
         return unpersistable("no such credential")
 
     def atomic_replace(self, ref: object, new_value: object, /) -> Result[object]:
-        del new_value
+        _ = new_value
         return Ok(ref)
 
 
@@ -499,13 +499,13 @@ class _JournalSink:
 
 class _RecordSink:
     def write(self, record: object, /) -> SinkResult:
-        del record
+        _ = record
         return Ok(SinkAck())
 
 
 class _FailingRecordSink:
     def write(self, record: object, /) -> SinkResult:
-        del record
+        _ = record
         return unpersistable("command identity store unavailable")
 
 

@@ -98,6 +98,7 @@ def _coerce_format_version(field: str, value: object, expected: int) -> int | No
     one this build understands returns ``None`` — the caller turns that into an
     ``unsupported capability`` refusal (an unknown version is never best-effort read).
     """
+    _ = field
     if isinstance(value, bool) or not isinstance(value, int):
         return None
     if value != expected:

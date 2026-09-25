@@ -554,7 +554,7 @@ def _has_declared_seed(bot: BotDefinition) -> bool:
 
 
 def _silent_logic(evidence: object) -> tuple[()]:
-    del evidence
+    _ = evidence
     return ()
 
 

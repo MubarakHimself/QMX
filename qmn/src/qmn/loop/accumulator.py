@@ -180,7 +180,7 @@ class RecordingAccumulator:
             writer_name=name,
         )
         _REGISTRY[key] = name
-        acc._registered = True
+        acc._registered = cls.SOLE_FIRST_WRITER
         return Ok(acc)
 
     @property

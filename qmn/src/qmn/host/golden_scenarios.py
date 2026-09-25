@@ -434,29 +434,29 @@ class _Fixtures:
 
 class _SecretStore:
     def read(self, ref: object, /) -> Result[object]:
-        del ref
+        _ = ref
         return unpersistable("no such credential")
 
     def atomic_replace(self, ref: object, new_value: object, /) -> Result[object]:
-        del new_value
+        _ = new_value
         return Ok(ref)
 
 
 class _ObsSink:
     def emit(self, observation: object, /) -> SinkResult:
-        del observation
+        _ = observation
         return Ok(SinkAck())
 
 
 class _JournalSink:
     def append(self, event: object, /) -> SinkResult:
-        del event
+        _ = event
         return Ok(SinkAck())
 
 
 class _RecordSink:
     def write(self, record: object, /) -> SinkResult:
-        del record
+        _ = record
         return Ok(SinkAck())
 
 

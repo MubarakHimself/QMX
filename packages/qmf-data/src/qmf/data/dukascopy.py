@@ -293,7 +293,7 @@ def decode_bi5_ticks(
     int, ask volume float, bid volume float. Prices stay as provider scaled
     integers at ``price_scale`` — never binary floats on the money path.
     """
-    del price_scale  # scale is applied by the caller when minting ForeignMoney
+    _ = price_scale  # scale is applied by the caller when minting ForeignMoney
     if not isinstance(compressed, (bytes, bytearray)):
         return invalid_input(
             "compressed",

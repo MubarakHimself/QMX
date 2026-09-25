@@ -293,14 +293,14 @@ def apply_treasury_boundary(
 
     class _TreasuryJournalSink:
         def append(self, event: object, /) -> Result[SinkAck]:
-            del event
+            _ = event
             written = journal.append(act)
             if is_refusal(written):
                 return written
             return Ok(SinkAck(detail={"complete": True, "partial": False}))
 
     def _apply_cash(_payload: Mapping[str, object]) -> Result[TreasuryBoundaryAct]:
-        del _payload
+        _ = _payload
         row = ledger.append_boundary(
             cash_delta=act.cash_delta,
             recorded_at=act.dated_at,

@@ -441,7 +441,7 @@ def _finish(
     if is_refusal(envelope_cls):
         return envelope_cls
     envelope_name, envelope_type = envelope_cls.value
-    del envelope_name
+    _ = envelope_name
     envelope = envelope_type()
     set_type = _set_int(envelope, ("payloadType", "payload_type"), payload_type)
     if is_refusal(set_type):

@@ -166,7 +166,7 @@ def refuse_snapshot_alone_claim(
     SCN-0004 / DEC-0118: recoverability is claimed only through sample-restore and
     full-restore rehearsal — never asserted from an off-machine copy existing.
     """
-    del world, copy_version, source_room_role
+    _ = (world, copy_version, source_room_role)
     return policy_rejection(
         "recoverability",
         "recoverability is claimed only through the ratified verify primitives — "

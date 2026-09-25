@@ -22,6 +22,7 @@ from qmn.data import (
     LocalFilesystemRcloneRunner,
     RecordingBackupJournal,
     RecordingRcloneRunner,
+    SubprocessRcloneRunner,
     apply_backup_retention,
     generate_test_payload_key,
     push_committed_prefixes,
@@ -266,6 +267,11 @@ def test_credentials_and_plaintext_never_enter_manifest_or_argv() -> None:
     )
     power = _refusal(validate_rclone_argv(trade))
     assert power.context["failure_id"] == "data.backup.trading_power"
+
+
+def test_subprocess_rclone_runner_refuses_non_rclone_argv() -> None:
+    refused = _refusal(SubprocessRcloneRunner().run(["curl", "https://invalid.example"]))
+    assert refused.category is RefusalCategory.INVALID_INPUT
 
 
 def test_push_is_idempotent_on_retry(tmp_path: Path) -> None:

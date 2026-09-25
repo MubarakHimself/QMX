@@ -306,26 +306,26 @@ class OffMachineCycle:
 
     def own_schedule(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — QMF never owns the nightly schedule (AC2 / FM-9)."""
-        del args, kwargs
+        _ = (args, kwargs)
         return refuse_schedule_ownership(request="own_schedule")
 
     def start_daemon(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — no daemon, cron, or thread lives in qmf-data (AC2)."""
-        del args, kwargs
+        _ = (args, kwargs)
         return refuse_schedule_ownership(request="start_daemon")
 
     def set_recovery_point_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RPO is a node/ops-sitting item (AC2)."""
-        del args, kwargs
+        _ = (args, kwargs)
         return refuse_numeric_rpo_rto(target="backup_recovery_point_objective")
 
     def set_recovery_time_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RTO is a node/ops-sitting item (AC2)."""
-        del args, kwargs
+        _ = (args, kwargs)
         return refuse_numeric_rpo_rto(target="backup_recovery_time_objective")
 
 

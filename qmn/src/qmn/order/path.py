@@ -388,7 +388,7 @@ class OrderPath:
         after handoff. ``amend_min_improvement`` is accepted only to prove it
         never suppresses a risk-non-increasing amend.
         """
-        del amend_min_improvement  # origination policy only — never a path gate
+        _ = amend_min_improvement  # origination policy only — never a path gate
         if isinstance(command, CompoundCommand):
             return compound_all_rejected_acceptance_blocked()
         if not isinstance(command, Command):
@@ -617,7 +617,7 @@ class OrderPath:
         # Past handoff: never retry — a failed submit is terminal for this mint.
         if self.command_journal is not None:
             def _submit(_payload: Mapping[str, object]) -> Result[SubmissionResult]:
-                del _payload
+                _ = _payload
                 return self.client.submit(command)
 
             receipt = journal_before_effect(

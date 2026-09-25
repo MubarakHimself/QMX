@@ -1716,6 +1716,7 @@ def _bounds_from_config(
     design: RegimeClassifierDesign | None,
     contract: ExecutableRegimeContract | None,
 ) -> HyperparameterBounds:
+    _ = config
     resolved = _resolve_contract(design=design, contract=contract)
     if is_refusal(resolved):
         return accepted_regime_classifier_design().hyperparameter_bounds

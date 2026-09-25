@@ -584,7 +584,7 @@ def _market(
     current: Price,
     fill_basis: str,
 ) -> Result[tuple[Price, bool] | NoFill]:
-    del path, opening, closing
+    _ = (path, opening, closing)
     if fill_basis == FILL_BASIS_OPTIMISTIC_EXACT:
         return _priced_hit(current, False)
     worst = high if _is_buy(order) else low
@@ -808,7 +808,7 @@ def _stop_triggered(order: FillOrder, high: Price, low: Price, stop: Price) -> b
 
 
 def _gap_through_market(order: FillOrder, path: SlicePath, opening: Price) -> Price | None:
-    del order
+    _ = order
     if path.prior_close is None:
         return None
     if not _same(path.prior_close, opening):

@@ -666,6 +666,7 @@ def _spread_delta(path: SlicePath, calibration: SlippageCalibration) -> Result[P
 
 
 def _bar_range(path: SlicePath, sample: Price) -> Result[PriceDelta]:
+    _ = sample
     high = path.high
     low = path.low
     if high is None or low is None:

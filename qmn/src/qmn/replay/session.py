@@ -198,7 +198,7 @@ def assert_outside_node_process() -> Result[None]:
 
 def attach_replay_to_loop(loop: object) -> Result[None]:
     """Always refuse — replay is never a second loop on the node thread."""
-    del loop
+    _ = loop
     return refuse_in_node_process()
 
 
@@ -260,7 +260,7 @@ class ReplayWorldSink:
         return self._accept(event, verb="append")
 
     def _accept(self, payload: object, *, verb: str) -> SinkResult:
-        del verb
+        _ = verb
         if isinstance(payload, Mapping):
             body = dict(cast("Mapping[str, object]", payload))
             declared = body.get("world")
@@ -289,11 +289,11 @@ class ReplaySliceHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[None]:
-        del stream_id, observation, frontier
+        _ = (stream_id, observation, frontier)
         return Ok(None)
 
     def scheduled_position_event(self, stream_id: str, frontier: Instant) -> Result[None]:
-        del stream_id, frontier
+        _ = (stream_id, frontier)
         return Ok(None)
 
     def execute_resting(
@@ -302,7 +302,7 @@ class ReplaySliceHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[bool]:
-        del intent, observation, frontier
+        _ = (intent, observation, frontier)
         # Never fill — GAP-0056 stays deferred.
         return Ok(False)
 
@@ -312,7 +312,7 @@ class ReplaySliceHandler:
         observation: SliceObservation,
         frontier: Instant,
     ) -> Result[None]:
-        del stream_id, observation, frontier
+        _ = (stream_id, observation, frontier)
         return Ok(None)
 
     def mint_intents(self, stream_id: str, frontier: Instant) -> Result[object]:
@@ -403,7 +403,7 @@ class ReplayComposition:
         return refuse_command_submit(command=command)
 
     def simulate_fills(self, *args: object, **kwargs: object) -> Result[None]:
-        del args, kwargs
+        _ = (args, kwargs)
         return refuse_fill_simulation()
 
 

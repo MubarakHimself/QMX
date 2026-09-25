@@ -11,7 +11,11 @@ from qmf.core.refusal import Result, is_ok, is_refusal
 from qmn.config import config_init
 from qmn.doors import api, library, parity
 from qmn.doors.http import evidence
-from qmn.doors.http.dispatch import handle_powers_call, render_powers_response
+from qmn.doors.http.dispatch import (
+    closed_power_names,
+    handle_powers_call,
+    render_powers_response,
+)
 from qmn.doors.http.evidence import handle_evidence_request, render_evidence_http
 from qmn.doors.http.powers import (
     CLOSED_POWERS,
@@ -356,6 +360,7 @@ def test_closed_powers_list_unchanged_and_ops_subset() -> None:
     assert "notify_test" in CLOSED_POWERS
     assert "resurrect" in CLOSED_POWERS
     assert doors.OPS_ALLOWED_POWERS <= CLOSED_POWERS
+    assert closed_power_names() == CLOSED_POWERS
 
 
 def test_doors_modules_stay_free_of_venue_and_cli() -> None:

@@ -437,7 +437,7 @@ def evaluate_sync_posture(
             )
         if truth.sync_age_ns > thresholds.unsynchronized_after_ns:
             return Ok(SyncPosture.UNSYNCHRONIZED)
-    del now  # reserved for interval stamping by the caller
+    _ = now  # reserved for interval stamping by the caller
     return Ok(SyncPosture.SYNCHRONIZED)
 
 
@@ -560,7 +560,7 @@ def evaluate_clock_band(
     stand_down = band is ClockBand.HALT
     failure = None if band is ClockBand.OK else CLOCK_BAND_FAILURE_IDS[band.value]
     # Broker skew remains evidence-only here; never auto-correct or rename as latency.
-    del broker_skew
+    _ = broker_skew
     return Ok(
         ClockBandDecision(
             band=band,
@@ -590,7 +590,7 @@ def clock_band_entry_side_refused(band: ClockBand, *, act: object) -> bool:
 
 def clock_band_preserves_protection(band: ClockBand, *, act: object) -> bool:
     """True when exits/protection remain enactable under ``band`` (L39)."""
-    del band
+    _ = band
     token = str(act).strip().lower().replace("-", "_")
     return token in {
         "cancel_order",
