@@ -471,6 +471,47 @@ def mint_exit_record(
     if is_refusal(refs):
         return refs
     arb, venue_obs = refs.value
+    return _finish_exit_record(
+        position=position,
+        bot=bot,
+        faces=faces,
+        fills=fills,
+        pnl=pnl,
+        costs=costs,
+        reason=reason,
+        mech=mech,
+        out=out,
+        authority=authority,
+        arb=arb,
+        venue_obs=venue_obs,
+        mapping_version=mapping_version,
+        label=label,
+        predicate_version=predicate_version,
+        epoch=epoch,
+        instant=instant,
+    )
+
+
+def _finish_exit_record(
+    *,
+    position: Fingerprint,
+    bot: str,
+    faces: RFaces,
+    fills: tuple[Fingerprint, ...],
+    pnl: Money,
+    costs: tuple[CostComponent, ...],
+    reason: CloseReason,
+    mech: CloseReason,
+    out: CloseOutcome,
+    authority: ClosingAuthority,
+    arb: Fingerprint | None,
+    venue_obs: Fingerprint | None,
+    mapping_version: int,
+    label: ExitResultLabel,
+    predicate_version: int,
+    epoch: Fingerprint,
+    instant: Instant,
+) -> Result[ExitRecord]:
     return _Ok(
         ExitRecord(
             virtual_position_ref=position,

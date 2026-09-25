@@ -237,8 +237,7 @@ def _book_instance_identity(
     if not isinstance(book_definition_fingerprint, Fingerprint):
         return invalid(
             "book_definition_fingerprint",
-            "a Book instance cites the CT-22 Book VERSION by fingerprint, never a version "
-            "string",
+            "a Book instance cites the CT-22 Book VERSION by fingerprint, never a version string",
             given=repr(book_definition_fingerprint),
         )
     account = clean_str(account_id)
@@ -1003,9 +1002,7 @@ def _bind_check_flatten(
     shared_flatten_signature: object,
 ) -> Result[str | None]:
     resolved_signature = clean_str(shared_flatten_signature)
-    netted_overlap = (
-        position_model is PositionModel.NETTING and second_book and overlapping
-    )
+    netted_overlap = position_model is PositionModel.NETTING and second_book and overlapping
     if netted_overlap and resolved_signature is None:
         return unsupported(
             "shared_flatten_signature",
@@ -1101,21 +1098,34 @@ def bind_time_capability_check(
     )
     if is_refusal(flatten):
         return flatten
-    sensors = _bind_check_sensors(
-        reqs, sensor_baselines_present, live_rung, rank_table
-    )
+    sensors = _bind_check_sensors(reqs, sensor_baselines_present, live_rung, rank_table)
     if is_refusal(sensors):
         return sensors
     return Ok(
-        CapabilityCheckResult(
+        _capability_check_result(
+            reqs,
             position_model=position_model,
             settlement_currency=settlement_currency,
-            satisfied_capabilities=reqs.required_venue_capabilities,
             shared_flatten_signature=flatten.value,
-            satisfied_sensor_baselines=reqs.required_sensor_ids,
-            live_path_rung_baseline_present=True,
-            rank_table_non_contradicted=True,
         )
+    )
+
+
+def _capability_check_result(
+    reqs: BookBindingRequirements,
+    *,
+    position_model: PositionModel,
+    settlement_currency: str,
+    shared_flatten_signature: str | None,
+) -> CapabilityCheckResult:
+    return CapabilityCheckResult(
+        position_model=position_model,
+        settlement_currency=settlement_currency,
+        satisfied_capabilities=reqs.required_venue_capabilities,
+        shared_flatten_signature=shared_flatten_signature,
+        satisfied_sensor_baselines=reqs.required_sensor_ids,
+        live_path_rung_baseline_present=True,
+        rank_table_non_contradicted=True,
     )
 
 
@@ -1127,9 +1137,7 @@ def _binding_tuple_identity(
     world: object,
     book_definition_fingerprint: object,
     bms_definition_fingerprint: object,
-) -> Result[
-    tuple[BookInstanceId, BmsInstanceId, VenueId, str, World, Fingerprint, Fingerprint]
-]:
+) -> Result[tuple[BookInstanceId, BmsInstanceId, VenueId, str, World, Fingerprint, Fingerprint]]:
     if not isinstance(book_instance_id, BookInstanceId):
         return invalid(
             "book_instance_id",

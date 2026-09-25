@@ -565,6 +565,11 @@ class RegistryPersistence:
                 "persistence appends a LineageEdge (the CT-07 typed lineage edge)",
                 given=repr(edge),
             )
+        return self._append_edge_with_witness(edge, edge_stream)
+
+    def _append_edge_with_witness(
+        self, edge: LineageEdge, edge_stream: object
+    ) -> Result[StoreReceipt]:
         if edge.edge_type is EdgeType.SUPERSEDES:
             guard = self._guard_durable_supersedes(edge)
             if is_refusal(guard):
@@ -788,7 +793,30 @@ def _reconstruct_record(persisted_fp: Fingerprint, raw: bytes) -> Result[LoadedR
     parsed = _load_object(raw)
     if is_refusal(parsed):  # pragma: no cover - defensive
         return parsed
-    identity = parsed.value
+    fields = _persisted_identity_fields(parsed.value)
+    if is_refusal(fields):
+        return fields
+    kind, version, refs, body_obj, envelope_version = fields.value
+    derived = _assert_persisted_fingerprint(parsed.value, persisted_fp)
+    if is_refusal(derived):
+        return derived
+    frozen_body = cast("Mapping[str, object]", _deep_freeze(body_obj))
+    return Ok(
+        LoadedRecord(
+            kind=kind,
+            contract_format_version=version,
+            at_birth_parent_refs=tuple(refs),
+            body=frozen_body,
+            format_version=envelope_version,
+            stable_id=derived.value,
+            persisted_fingerprint=persisted_fp,
+        )
+    )
+
+
+def _persisted_identity_fields(
+    identity: Mapping[str, object],
+) -> Result[tuple[str, int, list[Fingerprint], dict[str, object], int]]:
     kind = identity.get("kind")
     version = identity.get("contract_format_version")
     refs_obj = identity.get("at_birth_parent_refs")
@@ -810,6 +838,12 @@ def _reconstruct_record(persisted_fp: Fingerprint, raw: bytes) -> Result[LoadedR
         if resolved is None:  # pragma: no cover - defensive
             return _corrupt("a persisted at-birth parent reference is not an fp1 fingerprint")
         refs.append(resolved)
+    return Ok((kind, version, refs, cast("dict[str, object]", body_obj), envelope_version))
+
+
+def _assert_persisted_fingerprint(
+    identity: Mapping[str, object], persisted_fp: Fingerprint
+) -> Result[Fingerprint]:
     # Recompute the record's fp1 stable id over its identity content and assert it equals the
     # key the record was read under. The store key is the digest the SQLite engine filed the
     # row under — retained independently of the ``canonical`` bytes it returns — so a silently
@@ -827,18 +861,7 @@ def _reconstruct_record(persisted_fp: Fingerprint, raw: bytes) -> Result[LoadedR
             expected=persisted_fp.value,
             recomputed=derived.value.value,
         )
-    frozen_body = cast("Mapping[str, object]", _deep_freeze(cast("dict[str, object]", body_obj)))
-    return Ok(
-        LoadedRecord(
-            kind=kind,
-            contract_format_version=version,
-            at_birth_parent_refs=tuple(refs),
-            body=frozen_body,
-            format_version=envelope_version,
-            stable_id=derived.value,
-            persisted_fingerprint=persisted_fp,
-        )
-    )
+    return Ok(derived.value)
 
 
 def _reconstruct_edge(line: Mapping[str, object]) -> Result[LineageEdge]:
@@ -1123,18 +1146,39 @@ def migrate_registry_format(
     if is_refusal(verified):
         return verified
     return Ok(
-        MigrationReport(
-            restore_path=str(source.root),
-            backed_up=True,
+        _migration_report(
+            source,
             backup_path=backup_path.value,
-            records_only=True,
             preflight_count=preflight.value,
-            dry_run_count=len(migrated.value),
-            migrated_count=len(receipts.value),
+            migrated=migrated.value,
+            receipts=receipts.value,
             verified_count=verified.value,
             to_format_version=version.value,
-            receipts=tuple(receipts.value),
         )
+    )
+
+
+def _migration_report(
+    source: RegistryPersistence,
+    *,
+    backup_path: str,
+    preflight_count: int,
+    migrated: list[RegistrationRecord],
+    receipts: list[StoreReceipt],
+    verified_count: int,
+    to_format_version: int,
+) -> MigrationReport:
+    return MigrationReport(
+        restore_path=str(source.root),
+        backed_up=True,
+        backup_path=backup_path,
+        records_only=True,
+        preflight_count=preflight_count,
+        dry_run_count=len(migrated),
+        migrated_count=len(receipts),
+        verified_count=verified_count,
+        to_format_version=to_format_version,
+        receipts=tuple(receipts),
     )
 
 

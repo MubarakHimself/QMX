@@ -1094,53 +1094,62 @@ class PaperTargetLog:
                 record_fingerprint=fp_value,
             )
         binding_key = record.binding_ref.value
-        active = self._active_by_binding.get(binding_key)
-        if record.supersedes is not None:
-            prior_value = record.supersedes.value
-            prior = self._records.get(prior_value)
-            if prior is None:
-                return unavailable(
-                    "supersedes",
-                    "a superseding paper-target record must name an existing prior record; a "
-                    "supersedes edge never dangles",
-                    given=prior_value,
-                )
-            if prior.binding_ref.value != binding_key:
-                return invalid(
-                    "supersedes",
-                    "a paper-target record may supersede only the same binding's prior target",
-                    binding_ref=binding_key,
-                    prior_binding_ref=prior.binding_ref.value,
-                )
-            if prior_value in self._superseded:
-                return invalid(
-                    "supersedes",
-                    "the named prior paper-target record is already superseded; the log is "
-                    "append-only and a record is superseded at most once",
-                    given=prior_value,
-                )
-            if active != prior_value:
-                return invalid(
-                    "supersedes",
-                    "a re-point must supersede the binding's current active paper target",
-                    given=prior_value,
-                    current=active,
-                )
-        elif active is not None:
-            return invalid(
-                "record",
-                "one active paper-routing target exists per binding at an instant; re-pointing "
-                "mints a superseding dated record (two possible destinations is how an order "
-                "fires twice)",
-                binding_ref=binding_key,
-                current=active,
-            )
+        guarded = self._guard_paper_target_supersedes(record, binding_key)
+        if is_refusal(guarded):
+            return guarded
         self._records[fp_value] = record
         self._order.append(fp.value)
         if record.supersedes is not None:
             self._superseded.add(record.supersedes.value)
         self._active_by_binding[binding_key] = fp_value
         return Ok(fp.value)
+
+    def _guard_paper_target_supersedes(
+        self, record: PaperTargetRecord, binding_key: str
+    ) -> Result[None]:
+        active = self._active_by_binding.get(binding_key)
+        if record.supersedes is None:
+            if active is not None:
+                return invalid(
+                    "record",
+                    "one active paper-routing target exists per binding at an instant; "
+                    "re-pointing mints a superseding dated record (two possible destinations "
+                    "is how an order fires twice)",
+                    binding_ref=binding_key,
+                    current=active,
+                )
+            return Ok(None)
+        prior_value = record.supersedes.value
+        prior = self._records.get(prior_value)
+        if prior is None:
+            return unavailable(
+                "supersedes",
+                "a superseding paper-target record must name an existing prior record; a "
+                "supersedes edge never dangles",
+                given=prior_value,
+            )
+        if prior.binding_ref.value != binding_key:
+            return invalid(
+                "supersedes",
+                "a paper-target record may supersede only the same binding's prior target",
+                binding_ref=binding_key,
+                prior_binding_ref=prior.binding_ref.value,
+            )
+        if prior_value in self._superseded:
+            return invalid(
+                "supersedes",
+                "the named prior paper-target record is already superseded; the log is "
+                "append-only and a record is superseded at most once",
+                given=prior_value,
+            )
+        if active != prior_value:
+            return invalid(
+                "supersedes",
+                "a re-point must supersede the binding's current active paper target",
+                given=prior_value,
+                current=active,
+            )
+        return Ok(None)
 
     def resolve_active_target(self, binding_ref: object) -> Result[ExecutionTarget]:
         """The single active paper target for a binding, or an unavailable-dependency (AC3).
