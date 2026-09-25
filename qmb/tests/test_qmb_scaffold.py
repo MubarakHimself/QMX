@@ -12,6 +12,7 @@ import qmb
 
 _QMB_ROOT = Path(__file__).resolve().parents[1]
 _SRC = _QMB_ROOT / "src" / "qmb"
+_MAX_SOURCE_BYTES = 1 << 20  # 1 MiB
 _HOMES = (
     "runloop",
     "config",
@@ -138,10 +139,22 @@ def _banned_import_hit(
 
 
 def _scan_source_for_banned_imports(path: Path) -> list[str]:
-    relative = path.relative_to(_SRC)
+    """Scan one qmb source file for banned imports and open() calls.
+
+    The path is resolved and must be a regular file inside ``_SRC`` — never a
+    symlink, never resolving out of the package — and its size is capped before
+    the read, so a planted symlink or an oversized file can neither redirect nor
+    unbound it.
+    """
+    resolved = path.resolve()
+    assert not path.is_symlink(), resolved
+    assert resolved.is_file() and resolved.is_relative_to(_SRC), resolved
+    size = resolved.stat().st_size
+    assert size <= _MAX_SOURCE_BYTES, resolved
+    relative = resolved.relative_to(_SRC)
     in_orchestrator = relative.parts[:1] == ("orchestrator",)
     is_host_runner = relative.parts == ("host", "runner.py")
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(resolved.read_text(encoding="utf-8"), filename=str(resolved))
     violations: list[str] = []
     for node in ast.walk(tree):
         if _is_open_call(node):
