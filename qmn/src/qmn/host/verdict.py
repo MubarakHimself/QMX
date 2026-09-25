@@ -589,6 +589,98 @@ def publish_live_readiness_verdict(
     paper_performance: object = None,
 ) -> Result[LiveReadinessVerdict]:
     """Publish the Story 28.8 TN-23 verdict packet from journaled evidence."""
+    refused = _refuse_verdict_surface(
+        run_unattended_week=run_unattended_week,
+        claim_week_complete=claim_week_complete,
+        open_live_binding=open_live_binding,
+        procure_vps=procure_vps,
+        invented_ksa_value=invented_ksa_value,
+        invented_latency_value=invented_latency_value,
+        soak_duration=soak_duration,
+        profit=profit,
+        loss=loss,
+        win_rate=win_rate,
+        paper_performance=paper_performance,
+    )
+    if is_refusal(refused):
+        return refused
+    parts = _bind_verdict_evidence(
+        journaled_items=journaled_items,
+        first_hours_fp1=first_hours_fp1,
+        live_credentials_present=live_credentials_present,
+        live_instruments=live_instruments,
+        value_status=value_status,
+        incidents=incidents,
+        recovery_proofs=recovery_proofs,
+        qa_debt_matrix=qa_debt_matrix,
+    )
+    if is_refusal(parts):
+        return parts
+    return _stamp_live_readiness(parts.value)
+
+
+@dataclass(frozen=True, slots=True)
+class _VerdictParts:
+    hours_fp: Fingerprint
+    items: tuple[ChecklistItemFold, ...]
+    live_rows: tuple[LiveInstrumentReadiness, ...]
+    live_credentials_present: bool
+    statuses: Mapping[str, str]
+    incident_ids: tuple[str, ...]
+    recovery_ids: tuple[str, ...]
+    matrix: QaDebtClosureMatrix
+
+
+def _refuse_verdict_surface(
+    *,
+    run_unattended_week: object,
+    claim_week_complete: object,
+    open_live_binding: object,
+    procure_vps: object,
+    invented_ksa_value: object,
+    invented_latency_value: object,
+    soak_duration: object,
+    profit: object,
+    loss: object,
+    win_rate: object,
+    paper_performance: object,
+) -> Result[None]:
+    week = _refuse_verdict_week_and_live(
+        run_unattended_week=run_unattended_week,
+        claim_week_complete=claim_week_complete,
+        open_live_binding=open_live_binding,
+        procure_vps=procure_vps,
+    )
+    if is_refusal(week):
+        return week
+    invented = _refuse_verdict_invented_and_profit(
+        invented_ksa_value=invented_ksa_value,
+        invented_latency_value=invented_latency_value,
+        soak_duration=soak_duration,
+        profit=profit,
+        loss=loss,
+        win_rate=win_rate,
+        paper_performance=paper_performance,
+    )
+    if is_refusal(invented):
+        return invented
+    if RUNS_UNATTENDED_PAPER_WEEK or OPENS_LIVE_BINDING or PROFIT_ENTERS_VERDICT:
+        return policy(  # pragma: no cover - pinned False surface markers
+            "verdict",
+            "surface markers forbid running the paper week, opening a live "
+            "binding, or admitting profit into the verdict",
+            failure_id=_ID_WEEK,
+        )
+    return Ok(None)
+
+
+def _refuse_verdict_week_and_live(
+    *,
+    run_unattended_week: object,
+    claim_week_complete: object,
+    open_live_binding: object,
+    procure_vps: object,
+) -> Result[None]:
     if run_unattended_week is True or claim_week_complete is True:
         return refuse_unattended_paper_week(
             run_unattended_week=run_unattended_week,
@@ -598,6 +690,19 @@ def publish_live_readiness_verdict(
         return refuse_live_binding()
     if procure_vps is True:
         return refuse_procure_vps()
+    return Ok(None)
+
+
+def _refuse_verdict_invented_and_profit(
+    *,
+    invented_ksa_value: object,
+    invented_latency_value: object,
+    soak_duration: object,
+    profit: object,
+    loss: object,
+    win_rate: object,
+    paper_performance: object,
+) -> Result[None]:
     if (
         invented_ksa_value is not None
         or invented_latency_value is not None
@@ -620,22 +725,59 @@ def publish_live_readiness_verdict(
             win_rate=repr(win_rate),
             paper_performance=repr(paper_performance),
         )
-    if RUNS_UNATTENDED_PAPER_WEEK or OPENS_LIVE_BINDING or PROFIT_ENTERS_VERDICT:
-        return policy(  # pragma: no cover - pinned False surface markers
-            "verdict",
-            "surface markers forbid running the paper week, opening a live "
-            "binding, or admitting profit into the verdict",
-            failure_id=_ID_WEEK,
-        )
+    return Ok(None)
 
+
+def _bind_verdict_evidence(
+    *,
+    journaled_items: object,
+    first_hours_fp1: object,
+    live_credentials_present: object,
+    live_instruments: object,
+    value_status: object,
+    incidents: object,
+    recovery_proofs: object,
+    qa_debt_matrix: object,
+) -> Result[_VerdictParts]:
     hours_fp = _as_fingerprint(first_hours_fp1, "first_hours_fp1")
     if is_refusal(hours_fp):
         return hours_fp
-
     folded = fold_tn23_checklist(journaled_items)
     if is_refusal(folded):
         return folded
+    live = _bind_verdict_live_rows(live_credentials_present, live_instruments)
+    if is_refusal(live):
+        return live
+    credentials, live_rows = live.value
+    statuses = _bind_verdict_statuses(value_status)
+    if is_refusal(statuses):
+        return statuses
+    incident_ids = _parse_token_tuple(incidents, "incidents")
+    if is_refusal(incident_ids):
+        return incident_ids
+    recovery_ids = _parse_token_tuple(recovery_proofs, "recovery_proofs")
+    if is_refusal(recovery_ids):
+        return recovery_ids
+    matrix = _as_qa_debt_matrix(qa_debt_matrix)
+    if is_refusal(matrix):
+        return matrix
+    return Ok(
+        _VerdictParts(
+            hours_fp=hours_fp.value,
+            items=folded.value,
+            live_rows=live_rows,
+            live_credentials_present=credentials,
+            statuses=statuses.value,
+            incident_ids=incident_ids.value,
+            recovery_ids=recovery_ids.value,
+            matrix=matrix.value,
+        )
+    )
 
+
+def _bind_verdict_live_rows(
+    live_credentials_present: object, live_instruments: object
+) -> Result[tuple[bool, tuple[LiveInstrumentReadiness, ...]]]:
     live_rows = evaluate_live_instrument_readiness(
         live_credentials_present=live_credentials_present,
         instruments=live_instruments,
@@ -649,55 +791,78 @@ def publish_live_readiness_verdict(
             given=repr(live_credentials_present),
             failure_id=_ID_INPUTS,
         )
+    return Ok((live_credentials_present, live_rows.value))
 
+
+def _bind_verdict_statuses(value_status: object) -> Result[Mapping[str, str]]:
     statuses = _parse_value_status(value_status)
     if is_refusal(statuses):
         return statuses
     numeric = _refuse_numeric_ksa(statuses.value)
     if numeric is not None:
         return numeric
+    return Ok(statuses.value)
 
-    incident_ids = _parse_token_tuple(incidents, "incidents")
-    if is_refusal(incident_ids):
-        return incident_ids
-    recovery_ids = _parse_token_tuple(recovery_proofs, "recovery_proofs")
-    if is_refusal(recovery_ids):
-        return recovery_ids
 
-    matrix = _as_qa_debt_matrix(qa_debt_matrix)
-    if is_refusal(matrix):
-        return matrix
-
+def _stamp_live_readiness(parts: _VerdictParts) -> Result[LiveReadinessVerdict]:
     blocked = tuple(
         sorted(
             {
                 item.blocked_infra
-                for item in folded.value
+                for item in parts.items
                 if item.status is ChecklistItemStatus.SKIPPED_BLOCKED_INFRA
                 and item.blocked_infra is not None
             }
         )
     )
-    item_ok = all(item.status is not ChecklistItemStatus.REFUSED for item in folded.value)
+    item_ok = all(item.status is not ChecklistItemStatus.REFUSED for item in parts.items)
     live_ready = (
-        live_credentials_present is True
-        and bool(live_rows.value)
-        and all(row.ready for row in live_rows.value)
+        parts.live_credentials_present is True
+        and bool(parts.live_rows)
+        and all(row.ready for row in parts.live_rows)
     )
-    live_delayed = not live_ready
-    packet = LiveReadinessVerdict(
-        format_version=VERDICT_PACKET_FORMAT_VERSION,
+    packet = _live_readiness_packet(
         fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
-        items=folded.value,
-        qa_debt_matrix_fp1=matrix.value.fingerprint,
-        first_hours_fp1=hours_fp.value,
-        value_status=MappingProxyType(dict(statuses.value)),
-        incidents=incident_ids.value,
-        recovery_proofs=recovery_ids.value,
-        live_instruments=live_rows.value,
-        live_credentials_present=live_credentials_present,
+        parts=parts,
         live_ready=live_ready,
-        live_delayed=live_delayed,
+        blocked=blocked,
+        item_ok=item_ok,
+    )
+    stamped = fingerprint(packet.fp1_identity())
+    if is_refusal(stamped):
+        return stamped
+    return Ok(
+        _live_readiness_packet(
+            fingerprint=stamped.value,
+            parts=parts,
+            live_ready=live_ready,
+            blocked=blocked,
+            item_ok=item_ok,
+        )
+    )
+
+
+def _live_readiness_packet(
+    *,
+    fingerprint: Fingerprint,
+    parts: _VerdictParts,
+    live_ready: bool,
+    blocked: tuple[str, ...],
+    item_ok: bool,
+) -> LiveReadinessVerdict:
+    return LiveReadinessVerdict(
+        format_version=VERDICT_PACKET_FORMAT_VERSION,
+        fingerprint=fingerprint,
+        items=parts.items,
+        qa_debt_matrix_fp1=parts.matrix.fingerprint,
+        first_hours_fp1=parts.hours_fp,
+        value_status=MappingProxyType(dict(parts.statuses)),
+        incidents=parts.incident_ids,
+        recovery_proofs=parts.recovery_ids,
+        live_instruments=parts.live_rows,
+        live_credentials_present=parts.live_credentials_present,
+        live_ready=live_ready,
+        live_delayed=not live_ready,
         demo_milestone_invalidated=False,
         week_complete=False,
         unattended_week_ran=False,
@@ -706,33 +871,6 @@ def publish_live_readiness_verdict(
         profit_enters_verdict=False,
         blocked_infra=blocked,
         ok=item_ok,
-    )
-    stamped = fingerprint(packet.fp1_identity())
-    if is_refusal(stamped):
-        return stamped
-    return Ok(
-        LiveReadinessVerdict(
-            format_version=VERDICT_PACKET_FORMAT_VERSION,
-            fingerprint=stamped.value,
-            items=folded.value,
-            qa_debt_matrix_fp1=matrix.value.fingerprint,
-            first_hours_fp1=hours_fp.value,
-            value_status=MappingProxyType(dict(statuses.value)),
-            incidents=incident_ids.value,
-            recovery_proofs=recovery_ids.value,
-            live_instruments=live_rows.value,
-            live_credentials_present=live_credentials_present,
-            live_ready=live_ready,
-            live_delayed=live_delayed,
-            demo_milestone_invalidated=False,
-            week_complete=False,
-            unattended_week_ran=False,
-            live_binding_open=False,
-            grants_live_money_authority=False,
-            profit_enters_verdict=False,
-            blocked_infra=blocked,
-            ok=item_ok,
-        )
     )
 
 

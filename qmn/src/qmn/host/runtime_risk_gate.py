@@ -1923,37 +1923,59 @@ def _exercise_journal_before_dispatch() -> Result[Mapping[str, object]]:
 def _produce_refusal_categories(fx: _Fixtures) -> Result[dict[str, str]]:
     """Named production paths for every CT-04 category — not enum tautologies."""
     paths: dict[str, str] = {}
+    seeded = _seed_book_refusal_paths(paths)
+    if is_refusal(seeded):
+        return seeded
+    close_partial = refuse_close_partial()
+    paths[close_partial.category.value] = "refuse_close_partial"
+    populated = _seed_population_refusal_paths(fx, paths)
+    if is_refusal(populated):
+        return populated
+    stored = _seed_storage_refusal_paths(paths)
+    if is_refusal(stored):
+        return stored
+    if RefusalCategory.INVALID_INPUT.value not in paths:
+        filled = _seed_no_stop_invalid_input(fx, paths)
+        if is_refusal(filled):
+            return filled
+    return Ok(paths)
 
+
+def _seed_book_refusal_paths(paths: dict[str, str]) -> Result[None]:
     invalid_book = BookDefinition.try_create(2, 1.5, {})
     if not is_refusal(invalid_book):
         return policy("refusal_category", "CT-22 must refuse a non-USD/non-string currency")
     if invalid_book.category is not RefusalCategory.INVALID_INPUT:
-        # non-USD string is policy; a float/non-string should be invalid input.
-        unsupported_version = BookDefinition.try_create(99, "USD", {})
-        if not is_refusal(unsupported_version):
-            return policy("refusal_category", "unknown Book format must refuse")
-        if unsupported_version.category is RefusalCategory.UNSUPPORTED_CAPABILITY:
-            paths[RefusalCategory.UNSUPPORTED_CAPABILITY.value] = (
-                "BookDefinition.try_create/unknown-format"
-            )
-        invalid_intent = admit_entry_at_book_door(
-            intent="not-an-intent",
-            entry_price="x",
-            exit_logic_ref="y",
-            module=_OffsetStopModule(),
-            book_resolved_requested_r="z",
-            r_unit_price="z",
-            value_factor="z",
-            money_scale=2,
+        return _seed_non_invalid_book_paths(paths)
+    paths[RefusalCategory.INVALID_INPUT.value] = "BookDefinition.try_create/invalid-currency"
+    return Ok(None)
+
+
+def _seed_non_invalid_book_paths(paths: dict[str, str]) -> Result[None]:
+    # non-USD string is policy; a float/non-string should be invalid input.
+    unsupported_version = BookDefinition.try_create(99, "USD", {})
+    if not is_refusal(unsupported_version):
+        return policy("refusal_category", "unknown Book format must refuse")
+    if unsupported_version.category is RefusalCategory.UNSUPPORTED_CAPABILITY:
+        paths[RefusalCategory.UNSUPPORTED_CAPABILITY.value] = (
+            "BookDefinition.try_create/unknown-format"
         )
-        if is_refusal(invalid_intent):
-            paths[invalid_intent.category.value] = "admit_entry_at_book_door/invalid"
-    else:
-        paths[RefusalCategory.INVALID_INPUT.value] = "BookDefinition.try_create/invalid-currency"
+    invalid_intent = admit_entry_at_book_door(
+        intent="not-an-intent",
+        entry_price="x",
+        exit_logic_ref="y",
+        module=_OffsetStopModule(),
+        book_resolved_requested_r="z",
+        r_unit_price="z",
+        value_factor="z",
+        money_scale=2,
+    )
+    if is_refusal(invalid_intent):
+        paths[invalid_intent.category.value] = "admit_entry_at_book_door/invalid"
+    return Ok(None)
 
-    close_partial = refuse_close_partial()
-    paths[close_partial.category.value] = "refuse_close_partial"
 
+def _seed_population_refusal_paths(fx: _Fixtures, paths: dict[str, str]) -> Result[None]:
     graph = _risk_graph(fx.venue_id)
     if is_refusal(graph):
         return graph
@@ -1973,24 +1995,24 @@ def _produce_refusal_categories(fx: _Fixtures) -> Result[dict[str, str]]:
             "a dangling seat must refuse Layer-1 population admission",
         )
     paths[missing.category.value] = "admit_runtime_risk_population/referential_integrity"
-
     stale = refuse_stale_exit_before_intent(
         closing_exit_record=None, persisted=False, journaled=False
     )
     if not is_refusal(stale):
         return policy("refusal_category", "stale exit must refuse the next intent")
     paths[stale.category.value] = "refuse_stale_exit_before_intent"
-
     paper = refuse_paper_profit_as_proof()
     paths[paper.category.value] = "refuse_paper_profit_as_proof"
-
     unknown = _exercise_unknown(fx)
     if is_refusal(unknown):
         return unknown
     paths[str(unknown.value["refusal_category"])] = (
         "CommandStreamUnknownBoundary.admit/place_under_unknown"
     )
+    return Ok(None)
 
+
+def _seed_storage_refusal_paths(paths: dict[str, str]) -> Result[None]:
     storage = journal_before_effect(
         kind="control",
         payload={"class": "d010-storage"},
@@ -2000,63 +2022,105 @@ def _produce_refusal_categories(fx: _Fixtures) -> Result[dict[str, str]]:
     if not is_refusal(storage):
         return policy("refusal_category", "journal failure must be a storage failure")
     paths[storage.category.value] = "journal_before_effect/storage_failure"
-
     unsupported = BookDefinition.try_create(99, "USD", {})
     if is_refusal(unsupported):
         paths[unsupported.category.value] = "BookDefinition.try_create/unknown-format"
+    return Ok(None)
 
-    if RefusalCategory.INVALID_INPUT.value not in paths:
-        no_stop = _instrument(fx.venue_id)
-        if is_refusal(no_stop):
-            return no_stop
-        price = Price.try_create(110_000, no_stop.value, 5)
-        if is_refusal(price):
-            return price
-        target = ExecutionTarget.try_create(AccountRole.LIVE, fx.venue_id, "acct-1")
-        if is_refusal(target):
-            return target
-        reason = ReasonCode.try_create("momentum-break", "scalper-v1")
-        if is_refusal(reason):
-            return reason
-        slot = EvidenceSlot.try_create("sqs", "sqs-ref-1", fx.now)
-        if is_refusal(slot):
-            return slot
-        cited = CitedEvidence.try_create(sqs_reading=slot.value)
-        if is_refusal(cited):
-            return cited
-        requested = _r(1)
-        if is_refusal(requested):
-            return requested
-        entry = EntryIntent.try_create(
+
+def _seed_no_stop_invalid_input(fx: _Fixtures, paths: dict[str, str]) -> Result[None]:
+    bound = _bind_no_stop_entry(fx)
+    if is_refusal(bound):
+        return bound
+    entry, price, logic, requested, rate, factor = bound.value
+    refused_entry = admit_entry_at_book_door(
+        intent=entry,
+        entry_price=price,
+        exit_logic_ref=logic,
+        module=_NoStopModule(),
+        book_resolved_requested_r=requested,
+        r_unit_price=rate,
+        value_factor=factor,
+        money_scale=2,
+    )
+    if is_refusal(refused_entry):
+        paths[refused_entry.category.value] = "admit_entry_at_book_door/no-full-loss"
+    return Ok(None)
+
+
+def _bind_no_stop_entry(
+    fx: _Fixtures,
+) -> Result[
+    tuple[EntryIntent, Price, ExitLogicRef, ExactRational, ExactRational, ValueFactor]
+]:
+    cited = _bind_no_stop_cited(fx)
+    if is_refusal(cited):
+        return cited
+    instrument, price, target, reason, evidence, requested = cited.value
+    entry = EntryIntent.try_create(
+        instrument,
+        Direction.LONG,
+        reason,
+        target,
+        proposed_r=requested,
+        cited_evidence=evidence,
+    )
+    if is_refusal(entry):
+        return entry
+    logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
+    if is_refusal(logic):
+        return logic
+    rate = _rate(1_000)
+    if is_refusal(rate):
+        return rate
+    factor = ValueFactor.try_create(100_000, 1, instrument, "USD")
+    if is_refusal(factor):
+        return factor
+    return Ok(
+        (
+            entry.value,
+            price,
+            logic.value,
+            requested,
+            rate.value,
+            factor.value,
+        )
+    )
+
+
+def _bind_no_stop_cited(
+    fx: _Fixtures,
+) -> Result[
+    tuple[Instrument, Price, ExecutionTarget, ReasonCode, CitedEvidence, ExactRational]
+]:
+    no_stop = _instrument(fx.venue_id)
+    if is_refusal(no_stop):
+        return no_stop
+    price = Price.try_create(110_000, no_stop.value, 5)
+    if is_refusal(price):
+        return price
+    target = ExecutionTarget.try_create(AccountRole.LIVE, fx.venue_id, "acct-1")
+    if is_refusal(target):
+        return target
+    reason = ReasonCode.try_create("momentum-break", "scalper-v1")
+    if is_refusal(reason):
+        return reason
+    slot = EvidenceSlot.try_create("sqs", "sqs-ref-1", fx.now)
+    if is_refusal(slot):
+        return slot
+    cited = CitedEvidence.try_create(sqs_reading=slot.value)
+    if is_refusal(cited):
+        return cited
+    requested = _r(1)
+    if is_refusal(requested):
+        return requested
+    return Ok(
+        (
             no_stop.value,
-            Direction.LONG,
-            reason.value,
+            price.value,
             target.value,
-            proposed_r=requested.value,
-            cited_evidence=cited.value,
+            reason.value,
+            cited.value,
+            requested.value,
         )
-        if is_refusal(entry):
-            return entry
-        logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
-        if is_refusal(logic):
-            return logic
-        rate = _rate(1_000)
-        if is_refusal(rate):
-            return rate
-        factor = ValueFactor.try_create(100_000, 1, no_stop.value, "USD")
-        if is_refusal(factor):
-            return factor
-        refused_entry = admit_entry_at_book_door(
-            intent=entry.value,
-            entry_price=price.value,
-            exit_logic_ref=logic.value,
-            module=_NoStopModule(),
-            book_resolved_requested_r=requested.value,
-            r_unit_price=rate.value,
-            value_factor=factor.value,
-            money_scale=2,
-        )
-        if is_refusal(refused_entry):
-            paths[refused_entry.category.value] = "admit_entry_at_book_door/no-full-loss"
-
-    return Ok(paths)
+    )

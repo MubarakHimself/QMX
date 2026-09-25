@@ -185,185 +185,446 @@ class ShakedownPlan:
         invented_window_minutes: object | None = None,
         claim_sqs_live_conditioned: object = False,
     ) -> Result[ShakedownPlan]:
-        identity = clean_token(binding_identity)
-        if identity is None:
-            return invalid(
-                "binding_identity",
-                "the shakedown names the binding identity it ran on",
-                given=repr(binding_identity),
-            )
-        if not isinstance(shakedown_role, AccountRole):
-            return invalid(
-                "shakedown_role",
-                "the shakedown declares an AccountRole",
-                given=repr(shakedown_role),
-            )
-        if not isinstance(live_path_rung_baseline_present, bool):
-            return invalid(
-                "live_path_rung_baseline_present",
-                "the live-path rung baseline prerequisite is a bool",
-                given=repr(live_path_rung_baseline_present),
-            )
-        if not isinstance(sensor_baselines_present, bool):
-            return invalid(
-                "sensor_baselines_present",
-                "the sensor-baseline prerequisite is a bool",
-                given=repr(sensor_baselines_present),
-            )
-        if not isinstance(window_settings, ResolvedWindowSettings):
-            return invalid(
-                "window_settings",
-                "required windows resolve through ResolvedWindowSettings; "
-                "blank invents nothing",
-                given=type(window_settings).__name__,
-            )
-        if not isinstance(ledger_binding_epoch, Fingerprint):
-            return invalid(
-                "ledger_binding_epoch",
-                "the paper ledger seeds a CT-28 binding epoch fingerprint",
-                given=repr(ledger_binding_epoch),
-            )
-        if not isinstance(ledger_seed, Money):
-            return invalid(
-                "ledger_seed",
-                "paper ledger seed is Money; the shakedown invents no balance",
-                given=repr(ledger_seed),
-            )
-        if not isinstance(ledger_recorded_at, Instant):
-            return invalid(
-                "ledger_recorded_at",
-                "ledger seed carries an Instant",
-                given=repr(ledger_recorded_at),
-            )
-        if kill_line_capital_floor is None:
-            return refuse_invented_kill_line_floor(given="None")
-        if not isinstance(kill_line_capital_floor, Money):
-            return refuse_invented_kill_line_floor(given=repr(kill_line_capital_floor))
-        if not isinstance(kill_line_equity, Money):
-            return invalid(
-                "kill_line_equity",
-                "kill-line equity is marked virtual-ledger Money",
-                given=repr(kill_line_equity),
-            )
-        if not isinstance(kill_line_evaluated_at, Instant):
-            return invalid(
-                "kill_line_evaluated_at",
-                "kill-line evaluation carries an Instant",
-                given=repr(kill_line_evaluated_at),
-            )
-        if not isinstance(sqs_venue, VenueId):
-            return invalid(
-                "sqs_venue",
-                "SQS baseline key names a VenueId",
-                given=repr(sqs_venue),
-            )
-        env = clean_token(sqs_environment)
-        if env is None:
-            return invalid(
-                "sqs_environment",
-                "SQS baseline is keyed by a non-empty environment token",
-                given=repr(sqs_environment),
-            )
-        if not isinstance(sqs_instrument, Instrument):
-            return invalid(
-                "sqs_instrument",
-                "SQS baseline key names an Instrument",
-                given=repr(sqs_instrument),
-            )
-        if callback_deadline is None:
-            return refuse_invented_seat_bounds("seat_callback_deadline", given="None")
-        if not isinstance(callback_deadline, Duration):
-            return refuse_invented_seat_bounds(
-                "seat_callback_deadline", given=repr(callback_deadline)
-            )
-        if memory_ceiling_bytes is None:
-            return refuse_invented_seat_bounds("seat_memory_ceiling", given="None")
-        if not isinstance(dry_run_command, Command):
-            return invalid(
-                "dry_run_command",
-                "command-path dry run reads a typed CT-19 Command",
-                given=type(dry_run_command).__name__,
-            )
-        if not isinstance(protective_stop_forms, Mapping):
-            return invalid(
-                "protective_stop_forms",
-                "command-path dry run reads declared CT-18 protective-stop forms",
-                given=type(protective_stop_forms).__name__,
-            )
-        forms = {
-            str(key): str(value)
-            for key, value in cast("Mapping[object, object]", protective_stop_forms).items()
-        }
-        status = clean_token(effect_matrix_value_status) or VALUE_STATUS_BLANK
-        cells: tuple[Mapping[str, object], ...] | None
-        if effect_matrix_cells is None:
-            cells = None
-        elif isinstance(effect_matrix_cells, Sequence) and not isinstance(
-            effect_matrix_cells, (str, bytes)
-        ):
-            parsed: list[Mapping[str, object]] = []
-            for item in cast("Sequence[object]", effect_matrix_cells):
-                if not isinstance(item, Mapping):
-                    return invalid(
-                        "effect_matrix_cells",
-                        "each matrix cell declaration is a mapping",
-                        given=type(item).__name__,
-                    )
-                parsed.append(cast("Mapping[str, object]", item))
-            cells = tuple(parsed)
-        else:
+        return _bind_shakedown_plan(
+            cls,
+            binding_identity=binding_identity,
+            shakedown_role=shakedown_role,
+            live_path_rung_baseline_present=live_path_rung_baseline_present,
+            sensor_baselines_present=sensor_baselines_present,
+            window_settings=window_settings,
+            ledger_binding_epoch=ledger_binding_epoch,
+            ledger_seed=ledger_seed,
+            ledger_recorded_at=ledger_recorded_at,
+            kill_line_capital_floor=kill_line_capital_floor,
+            kill_line_equity=kill_line_equity,
+            kill_line_evaluated_at=kill_line_evaluated_at,
+            sqs_venue=sqs_venue,
+            sqs_environment=sqs_environment,
+            sqs_instrument=sqs_instrument,
+            callback_deadline=callback_deadline,
+            memory_ceiling_bytes=memory_ceiling_bytes,
+            dry_run_command=dry_run_command,
+            protective_stop_forms=protective_stop_forms,
+            effect_matrix_value_status=effect_matrix_value_status,
+            effect_matrix_cells=effect_matrix_cells,
+            treat_as_performance_proof=treat_as_performance_proof,
+            soak_duration=soak_duration,
+            ksa_numeric_value=ksa_numeric_value,
+            invented_window_minutes=invented_window_minutes,
+            claim_sqs_live_conditioned=claim_sqs_live_conditioned,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _ShakedownIdentity:
+    identity: str
+    role: AccountRole
+    live_path: bool
+    sensor: bool
+    windows: ResolvedWindowSettings
+
+
+@dataclass(frozen=True, slots=True)
+class _ShakedownLedger:
+    epoch: Fingerprint
+    seed: Money
+    recorded_at: Instant
+    kill_floor: Money
+    kill_equity: Money
+    kill_at: Instant
+
+
+@dataclass(frozen=True, slots=True)
+class _ShakedownCommand:
+    sqs_venue: VenueId
+    sqs_environment: str
+    sqs_instrument: Instrument
+    callback_deadline: Duration
+    memory_ceiling_bytes: int
+    dry_run_command: Command
+    protective_stop_forms: Mapping[str, str]
+    effect_status: str
+    effect_cells: tuple[Mapping[str, object], ...] | None
+    treat_as_performance_proof: bool
+    claim_sqs_live_conditioned: bool
+
+
+def _bind_shakedown_plan(
+    cls: type[ShakedownPlan],
+    *,
+    binding_identity: object,
+    shakedown_role: object,
+    live_path_rung_baseline_present: object,
+    sensor_baselines_present: object,
+    window_settings: object,
+    ledger_binding_epoch: object,
+    ledger_seed: object,
+    ledger_recorded_at: object,
+    kill_line_capital_floor: object,
+    kill_line_equity: object,
+    kill_line_evaluated_at: object,
+    sqs_venue: object,
+    sqs_environment: object,
+    sqs_instrument: object,
+    callback_deadline: object,
+    memory_ceiling_bytes: object,
+    dry_run_command: object,
+    protective_stop_forms: object,
+    effect_matrix_value_status: object,
+    effect_matrix_cells: object,
+    treat_as_performance_proof: object,
+    soak_duration: object | None,
+    ksa_numeric_value: object | None,
+    invented_window_minutes: object | None,
+    claim_sqs_live_conditioned: object,
+) -> Result[ShakedownPlan]:
+    identity = _bind_shakedown_identity(
+        binding_identity,
+        shakedown_role,
+        live_path_rung_baseline_present,
+        sensor_baselines_present,
+        window_settings,
+    )
+    if is_refusal(identity):
+        return identity
+    ledger = _bind_shakedown_ledger(
+        ledger_binding_epoch,
+        ledger_seed,
+        ledger_recorded_at,
+        kill_line_capital_floor,
+        kill_line_equity,
+        kill_line_evaluated_at,
+    )
+    if is_refusal(ledger):
+        return ledger
+    command = _bind_shakedown_command(
+        sqs_venue=sqs_venue,
+        sqs_environment=sqs_environment,
+        sqs_instrument=sqs_instrument,
+        callback_deadline=callback_deadline,
+        memory_ceiling_bytes=memory_ceiling_bytes,
+        dry_run_command=dry_run_command,
+        protective_stop_forms=protective_stop_forms,
+        effect_matrix_value_status=effect_matrix_value_status,
+        effect_matrix_cells=effect_matrix_cells,
+        treat_as_performance_proof=treat_as_performance_proof,
+        claim_sqs_live_conditioned=claim_sqs_live_conditioned,
+    )
+    if is_refusal(command):
+        return command
+    row = identity.value
+    books = ledger.value
+    path = command.value
+    return Ok(
+        cls(
+            binding_identity=row.identity,
+            shakedown_role=row.role,
+            live_path_rung_baseline_present=row.live_path,
+            sensor_baselines_present=row.sensor,
+            window_settings=row.windows,
+            ledger_binding_epoch=books.epoch,
+            ledger_seed=books.seed,
+            ledger_recorded_at=books.recorded_at,
+            kill_line_capital_floor=books.kill_floor,
+            kill_line_equity=books.kill_equity,
+            kill_line_evaluated_at=books.kill_at,
+            sqs_venue=path.sqs_venue,
+            sqs_environment=path.sqs_environment,
+            sqs_instrument=path.sqs_instrument,
+            callback_deadline=path.callback_deadline,
+            memory_ceiling_bytes=path.memory_ceiling_bytes,
+            dry_run_command=path.dry_run_command,
+            protective_stop_forms=MappingProxyType(dict(path.protective_stop_forms)),
+            effect_matrix_value_status=path.effect_status,
+            effect_matrix_cells=path.effect_cells,
+            treat_as_performance_proof=path.treat_as_performance_proof,
+            soak_duration=soak_duration,
+            ksa_numeric_value=ksa_numeric_value,
+            invented_window_minutes=invented_window_minutes,
+            claim_sqs_live_conditioned=path.claim_sqs_live_conditioned,
+        )
+    )
+
+
+def _bind_shakedown_identity(
+    binding_identity: object,
+    shakedown_role: object,
+    live_path_rung_baseline_present: object,
+    sensor_baselines_present: object,
+    window_settings: object,
+) -> Result[_ShakedownIdentity]:
+    identity = clean_token(binding_identity)
+    if identity is None:
+        return invalid(
+            "binding_identity",
+            "the shakedown names the binding identity it ran on",
+            given=repr(binding_identity),
+        )
+    if not isinstance(shakedown_role, AccountRole):
+        return invalid(
+            "shakedown_role",
+            "the shakedown declares an AccountRole",
+            given=repr(shakedown_role),
+        )
+    if not isinstance(live_path_rung_baseline_present, bool):
+        return invalid(
+            "live_path_rung_baseline_present",
+            "the live-path rung baseline prerequisite is a bool",
+            given=repr(live_path_rung_baseline_present),
+        )
+    if not isinstance(sensor_baselines_present, bool):
+        return invalid(
+            "sensor_baselines_present",
+            "the sensor-baseline prerequisite is a bool",
+            given=repr(sensor_baselines_present),
+        )
+    if not isinstance(window_settings, ResolvedWindowSettings):
+        return invalid(
+            "window_settings",
+            "required windows resolve through ResolvedWindowSettings; "
+            "blank invents nothing",
+            given=type(window_settings).__name__,
+        )
+    return Ok(
+        _ShakedownIdentity(
+            identity=identity,
+            role=shakedown_role,
+            live_path=live_path_rung_baseline_present,
+            sensor=sensor_baselines_present,
+            windows=window_settings,
+        )
+    )
+
+
+def _bind_shakedown_ledger(
+    ledger_binding_epoch: object,
+    ledger_seed: object,
+    ledger_recorded_at: object,
+    kill_line_capital_floor: object,
+    kill_line_equity: object,
+    kill_line_evaluated_at: object,
+) -> Result[_ShakedownLedger]:
+    if not isinstance(ledger_binding_epoch, Fingerprint):
+        return invalid(
+            "ledger_binding_epoch",
+            "the paper ledger seeds a CT-28 binding epoch fingerprint",
+            given=repr(ledger_binding_epoch),
+        )
+    if not isinstance(ledger_seed, Money):
+        return invalid(
+            "ledger_seed",
+            "paper ledger seed is Money; the shakedown invents no balance",
+            given=repr(ledger_seed),
+        )
+    if not isinstance(ledger_recorded_at, Instant):
+        return invalid(
+            "ledger_recorded_at",
+            "ledger seed carries an Instant",
+            given=repr(ledger_recorded_at),
+        )
+    if kill_line_capital_floor is None:
+        return refuse_invented_kill_line_floor(given="None")
+    if not isinstance(kill_line_capital_floor, Money):
+        return refuse_invented_kill_line_floor(given=repr(kill_line_capital_floor))
+    if not isinstance(kill_line_equity, Money):
+        return invalid(
+            "kill_line_equity",
+            "kill-line equity is marked virtual-ledger Money",
+            given=repr(kill_line_equity),
+        )
+    if not isinstance(kill_line_evaluated_at, Instant):
+        return invalid(
+            "kill_line_evaluated_at",
+            "kill-line evaluation carries an Instant",
+            given=repr(kill_line_evaluated_at),
+        )
+    return Ok(
+        _ShakedownLedger(
+            epoch=ledger_binding_epoch,
+            seed=ledger_seed,
+            recorded_at=ledger_recorded_at,
+            kill_floor=kill_line_capital_floor,
+            kill_equity=kill_line_equity,
+            kill_at=kill_line_evaluated_at,
+        )
+    )
+
+
+def _bind_shakedown_command(
+    *,
+    sqs_venue: object,
+    sqs_environment: object,
+    sqs_instrument: object,
+    callback_deadline: object,
+    memory_ceiling_bytes: object,
+    dry_run_command: object,
+    protective_stop_forms: object,
+    effect_matrix_value_status: object,
+    effect_matrix_cells: object,
+    treat_as_performance_proof: object,
+    claim_sqs_live_conditioned: object,
+) -> Result[_ShakedownCommand]:
+    sqs = _bind_shakedown_sqs(sqs_venue, sqs_environment, sqs_instrument)
+    if is_refusal(sqs):
+        return sqs
+    venue, env, instrument = sqs.value
+    path = _bind_shakedown_path(
+        callback_deadline=callback_deadline,
+        memory_ceiling_bytes=memory_ceiling_bytes,
+        dry_run_command=dry_run_command,
+        protective_stop_forms=protective_stop_forms,
+    )
+    if is_refusal(path):
+        return path
+    deadline, command, forms = path.value
+    matrix = _bind_shakedown_matrix_and_flags(
+        effect_matrix_value_status=effect_matrix_value_status,
+        effect_matrix_cells=effect_matrix_cells,
+        treat_as_performance_proof=treat_as_performance_proof,
+        claim_sqs_live_conditioned=claim_sqs_live_conditioned,
+        memory_ceiling_bytes=memory_ceiling_bytes,
+    )
+    if is_refusal(matrix):
+        return matrix
+    status, cells, treat_as, claim_live, memory = matrix.value
+    return Ok(
+        _ShakedownCommand(
+            sqs_venue=venue,
+            sqs_environment=env,
+            sqs_instrument=instrument,
+            callback_deadline=deadline,
+            memory_ceiling_bytes=memory,
+            dry_run_command=command,
+            protective_stop_forms=forms,
+            effect_status=status,
+            effect_cells=cells,
+            treat_as_performance_proof=treat_as,
+            claim_sqs_live_conditioned=claim_live,
+        )
+    )
+
+
+def _bind_shakedown_sqs(
+    sqs_venue: object, sqs_environment: object, sqs_instrument: object
+) -> Result[tuple[VenueId, str, Instrument]]:
+    if not isinstance(sqs_venue, VenueId):
+        return invalid(
+            "sqs_venue",
+            "SQS baseline key names a VenueId",
+            given=repr(sqs_venue),
+        )
+    env = clean_token(sqs_environment)
+    if env is None:
+        return invalid(
+            "sqs_environment",
+            "SQS baseline is keyed by a non-empty environment token",
+            given=repr(sqs_environment),
+        )
+    if not isinstance(sqs_instrument, Instrument):
+        return invalid(
+            "sqs_instrument",
+            "SQS baseline key names an Instrument",
+            given=repr(sqs_instrument),
+        )
+    return Ok((sqs_venue, env, sqs_instrument))
+
+
+def _bind_shakedown_path(
+    *,
+    callback_deadline: object,
+    memory_ceiling_bytes: object,
+    dry_run_command: object,
+    protective_stop_forms: object,
+) -> Result[tuple[Duration, Command, dict[str, str]]]:
+    if callback_deadline is None:
+        return refuse_invented_seat_bounds("seat_callback_deadline", given="None")
+    if not isinstance(callback_deadline, Duration):
+        return refuse_invented_seat_bounds(
+            "seat_callback_deadline", given=repr(callback_deadline)
+        )
+    if memory_ceiling_bytes is None:
+        return refuse_invented_seat_bounds("seat_memory_ceiling", given="None")
+    if not isinstance(dry_run_command, Command):
+        return invalid(
+            "dry_run_command",
+            "command-path dry run reads a typed CT-19 Command",
+            given=type(dry_run_command).__name__,
+        )
+    if not isinstance(protective_stop_forms, Mapping):
+        return invalid(
+            "protective_stop_forms",
+            "command-path dry run reads declared CT-18 protective-stop forms",
+            given=type(protective_stop_forms).__name__,
+        )
+    forms = {
+        str(key): str(value)
+        for key, value in cast("Mapping[object, object]", protective_stop_forms).items()
+    }
+    return Ok((callback_deadline, dry_run_command, forms))
+
+
+def _bind_shakedown_matrix_and_flags(
+    *,
+    effect_matrix_value_status: object,
+    effect_matrix_cells: object,
+    treat_as_performance_proof: object,
+    claim_sqs_live_conditioned: object,
+    memory_ceiling_bytes: object,
+) -> Result[tuple[str, tuple[Mapping[str, object], ...] | None, bool, bool, int]]:
+    status = clean_token(effect_matrix_value_status) or VALUE_STATUS_BLANK
+    cells = _bind_shakedown_cells(effect_matrix_cells)
+    if is_refusal(cells):
+        return cells
+    if not isinstance(treat_as_performance_proof, bool):
+        return invalid(
+            "treat_as_performance_proof",
+            "treat_as_performance_proof is a bool",
+            given=repr(treat_as_performance_proof),
+        )
+    if not isinstance(claim_sqs_live_conditioned, bool):
+        return invalid(
+            "claim_sqs_live_conditioned",
+            "claim_sqs_live_conditioned is a bool",
+            given=repr(claim_sqs_live_conditioned),
+        )
+    if not isinstance(memory_ceiling_bytes, int) or isinstance(memory_ceiling_bytes, bool):
+        return refuse_invented_seat_bounds(
+            "seat_memory_ceiling", given=repr(memory_ceiling_bytes)
+        )
+    return Ok(
+        (
+            status,
+            cells.value,
+            treat_as_performance_proof,
+            claim_sqs_live_conditioned,
+            memory_ceiling_bytes,
+        )
+    )
+
+
+def _bind_shakedown_cells(
+    effect_matrix_cells: object,
+) -> Result[tuple[Mapping[str, object], ...] | None]:
+    if effect_matrix_cells is None:
+        return Ok(None)
+    if not isinstance(effect_matrix_cells, Sequence) or isinstance(
+        effect_matrix_cells, (str, bytes)
+    ):
+        return invalid(
+            "effect_matrix_cells",
+            "matrix cells are a sequence of mappings when supplied",
+            given=type(effect_matrix_cells).__name__,
+        )
+    parsed: list[Mapping[str, object]] = []
+    for item in cast("Sequence[object]", effect_matrix_cells):
+        if not isinstance(item, Mapping):
             return invalid(
                 "effect_matrix_cells",
-                "matrix cells are a sequence of mappings when supplied",
-                given=type(effect_matrix_cells).__name__,
+                "each matrix cell declaration is a mapping",
+                given=type(item).__name__,
             )
-        if not isinstance(treat_as_performance_proof, bool):
-            return invalid(
-                "treat_as_performance_proof",
-                "treat_as_performance_proof is a bool",
-                given=repr(treat_as_performance_proof),
-            )
-        if not isinstance(claim_sqs_live_conditioned, bool):
-            return invalid(
-                "claim_sqs_live_conditioned",
-                "claim_sqs_live_conditioned is a bool",
-                given=repr(claim_sqs_live_conditioned),
-            )
-        if not isinstance(memory_ceiling_bytes, int) or isinstance(
-            memory_ceiling_bytes, bool
-        ):
-            return refuse_invented_seat_bounds(
-                "seat_memory_ceiling", given=repr(memory_ceiling_bytes)
-            )
-        return Ok(
-            cls(
-                binding_identity=identity,
-                shakedown_role=shakedown_role,
-                live_path_rung_baseline_present=live_path_rung_baseline_present,
-                sensor_baselines_present=sensor_baselines_present,
-                window_settings=window_settings,
-                ledger_binding_epoch=ledger_binding_epoch,
-                ledger_seed=ledger_seed,
-                ledger_recorded_at=ledger_recorded_at,
-                kill_line_capital_floor=kill_line_capital_floor,
-                kill_line_equity=kill_line_equity,
-                kill_line_evaluated_at=kill_line_evaluated_at,
-                sqs_venue=sqs_venue,
-                sqs_environment=env,
-                sqs_instrument=sqs_instrument,
-                callback_deadline=callback_deadline,
-                memory_ceiling_bytes=memory_ceiling_bytes,
-                dry_run_command=dry_run_command,
-                protective_stop_forms=MappingProxyType(forms),
-                effect_matrix_value_status=status,
-                effect_matrix_cells=cells,
-                treat_as_performance_proof=treat_as_performance_proof,
-                soak_duration=soak_duration,
-                ksa_numeric_value=ksa_numeric_value,
-                invented_window_minutes=invented_window_minutes,
-                claim_sqs_live_conditioned=claim_sqs_live_conditioned,
-            )
-        )
+        parsed.append(cast("Mapping[str, object]", item))
+    return Ok(tuple(parsed))
 
 
 @dataclass(frozen=True, slots=True)
@@ -464,12 +725,26 @@ def assemble_shakedown_signature_page(
 
 def run_demo_shakedown(plan: object) -> Result[ShakedownEvidence]:
     """Exercise the technical demo shakedown without a live binding."""
+    bound = _require_shakedown_plan(plan)
+    if is_refusal(bound):
+        return bound
+    refused = _refuse_shakedown_plan_flags(bound.value)
+    if is_refusal(refused):
+        return refused
+    return _assemble_shakedown_evidence(bound.value)
+
+
+def _require_shakedown_plan(plan: object) -> Result[ShakedownPlan]:
     if not isinstance(plan, ShakedownPlan):
         return invalid(
             "plan",
             "the demo shakedown reads a ShakedownPlan",
             given=type(plan).__name__,
         )
+    return Ok(plan)
+
+
+def _refuse_shakedown_plan_flags(plan: ShakedownPlan) -> Result[None]:
     if plan.shakedown_role is AccountRole.LIVE:
         return policy(
             "shakedown_role",
@@ -493,7 +768,10 @@ def run_demo_shakedown(plan: object) -> Result[ShakedownEvidence]:
         )
     if plan.invented_window_minutes is not None:
         return refuse_invented_window_minutes(plan.invented_window_minutes)
+    return Ok(None)
 
+
+def _assemble_shakedown_evidence(plan: ShakedownPlan) -> Result[ShakedownEvidence]:
     windows = _exercise_windows(plan)
     if is_refusal(windows):
         return windows
@@ -518,7 +796,6 @@ def run_demo_shakedown(plan: object) -> Result[ShakedownEvidence]:
     command = _exercise_command_path_dry_run(plan)
     if is_refusal(command):
         return command
-
     layer2 = run_layer2_shakedown(
         plan.binding_identity,
         plan.shakedown_role,
@@ -527,7 +804,6 @@ def run_demo_shakedown(plan: object) -> Result[ShakedownEvidence]:
     )
     if is_refusal(layer2):
         return layer2
-
     return Ok(
         ShakedownEvidence(
             binding_identity=plan.binding_identity,

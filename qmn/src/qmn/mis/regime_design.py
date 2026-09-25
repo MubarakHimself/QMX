@@ -712,6 +712,28 @@ def validate_regime_design_leakage(
             "leakage validation takes a RegimeClassifierDesign",
             given=type(design).__name__,
         )
+    flags = _validate_leakage_flags(design)
+    if is_refusal(flags):
+        return flags
+    purge = _validate_purge_and_embargo(design)
+    if is_refusal(purge):
+        return purge
+    calendars = _validate_calendars_and_sessions(design)
+    if is_refusal(calendars):
+        return calendars
+    split = _validate_split_and_features(design)
+    if is_refusal(split):
+        return split
+    candidates = _validate_candidate_evaluations(design)
+    if is_refusal(candidates):
+        return candidates
+    authority = _validate_authority_and_vocabulary(design)
+    if is_refusal(authority):
+        return authority
+    return Ok(design)
+
+
+def _validate_leakage_flags(design: RegimeClassifierDesign) -> Result[None]:
     leak = design.leakage
     required_flags = (
         ("as_of_only", leak.as_of_only),
@@ -729,6 +751,11 @@ def validate_regime_design_leakage(
                 "regime_classifier_v1 design must enforce the leakage law",
                 given=flag,
             )
+    return Ok(None)
+
+
+def _validate_purge_and_embargo(design: RegimeClassifierDesign) -> Result[None]:
+    leak = design.leakage
     if leak.purge_bars < design.label_contract.horizon_bars:
         return policy(
             "purge_bars",
@@ -738,7 +765,11 @@ def validate_regime_design_leakage(
         )
     if leak.embargo_bars < 1:
         return policy("embargo_bars", "embargo must be a positive bar count")
-    calendars = set(leak.calendar_kinds_named_apart)
+    return Ok(None)
+
+
+def _validate_calendars_and_sessions(design: RegimeClassifierDesign) -> Result[None]:
+    calendars = set(design.leakage.calendar_kinds_named_apart)
     required_calendars = {
         "market-hours-calendar",
         "day-boundary-calendar",
@@ -759,6 +790,10 @@ def validate_regime_design_leakage(
             given=list(sessions),
             required=list(DECLARED_TRADING_SESSIONS),
         )
+    return Ok(None)
+
+
+def _validate_split_and_features(design: RegimeClassifierDesign) -> Result[None]:
     if design.split_strategy.shuffle_forbidden is not True:
         return policy(
             "shuffle_forbidden",
@@ -778,6 +813,10 @@ def validate_regime_design_leakage(
             "accepted design chooses lightgbm-multiclass",
             given=design.chosen_family,
         )
+    return Ok(None)
+
+
+def _validate_candidate_evaluations(design: RegimeClassifierDesign) -> Result[None]:
     selected = [row for row in design.candidate_evaluations if row.selected]
     if len(selected) != 1 or selected[0].family_id != CHOSEN_MODEL_FAMILY:
         return policy(
@@ -785,28 +824,40 @@ def validate_regime_design_leakage(
             "exactly one selected family and it must be lightgbm-multiclass",
         )
     for row in design.candidate_evaluations:
-        if row.recovered_candidate and row.authority != "none":
-            return policy(
-                "authority",
-                "recovered/pretrained candidates receive no authority merely by "
-                "being evaluated (DEC-0262)",
-                family_id=row.family_id,
-                authority=row.authority,
-            )
-        if row.family_id in UNAUTHORITATIVE_CANDIDATES:
-            refused = refuse_unauthoritative_candidate(row.family_id)
-            if not is_refusal(refused):
-                return policy(
-                    "family_id",
-                    "recovered candidate must still refuse through catalog policy",
-                    family_id=row.family_id,
-                )
-            if row.selected:
-                return policy(
-                    "selected",
-                    "unauthoritative recovered candidates cannot be selected",
-                    family_id=row.family_id,
-                )
+        checked = _validate_one_candidate(row)
+        if is_refusal(checked):
+            return checked
+    return Ok(None)
+
+
+def _validate_one_candidate(row: CandidateFamilyEvaluation) -> Result[None]:
+    if row.recovered_candidate and row.authority != "none":
+        return policy(
+            "authority",
+            "recovered/pretrained candidates receive no authority merely by "
+            "being evaluated (DEC-0262)",
+            family_id=row.family_id,
+            authority=row.authority,
+        )
+    if row.family_id not in UNAUTHORITATIVE_CANDIDATES:
+        return Ok(None)
+    refused = refuse_unauthoritative_candidate(row.family_id)
+    if not is_refusal(refused):
+        return policy(
+            "family_id",
+            "recovered candidate must still refuse through catalog policy",
+            family_id=row.family_id,
+        )
+    if row.selected:
+        return policy(
+            "selected",
+            "unauthoritative recovered candidates cannot be selected",
+            family_id=row.family_id,
+        )
+    return Ok(None)
+
+
+def _validate_authority_and_vocabulary(design: RegimeClassifierDesign) -> Result[None]:
     if design.grants_money_path_authority or design.grants_governed_binding:
         return policy(
             "authority",
@@ -825,7 +876,7 @@ def validate_regime_design_leakage(
             "ambiguous rows use insufficient_evidence rather than an invented default",
             given=design.label_contract.exclusion_class,
         )
-    return Ok(design)
+    return Ok(None)
 
 
 def refuse_design_authority_claim(design: object) -> Result[None]:

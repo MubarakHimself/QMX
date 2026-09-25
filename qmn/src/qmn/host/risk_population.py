@@ -735,7 +735,36 @@ def admit_runtime_risk_population(graph: object) -> Result[Layer1PopulationProof
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _PopulationIndex:
+    bms: dict[str, PopulationBmsRecord]
+    books: dict[str, PopulationBookRecord]
+    bindings: dict[str, PopulationBindingRecord]
+
+
 def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
+    index = _unique_population_index(graph)
+    if is_refusal(index):
+        return index
+    books = _check_book_bms_refs(graph, index.value)
+    if is_refusal(books):
+        return books
+    bindings = _check_binding_refs(graph, index.value)
+    if is_refusal(bindings):
+        return bindings
+    seats = _check_seat_refs(graph, index.value)
+    if is_refusal(seats):
+        return seats
+    windows = _check_window_binding_refs(graph, index.value)
+    if is_refusal(windows):
+        return windows
+    kinds = _check_window_kind_cardinalities(graph)
+    if is_refusal(kinds):
+        return kinds
+    return _check_capability_refs(graph, index.value)
+
+
+def _unique_population_index(graph: RuntimeRiskGraph) -> Result[_PopulationIndex]:
     bms_ids = {row.bms_instance_id: row for row in graph.bms}
     if len(bms_ids) != len(graph.bms):
         return invalid(
@@ -764,9 +793,12 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
             "seat ids are unique in the assembled population",
             failure_id="compose.risk_population.referential_integrity",
         )
+    return Ok(_PopulationIndex(bms=bms_ids, books=book_ids, bindings=binding_ids))
 
+
+def _check_book_bms_refs(graph: RuntimeRiskGraph, index: _PopulationIndex) -> Result[None]:
     for book in graph.books:
-        if book.bms_instance_id not in bms_ids:
+        if book.bms_instance_id not in index.bms:
             return unavailable(
                 "book",
                 "a Book must cite an assembled BMS instance",
@@ -774,50 +806,65 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 bms_instance_id=book.bms_instance_id,
                 failure_id="compose.risk_population.referential_integrity",
             )
-        bms = bms_ids[book.bms_instance_id]
+        bms = index.bms[book.bms_instance_id]
         if book.bms_instance_id != bms.bms_instance_id:
             return invalid(
                 "book",
                 "Book/BMS referential integrity failed",
                 failure_id="compose.risk_population.referential_integrity",
             )
+    return Ok(None)
 
+
+def _check_binding_refs(graph: RuntimeRiskGraph, index: _PopulationIndex) -> Result[None]:
     for binding in graph.bindings:
-        if binding.book_instance_id not in book_ids:
-            return unavailable(
-                "binding",
-                "a binding must cite an assembled Book instance",
-                binding_id=binding.binding_id,
-                book_instance_id=binding.book_instance_id,
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        if binding.bms_instance_id not in bms_ids:
-            return unavailable(
-                "binding",
-                "a binding must cite an assembled BMS instance",
-                binding_id=binding.binding_id,
-                bms_instance_id=binding.bms_instance_id,
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        book = book_ids[binding.book_instance_id]
-        if book.bms_instance_id != binding.bms_instance_id:
-            return invalid(
-                "binding",
-                "a binding's BMS must equal the cited Book's BMS",
-                binding_id=binding.binding_id,
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        bms = bms_ids[binding.bms_instance_id]
-        if bms.venue_id != binding.venue_id or bms.account_id != binding.account_id:
-            return invalid(
-                "binding",
-                "a binding's (venue, account) must equal its BMS account",
-                binding_id=binding.binding_id,
-                failure_id="compose.risk_population.referential_integrity",
-            )
+        checked = _check_one_binding_ref(binding, index)
+        if is_refusal(checked):
+            return checked
+    return Ok(None)
 
+
+def _check_one_binding_ref(
+    binding: PopulationBindingRecord, index: _PopulationIndex
+) -> Result[None]:
+    if binding.book_instance_id not in index.books:
+        return unavailable(
+            "binding",
+            "a binding must cite an assembled Book instance",
+            binding_id=binding.binding_id,
+            book_instance_id=binding.book_instance_id,
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    if binding.bms_instance_id not in index.bms:
+        return unavailable(
+            "binding",
+            "a binding must cite an assembled BMS instance",
+            binding_id=binding.binding_id,
+            bms_instance_id=binding.bms_instance_id,
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    book = index.books[binding.book_instance_id]
+    if book.bms_instance_id != binding.bms_instance_id:
+        return invalid(
+            "binding",
+            "a binding's BMS must equal the cited Book's BMS",
+            binding_id=binding.binding_id,
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    bms = index.bms[binding.bms_instance_id]
+    if bms.venue_id != binding.venue_id or bms.account_id != binding.account_id:
+        return invalid(
+            "binding",
+            "a binding's (venue, account) must equal its BMS account",
+            binding_id=binding.binding_id,
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    return Ok(None)
+
+
+def _check_seat_refs(graph: RuntimeRiskGraph, index: _PopulationIndex) -> Result[None]:
     for seat in graph.seats:
-        binding = binding_ids.get(seat.binding_id)
+        binding = index.bindings.get(seat.binding_id)
         if binding is None:
             return unavailable(
                 "seat",
@@ -833,7 +880,7 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 seat_id=seat.seat_id,
                 failure_id="compose.risk_population.referential_integrity",
             )
-        if seat.book_instance_id not in book_ids:
+        if seat.book_instance_id not in index.books:
             return unavailable(
                 "seat",
                 "a seat must cite an assembled Book instance",
@@ -841,9 +888,14 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 book_instance_id=seat.book_instance_id,
                 failure_id="compose.risk_population.referential_integrity",
             )
+    return Ok(None)
 
+
+def _check_window_binding_refs(
+    graph: RuntimeRiskGraph, index: _PopulationIndex
+) -> Result[None]:
     for window in graph.windows:
-        if window.binding_id not in binding_ids:
+        if window.binding_id not in index.bindings:
             return unavailable(
                 "window",
                 "a window must cite an assembled binding",
@@ -851,7 +903,10 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 binding_id=window.binding_id,
                 failure_id="compose.risk_population.referential_integrity",
             )
+    return Ok(None)
 
+
+def _check_window_kind_cardinalities(graph: RuntimeRiskGraph) -> Result[None]:
     seen_window: set[tuple[str, str]] = set()
     for window in graph.windows:
         key = (window.binding_id, window.kind)
@@ -864,7 +919,6 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 failure_id="compose.risk_population.cardinalities",
             )
         seen_window.add(key)
-
     required_kinds = {member.value for member in WindowKind}
     bindings_with_windows = {window.binding_id for window in graph.windows}
     for binding_id in bindings_with_windows:
@@ -881,33 +935,16 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 missing=sorted(missing),
                 failure_id="compose.risk_population.cardinalities",
             )
+    return Ok(None)
 
+
+def _check_capability_refs(graph: RuntimeRiskGraph, index: _PopulationIndex) -> Result[None]:
     cap_by_binding: dict[str, CapabilityRecord] = {}
     for cap in graph.capabilities:
-        if cap.binding_id in cap_by_binding:
-            return invalid(
-                "capabilities",
-                "one capability record per binding",
-                binding_id=cap.binding_id,
-                failure_id="compose.risk_population.cardinalities",
-            )
+        checked = _check_one_capability(cap, cap_by_binding, index)
+        if is_refusal(checked):
+            return checked
         cap_by_binding[cap.binding_id] = cap
-        if cap.binding_id not in binding_ids:
-            return unavailable(
-                "capability",
-                "a capability record must cite an assembled binding",
-                binding_id=cap.binding_id,
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        missing_caps = cap.required - cap.declared
-        if missing_caps:
-            return unavailable(
-                "capability",
-                "declared venue capabilities must cover the binding's required set",
-                binding_id=cap.binding_id,
-                missing=sorted(missing_caps),
-                failure_id="compose.risk_population.referential_integrity",
-            )
     for binding in graph.bindings:
         if binding.binding_id not in cap_by_binding:
             return unavailable(
@@ -916,6 +953,37 @@ def _check_referential_integrity(graph: RuntimeRiskGraph) -> Result[None]:
                 binding_id=binding.binding_id,
                 failure_id="compose.risk_population.referential_integrity",
             )
+    return Ok(None)
+
+
+def _check_one_capability(
+    cap: CapabilityRecord,
+    cap_by_binding: dict[str, CapabilityRecord],
+    index: _PopulationIndex,
+) -> Result[None]:
+    if cap.binding_id in cap_by_binding:
+        return invalid(
+            "capabilities",
+            "one capability record per binding",
+            binding_id=cap.binding_id,
+            failure_id="compose.risk_population.cardinalities",
+        )
+    if cap.binding_id not in index.bindings:
+        return unavailable(
+            "capability",
+            "a capability record must cite an assembled binding",
+            binding_id=cap.binding_id,
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    missing_caps = cap.required - cap.declared
+    if missing_caps:
+        return unavailable(
+            "capability",
+            "declared venue capabilities must cover the binding's required set",
+            binding_id=cap.binding_id,
+            missing=sorted(missing_caps),
+            failure_id="compose.risk_population.referential_integrity",
+        )
     return Ok(None)
 
 
@@ -1024,6 +1092,19 @@ def _check_netting_partitions(graph: RuntimeRiskGraph) -> Result[None]:
 
 
 def _check_one_bms_per_account_many_books(graph: RuntimeRiskGraph) -> Result[None]:
+    mapped = _map_account_bms(graph)
+    if is_refusal(mapped):
+        return mapped
+    account_to_bms, bms_to_account = mapped.value
+    books = _check_books_bind_mapped_bms(graph, bms_to_account)
+    if is_refusal(books):
+        return books
+    return _check_bindings_use_account_bms(graph, account_to_bms)
+
+
+def _map_account_bms(
+    graph: RuntimeRiskGraph,
+) -> Result[tuple[dict[str, str], dict[str, str]]]:
     account_to_bms: dict[str, str] = {}
     bms_to_account: dict[str, str] = {}
     for bms in graph.bms:
@@ -1050,10 +1131,13 @@ def _check_one_bms_per_account_many_books(graph: RuntimeRiskGraph) -> Result[Non
             )
         account_to_bms[account] = bms.bms_instance_id
         bms_to_account[bms.bms_instance_id] = account
+    return Ok((account_to_bms, bms_to_account))
 
-    books_by_bms: dict[str, set[str]] = {}
+
+def _check_books_bind_mapped_bms(
+    graph: RuntimeRiskGraph, bms_to_account: dict[str, str]
+) -> Result[None]:
     for book in graph.books:
-        books_by_bms.setdefault(book.bms_instance_id, set()).add(book.book_instance_id)
         if book.bms_instance_id not in bms_to_account:
             return unavailable(
                 "book",
@@ -1061,7 +1145,12 @@ def _check_one_bms_per_account_many_books(graph: RuntimeRiskGraph) -> Result[Non
                 book_instance_id=book.book_instance_id,
                 failure_id="compose.risk_population.one_bms_per_account",
             )
+    return Ok(None)
 
+
+def _check_bindings_use_account_bms(
+    graph: RuntimeRiskGraph, account_to_bms: dict[str, str]
+) -> Result[None]:
     for binding in graph.bindings:
         account = binding.stream_key
         expected = account_to_bms.get(account)

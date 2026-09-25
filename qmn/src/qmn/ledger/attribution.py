@@ -94,9 +94,39 @@ def prove_attribution_partition(
     gap is invalid input; overlapping instrument sets across Books require a
     shared-flatten signature on every overlapping Book.
     """
+    bound = _bind_attribution_inputs(account_key, position_model, declarations)
+    if is_refusal(bound):
+        return bound
+    key, model, decls = bound.value
+    if model is PositionModelKind.HEDGING:
+        return _hedging_partition(key, model, decls)
+    netted = _validate_netting_declarations(key, decls)
+    if is_refusal(netted):
+        return netted
+    flatten = _validate_shared_flatten(key, decls)
+    if is_refusal(flatten):
+        return flatten
+    return _netting_cover(key, model, decls)
+
+
+def _bind_attribution_inputs(
+    account_key: object,
+    position_model: object,
+    declarations: object,
+) -> Result[tuple[str, PositionModelKind, tuple[AttributionDeclaration, ...]]]:
     key = clean_token(account_key)
     if key is None:
         return invalid("account_key", "account key is venue::account", given=repr(account_key))
+    model = _bind_position_model(position_model)
+    if is_refusal(model):
+        return model
+    decls = _bind_attribution_declarations(declarations)
+    if is_refusal(decls):
+        return decls
+    return Ok((key, model.value, decls.value))
+
+
+def _bind_position_model(position_model: object) -> Result[PositionModelKind]:
     model_token = clean_token(position_model)
     if model_token is None:
         return invalid(
@@ -105,13 +135,18 @@ def prove_attribution_partition(
             given=repr(position_model),
         )
     try:
-        model = PositionModelKind(model_token)
+        return Ok(PositionModelKind(model_token))
     except ValueError:
         return invalid(
             "position_model",
             "position model is netting|hedging",
             given=repr(position_model),
         )
+
+
+def _bind_attribution_declarations(
+    declarations: object,
+) -> Result[tuple[AttributionDeclaration, ...]]:
     if not isinstance(declarations, Sequence) or isinstance(declarations, (str, bytes)):
         return invalid(
             "declarations",
@@ -127,65 +162,124 @@ def prove_attribution_partition(
                 given=repr(item),
             )
         resolved_decls.append(item)
-    decls = tuple(resolved_decls)
+    return Ok(tuple(resolved_decls))
 
-    if model is PositionModelKind.HEDGING:
-        covered: set[str] = set()
-        for decl in decls:
-            covered |= set(decl.instruments)
-        return Ok(
-            AttributionPartition(
-                account_key=key,
-                position_model=model,
-                covered=frozenset(covered),
-                declarations=decls,
-            )
-        )
 
-    # --- netting -------------------------------------------------------------
+def _hedging_partition(
+    key: str,
+    model: PositionModelKind,
+    decls: tuple[AttributionDeclaration, ...],
+) -> Result[AttributionPartition]:
+    covered: set[str] = set()
     for decl in decls:
-        if decl.attribution_instruments is None:
-            return policy(
-                "attribution_instruments",
-                "where CT-18 declares netting, the fill-to-virtual-position "
-                "attribution declaration is mandatory; absence is a bind-time "
-                "policy rejection",
-                account=key,
-                binding_id=decl.binding_id,
-            )
-        if not decl.attribution_instruments:
-            return invalid(
-                "attribution_instruments",
-                "netting attribution declaration must name a non-empty instrument set",
-                account=key,
-                binding_id=decl.binding_id,
-            )
-        if not decl.attribution_instruments <= decl.instruments:
-            return invalid(
-                "attribution_instruments",
-                "attribution instruments must be a subset of the Book's declared instruments",
-                account=key,
-                binding_id=decl.binding_id,
-            )
+        covered |= set(decl.instruments)
+    return Ok(
+        AttributionPartition(
+            account_key=key,
+            position_model=model,
+            covered=frozenset(covered),
+            declarations=decls,
+        )
+    )
 
-    if len(decls) > 1:
-        for i, left in enumerate(decls):
-            for right in decls[i + 1 :]:
-                overlap = left.instruments & right.instruments
-                if overlap and (
-                    left.shared_flatten_signature is None
-                    or right.shared_flatten_signature is None
-                ):
-                    return unsupported(
-                        "shared_flatten_signature",
-                        "a second Book on a netting account whose live bindings "
-                        "may trade an overlapping instrument set needs the "
-                        "operator's signed shared-flatten limitation; one Book "
-                        "per netted account is the V1 default",
-                        account=key,
-                        overlapping=sorted(overlap),
-                    )
 
+def _validate_netting_declarations(
+    key: str, decls: tuple[AttributionDeclaration, ...]
+) -> Result[None]:
+    for decl in decls:
+        checked = _validate_one_netting_declaration(key, decl)
+        if is_refusal(checked):
+            return checked
+    return Ok(None)
+
+
+def _validate_one_netting_declaration(
+    key: str, decl: AttributionDeclaration
+) -> Result[None]:
+    if decl.attribution_instruments is None:
+        return policy(
+            "attribution_instruments",
+            "where CT-18 declares netting, the fill-to-virtual-position "
+            "attribution declaration is mandatory; absence is a bind-time "
+            "policy rejection",
+            account=key,
+            binding_id=decl.binding_id,
+        )
+    if not decl.attribution_instruments:
+        return invalid(
+            "attribution_instruments",
+            "netting attribution declaration must name a non-empty instrument set",
+            account=key,
+            binding_id=decl.binding_id,
+        )
+    if not decl.attribution_instruments <= decl.instruments:
+        return invalid(
+            "attribution_instruments",
+            "attribution instruments must be a subset of the Book's declared instruments",
+            account=key,
+            binding_id=decl.binding_id,
+        )
+    return Ok(None)
+
+
+def _validate_shared_flatten(
+    key: str, decls: tuple[AttributionDeclaration, ...]
+) -> Result[None]:
+    if len(decls) <= 1:
+        return Ok(None)
+    for i, left in enumerate(decls):
+        for right in decls[i + 1 :]:
+            overlap = left.instruments & right.instruments
+            if overlap and (
+                left.shared_flatten_signature is None
+                or right.shared_flatten_signature is None
+            ):
+                return unsupported(
+                    "shared_flatten_signature",
+                    "a second Book on a netting account whose live bindings "
+                    "may trade an overlapping instrument set needs the "
+                    "operator's signed shared-flatten limitation; one Book "
+                    "per netted account is the V1 default",
+                    account=key,
+                    overlapping=sorted(overlap),
+                )
+    return Ok(None)
+
+
+def _netting_cover(
+    key: str,
+    model: PositionModelKind,
+    decls: tuple[AttributionDeclaration, ...],
+) -> Result[AttributionPartition]:
+    covered = _disjoint_attribution_cover(key, decls)
+    if is_refusal(covered):
+        return covered
+    universe: set[str] = set()
+    for decl in decls:
+        universe |= decl.instruments
+    missing = universe - covered.value
+    if missing:
+        return invalid(
+            "attribution_instruments",
+            "netting attribution declarations on one account must be jointly "
+            "exhaustive over every instrument the bindings may trade; gaps are "
+            "an invalid input refusal at compose",
+            account=key,
+            missing=sorted(missing),
+        )
+    return Ok(
+        AttributionPartition(
+            account_key=key,
+            position_model=model,
+            covered=frozenset(covered.value),
+            declarations=decls,
+        )
+    )
+
+
+def _disjoint_attribution_cover(
+    key: str, decls: tuple[AttributionDeclaration, ...]
+) -> Result[set[str]]:
     covered_set: set[str] = set()
     for decl in decls:
         attrib = decl.attribution_instruments
@@ -203,29 +297,7 @@ def prove_attribution_partition(
                 binding_id=decl.binding_id,
             )
         covered_set |= attrib
-
-    universe: set[str] = set()
-    for decl in decls:
-        universe |= decl.instruments
-    missing = universe - covered_set
-    if missing:
-        return invalid(
-            "attribution_instruments",
-            "netting attribution declarations on one account must be jointly "
-            "exhaustive over every instrument the bindings may trade; gaps are "
-            "an invalid input refusal at compose",
-            account=key,
-            missing=sorted(missing),
-        )
-
-    return Ok(
-        AttributionPartition(
-            account_key=key,
-            position_model=model,
-            covered=frozenset(covered_set),
-            declarations=decls,
-        )
-    )
+    return Ok(covered_set)
 
 
 def reconcile_virtual_to_venue_quantity(
@@ -238,21 +310,42 @@ def reconcile_virtual_to_venue_quantity(
 
     Residual is exact scaled-integer Quantity subtraction — never float.
     """
-    if not isinstance(ledgers, Sequence) or isinstance(ledgers, (str, bytes)):
-        return invalid(
-            "ledgers",
-            "ledgers is a sequence of BindingVirtualLedger",
-            given=repr(type(ledgers).__name__),
+    bound = _bind_reconcile_inputs(ledgers, venue_position, instrument)
+    if is_refusal(bound):
+        return bound
+    resolved, venue, inst = bound.value
+    summed = sum_virtual_quantities(resolved, instrument=inst)
+    if is_refusal(summed):
+        return summed
+    virtual_qty = summed.value
+    if virtual_qty is None:
+        zero = Quantity.try_create(0, venue.quantity.unit, venue.quantity.scale)
+        if is_refusal(zero):
+            return zero
+        virtual_qty = zero.value
+    residual_r = venue.quantity.subtract(virtual_qty)
+    if is_refusal(residual_r):
+        return residual_r
+    residual = residual_r.value
+    return Ok(
+        QuantityReconcileResult(
+            instrument=inst,
+            virtual_quantity=virtual_qty,
+            venue_quantity=venue.quantity,
+            residual=residual,
+            reconciled=residual.as_fraction() == 0,
         )
-    resolved_ledgers: list[BindingVirtualLedger] = []
-    for item in cast("Sequence[object]", ledgers):
-        if not isinstance(item, BindingVirtualLedger):
-            return invalid(
-                "ledgers",
-                "each ledger is a BindingVirtualLedger",
-                given=repr(item),
-            )
-        resolved_ledgers.append(item)
+    )
+
+
+def _bind_reconcile_inputs(
+    ledgers: object,
+    venue_position: object,
+    instrument: object | None,
+) -> Result[tuple[tuple[BindingVirtualLedger, ...], VenuePosition, str]]:
+    resolved = _bind_reconcile_ledgers(ledgers)
+    if is_refusal(resolved):
+        return resolved
     if not isinstance(venue_position, VenuePosition):
         return invalid(
             "venue_position",
@@ -269,27 +362,23 @@ def reconcile_virtual_to_venue_quantity(
             virtual=inst,
             venue=venue_position.instrument,
         )
+    return Ok((resolved.value, venue_position, inst))
 
-    summed = sum_virtual_quantities(tuple(resolved_ledgers), instrument=inst)
-    if is_refusal(summed):
-        return summed
-    virtual_qty = summed.value
-    if virtual_qty is None:
-        zero = Quantity.try_create(0, venue_position.quantity.unit, venue_position.quantity.scale)
-        if is_refusal(zero):
-            return zero
-        virtual_qty = zero.value
 
-    residual_r = venue_position.quantity.subtract(virtual_qty)
-    if is_refusal(residual_r):
-        return residual_r
-    residual = residual_r.value
-    return Ok(
-        QuantityReconcileResult(
-            instrument=inst,
-            virtual_quantity=virtual_qty,
-            venue_quantity=venue_position.quantity,
-            residual=residual,
-            reconciled=residual.as_fraction() == 0,
+def _bind_reconcile_ledgers(ledgers: object) -> Result[tuple[BindingVirtualLedger, ...]]:
+    if not isinstance(ledgers, Sequence) or isinstance(ledgers, (str, bytes)):
+        return invalid(
+            "ledgers",
+            "ledgers is a sequence of BindingVirtualLedger",
+            given=repr(type(ledgers).__name__),
         )
-    )
+    resolved_ledgers: list[BindingVirtualLedger] = []
+    for item in cast("Sequence[object]", ledgers):
+        if not isinstance(item, BindingVirtualLedger):
+            return invalid(
+                "ledgers",
+                "each ledger is a BindingVirtualLedger",
+                given=repr(item),
+            )
+        resolved_ledgers.append(item)
+    return Ok(tuple(resolved_ledgers))

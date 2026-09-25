@@ -30,6 +30,7 @@ from qmf.core import (
     Result,
     SinkAck,
     SinkResult,
+    TypedRefusal,
     VenueId,
     WriterId,
     fingerprint,
@@ -525,15 +526,41 @@ class _DriveBox:
 
 
 def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Result[_DriveMetrics]:
+    prepared = _prepare_drive(load=load, bounds=bounds)
+    if is_refusal(prepared):
+        return prepared
+    runtime = prepared.value
+    driven = _run_drive_actions(load=load, bounds=bounds, runtime=runtime)
+    if is_refusal(driven):
+        return driven
+    forced = _force_drive_bounds(bounds=bounds, runtime=runtime)
+    if is_refusal(forced):
+        return forced
+    isolation = _prove_drive_isolation(runtime=runtime)
+    if is_refusal(isolation):
+        return isolation
+    return _finish_drive_metrics(runtime=runtime, isolation=isolation.value)
+
+
+@dataclass
+class _DriveRuntime:
+    box: _DriveBox
+    stream_bundle: list[tuple[RecordingAccumulator, _ListSink, _ListSink, VenueId, Account]]
+    seat_bundle: list[_SeatRow]
+    door: DoorRuntime
+    pacer: ConnectionCommandPacer
+    stream: SeatTransitionStream
+
+
+def _prepare_drive(
+    *, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds
+) -> Result[_DriveRuntime]:
     streams = _build_streams(load=load, bounds=bounds.host)
     if is_refusal(streams):
         return streams
-    stream_bundle = streams.value
     seats = _build_seats(load=load, containment=bounds.containment)
     if is_refusal(seats):
         return seats
-    seat_bundle = seats.value
-
     door = DoorRuntime(
         boot_epoch=_BOOT,
         composition_fp="fp1:seat-concurrency-proof",
@@ -554,19 +581,33 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
     )
     if is_refusal(pacer):
         return pacer
+    return Ok(
+        _DriveRuntime(
+            box=_DriveBox(),
+            stream_bundle=streams.value,
+            seat_bundle=seats.value,
+            door=door,
+            pacer=pacer.value,
+            stream=SeatTransitionStream(),
+        )
+    )
 
-    box = _DriveBox()
+
+def _run_drive_actions(
+    *,
+    load: SeatConcurrencyLoad,
+    bounds: SeatInjectedBounds,
+    runtime: _DriveRuntime,
+) -> Result[None]:
     rng = _Deterministic(load.seed)
-    stream_obj = SeatTransitionStream()
     actions = _plan_actions(load)
     _shuffle(actions, rng)
-
     pushes_done = 0
     for action in actions:
         if action.kind == "push":
             pushed = _push_one(
-                box=box,
-                stream_bundle=stream_bundle,
+                box=runtime.box,
+                stream_bundle=runtime.stream_bundle,
                 bounds=bounds.host,
                 rng=rng,
                 stream_count=load.host.stream_count,
@@ -575,47 +616,54 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
                 return pushed
             pushes_done += 1
             if pushes_done % load.host.door_interleave_every == 0:
-                door_step = _interleave_doors(box=box, door=door, step=pushes_done)
+                door_step = _interleave_doors(
+                    box=runtime.box, door=runtime.door, step=pushes_done
+                )
                 if is_refusal(door_step):
                     return door_step
         elif action.kind == "seat":
             driven = _drive_one_seat(
-                box=box,
-                seat_row=seat_bundle[action.index],
-                stream=stream_obj,
+                box=runtime.box,
+                seat_row=runtime.seat_bundle[action.index],
+                stream=runtime.stream,
             )
             if is_refusal(driven):
                 return driven
         else:
             _ = host_perf_counter_ns()
-            box.timer_ticks_fired += 1
+            runtime.box.timer_ticks_fired += 1
+    return Ok(None)
 
-    overflow = _force_overflow(box=box, stream_bundle=stream_bundle, bounds=bounds.host)
+
+def _force_drive_bounds(
+    *, bounds: SeatInjectedBounds, runtime: _DriveRuntime
+) -> Result[None]:
+    overflow = _force_overflow(
+        box=runtime.box, stream_bundle=runtime.stream_bundle, bounds=bounds.host
+    )
     if is_refusal(overflow):
         return overflow
-
-    acc0 = stream_bundle[0][0]
-    box.exits_preserved = protection_enactable(acc0.cycle_band, act="close_all")
-    box.protection_preserved = box.exits_preserved or acc0.cycle_band is CycleBand.OK
-
-    venue0 = stream_bundle[0][3]
-    account0 = stream_bundle[0][4]
+    acc0 = runtime.stream_bundle[0][0]
+    runtime.box.exits_preserved = protection_enactable(acc0.cycle_band, act="close_all")
+    runtime.box.protection_preserved = (
+        runtime.box.exits_preserved or acc0.cycle_band is CycleBand.OK
+    )
+    venue0 = runtime.stream_bundle[0][3]
+    account0 = runtime.stream_bundle[0][4]
     pacer_step = _force_pacer_and_protection(
-        box=box,
-        pacer=pacer.value,
+        box=runtime.box,
+        pacer=runtime.pacer,
         bounds=bounds.host,
         venue=venue0,
         account=account0,
     )
     if is_refusal(pacer_step):
         return pacer_step
-
-    budget = _force_evidence_budget(box=box, door=door)
+    budget = _force_evidence_budget(box=runtime.box, door=runtime.door)
     if is_refusal(budget):
         return budget
-
-    for acc, *_rest in stream_bundle:
-        box.max_depth = max(box.max_depth, acc.depth)
+    for acc, *_rest in runtime.stream_bundle:
+        runtime.box.max_depth = max(runtime.box.max_depth, acc.depth)
         if acc.depth > bounds.host.accumulator_bound:
             return policy(
                 "accumulator_bound",
@@ -623,12 +671,17 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
                 depth=acc.depth,
                 bound=bounds.host.accumulator_bound,
             )
+    return Ok(None)
 
-    isolation = _fold_isolation(seat_bundle=seat_bundle, stream=stream_obj)
+
+def _prove_drive_isolation(
+    *, runtime: _DriveRuntime
+) -> Result[tuple[SeatIsolationRecord, ...]]:
+    isolation = _fold_isolation(seat_bundle=runtime.seat_bundle, stream=runtime.stream)
     if is_refusal(isolation):
         return isolation
-
-    if not box.exits_preserved:
+    if not runtime.box.exits_preserved:
+        acc0 = runtime.stream_bundle[0][0]
         return policy(
             "exits_preserved",
             "entry-side degradation must leave exits and protection enactable",
@@ -647,7 +700,15 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
             gap_id=GAP_0054_ID,
             gap_status=GAP_0054_STATUS,
         )
+    return isolation
 
+
+def _finish_drive_metrics(
+    *,
+    runtime: _DriveRuntime,
+    isolation: tuple[SeatIsolationRecord, ...],
+) -> Result[_DriveMetrics]:
+    box = runtime.box
     backpressure = box.coalesce_events > 0 or any(
         crossing.kind
         in {
@@ -688,7 +749,6 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
             "callbacks would imply an undeclared background thread",
             max_overlapping_seat_callbacks=box.max_overlapping,
         )
-
     return Ok(
         _DriveMetrics(
             max_in_flight_observed=box.max_in_flight,
@@ -710,7 +770,7 @@ def _drive_load(*, load: SeatConcurrencyLoad, bounds: SeatInjectedBounds) -> Res
             door_response_samples_ns=tuple(box.door_samples),
             timer_ticks_fired=box.timer_ticks_fired,
             bound_crossings=tuple(box.crossings),
-            isolation=isolation.value,
+            isolation=isolation,
             protection_preserved=box.protection_preserved,
             exits_preserved=box.exits_preserved,
             protective_command_admitted=box.protective_admitted,
@@ -898,6 +958,15 @@ def _drive_one_seat(
     if is_ok(result):
         box.callbacks_ok += 1
         return Ok(None)
+    return _account_seat_refusal(box=box, seat_row=seat_row, result=result)
+
+
+def _account_seat_refusal(
+    *,
+    box: _DriveBox,
+    seat_row: _SeatRow,
+    result: TypedRefusal,
+) -> Result[None]:
     box.typed_refusals += 1
     stream_failure = result.context.get("stream_failure") is True
     node_restart = result.context.get("node_restart") is True
@@ -917,6 +986,11 @@ def _drive_one_seat(
             gap_status=GAP_0054_STATUS,
             seat_id=seat_row.seat.seat_id,
         )
+    _record_seat_quarantine(box=box, result=result)
+    return Ok(None)
+
+
+def _record_seat_quarantine(*, box: _DriveBox, result: TypedRefusal) -> None:
     trigger = str(result.context.get("trigger", ""))
     if trigger == QuarantineTrigger.DEADLINE_BREACH.value:
         box.callbacks_quarantined += 1
@@ -940,7 +1014,6 @@ def _drive_one_seat(
                 details=dict(result.context),
             )
         )
-    return Ok(None)
 
 
 def _force_overflow(
@@ -951,47 +1024,14 @@ def _force_overflow(
 ) -> Result[None]:
     if BoundCrossingKind.MARKET_DATA_COALESCE in {c.kind for c in box.crossings}:
         return Ok(None)
-    acc0, _obs0, _j0, _venue0, _account0 = stream_bundle[0]
+    acc0 = stream_bundle[0][0]
     force_guard = 0
     while BoundCrossingKind.MARKET_DATA_COALESCE not in {c.kind for c in box.crossings}:
-        box.wall_seq += 1
         force_guard += 1
-        box.push_attempts += 1
-        before_coalesce = len(acc0.coalesce_events)
-        forced = acc0.push(
-            observation_id=f"force-overflow-{box.wall_seq}",
-            stream_id="eurusd",
-            receive_wall=_instant(_WALL_BASE_NS + box.wall_seq * 1_000_000),
-            payload={"kind": "spot", "force": True},
-            kind="spot",
-            coalesce_key="eurusd",
-        )
-        if is_ok(forced):
-            box.push_accepted += 1
-            box.accounted += 1
-            if len(acc0.coalesce_events) > before_coalesce:
-                _record_coalesce(box=box, acc=acc0, bounds=bounds, stream_index=0)
-                return Ok(None)
-            box.max_depth = max(box.max_depth, acc0.depth)
-            if acc0.depth > bounds.accumulator_bound:
-                return policy(
-                    "accumulator_bound",
-                    "foldable depth must never exceed the configured accumulator_bound",
-                    depth=acc0.depth,
-                    bound=bounds.accumulator_bound,
-                )
-        else:
-            box.typed_refusals += 1
-            box.accounted += 1
-            box.crossings.append(
-                BoundCrossingRecord(
-                    kind=BoundCrossingKind.STORAGE_FAILURE,
-                    category=forced.category.value,
-                    bound_field=str(forced.context.get("field", "accumulator_bound")),
-                    stream_index=0,
-                    details=dict(forced.context),
-                )
-            )
+        forced = _force_one_overflow_push(box=box, acc0=acc0, bounds=bounds)
+        if is_refusal(forced):
+            return forced
+        if forced.value is True:
             return Ok(None)
         if force_guard > bounds.accumulator_bound + 4:
             return policy(
@@ -1003,6 +1043,64 @@ def _force_overflow(
     return Ok(None)
 
 
+def _force_one_overflow_push(
+    *,
+    box: _DriveBox,
+    acc0: RecordingAccumulator,
+    bounds: InjectedBounds,
+) -> Result[bool]:
+    box.wall_seq += 1
+    box.push_attempts += 1
+    before_coalesce = len(acc0.coalesce_events)
+    forced = acc0.push(
+        observation_id=f"force-overflow-{box.wall_seq}",
+        stream_id="eurusd",
+        receive_wall=_instant(_WALL_BASE_NS + box.wall_seq * 1_000_000),
+        payload={"kind": "spot", "force": True},
+        kind="spot",
+        coalesce_key="eurusd",
+    )
+    if is_ok(forced):
+        return _account_forced_overflow(
+            box=box, acc0=acc0, bounds=bounds, before_coalesce=before_coalesce
+        )
+    box.typed_refusals += 1
+    box.accounted += 1
+    box.crossings.append(
+        BoundCrossingRecord(
+            kind=BoundCrossingKind.STORAGE_FAILURE,
+            category=forced.category.value,
+            bound_field=str(forced.context.get("field", "accumulator_bound")),
+            stream_index=0,
+            details=dict(forced.context),
+        )
+    )
+    return Ok(True)
+
+
+def _account_forced_overflow(
+    *,
+    box: _DriveBox,
+    acc0: RecordingAccumulator,
+    bounds: InjectedBounds,
+    before_coalesce: int,
+) -> Result[bool]:
+    box.push_accepted += 1
+    box.accounted += 1
+    if len(acc0.coalesce_events) > before_coalesce:
+        _record_coalesce(box=box, acc=acc0, bounds=bounds, stream_index=0)
+        return Ok(True)
+    box.max_depth = max(box.max_depth, acc0.depth)
+    if acc0.depth > bounds.accumulator_bound:
+        return policy(
+            "accumulator_bound",
+            "foldable depth must never exceed the configured accumulator_bound",
+            depth=acc0.depth,
+            bound=bounds.accumulator_bound,
+        )
+    return Ok(False)
+
+
 def _force_pacer_and_protection(
     *,
     box: _DriveBox,
@@ -1011,24 +1109,9 @@ def _force_pacer_and_protection(
     venue: VenueId,
     account: Account,
 ) -> Result[None]:
-    instrument = Instrument.try_create(venue, "EURUSD")
-    if is_refusal(instrument):
-        return instrument
-    qty = Quantity.try_create(100, "lot", 2)
-    if is_refusal(qty):
-        return qty
-    stop = PriceDelta.try_create(100, instrument.value, 5)
-    if is_refusal(stop):
-        return stop
-    params = OrderParameters.try_create(
-        OrderType.MARKET,
-        TimeInForce.GOOD_TILL_CANCEL,
-        qty.value,
-        protective_stop_distance=stop.value,
-    )
+    params = _seat_pacer_order_params(venue)
     if is_refusal(params):
         return params
-
     queue = _observe_queue_bound(
         box=box,
         pacer=pacer,
@@ -1039,46 +1122,71 @@ def _force_pacer_and_protection(
     )
     if is_refusal(queue):
         return queue
+    held = _fill_pacer_capacity(
+        box=box,
+        pacer=pacer,
+        bounds=bounds,
+        venue=venue,
+        account=account,
+        params=params.value,
+    )
+    if is_refusal(held):
+        return held
+    return _admit_protective_close(
+        box=box,
+        pacer=pacer,
+        bounds=bounds,
+        venue=venue,
+        account=account,
+        held=held.value,
+        ordinal=10 + bounds.general_capacity + 2,
+    )
 
+
+def _seat_pacer_order_params(venue: VenueId) -> Result[OrderParameters]:
+    instrument = Instrument.try_create(venue, "EURUSD")
+    if is_refusal(instrument):
+        return instrument
+    qty = Quantity.try_create(100, "lot", 2)
+    if is_refusal(qty):
+        return qty
+    stop = PriceDelta.try_create(100, instrument.value, 5)
+    if is_refusal(stop):
+        return stop
+    return OrderParameters.try_create(
+        OrderType.MARKET,
+        TimeInForce.GOOD_TILL_CANCEL,
+        qty.value,
+        protective_stop_distance=stop.value,
+    )
+
+
+def _fill_pacer_capacity(
+    *,
+    box: _DriveBox,
+    pacer: ConnectionCommandPacer,
+    bounds: InjectedBounds,
+    venue: VenueId,
+    account: Account,
+    params: OrderParameters,
+) -> Result[int]:
     held = 0
     ordinal = 10
     for i in range(bounds.general_capacity + 2):
         ordinal += 1
-        cmd = Command.place_order(venue, account, _SESSION, ordinal, params.value)
-        if is_refusal(cmd):
-            return cmd
-        enqueued = pacer.enqueue(cmd.value)
-        if is_refusal(enqueued):
-            return enqueued
-        enqueued_at = MonotonicReading.try_create(30_000_000_000 + i * 1_000, _BOOT)
-        now = MonotonicReading.try_create(30_000_000_000 + i * 1_000 + 100, _BOOT)
-        if is_refusal(enqueued_at):
-            return enqueued_at
-        if is_refusal(now):
-            return now
-        admitted = pacer.admit(cmd.value, enqueued_at=enqueued_at.value, now=now.value)
-        if is_ok(admitted):
-            held += 1
-            box.max_in_flight = max(box.max_in_flight, held)
-            continue
-        box.max_in_flight = max(box.max_in_flight, held)
-        box.typed_refusals += 1
-        field_name = str(admitted.context.get("field", ""))
-        kind = (
-            BoundCrossingKind.LOCAL_QUEUE_BOUND
-            if field_name == "local_queue_bound"
-            else BoundCrossingKind.PACER_CAPACITY
+        admitted = _admit_one_capacity(
+            box=box,
+            pacer=pacer,
+            venue=venue,
+            account=account,
+            params=params,
+            ordinal=ordinal,
+            index=i,
+            held=held,
         )
-        box.crossings.append(
-            BoundCrossingRecord(
-                kind=kind,
-                category=admitted.category.value,
-                bound_field=field_name,
-                stream_index=None,
-                details=dict(admitted.context),
-            )
-        )
-
+        if is_refusal(admitted):
+            return admitted
+        held = admitted.value
     cap = bounds.general_capacity + bounds.protective_reserve_capacity
     if box.max_in_flight > cap:
         return policy(
@@ -1088,7 +1196,67 @@ def _force_pacer_and_protection(
             general_capacity=bounds.general_capacity,
             protective_reserve_capacity=bounds.protective_reserve_capacity,
         )
+    return Ok(held)
 
+
+def _admit_one_capacity(
+    *,
+    box: _DriveBox,
+    pacer: ConnectionCommandPacer,
+    venue: VenueId,
+    account: Account,
+    params: OrderParameters,
+    ordinal: int,
+    index: int,
+    held: int,
+) -> Result[int]:
+    cmd = Command.place_order(venue, account, _SESSION, ordinal, params)
+    if is_refusal(cmd):
+        return cmd
+    enqueued = pacer.enqueue(cmd.value)
+    if is_refusal(enqueued):
+        return enqueued
+    enqueued_at = MonotonicReading.try_create(30_000_000_000 + index * 1_000, _BOOT)
+    now = MonotonicReading.try_create(30_000_000_000 + index * 1_000 + 100, _BOOT)
+    if is_refusal(enqueued_at):
+        return enqueued_at
+    if is_refusal(now):
+        return now
+    admitted = pacer.admit(cmd.value, enqueued_at=enqueued_at.value, now=now.value)
+    if is_ok(admitted):
+        held += 1
+        box.max_in_flight = max(box.max_in_flight, held)
+        return Ok(held)
+    box.max_in_flight = max(box.max_in_flight, held)
+    box.typed_refusals += 1
+    field_name = str(admitted.context.get("field", ""))
+    kind = (
+        BoundCrossingKind.LOCAL_QUEUE_BOUND
+        if field_name == "local_queue_bound"
+        else BoundCrossingKind.PACER_CAPACITY
+    )
+    box.crossings.append(
+        BoundCrossingRecord(
+            kind=kind,
+            category=admitted.category.value,
+            bound_field=field_name,
+            stream_index=None,
+            details=dict(admitted.context),
+        )
+    )
+    return Ok(held)
+
+
+def _admit_protective_close(
+    *,
+    box: _DriveBox,
+    pacer: ConnectionCommandPacer,
+    bounds: InjectedBounds,
+    venue: VenueId,
+    account: Account,
+    held: int,
+    ordinal: int,
+) -> Result[None]:
     close_cmd = Command.close_all(
         venue,
         account,
