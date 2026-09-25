@@ -91,48 +91,79 @@ def test_mcp_door_is_scaffolded_not_shipped() -> None:
     assert "mcp" not in qmb.__all__
 
 
+def _imported_module_names(node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+        return [node.module]
+    return []
+
+
+def _is_open_call(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "open"
+    )
+
+
+def _banned_import_hit(
+    name: str,
+    relative: Path,
+    *,
+    in_orchestrator: bool,
+    is_host_runner: bool,
+) -> str | None:
+    banned = name in _BANNED_IMPORTS or any(
+        name.startswith(banned + ".") for banned in _BANNED_IMPORTS
+    )
+    if banned:
+        if (in_orchestrator or is_host_runner) and (
+            name == "subprocess" or name.startswith("subprocess.")
+        ):
+            return None
+        # optuna is the TPE-class sampler adapter's dependency and lives
+        # only in the sampler module, pinned n_jobs=1 (DEC-0168, B-8).
+        if relative.parts == ("optimize", "sampler.py") and (
+            name == "optuna" or name.startswith("optuna.")
+        ):
+            return None
+        return f"imports {name}"
+    if (name == "click" or name.startswith("click.")) and relative.parts[:2] != (
+        "doors",
+        "cli",
+    ):
+        return "click is CLI-door only"
+    return None
+
+
+def _scan_source_for_banned_imports(path: Path) -> list[str]:
+    relative = path.relative_to(_SRC)
+    in_orchestrator = relative.parts[:1] == ("orchestrator",)
+    is_host_runner = relative.parts == ("host", "runner.py")
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if _is_open_call(node):
+            if not (in_orchestrator or is_host_runner):
+                violations.append(f"{path}: open()")
+            continue
+        for name in _imported_module_names(node):
+            hit = _banned_import_hit(
+                name,
+                relative,
+                in_orchestrator=in_orchestrator,
+                is_host_runner=is_host_runner,
+            )
+            if hit is not None:
+                violations.append(f"{path}: {hit}")
+    return violations
+
+
 def test_source_never_imports_banned_modules() -> None:
     violations: list[str] = []
     for path in sorted(_SRC.rglob("*.py")):
-        relative = path.relative_to(_SRC)
-        in_orchestrator = relative.parts[:1] == ("orchestrator",)
-        is_host_runner = relative.parts == ("host", "runner.py")
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            names: list[str] = []
-            if isinstance(node, ast.Import):
-                names.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-                names.append(node.module)
-            elif (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "open"
-            ):
-                if not (in_orchestrator or is_host_runner):
-                    violations.append(f"{path}: open()")
-                continue
-            for name in names:
-                banned = name in _BANNED_IMPORTS or any(
-                    name.startswith(banned + ".") for banned in _BANNED_IMPORTS
-                )
-                if banned:
-                    if (in_orchestrator or is_host_runner) and (
-                        name == "subprocess" or name.startswith("subprocess.")
-                    ):
-                        continue
-                    # optuna is the TPE-class sampler adapter's dependency and lives
-                    # only in the sampler module, pinned n_jobs=1 (DEC-0168, B-8).
-                    if relative.parts == ("optimize", "sampler.py") and (
-                        name == "optuna" or name.startswith("optuna.")
-                    ):
-                        continue
-                    violations.append(f"{path}: imports {name}")
-                if (name == "click" or name.startswith("click.")) and relative.parts[:2] != (
-                    "doors",
-                    "cli",
-                ):
-                    violations.append(f"{path}: click is CLI-door only")
+        violations.extend(_scan_source_for_banned_imports(path))
     assert violations == []
 
 
