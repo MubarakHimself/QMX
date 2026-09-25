@@ -565,102 +565,29 @@ def build_accepted_registration(
     mutate_composition_fp: object = False,
 ) -> Result[RegimeModelRegistration]:
     """Build a fingerprinted registration for a completed accepted training run."""
-    if grant_governed_binding is True:
-        return refuse_live_consumer_binding(claim="grant_governed_binding=True")
-    if grant_live_consumer_binding is True:
-        return refuse_live_consumer_binding(claim="grant_live_consumer_binding=True")
-    if mutate_composition_fp is True:
-        return refuse_composition_fp_mutation(claim="mutate_composition_fp=True")
-    if grant_governed_binding not in (False, None) or grant_live_consumer_binding not in (
-        False,
-        None,
-    ):
-        return invalid(
-            "authority",
-            "authority grant flags are False for Story 30.6 registration",
-            given=repr((grant_governed_binding, grant_live_consumer_binding)),
-        )
-    if mutate_composition_fp not in (False, None):
-        return invalid(
-            "mutate_composition_fp",
-            "mutate_composition_fp is False for Story 30.6 registration",
-            given=repr(mutate_composition_fp),
-        )
-
-    status = _coerce_status(request_status)
-    if is_refusal(status):
-        return status
-    if status.value is not RegistrationAuthorityStatus.CANDIDATE:
-        return policy(
-            "status",
-            "an accepted QMX training registration uses candidate status only",
-            failure_id="mis.regime_register.accepted_status",
-            given=status.value.value,
-        )
-
-    if not isinstance(artifact, TrainingArtifact):
-        return invalid(
-            "artifact",
-            "accepted registration takes a completed TrainingArtifact",
-            given=type(artifact).__name__,
-        )
-    registerable = assert_registerable_training_artifact(artifact)
-    if is_refusal(registerable):
-        return registerable
-    if not isinstance(evaluation, EvaluationReport):
-        return invalid(
-            "evaluation",
-            "accepted registration takes an EvaluationReport",
-            given=type(evaluation).__name__,
-        )
-    if evaluation.verdict is not EvaluationVerdict.ACCEPTED:
-        return policy(
-            "evaluation",
-            "accepted registration requires an accepted evaluation verdict; "
-            "refused evaluations register only as refused-candidate",
-            failure_id="mis.regime_register.evaluation_not_accepted",
-            given=evaluation.verdict.value,
-        )
-    if evaluation.model_fp != artifact.model_fp:
-        return policy(
-            "model_fp",
-            "evaluation report must cite the same model fingerprint as the training artifact",
-            failure_id="mis.regime_register.model_fp_mismatch",
-            training=artifact.model_fp.value,
-            evaluation=evaluation.model_fp.value,
-        )
-
-    resolved_design = design if design is not None else accepted_regime_classifier_design()
-    design_fp = resolved_design.fingerprint()
-    if is_refusal(design_fp):
-        return design_fp
-    unchanged = assert_design_unchanged(design_fp.value, design=resolved_design)
-    if is_refusal(unchanged):
-        return unchanged
-    if isinstance(contract, ExecutableRegimeContract):
-        resolved_contract = contract
-    else:
-        built = executable_regime_contract(resolved_design)
-        if is_refusal(built):
-            return built
-        resolved_contract = built.value
-
-    feature_fp = _feature_schema_fp(resolved_contract.feature_contract)
-    if is_refusal(feature_fp):
-        return feature_fp
-    class_fp = _class_mapping_fp(resolved_contract.label_contract)
-    if is_refusal(class_fp):
-        return class_fp
-    contract_fp = resolved_contract.fingerprint()
-    if is_refusal(contract_fp):
-        return contract_fp
-    eval_fp = evaluation.governed_fingerprint()
+    blocked = _refuse_registration_grants(
+        grant_governed_binding=grant_governed_binding,
+        grant_live_consumer_binding=grant_live_consumer_binding,
+        mutate_composition_fp=mutate_composition_fp,
+    )
+    if is_refusal(blocked):
+        return blocked
+    inputs = _accepted_registration_inputs(
+        artifact=artifact, evaluation=evaluation, request_status=request_status
+    )
+    if is_refusal(inputs):
+        return inputs
+    artifact_obj, evaluation_obj = inputs.value
+    fps = _registration_design_fps(design=design, contract=contract)
+    if is_refusal(fps):
+        return fps
+    design_fp, _resolved_contract, feature_fp, class_fp, contract_fp = fps.value
+    eval_fp = evaluation_obj.governed_fingerprint()
     if is_refusal(eval_fp):
         return eval_fp
-    training_cite = _training_artifact_cite(artifact)
+    training_cite = _training_artifact_cite(artifact_obj)
     if is_refusal(training_cite):
         return training_cite
-
     cleaned_resolved = _optional_fp(cleaned_fp, "cleaned_fp")
     if is_refusal(cleaned_resolved):
         return cleaned_resolved
@@ -670,26 +597,25 @@ def build_accepted_registration(
     splits_resolved = _optional_fp(splits_fp, "splits_fp")
     if is_refusal(splits_resolved):
         return splits_resolved
-
     return Ok(
         RegimeModelRegistration(
             artifact_id=REGIME_REGISTER_ARTIFACT_ID,
             producer_id=REGIME_CLASSIFIER_PRODUCER_ID,
             status=RegistrationAuthorityStatus.CANDIDATE,
             candidate_kind=CandidateKind.QMX_TRAINED,
-            model_fp=artifact.model_fp,
-            feature_schema_fp=feature_fp.value,
-            class_mapping_fp=class_fp.value,
+            model_fp=artifact_obj.model_fp,
+            feature_schema_fp=feature_fp,
+            class_mapping_fp=class_fp,
             evaluation_report_fp=eval_fp.value,
-            training_config_fp=artifact.config_fp,
-            code_fp=artifact.code_fp,
-            dependency_lock_fp=artifact.record.dependency_lock.lock_fp,
-            seed=artifact.record.seed,
+            training_config_fp=artifact_obj.config_fp,
+            code_fp=artifact_obj.code_fp,
+            dependency_lock_fp=artifact_obj.record.dependency_lock.lock_fp,
+            seed=artifact_obj.record.seed,
             cleaned_fp=cleaned_resolved.value,
             labeled_fp=labeled_resolved.value,
             splits_fp=splits_resolved.value,
-            design_fp=design_fp.value,
-            contract_fp=contract_fp.value,
+            design_fp=design_fp,
+            contract_fp=contract_fp,
             training_artifact_fp=training_cite.value,
             external_family=None,
             provenance=SANDBOX_PROVENANCE,
@@ -727,7 +653,187 @@ def build_non_authoritative_registration(
         return refuse_composition_fp_mutation(claim="mutate_composition_fp=True")
     if claim_pretrained_authority is True:
         return refuse_pretrained_reputation(family=external_family)
+    kind = _non_authoritative_kind(candidate_kind)
+    if is_refusal(kind):
+        return kind
+    fps = _registration_design_fps(design=design, contract=contract, require_unchanged=False)
+    if is_refusal(fps):
+        return fps
+    design_fp, _resolved_contract, feature_fp, class_fp, contract_fp = fps.value
+    family = _external_family_token(kind.value, external_family)
+    if is_refusal(family):
+        return family
+    family_token = family.value
+    default_status = _non_authoritative_default_status(kind.value)
+    status = _coerce_status(default_status if request_status is None else request_status)
+    if is_refusal(status):
+        return status
+    model = _non_authoritative_model(
+        kind=kind.value,
+        artifact=artifact,
+        model_fp=model_fp,
+        model_bytes=model_bytes,
+        family_token=family_token,
+    )
+    if is_refusal(model):
+        return model
+    resolved_model_fp, training_cite, training_config, code_fp, dependency_lock, seed = model.value
+    eval_fp = _non_authoritative_eval_fp(kind.value, evaluation)
+    if is_refusal(eval_fp):
+        return eval_fp
+    return Ok(
+        RegimeModelRegistration(
+            artifact_id=REGIME_REGISTER_ARTIFACT_ID,
+            producer_id=REGIME_CLASSIFIER_PRODUCER_ID,
+            status=status.value,
+            candidate_kind=kind.value,
+            model_fp=resolved_model_fp,
+            feature_schema_fp=feature_fp,
+            class_mapping_fp=class_fp,
+            evaluation_report_fp=eval_fp.value,
+            training_config_fp=training_config,
+            code_fp=code_fp,
+            dependency_lock_fp=dependency_lock,
+            seed=seed,
+            cleaned_fp=None,
+            labeled_fp=None,
+            splits_fp=None,
+            design_fp=design_fp,
+            contract_fp=contract_fp,
+            training_artifact_fp=training_cite,
+            external_family=family_token,
+            provenance=SANDBOX_PROVENANCE,
+            grants_money_path_authority=False,
+            grants_governed_binding=False,
+            grants_live_consumer_binding=False,
+            changes_composition_fp=False,
+            format_version=REGIME_REGISTER_FORMAT_VERSION,
+        )
+    )
 
+
+def _refuse_registration_grants(
+    *,
+    grant_governed_binding: object,
+    grant_live_consumer_binding: object,
+    mutate_composition_fp: object,
+) -> Result[None]:
+    if grant_governed_binding is True:
+        return refuse_live_consumer_binding(claim="grant_governed_binding=True")
+    if grant_live_consumer_binding is True:
+        return refuse_live_consumer_binding(claim="grant_live_consumer_binding=True")
+    if mutate_composition_fp is True:
+        return refuse_composition_fp_mutation(claim="mutate_composition_fp=True")
+    if grant_governed_binding not in (False, None) or grant_live_consumer_binding not in (
+        False,
+        None,
+    ):
+        return invalid(
+            "authority",
+            "authority grant flags are False for Story 30.6 registration",
+            given=repr((grant_governed_binding, grant_live_consumer_binding)),
+        )
+    if mutate_composition_fp not in (False, None):
+        return invalid(
+            "mutate_composition_fp",
+            "mutate_composition_fp is False for Story 30.6 registration",
+            given=repr(mutate_composition_fp),
+        )
+    return Ok(None)
+
+
+def _accepted_registration_inputs(
+    *,
+    artifact: object,
+    evaluation: object,
+    request_status: object,
+) -> Result[tuple[TrainingArtifact, EvaluationReport]]:
+    status = _coerce_status(request_status)
+    if is_refusal(status):
+        return status
+    if status.value is not RegistrationAuthorityStatus.CANDIDATE:
+        return policy(
+            "status",
+            "an accepted QMX training registration uses candidate status only",
+            failure_id="mis.regime_register.accepted_status",
+            given=status.value.value,
+        )
+    if not isinstance(artifact, TrainingArtifact):
+        return invalid(
+            "artifact",
+            "accepted registration takes a completed TrainingArtifact",
+            given=type(artifact).__name__,
+        )
+    registerable = assert_registerable_training_artifact(artifact)
+    if is_refusal(registerable):
+        return registerable
+    if not isinstance(evaluation, EvaluationReport):
+        return invalid(
+            "evaluation",
+            "accepted registration takes an EvaluationReport",
+            given=type(evaluation).__name__,
+        )
+    if evaluation.verdict is not EvaluationVerdict.ACCEPTED:
+        return policy(
+            "evaluation",
+            "accepted registration requires an accepted evaluation verdict; "
+            "refused evaluations register only as refused-candidate",
+            failure_id="mis.regime_register.evaluation_not_accepted",
+            given=evaluation.verdict.value,
+        )
+    if evaluation.model_fp != artifact.model_fp:
+        return policy(
+            "model_fp",
+            "evaluation report must cite the same model fingerprint as the training artifact",
+            failure_id="mis.regime_register.model_fp_mismatch",
+            training=artifact.model_fp.value,
+            evaluation=evaluation.model_fp.value,
+        )
+    return Ok((artifact, evaluation))
+
+
+def _registration_design_fps(
+    *,
+    design: RegimeClassifierDesign | None,
+    contract: ExecutableRegimeContract | None,
+    require_unchanged: bool = True,
+) -> Result[tuple[Fingerprint, ExecutableRegimeContract, Fingerprint, Fingerprint, Fingerprint]]:
+    resolved_design = design if design is not None else accepted_regime_classifier_design()
+    design_fp = resolved_design.fingerprint()
+    if is_refusal(design_fp):
+        return design_fp
+    if require_unchanged:
+        unchanged = assert_design_unchanged(design_fp.value, design=resolved_design)
+        if is_refusal(unchanged):
+            return unchanged
+    if isinstance(contract, ExecutableRegimeContract):
+        resolved_contract = contract
+    else:
+        built = executable_regime_contract(resolved_design)
+        if is_refusal(built):
+            return built
+        resolved_contract = built.value
+    feature_fp = _feature_schema_fp(resolved_contract.feature_contract)
+    if is_refusal(feature_fp):
+        return feature_fp
+    class_fp = _class_mapping_fp(resolved_contract.label_contract)
+    if is_refusal(class_fp):
+        return class_fp
+    contract_fp = resolved_contract.fingerprint()
+    if is_refusal(contract_fp):
+        return contract_fp
+    return Ok(
+        (
+            design_fp.value,
+            resolved_contract,
+            feature_fp.value,
+            class_fp.value,
+            contract_fp.value,
+        )
+    )
+
+
+def _non_authoritative_kind(candidate_kind: object) -> Result[CandidateKind]:
     kind_token = clean_token(candidate_kind)
     if kind_token is None and isinstance(candidate_kind, CandidateKind):
         kind = candidate_kind
@@ -753,72 +859,58 @@ def build_non_authoritative_registration(
             "QMX-trained accepted candidates use build_accepted_registration",
             given=kind.value,
         )
+    return Ok(kind)
 
-    resolved_design = design if design is not None else accepted_regime_classifier_design()
-    resolved_contract: ExecutableRegimeContract
-    if isinstance(contract, ExecutableRegimeContract):
-        resolved_contract = contract
-    else:
-        built = executable_regime_contract(resolved_design)
-        if is_refusal(built):
-            return built
-        resolved_contract = built.value
 
-    feature_fp = _feature_schema_fp(resolved_contract.feature_contract)
-    if is_refusal(feature_fp):
-        return feature_fp
-    class_fp = _class_mapping_fp(resolved_contract.label_contract)
-    if is_refusal(class_fp):
-        return class_fp
-    design_fp = resolved_design.fingerprint()
-    if is_refusal(design_fp):
-        return design_fp
-    contract_fp = resolved_contract.fingerprint()
-    if is_refusal(contract_fp):
-        return contract_fp
+def _external_family_token(kind: CandidateKind, external_family: object) -> Result[str | None]:
+    if kind is not CandidateKind.EXTERNAL:
+        return Ok(None)
+    family_token = clean_token(external_family)
+    if family_token is None:
+        return invalid(
+            "external_family",
+            "external candidates declare their family (kronos/hmm/bocpd/ms-garch)",
+            given=repr(external_family),
+        )
+    unauth = refuse_unauthoritative_candidate(family_token)
+    if is_refusal(unauth):
+        return Ok(family_token)
+    return policy(
+        "external_family",
+        "external registration is reserved for Kronos/HMM/BOCPD/MS-GARCH "
+        "candidates that remain unauthoritative",
+        failure_id="mis.regime_register.unknown_external_family",
+        given=family_token,
+        unauthoritative=sorted(UNAUTHORITATIVE_CANDIDATES),
+    )
 
-    family_token: str | None = None
+
+def _non_authoritative_default_status(kind: CandidateKind) -> RegistrationAuthorityStatus:
     if kind is CandidateKind.EXTERNAL:
-        family_token = clean_token(external_family)
-        if family_token is None:
-            return invalid(
-                "external_family",
-                "external candidates declare their family (kronos/hmm/bocpd/ms-garch)",
-                given=repr(external_family),
-            )
-        unauth = refuse_unauthoritative_candidate(family_token)
-        if is_refusal(unauth):
-            # Expected — record with honest provenance, no authority.
-            pass
-        else:
-            return policy(
-                "external_family",
-                "external registration is reserved for Kronos/HMM/BOCPD/MS-GARCH "
-                "candidates that remain unauthoritative",
-                failure_id="mis.regime_register.unknown_external_family",
-                given=family_token,
-                unauthoritative=sorted(UNAUTHORITATIVE_CANDIDATES),
-            )
-        default_status = RegistrationAuthorityStatus.EXTERNAL_CANDIDATE
-    elif kind is CandidateKind.INCOMPLETE_TRAINING:
-        default_status = RegistrationAuthorityStatus.INCOMPLETE_CANDIDATE
-    else:
-        default_status = RegistrationAuthorityStatus.REFUSED_CANDIDATE
+        return RegistrationAuthorityStatus.EXTERNAL_CANDIDATE
+    if kind is CandidateKind.INCOMPLETE_TRAINING:
+        return RegistrationAuthorityStatus.INCOMPLETE_CANDIDATE
+    return RegistrationAuthorityStatus.REFUSED_CANDIDATE
 
-    status = _coerce_status(default_status if request_status is None else request_status)
-    if is_refusal(status):
-        return status
 
-    resolved_model_fp: Fingerprint
-    training_cite: Fingerprint | None = None
-    training_config: Fingerprint | None = None
-    code_fp: Fingerprint | None = None
-    dependency_lock: str | None = None
-    seed: int | None = None
-    eval_fp: Fingerprint | None = None
-
+def _non_authoritative_model(
+    *,
+    kind: CandidateKind,
+    artifact: object,
+    model_fp: object | None,
+    model_bytes: object | None,
+    family_token: str | None,
+) -> Result[
+    tuple[
+        Fingerprint,
+        Fingerprint | None,
+        Fingerprint | None,
+        Fingerprint | None,
+        str | None,
+        int | None,
+    ]
+]:
     if isinstance(artifact, TrainingArtifact):
-        # Incomplete/aborted artifacts may be recorded but never as registerable authority.
         if (
             artifact.registerable
             and artifact.record.status is TrainingTerminalStatus.COMPLETED
@@ -829,23 +921,27 @@ def build_non_authoritative_registration(
                 "a completed registerable training artifact is not an incomplete candidate",
                 failure_id="mis.regime_register.completed_as_incomplete",
             )
-        resolved_model_fp = artifact.model_fp
-        training_config = artifact.config_fp
-        code_fp = artifact.code_fp
-        dependency_lock = artifact.record.dependency_lock.lock_fp
-        seed = artifact.record.seed
         cite = _training_artifact_cite(artifact)
         if is_refusal(cite):
             return cite
-        training_cite = cite.value
-    elif model_fp is not None:
+        return Ok(
+            (
+                artifact.model_fp,
+                cite.value,
+                artifact.config_fp,
+                artifact.code_fp,
+                artifact.record.dependency_lock.lock_fp,
+                artifact.record.seed,
+            )
+        )
+    if model_fp is not None:
         coerced = _optional_fp(model_fp, "model_fp")
         if is_refusal(coerced):
             return coerced
         if coerced.value is None:
             return invalid("model_fp", "model_fp resolved to an absent fingerprint")
-        resolved_model_fp = coerced.value
-    elif model_bytes is not None:
+        return Ok((coerced.value, None, None, None, None, None))
+    if model_bytes is not None:
         if not isinstance(model_bytes, (bytes, bytearray, str)):
             return invalid(
                 "model_bytes",
@@ -855,66 +951,39 @@ def build_non_authoritative_registration(
         payload = (
             model_bytes.encode("utf-8") if isinstance(model_bytes, str) else bytes(model_bytes)
         )
-        resolved_model_fp = fingerprint_bytes(payload)
-    else:
-        # Content-address a declared external stub so provenance stays honest.
-        stub = fingerprint(
-            {
-                "class": "regime-external-candidate-stub",
-                "family": family_token,
-                "candidate_kind": kind.value,
-                "authority": False,
-            }
-        )
-        if is_refusal(stub):
-            return stub
-        resolved_model_fp = stub.value
-
-    if isinstance(evaluation, EvaluationReport):
-        if (
-            evaluation.verdict is EvaluationVerdict.ACCEPTED
-            and kind is CandidateKind.REJECTED_EVALUATION
-        ):
-            return policy(
-                "evaluation",
-                "rejected-evaluation candidates require a refused evaluation verdict",
-                failure_id="mis.regime_register.accepted_as_rejected",
-                given=evaluation.verdict.value,
-            )
-        scored = evaluation.governed_fingerprint()
-        if is_refusal(scored):
-            return scored
-        eval_fp = scored.value
-
-    return Ok(
-        RegimeModelRegistration(
-            artifact_id=REGIME_REGISTER_ARTIFACT_ID,
-            producer_id=REGIME_CLASSIFIER_PRODUCER_ID,
-            status=status.value,
-            candidate_kind=kind,
-            model_fp=resolved_model_fp,
-            feature_schema_fp=feature_fp.value,
-            class_mapping_fp=class_fp.value,
-            evaluation_report_fp=eval_fp,
-            training_config_fp=training_config,
-            code_fp=code_fp,
-            dependency_lock_fp=dependency_lock,
-            seed=seed,
-            cleaned_fp=None,
-            labeled_fp=None,
-            splits_fp=None,
-            design_fp=design_fp.value,
-            contract_fp=contract_fp.value,
-            training_artifact_fp=training_cite,
-            external_family=family_token,
-            provenance=SANDBOX_PROVENANCE,
-            grants_money_path_authority=False,
-            grants_governed_binding=False,
-            grants_live_consumer_binding=False,
-            changes_composition_fp=False,
-            format_version=REGIME_REGISTER_FORMAT_VERSION,
-        )
+        return Ok((fingerprint_bytes(payload), None, None, None, None, None))
+    stub = fingerprint(
+        {
+            "class": "regime-external-candidate-stub",
+            "family": family_token,
+            "candidate_kind": kind.value,
+            "authority": False,
+        }
     )
+    if is_refusal(stub):
+        return stub
+    return Ok((stub.value, None, None, None, None, None))
+
+
+def _non_authoritative_eval_fp(
+    kind: CandidateKind, evaluation: object | None
+) -> Result[Fingerprint | None]:
+    if not isinstance(evaluation, EvaluationReport):
+        return Ok(None)
+    if (
+        evaluation.verdict is EvaluationVerdict.ACCEPTED
+        and kind is CandidateKind.REJECTED_EVALUATION
+    ):
+        return policy(
+            "evaluation",
+            "rejected-evaluation candidates require a refused evaluation verdict",
+            failure_id="mis.regime_register.accepted_as_rejected",
+            given=evaluation.verdict.value,
+        )
+    scored = evaluation.governed_fingerprint()
+    if is_refusal(scored):
+        return scored
+    return Ok(scored.value)
 
 
 def _optional_fp(value: object | None, field: str) -> Result[Fingerprint | None]:
