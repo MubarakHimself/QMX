@@ -593,10 +593,18 @@ def _boundary(
     return Ok((boundary.value, manager.value))
 
 
-def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str, object]]:
-    venue = fx.venue
-    degraded: dict[str, str] = {}
+@dataclass
+class _CommandFaultState:
+    degraded: dict[str, str]
+    unknown_one_stream: bool = False
+    protective_survive: bool = False
+    commands_resubmitted: int = 0
 
+
+def _fault_unknown_triggers(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     unknown_triggers = (
         InjectedFault.TIMEOUT,
         InjectedFault.TRANSPORT_ERROR,
@@ -626,8 +634,14 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
                 "UNKNOWN is a state, never a rejection",
                 failure_id=_ID_INJECTION,
             )
-        degraded[fault.value] = DESIGNED_DEGRADED_STATES[fault.value]
+        state.degraded[fault.value] = DESIGNED_DEGRADED_STATES[fault.value]
+    return Ok(None)
 
+
+def _fault_unknown_one_stream(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     other = _unwrap(_account(fx.venue_id, "acct-other", AccountRole.DEMO))
     if isinstance(other, TypedRefusal):
         return other
@@ -690,9 +704,17 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             "UNKNOWN blocks exactly one (VenueId, account) stream",
             failure_id=_ID_INJECTION,
         )
-    unknown_one_stream = blocked_boundary.stream_open is False and open_boundary.stream_open is True
-    protective_survive = held.value.disposition.value == "held"
+    state.unknown_one_stream = (
+        blocked_boundary.stream_open is False and open_boundary.stream_open is True
+    )
+    state.protective_survive = held.value.disposition.value == "held"
+    return Ok(None)
 
+
+def _fault_superseded_by_fill(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     superseded = venue.inject(InjectedFault.SUPERSEDED_BY_FILL)
     if is_refusal(superseded):
         return _as_refusal(superseded)
@@ -709,10 +731,17 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             outcome=supersede_sub.value.outcome.value,
             failure_id=_ID_INJECTION,
         )
-    degraded[InjectedFault.SUPERSEDED_BY_FILL.value] = DESIGNED_DEGRADED_STATES[
+    state.degraded[InjectedFault.SUPERSEDED_BY_FILL.value] = DESIGNED_DEGRADED_STATES[
         InjectedFault.SUPERSEDED_BY_FILL.value
     ]
+    return Ok(None)
 
+
+def _fault_reconnect_gap(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    _ = demo
+    venue = fx.venue
     gap = venue.inject(InjectedFault.RECONNECT_GAP)
     if is_refusal(gap):
         return _as_refusal(gap)
@@ -775,10 +804,17 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             "recovered fills must persist before healthy",
             failure_id=_ID_INJECTION,
         )
-    degraded[InjectedFault.RECONNECT_GAP.value] = DESIGNED_DEGRADED_STATES[
+    state.commands_resubmitted = report.value.commands_resubmitted
+    state.degraded[InjectedFault.RECONNECT_GAP.value] = DESIGNED_DEGRADED_STATES[
         InjectedFault.RECONNECT_GAP.value
     ]
+    return Ok(None)
 
+
+def _fault_unpersistable_identity(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     identity_fault = venue.inject(InjectedFault.UNPERSISTABLE_IDENTITY)
     if is_refusal(identity_fault):
         return _as_refusal(identity_fault)
@@ -801,10 +837,16 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             "unpersistable identity blocks submission before handoff",
             failure_id=_ID_INJECTION,
         )
-    degraded[InjectedFault.UNPERSISTABLE_IDENTITY.value] = DESIGNED_DEGRADED_STATES[
+    state.degraded[InjectedFault.UNPERSISTABLE_IDENTITY.value] = DESIGNED_DEGRADED_STATES[
         InjectedFault.UNPERSISTABLE_IDENTITY.value
     ]
+    return Ok(None)
 
+
+def _fault_queue_bound(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     queue_fault = venue.inject(InjectedFault.QUEUE_BOUND)
     if is_refusal(queue_fault):
         return _as_refusal(queue_fault)
@@ -849,10 +891,16 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             "queue-bound breach must never mint UNKNOWN",
             failure_id=_ID_INJECTION,
         )
-    degraded[InjectedFault.QUEUE_BOUND.value] = DESIGNED_DEGRADED_STATES[
+    state.degraded[InjectedFault.QUEUE_BOUND.value] = DESIGNED_DEGRADED_STATES[
         InjectedFault.QUEUE_BOUND.value
     ]
+    return Ok(None)
 
+
+def _fault_protective_stop(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    venue = fx.venue
     stop_fault = venue.inject(InjectedFault.PROTECTIVE_STOP_CAPABILITY)
     if is_refusal(stop_fault):
         return _as_refusal(stop_fault)
@@ -876,10 +924,17 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             given=stop_refused.category.value,
             failure_id=_ID_INJECTION,
         )
-    degraded[InjectedFault.PROTECTIVE_STOP_CAPABILITY.value] = DESIGNED_DEGRADED_STATES[
+    state.degraded[InjectedFault.PROTECTIVE_STOP_CAPABILITY.value] = DESIGNED_DEGRADED_STATES[
         InjectedFault.PROTECTIVE_STOP_CAPABILITY.value
     ]
+    return Ok(None)
 
+
+def _fault_no_retry_after_handoff(
+    fx: _Fixtures, demo: Account, state: _CommandFaultState
+) -> Result[None]:
+    _ = demo
+    _ = state
     long_bound = _duration(5_000_000_000)
     if is_refusal(long_bound):
         return _as_refusal(long_bound)
@@ -906,15 +961,35 @@ def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str
             "no command is retried after wire handoff",
             failure_id=_ID_INJECTION,
         )
+    return Ok(None)
 
+
+_COMMAND_FAULT_STEPS = (
+    _fault_unknown_triggers,
+    _fault_unknown_one_stream,
+    _fault_superseded_by_fill,
+    _fault_reconnect_gap,
+    _fault_unpersistable_identity,
+    _fault_queue_bound,
+    _fault_protective_stop,
+    _fault_no_retry_after_handoff,
+)
+
+
+def _exercise_command_faults(fx: _Fixtures, demo: Account) -> Result[Mapping[str, object]]:
+    state = _CommandFaultState(degraded={})
+    for step in _COMMAND_FAULT_STEPS:
+        outcome = step(fx, demo, state)
+        if is_refusal(outcome):
+            return outcome
     return Ok(
         MappingProxyType(
             {
-                "commands_retried": report.value.commands_resubmitted,
-                "degraded_states": degraded,
+                "commands_retried": state.commands_resubmitted,
+                "degraded_states": state.degraded,
                 "fills_persist_before_healthy": True,
-                "protective_intents_survive": protective_survive,
-                "unknown_blocks_one_stream": unknown_one_stream,
+                "protective_intents_survive": state.protective_survive,
+                "unknown_blocks_one_stream": state.unknown_one_stream,
                 "unprotected_entries_refused": True,
             }
         )
