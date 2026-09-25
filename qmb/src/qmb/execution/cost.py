@@ -161,120 +161,216 @@ class CommissionCalibration:
         cited_fingerprint: object = None,
     ) -> Result[CommissionCalibration]:
         """Build a fingerprinted calibration. No default numeric content is filled in."""
-        token = clean_token(model)
-        if token not in COST_MODELS:
-            return invalid(
-                "model",
-                "commission model is zero, percent-of-notional, per-lot/per-1k-units, "
-                "or notional-proportional-with-per-order-minimum (FEE-2)",
-                given=repr(model),
-                allowed=list(COST_MODELS),
-            )
-        broker = clean_token(broker_id)
-        if broker is None:
-            return invalid(
-                "broker_id",
-                "a commission calibration is per-broker (DEC-0135)",
-                given=repr(broker_id),
-            )
-        if (
-            not isinstance(format_version, int)
-            or isinstance(format_version, bool)
-            or format_version < 1
-        ):
-            return invalid(
-                "format_version",
-                "calibration format version is a positive integer",
-                given=repr(format_version),
-            )
-        tagged = _optional_currency(currency)
+        identity = _calibration_identity(model, broker_id, format_version)
+        if is_refusal(identity):
+            return identity
+        token, broker, version = identity.value
+        amounts = _calibration_amounts(
+            currency=currency,
+            percent=percent,
+            per_lot=per_lot,
+            per_1k_units=per_1k_units,
+            units_per_lot=units_per_lot,
+            minimum=minimum,
+            value_factor=value_factor,
+            money_scale=money_scale,
+        )
+        if is_refusal(amounts):
+            return amounts
+        tagged = _calibration_currency(amounts.value)
         if is_refusal(tagged):
             return tagged
-        pct = _optional_ratio(percent, "percent")
-        if is_refusal(pct):
-            return pct
-        lot_fee = _optional_money(per_lot, "per_lot")
-        if is_refusal(lot_fee):
-            return lot_fee
-        per_1k = _optional_money(per_1k_units, "per_1k_units")
-        if is_refusal(per_1k):
-            return per_1k
-        units = _optional_units(units_per_lot)
-        if is_refusal(units):
-            return units
-        floor = _optional_money(minimum, "minimum")
-        if is_refusal(floor):
-            return floor
-        factor = _optional_value_factor(value_factor)
-        if is_refusal(factor):
-            return factor
-        scale = _optional_scale(money_scale)
-        if is_refusal(scale):
-            return scale
-        if lot_fee.value is not None and per_1k.value is not None:
-            return invalid(
-                "cost_calibration",
-                "per-lot and per-1k-units are alternate parameterizations of one shape",
-            )
-        currency_token = tagged.value
-        for field, amount in (
-            ("per_lot", lot_fee.value),
-            ("per_1k_units", per_1k.value),
-            ("minimum", floor.value),
-        ):
-            checked = _currency_agrees(currency_token, amount, field)
-            if is_refusal(checked):
-                return checked
-            if currency_token is None and amount is not None:
-                currency_token = amount.currency
-        if factor.value is not None:
-            if currency_token is None:
-                currency_token = factor.value.currency
-            elif factor.value.currency != currency_token:
-                return invalid(
-                    "currency",
-                    "commission currency must match the value-factor currency; "
-                    "no silent conversion (FEE-1)",
-                    given=currency_token,
-                    value_factor=factor.value.currency,
-                )
-        pending = cls(
-            model=token,
-            broker_id=broker,
-            format_version=format_version,
-            fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
-            currency=currency_token,
-            percent=pct.value,
-            per_lot=lot_fee.value,
-            per_1k_units=per_1k.value,
-            units_per_lot=units.value,
-            minimum=floor.value,
-            value_factor=factor.value,
-            money_scale=scale.value,
+        return _stamp_calibration(cls, token, broker, version, tagged.value, cited_fingerprint)
+
+
+_CalibrationAmounts = tuple[
+    str | None,
+    ExactRational | None,
+    Money | None,
+    Money | None,
+    Quantity | ExactRational | None,
+    Money | None,
+    ValueFactor | None,
+    int | None,
+]
+
+
+def _calibration_identity(
+    model: object, broker_id: object, format_version: object
+) -> Result[tuple[str, str, int]]:
+    token = clean_token(model)
+    if token not in COST_MODELS:
+        return invalid(
+            "model",
+            "commission model is zero, percent-of-notional, per-lot/per-1k-units, "
+            "or notional-proportional-with-per-order-minimum (FEE-2)",
+            given=repr(model),
+            allowed=list(COST_MODELS),
         )
-        if isinstance(cited_fingerprint, Fingerprint):
-            stamped = cited_fingerprint
-        else:
-            derived = fingerprint(pending.fp1_identity())
-            if is_refusal(derived):
-                return derived
-            stamped = derived.value
-        return Ok(
-            cls(
-                model=pending.model,
-                broker_id=pending.broker_id,
-                format_version=pending.format_version,
-                fingerprint=stamped,
-                currency=pending.currency,
-                percent=pending.percent,
-                per_lot=pending.per_lot,
-                per_1k_units=pending.per_1k_units,
-                units_per_lot=pending.units_per_lot,
-                minimum=pending.minimum,
-                value_factor=pending.value_factor,
-                money_scale=pending.money_scale,
-            )
+    broker = clean_token(broker_id)
+    if broker is None:
+        return invalid(
+            "broker_id",
+            "a commission calibration is per-broker (DEC-0135)",
+            given=repr(broker_id),
         )
+    if (
+        not isinstance(format_version, int)
+        or isinstance(format_version, bool)
+        or format_version < 1
+    ):
+        return invalid(
+            "format_version",
+            "calibration format version is a positive integer",
+            given=repr(format_version),
+        )
+    return Ok((token, broker, format_version))
+
+
+def _calibration_amounts(
+    *,
+    currency: object,
+    percent: object,
+    per_lot: object,
+    per_1k_units: object,
+    units_per_lot: object,
+    minimum: object,
+    value_factor: object,
+    money_scale: object,
+) -> Result[_CalibrationAmounts]:
+    tagged = _optional_currency(currency)
+    if is_refusal(tagged):
+        return tagged
+    pct = _optional_ratio(percent, "percent")
+    if is_refusal(pct):
+        return pct
+    moneyed = _calibration_money_fields(
+        per_lot=per_lot,
+        per_1k_units=per_1k_units,
+        units_per_lot=units_per_lot,
+        minimum=minimum,
+        value_factor=value_factor,
+        money_scale=money_scale,
+    )
+    if is_refusal(moneyed):
+        return moneyed
+    lot_fee, per_1k, units, floor, factor, scale = moneyed.value
+    if lot_fee is not None and per_1k is not None:
+        return invalid(
+            "cost_calibration",
+            "per-lot and per-1k-units are alternate parameterizations of one shape",
+        )
+    return Ok((tagged.value, pct.value, lot_fee, per_1k, units, floor, factor, scale))
+
+
+def _calibration_money_fields(
+    *,
+    per_lot: object,
+    per_1k_units: object,
+    units_per_lot: object,
+    minimum: object,
+    value_factor: object,
+    money_scale: object,
+) -> Result[
+    tuple[
+        Money | None,
+        Money | None,
+        Quantity | ExactRational | None,
+        Money | None,
+        ValueFactor | None,
+        int | None,
+    ]
+]:
+    lot_fee = _optional_money(per_lot, "per_lot")
+    if is_refusal(lot_fee):
+        return lot_fee
+    per_1k = _optional_money(per_1k_units, "per_1k_units")
+    if is_refusal(per_1k):
+        return per_1k
+    units = _optional_units(units_per_lot)
+    if is_refusal(units):
+        return units
+    floor = _optional_money(minimum, "minimum")
+    if is_refusal(floor):
+        return floor
+    factor = _optional_value_factor(value_factor)
+    if is_refusal(factor):
+        return factor
+    scale = _optional_scale(money_scale)
+    if is_refusal(scale):
+        return scale
+    return Ok((lot_fee.value, per_1k.value, units.value, floor.value, factor.value, scale.value))
+
+
+def _calibration_currency(amounts: _CalibrationAmounts) -> Result[_CalibrationAmounts]:
+    currency_token, pct, lot_fee, per_1k, units, floor, factor, scale = amounts
+    for field, amount in (("per_lot", lot_fee), ("per_1k_units", per_1k), ("minimum", floor)):
+        checked = _currency_agrees(currency_token, amount, field)
+        if is_refusal(checked):
+            return checked
+        if currency_token is None and amount is not None:
+            currency_token = amount.currency
+    if factor is None:
+        return Ok((currency_token, pct, lot_fee, per_1k, units, floor, factor, scale))
+    if currency_token is None:
+        currency_token = factor.currency
+    elif factor.currency != currency_token:
+        return invalid(
+            "currency",
+            "commission currency must match the value-factor currency; "
+            "no silent conversion (FEE-1)",
+            given=currency_token,
+            value_factor=factor.currency,
+        )
+    return Ok((currency_token, pct, lot_fee, per_1k, units, floor, factor, scale))
+
+
+def _stamp_calibration(
+    cls: type[CommissionCalibration],
+    token: str,
+    broker: str,
+    format_version: int,
+    amounts: _CalibrationAmounts,
+    cited_fingerprint: object,
+) -> Result[CommissionCalibration]:
+    currency_token, pct, lot_fee, per_1k, units, floor, factor, scale = amounts
+    pending = cls(
+        model=token,
+        broker_id=broker,
+        format_version=format_version,
+        fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
+        currency=currency_token,
+        percent=pct,
+        per_lot=lot_fee,
+        per_1k_units=per_1k,
+        units_per_lot=units,
+        minimum=floor,
+        value_factor=factor,
+        money_scale=scale,
+    )
+    if isinstance(cited_fingerprint, Fingerprint):
+        stamped = cited_fingerprint
+    else:
+        derived = fingerprint(pending.fp1_identity())
+        if is_refusal(derived):
+            return derived
+        stamped = derived.value
+    return Ok(
+        cls(
+            model=pending.model,
+            broker_id=pending.broker_id,
+            format_version=pending.format_version,
+            fingerprint=stamped,
+            currency=pending.currency,
+            percent=pending.percent,
+            per_lot=pending.per_lot,
+            per_1k_units=pending.per_1k_units,
+            units_per_lot=pending.units_per_lot,
+            minimum=pending.minimum,
+            value_factor=pending.value_factor,
+            money_scale=pending.money_scale,
+        )
+    )
 
 
 def charge_commission(

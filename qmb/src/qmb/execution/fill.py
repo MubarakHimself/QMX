@@ -182,112 +182,49 @@ class FillOrder:
         intent_id: object = None,
     ) -> Result[FillOrder]:
         """Validate a resting fill ticket."""
-        typed = _coerce_order_type(order_type)
-        if is_refusal(typed):
-            return typed
-        if not isinstance(side, Direction):
-            return invalid(
-                "side",
-                "fill side is Direction.LONG (buy) or Direction.SHORT (sell)",
-                given=repr(type(side).__name__),
-            )
-        qty = _require_qty(quantity, "quantity")
-        if is_refusal(qty):
-            return qty
-        if qty.value.as_fraction() <= 0:
-            return invalid(
-                "quantity",
-                "an order quantity is a positive exact count",
-                given=str(qty.value.as_fraction()),
-            )
-        limit = _optional_price(limit_price, "limit_price")
-        if is_refusal(limit):
-            return limit
-        stop = _optional_price(stop_price, "stop_price")
-        if is_refusal(stop):
-            return stop
-        trail = _optional_delta(trail_distance, "trail_distance")
-        if is_refusal(trail):
-            return trail
-        extreme = _optional_price(trail_extreme, "trail_extreme")
-        if is_refusal(extreme):
-            return extreme
-        submitted = _optional_instant(submitted_at, "submitted_at")
-        if is_refusal(submitted):
-            return submitted
-        evaluated = _optional_instant(evaluated_at, "evaluated_at")
-        if is_refusal(evaluated):
-            return evaluated
-        if not isinstance(reduce_only, bool):
-            return invalid(
-                "reduce_only",
-                "reduce_only is a bool; a reduce-only fill caps at open position size",
-                given=repr(type(reduce_only).__name__),
-            )
-        group = _optional_token(group_id, "group_id")
-        if is_refusal(group):
-            return group
-        position = _optional_qty(position_quantity, "position_quantity")
-        if is_refusal(position):
-            return position
-        step = _optional_qty(lot_step, "lot_step")
-        if is_refusal(step):
-            return step
-        depth = _optional_qty(liquidity, "liquidity")
-        if is_refusal(depth):
-            return depth
-        fee = _optional_token(fee_reference, "fee_reference")
-        if is_refusal(fee):
-            return fee
-        iid = _optional_token(intent_id, "intent_id")
-        if is_refusal(iid):
-            return iid
-        needed_limit = typed.value in {OrderType.LIMIT, OrderType.STOP_LIMIT}
-        needed_stop = typed.value in {
-            OrderType.STOP,
-            OrderType.STOP_LIMIT,
-        }
-        if needed_limit and limit.value is None:
-            return invalid(
-                "limit_price",
-                "limit and stop-limit orders name an exact limit price",
-                order_type=typed.value.value,
-            )
-        if needed_stop and stop.value is None:
-            return invalid(
-                "stop_price",
-                "stop and stop-limit orders name an exact stop price",
-                order_type=typed.value.value,
-            )
-        if typed.value is OrderType.TRAILING_STOP and trail.value is None:
-            return invalid(
-                "trail_distance",
-                "a trailing-stop names an exact PriceDelta trail distance",
-            )
-        if trail.value is not None and trail.value.as_fraction() <= 0:
-            return invalid(
-                "trail_distance",
-                "a trail distance is a positive exact PriceDelta",
-                given=str(trail.value.as_fraction()),
-            )
+        core = _fill_order_core(order_type, side, quantity)
+        if is_refusal(core):
+            return core
+        typed, bound_side, qty = core.value
+        prices = _fill_order_prices(limit_price, stop_price, trail_distance, trail_extreme)
+        if is_refusal(prices):
+            return prices
+        extras = _fill_order_extras(
+            submitted_at=submitted_at,
+            evaluated_at=evaluated_at,
+            reduce_only=reduce_only,
+            group_id=group_id,
+            position_quantity=position_quantity,
+            lot_step=lot_step,
+            liquidity=liquidity,
+            fee_reference=fee_reference,
+            intent_id=intent_id,
+        )
+        if is_refusal(extras):
+            return extras
+        needed = _fill_order_required(typed, prices.value)
+        if is_refusal(needed):
+            return needed
+        limit, stop, trail, extreme = prices.value
+        submitted, evaluated, group, position, step, depth, fee, iid, reduce_flag = extras.value
         return Ok(
             cls(
-                order_type=typed.value,
-                side=side,
-                quantity=qty.value,
-                limit_price=limit.value,
-                stop_price=stop.value,
-                trail_distance=trail.value,
-                trail_extreme=extreme.value,
-                submitted_at=submitted.value,
-                evaluated_at=evaluated.value,
-                group_id=group.value,
-                reduce_only=reduce_only,
-                position_quantity=position.value,
-                lot_step=step.value,
-                liquidity=depth.value,
-                fee_reference=fee.value,
-                intent_id=iid.value,
+                order_type=typed,
+                side=bound_side,
+                quantity=qty,
+                limit_price=limit,
+                stop_price=stop,
+                trail_distance=trail,
+                trail_extreme=extreme,
+                submitted_at=submitted,
+                evaluated_at=evaluated,
+                group_id=group,
+                reduce_only=reduce_flag,
+                position_quantity=position,
+                lot_step=step,
+                liquidity=depth,
+                fee_reference=fee,
+                intent_id=iid,
             )
         )
 
@@ -377,57 +314,16 @@ def cross_declared_path(
     stale_price_span: object = None,
 ) -> Result[Fill | NoFill | PartialFill]:
     """Decide Fill/NoFill/PartialFill by crossing the declared path (FILL-2)."""
-    authorized = require_authorized_intent(intent)
-    if is_refusal(authorized):
-        return authorized
-    if not isinstance(path, SlicePath):
-        return invalid(
-            "path",
-            "the fill port crosses a declared SlicePath inside the slice",
-            given=repr(type(path).__name__),
-        )
-    ticket = _require_order(order, authorized.value, requested_quantity)
-    if is_refusal(ticket):
-        return ticket
-    basis = _require_basis(fill_basis)
-    if is_refusal(basis):
-        return basis
-    if path.market_closed:
-        return _nofill_value(NOFILL_MARKET_CLOSED)
-    stale = _stale_guard(ticket.value, path, stale_price_span)
-    if is_refusal(stale):
-        return stale
-    if stale.value:
-        return _nofill_value(NOFILL_STALE_DATA)
-    if ticket.value.order_type is OrderType.ALL_OR_NONE:
-        return _nofill_value(NOFILL_ALL_OR_NONE_LEG_FAILED)
-    ohlc = path_ohlc(path)
-    if is_refusal(ohlc):
-        return ohlc
-    opening, high, low, closing = ohlc.value
-    current = path.current if path.current is not None else opening
-    priced = _dispatch(
-        ticket.value,
-        path=path,
-        opening=opening,
-        high=high,
-        low=low,
-        closing=closing,
-        current=current,
-        fill_basis=basis.value,
-    )
-    if is_refusal(priced):
-        return priced
-    if isinstance(priced.value, NoFill):
-        return _as_fill(priced.value)
-    pre_slip, gap = priced.value
-    return _emit(
-        ticket.value,
-        requested_quantity=ticket.value.quantity,
-        pre_slip=pre_slip,
-        fill_basis=basis.value,
-        gap_fill=gap,
-    )
+    ticketed = _fill_ticket(intent, path, requested_quantity, order, fill_basis)
+    if is_refusal(ticketed):
+        return ticketed
+    ticket, slice_path, basis = ticketed.value
+    guarded = _fill_pre_dispatch(ticket, slice_path, stale_price_span)
+    if is_refusal(guarded):
+        return guarded
+    if guarded.value is not None:
+        return Ok(guarded.value)
+    return _fill_cross(ticket, slice_path, basis)
 
 
 def fill_all_or_none(
@@ -538,6 +434,252 @@ def split_path_at(path: object, price: object) -> Result[SlicePath]:
     )
 
 
+_FillPrices = tuple[Price | None, Price | None, PriceDelta | None, Price | None]
+_FillExtras = tuple[
+    Instant | None,
+    Instant | None,
+    str | None,
+    Quantity | None,
+    Quantity | None,
+    Quantity | None,
+    str | None,
+    str | None,
+    bool,
+]
+
+
+def _fill_order_core(
+    order_type: object, side: object, quantity: object
+) -> Result[tuple[OrderType, Direction, Quantity]]:
+    typed = _coerce_order_type(order_type)
+    if is_refusal(typed):
+        return typed
+    if not isinstance(side, Direction):
+        return invalid(
+            "side",
+            "fill side is Direction.LONG (buy) or Direction.SHORT (sell)",
+            given=repr(type(side).__name__),
+        )
+    qty = _require_qty(quantity, "quantity")
+    if is_refusal(qty):
+        return qty
+    if qty.value.as_fraction() <= 0:
+        return invalid(
+            "quantity",
+            "an order quantity is a positive exact count",
+            given=str(qty.value.as_fraction()),
+        )
+    return Ok((typed.value, side, qty.value))
+
+
+def _fill_order_prices(
+    limit_price: object,
+    stop_price: object,
+    trail_distance: object,
+    trail_extreme: object,
+) -> Result[_FillPrices]:
+    limit = _optional_price(limit_price, "limit_price")
+    if is_refusal(limit):
+        return limit
+    stop = _optional_price(stop_price, "stop_price")
+    if is_refusal(stop):
+        return stop
+    trail = _optional_delta(trail_distance, "trail_distance")
+    if is_refusal(trail):
+        return trail
+    extreme = _optional_price(trail_extreme, "trail_extreme")
+    if is_refusal(extreme):
+        return extreme
+    return Ok((limit.value, stop.value, trail.value, extreme.value))
+
+
+def _fill_order_times(
+    submitted_at: object, evaluated_at: object, reduce_only: object, group_id: object
+) -> Result[tuple[Instant | None, Instant | None, bool, str | None]]:
+    submitted = _optional_instant(submitted_at, "submitted_at")
+    if is_refusal(submitted):
+        return submitted
+    evaluated = _optional_instant(evaluated_at, "evaluated_at")
+    if is_refusal(evaluated):
+        return evaluated
+    if not isinstance(reduce_only, bool):
+        return invalid(
+            "reduce_only",
+            "reduce_only is a bool; a reduce-only fill caps at open position size",
+            given=repr(type(reduce_only).__name__),
+        )
+    group = _optional_token(group_id, "group_id")
+    if is_refusal(group):
+        return group
+    return Ok((submitted.value, evaluated.value, reduce_only, group.value))
+
+
+def _fill_order_caps(
+    position_quantity: object,
+    lot_step: object,
+    liquidity: object,
+    fee_reference: object,
+    intent_id: object,
+) -> Result[tuple[Quantity | None, Quantity | None, Quantity | None, str | None, str | None]]:
+    position = _optional_qty(position_quantity, "position_quantity")
+    if is_refusal(position):
+        return position
+    step = _optional_qty(lot_step, "lot_step")
+    if is_refusal(step):
+        return step
+    depth = _optional_qty(liquidity, "liquidity")
+    if is_refusal(depth):
+        return depth
+    fee = _optional_token(fee_reference, "fee_reference")
+    if is_refusal(fee):
+        return fee
+    iid = _optional_token(intent_id, "intent_id")
+    if is_refusal(iid):
+        return iid
+    return Ok((position.value, step.value, depth.value, fee.value, iid.value))
+
+
+def _fill_order_extras(
+    *,
+    submitted_at: object,
+    evaluated_at: object,
+    reduce_only: object,
+    group_id: object,
+    position_quantity: object,
+    lot_step: object,
+    liquidity: object,
+    fee_reference: object,
+    intent_id: object,
+) -> Result[_FillExtras]:
+    times = _fill_order_times(submitted_at, evaluated_at, reduce_only, group_id)
+    if is_refusal(times):
+        return times
+    submitted, evaluated, reduce_flag, group = times.value
+    caps = _fill_order_caps(position_quantity, lot_step, liquidity, fee_reference, intent_id)
+    if is_refusal(caps):
+        return caps
+    position, step, depth, fee, iid = caps.value
+    return Ok((submitted, evaluated, group, position, step, depth, fee, iid, reduce_flag))
+
+
+def _fill_order_required(kind: OrderType, prices: _FillPrices) -> Result[None]:
+    limit, stop, trail, _extreme = prices
+    needed_limit = kind in {OrderType.LIMIT, OrderType.STOP_LIMIT}
+    needed_stop = kind in {OrderType.STOP, OrderType.STOP_LIMIT}
+    if needed_limit and limit is None:
+        return invalid(
+            "limit_price",
+            "limit and stop-limit orders name an exact limit price",
+            order_type=kind.value,
+        )
+    if needed_stop and stop is None:
+        return invalid(
+            "stop_price",
+            "stop and stop-limit orders name an exact stop price",
+            order_type=kind.value,
+        )
+    if kind is OrderType.TRAILING_STOP and trail is None:
+        return invalid(
+            "trail_distance",
+            "a trailing-stop names an exact PriceDelta trail distance",
+        )
+    if trail is not None and trail.as_fraction() <= 0:
+        return invalid(
+            "trail_distance",
+            "a trail distance is a positive exact PriceDelta",
+            given=str(trail.as_fraction()),
+        )
+    return Ok(None)
+
+
+def _fill_ticket(
+    intent: object,
+    path: object,
+    requested_quantity: object,
+    order: object,
+    fill_basis: object,
+) -> Result[tuple[FillOrder, SlicePath, str]]:
+    authorized = require_authorized_intent(intent)
+    if is_refusal(authorized):
+        return authorized
+    if not isinstance(path, SlicePath):
+        return invalid(
+            "path",
+            "the fill port crosses a declared SlicePath inside the slice",
+            given=repr(type(path).__name__),
+        )
+    ticket = _require_order(order, authorized.value, requested_quantity)
+    if is_refusal(ticket):
+        return ticket
+    basis = _require_basis(fill_basis)
+    if is_refusal(basis):
+        return basis
+    return Ok((ticket.value, path, basis.value))
+
+
+def _fill_pre_dispatch(
+    ticket: FillOrder, path: SlicePath, stale_price_span: object
+) -> Result[Fill | NoFill | PartialFill | None]:
+    blocked = _fill_blocked_reason(ticket, path, stale_price_span)
+    if is_refusal(blocked):
+        return blocked
+    if blocked.value is None:
+        empty: Fill | NoFill | PartialFill | None = None
+        return Ok(empty)
+    none = _nofill_value(blocked.value)
+    if is_refusal(none):
+        return none
+    outcome: Fill | NoFill | PartialFill | None = none.value
+    return Ok(outcome)
+
+
+def _fill_blocked_reason(
+    ticket: FillOrder, path: SlicePath, stale_price_span: object
+) -> Result[str | None]:
+    if path.market_closed:
+        return Ok(NOFILL_MARKET_CLOSED)
+    stale = _stale_guard(ticket, path, stale_price_span)
+    if is_refusal(stale):
+        return stale
+    if stale.value:
+        return Ok(NOFILL_STALE_DATA)
+    if ticket.order_type is OrderType.ALL_OR_NONE:
+        return Ok(NOFILL_ALL_OR_NONE_LEG_FAILED)
+    return Ok(None)
+
+
+def _fill_cross(
+    ticket: FillOrder, path: SlicePath, basis: str
+) -> Result[Fill | NoFill | PartialFill]:
+    ohlc = path_ohlc(path)
+    if is_refusal(ohlc):
+        return ohlc
+    opening, high, low, closing = ohlc.value
+    current = path.current if path.current is not None else opening
+    priced = _dispatch(
+        ticket,
+        path=path,
+        opening=opening,
+        high=high,
+        low=low,
+        closing=closing,
+        current=current,
+        fill_basis=basis,
+    )
+    if is_refusal(priced):
+        return priced
+    if isinstance(priced.value, NoFill):
+        return _as_fill(priced.value)
+    pre_slip, gap = priced.value
+    return _emit(
+        ticket,
+        requested_quantity=ticket.quantity,
+        pre_slip=pre_slip,
+        fill_basis=basis,
+        gap_fill=gap,
+    )
+
+
 def _dispatch(
     order: FillOrder,
     *,
@@ -560,6 +702,16 @@ def _dispatch(
         return _stop_limit(order, path, opening, high, low, fill_basis)
     if kind is OrderType.TRAILING_STOP:
         return _trailing_stop(order, path, opening, high, low, current, fill_basis)
+    return _dispatch_session(kind, order, path, opening, closing)
+
+
+def _dispatch_session(
+    kind: OrderType,
+    order: FillOrder,
+    path: SlicePath,
+    opening: Price,
+    closing: Price,
+) -> Result[tuple[Price, bool] | NoFill]:
     if kind is OrderType.MARKET_ON_OPEN:
         if not path.session_open:
             return _priced_none(NOFILL_NOT_TRIGGERED)
@@ -711,33 +863,15 @@ def _emit(
     fill_basis: str,
     gap_fill: bool,
 ) -> Result[Fill | NoFill | PartialFill]:
-    fillable = requested_quantity
-    if order.liquidity is not None:
-        if order.liquidity.as_fraction() <= 0:
-            return _nofill_value(NOFILL_INSUFFICIENT_LIQUIDITY)
-        if order.liquidity.as_fraction() < fillable.as_fraction():
-            fillable = order.liquidity
-    if order.reduce_only:
-        position = order.position_quantity
-        if position is None or position.as_fraction() <= 0:
-            return _nofill_value(NOFILL_INSUFFICIENT_LIQUIDITY)
-        if position.as_fraction() < fillable.as_fraction():
-            fillable = position
-    cap = fillable
-    if order.position_quantity is not None and order.position_quantity.as_fraction() > 0:
-        if order.reduce_only:
-            cap = order.position_quantity
-        elif order.position_quantity.as_fraction() < requested_quantity.as_fraction():
-            cap = min_qty(order.position_quantity, fillable)
-        else:
-            cap = fillable
-    if order.lot_step is not None:
-        step_qty = order.lot_step
-    else:
-        built = _unit_step(requested_quantity)
-        if is_refusal(built):
-            return built
-        step_qty = built.value
+    sized = _emit_sized_quantity(order, requested_quantity)
+    if is_refusal(sized):
+        return sized
+    if isinstance(sized.value, NoFill):
+        return _as_fill(sized.value)
+    fillable, cap = sized.value
+    stepped = _emit_lot_step(order, requested_quantity)
+    if is_refusal(stepped):
+        return stepped
     fee = order.fee_reference
     if fee is None and fillable.as_fraction() < requested_quantity.as_fraction():
         fee = order.intent_id
@@ -745,7 +879,7 @@ def _emit(
         requested=requested_quantity,
         filled=fillable,
         position_cap=cap if cap.as_fraction() > 0 else requested_quantity,
-        lot_step=step_qty,
+        lot_step=stepped.value,
         pre_slip_price=pre_slip,
         fill_basis=fill_basis,
         gap_fill=gap_fill,
@@ -759,6 +893,54 @@ def _emit(
     if isinstance(classified.value, NoFill) and classified.value.reason == "lot-step-snap-to-zero":
         return _nofill_value(NOFILL_INSUFFICIENT_LIQUIDITY)
     return classified
+
+
+def _emit_sized_quantity(
+    order: FillOrder, requested_quantity: Quantity
+) -> Result[tuple[Quantity, Quantity] | NoFill]:
+    fillable = requested_quantity
+    if order.liquidity is not None:
+        if order.liquidity.as_fraction() <= 0:
+            none = _nofill(NOFILL_INSUFFICIENT_LIQUIDITY)
+            if is_refusal(none):
+                return none
+            outcome: tuple[Quantity, Quantity] | NoFill = none.value
+            return Ok(outcome)
+        if order.liquidity.as_fraction() < fillable.as_fraction():
+            fillable = order.liquidity
+    if order.reduce_only:
+        position = order.position_quantity
+        if position is None or position.as_fraction() <= 0:
+            none = _nofill(NOFILL_INSUFFICIENT_LIQUIDITY)
+            if is_refusal(none):
+                return none
+            outcome = none.value
+            return Ok(outcome)
+        if position.as_fraction() < fillable.as_fraction():
+            fillable = position
+    sized: tuple[Quantity, Quantity] | NoFill = (
+        fillable,
+        _emit_position_cap(order, requested_quantity, fillable),
+    )
+    return Ok(sized)
+
+
+def _emit_position_cap(
+    order: FillOrder, requested_quantity: Quantity, fillable: Quantity
+) -> Quantity:
+    if order.position_quantity is None or order.position_quantity.as_fraction() <= 0:
+        return fillable
+    if order.reduce_only:
+        return order.position_quantity
+    if order.position_quantity.as_fraction() < requested_quantity.as_fraction():
+        return min_qty(order.position_quantity, fillable)
+    return fillable
+
+
+def _emit_lot_step(order: FillOrder, requested_quantity: Quantity) -> Result[Quantity]:
+    if order.lot_step is not None:
+        return Ok(order.lot_step)
+    return _unit_step(requested_quantity)
 
 
 def _stale_guard(
@@ -963,30 +1145,28 @@ def _as_legs(value: object) -> Result[tuple[FillLeg, ...]]:
         )
     parsed: list[FillLeg] = []
     for index, raw in enumerate(cast("Sequence[object]", value)):
-        if isinstance(raw, FillLeg):
-            parsed.append(raw)
-            continue
-        if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
-            items = cast("Sequence[object]", raw)
-            if len(items) < 2:
-                return invalid(
-                    "legs",
-                    "each AON leg is a FillLeg",
-                    index=index,
-                )
-            extra = items[2] if len(items) > 2 else None
-            created = FillLeg.try_create(items[0], items[1], extra)
-            if is_refusal(created):
-                return created
-            parsed.append(created.value)
-            continue
-        return invalid(
-            "legs",
-            "each AON leg is a FillLeg",
-            index=index,
-            given=repr(type(raw).__name__),
-        )
+        leg = _as_one_leg(raw, index)
+        if is_refusal(leg):
+            return leg
+        parsed.append(leg.value)
     return Ok(tuple(parsed))
+
+
+def _as_one_leg(raw: object, index: int) -> Result[FillLeg]:
+    if isinstance(raw, FillLeg):
+        return Ok(raw)
+    if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+        items = cast("Sequence[object]", raw)
+        if len(items) < 2:
+            return invalid("legs", "each AON leg is a FillLeg", index=index)
+        extra = items[2] if len(items) > 2 else None
+        return FillLeg.try_create(items[0], items[1], extra)
+    return invalid(
+        "legs",
+        "each AON leg is a FillLeg",
+        index=index,
+        given=repr(type(raw).__name__),
+    )
 
 
 def _require_qty(value: object, field: str) -> Result[Quantity]:
