@@ -273,7 +273,26 @@ def evaluate_gap_event(producer: object, frame: object) -> Result[ProducerEmissi
         return configured
     if not isinstance(frame, FrontierFrame):
         return invalid("frame", "evaluation reads a FrontierFrame", given=type(frame).__name__)
-    params = configured.value.parameters
+    limits = _bind_gap_limits(configured.value.parameters)
+    if is_refusal(limits):
+        return limits
+    measured = _measure_gap(frame, limits.value[0], limits.value[1])
+    if is_refusal(measured):
+        return measured
+    if measured.value is None:
+        return Ok(_not_ready(configured.value, "gap-observation-missing"))
+    return Ok(
+        ProducerEmission(
+            producer_id=GAP_EVENT_PRODUCER_ID,
+            readiness=ProducerReadiness.OK,
+            labeler_version=configured.value.version,
+            marker_detail="true" if measured.value else "false",
+            gap_event=measured.value,
+        )
+    )
+
+
+def _bind_gap_limits(params: Mapping[str, object]) -> Result[tuple[Duration, int]]:
     max_tick = params.get("max_expected_tick_gap")
     max_bars = params.get("max_expected_bar_gap_count")
     if not isinstance(max_tick, Duration):
@@ -288,6 +307,12 @@ def evaluate_gap_event(producer: object, frame: object) -> Result[ProducerEmissi
             "max expected bar-gap count is a non-negative integer",
             given=repr(max_bars),
         )
+    return Ok((max_tick, max_bars))
+
+
+def _measure_gap(
+    frame: FrontierFrame, max_tick: Duration, max_bars: int
+) -> Result[bool | None]:
     tick_gap: Duration | None = None
     if frame.last_tick_at is not None:
         delta = frame.frontier_instant.difference(frame.last_tick_at)
@@ -296,21 +321,13 @@ def evaluate_gap_event(producer: object, frame: object) -> Result[ProducerEmissi
         tick_gap = delta.value
     bar_gap = frame.bar_gap_count
     if tick_gap is None and bar_gap is None:
-        return Ok(_not_ready(configured.value, "gap-observation-missing"))
+        return Ok(None)
     gap = False
     if tick_gap is not None and tick_gap.value_ns > max_tick.value_ns:
         gap = True
     if bar_gap is not None and bar_gap > max_bars:
         gap = True
-    return Ok(
-        ProducerEmission(
-            producer_id=GAP_EVENT_PRODUCER_ID,
-            readiness=ProducerReadiness.OK,
-            labeler_version=configured.value.version,
-            marker_detail="true" if gap else "false",
-            gap_event=gap,
-        )
-    )
+    return Ok(gap)
 
 
 def evaluate_feed_state(producer: object, frame: object) -> Result[ProducerEmission]:

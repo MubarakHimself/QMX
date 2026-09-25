@@ -1067,6 +1067,26 @@ def _parse_one_item(value: object) -> Result[ChecklistItemFold]:
     evidence = _as_fingerprint(evidence_raw, "evidence_fp1")
     if is_refusal(evidence):
         return evidence
+    extras = _bind_item_optional_fields(body)
+    if is_refusal(extras):
+        return extras
+    recovery, incidents, status_text = extras.value
+    return Ok(
+        ChecklistItemFold(
+            item_id=item_id,
+            status=ChecklistItemStatus(status_token),
+            evidence_fp1=evidence.value,
+            incidents=incidents,
+            recovery_proof_fp1=recovery,
+            blocked_infra=BLOCKED_INFRA_ITEMS.get(item_id),
+            value_status=status_text,
+        )
+    )
+
+
+def _bind_item_optional_fields(
+    body: Mapping[str, object],
+) -> Result[tuple[Fingerprint | None, tuple[str, ...], str | None]]:
     recovery_raw = body.get("recovery_proof_fp1")
     recovery: Fingerprint | None = None
     if recovery_raw is not None:
@@ -1089,18 +1109,7 @@ def _parse_one_item(value: object) -> Result[ChecklistItemFold]:
                 failure_id=_ID_INPUTS,
             )
         status_text = token
-    blocked = BLOCKED_INFRA_ITEMS.get(item_id)
-    return Ok(
-        ChecklistItemFold(
-            item_id=item_id,
-            status=ChecklistItemStatus(status_token),
-            evidence_fp1=evidence.value,
-            incidents=incidents.value,
-            recovery_proof_fp1=recovery,
-            blocked_infra=blocked,
-            value_status=status_text,
-        )
-    )
+    return Ok((recovery, incidents.value, status_text))
 
 
 def _parse_live_instruments(

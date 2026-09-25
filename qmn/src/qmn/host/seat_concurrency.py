@@ -363,6 +363,53 @@ def prove_seat_concurrency(
     os_hard_cap_bytes: object = None,
 ) -> Result[SeatConcurrencyProofReport]:
     """Run the seat-concurrency/backpressure proof and return measured evidence."""
+    bound = _bind_seat_proof_inputs(
+        load=load,
+        bounds=bounds,
+        lifecycle=lifecycle,
+        deployment_id=deployment_id,
+        close_gap_0054=close_gap_0054,
+        os_hard_cap_bytes=os_hard_cap_bytes,
+    )
+    if is_refusal(bound):
+        return bound
+    load_row, bounds_row, lifecycle_row, deployment = bound.value
+    provenance = collect_provenance(lifecycle=lifecycle_row, deployment_id=deployment)
+    process_model = dict(supervision_process_model())
+    loop_count = process_model["event_loop_count"]
+    if not isinstance(loop_count, int) or loop_count != EVENT_LOOP_COUNT:
+        return policy(
+            "event_loop_count",
+            "process model event_loop_count must equal EVENT_LOOP_COUNT",
+            declared=loop_count,
+            constant=EVENT_LOOP_COUNT,
+        )
+    measured = _measure_seat_drive(load_row, bounds_row)
+    if is_refusal(measured):
+        return measured
+    payload, wall_ns, peak_rss = measured.value
+    return Ok(
+        _seat_proof_report(
+            load=load_row,
+            bounds=bounds_row,
+            provenance=provenance,
+            process_model=process_model,
+            payload=payload,
+            wall_ns=wall_ns,
+            peak_rss=peak_rss,
+        )
+    )
+
+
+def _bind_seat_proof_inputs(
+    *,
+    load: object,
+    bounds: object,
+    lifecycle: object,
+    deployment_id: object,
+    close_gap_0054: object,
+    os_hard_cap_bytes: object,
+) -> Result[tuple[SeatConcurrencyLoad, SeatInjectedBounds, BenchLifecycle, str]]:
     if close_gap_0054 is True or os_hard_cap_bytes is not None:
         invented = refuse_invented_os_hard_cap(
             close_gap_0054=close_gap_0054,
@@ -400,74 +447,74 @@ def prove_seat_concurrency(
             "an unbounded or non-positive accumulator is an absent mechanism",
             given=bounds.host.accumulator_bound,
         )
+    return Ok((load, bounds, lifecycle, deployment_id))
 
-    provenance = collect_provenance(lifecycle=lifecycle, deployment_id=deployment_id)
-    process_model = dict(supervision_process_model())
-    loop_count = process_model["event_loop_count"]
-    if not isinstance(loop_count, int) or loop_count != EVENT_LOOP_COUNT:
-        return policy(
-            "event_loop_count",
-            "process model event_loop_count must equal EVENT_LOOP_COUNT",
-            declared=loop_count,
-            constant=EVENT_LOOP_COUNT,
-        )
 
+def _measure_seat_drive(
+    load: SeatConcurrencyLoad, bounds: SeatInjectedBounds
+) -> Result[tuple[_DriveMetrics, int, int]]:
     clear_first_writer_registry()
     rss_before = peak_rss_bytes()
     started = host_perf_counter_ns()
-
     try:
         measured = _drive_load(load=load, bounds=bounds)
     finally:
         clear_first_writer_registry()
-
     if is_refusal(measured):
         return measured
     payload = measured.value
-
     ended = host_perf_counter_ns()
-    wall_ns = ended - started
     peak_rss = max(rss_before, peak_rss_bytes(), payload.peak_rss_bytes)
+    return Ok((payload, ended - started, peak_rss))
 
-    return Ok(
-        SeatConcurrencyProofReport(
-            surface=SEAT_CONCURRENCY_SURFACE,
-            load=load,
-            bounds=bounds,
-            provenance=provenance,
-            process_model=MappingProxyType(process_model),
-            event_loop_count=EVENT_LOOP_COUNT,
-            domain_background_threads_allowed=DOMAIN_BACKGROUND_THREADS_ALLOWED,
-            async_allowed_surfaces=ASYNC_ALLOWED_SURFACES,
-            wall_time_ns=wall_ns,
-            peak_rss_bytes=peak_rss,
-            max_in_flight_observed=payload.max_in_flight_observed,
-            max_accumulator_depth_observed=payload.max_accumulator_depth_observed,
-            max_overlapping_seat_callbacks=payload.max_overlapping_seat_callbacks,
-            push_attempts=payload.push_attempts,
-            push_accepted=payload.push_accepted,
-            coalesce_events=payload.coalesce_events,
-            typed_refusals=payload.typed_refusals,
-            entry_side_degradations=payload.entry_side_degradations,
-            callbacks_attempted=payload.callbacks_attempted,
-            callbacks_ok=payload.callbacks_ok,
-            callbacks_quarantined=payload.callbacks_quarantined,
-            backpressure_observed=payload.backpressure_observed,
-            silent_observation_loss=payload.silent_observation_loss,
-            accounted_observations=payload.accounted_observations,
-            evidence_door_ok=payload.evidence_door_ok,
-            powers_door_ok=payload.powers_door_ok,
-            door_response_samples_ns=payload.door_response_samples_ns,
-            timer_ticks_fired=payload.timer_ticks_fired,
-            bound_crossings=payload.bound_crossings,
-            isolation=payload.isolation,
-            protection_preserved=payload.protection_preserved,
-            exits_preserved=payload.exits_preserved,
-            protective_command_admitted=payload.protective_command_admitted,
-            os_level_confinement=V1_HARDENED_OS_CONFINEMENT,
-            gap_0054=GAP_0054_ID,
-            gap_0054_closed=False,
-        )
+
+def _seat_proof_report(
+    *,
+    load: SeatConcurrencyLoad,
+    bounds: SeatInjectedBounds,
+    provenance: DeploymentProvenance,
+    process_model: dict[str, object],
+    payload: _DriveMetrics,
+    wall_ns: int,
+    peak_rss: int,
+) -> SeatConcurrencyProofReport:
+    return SeatConcurrencyProofReport(
+        surface=SEAT_CONCURRENCY_SURFACE,
+        load=load,
+        bounds=bounds,
+        provenance=provenance,
+        process_model=MappingProxyType(process_model),
+        event_loop_count=EVENT_LOOP_COUNT,
+        domain_background_threads_allowed=DOMAIN_BACKGROUND_THREADS_ALLOWED,
+        async_allowed_surfaces=ASYNC_ALLOWED_SURFACES,
+        wall_time_ns=wall_ns,
+        peak_rss_bytes=peak_rss,
+        max_in_flight_observed=payload.max_in_flight_observed,
+        max_accumulator_depth_observed=payload.max_accumulator_depth_observed,
+        max_overlapping_seat_callbacks=payload.max_overlapping_seat_callbacks,
+        push_attempts=payload.push_attempts,
+        push_accepted=payload.push_accepted,
+        coalesce_events=payload.coalesce_events,
+        typed_refusals=payload.typed_refusals,
+        entry_side_degradations=payload.entry_side_degradations,
+        callbacks_attempted=payload.callbacks_attempted,
+        callbacks_ok=payload.callbacks_ok,
+        callbacks_quarantined=payload.callbacks_quarantined,
+        backpressure_observed=payload.backpressure_observed,
+        silent_observation_loss=payload.silent_observation_loss,
+        accounted_observations=payload.accounted_observations,
+        evidence_door_ok=payload.evidence_door_ok,
+        powers_door_ok=payload.powers_door_ok,
+        door_response_samples_ns=payload.door_response_samples_ns,
+        timer_ticks_fired=payload.timer_ticks_fired,
+        bound_crossings=payload.bound_crossings,
+        isolation=payload.isolation,
+        protection_preserved=payload.protection_preserved,
+        exits_preserved=payload.exits_preserved,
+        protective_command_admitted=payload.protective_command_admitted,
+        os_level_confinement=V1_HARDENED_OS_CONFINEMENT,
+        gap_0054=GAP_0054_ID,
+        gap_0054_closed=False,
     )
 
 
