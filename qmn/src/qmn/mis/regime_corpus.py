@@ -190,9 +190,7 @@ class CorpusAcquisitionPlan:
             "data_windows": self.data_windows.fp1_identity(),
             "calendar_kinds_named_apart": list(self.calendar_kinds_named_apart),
             "acquisition_context": self.acquisition_context,
-            "provider_fetch_in_training_forbidden": (
-                self.provider_fetch_in_training_forbidden
-            ),
+            "provider_fetch_in_training_forbidden": (self.provider_fetch_in_training_forbidden),
             "live_network_forbidden": self.live_network_forbidden,
             "world": self.world,
             "format_version": CORPUS_FORMAT_VERSION,
@@ -503,13 +501,10 @@ def build_acquisition_plan(
     if is_refusal(contract_fp):
         return contract_fp
     windows = resolved_contract.data_windows
-    if windows.source_law != (
-        "governed-qmf-qmb-tools-only-no-provider-fetch-inside-training"
-    ):
+    if windows.source_law != ("governed-qmf-qmb-tools-only-no-provider-fetch-inside-training"):
         return policy(
             "source_law",
-            "acquisition cites only governed QMF/QMB tools with no provider "
-            "fetch inside training",
+            "acquisition cites only governed QMF/QMB tools with no provider fetch inside training",
             given=windows.source_law,
         )
     if tuple(windows.sessions) != DECLARED_TRADING_SESSIONS:
@@ -673,6 +668,31 @@ def clean_corpus(
     handling follows the design. Refused rows are counted; nothing is silently
     repaired or dropped. Raw row ids remain on the cleaned artifact for lineage.
     """
+    inputs = _clean_corpus_inputs(
+        plan=plan,
+        raw_rows=raw_rows,
+        source_receipts=source_receipts,
+        bar_interval_ns=bar_interval_ns,
+        silent_repair=silent_repair,
+    )
+    if is_refusal(inputs):
+        return inputs
+    plan_obj, rows, receipts, interval_ns = inputs.value
+    cleaned = _admit_cleaned_rows(rows, plan_obj, interval_ns)
+    if is_refusal(cleaned):
+        return cleaned
+    admitted, raw_ids, refusal_counts, gap_count = cleaned.value
+    return _cleaned_corpus_result(plan_obj, admitted, receipts, raw_ids, refusal_counts, gap_count)
+
+
+def _clean_corpus_inputs(
+    *,
+    plan: object,
+    raw_rows: object,
+    source_receipts: object,
+    bar_interval_ns: object,
+    silent_repair: object,
+) -> Result[tuple[CorpusAcquisitionPlan, Sequence[object], tuple[SourceReceipt, ...], int]]:
     if not isinstance(plan, CorpusAcquisitionPlan):
         return invalid(
             "plan",
@@ -706,30 +726,39 @@ def clean_corpus(
             "cleaning takes a sequence of RawCorpusRow values",
             given=type(raw_rows).__name__,
         )
-    receipts: tuple[SourceReceipt, ...]
+    receipts = _source_receipt_tuple(source_receipts)
+    if is_refusal(receipts):
+        return receipts
+    return Ok((plan, cast("Sequence[object]", raw_rows), receipts.value, bar_interval_ns))
+
+
+def _source_receipt_tuple(source_receipts: object) -> Result[tuple[SourceReceipt, ...]]:
     if source_receipts is None:
-        receipts = ()
-    elif isinstance(source_receipts, Sequence) and not isinstance(
-        source_receipts, (str, bytes)
-    ):
-        built: list[SourceReceipt] = []
-        for index, item in enumerate(cast("Sequence[object]", source_receipts)):
-            if not isinstance(item, SourceReceipt):
-                return invalid(
-                    "source_receipts",
-                    "each source receipt is a SourceReceipt",
-                    index=index,
-                    given=type(item).__name__,
-                )
-            built.append(item)
-        receipts = tuple(built)
-    else:
+        return Ok(())
+    if not isinstance(source_receipts, Sequence) or isinstance(source_receipts, (str, bytes)):
         return invalid(
             "source_receipts",
             "source_receipts is a sequence of SourceReceipt values",
             given=type(source_receipts).__name__,
         )
+    built: list[SourceReceipt] = []
+    for index, item in enumerate(cast("Sequence[object]", source_receipts)):
+        if not isinstance(item, SourceReceipt):
+            return invalid(
+                "source_receipts",
+                "each source receipt is a SourceReceipt",
+                index=index,
+                given=type(item).__name__,
+            )
+        built.append(item)
+    return Ok(tuple(built))
 
+
+def _admit_cleaned_rows(
+    raw_rows: Sequence[object],
+    plan: CorpusAcquisitionPlan,
+    bar_interval_ns: int,
+) -> Result[tuple[list[CleanedCorpusRow], list[str], dict[str, int], int]]:
     allowed_sources = {row.source_id: row for row in plan.sources}
     allowed_sessions = set(plan.sessions)
     refusal_counts: dict[str, int] = {code.value: 0 for code in QualityIssueCode}
@@ -738,79 +767,109 @@ def clean_corpus(
     seen_keys: set[tuple[str, str, int]] = set()
     prev_by_instrument: dict[str, int] = {}
     gap_count = 0
-
-    for index, raw in enumerate(cast("Sequence[object]", raw_rows)):
-        if not isinstance(raw, RawCorpusRow):
+    for index, raw_obj in enumerate(raw_rows):
+        if not isinstance(raw_obj, RawCorpusRow):
             return invalid(
                 "raw_rows",
                 "each raw row is a RawCorpusRow",
                 index=index,
-                given=type(raw).__name__,
+                given=type(raw_obj).__name__,
             )
-        raw_ids.append(raw.row_id)
-        issues: list[QualityIssueCode] = []
-        declaration = allowed_sources.get(raw.source_id)
-        if declaration is None:
-            issues.append(QualityIssueCode.FOREIGN_SOURCE)
-        elif raw.license_tag != declaration.license_tag:
-            issues.append(QualityIssueCode.MISSING_LICENSE)
-        if raw.session not in allowed_sessions:
-            issues.append(QualityIssueCode.UNKNOWN_SESSION)
-        if raw.scale_digits not in _ALLOWED_SCALE_DIGITS:
-            issues.append(QualityIssueCode.BAD_SCALE)
-        if raw.high_scaled < raw.low_scaled:
-            issues.append(QualityIssueCode.BAD_SCALE)
-        if (
-            raw.open_scaled > raw.high_scaled
-            or raw.open_scaled < raw.low_scaled
-            or raw.close_scaled > raw.high_scaled
-            or raw.close_scaled < raw.low_scaled
-        ):
-            issues.append(QualityIssueCode.BAD_SCALE)
-        if raw.knowledge_time_ns < raw.event_time_ns:
-            issues.append(QualityIssueCode.OUT_OF_ORDER)
-        if raw.is_correction or raw.correction_of is not None:
-            issues.append(QualityIssueCode.CORRECTION)
-        key = (raw.source_id, raw.instrument, raw.event_time_ns)
-        if key in seen_keys:
-            issues.append(QualityIssueCode.DUPLICATE)
-        prev = prev_by_instrument.get(raw.instrument)
-        if prev is not None:
-            if raw.event_time_ns < prev:
-                issues.append(QualityIssueCode.OUT_OF_ORDER)
-            elif raw.event_time_ns == prev:
-                issues.append(QualityIssueCode.DUPLICATE)
-            elif raw.event_time_ns - prev > bar_interval_ns:
-                # Gaps are reported, never filled. The following sealed bar is
-                # still eligible unless another issue refuses it.
-                gap_count += 1
-                refusal_counts[QualityIssueCode.GAP.value] += 1
-        if clean_token(raw.session) is None:
-            issues.append(QualityIssueCode.SESSION_BOUNDARY)
-
+        raw_ids.append(raw_obj.row_id)
+        issues, gap = _row_quality_issues(
+            raw_obj,
+            allowed_sources=allowed_sources,
+            allowed_sessions=allowed_sessions,
+            seen_keys=seen_keys,
+            prev_by_instrument=prev_by_instrument,
+            bar_interval_ns=bar_interval_ns,
+        )
+        if gap:
+            gap_count += 1
+            refusal_counts[QualityIssueCode.GAP.value] += 1
         if issues:
             for code in dict.fromkeys(issues):
                 refusal_counts[code.value] += 1
             continue
+        seen_keys.add((raw_obj.source_id, raw_obj.instrument, raw_obj.event_time_ns))
+        prev_by_instrument[raw_obj.instrument] = raw_obj.event_time_ns
+        admitted.append(_cleaned_row_from_raw(raw_obj))
+    return Ok((admitted, raw_ids, refusal_counts, gap_count))
 
-        seen_keys.add(key)
-        prev_by_instrument[raw.instrument] = raw.event_time_ns
-        admitted.append(
-            CleanedCorpusRow(
-                row_id=raw.row_id,
-                source_id=raw.source_id,
-                instrument=raw.instrument,
-                session=raw.session,
-                event_time_ns=raw.event_time_ns,
-                knowledge_time_ns=raw.knowledge_time_ns,
-                open_scaled=raw.open_scaled,
-                high_scaled=raw.high_scaled,
-                low_scaled=raw.low_scaled,
-                close_scaled=raw.close_scaled,
-                scale_digits=raw.scale_digits,
-            )
-        )
 
+def _row_quality_issues(
+    raw: RawCorpusRow,
+    *,
+    allowed_sources: Mapping[str, GovernedSourceDeclaration],
+    allowed_sessions: set[str],
+    seen_keys: set[tuple[str, str, int]],
+    prev_by_instrument: Mapping[str, int],
+    bar_interval_ns: int,
+) -> tuple[list[QualityIssueCode], bool]:
+    issues: list[QualityIssueCode] = []
+    declaration = allowed_sources.get(raw.source_id)
+    if declaration is None:
+        issues.append(QualityIssueCode.FOREIGN_SOURCE)
+    elif declaration.license_tag != raw.license_tag:
+        issues.append(QualityIssueCode.MISSING_LICENSE)
+    if raw.session not in allowed_sessions:
+        issues.append(QualityIssueCode.UNKNOWN_SESSION)
+    if raw.scale_digits not in _ALLOWED_SCALE_DIGITS:
+        issues.append(QualityIssueCode.BAD_SCALE)
+    if raw.high_scaled < raw.low_scaled:
+        issues.append(QualityIssueCode.BAD_SCALE)
+    if (
+        raw.open_scaled > raw.high_scaled
+        or raw.open_scaled < raw.low_scaled
+        or raw.close_scaled > raw.high_scaled
+        or raw.close_scaled < raw.low_scaled
+    ):
+        issues.append(QualityIssueCode.BAD_SCALE)
+    if raw.knowledge_time_ns < raw.event_time_ns:
+        issues.append(QualityIssueCode.OUT_OF_ORDER)
+    if raw.is_correction or raw.correction_of is not None:
+        issues.append(QualityIssueCode.CORRECTION)
+    key = (raw.source_id, raw.instrument, raw.event_time_ns)
+    if key in seen_keys:
+        issues.append(QualityIssueCode.DUPLICATE)
+    gap = False
+    prev = prev_by_instrument.get(raw.instrument)
+    if prev is not None:
+        if raw.event_time_ns < prev:
+            issues.append(QualityIssueCode.OUT_OF_ORDER)
+        elif raw.event_time_ns == prev:
+            issues.append(QualityIssueCode.DUPLICATE)
+        elif raw.event_time_ns - prev > bar_interval_ns:
+            gap = True
+    if clean_token(raw.session) is None:
+        issues.append(QualityIssueCode.SESSION_BOUNDARY)
+    return issues, gap
+
+
+def _cleaned_row_from_raw(raw: RawCorpusRow) -> CleanedCorpusRow:
+    return CleanedCorpusRow(
+        row_id=raw.row_id,
+        source_id=raw.source_id,
+        instrument=raw.instrument,
+        session=raw.session,
+        event_time_ns=raw.event_time_ns,
+        knowledge_time_ns=raw.knowledge_time_ns,
+        open_scaled=raw.open_scaled,
+        high_scaled=raw.high_scaled,
+        low_scaled=raw.low_scaled,
+        close_scaled=raw.close_scaled,
+        scale_digits=raw.scale_digits,
+    )
+
+
+def _cleaned_corpus_result(
+    plan: CorpusAcquisitionPlan,
+    admitted: Sequence[CleanedCorpusRow],
+    receipts: tuple[SourceReceipt, ...],
+    raw_ids: Sequence[str],
+    refusal_counts: Mapping[str, int],
+    gap_count: int,
+) -> Result[CleanedCorpus]:
     sessions_present = tuple(
         session
         for session in DECLARED_TRADING_SESSIONS
@@ -830,11 +889,9 @@ def clean_corpus(
             "quality report refusal counts",
             refused_count=sum(refusal_counts.values()),
         )
-
-    refused_count = sum(refusal_counts.values())
     quality = CorpusQualityReport(
         admitted_count=len(admitted),
-        refused_count=refused_count,
+        refused_count=sum(refusal_counts.values()),
         refusal_counts=MappingProxyType(dict(sorted(refusal_counts.items()))),
         gap_count=gap_count,
         sessions_represented=sessions_present,
