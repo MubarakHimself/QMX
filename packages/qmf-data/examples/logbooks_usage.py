@@ -24,6 +24,7 @@ stream) — no entity mints a stream of its own:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -228,24 +229,28 @@ def main() -> None:
         all_events = _record_streams(store)
 
         row_count, types = book_projection_with_join(all_events)
-        print(f"live Book journal (join): {row_count} rows, types={types}")
+        sys.stdout.write(f"live Book journal (join): {row_count} rows, types={types}\n")
 
         category, role_count = cross_role_guard(all_events)
-        print(
+        sys.stdout.write(
             f"cross-role guard: refusal={category}; "
-            f"declared multi-role read spans {role_count} roles"
+            f"declared multi-role read spans {role_count} roles\n"
         )
 
         doors, veto_n, trade_n = legacy_records_projections(all_events)
-        print(
+        sys.stdout.write(
             f"veto_ledger (refused-by-door) doors={doors}; "
-            f"trade_journal rows={trade_n}; veto rows={veto_n}"
+            f"trade_journal rows={trade_n}; veto rows={veto_n}\n"
         )
 
         live_ns, benched_ns = namespaces_separate_paper_and_live()
-        print(f"role-scoped namespaces: live={live_ns!r}, paper-benched={benched_ns!r}")
+        sys.stdout.write(
+            f"role-scoped namespaces: live={live_ns!r}, paper-benched={benched_ns!r}\n"
+        )
 
-        print(f"binding identity is generic qmf-core-noun value: {binding_is_generic_identity()}")
+        sys.stdout.write(
+            f"binding identity is generic qmf-core-noun value: {binding_is_generic_identity()}\n"
+        )
 
 
 if __name__ == "__main__":

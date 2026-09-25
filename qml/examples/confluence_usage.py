@@ -24,6 +24,7 @@ Shows the things QL-5 / Story 11.5 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.chrono import Instant, WriterId
@@ -253,17 +254,19 @@ def refusals_and_conditions_live_in_logic() -> TypedRefusal:
 
 
 def main() -> None:
-    print(f"roles in mixed confluence: {roles_and_one_or_more_legs()}")
+    sys.stdout.write(f"roles in mixed confluence: {roles_and_one_or_more_legs()}\n")
     child = binding_and_or_child_cite()
-    print(f"child confluence fingerprint: {child[:19]}...")
-    print(
+    sys.stdout.write(f"child confluence fingerprint: {child[:19]}...\n")
+    sys.stdout.write(
         f"order-significance changes fingerprint: "
-        f"{fingerprint_ascending_default_and_opt_in_order()}"
+        f"{fingerprint_ascending_default_and_opt_in_order()}\n"
     )
-    print(f"two sandboxes reuse one confluence: {reuse_across_bots_mints_no_new_confluence()}")
+    sys.stdout.write(
+        f"two sandboxes reuse one confluence: {reuse_across_bots_mints_no_new_confluence()}\n"
+    )
     missing = refusals_and_conditions_live_in_logic()
-    print(f"unresolvable producer at Layer 1: {missing.category.value}")
-    print("confluence authoring ok")
+    sys.stdout.write(f"unresolvable producer at Layer 1: {missing.category.value}\n")
+    sys.stdout.write("confluence authoring ok\n")
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ Shows the things AC1-AC6 pin down for store-persisted synthetic data:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.data import (
@@ -86,7 +87,9 @@ def main() -> None:
     assert record["config_fp1"] == _ok(config.fingerprint()).value
     assert record["generation_timestamp_ns"] == _STAMP
     assert record["source_dataset_id"] == "none"
-    print("store-level origin=synthetic record: process, seed, config fp1, timestamp, version")
+    sys.stdout.write(
+        "store-level origin=synthetic record: process, seed, config fp1, timestamp, version\n"
+    )
 
     # 2. world derived from provenance; governed-evidence policy rejection (AC2)
     assert _ok(derive_world_from_store_provenance(provenance)) is World.SIMULATED
@@ -94,8 +97,13 @@ def main() -> None:
     assert classification.governed_evidence_admissible is False
     gate = classification.refuse_governed_evidence()
     assert is_refusal(gate) and gate.category is RefusalCategory.POLICY_REJECTION
-    print("store read derives world=simulated; governed evidence refused until GAP-0048")
-    print("simulated permits:", " ".join(classification.permittable_claim_classes))
+    sys.stdout.write(
+        "store read derives world=simulated; governed evidence refused until GAP-0048\n"
+    )
+    sys.stdout.write(
+        " ".join(["simulated permits:", str(" ".join(classification.permittable_claim_classes))])
+        + "\n"
+    )
 
     # 3. replay clock / replay-live adapter on synthetic-tainted data is invalid input (AC3)
     replay_clock = resolve_store_clock_binding(provenance, clock="replay")
@@ -103,7 +111,9 @@ def main() -> None:
     live_adapter = resolve_store_clock_binding(provenance, clock="simulated", adapters=["live"])
     assert is_refusal(live_adapter) and live_adapter.category is RefusalCategory.INVALID_INPUT
     assert _ok(resolve_store_clock_binding(provenance, clock="simulated")) is World.SIMULATED
-    print("replay clock or replay/live adapter on synthetic data is invalid input; B-7 wins")
+    sys.stdout.write(
+        "replay clock or replay/live adapter on synthetic data is invalid input; B-7 wins\n"
+    )
 
     # 4. non-promotable; the closed synthetic backdoor (AC4)
     assert synthetic_is_promotable() is False
@@ -113,7 +123,9 @@ def main() -> None:
     assert is_ok(refuse_synthetic_load("simulated"))
     promote = refuse_promote_synthetic("gbm-run")
     assert promote.category is RefusalCategory.POLICY_REJECTION
-    print("synthetic is non-promotable; loading into replay/live or promoting to live refused")
+    sys.stdout.write(
+        "synthetic is non-promotable; loading into replay/live or promoting to live refused\n"
+    )
 
     # 5. procedure-ephemeral perturbation persists no synthetic series (AC5)
     ephemeral = _ok(procedure_ephemeral_taint("block-bootstrap", 7))
@@ -121,7 +133,9 @@ def main() -> None:
     assert ephemeral.creates_store_partition is False
     assert ephemeral.claim_class == "robustness"
     assert ephemeral.label_content() == {"procedure": "block-bootstrap", "seed": 7}
-    print("procedure-ephemeral perturbation stays world=replay, no partition, robustness-only")
+    sys.stdout.write(
+        "procedure-ephemeral perturbation stays world=replay, no partition, robustness-only\n"
+    )
 
     # 6. a generation persists only into the synthetic-tainted partition (AC6)
     partition = _ok(route_synthetic_persist(provenance))
@@ -130,9 +144,11 @@ def main() -> None:
     for governed in sorted(GOVERNED_EVIDENCE_NAMESPACES):
         refusal = route_synthetic_persist(provenance, requested_namespace=governed)
         assert is_refusal(refusal) and refusal.category is RefusalCategory.POLICY_REJECTION
-    print("synthetic write routes only into the synthetic-tainted partition, never live/governed")
+    sys.stdout.write(
+        "synthetic write routes only into the synthetic-tainted partition, never live/governed\n"
+    )
 
-    print("store taint ok")
+    sys.stdout.write("store taint ok\n")
 
 
 if __name__ == "__main__":

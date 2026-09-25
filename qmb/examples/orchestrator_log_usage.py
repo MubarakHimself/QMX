@@ -224,20 +224,20 @@ def library_run_writes_no_log(output_root: Path) -> None:
 def main() -> None:
     assert qmb.LOG_IS_EVIDENCE is False
     identity_names_operational_only_logs()
-    print("orchestrator owns the injected log sink")
+    sys.stdout.write("orchestrator owns the injected log sink\n")
     correlation_id_excluded_from_fp1()
-    print("correlation_id excluded from fp1 identity")
+    sys.stdout.write("correlation_id excluded from fp1 identity\n")
     with tempfile.TemporaryDirectory(prefix="qmb_log_", ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
         orchestrator_streams_into_run_directory(root)
-        print("AD-14 operational logs only, never evidence")
+        sys.stdout.write("AD-14 operational logs only, never evidence\n")
         crashed_run_stays_in_its_own_room(root)
-        print("crashed run leaves a partial log in its own room")
+        sys.stdout.write("crashed run leaves a partial log in its own room\n")
         research = root / "research"
         research.mkdir()
         library_run_writes_no_log(research)
-        print("never corrupts sibling or the ledger")
-    print("orchestrator log ok")
+        sys.stdout.write("never corrupts sibling or the ledger\n")
+    sys.stdout.write("orchestrator log ok\n")
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ Shows the things R-RPT-3..5 / R-RPT-9 / R-RPT-10 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.results import (
@@ -115,12 +116,14 @@ def main() -> None:
     assert recovery.quantity.unit_kind is UnitKind.DURATION
     sharpe = _find(rows, "sharpe_ratio")
     assert isinstance(sharpe, PerformanceMeasure)
-    print("ordered V1 core measure set; every computed quantity has a non-null AD-40 unit-kind")
-    print("money measures are exact scaled integers; durations are int64 UTC-ns")
+    sys.stdout.write(
+        "ordered V1 core measure set; every computed quantity has a non-null AD-40 unit-kind\n"
+    )
+    sys.stdout.write("money measures are exact scaled integers; durations are int64 UTC-ns\n")
 
     null_kind = emit_measure("net_profit", seed, unit_kind=None)
     assert is_refusal(null_kind)
-    print("null unit-kind is invalid input, never defaulted")
+    sys.stdout.write("null unit-kind is invalid input, never defaulted\n")
 
     no_losers = _unwrap(
         assemble_v1_measure_set(
@@ -133,7 +136,7 @@ def main() -> None:
     profit_factor = _find(no_losers, "profit_factor")
     assert isinstance(profit_factor, UndefinedMeasure)
     assert profit_factor.refusal.context["code"] == CODE_UNDEFINED
-    print("profit factor with no losers is typed undefined, never a magic cap of 10")
+    sys.stdout.write("profit factor with no losers is typed undefined, never a magic cap of 10\n")
 
     thin = _unwrap(
         assemble_v1_measure_set(starting_capital=seed, period=_interval(_NS, _NS + 1)), "thin"
@@ -141,7 +144,9 @@ def main() -> None:
     thin_sharpe = _find(thin, "sharpe_ratio")
     assert isinstance(thin_sharpe, UndefinedMeasure)
     assert thin_sharpe.refusal.context["code"] == CODE_INSUFFICIENT_SAMPLE
-    print("Sharpe with <2 daily samples is insufficient-sample, never NaN coerced to 0")
+    sys.stdout.write(
+        "Sharpe with <2 daily samples is insufficient-sample, never NaN coerced to 0\n"
+    )
 
     names = [row.measure_identity for row in rows]
     assert all("score" not in name and "grade" not in name and "tier" not in name for name in names)
@@ -149,8 +154,10 @@ def main() -> None:
         refused = check_publish_never_act(act)
         assert is_refusal(refused)
     assert result_identity()["measure_identities"] == list(MEASURE_IDENTITIES)
-    print("no composite score/grade/tier; producing the set sizes, promotes, and benches nothing")
-    print("V1 core measure set ok")
+    sys.stdout.write(
+        "no composite score/grade/tier; producing the set sizes, promotes, and benches nothing\n"
+    )
+    sys.stdout.write("V1 core measure set ok\n")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ Shows the things Story 35.1 / 35.2 / FR-W21 / FR-W22 / FR-W23 / FR-W24 / SCN-001
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -130,18 +131,18 @@ def main() -> None:
     assert view.claim_class == "projection"
     assert view.is_admission_evidence is False
     assert view.b4_role is None
-    print("canonical saved-view JSON")
-    print("as_of is source registry_as_of")
-    print("fp1 is of that JSON")
-    print("query occupancy, no CT-32")
-    print("claim-class is projection")
+    sys.stdout.write("canonical saved-view JSON\n")
+    sys.stdout.write("as_of is source registry_as_of\n")
+    sys.stdout.write("fp1 is of that JSON\n")
+    sys.stdout.write("query occupancy, no CT-32\n")
+    sys.stdout.write("claim-class is projection\n")
 
     cited = cite_projection(cite=view.fingerprint.value)
     assert is_refusal(cited) and cited.category is RefusalCategory.POLICY_REJECTION
-    print("citation without a body refused")
+    sys.stdout.write("citation without a body refused\n")
     copied = cite_projection(body={**body, "trades": [{"pnl": 1}]})
     assert is_refusal(copied)
-    print("copied trade list is not a saved view")
+    sys.stdout.write("copied trade list is not a saved view\n")
     query_time = project(
         source_ct32=artifact,
         source_ct29=trades,
@@ -149,7 +150,7 @@ def main() -> None:
         as_of=_at(hour=12),
     )
     assert is_refusal(query_time)
-    print("query-time as_of refused")
+    sys.stdout.write("query-time as_of refused\n")
 
     size = project(
         source_ct32=artifact,
@@ -161,12 +162,12 @@ def main() -> None:
     assert is_refusal(size) and size.category is RefusalCategory.POLICY_REJECTION
     assert size.context["axis"] == "starting_capital"
     assert "path-dependent" in str(size.context["reason"])
-    print("forbidden starting_capital is path-dependent")
+    sys.stdout.write("forbidden starting_capital is path-dependent\n")
 
     assert view.home == "ungoverned"
     assert view.durable is False
     assert view.is_library_object is False
-    print("ungoverned is a return value only")
+    sys.stdout.write("ungoverned is a return value only\n")
 
     with TemporaryDirectory() as raw:
         root = Path(raw)
@@ -188,7 +189,7 @@ def main() -> None:
         assert governed.spawns_orchestrator is False
         assert sidecar.is_file()
         assert json.loads(sidecar.read_text(encoding="utf-8")) == governed.body()
-        print("governed sidecar written")
+        sys.stdout.write("governed sidecar written\n")
         coordinated = project(
             source_ct32=artifact,
             source_ct29=trades,
@@ -200,10 +201,10 @@ def main() -> None:
         assert is_refusal(coordinated)
         assert coordinated.context["epic"] == "36"
         assert coordinated.context["opens_sqlite"] is False
-        print("coordinated persistence is Epic 36")
+        sys.stdout.write("coordinated persistence is Epic 36\n")
 
-    print(f"qmb {qmb.__version__}")
-    print("analysis.project ok")
+    sys.stdout.write(f"qmb {qmb.__version__}\n")
+    sys.stdout.write("analysis.project ok\n")
 
 
 if __name__ == "__main__":

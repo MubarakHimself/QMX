@@ -18,6 +18,7 @@ Shows the things Story 35.5 / FR-W26 / FR-W28 / FR-W21 / SCN-0016 pin down:
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -139,14 +140,14 @@ def main() -> None:
     assert readout.is_analysis_method is False
     assert readout.b4_role is None
     assert readout.same_world is True
-    print("compare_runs is a readout of cited CT-32 fields")
-    print("no artifact, no ledger line, no confirmation label, no occupancy")
+    sys.stdout.write("compare_runs is a readout of cited CT-32 fields\n")
+    sys.stdout.write("no artifact, no ledger line, no confirmation label, no occupancy\n")
 
     identity = qmb.compare_runs_identity()
     assert identity["is_analysis_method"] is False
     assert "analysis_method" not in identity
     assert "lane" not in identity
-    print("CT-32 and B-4 gain no lane or analysis_method field")
+    sys.stdout.write("CT-32 and B-4 gain no lane or analysis_method field\n")
 
     as_of = _at(hour=0)
     trades = (_trade(hour=10),)
@@ -164,7 +165,9 @@ def main() -> None:
     assert view.claim_class == "projection"
     assert view.world == World.REPLAY.value
     assert view.confirmed is False
-    print("projection has no B-4 role, claim-class projection, inherited world, never confirmed")
+    sys.stdout.write(
+        "projection has no B-4 role, claim-class projection, inherited world, never confirmed\n"
+    )
     gated = project(
         source_ct32=artifact,
         source_ct29=trades,
@@ -173,7 +176,7 @@ def main() -> None:
         gating_live=True,
     )
     assert is_refusal(gated) and gated.context["law"] == "L20"
-    print("L20 forbids gating live money on replay-world verdicts")
+    sys.stdout.write("L20 forbids gating live money on replay-world verdicts\n")
 
     with TemporaryDirectory() as raw:
         root = Path(raw)
@@ -193,7 +196,7 @@ def main() -> None:
         stored = _unwrap(load_stored_ct32(trial.isolated.output_dir), "stored")
         assert "analysis_method" not in stored
         assert "lane" not in stored
-        print("rerun B-4 role is the role of that run, not admission evidence")
+        sys.stdout.write("rerun B-4 role is the role of that run, not admission evidence\n")
 
         confirmation = _unwrap(
             rerun(
@@ -207,7 +210,7 @@ def main() -> None:
         )
         assert confirmation.b4_role == qmb.ROLE_CONFIRMATION
         assert confirmation.is_admission_evidence is True
-        print("admission evidence remains B-4 role=confirmation only")
+        sys.stdout.write("admission evidence remains B-4 role=confirmation only\n")
 
     f07 = project(
         source_ct32=artifact,
@@ -221,15 +224,15 @@ def main() -> None:
     assert f07.context["deferred"] is True
     assert is_refusal(rerun(synthetic_portfolio=True))
     assert is_refusal(compare_runs(left, right, combine=True))
-    print("F07 synthetic portfolio combination is refused as deferred")
+    sys.stdout.write("F07 synthetic portfolio combination is refused as deferred\n")
 
     assert is_refusal(compare_runs(left, right, occupancy="run"))
     assert is_refusal(compare_runs(left, right, mint_ct32=True))
     assert is_refusal(compare_runs(left, right, role="confirmation"))
-    print("run occupancy, minted artifact, and confirmation label are refused")
+    sys.stdout.write("run occupancy, minted artifact, and confirmation label are refused\n")
 
-    print(f"qmb {qmb.__version__}")
-    print("compare_runs ok")
+    sys.stdout.write(f"qmb {qmb.__version__}\n")
+    sys.stdout.write("compare_runs ok\n")
 
 
 if __name__ == "__main__":

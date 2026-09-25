@@ -17,6 +17,7 @@ Shows the four things Story 5.3 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -112,9 +113,9 @@ def main() -> None:
     _require(NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE is None, "RPO stays null")
     _require(NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE is None, "RTO stays null")
     _require(NODE_OPS_BACKUP_RETENTION_PERIOD is None, "retention stays null")
-    print(
+    sys.stdout.write(
         "node/ops pointers: cadence/RPO/RTO/retention remain null "
-        "(never filled from a recommendation)"
+        "(never filled from a recommendation)\n"
     )
 
     alone = refuse_snapshot_alone_claim(world=World.LIVE, copy_version=1)
@@ -122,7 +123,7 @@ def main() -> None:
         is_refusal(alone) and alone.category.value == "policy rejection",
         "snapshot-alone recoverability is policy rejection",
     )
-    print("snapshot alone: policy rejection (no recoverability claim)")
+    sys.stdout.write("snapshot alone: policy rejection (no recoverability claim)\n")
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -175,9 +176,9 @@ def main() -> None:
         )
         _require(claim.kind is VerifyKind.SAMPLE_RESTORE, "claim kind is sample-restore")
         _require(claim.record_count == 1, "sample claim covers one record")
-        print(
+        sys.stdout.write(
             f"sample-restore: recoverability claimed "
-            f"(kind={claim.kind.value}; records={claim.record_count})"
+            f"(kind={claim.kind.value}; records={claim.record_count})\n"
         )
 
         bucket.objects[("live", receipt.copy_version, "immutable raw archive")] = b"CORRUPT!!"
@@ -194,7 +195,7 @@ def main() -> None:
             is_refusal(corrupt) and corrupt.category.value == "storage failure",
             "corrupt restore is storage failure",
         )
-        print("corrupt restore: storage failure (no recoverability claim)")
+        sys.stdout.write("corrupt restore: storage failure (no recoverability claim)\n")
 
         # Fresh bucket for the migration rehearsal (prior corruption stays isolated).
         mig_bucket = _MemoryBucket()
@@ -230,9 +231,9 @@ def main() -> None:
             source_again.records[0].canonical == export.records[0].canonical,
             "migration never mutated the only local copy",
         )
-        print(
+        sys.stdout.write(
             "migration: preflight -> backup-first -> dry-run -> migrate -> verify; "
-            "source untouched; recoverability via full-restore rehearsal"
+            "source untouched; recoverability via full-restore rehearsal\n"
         )
 
 

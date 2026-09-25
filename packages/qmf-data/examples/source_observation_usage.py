@@ -23,6 +23,7 @@ Shows the five things Story 3.2 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -210,21 +211,21 @@ def main() -> None:
         original = _original()
 
         fingerprint = bitemporal_identity(original)
-        print(f"bitemporal observation fp1: {fingerprint[:24]}...")
+        sys.stdout.write(f"bitemporal observation fp1: {fingerprint[:24]}...\n")
 
         verbatim_foreign_evidence(boundary, original)
-        print("foreign timestamp and money: stored verbatim, no rescale")
+        sys.stdout.write("foreign timestamp and money: stored verbatim, no rescale\n")
 
         receipt = _unwrap(boundary.admit(original), "admit original for world gate")
         original_fp, correction_fp = correction_is_distinct(boundary, original)
         _require(original_fp != correction_fp, "original and correction differ")
-        print("correction: distinct fp1 with correction_of; original preserved")
+        sys.stdout.write("correction: distinct fp1 with correction_of; original preserved\n")
 
         refusal = incomplete_is_refused()
-        print(f"incomplete observation: {refusal}")
+        sys.stdout.write(f"incomplete observation: {refusal}\n")
 
         write_refusal, read_refusal = world_gates(boundary, receipt.archive.fingerprint)
-        print(f"simulated write and cross-world read: {write_refusal}, {read_refusal}")
+        sys.stdout.write(f"simulated write and cross-world read: {write_refusal}, {read_refusal}\n")
 
 
 if __name__ == "__main__":

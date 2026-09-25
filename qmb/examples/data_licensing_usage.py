@@ -21,6 +21,7 @@ Shows the things the licensing gate pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -59,9 +60,9 @@ def main() -> None:
     identity = licensing_gate_identity()
     _require(identity["writes"] is False, "gate writes nothing")
     _require(identity["ship_no_corpus"] is True, "ship-no-corpus posture")
-    print(
+    sys.stdout.write(
         f"licensing gate: states={identity['license_tag_states']} "
-        f"writes={identity['writes']} ship_no_corpus={identity['ship_no_corpus']}"
+        f"writes={identity['writes']} ship_no_corpus={identity['ship_no_corpus']}\n"
     )
 
     policies = {DUKASCOPY_PERSONAL_USE_POLICY.venue: DUKASCOPY_PERSONAL_USE_POLICY}
@@ -74,9 +75,9 @@ def main() -> None:
         source="dukascopy",
     )
     admitted = _unwrap(admit_governed_evidence(licensed, policies=policies), "admit")
-    print(
+    sys.stdout.write(
         f"governed-evidence admitted: tag={admitted.license_tag.value} "
-        f"authority={admitted.granting_authority}"
+        f"authority={admitted.granting_authority}\n"
     )
 
     citing = _unwrap(fingerprint({"class": "citing-artifact", "id": "demo"}), "citing fp")
@@ -86,9 +87,9 @@ def main() -> None:
         "CT-07 edge",
     )
     _require(edge.edge_type is EdgeType.OCCURRENCE_OF, "occurrence-of entitlement edge")
-    print(
+    sys.stdout.write(
         f"CT-07 lineage: edge={edge.edge_type.value} "
-        f"entitlement={admitted.lineage_payload()['granting_authority']}"
+        f"entitlement={admitted.lineage_payload()['granting_authority']}\n"
     )
 
     blank = SourceWindowRef(
@@ -103,15 +104,15 @@ def main() -> None:
     _require(refused.category is RefusalCategory.POLICY_REJECTION, "policy rejection")
     _require(refused.context["license_tag"] == "unknown", "blank is unknown")
     _require(refused.context["venue"] == "dukascopy-fx", "venue in context")
-    print(
+    sys.stdout.write(
         "unlicensed governed-evidence refused: "
         f"venue={refused.context['venue']} symbol={refused.context['symbol']} "
-        f"tag={refused.context['license_tag']}"
+        f"tag={refused.context['license_tag']}\n"
     )
 
     _unwrap(allow_non_evidence_use(blank, use="infra-stress"), "infra-stress")
     _unwrap(allow_non_evidence_use(blank, use="strategy-logic-smoke"), "logic-smoke")
-    print("non-evidence use allowed for blank Dukascopy window (catalogable)")
+    sys.stdout.write("non-evidence use allowed for blank Dukascopy window (catalogable)\n")
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp) / "pkg"
@@ -119,8 +120,8 @@ def main() -> None:
         (root / "qmb").mkdir()
         (root / "qmb" / "__init__.py").write_text("# no corpus\n", encoding="utf-8")
         _unwrap(assert_distribution_has_no_corpus(root), "zero corpus")
-    print("wheel/release check: distribution bundles zero corpus bytes")
-    print("qmb data licensing gate ok")
+    sys.stdout.write("wheel/release check: distribution bundles zero corpus bytes\n")
+    sys.stdout.write("qmb data licensing gate ok\n")
 
 
 if __name__ == "__main__":

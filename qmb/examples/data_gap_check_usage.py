@@ -16,6 +16,7 @@ Shows the things B-11 / CT-02 pin down for gap detection:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -51,11 +52,11 @@ def main() -> None:
     _require(identity["fills_gaps"] is False, "never fills")
     _require(identity["never_guess_always_open"] is True, "no silent always-open")
     _require(identity["synthetic_fill_deferred_to"] == "GAP-0048", "fill deferred")
-    print(
+    sys.stdout.write(
         "gap-check identity: "
         f"kind={identity['gap_check_kind']} "
         f"fills={identity['fills_gaps']} "
-        f"calendar={identity['calendar_authority']}"
+        f"calendar={identity['calendar_authority']}\n"
     )
 
     calendar = _unwrap(get_provider(), "forex-17NY provider")
@@ -83,10 +84,10 @@ def main() -> None:
         _require(report.gaps[0].present == 0, "present count on the hole is zero")
         _require(report.fills_gaps is False, "report never fills")
         _require(report.calendar["rule_set"] == "forex-17NY", "records CT-02 rule set")
-        print(
+        sys.stdout.write(
             f"open-session gaps={len(report.gaps)} "
             f"calendar={report.calendar} "
-            f"gap={report.gaps[0].as_mapping()}"
+            f"gap={report.gaps[0].as_mapping()}\n"
         )
 
         # Weekend closed → no open sessions → no gaps.
@@ -103,7 +104,7 @@ def main() -> None:
         )
         _require(weekend.open_session_count == 0, "weekend has no open sessions")
         _require(weekend.gaps == (), "closure is not a gap")
-        print(f"weekend closure: open_sessions={weekend.open_session_count} gaps=0")
+        sys.stdout.write(f"weekend closure: open_sessions={weekend.open_session_count} gaps=0\n")
 
         # 24/7 always-open: every hole is a gap.
         always_id = _unwrap(
@@ -130,7 +131,9 @@ def main() -> None:
         )
         _require(len(crypto.gaps) == 1, "always-open reports interior hole")
         _require(crypto.gaps[0].expected == 2, "two missing interior slots")
-        print(f"always-open gaps={len(crypto.gaps)} expected={crypto.gaps[0].expected}")
+        sys.stdout.write(
+            f"always-open gaps={len(crypto.gaps)} expected={crypto.gaps[0].expected}\n"
+        )
 
         # Determinism: same window + same calendar version → identical gap set.
         again = _unwrap(gap_check(base), "deterministic re-run")
@@ -139,14 +142,14 @@ def main() -> None:
             [g.as_mapping() for g in again.gaps] == [g.as_mapping() for g in report.gaps],
             "identical gap set",
         )
-        print("determinism: same window + calendar version -> identical gap set")
+        sys.stdout.write("determinism: same window + calendar version -> identical gap set\n")
 
         # Fill attempt refused until GAP-0048.
         filled = gap_check({**base, "fill": True})
         assert is_refusal(filled)
         _require(filled.category is RefusalCategory.POLICY_REJECTION, "fill is policy")
         _require(filled.context["gap"] == "GAP-0048", "deferred to GAP-0048")
-        print(f"interior fill refused category={filled.category.value} gap=GAP-0048")
+        sys.stdout.write(f"interior fill refused category={filled.category.value} gap=GAP-0048\n")
 
         # Unknown venue calendar → unavailable dependency, never always-open.
         missing = gap_check(
@@ -166,12 +169,12 @@ def main() -> None:
             missing.category is RefusalCategory.UNAVAILABLE_DEPENDENCY,
             "missing calendar is unavailable dependency",
         )
-        print(
+        sys.stdout.write(
             f"unresolvable calendar refused category={missing.category.value} "
-            f"field={missing.context.get('field')}"
+            f"field={missing.context.get('field')}\n"
         )
 
-    print("qmb data gap-check ok")
+    sys.stdout.write("qmb data gap-check ok\n")
 
 
 if __name__ == "__main__":

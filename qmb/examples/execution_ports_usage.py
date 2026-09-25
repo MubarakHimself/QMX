@@ -19,6 +19,7 @@ Shows the things B-6 / AR-56 / CT-23 / CT-29 / SC-06 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -408,19 +409,19 @@ def main() -> None:
     assert qmb.PORT_ROLES == PORT_ROLES
     assert qmb.COMPOSITION_ORDER == COMPOSITION_ORDER
     pinned_separate_ports()
-    print("fill, slippage, and cost are separate Protocol seams")
+    sys.stdout.write("fill, slippage, and cost are separate Protocol seams\n")
     authorized_intent_never_bot_sized()
-    print("CT-23 authorized intent; never a bot-sized order")
-    print("full-loss price required before open")
+    sys.stdout.write("CT-23 authorized intent; never a bot-sized order\n")
+    sys.stdout.write("full-loss price required before open\n")
     fill_decisions_and_optimistic_taint()
-    print("partial fill is first-class")
-    print("optimistic taint on every fill")
+    sys.stdout.write("partial fill is first-class\n")
+    sys.stdout.write("optimistic taint on every fill\n")
     one_exit_and_risk_monotonic()
-    print("one CT-29 exit per virtual close")
-    print("bot-proposed exits are risk-monotonic")
+    sys.stdout.write("one CT-29 exit per virtual close\n")
+    sys.stdout.write("bot-proposed exits are risk-monotonic\n")
     synthetic_store_is_policy_rejection()
-    print("store-persisted synthetic is world=simulated policy rejection")
-    print("execution ports ok")
+    sys.stdout.write("store-persisted synthetic is world=simulated policy rejection\n")
+    sys.stdout.write("execution ports ok\n")
 
 
 if __name__ == "__main__":

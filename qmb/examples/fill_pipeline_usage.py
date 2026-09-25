@@ -19,6 +19,7 @@ Shows the things FILL-2 / FILL-4 / FILL-6 / FILL-8 / SLIP-1 / B-2 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.execution import (
@@ -131,8 +132,8 @@ def main() -> None:
     assert market.pre_slip_price.as_fraction() == _price(1_12000).as_fraction()
     assert market.fill_basis == FILL_BASIS_WORST_CASE
     assert market.taint == TAINT_OPTIMISTIC
-    print("dispatched per order type")
-    print("Fill | NoFill | PartialFill")
+    sys.stdout.write("dispatched per order type\n")
+    sys.stdout.write("Fill | NoFill | PartialFill\n")
 
     exact = _unwrap(
         cross_declared_path(
@@ -152,9 +153,9 @@ def main() -> None:
     assert isinstance(exact, Fill)
     assert exact.fill_basis == FILL_BASIS_OPTIMISTIC_EXACT
     assert exact.taint == TAINT_OPTIMISTIC
-    print("worst-case default")
-    print("optimistic-exact fill-basis")
-    print("optimistic taint")
+    sys.stdout.write("worst-case default\n")
+    sys.stdout.write("optimistic-exact fill-basis\n")
+    sys.stdout.write("optimistic taint\n")
 
     missed = _unwrap(
         fill_all_or_none(
@@ -192,7 +193,7 @@ def main() -> None:
     for item in missed:
         assert isinstance(item, NoFill)
         assert item.reason == NOFILL_ALL_OR_NONE_LEG_FAILED
-    print("all-or-none any-leg-fail is NoFill")
+    sys.stdout.write("all-or-none any-leg-fail is NoFill\n")
 
     partial = _unwrap(
         cross_declared_path(
@@ -216,8 +217,8 @@ def main() -> None:
     )
     assert isinstance(partial, PartialFill)
     assert partial.fee_reference == "fee-partial"
-    print("partial capped by position and lot step")
-    print("each partial has its own fee reference")
+    sys.stdout.write("partial capped by position and lot step\n")
+    sys.stdout.write("each partial has its own fee reference\n")
 
     closed = _unwrap(
         cross_declared_path(
@@ -231,7 +232,7 @@ def main() -> None:
         "closed",
     )
     assert isinstance(closed, NoFill)
-    print("typed NoFill reasons")
+    sys.stdout.write("typed NoFill reasons\n")
     gapped = _unwrap(
         cross_declared_path(
             intent,
@@ -248,7 +249,7 @@ def main() -> None:
     )
     assert isinstance(gapped, Fill)
     assert gapped.gap_fill is True
-    print("gap fill at gapped price")
+    sys.stdout.write("gap fill at gapped price\n")
 
     low = _unwrap(
         RestingIntent.try_create(
@@ -284,9 +285,9 @@ def main() -> None:
         assert isinstance(item, RestingIntent)
         ranked_ids.append(item.intent_id)
     assert ranked_ids == ["low", "high"]
-    print("deterministic path-split sequencing")
+    sys.stdout.write("deterministic path-split sequencing\n")
     assert SAME_SLICE_NEW_INTENT_FILL is False
-    print("new intents rest for a later slice")
+    sys.stdout.write("new intents rest for a later slice\n")
 
     handler = ExecutionSliceHandler(
         fill=DeclaredPathFillAdapter(),
@@ -335,7 +336,7 @@ def main() -> None:
     assert outcome.subphase_order() == SUBPHASES
     assert "rest-1" in outcome.filled
     assert "new-eurusd" in outcome.ineligible
-    print("wired into run-loop sub-phase 3")
+    sys.stdout.write("wired into run-loop sub-phase 3\n")
 
     slipped = ZeroSlippageAdapter().apply(market, path)
     assert is_ok(slipped)
@@ -354,9 +355,9 @@ def main() -> None:
     )
     applied = ConstantPercentSlippageAdapter(calibration=cal).apply(market, path)
     assert is_ok(applied) or is_refusal(applied)
-    print("slippage maps pre-slip to post-slip or vetoes")
-    print("passive limits skip slippage unless configured")
-    print("fill pipeline ok")
+    sys.stdout.write("slippage maps pre-slip to post-slip or vetoes\n")
+    sys.stdout.write("passive limits skip slippage unless configured\n")
+    sys.stdout.write("fill pipeline ok\n")
 
 
 if __name__ == "__main__":

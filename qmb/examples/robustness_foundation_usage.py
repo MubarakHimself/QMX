@@ -27,6 +27,7 @@ Shows the things B-14 / Story 22.1 pin down for every ladder procedure (22.2-22.
 
 from __future__ import annotations
 
+import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -51,10 +52,17 @@ def main() -> None:
     assert api.PROCEDURE_WRITES_LEDGER_LINE is False
     assert api.PROCEDURE_WRITES_LOG is False
     assert api.MODULE_HAS_GLOBAL_MUTABLE_STATE is False
-    print(
-        "each rung is a pure library function with a format-version-1 procedure contract; "
-        "no ledger line, no log:",
-        api.ROBUSTNESS_PROCEDURES,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "each rung is a pure library function with a format-version-1 procedure contract; "  # noqa: E501
+                    "no ledger line, no log:"
+                ),
+                str(api.ROBUSTNESS_PROCEDURES),
+            ]
+        )
+        + "\n"
     )
 
     # 2. Return-space float carve-out: floats live only inside the statistic; the
@@ -68,10 +76,17 @@ def main() -> None:
     )
     assert reentered.as_fraction() == Fraction(5, 4)
     assert is_refusal(api.reenter_money_path(1.25, currency="USD", scale=2, rounding=None))
-    print(
-        "return-space stat lives in a bounded float carve-out; P&L stays exact integer and "
-        "money re-entry needs a declared rounding mode:",
-        measure.magnitude,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "return-space stat lives in a bounded float carve-out; P&L stays exact integer and "  # noqa: E501
+                    "money re-entry needs a declared rounding mode:"
+                ),
+                str(measure.magnitude),
+            ]
+        )
+        + "\n"
     )
 
     # 3. AD-41 label-derived identity: two distinct floats that round alike share it.
@@ -79,7 +94,9 @@ def main() -> None:
     nudged = _unwrap(api.carve_return_statistic("sharpe_ratio", 1.5 + 1e-15), "nudged sharpe")
     assert _unwrap(base.fingerprint(), "base fp").value == _unwrap(nudged.fingerprint(), "fp").value
     assert all(not isinstance(part, float) for part in base.fp1_identity().values())
-    print("float-valued measure takes label-derived identity; no float bits enter the fingerprint")
+    sys.stdout.write(
+        "float-valued measure takes label-derived identity; no float bits enter the fingerprint\n"
+    )
 
     # 4. The distribution-summary primitive is pure data — no verdict, no alpha.
     distribution = [Fraction(value) for value in range(1, 101)]
@@ -96,10 +113,17 @@ def main() -> None:
     assert summary.emits_verdict is False
     assert [band.value for band in summary.bands] == [Fraction(3), Fraction(98)]
     assert is_refusal(api.refuse_pass_fail_verdict("pass"))
-    print(
-        "distribution summary returns percentile ranks, confidence bands, and a one-tailed "
-        "p-value as pure data; no pass/fail verdict, no invented alpha:",
-        f"p_value={summary.p_value}",
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "distribution summary returns percentile ranks, confidence bands, and a one-tailed "  # noqa: E501
+                    "p-value as pure data; no pass/fail verdict, no invented alpha:"
+                ),
+                str(f"p_value={summary.p_value}"),
+            ]
+        )
+        + "\n"
     )
 
     # 5. Required configurables: unset is a typed invalid-input refusal, no default.
@@ -108,9 +132,9 @@ def main() -> None:
     assert unset.category is RefusalCategory.INVALID_INPUT
     assert _unwrap(api.require_positive_int({"n": 1000}, "n"), "configured iterations") == 1000
     assert api.MODULE_SHIPS_INVENTED_DEFAULT is False
-    print(
+    sys.stdout.write(
         "every threshold / iteration / scenario / block-length input is a UI-editable "
-        "configurable; unset is invalid input, never a silently-applied default"
+        "configurable; unset is invalid input, never a silently-applied default\n"
     )
 
     # 6. Claim class is robustness or infra-stress, never edge; gates no live money.
@@ -119,17 +143,24 @@ def main() -> None:
     assert is_refusal(api.refuse_edge_claim("walk-forward"))
     assert is_refusal(api.refuse_live_money_gate("walk-forward"))
     assert api.PROCEDURE_GATES_LIVE_MONEY is False
-    print(
-        "outputs claim robustness or infra-stress, never edge; no output gates live money "
-        "while GAP-0048 is open:",
-        api.CLAIM_GATED_BEHIND,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "outputs claim robustness or infra-stress, never edge; no output gates live money "  # noqa: E501
+                    "while GAP-0048 is open:"
+                ),
+                str(api.CLAIM_GATED_BEHIND),
+            ]
+        )
+        + "\n"
     )
 
     # Foundation identity is fingerprintable and carries no package SemVer.
     identity = api.robustness_foundation_identity()
     assert api.__version__ not in str(identity)
     assert is_ok(fingerprint(identity))
-    print("robustness foundation ok")
+    sys.stdout.write("robustness foundation ok\n")
 
 
 if __name__ == "__main__":

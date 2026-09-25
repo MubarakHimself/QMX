@@ -1435,22 +1435,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.labeled_json is None or args.cleaned_json is None:
-        print(
+        sys.stderr.write(
             "operator-prepared --labeled-json and --cleaned-json are required; "
-            "this script never fetches providers or opens credentials",
-            file=sys.stderr,
+            "this script never fetches providers or opens credentials\n"
         )
         return 2
 
     # The CLI loads operator-prepared JSON envelopes produced by Stories 30.2/30.3
     # tooling outside this module. In-library callers should use run_offline_training
     # with live LabeledCorpus / CleanedCorpus objects instead.
-    print(
+    sys.stderr.write(
         "JSON envelope loading for operator-prepared corpora is staged through "
         "run_offline_training with in-memory Story 30.2/30.3 artifacts; pass "
         "objects from Python rather than relying on an undeclared on-disk schema "
-        "in Story 30.4. Refusing rather than inventing a loader.",
-        file=sys.stderr,
+        "in Story 30.4. Refusing rather than inventing a loader.\n"
     )
     refusal = policy(
         "cli_loader",

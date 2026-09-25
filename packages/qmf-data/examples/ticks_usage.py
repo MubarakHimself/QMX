@@ -16,6 +16,7 @@ Shows the three things Story 6.2 pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -275,9 +276,9 @@ def revision_linked(ingest: ExternalSourceIngest) -> str:
 
 def main() -> None:
     ingest = ExternalSourceIngest(_DemoPort())
-    print(f"bid/ask preserved: {bid_ask_preserved(ingest)}")
-    print(f"source disagreement: {disagreement_edges(ingest)}")
-    print(f"revision link: {revision_linked(ingest)}")
+    sys.stdout.write(f"bid/ask preserved: {bid_ask_preserved(ingest)}\n")
+    sys.stdout.write(f"source disagreement: {disagreement_edges(ingest)}\n")
+    sys.stdout.write(f"revision link: {revision_linked(ingest)}\n")
 
 
 if __name__ == "__main__":

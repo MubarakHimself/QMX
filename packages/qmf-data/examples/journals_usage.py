@@ -24,6 +24,7 @@ Shows the six things Story 3.5 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -258,23 +259,29 @@ def main() -> None:
         store = EvidenceStore(Path(tmp) / "store")
 
         sequences = gapless_wired_producer(store)
-        print(f"gapless data-quality stream: sequences={sequences}")
+        sys.stdout.write(f"gapless data-quality stream: sequences={sequences}\n")
 
         refusing_doors = decision_outcome_projection(store)
-        print(f"veto_ledger (refused-by-door) selects on the declared outcome: {refusing_doors}")
+        sys.stdout.write(
+            f"veto_ledger (refused-by-door) selects on the declared outcome: {refusing_doors}\n"
+        )
 
         same_identity, display = identity_excludes_correlation_and_display()
-        print(f"correlation_id excluded from fp1: {same_identity}; display time (log): {display}")
+        sys.stdout.write(
+            f"correlation_id excluded from fp1: {same_identity}; display time (log): {display}\n"
+        )
 
         edge_type = causal_edge_links_by_fp1()
-        print(f"cross-stream causal linkage is a typed edge: {edge_type} (references fp1s)")
+        sys.stdout.write(
+            f"cross-stream causal linkage is a typed edge: {edge_type} (references fp1s)\n"
+        )
 
         loss = gap_signals_loss()
-        print(f"a sequence gap is surfaced as loss: {loss}")
+        sys.stdout.write(f"a sequence gap is surfaced as loss: {loss}\n")
 
         landed, resumed = block_on_unpersistable(Path(tmp) / "flaky")
-        print(
-            f"block-on-unpersistable: recovered event landed={landed}, stream sequences={resumed}"
+        sys.stdout.write(
+            f"block-on-unpersistable: recovered event landed={landed}, stream sequences={resumed}\n"
         )
 
 

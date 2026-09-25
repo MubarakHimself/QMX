@@ -20,6 +20,7 @@ Shows the five things Story 6.4 pins down:
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
@@ -141,9 +142,9 @@ def main() -> None:
     _require(first.observation.source == CALENDAR_FEED_SOURCE, "source news-calendar")
     _require(first.observation.source_native_id == "nfp-2024-08-20", "provider-native id")
     events = adapter.last_events
-    print(
+    sys.stdout.write(
         f"governed CT-10: source={first.observation.source} "
-        f"events={len(receipts)} ids={[e.source_native_id for e in events]}"
+        f"events={len(receipts)} ids={[e.source_native_id for e in events]}\n"
     )
 
     # Same revision → idempotent.
@@ -175,9 +176,9 @@ def main() -> None:
         rev[0].observation.fingerprint.value != first.observation.fingerprint.value,
         "revision mints new fp1",
     )
-    print(
+    sys.stdout.write(
         f"revision append-only: r1={first.observation.fingerprint.value[-12:]} "
-        f"r2={rev[0].observation.fingerprint.value[-12:]}"
+        f"r2={rev[0].observation.fingerprint.value[-12:]}\n"
     )
 
     # AC2 — verbatim impact; no window/permission; no minted severity.
@@ -185,9 +186,9 @@ def main() -> None:
     _require(events[1].impact_label == "Medium", "impact Medium verbatim")
     severity = refuse_minted_severity_scale(request="demo")
     _require(is_refusal(severity), "minted severity refused")
-    print(
+    sys.stdout.write(
         f"verbatim impact labels: {[e.impact_label for e in events]} "
-        f"(no QMX severity; feed defines no window)"
+        f"(no QMX severity; feed defines no window)\n"
     )
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -219,10 +220,10 @@ def main() -> None:
             imported.journal_receipt.event.payload["signal"] == "calendar-import",
             "data-quality import signal",
         )
-        print(
+        sys.stdout.write(
             f"import journaled as data quality: "
             f"events={imported.journal_receipt.event.payload['event_count']} "
-            f"defines_window={imported.journal_receipt.event.payload['defines_window']}"
+            f"defines_window={imported.journal_receipt.event.payload['defines_window']}\n"
         )
 
         # AC4 — failed refresh fails closed, journaled, no live skip.
@@ -244,9 +245,9 @@ def main() -> None:
         _require(closed.treated_as_affected and closed.alarm, "treated-as-affected+alarm")
         skip = refuse_live_skip(request="demo")
         _require(is_refusal(skip), "live skip refused")
-        print(
+        sys.stdout.write(
             f"fail-closed degradation: reason={closed.reason.value} "
-            f"treated_as_affected={closed.treated_as_affected} (no live skip)"
+            f"treated_as_affected={closed.treated_as_affected} (no live skip)\n"
         )
 
         # AC5 — retention not claimed authorized.
@@ -256,7 +257,9 @@ def main() -> None:
             importer.legal_archiving_posture == LEGAL_ARCHIVING_POSTURE,
             "open operator item",
         )
-        print(f"legal archiving posture: {LEGAL_ARCHIVING_POSTURE} (not claimed authorized)")
+        sys.stdout.write(
+            f"legal archiving posture: {LEGAL_ARCHIVING_POSTURE} (not claimed authorized)\n"
+        )
 
 
 if __name__ == "__main__":

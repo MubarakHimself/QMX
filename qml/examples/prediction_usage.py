@@ -24,6 +24,7 @@ Shows the things QL-8 / Story 12.6 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.chrono import CalendarIdentity
@@ -222,16 +223,18 @@ def ruled_footprint_can_fail() -> str:
 
 
 def main() -> None:
-    print(f"prediction checks: {','.join(PREDICTION_CHECKS)}")
-    print(f"threshold gaps: {','.join(THRESHOLD_GAPS_BEHIND_NEW_ADMISSION_BAR_FIELDS)}")
-    print(f"entry-only vs zero-exit Book: {entry_only_against_zero_exit_book()}")
-    print(f"unresolved family: {unresolved_family()}")
-    print(f"stream set exceeds venue: {stream_exceeds_venue()}")
+    sys.stdout.write(f"prediction checks: {','.join(PREDICTION_CHECKS)}\n")
+    sys.stdout.write(
+        f"threshold gaps: {','.join(THRESHOLD_GAPS_BEHIND_NEW_ADMISSION_BAR_FIELDS)}\n"
+    )
+    sys.stdout.write(f"entry-only vs zero-exit Book: {entry_only_against_zero_exit_book()}\n")
+    sys.stdout.write(f"unresolved family: {unresolved_family()}\n")
+    sys.stdout.write(f"stream set exceeds venue: {stream_exceeds_venue()}\n")
     passed, live = blank_requirement_passes_registration_blocks_live()
-    print(f"blank passes registration: {passed}")
-    print(f"blank blocks live: {live}")
-    print(f"ruled footprint miss: {ruled_footprint_can_fail()}")
-    print("prediction linter ok")
+    sys.stdout.write(f"blank passes registration: {passed}\n")
+    sys.stdout.write(f"blank blocks live: {live}\n")
+    sys.stdout.write(f"ruled footprint miss: {ruled_footprint_can_fail()}\n")
+    sys.stdout.write("prediction linter ok\n")
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ Shows the things AD-28 / Story 59.1 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.runloop import (
@@ -109,17 +110,17 @@ def main() -> None:
     )
     held = _unwrap(begin_stream_cutover(missing), "hold in cutover")
     refused = ack_stream_cutover(held, watermark=_WATERMARK, acked_at=_NOW)
-    print("stream cancel cutover ok")
-    print(f"refcount after cancel A {after.refcount}")
+    sys.stdout.write("stream cancel cutover ok\n")
+    sys.stdout.write(f"refcount after cancel A {after.refcount}\n")
     if shared_feed_consumers(after, after.as_of) == ("consumer:b",):
-        print("cancelling A leaves B running")
-    print(f"cutover-ack {ack.event_kind} phase {live.phase}")
+        sys.stdout.write("cancelling A leaves B running\n")
+    sys.stdout.write(f"cutover-ack {ack.event_kind} phase {live.phase}\n")
     if is_refusal(replay_cmd):
-        print("replay provenance cannot authorize a live command")
+        sys.stdout.write("replay provenance cannot authorize a live command\n")
     if is_refusal(refused) and held.phase == "cutover":
-        print("missing watermark holds in cutover")
+        sys.stdout.write("missing watermark holds in cutover\n")
     if permission.context["trading_permission"] is False:
-        print("a stream subscription is not trading permission")
+        sys.stdout.write("a stream subscription is not trading permission\n")
 
 
 if __name__ == "__main__":

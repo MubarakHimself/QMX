@@ -199,20 +199,20 @@ def main() -> None:
     assert qmb.finish_run is finish_run
     assert qmb.ONE_LINE_PER_RUN is True
     identity_names_one_line_jsonl()
-    print("one ledger line per run; JSONL fragments; no stored verdict")
+    sys.stdout.write("one ledger line per run; JSONL fragments; no stored verdict\n")
     with tempfile.TemporaryDirectory(prefix="qmb_ledger_", ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
         runs = root / "runs"
         ledger = root / "ledger"
         runs.mkdir()
         completed_run_is_one_confirmation_line(runs, ledger)
-        print("completed run appends one confirmation line; Book-bar read selects it")
+        sys.stdout.write("completed run appends one confirmation line; Book-bar read selects it\n")
         aborted_line_carries_refusal_context(runs, ledger)
-        print("aborted line carries refusal context, never silently absent")
+        sys.stdout.write("aborted line carries refusal context, never silently absent\n")
         library_run_is_not_governed_evidence(runs)
-        print("direct library run() produces no governed evidence")
-        print("WriterId-scoped fragments; concurrent slots never share a file")
-    print("orchestrator ledger ok")
+        sys.stdout.write("direct library run() produces no governed evidence\n")
+        sys.stdout.write("WriterId-scoped fragments; concurrent slots never share a file\n")
+    sys.stdout.write("orchestrator ledger ok\n")
 
 
 if __name__ == "__main__":

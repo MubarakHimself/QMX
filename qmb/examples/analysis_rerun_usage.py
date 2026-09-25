@@ -17,6 +17,7 @@ Shows the things Story 35.3 / FR-W25 / FR-W11 / SCN-0016 pin down:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TypeVar
@@ -170,27 +171,23 @@ def main() -> None:
         assert line["workbench_lane"] == "governed"
         assert line["ct32"] == {"_ref": outcome.ct32_fingerprint.value}
         assert "analysis_method" not in line
-        print("analysis.rerun is a new QMB run")
-        print("canonical artifact is a new CT-32")
-        print("occupancy is run, not a query")
-        print("workbench_lane=governed cites CT-32 by _ref")
-        print("analysis_method and lane are not CT-32 or B-4 fields")
+        sys.stdout.write("analysis.rerun is a new QMB run\n")
+        sys.stdout.write("canonical artifact is a new CT-32\n")
+        sys.stdout.write("occupancy is run, not a query\n")
+        sys.stdout.write("workbench_lane=governed cites CT-32 by _ref\n")
+        sys.stdout.write("analysis_method and lane are not CT-32 or B-4 fields\n")
 
         query = rerun(occupancy="query")
         assert is_refusal(query)
-        print("query occupancy refused")
+        sys.stdout.write("query occupancy refused\n")
 
         book = _unwrap(
             BookDefinition.try_create(
                 BOOK_CONTRACT_FORMAT_VERSION,
                 "USD",
                 {
-                    "admission_bar": _section(
-                        "admission_bar", _money_variable("bar_floor", 1)
-                    ),
-                    "money_rules": _section(
-                        "money_rules", _money_variable("loss_floor", 800_000)
-                    ),
+                    "admission_bar": _section("admission_bar", _money_variable("bar_floor", 1)),
+                    "money_rules": _section("money_rules", _money_variable("loss_floor", 800_000)),
                     "exit_policy": _section("exit_policy", _money_variable("q", 100)),
                 },
             ),
@@ -317,11 +314,11 @@ def main() -> None:
         )
         assert seed.config.seed_overridden is True
         assert seed.config.fold_rating == FOLD_UNRATED
-        print("starting_capital override stamps seed_overridden and fold unrated")
+        sys.stdout.write("starting_capital override stamps seed_overridden and fold unrated\n")
         epic = rerun(experiment_spec=True)
         assert is_refusal(epic)
-        print("coordinated Experiment Ledger is Epic 36")
-    print("analysis.rerun ok")
+        sys.stdout.write("coordinated Experiment Ledger is Epic 36\n")
+    sys.stdout.write("analysis.rerun ok\n")
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ Shows the things FEE-1 / FEE-2 / FEE-3 / FEE-5 / B-6 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.execution import (
@@ -114,8 +115,8 @@ def main() -> None:
     quoted = _unwrap(adapter.quote(fill), "quote")
     assert quoted.currency == "USD"
     assert quoted.as_fraction() == _unwrap(Money.try_create(1_100, "USD", 2), "11.00").as_fraction()
-    print("exact-integer Money in its own currency")
-    print("no float on the money path")
+    sys.stdout.write("exact-integer Money in its own currency\n")
+    sys.stdout.write("no float on the money path\n")
 
     first = _unwrap(adapter.itemize(_partial(quantity=1, requested=2)), "partial-a")
     second = _unwrap(adapter.itemize(_partial(quantity=1, requested=2)), "partial-b")
@@ -123,8 +124,8 @@ def main() -> None:
     assert first.costs[0].amount.as_fraction() == quoted.as_fraction()
     assert second.costs[0].amount.as_fraction() == quoted.as_fraction()
     assert first.fill.pre_slip_price.as_fraction() == fill.pre_slip_price.as_fraction()
-    print("each partial has its own pro-rated commission")
-    print("commission is a distinct line item")
+    sys.stdout.write("each partial has its own pro-rated commission\n")
+    sys.stdout.write("commission is a distinct line item\n")
 
     assert COST_MODELS == (
         "zero",
@@ -161,22 +162,22 @@ def main() -> None:
     )
     expected_min = _unwrap(Money.try_create(700, "USD", 2), "7.00-min")
     assert floored.as_fraction() == expected_min.as_fraction()
-    print(
+    sys.stdout.write(
         "zero | percent-of-notional | per-lot/per-1k-units | "
-        "notional-proportional-with-per-order-minimum"
+        "notional-proportional-with-per-order-minimum\n"
     )
 
     admitted = _unwrap(adapter.quote(fill), "admit")
     charged = _unwrap(adapter.itemize(fill), "charge")
     assert admitted.as_fraction() == charged.costs[0].amount.as_fraction()
-    print("admission query matches fill-time charge")
+    sys.stdout.write("admission query matches fill-time charge\n")
 
     missing = PercentOfNotionalCostAdapter().quote(fill)
     assert is_refusal(missing)
     named_zero = _unwrap(ZeroCostAdapter().itemize(fill), "zero")
     assert named_zero.costs == ()
-    print("missing calibration is typed refusal, never silent zero")
-    print("cost port ok")
+    sys.stdout.write("missing calibration is typed refusal, never silent zero\n")
+    sys.stdout.write("cost port ok\n")
 
 
 if __name__ == "__main__":

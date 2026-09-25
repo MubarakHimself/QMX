@@ -542,11 +542,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.apply and args.fixture_root is None:
-        print(
+        sys.stderr.write(
             "refusing --apply without --fixture-root: run on the VPS under the "
             "ops principal sudo path; CI and workstations use --check-mode or "
-            "--fixture-root only; this story does not provision a VPS",
-            file=sys.stderr,
+            "--fixture-root only; this story does not provision a VPS\n"
         )
         return 2
 
@@ -566,7 +565,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out is not None:
         write_plan(plan, args.out)
     else:
-        print(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True))
+        sys.stdout.write(str(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True)) + "\n")
     if not plan.ok:
         return 1
     if args.fixture_root is not None:

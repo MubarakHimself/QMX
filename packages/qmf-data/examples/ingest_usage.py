@@ -22,6 +22,7 @@ Shows the six things Story 6.1 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -295,23 +296,23 @@ def main() -> None:
         boundary = SourceObservationBoundary(EvidenceStore(Path(tmp)))
 
         fp = fetch_normalize_and_route(ingest, boundary)
-        print(f"CT-15 -> CT-10 routed: {fp[:24]}...")
+        sys.stdout.write(f"CT-15 -> CT-10 routed: {fp[:24]}...\n")
 
         original_fp, revision_fp = idempotent_and_revision(ingest)
         _require(original_fp != revision_fp, "revision distinct")
-        print("idempotent key; revision is a new fp1 artifact")
+        sys.stdout.write("idempotent key; revision is a new fp1 artifact\n")
 
         verbatim_foreign(ingest)
-        print("foreign timestamp and money: stored verbatim")
+        sys.stdout.write("foreign timestamp and money: stored verbatim\n")
 
         refusal = incomplete_is_refused(ingest)
-        print(f"incomplete / unmapped instrument: {refusal}")
+        sys.stdout.write(f"incomplete / unmapped instrument: {refusal}\n")
 
         rate = provider_failure_fabricates_nothing(ingest, port)
-        print(f"rate-limit: {rate}; no fabricated observation")
+        sys.stdout.write(f"rate-limit: {rate}; no fabricated observation\n")
 
         schedule = schedule_ask_is_refused(ingest)
-        print(f"scheduler/daemon ask: {schedule} (called port only)")
+        sys.stdout.write(f"scheduler/daemon ask: {schedule} (called port only)\n")
 
 
 if __name__ == "__main__":

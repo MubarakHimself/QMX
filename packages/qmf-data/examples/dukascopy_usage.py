@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import lzma
 import struct
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -127,9 +128,9 @@ def main() -> None:
     if quote is None:
         raise AssertionError("expected bid/ask preserved on tick")
     _require(first.observation.source == DUKASCOPY_SOURCE, "source identity dukascopy")
-    print(
+    sys.stdout.write(
         f"download-once CT-10: source={first.observation.source} "
-        f"ticks={len(receipts)} bid={quote.bid.verbatim} ask={quote.ask.verbatim}"
+        f"ticks={len(receipts)} bid={quote.bid.verbatim} ask={quote.ask.verbatim}\n"
     )
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -138,16 +139,16 @@ def main() -> None:
             ingest.submit(first.observation, boundary),
             "CT-10 admit",
         )
-        print(f"admitted to raw archive: {admitted.archive.outcome.value}")
+        sys.stdout.write(f"admitted to raw archive: {admitted.archive.outcome.value}\n")
 
     # AC2 — license-tagged window; unlicensed refuses governed evidence.
     window = adapter.last_window
     if window is None:
         raise AssertionError("expected window recorded")
     offered = _unwrap(offer_for_governed_evidence(window), "personal-use governed offer")
-    print(
+    sys.stdout.write(
         f"license-tagged window: tag={offered.license_tag.value} "
-        f"partition={offered.partition.partition_key}"
+        f"partition={offered.partition.partition_key}\n"
     )
 
     unknown = _unwrap(
@@ -164,7 +165,7 @@ def main() -> None:
         refused_license.category is RefusalCategory.POLICY_REJECTION,
         "unlicensed is policy rejection",
     )
-    print("unlicensed window refused for governed evidence")
+    sys.stdout.write("unlicensed window refused for governed evidence\n")
 
     # AC3 — malformed bi5 / unmappable symbol.
     bad = decode_bi5_ticks(b"not-compressed", hour_start_ns=_HOUR_NS)
@@ -178,17 +179,17 @@ def main() -> None:
     )
     if not is_refusal(unmapped) or unmapped.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected unmappable instrument invalid input")
-    print("malformed / unmappable -> invalid input")
+    sys.stdout.write("malformed / unmappable -> invalid input\n")
 
     # AC4 — complete corpus refused.
     corpus = adapter.download_complete_corpus()
     _require(is_refusal(corpus), "complete corpus refused")
-    print("complete-corpus download refused (bounded adapter only)")
+    sys.stdout.write("complete-corpus download refused (bounded adapter only)\n")
 
     # AC5 — recovery ownership refused.
     recovery = adapter.recover_external()
     _require(is_refusal(recovery), "external recovery refused")
-    print("external recovery / checkpoint ownership refused (application-owned)")
+    sys.stdout.write("external recovery / checkpoint ownership refused (application-owned)\n")
 
 
 if __name__ == "__main__":

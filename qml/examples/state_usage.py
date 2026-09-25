@@ -19,6 +19,7 @@ Shows the things QL-7 / Story 12.2 pin down:
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Mapping
 from typing import TypeVar, cast
 
@@ -336,17 +337,17 @@ def exceeded_bound_is_layer2() -> TypedRefusal:
 
 
 def main() -> None:
-    print(f"snapshot format version: {STATE_SNAPSHOT_FORMAT_VERSION}")
-    print(f"identical-tuple round-trip equivalent: {round_trip_equivalent()}")
-    print(f"restored-state fingerprint enters labels: {fingerprint_enters_labels()}")
+    sys.stdout.write(f"snapshot format version: {STATE_SNAPSHOT_FORMAT_VERSION}\n")
+    sys.stdout.write(f"identical-tuple round-trip equivalent: {round_trip_equivalent()}\n")
+    sys.stdout.write(f"restored-state fingerprint enters labels: {fingerprint_enters_labels()}\n")
     os_miss, logic_miss, protocol_miss, ar_miss = cross_tuple_refusals()
-    print(f"cross-OS restore: {os_miss}")
-    print(f"cross-logic restore: {logic_miss}")
-    print(f"cross-protocol restore: {protocol_miss}")
-    print(f"cross-arithmetic-reference restore: {ar_miss}")
+    sys.stdout.write(f"cross-OS restore: {os_miss}\n")
+    sys.stdout.write(f"cross-logic restore: {logic_miss}\n")
+    sys.stdout.write(f"cross-protocol restore: {protocol_miss}\n")
+    sys.stdout.write(f"cross-arithmetic-reference restore: {ar_miss}\n")
     bound = exceeded_bound_is_layer2()
-    print(f"exceeded state bound: {bound.category.value}")
-    print("state usage ok")
+    sys.stdout.write(f"exceeded state bound: {bound.category.value}\n")
+    sys.stdout.write("state usage ok\n")
 
 
 if __name__ == "__main__":

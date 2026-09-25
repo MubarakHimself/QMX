@@ -20,6 +20,7 @@ Shows the things Story 14.8 / QL-7 / DEC-0183 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar, cast
 
 from qmb.config import (
@@ -271,8 +272,8 @@ def main() -> None:
         "qml construct_bot",
     )
     assert via_qml.__class__ is hosted.__class__
-    print("factory constructed via construct_bot / FunctionFactory / HostedBot")
-    print("driven per evaluation instant with declared-footprint evidence only")
+    sys.stdout.write("factory constructed via construct_bot / FunctionFactory / HostedBot\n")
+    sys.stdout.write("driven per evaluation instant with declared-footprint evidence only\n")
 
     bot = _unwrap(
         RegistrationRecord.try_create(
@@ -336,8 +337,8 @@ def main() -> None:
     items = cast("list[object] | tuple[object, ...]", producers)
     assert len(items) == 2
     assert all(isinstance(item, str) and item.startswith("fp1:sha256:") for item in items)
-    print(f"assignment_is_canonical {canonical.keys[ASSIGNMENT_IS_CANONICAL_KEY]}")
-    print("producer template resolved to one configured-producer fingerprint")
+    sys.stdout.write(f"assignment_is_canonical {canonical.keys[ASSIGNMENT_IS_CANONICAL_KEY]}\n")
+    sys.stdout.write("producer template resolved to one configured-producer fingerprint\n")
 
     overridden = _unwrap(
         compile_run_config(
@@ -355,7 +356,9 @@ def main() -> None:
     )
     assert overridden.assignment_is_canonical is False
     assert fold_canonical_assignment(overridden) == "miss"
-    print("non-canonical assignment is a run-spec override, never a governed-seat execution")
+    sys.stdout.write(
+        "non-canonical assignment is a run-spec override, never a governed-seat execution\n"
+    )
 
     scope = _unwrap(
         mint_state_scope(
@@ -387,7 +390,7 @@ def main() -> None:
         "in-process QML verdict",
     )
     assert qmb_verdict.fp1_identity() == in_process.fp1_identity()
-    print("Layer 2 verdict under QMB hosting passed through unchanged")
+    sys.stdout.write("Layer 2 verdict under QMB hosting passed through unchanged\n")
 
     stub = _unwrap(
         RegistrationRecord.try_create(
@@ -441,8 +444,8 @@ def main() -> None:
             read_surfaces={},
         )
     )
-    print("ungoverned plain-Python bot needs no QL-7 adapter; tunnel entry ungated")
-    print("ql7 host ok")
+    sys.stdout.write("ungoverned plain-Python bot needs no QL-7 adapter; tunnel entry ungated\n")
+    sys.stdout.write("ql7 host ok\n")
 
 
 if __name__ == "__main__":

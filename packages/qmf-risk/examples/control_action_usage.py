@@ -11,6 +11,7 @@ and SCN-0010 same-tick compose (suspend_new + flatten both execute).
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -92,13 +93,13 @@ def main() -> None:
         blocked.category is RefusalCategory.POLICY_REJECTION,
         "exit-preservation is a policy rejection",
     )
-    print("exit-preservation: close_all block refused (policy rejection)")
+    sys.stdout.write("exit-preservation: close_all block refused (policy rejection)\n")
     _require(is_ok(check_exit_preservation(blocked_act="entry")), "entries may be blocked")
-    print("exit-preservation: entry block allowed")
+    sys.stdout.write("exit-preservation: entry block allowed\n")
 
     pipe = reject_blanket_command_pipe_block("block_all_commands")
     _require(is_refusal(pipe), "blanket pipe-block kind must be refused")
-    print("no blanket command-pipe block kind may be minted")
+    sys.stdout.write("no blanket command-pipe block kind may be minted\n")
 
     # Kill switch (global) vs kill line (per-Book floor) — named apart.
     kill_switch = _unwrap(
@@ -113,9 +114,9 @@ def main() -> None:
         kill_switch.fp1_identity()["class"] != kill_line.fp1_identity()["class"],
         "kill switch and kill line must stay distinct classes",
     )
-    print(
+    sys.stdout.write(
         "kill_switch class / kill_line class: "
-        f"{kill_switch.fp1_identity()['class']} / {kill_line.fp1_identity()['class']}"
+        f"{kill_switch.fp1_identity()['class']} / {kill_line.fp1_identity()['class']}\n"
     )
 
     ks_action = _unwrap(
@@ -139,7 +140,9 @@ def main() -> None:
         kl_close is not CloseReason.PROTECTION_FORCED_FLAT,
         "kill_line_flat is minted apart from protection_forced_flat",
     )
-    print(f"close reasons distinct: {kl_close.value} != {CloseReason.PROTECTION_FORCED_FLAT.value}")
+    sys.stdout.write(
+        f"close reasons distinct: {kl_close.value} != {CloseReason.PROTECTION_FORCED_FLAT.value}\n"
+    )
 
     # Flatten authority: adapter cannot flatten; operator always can.
     _require(
@@ -147,7 +150,7 @@ def main() -> None:
         "adapter_self must not flatten",
     )
     _require(is_ok(check_flatten_authority(AuthorityKind.OPERATOR)), "operator may flatten")
-    print("flatten authority: operator ok; adapter_self refused")
+    sys.stdout.write("flatten authority: operator ok; adapter_self refused\n")
 
     # Scope resolution refuses netting-indistinguishable widen.
     scope_ok = resolve_subject_scope(
@@ -165,7 +168,7 @@ def main() -> None:
         netting_indistinguishable_from_wider=True,
     )
     _require(is_refusal(netting_refuse), "netting-indistinguishable must refuse")
-    print("scope resolution: netting-indistinguishable refused (never widened)")
+    sys.stdout.write("scope resolution: netting-indistinguishable refused (never widened)\n")
 
     # Journal before dispatch — storage failure blocks.
     blocked_dispatch = journal_before_dispatch(
@@ -181,7 +184,7 @@ def main() -> None:
         journal_before_dispatch(kl_action, journal_result=True),
         "journal before dispatch failed",
     )
-    print("journal-before-dispatch: storage failure blocks; success proceeds")
+    sys.stdout.write("journal-before-dispatch: storage failure blocks; success proceeds\n")
 
     action_stream = ControlActionStream()
     _unwrap(action_stream.mint(ks_action), "stream mint suspend failed")
@@ -198,7 +201,7 @@ def main() -> None:
         any(f.status.value == "held-alarm" for f in folds),
         "unknown verdict must hold flatten open without dispatching",
     )
-    print("standing intent: unknown verdict holds flatten open (held-alarm)")
+    sys.stdout.write("standing intent: unknown verdict holds flatten open (held-alarm)\n")
 
     # Same-tick compose: suspend_new + flatten both execute (SCN-0010).
     enforcement = EnforcementScope(
@@ -226,8 +229,10 @@ def main() -> None:
     kinds = {p.record.action_kind.value for p in outcome.emit}
     _require(kinds == {"suspend_new", "flatten"}, "compose must emit both")
     _require(len(outcome.suppressed) == 0, "compose must suppress none")
-    print(f"same-tick compose: emit={sorted(kinds)}; suppressed={len(outcome.suppressed)}")
-    print("resume is operator-only; kill-line stand-down clears only by human resume")
+    sys.stdout.write(
+        f"same-tick compose: emit={sorted(kinds)}; suppressed={len(outcome.suppressed)}\n"
+    )
+    sys.stdout.write("resume is operator-only; kill-line stand-down clears only by human resume\n")
 
 
 if __name__ == "__main__":

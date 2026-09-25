@@ -16,6 +16,7 @@ Shows the things Story 15.1 / AR-50 / B-5 pin down:
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -142,17 +143,17 @@ def main() -> None:
     assert qmb.SPAWN_MODEL == SPAWN_MODEL
     assert qmb.spawn_run is spawn_run
     identity_is_stdlib_process_per_run()
-    print("process-per-run via stdlib subprocess")
+    sys.stdout.write("process-per-run via stdlib subprocess\n")
     run_stays_pure()
-    print("run is pure")
+    sys.stdout.write("run is pure\n")
     with tempfile.TemporaryDirectory(prefix="qmb_orch_", ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
         spawned_process_matches_pure_run(root)
-        print("isolated output directory named by the run id")
+        sys.stdout.write("isolated output directory named by the run id\n")
         concurrent_runs_never_share_a_writer(root)
-        print("one-writer-per-stream")
-    print("no Ray, no required Docker, no daemon")
-    print("process-per-run ok")
+        sys.stdout.write("one-writer-per-stream\n")
+    sys.stdout.write("no Ray, no required Docker, no daemon\n")
+    sys.stdout.write("process-per-run ok\n")
 
 
 if __name__ == "__main__":

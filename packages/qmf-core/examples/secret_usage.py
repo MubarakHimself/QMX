@@ -25,6 +25,7 @@ same port; ``qmf-core`` holds no secret value itself.
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.refusal import (
@@ -138,11 +139,13 @@ def rotation_is_store_before_discard(
 
 def main() -> None:
     ref = ref_is_the_safe_handle()
-    print(f"ref renders its id: {ref.value}")
+    sys.stdout.write(f"ref renders its id: {ref.value}\n")
 
     value, plaintext = value_never_renders(ref)
-    print(f"secret value hides its secret in repr/str/format: {plaintext not in repr(value)}")
-    print(f"reveal is the only plaintext path: {value.reveal() == plaintext}")
+    sys.stdout.write(
+        f"secret value hides its secret in repr/str/format: {plaintext not in repr(value)}\n"
+    )
+    sys.stdout.write(f"reveal is the only plaintext path: {value.reveal() == plaintext}\n")
 
     store = InMemorySecretStore()
     store.provision(value)
@@ -150,11 +153,13 @@ def main() -> None:
     # The concrete store is used through the SecretStore port — the parameter type
     # of this helper — exactly as the composition root injects it.
     refusal = missing_credential_is_a_refusal(store)
-    print(f"missing credential refused: {refusal.category.value} / {refusal.context['secret_ref']}")
+    sys.stdout.write(
+        f"missing credential refused: {refusal.category.value} / {refusal.context['secret_ref']}\n"
+    )
     assert plaintext not in repr(refusal)
 
     rotated = rotation_is_store_before_discard(store, ref, plaintext)
-    print(f"rotation stored new value before discard: {rotated != plaintext}")
+    sys.stdout.write(f"rotation stored new value before discard: {rotated != plaintext}\n")
 
 
 if __name__ == "__main__":

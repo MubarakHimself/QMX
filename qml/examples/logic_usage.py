@@ -18,6 +18,7 @@ Shows the things QL-2 / Story 11.3 pin down:
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Mapping
 from typing import TypeVar
 
@@ -133,12 +134,14 @@ def unresolvable_logic_is_unavailable_dependency() -> TypedRefusal:
 
 def main() -> None:
     manifest = source_manifest_is_fp1_via_qmf_core()
-    print(f"source-manifest fingerprint: {manifest[:19]}...")
-    print(f"two sandboxes one Bot fp1: {two_sandboxes_one_bot_fp1()}")
-    print(f"one-character change mints new Bot fp1: {one_character_change_mints_new_bot_fp1()}")
+    sys.stdout.write(f"source-manifest fingerprint: {manifest[:19]}...\n")
+    sys.stdout.write(f"two sandboxes one Bot fp1: {two_sandboxes_one_bot_fp1()}\n")
+    sys.stdout.write(
+        f"one-character change mints new Bot fp1: {one_character_change_mints_new_bot_fp1()}\n"
+    )
     missing = unresolvable_logic_is_unavailable_dependency()
-    print(f"unresolvable logic at Layer 1: {missing.category.value}")
-    print("logic identity ok")
+    sys.stdout.write(f"unresolvable logic at Layer 1: {missing.category.value}\n")
+    sys.stdout.write("logic identity ok\n")
 
 
 if __name__ == "__main__":

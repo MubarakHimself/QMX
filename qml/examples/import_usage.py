@@ -10,6 +10,8 @@ and the pure conformance ticket. A plain-Python bot needs none of this to run.
 
 from __future__ import annotations
 
+import sys
+
 from qmf.core.refusal import is_ok
 from qml.conformance import evaluate_ticket
 from qml.families import StrategyFamilyId
@@ -19,14 +21,14 @@ import qml
 
 
 def main() -> None:
-    print(f"qml {qml.__version__}")
+    sys.stdout.write(f"qml {qml.__version__}\n")
     family = StrategyFamilyId.try_create("trend-follow")
     assert is_ok(family)
     kinds = permitted_exit_kinds(())
     assert is_ok(kinds)
     ticket = evaluate_ticket(layer1_passed=True, layer2_passed=True)
     assert is_ok(ticket)
-    print("import qml ok")
+    sys.stdout.write("import qml ok\n")
 
 
 if __name__ == "__main__":

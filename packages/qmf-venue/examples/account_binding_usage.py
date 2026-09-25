@@ -19,6 +19,7 @@ Shows the things CT-21 / DEC-0136 / DEC-0140 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -110,10 +111,12 @@ def cross_venue_account_refuses() -> str:
 
 
 def main() -> None:
-    print(f"encoding secret reference refused: {opaque_reference_mints_and_encoding_refuses()}")
-    print(f"rotation never forks identity: {rotation_never_forks_identity()}")
-    print(f"cross-venue account refused: {cross_venue_account_refuses()}")
-    print("account binding usage ok")
+    sys.stdout.write(
+        f"encoding secret reference refused: {opaque_reference_mints_and_encoding_refuses()}\n"
+    )
+    sys.stdout.write(f"rotation never forks identity: {rotation_never_forks_identity()}\n")
+    sys.stdout.write(f"cross-venue account refused: {cross_venue_account_refuses()}\n")
+    sys.stdout.write("account binding usage ok\n")
 
 
 if __name__ == "__main__":

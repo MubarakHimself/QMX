@@ -19,6 +19,7 @@ Shows the four things Story 7.1 pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -170,13 +171,13 @@ def binary_float_parameter_is_refused() -> TypedRefusal:
 
 def main() -> None:
     fp = fp1_spans_the_whole_configuration()
-    print(f"fp1 spans the whole configuration: {fp[:19]}...")
+    sys.stdout.write(f"fp1 spans the whole configuration: {fp[:19]}...\n")
 
     fp_20, fp_50 = one_parameter_change_forks_identity()
-    print(f"one parameter change forks identity: {fp_20 != fp_50}")
+    sys.stdout.write(f"one parameter change forks identity: {fp_20 != fp_50}\n")
 
     refusal = binary_float_parameter_is_refused()
-    print(f"binary float parameter refused: {refusal.category.value}")
+    sys.stdout.write(f"binary float parameter refused: {refusal.category.value}\n")
 
 
 if __name__ == "__main__":

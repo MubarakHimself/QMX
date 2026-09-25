@@ -15,6 +15,7 @@ Shows the things R-RPT-8 / R-RPT-3 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.results import (
@@ -77,7 +78,7 @@ def quiet_run_keeps_every_key_at_zero() -> None:
     assert {row.door_identity for row in vetoes} == set(VETO_DOOR_IDENTITIES)
     assert all(row.fp1_identity()["unit_kind"] == UnitKind.COUNT.value for row in suppressions)
     assert all(row.fp1_identity()["unit_kind"] == UnitKind.COUNT.value for row in vetoes)
-    print("quiet run keeps explicit zero counts; keys are never omitted")
+    sys.stdout.write("quiet run keeps explicit zero counts; keys are never omitted\n")
 
 
 def journals_attribute_control_versus_strategy() -> None:
@@ -113,7 +114,7 @@ def journals_attribute_control_versus_strategy() -> None:
     assert TALLY_UNIT_KIND is UnitKind.COUNT
     assert TALLY_FIELD_GROUP == "control-accounting"
     assert TALLY_FIELD_GROUP not in MEASURE_IDENTITIES
-    print("tallies fold CT-13 journals; count unit-kind; distinct from measure_set")
+    sys.stdout.write("tallies fold CT-13 journals; count unit-kind; distinct from measure_set\n")
 
 
 def unresolvable_key_is_typed_refusal() -> None:
@@ -129,7 +130,7 @@ def unresolvable_key_is_typed_refusal() -> None:
         ({"authority": "operator", "reason": "other", "count": 1},)
     )
     assert is_refusal(parallel)
-    print("unresolvable authority is typed refusal; parallel log is refused")
+    sys.stdout.write("unresolvable authority is typed refusal; parallel log is refused\n")
 
 
 def main() -> None:
@@ -138,7 +139,7 @@ def main() -> None:
     quiet_run_keeps_every_key_at_zero()
     journals_attribute_control_versus_strategy()
     unresolvable_key_is_typed_refusal()
-    print("suppression and veto accounting ok")
+    sys.stdout.write("suppression and veto accounting ok\n")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ Shows the things QL-6 / Story 11.2 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.chrono import Instant, WriterId
@@ -178,15 +179,15 @@ def unresolvable_family_is_unavailable_dependency() -> TypedRefusal:
 
 def main() -> None:
     stable_id = opaque_id_resolves_to_dated_ct06_record()
-    print(f"dated CT-06 family record, derived id: {stable_id[:19]}...")
-    print(f"two sandboxes deduplicate: {two_sandboxes_deduplicate()}")
+    sys.stdout.write(f"dated CT-06 family record, derived id: {stable_id[:19]}...\n")
+    sys.stdout.write(f"two sandboxes deduplicate: {two_sandboxes_deduplicate()}\n")
     family_has_no_authority()
-    print("constraint powers: none (keying token, Book constrains)")
+    sys.stdout.write("constraint powers: none (keying token, Book constrains)\n")
     keyed = family_keys_ratified_law_surfaces()
-    print(f"keyed surfaces: {', '.join(sorted(keyed))}")
+    sys.stdout.write(f"keyed surfaces: {', '.join(sorted(keyed))}\n")
     missing = unresolvable_family_is_unavailable_dependency()
-    print(f"unresolvable family at Layer 1: {missing.category.value}")
-    print("family mint ok")
+    sys.stdout.write(f"unresolvable family at Layer 1: {missing.category.value}\n")
+    sys.stdout.write("family mint ok\n")
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ Shows the things B-4 / B-10 / B-12 / B-14 / spec R11-R12 / Story 20.4 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb._refuse import unavailable
@@ -137,7 +138,7 @@ def objective_ordering_is_a_read_time_fold() -> None:
     assert ranking.worst is not None and ranking.worst.objective_value == 10
     assert ranking.adds_computation is False  # a pure downstream fold
     assert all(combo.world == World.REPLAY.value for combo in ranking.ranked)  # never mixed
-    print("ranked best to worst by net_profit over one sweep_id, one world, one role")
+    sys.stdout.write("ranked best to worst by net_profit over one sweep_id, one world, one role\n")
 
 
 def a_constraint_filters_without_inventing_a_threshold() -> None:
@@ -167,7 +168,9 @@ def a_constraint_filters_without_inventing_a_threshold() -> None:
     assert ranking.ranked_count == 1  # only the combo satisfying max_drawdown <= 0.20
     assert ranking.constrained_out_count == 1
     assert ranking.constrained_out[0].failed_constraints
-    print("caller-supplied max_drawdown bound filtered the ordering; no threshold invented")
+    sys.stdout.write(
+        "caller-supplied max_drawdown bound filtered the ordering; no threshold invented\n"
+    )
 
 
 def ranking_publishes_and_never_acts() -> None:
@@ -187,7 +190,7 @@ def ranking_publishes_and_never_acts() -> None:
     assert is_refusal(
         qmb.rank_sweep(lines, sweep_id=sweep_id, objective="composite_score", world=World.REPLAY)
     )
-    print("ranking makes no edge claim, no pass/fail verdict, and refuses every act")
+    sys.stdout.write("ranking makes no edge claim, no pass/fail verdict, and refuses every act\n")
 
 
 def refused_and_undefined_combos_are_reported_never_zeroed() -> None:
@@ -207,7 +210,9 @@ def refused_and_undefined_combos_are_reported_never_zeroed() -> None:
     ranked_runs = {combo.run_id.value for combo in ranking.ranked}
     for item in ranking.incomplete:
         assert item.run_id.value not in ranked_runs  # never coerced into the ordering
-    print("refused and undefined combos land in the incomplete list, never a zero score")
+    sys.stdout.write(
+        "refused and undefined combos land in the incomplete list, never a zero score\n"
+    )
 
 
 def re_ranking_is_deterministic() -> None:
@@ -228,7 +233,7 @@ def re_ranking_is_deterministic() -> None:
         "second",
     )
     assert first.fp1_identity() == second.fp1_identity()
-    print("same sweep, same objective: identical ranking regardless of input order")
+    sys.stdout.write("same sweep, same objective: identical ranking regardless of input order\n")
 
 
 def main() -> None:
@@ -240,7 +245,7 @@ def main() -> None:
     ranking_publishes_and_never_acts()
     refused_and_undefined_combos_are_reported_never_zeroed()
     re_ranking_is_deterministic()
-    print("sweep rank ok")
+    sys.stdout.write("sweep rank ok\n")
 
 
 if __name__ == "__main__":

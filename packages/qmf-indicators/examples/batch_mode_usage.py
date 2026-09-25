@@ -23,6 +23,7 @@ the canonical TA-Lib reference:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -132,28 +133,30 @@ def main() -> None:
     output = result.outputs["sma"]
 
     # 1. Full-length, index-aligned, presence-mapped.
-    print(f"batch output length: {output.length} (input length: {series.length})")
-    print("presence map: " + " ".join(state.value for state in output.presence))
+    sys.stdout.write(f"batch output length: {output.length} (input length: {series.length})\n")
+    sys.stdout.write(
+        str("presence map: " + " ".join(state.value for state in output.presence)) + "\n"
+    )
 
     # 2. Schedule vs missing vs warm-up.
-    print(f"position 5 (calendar-open, no data): {output.presence[5].value}")
-    print(f"position 6 (market-hours closed): {output.presence[6].value}")
-    print(f"position 0 (during warm-up): {output.presence[0].value}")
+    sys.stdout.write(f"position 5 (calendar-open, no data): {output.presence[5].value}\n")
+    sys.stdout.write(f"position 6 (market-hours closed): {output.presence[6].value}\n")
+    sys.stdout.write(f"position 0 (during warm-up): {output.presence[0].value}\n")
 
     # 3. As-of-only alignment; forward-fill across the instant is refused.
     at_instant = _unwrap(Instant.try_create(1_004))
     as_of = _unwrap(align_to_instant(output, at_instant, AlignmentMode.AS_OF))
-    print(f"as-of@1004: {as_of.presence.value} at index {as_of.index}")
+    sys.stdout.write(f"as-of@1004: {as_of.presence.value} at index {as_of.index}\n")
     forward_fill = align_to_instant(output, at_instant, AlignmentMode.FORWARD_FILL)
     assert is_refusal(forward_fill), forward_fill
-    print(f"forward-fill across the instant: {forward_fill.category.value}")
+    sys.stdout.write(f"forward-fill across the instant: {forward_fill.category.value}\n")
 
     # 4. Every sample carries a knowable-at; a confirmed result is governable.
-    print(f"output sample knowable-at count: {len(output.knowable_at)}")
+    sys.stdout.write(f"output sample knowable-at count: {len(output.knowable_at)}\n")
     governed = require_governed(result)
     evidence = result.label.evidence_class.value
     verdict = f"admitted ({evidence})" if is_ok(governed) else "refused"
-    print(f"governed evidence: {verdict}")
+    sys.stdout.write(f"governed evidence: {verdict}\n")
 
 
 if __name__ == "__main__":

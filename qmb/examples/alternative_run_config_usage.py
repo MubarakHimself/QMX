@@ -19,6 +19,7 @@ Shows the things SCN-0020 / Story 58.2 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -123,24 +124,24 @@ def main() -> None:
         ),
         "live ATC validate",
     )
-    print("alternative run-config ok")
-    print(f"config_class={validated.config_class}")
-    print("Book keys absent, not null")
-    print(f"policy_pair_hash={validated.policy_pair.policy_pair_hash.value}")
-    print(f"composition_fp={validated.composition_fp.value}")
-    print(f"host verdict={validated.admission.verdict}")
-    print(f"JSONL composition_class alternative ({len(line)} bytes)")
-    print(f"QMB simulate token {receipt.simulate_token.value}")
-    print(f"CT-07 to policy_pair_hash {receipt.journal.lineage.to_ref.value}")
-    print(f"adopted {adopted.consumer} config_class={adopted.config_class}")
+    sys.stdout.write("alternative run-config ok\n")
+    sys.stdout.write(f"config_class={validated.config_class}\n")
+    sys.stdout.write("Book keys absent, not null\n")
+    sys.stdout.write(f"policy_pair_hash={validated.policy_pair.policy_pair_hash.value}\n")
+    sys.stdout.write(f"composition_fp={validated.composition_fp.value}\n")
+    sys.stdout.write(f"host verdict={validated.admission.verdict}\n")
+    sys.stdout.write(f"JSONL composition_class alternative ({len(line)} bytes)\n")
+    sys.stdout.write(f"QMB simulate token {receipt.simulate_token.value}\n")
+    sys.stdout.write(f"CT-07 to policy_pair_hash {receipt.journal.lineage.to_ref.value}\n")
+    sys.stdout.write(f"adopted {adopted.consumer} config_class={adopted.config_class}\n")
     if is_refusal(dummy):
-        print("dummy PolicyPair is invalid input")
+        sys.stdout.write("dummy PolicyPair is invalid input\n")
     if is_refusal(inspect):
-        print("claiming ATC at 270e992 fails")
-    print(f"live without paper+L17 is {live.admission.verdict}")
+        sys.stdout.write("claiming ATC at 270e992 fails\n")
+    sys.stdout.write(f"live without paper+L17 is {live.admission.verdict}\n")
     assert validated.admission.verdict == VERDICT_ADMITTED_SIMULATE
     assert live.admission.verdict == VERDICT_NOT_PROMOTED
-    print("GAP-0098 stays open")
+    sys.stdout.write("GAP-0098 stays open\n")
 
 
 if __name__ == "__main__":

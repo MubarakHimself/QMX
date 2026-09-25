@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import lzma
 import struct
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -110,16 +111,16 @@ def main() -> None:
     _require(adapter.batch_count == 1, "Dukascopy batch is one hour file")
     symbols = _unwrap(adapter.list_symbols(), "list_symbols")
     earliest = _unwrap(adapter.earliest_available("EURUSD"), "earliest")
-    print(
+    sys.stdout.write(
         f"provider port: source={adapter.source} symbols={symbols} "
-        f"earliest={earliest} batch_count={adapter.batch_count}"
+        f"earliest={earliest} batch_count={adapter.batch_count}\n"
     )
 
     exact = _unwrap(
         provider_price_to_exact(110250, instrument=_instrument(), scale=5),
         "exact int",
     )
-    print(f"AD-22 conversion boundary={CONVERSION_BOUNDARY} verbatim={exact.verbatim}")
+    sys.stdout.write(f"AD-22 conversion boundary={CONVERSION_BOUNDARY} verbatim={exact.verbatim}\n")
 
     progress = _ProgressLog()
     with tempfile.TemporaryDirectory() as tmp:
@@ -143,25 +144,29 @@ def main() -> None:
         _require(receipt.produced == 2, "two ticks admitted")
         _require(receipt.license_tag == PERSONAL_USE_LICENSE, "licence tag recorded")
         _require(progress.samples[-1].percent == 100, "progress reached 100")
-        print(
+        sys.stdout.write(
             f"download-once CT-10: produced={receipt.produced} "
             f"side={receipt.side} license={receipt.license_tag} "
-            f"progress_percent={progress.samples[-1].percent}"
+            f"progress_percent={progress.samples[-1].percent}\n"
         )
 
         again = _unwrap(download(resources), "idempotent re-run")
         _require(again.idempotent == 2, "overlapping re-run skipped duplicates")
-        print(f"idempotent re-run: produced={again.produced} idempotent={again.idempotent}")
+        sys.stdout.write(
+            f"idempotent re-run: produced={again.produced} idempotent={again.idempotent}\n"
+        )
 
         overwritten = _unwrap(download({**resources, "overwrite": True}), "overwrite")
         _require(overwritten.produced == 2, "overwrite appends a new revision")
-        print(f"overwrite revision={overwritten.revision} produced={overwritten.produced}")
+        sys.stdout.write(
+            f"overwrite revision={overwritten.revision} produced={overwritten.produced}\n"
+        )
 
     refused = refuse_run_provider_fetch(request="backtest.run")
     assert is_refusal(refused)
     _require(refused.category is RefusalCategory.POLICY_REJECTION, "policy rejection")
-    print("run provider fetch is policy rejection — rooms only")
-    print("qmb data download ok")
+    sys.stdout.write("run provider fetch is policy rejection — rooms only\n")
+    sys.stdout.write("qmb data download ok\n")
 
 
 if __name__ == "__main__":

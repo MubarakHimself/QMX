@@ -16,6 +16,7 @@ Shows the four things Story 5.2 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -194,9 +195,9 @@ def main() -> None:
             source_again.records[0].canonical == export.records[0].canonical,
             "restore never rewrote the only local copy",
         )
-        print(
+        sys.stdout.write(
             "restore into replacement: timestamps verbatim; "
-            "source untouched; off-machine version retained"
+            "source untouched; off-machine version retained\n"
         )
 
         sealed = restored_live.append_store.read_raw(
@@ -209,7 +210,7 @@ def main() -> None:
             is_refusal(sealed) and sealed.category.value == "policy rejection",
             "sealed restored read is policy rejection",
         )
-        print("restored seal enforcement: policy rejection on sealed holdout")
+        sys.stdout.write("restored seal enforcement: policy rejection on sealed holdout\n")
 
         cross = restore.restore_export(
             export, into=EvidenceStore(root / "cross"), for_world=World.REPLAY, source_store=source
@@ -230,9 +231,9 @@ def main() -> None:
             is_refusal(discard) and discard.category.value == "policy rejection",
             "discard of only local raw is policy rejection",
         )
-        print(
+        sys.stdout.write(
             "cross-world / in-place / discard-only-copy: policy rejection "
-            "(raw originals kept forever)"
+            "(raw originals kept forever)\n"
         )
 
 

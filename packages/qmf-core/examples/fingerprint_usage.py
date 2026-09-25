@@ -26,6 +26,7 @@ Shows the six things CT-05 pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 import qmf.core
@@ -176,26 +177,26 @@ def two_version_ladders() -> None:
 
 def main() -> None:
     fp = equal_value_equal_fingerprint()
-    print(f"equal value, equal fingerprint: {fp.value[:19]}...")
+    sys.stdout.write(f"equal value, equal fingerprint: {fp.value[:19]}...\n")
 
     order_bytes = serializer_is_order_independent()
-    print(f"serializer is key-order independent: {order_bytes.decode('utf-8')}")
+    sys.stdout.write(f"serializer is key-order independent: {order_bytes.decode('utf-8')}\n")
 
     float_refusal, null_refusal = floats_and_nulls_are_refused()
-    print(f"float refused in identity: {float_refusal.category.value}")
-    print(f"null refused in identity: {null_refusal.category.value}")
+    sys.stdout.write(f"float refused in identity: {float_refusal.category.value}\n")
+    sys.stdout.write(f"null refused in identity: {null_refusal.category.value}\n")
 
     label, twin = label_identity_excludes_occurrence()
-    print(f"label identity dedups across occurrences: {label == twin}")
+    sys.stdout.write(f"label identity dedups across occurrences: {label == twin}\n")
 
     simulated = simulated_is_refused_and_worlds_separate()
-    print(f"simulated into evidence refused: {simulated.category.value}")
+    sys.stdout.write(f"simulated into evidence refused: {simulated.category.value}\n")
 
     collision = idempotent_accept_but_collision_refused()
-    print(f"true collision refused and alarmed: {collision.category.value}")
+    sys.stdout.write(f"true collision refused and alarmed: {collision.category.value}\n")
 
     two_version_ladders()
-    print(f"package SemVer {qmf.core.__version__} stays out of identity")
+    sys.stdout.write(f"package SemVer {qmf.core.__version__} stays out of identity\n")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@ Shows the five things Story 5.1 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -178,9 +179,9 @@ def main() -> None:
             "CT-26 registry export",
         )
         _require(registry.record_count == 2, "registry export covers records + edges")
-        print(
+        sys.stdout.write(
             "CT-26 input: raw records=1 (timestamps verbatim), "
-            f"registry records={registry.record_count}"
+            f"registry records={registry.record_count}\n"
         )
 
         bucket = _MemoryBucket()
@@ -214,9 +215,9 @@ def main() -> None:
             reread.records[0].canonical == raw.records[0].canonical,
             "backup never mutates the only local copy",
         )
-        print(
+        sys.stdout.write(
             f"CT-14 copy: versions={receipt.copy_version},{second.copy_version}; "
-            "encrypted; local evidence untouched"
+            "encrypted; local evidence untouched\n"
         )
 
         cross = backup.copy_export(raw, for_world=World.REPLAY)
@@ -225,7 +226,7 @@ def main() -> None:
             is_refusal(cross) and cross.category.value == "policy rejection",
             "cross-world is policy rejection",
         )
-        print("cross-world / simulated path: policy rejection")
+        sys.stdout.write("cross-world / simulated path: policy rejection\n")
 
         down = OffMachineBackup(_DownBucket(), _XorCipher())
         failed = down.copy_export(raw, for_world=World.LIVE)
@@ -234,9 +235,9 @@ def main() -> None:
             is_refusal(failed) and failed.category.value == "storage failure",
             "unreachable storage is storage failure, not completion",
         )
-        print(
+        sys.stdout.write(
             "object-storage failure: storage failure typed refusal "
-            "(no completion claimed; nothing raised)"
+            "(no completion claimed; nothing raised)\n"
         )
 
 

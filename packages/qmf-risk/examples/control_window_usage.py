@@ -11,6 +11,7 @@ paper alike, widen-never-shrink fold, fail-closed, and veto-path journaling.
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -77,7 +78,7 @@ def main() -> None:
     # Scope is declared through currency-exposure records — never parsed.
     parse = reject_symbol_currency_parse("EURUSD")
     _require(is_refusal(parse), "symbol parse must be refused")
-    print("instrument scope: symbol currency parse refused (policy rejection)")
+    sys.stdout.write("instrument scope: symbol currency parse refused (policy rejection)\n")
 
     eurusd_exp = _unwrap(
         CurrencyExposureRecord.try_create(eurusd, ["EUR", "USD"], _instant(100), "exp-eu"),
@@ -97,7 +98,7 @@ def main() -> None:
         "scope resolve failed",
     )
     _require(eurusd in scope.instruments and usdjpy in scope.instruments, "USD scope")
-    print(f"resolved scope instruments: {sorted(i.symbol for i in scope.instruments)}")
+    sys.stdout.write(f"resolved scope instruments: {sorted(i.symbol for i in scope.instruments)}\n")
 
     bounds = _unwrap(
         WindowBounds.try_create(_instant(1_000), _instant(2_000)),
@@ -121,10 +122,10 @@ def main() -> None:
         "news window mint failed",
     )
     _require(window.feed_quadruple is not None, "feed quadruple present")
-    print(
+    sys.stdout.write(
         "news window: two instants "
         f"[{window.window_bounds.start.value_ns}, {window.window_bounds.end.value_ns}) "
-        f"kind={window.window_kind.value} format={window.fp1_identity()['format_version']}"
+        f"kind={window.window_kind.value} format={window.fp1_identity()['format_version']}\n"
     )
 
     # Entries-only: exit may not be blocked by a window.
@@ -135,7 +136,7 @@ def main() -> None:
         exit_gate.category is RefusalCategory.POLICY_REJECTION,
         "entries-only is a policy rejection",
     )
-    print("entries-only: exit block refused (policy rejection)")
+    sys.stdout.write("entries-only: exit block refused (policy rejection)\n")
 
     # Live and paper entries alike are blocked on in-scope instruments.
     decision = _instant(1_500)
@@ -150,7 +151,7 @@ def main() -> None:
             f"evaluation under {mode.value} failed",
         )
         _require(evaluation.blocked is True, f"{mode.value} entry must block")
-        print(f"blocked entry under book_mode={mode.value}")
+        sys.stdout.write(f"blocked entry under book_mode={mode.value}\n")
 
     action_fp = _unwrap(
         fingerprint({"class": "would-have-been-entry", "symbol": "EURUSD"}),
@@ -174,9 +175,9 @@ def main() -> None:
         ),
         "veto mint failed",
     )
-    print(
+    sys.stdout.write(
         f"veto path: door={veto.refusing_door} path={veto.fp1_identity()['path']} "
-        f"mode={veto.book_mode.value}"
+        f"mode={veto.book_mode.value}\n"
     )
 
     # Widen-never-shrink: r2 widens, r3 narrows — fold keeps the union.
@@ -228,17 +229,17 @@ def main() -> None:
     )
     _require(effective.bounds.start.value_ns == 800, "widen start")
     _require(effective.bounds.end.value_ns == 2_500, "widen end")
-    print(
+    sys.stdout.write(
         "widen-never-shrink fold: "
         f"[{effective.bounds.start.value_ns}, {effective.bounds.end.value_ns}) "
-        f"from {effective.revision_count} revisions"
+        f"from {effective.revision_count} revisions\n"
     )
 
     # Fail closed — no live skip.
     closed = fail_closed_on_uncertainty(cause=FailClosedCause.UNKNOWN_COVERAGE)
     _require(is_refusal(closed), "unknown coverage must fail closed")
     _require(is_refusal(reject_live_skip()), "no live skip button")
-    print("fail closed: unknown_coverage blocks; no live skip button")
+    sys.stdout.write("fail closed: unknown_coverage blocks; no live skip button\n")
 
     # session_handover_buffer declares anchor side; V1 window_forced_flat is none.
     handover = _unwrap(
@@ -258,9 +259,9 @@ def main() -> None:
         raise RuntimeError("anchor side mandatory")
     policy = WindowForcedFlatPolicy.v1_default()
     _require(policy.declares_forced_flat is False, "V1 declares none")
-    print(
+    sys.stdout.write(
         f"handover kind={handover.window_kind.value} anchor={anchor.value}; "
-        f"window_forced_flat V1 declares_none rank={policy.arbitration_rank}"
+        f"window_forced_flat V1 declares_none rank={policy.arbitration_rank}\n"
     )
 
 

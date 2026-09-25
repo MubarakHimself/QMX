@@ -22,6 +22,8 @@ Shows the four things Story 7.2 pins down:
 
 from __future__ import annotations
 
+import sys
+
 from qmf.core import is_ok
 from qmf.indicators import (
     FormulaOwnership,
@@ -37,31 +39,35 @@ def main() -> None:
     status = reference_status()
     if is_ok(status):
         reference = status.value
-        print(f"reference asserted at import: verified {reference.python_wrapper}")
-        print(f"reference config record: {dict(reference.reference_configuration)}")
+        sys.stdout.write(f"reference asserted at import: verified {reference.python_wrapper}\n")
+        sys.stdout.write(f"reference config record: {dict(reference.reference_configuration)}\n")
     else:
-        print(f"reference asserted at import: unavailable dependency ({status.context['field']})")
+        sys.stdout.write(
+            f"reference asserted at import: unavailable dependency ({status.context['field']})\n"
+        )
 
     # 2. A reference-owned formula names its mandatory wrap target.
     sma = canonical_owner("sma")
     assert is_ok(sma)
-    print(f"sma ownership: {sma.value.ownership.value} (wraps {sma.value.reference_function})")
+    sys.stdout.write(
+        f"sma ownership: {sma.value.ownership.value} (wraps {sma.value.reference_function})\n"
+    )
 
     # 3. A package-owned formula the reference does not implement.
     vwap = canonical_owner("vwap")
     assert is_ok(vwap)
-    print(f"vwap ownership: {vwap.value.ownership.value} (package-canonical)")
+    sys.stdout.write(f"vwap ownership: {vwap.value.ownership.value} (package-canonical)\n")
 
     # Mandatory wrapping: a reference-owned formula resolves only against the verified
     # reference; a package-owned formula resolves regardless.
     resolved_vwap = resolve_canonical_arithmetic("vwap")
     assert is_ok(resolved_vwap)
     assert resolved_vwap.value.ownership is FormulaOwnership.PACKAGE
-    print("vwap resolves without the reference: True")
+    sys.stdout.write("vwap resolves without the reference: True\n")
 
     # 4. The shipped registry is conformant — one canonical owner per formula.
     defects = ownership_conformance_defects()
-    print(f"ownership registry conformant: {defects == ()}")
+    sys.stdout.write(f"ownership registry conformant: {defects == ()}\n")
 
 
 if __name__ == "__main__":

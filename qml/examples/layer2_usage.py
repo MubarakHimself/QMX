@@ -20,6 +20,7 @@ Shows the things QL-8 / Story 12.4 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.chrono import CalendarIdentity
@@ -250,16 +251,16 @@ def clock_scan_fails() -> str:
 
 
 def main() -> None:
-    print(f"layer 2 format version: {CONFORMANCE_FORMAT_VERSION}")
-    print(f"denial set: {','.join(sorted(DENIAL_SET))}")
-    print(f"golden slice is identity-bearing: {golden_slice_identity_bearing()}")
-    print(f"logic loads in isolation: {clean_suite_passes()}")
-    print(f"two hosts identical verdict: {two_hosts_identical_verdict()}")
-    print(f"no Book present: {no_book_present()}")
-    print(f"differing intents is layer-2 failure: {differing_intents_fail()}")
-    print(f"non-permitted kind is layer-2 failure: {non_permitted_kind_fails()}")
-    print(f"clock import is layer-2 failure: {clock_scan_fails()}")
-    print("layer2 conformance ok")
+    sys.stdout.write(f"layer 2 format version: {CONFORMANCE_FORMAT_VERSION}\n")
+    sys.stdout.write(f"denial set: {','.join(sorted(DENIAL_SET))}\n")
+    sys.stdout.write(f"golden slice is identity-bearing: {golden_slice_identity_bearing()}\n")
+    sys.stdout.write(f"logic loads in isolation: {clean_suite_passes()}\n")
+    sys.stdout.write(f"two hosts identical verdict: {two_hosts_identical_verdict()}\n")
+    sys.stdout.write(f"no Book present: {no_book_present()}\n")
+    sys.stdout.write(f"differing intents is layer-2 failure: {differing_intents_fail()}\n")
+    sys.stdout.write(f"non-permitted kind is layer-2 failure: {non_permitted_kind_fails()}\n")
+    sys.stdout.write(f"clock import is layer-2 failure: {clock_scan_fails()}\n")
+    sys.stdout.write("layer2 conformance ok\n")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ Shows the five things Story 4.3 pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf import calendar_forex
@@ -107,13 +108,13 @@ def tzdata_pin_change_describes_lineage_edge() -> str:
 
 def main() -> None:
     name = explicit_composition_root_registration()
-    print(f"explicit composition-root registration: {name}")
+    sys.stdout.write(f"explicit composition-root registration: {name}\n")
     fp = distribution_rides_into_downstream_fingerprint()
-    print(f"downstream fingerprint: {fp[:19]}...")
-    print(f"binding separate from identity: {binding_does_not_change_identity()}")
+    sys.stdout.write(f"downstream fingerprint: {fp[:19]}...\n")
+    sys.stdout.write(f"binding separate from identity: {binding_does_not_change_identity()}\n")
     edge = tzdata_pin_change_describes_lineage_edge()
-    print(f"tzdata pin lineage edge: {edge}")
-    print("shared nouns consumed from qmf-core only: True")
+    sys.stdout.write(f"tzdata pin lineage edge: {edge}\n")
+    sys.stdout.write("shared nouns consumed from qmf-core only: True\n")
 
 
 if __name__ == "__main__":

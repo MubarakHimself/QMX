@@ -23,6 +23,7 @@ Shows the things B-8 / OPT-22 / Story 21.6 pin down:
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Sequence
 from typing import TypeVar, cast
 
@@ -95,29 +96,29 @@ def main() -> None:
 
     distribution = report.distribution
     assert distribution is not None
-    print(
+    sys.stdout.write(
         "objective distribution summary over all completed role=trial lines: "
         f"count={distribution.count} mean={distribution.mean} min={distribution.minimum} "
-        f"max={distribution.maximum} median={distribution.median}"
+        f"max={distribution.maximum} median={distribution.median}\n"
     )
 
     slice_names = [item.parameter for item in report.parameter_slices]
-    print(
+    sys.stdout.write(
         "per-parameter objective slices as chart series (data, never an image): "
         f"{slice_names} canonical_payload={report.canonical_payload} "
-        f"emits_image_payload={report.emits_image_payload}"
+        f"emits_image_payload={report.emits_image_payload}\n"
     )
 
-    print(
+    sys.stdout.write(
         "good regions cluster the favourable-side trials, each described as data: "
-        f"cluster_count={report.cluster_count}"
+        f"cluster_count={report.cluster_count}\n"
     )
 
     stability = report.winner_stability
-    print(
+    sys.stdout.write(
         "the objective-best winner is flagged isolated-spike when its good-region "
         f"cluster is a singleton: stability={stability.stability} "
-        f"cluster_size={stability.cluster_size} good_neighbours={stability.good_neighbour_count}"
+        f"cluster_size={stability.cluster_size} good_neighbours={stability.good_neighbour_count}\n"
     )
 
     # The same trials with the best objective moved inside the dense cluster: a
@@ -144,31 +145,33 @@ def main() -> None:
         ),
         "stable report",
     )
-    print(
+    sys.stdout.write(
         "a winner inside a stable cluster is flagged distinctly: "
         f"stability={stable.winner_stability.stability} "
-        f"cluster_size={stable.winner_stability.cluster_size}"
+        f"cluster_size={stable.winner_stability.cluster_size}\n"
     )
 
-    print(
+    sys.stdout.write(
         "the report describes structure and neighbourhood stability only: "
         f"makes_search_quality_verdict={report.makes_search_quality_verdict} "
         f"invents_threshold={report.invents_threshold} "
-        f"deferred_to={report.verdict_deferred_to}"
+        f"deferred_to={report.verdict_deferred_to}\n"
     )
     verdict = api.refuse_search_quality_verdict("SR*")
     assert is_refusal(verdict) and verdict.category is RefusalCategory.POLICY_REJECTION
-    print("an SR*/search-quality pass/fail verdict is refused: the threshold sitting is deferred")
+    sys.stdout.write(
+        "an SR*/search-quality pass/fail verdict is refused: the threshold sitting is deferred\n"
+    )
 
     std_slot = distribution.fp1_identity()["std"]
     assert isinstance(std_slot, dict)
-    print(
+    sys.stdout.write(
         "P&L inputs stay exact-integer; the std statistic re-enters through the named "
         f"rounding boundary as a scaled rational: std={std_slot['num']}/{std_slot['den']} "
-        f"rounding={std_slot['rounding']} scale={std_slot['scale']}"
+        f"rounding={std_slot['rounding']} scale={std_slot['scale']}\n"
     )
     assert not _has_float(report.fp1_identity())
-    print("no raw binary float ever appears in the report identity")
+    sys.stdout.write("no raw binary float ever appears in the report identity\n")
 
     first = _unwrap(report.fingerprint(), "fingerprint")
     second = _unwrap(
@@ -185,9 +188,11 @@ def main() -> None:
         "fingerprint",
     )
     assert first.value == second.value
-    print("recomputing the report over the same trials reproduces its fingerprint (NFR-03)")
+    sys.stdout.write(
+        "recomputing the report over the same trials reproduces its fingerprint (NFR-03)\n"
+    )
 
-    print("parameter-sensitivity report ok")
+    sys.stdout.write("parameter-sensitivity report ok\n")
 
 
 def _has_float(value: object) -> bool:

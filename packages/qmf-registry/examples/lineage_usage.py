@@ -25,6 +25,7 @@ Shows the six things CT-07 pins down:
 from __future__ import annotations
 
 import json
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -155,25 +156,25 @@ def one_writer_per_stream() -> TypedRefusal:
 
 def main() -> None:
     line = typed_edge_and_its_jsonl_line()
-    print(f"typed edge JSONL line, LF-terminated: {line.endswith(chr(10).encode())}")
+    sys.stdout.write(f"typed edge JSONL line, LF-terminated: {line.endswith(chr(10).encode())}\n")
 
     head, fork_category = supersedes_is_linear()
-    print(f"supersedes head resolves to one current: {head[:19]}...")
-    print(f"second supersedes for a subject refused: {fork_category}")
+    sys.stdout.write(f"supersedes head resolves to one current: {head[:19]}...\n")
+    sys.stdout.write(f"second supersedes for a subject refused: {fork_category}\n")
 
     branches = branches_from_allows_several_heads()
-    print(f"branches-from allows several heads: {branches}")
+    sys.stdout.write(f"branches-from allows several heads: {branches}\n")
 
     outcome, collision = idempotent_accept_but_collision_refused()
-    print(f"first append outcome: {outcome}")
-    print(f"true collision refused and alarmed: {collision.category.value}")
+    sys.stdout.write(f"first append outcome: {outcome}\n")
+    sys.stdout.write(f"true collision refused and alarmed: {collision.category.value}\n")
 
     bad_type, non_fp1 = bad_type_and_non_fp1_endpoint_are_refused()
-    print(f"edge type outside the set refused: {bad_type.category.value}")
-    print(f"non-fp1 endpoint refused: {non_fp1.category.value}")
+    sys.stdout.write(f"edge type outside the set refused: {bad_type.category.value}\n")
+    sys.stdout.write(f"non-fp1 endpoint refused: {non_fp1.category.value}\n")
 
     foreign = one_writer_per_stream()
-    print(f"foreign writer refused (one writer per stream): {foreign.category.value}")
+    sys.stdout.write(f"foreign writer refused (one writer per stream): {foreign.category.value}\n")
 
 
 if __name__ == "__main__":

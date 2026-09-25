@@ -60,6 +60,7 @@ and qmf.structure.
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -487,56 +488,60 @@ def light_claim_is_policed_and_memory_regresses_like_a_slowdown() -> tuple[bool,
 def main() -> None:
     obj = minted_object_has_derived_fingerprint()
     fp = _unwrap(obj.content_fingerprint(), "fp1")
-    print(f"minted at observation, derived fp1: {fp.value[:19]}...")
+    sys.stdout.write(f"minted at observation, derived fp1: {fp.value[:19]}...\n")
 
     a, b = two_sandboxes_deduplicate()
-    print(f"two sandboxes deduplicate: {a == b}")
+    sys.stdout.write(f"two sandboxes deduplicate: {a == b}\n")
 
     object_is_immutable_and_unstamped()
-    print("object immutable and unstamped (no writer/sequence/created-at)")
+    sys.stdout.write("object immutable and unstamped (no writer/sequence/created-at)\n")
 
     ordering, lookahead = emission_invariant_refuses_lookahead()
-    print(f"anchor end after observed-at refused: {ordering.category.value}")
-    print(f"observed-at behind consumed input refused: {lookahead.category.value}")
+    sys.stdout.write(f"anchor end after observed-at refused: {ordering.category.value}\n")
+    sys.stdout.write(f"observed-at behind consumed input refused: {lookahead.category.value}\n")
 
     before, after = lifecycle_state_is_a_read_time_fold()
-    print(f"still valid is a read-time fold (before={before}, after={after})")
+    sys.stdout.write(f"still valid is a read-time fold (before={before}, after={after})\n")
 
     record_fp = confirmation_record_references_object_by_fingerprint()
-    print(f"confirmation record references object by fp1: {record_fp[:19]}...")
+    sys.stdout.write(f"confirmation record references object by fp1: {record_fp[:19]}...\n")
 
     prior_fp, new_fp = refit_mints_a_new_artifact_not_an_overwrite()
-    print(f"refit mints a new artifact, prior untouched: {prior_fp != new_fp}")
+    sys.stdout.write(f"refit mints a new artifact, prior untouched: {prior_fp != new_fp}\n")
 
     refused = confirmed_read_refuses_unconfirmed()
-    print(f"confirmed read refuses an unconfirmed row: {refused}")
+    sys.stdout.write(f"confirmed read refuses an unconfirmed row: {refused}\n")
 
     consumed, causal_refused = consumption_vs_causality()
-    print(f"equality is consumption ({consumed}), causality refuses equal ({causal_refused})")
-
-    print(
-        f"revised input yields a different result label: {revised_input_gives_a_different_label()}"
+    sys.stdout.write(
+        f"equality is consumption ({consumed}), causality refuses equal ({causal_refused})\n"
     )
 
-    print(f"citation makes object governed evidence: {citation_makes_object_governed_evidence()}")
+    sys.stdout.write(
+        f"revised input yields a different result label: {revised_input_gives_a_different_label()}\n"  # noqa: E501
+    )
+
+    sys.stdout.write(
+        f"citation makes object governed evidence: {citation_makes_object_governed_evidence()}\n"
+    )
 
     split_refused = split_embargo_refuses_a_straddling_record()
-    print(f"split embargo refuses a straddling record: {split_refused}")
+    sys.stdout.write(f"split embargo refuses a straddling record: {split_refused}\n")
 
     confirmed_at, admitted = swing_family_detects_confirms_and_holds_no_privilege()
-    print(
-        f"swing-point family confirms a pivot at {confirmed_at} (admitted={admitted}, no privilege)"
+    sys.stdout.write(
+        f"swing-point family confirms a pivot at {confirmed_at} (admitted={admitted}, no privilege)\n"  # noqa: E501
     )
 
     ct16, ct17 = routing_test_separates_the_libraries()
-    print(f"routing test: value-per-instant is {ct16}, discrete-object is {ct17}")
+    sys.stdout.write(f"routing test: value-per-instant is {ct16}, discrete-object is {ct17}\n")
 
     no_baseline_refused, memory_regression_refused = (
         light_claim_is_policed_and_memory_regresses_like_a_slowdown()
     )
-    print(
+    sys.stdout.write(
         f"light claim without a baseline refused: {no_baseline_refused}; "
-        f"peak-memory regression fails like a slowdown: {memory_regression_refused}"
+        f"peak-memory regression fails like a slowdown: {memory_regression_refused}\n"
     )
 
 

@@ -16,6 +16,7 @@ Shows the things B-10 / B-13 / AR-59 pin down:
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -167,15 +168,17 @@ def main() -> None:
         root = Path(tmp)
         written = assemble_one_canonical_artifact(root)
         assert written.startswith("fp1:sha256:")
-        print("exactly one CT-32 container written; fp1 label-derived via qmf-core")
-        print("AD-12 label plus registry_as_of, data/split, fidelity, RNG stamps")
-        print("world=replay from data-derived provenance; optimistic taint; no edge claim")
+        sys.stdout.write("exactly one CT-32 container written; fp1 label-derived via qmf-core\n")
+        sys.stdout.write("AD-12 label plus registry_as_of, data/split, fidelity, RNG stamps\n")
+        sys.stdout.write(
+            "world=replay from data-derived provenance; optimistic taint; no edge claim\n"
+        )
         empty = root / "empty"
         empty.mkdir()
         multi_role_writes_nothing(empty)
-        print("multi-role span is policy rejection; writes nothing")
-        print("no second report JSON")
-        print("canonical CT-32 artifact ok")
+        sys.stdout.write("multi-role span is policy rejection; writes nothing\n")
+        sys.stdout.write("no second report JSON\n")
+        sys.stdout.write("canonical CT-32 artifact ok\n")
 
 
 if __name__ == "__main__":

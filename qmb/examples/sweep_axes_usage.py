@@ -24,6 +24,7 @@ Shows the things B-12 / Story 20.1 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.doors import api
@@ -68,7 +69,7 @@ def main() -> None:
     assert combos[-1].instrument == "GBPUSD"
     fingerprints = {_unwrap(combo.fingerprint(), "combo fp1").value for combo in combos}
     assert len(fingerprints) == 24
-    print(f"Cartesian product: {len(combos)} isolated run specs, declaration order")
+    sys.stdout.write(f"Cartesian product: {len(combos)} isolated run specs, declaration order\n")
 
     count = _unwrap(qmb.preflight_run_count(declaration), "pre-flight count")
     assert count == 24 == declaration.run_count
@@ -76,7 +77,7 @@ def main() -> None:
     assert qmb.PREFLIGHT_WRITES_LEDGER_LINE is False
     assert qmb.PREFLIGHT_ADMITS_BATCH is False
     assert qmb.PREFLIGHT_IS_PURE_INSPECTION is True
-    print(f"pre-flight run count {count} is a pure inspection, spawns no process")
+    sys.stdout.write(f"pre-flight run count {count} is a pure inspection, spawns no process\n")
 
     # A single run = a 1x1x1 sweep: the same object at unit scale.
     unit = _unwrap(
@@ -95,7 +96,7 @@ def main() -> None:
     layer = unit_runs[0].run_spec_layer()
     assert layer["bot"] == "mean-reversion"
     assert "stream_set" in layer
-    print("a single run is a 1x1x1 sweep - the same object at unit scale (spec R13)")
+    sys.stdout.write("a single run is a 1x1x1 sweep - the same object at unit scale (spec R13)\n")
 
     # An empty axis is a typed invalid-input refusal naming the empty axis.
     empty_bars = qmb.SweepDeclaration.try_create(
@@ -118,7 +119,9 @@ def main() -> None:
     )
     assert is_refusal(empty_param)
     assert empty_param.context["parameter"] == "lookback"
-    print("an empty axis is invalid input naming the axis, never a silent zero-combo batch")
+    sys.stdout.write(
+        "an empty axis is invalid input naming the axis, never a silent zero-combo batch\n"
+    )
 
     # A bare binary float is refused; money/rational cross a named AD-7/AD-22 conversion.
     bare_float = qmb.SweepDeclaration.try_create(
@@ -184,7 +187,9 @@ def main() -> None:
     }
     # No binary float survives into identity content — the fp1 is computed clean.
     assert _unwrap(first.fingerprint(), "converted fp1").value.startswith("fp1:sha256:")
-    print("money/rational cross a named conversion; a binary float never enters identity")
+    sys.stdout.write(
+        "money/rational cross a named conversion; a binary float never enters identity\n"
+    )
 
     # The door is a thin wrapper over the one pure library function.
     door_count = api.preflight_run_count(declaration)
@@ -195,10 +200,10 @@ def main() -> None:
         {"bot": "b", "book": "k", "bms": "m", "instruments": [], "timeframes": [_TF_1M]}
     )
     assert is_refusal(door_refusal)
-    print("the qmb door is a thin wrapper over one pure library expansion function")
+    sys.stdout.write("the qmb door is a thin wrapper over one pure library expansion function\n")
 
-    print(f"qmb {qmb.__version__}")
-    print("sweep axes ok")
+    sys.stdout.write(f"qmb {qmb.__version__}\n")
+    sys.stdout.write("sweep axes ok\n")
 
 
 if __name__ == "__main__":

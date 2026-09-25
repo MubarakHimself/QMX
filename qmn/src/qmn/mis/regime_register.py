@@ -16,6 +16,7 @@ recertification path. Registering a candidate never changes node
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -204,9 +205,7 @@ class _EdgeLogHost(Protocol):
 
 
 def _is_kind_registry(obj: object) -> TypeIs[_KindRegistryHost]:
-    return callable(getattr(obj, "register", None)) and callable(
-        getattr(obj, "contract_for", None)
-    )
+    return callable(getattr(obj, "register", None)) and callable(getattr(obj, "contract_for", None))
 
 
 def _is_registrar(obj: object) -> TypeIs[_RegistrarHost]:
@@ -1261,12 +1260,12 @@ def _write_registration_outputs(
 def main(argv: Sequence[str] | None = None) -> int:
     """Operator entry placeholder — registration is an in-library API over prepared artifacts."""
     _ = argv
-    print(
+    sys.stdout.write(
         "qmn.mis.regime_register is an in-library API: build_accepted_registration / "
         "register_model_lineage over prepared Story 30.4/30.5 artifacts; it never "
-        "trains, never binds a live consumer, and never mutates composition_fp",
-        flush=True,
+        "trains, never binds a live consumer, and never mutates composition_fp\n"
     )
+    sys.stdout.flush()
     return 0
 
 

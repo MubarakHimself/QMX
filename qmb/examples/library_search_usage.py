@@ -15,6 +15,7 @@ Shows the things Story 34.2 / FR-W19 / FR-W20 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.ledger.line import LedgerLine
@@ -70,7 +71,7 @@ def main() -> None:
     assert identity["reads_staging"] is False
     assert identity["holds_cache"] is False
     assert qmb.__version__ not in identity.values()
-    print("surfaces: " + ", ".join(QUERY_SURFACES))
+    sys.stdout.write(str("surfaces: " + ", ".join(QUERY_SURFACES)) + "\n")
 
     bot = _record("bot-definition", "scalping", "node-a")
     result = _record("performance-result", "run-a", "node-b")
@@ -124,16 +125,16 @@ def main() -> None:
     )
     surfaces = {hit.surface for hit in found.hits}
     assert surfaces == {SURFACE_REGISTRY_AS_OF, SURFACE_LEDGER_MERGE, SURFACE_EXPERIMENT_LEDGER}
-    print("three-surface search hit count: " + str(len(found.hits)))
+    sys.stdout.write(str("three-surface search hit count: " + str(len(found.hits))) + "\n")
 
     alias = _unwrap(search_library("bot-definition", fp1="scalping", port=port), "alias")
     assert alias.hits[0].cite() == bot.stable_id.value
-    print("as-of alias resolved by fp1")
+    sys.stdout.write("as-of alias resolved by fp1\n")
 
     frozen = port.admit_batch()
     banned = search_library("bot-definition", fp1="scalping@latest", port=frozen)
     assert is_refusal(banned) and banned.category is RefusalCategory.INVALID_INPUT
-    print("name@version refused; frozen as-of still holds")
+    sys.stdout.write("name@version refused; frozen as-of still holds\n")
 
     view = _unwrap(SavedViewCite.try_create(result.stable_id), "saved-view")
     cited = _unwrap(
@@ -142,17 +143,17 @@ def main() -> None:
     )
     assert cited.hits[0].cite() == result.stable_id.value
     assert cited.hits[0].is_registry_kind is False
-    print("saved-view cites source CT-32 fp1; not a registry kind")
+    sys.stdout.write("saved-view cites source CT-32 fp1; not a registry kind\n")
 
     staging = search_library("bot-definition", port=port, staging=({"proposal": 1},))
     assert is_refusal(staging) and staging.context["reads_staging"] is False
-    print("staging is not read")
+    sys.stdout.write("staging is not read\n")
 
     store = search_library("bot-definition", store="library.sqlite")
     assert is_refusal(store) and store.context["opens_fourth_store"] is False
-    print("fourth store refused")
-    print(f"qmb {qmb.__version__}")
-    print("library search ok")
+    sys.stdout.write("fourth store refused\n")
+    sys.stdout.write(f"qmb {qmb.__version__}\n")
+    sys.stdout.write("library search ok\n")
 
 
 if __name__ == "__main__":

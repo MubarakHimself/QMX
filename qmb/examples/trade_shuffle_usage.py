@@ -26,6 +26,7 @@ Shows what the first B-14 ladder rung pins down:
 
 from __future__ import annotations
 
+import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -88,10 +89,17 @@ def main() -> None:
     assert result.world == "replay"
     assert result.procedure == api.TRADE_SHUFFLE_PROCEDURE
     assert result.mints_synthetic_series is False
-    print(
-        "re-orders realised trades and re-accumulates equity in exact integer money; "
-        "world stays replay:",
-        result.world,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "re-orders realised trades and re-accumulates equity in exact integer money; "
+                    "world stays replay:"
+                ),
+                str(result.world),
+            ]
+        )
+        + "\n"
     )
 
     net = result.metric_named("net_profit")
@@ -100,9 +108,14 @@ def main() -> None:
     # Net profit is the invariant sum of the same P&Ls; drawdown depends on order.
     assert net.summary.minimum == net.summary.maximum
     assert drawdown.summary.minimum != drawdown.summary.maximum
-    print(
-        "net profit is order-invariant; max drawdown is sequence-dependent:",
-        f"dd range [{drawdown.summary.minimum}..{drawdown.summary.maximum}]",
+    sys.stdout.write(
+        " ".join(
+            [
+                "net profit is order-invariant; max drawdown is sequence-dependent:",
+                str(f"dd range [{drawdown.summary.minimum}..{drawdown.summary.maximum}]"),
+            ]
+        )
+        + "\n"
     )
 
     # 2. Deterministic per-scenario seeding + a full RNG/data-window provenance record.
@@ -113,11 +126,20 @@ def main() -> None:
     assert provenance.scenario_count == 500
     assert provenance.data_window_start_ns == 0
     assert provenance.data_window_end_ns == 9 * _DAY_NS
-    print(
-        "scenario seed is base_seed + scenario_index; result records RNG family, base seed, "
-        "rule, count, data window:",
-        f"{provenance.rng_family} window=[{provenance.data_window_start_ns}"
-        f"..{provenance.data_window_end_ns}]",
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "scenario seed is base_seed + scenario_index; result records RNG family, base seed, "  # noqa: E501
+                    "rule, count, data window:"
+                ),
+                str(
+                    f"{provenance.rng_family} window=[{provenance.data_window_start_ns}"
+                    f"..{provenance.data_window_end_ns}]"
+                ),
+            ]
+        )
+        + "\n"
     )
 
     # Reproducibility: identical inputs reproduce the result fingerprint bit-for-bit.
@@ -136,7 +158,7 @@ def main() -> None:
     first_fp = _unwrap(result.fingerprint(), "first fingerprint")
     second_fp = _unwrap(again.fingerprint(), "second fingerprint")
     assert first_fp.value == second_fp.value
-    print("re-running the same inputs reproduces the result fingerprint bit-for-bit")
+    sys.stdout.write("re-running the same inputs reproduces the result fingerprint bit-for-bit\n")
 
     # 3. Direction-aware summary as chart series data, never images; no verdict.
     assert api.metric_direction("max_drawdown") == api.DIRECTION_LOWER_IS_BETTER
@@ -145,15 +167,29 @@ def main() -> None:
     assert all("values" in item and "png" not in item for item in series)
     assert result.emits_verdict is False
     assert is_refusal(api.refuse_pass_fail_verdict("pass"))
-    print(
-        "distribution summary as chart series data, never images; direction-aware for drawdown "
-        "(lower is better):",
-        f"observed favorable_rank={drawdown.observed_favorable_rank} "
-        f"p_value={drawdown.summary.p_value}",
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "distribution summary as chart series data, never images; direction-aware for drawdown "  # noqa: E501
+                    "(lower is better):"
+                ),
+                str(
+                    f"observed favorable_rank={drawdown.observed_favorable_rank} "
+                    f"p_value={drawdown.summary.p_value}"
+                ),
+            ]
+        )
+        + "\n"
     )
-    print(
-        "no pass/fail verdict; thresholds and the MC-1000 battery stay deferred:",
-        api.SHUFFLE_VERDICT_DEFERRED_TO,
+    sys.stdout.write(
+        " ".join(
+            [
+                "no pass/fail verdict; thresholds and the MC-1000 battery stay deferred:",
+                str(api.SHUFFLE_VERDICT_DEFERRED_TO),
+            ]
+        )
+        + "\n"
     )
 
     # 4. Scenario count is a UI-editable configurable with no ratified value.
@@ -167,10 +203,17 @@ def main() -> None:
             metrics=["net_profit"],
         )
     )
-    print(
-        "scenario count is a UI-editable configurable with no ratified value; "
-        "MC-1000 is not baked:",
-        api.SCENARIO_COUNT_KEY,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "scenario count is a UI-editable configurable with no ratified value; "
+                    "MC-1000 is not baked:"
+                ),
+                str(api.SCENARIO_COUNT_KEY),
+            ]
+        )
+        + "\n"
     )
 
     # 5. Fan-out under the min(cpu, memory) governor with enqueue-on-full; replicate,
@@ -188,14 +231,21 @@ def main() -> None:
     decisions = [_unwrap(governor.submit(request), "admission").decision for request in requests]
     assert decisions == [api.DECISION_ADMITTED, api.DECISION_ADMITTED, api.DECISION_QUEUED]
     assert is_refusal(api.refuse_scenario_bar_verdict("bar-pass"))
-    print(
-        "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "
-        "role=replicate, cancellable, never a bar verdict:",
-        decisions,
+    sys.stdout.write(
+        " ".join(
+            [
+                (
+                    "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "  # noqa: E501
+                    "role=replicate, cancellable, never a bar verdict:"
+                ),
+                str(decisions),
+            ]
+        )
+        + "\n"
     )
 
-    print("no synthetic market series is minted; procedure-ephemeral")
-    print("trade shuffle ok")
+    sys.stdout.write("no synthetic market series is minted; procedure-ephemeral\n")
+    sys.stdout.write("trade shuffle ok\n")
 
 
 if __name__ == "__main__":

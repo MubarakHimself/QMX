@@ -15,6 +15,7 @@ Shows the things AR-57 / B-2 / FR-037 / SC-06 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.runloop import (
@@ -187,14 +188,14 @@ def lookahead_independent_of_gap_0048() -> None:
 def main() -> None:
     assert qmb.LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048 is True
     higher_bars_from_finest_base()
-    print("higher BarSpec derived from finest base on completed boundary")
+    sys.stdout.write("higher BarSpec derived from finest base on completed boundary\n")
     forming_never_visible_or_actionable()
-    print("forming bar not visible; acting is policy rejection")
+    sys.stdout.write("forming bar not visible; acting is policy rejection\n")
     same_series_for_bars_and_fills()
-    print("same-slice bars and fills share one series")
+    sys.stdout.write("same-slice bars and fills share one series\n")
     lookahead_independent_of_gap_0048()
-    print("look-ahead prevention ships regardless of GAP-0048")
-    print("completed-boundary derivation ok")
+    sys.stdout.write("look-ahead prevention ships regardless of GAP-0048\n")
+    sys.stdout.write("completed-boundary derivation ok\n")
 
 
 if __name__ == "__main__":

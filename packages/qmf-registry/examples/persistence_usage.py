@@ -27,6 +27,7 @@ qmf-data`` — no database server, stdlib-typed at the boundary:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
@@ -270,25 +271,29 @@ def main() -> None:
         base = Path(tmp)
 
         record = record_round_trips_content_addressed(base / "round-trip")
-        print(f"record persisted, content-addressed on fp1: {record.stable_id.value[:19]}...")
+        sys.stdout.write(
+            f"record persisted, content-addressed on fp1: {record.stable_id.value[:19]}...\n"
+        )
 
         outcome = idempotent_re_write_dedups(base / "idempotent")
-        print(f"byte-identical re-write deduplicates: {outcome}")
+        sys.stdout.write(f"byte-identical re-write deduplicates: {outcome}\n")
 
         edge = edge_round_trips_on_its_fp1(base / "edges")
-        print(f"lineage edge persisted on its own fp1: {edge.edge_type.value}")
+        sys.stdout.write(f"lineage edge persisted on its own fp1: {edge.edge_type.value}\n")
 
         crossed, simulated = cross_world_and_simulated_refuse(base / "worlds")
-        print(f"cross-world read refused: {crossed.category.value}")
-        print(f"simulated world refused: {simulated.category.value}")
+        sys.stdout.write(f"cross-world read refused: {crossed.category.value}\n")
+        sys.stdout.write(f"simulated world refused: {simulated.category.value}\n")
 
         refused = store_failure_is_a_typed_refusal(base / "failure")
-        print(f"store failure is a typed refusal: {refused.category.value}")
+        sys.stdout.write(f"store failure is a typed refusal: {refused.category.value}\n")
 
         restore_path, verified = migration_is_staged_and_never_in_place(
             base / "migrate-src", base / "migrate-dst"
         )
-        print(f"migration staged and never in-place: verified {verified}, restore path preserved")
+        sys.stdout.write(
+            f"migration staged and never in-place: verified {verified}, restore path preserved\n"
+        )
         assert restore_path.endswith("migrate-src")
 
 

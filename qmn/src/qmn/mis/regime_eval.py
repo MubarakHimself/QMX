@@ -1084,19 +1084,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.artifact_json is None or args.labeled_json is None or args.cleaned_json is None:
-        print(
+        sys.stderr.write(
             "operator-prepared --artifact-json, --labeled-json, and --cleaned-json "
-            "are required; this script never fetches providers or opens credentials",
-            file=sys.stderr,
+            "are required; this script never fetches providers or opens credentials\n"
         )
         return 2
 
-    print(
+    sys.stderr.write(
         "JSON envelope loading for operator-prepared evaluation inputs is staged "
         "through run_offline_evaluation with in-memory Story 30.2-30.4 artifacts; "
         "pass objects from Python rather than relying on an undeclared on-disk "
-        "schema in Story 30.5. Refusing rather than inventing a loader.",
-        file=sys.stderr,
+        "schema in Story 30.5. Refusing rather than inventing a loader.\n"
     )
     refusal = policy(
         "cli_loader",

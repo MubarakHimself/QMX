@@ -25,6 +25,7 @@ Shows the six things CT-06 pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -221,21 +222,21 @@ def unknown_reserved_and_bad_field_are_refused() -> tuple[TypedRefusal, TypedRef
 
 def main() -> None:
     record = per_kind_record_has_derived_id()
-    print(f"per-kind record, derived id: {record.stable_id.value[:19]}...")
+    sys.stdout.write(f"per-kind record, derived id: {record.stable_id.value[:19]}...\n")
 
     id_a, id_b = two_sandboxes_deduplicate()
-    print(f"two sandboxes deduplicate: {id_a == id_b}")
+    sys.stdout.write(f"two sandboxes deduplicate: {id_a == id_b}\n")
 
     parent_refs_are_order_insensitive_but_identity_bearing()
-    print("at-birth parent refs: order-insensitive, identity-bearing, header-only")
+    sys.stdout.write("at-birth parent refs: order-insensitive, identity-bearing, header-only\n")
 
     collision = idempotent_accept_but_collision_refused()
-    print(f"true collision refused and alarmed: {collision.category.value}")
+    sys.stdout.write(f"true collision refused and alarmed: {collision.category.value}\n")
 
     unknown, reserved, bad_field = unknown_reserved_and_bad_field_are_refused()
-    print(f"unknown kind refused: {unknown.category.value}")
-    print(f"reserved kind honored (refused): {reserved.category.value}")
-    print(f"undefined body field refused: {bad_field.category.value}")
+    sys.stdout.write(f"unknown kind refused: {unknown.category.value}\n")
+    sys.stdout.write(f"reserved kind honored (refused): {reserved.category.value}\n")
+    sys.stdout.write(f"undefined body field refused: {bad_field.category.value}\n")
 
 
 if __name__ == "__main__":

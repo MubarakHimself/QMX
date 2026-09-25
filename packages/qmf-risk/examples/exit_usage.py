@@ -12,6 +12,7 @@ folds the qualifying-loss bench (breakeven and scratch excluded), enforces
 
 from __future__ import annotations
 
+import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -201,27 +202,30 @@ def main() -> None:
         records.append(minted)
 
     ql1_r = _unwrap(records[2].realized_r(), "realized_r derivation failed")
-    print(
+    sys.stdout.write(
         f"single-sourced realized_r for protective-stop full loss: "
-        f"{ql1_r.as_fraction()} (expected -51/50)"
+        f"{ql1_r.as_fraction()} (expected -51/50)\n"
     )
     _require(ql1_r.as_fraction() == Fraction(-102, 100), "realized_r mismatch")
 
     attributed = _unwrap(attribute_whole_trade(records[3]), "attribution failed")
-    print(
+    sys.stdout.write(
         f"whole-trade attribution credits opening bot={attributed.opening_bot_id} "
-        f"close_reason={attributed.close_reason.value}"
+        f"close_reason={attributed.close_reason.value}\n"
     )
     partitioned = _unwrap(partition_by_close_reason(tuple(records)), "partition failed")
-    print(
-        "reports partition by close reason: "
-        + ", ".join(f"{k}={len(v)}" for k, v in sorted(partitioned.items()))
+    sys.stdout.write(
+        str(
+            "reports partition by close reason: "
+            + ", ".join(f"{k}={len(v)}" for k, v in sorted(partitioned.items()))
+        )
+        + "\n"
     )
 
     dispositions: list[BenchDisposition] = []
     for raw in (classify_bench_disposition(r, q=q) for r in records):
         dispositions.append(_unwrap(raw, "disposition classify failed"))
-    print("bench dispositions: " + ", ".join(d.value for d in dispositions))
+    sys.stdout.write(str("bench dispositions: " + ", ".join(d.value for d in dispositions)) + "\n")
     _require(
         dispositions[0] is BenchDisposition.BREAKEVEN
         and dispositions[1] is BenchDisposition.SCRATCH_OR_PARTIAL_LOSS
@@ -234,9 +238,9 @@ def main() -> None:
         fold_bench(tuple(records), binding_epoch=epoch, q=q, threshold=threshold),
         "bench fold failed",
     )
-    print(
+    sys.stdout.write(
         f"bench fold: qualifying_loss_count={folded.qualifying_loss_count} "
-        f"threshold={threshold} crossed={folded.threshold_crossed}"
+        f"threshold={threshold} crossed={folded.threshold_crossed}\n"
     )
     _require(folded.qualifying_loss_count == 2, "expected two qualifying losses")
     _require(folded.threshold_crossed is True, "expected threshold crossed")
@@ -261,7 +265,7 @@ def main() -> None:
     if not is_refusal(stale):
         raise RuntimeError("expected refusal for unrecorded close")
     _require(stale.category is RefusalCategory.STALE_EVIDENCE, "expected stale")
-    print(f"recording precedes interpretation: refused ({stale.category.value})")
+    sys.stdout.write(f"recording precedes interpretation: refused ({stale.category.value})\n")
 
     _unwrap(
         check_move_to_breakeven_ratchet(
@@ -276,13 +280,13 @@ def main() -> None:
     )
     if not is_refusal(widen):
         raise RuntimeError("widen must refuse")
-    print(
+    sys.stdout.write(
         f"move-to-breakeven ratchet: zero-offset ok; widen refused "
-        f"({widen.category.value}); R stays frozen so -1R keeps meaning a full original loss"
+        f"({widen.category.value}); R stays frozen so -1R keeps meaning a full original loss\n"
     )
-    print(
+    sys.stdout.write(
         "kill_line_flat and protection_forced_flat are distinct taxonomy members: "
-        f"{CloseReason.KILL_LINE_FLAT.value} / {CloseReason.PROTECTION_FORCED_FLAT.value}"
+        f"{CloseReason.KILL_LINE_FLAT.value} / {CloseReason.PROTECTION_FORCED_FLAT.value}\n"
     )
 
 

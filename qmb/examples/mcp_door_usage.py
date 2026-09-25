@@ -17,6 +17,7 @@ Shows the things Story 16.6 / B-1 / SC-08 / AR-58 pin down:
 from __future__ import annotations
 
 import json
+import sys
 
 from qmb.doors import MCP_IN_DOOR_SET, SHIPPED_DOORS
 from qmb.doors.cli.render import render_refusal
@@ -39,7 +40,7 @@ def unshipped_sibling() -> None:
     assert identity["post_cli_v1"] is True
     assert identity["shipped"] is False
     assert identity["in_door_set"] is MCP_IN_DOOR_SET is False
-    print("sibling wrapper over the same library; post-CLI-v1, not shipped")
+    sys.stdout.write("sibling wrapper over the same library; post-CLI-v1, not shipped\n")
 
 
 def invocation_is_unsupported() -> None:
@@ -47,7 +48,7 @@ def invocation_is_unsupported() -> None:
     assert is_refusal(refused)
     assert isinstance(refused, TypedRefusal)
     assert refused.category is RefusalCategory.UNSUPPORTED_CAPABILITY
-    print("invocation is typed unsupported-capability refusal")
+    sys.stdout.write("invocation is typed unsupported-capability refusal\n")
 
 
 def localhost_never_http() -> None:
@@ -55,7 +56,7 @@ def localhost_never_http() -> None:
     assert identity["stacked_over_http"] is False
     assert identity["localhost_bound"] is True
     assert BIND_HOST == "127.0.0.1"
-    print("localhost-bound by default; never stacked over HTTP")
+    sys.stdout.write("localhost-bound by default; never stacked over HTTP\n")
 
 
 def error_data_is_the_union() -> None:
@@ -64,13 +65,13 @@ def error_data_is_the_union() -> None:
     payload = error_data(refused)
     assert payload == json.loads(render_refusal(refused))
     assert render_error(refused)["data"] == payload
-    print("error.data carries the refusal union verbatim")
+    sys.stdout.write("error.data carries the refusal union verbatim\n")
 
 
 def cli_ships_first() -> None:
     assert SHIPPED_DOORS == ("cli", "api")
     assert is_shipped() is False
-    print("CLI v1 ships first; MCP does not gate it")
+    sys.stdout.write("CLI v1 ships first; MCP does not gate it\n")
 
 
 if __name__ == "__main__":
@@ -79,4 +80,4 @@ if __name__ == "__main__":
     localhost_never_http()
     error_data_is_the_union()
     cli_ships_first()
-    print("qmb MCP door scaffold ok")
+    sys.stdout.write("qmb MCP door scaffold ok\n")

@@ -14,6 +14,8 @@ category that arrives dynamically.
 
 from __future__ import annotations
 
+import sys
+
 from qmf.core.refusal import (
     Ok,
     RefusalCategory,
@@ -71,9 +73,12 @@ def refusal_from_dynamic(
 
 def main() -> None:
     for raw in ("3", "0", "abc"):
-        print(describe(raw))
-    print(refusal_from_dynamic("transient venue failure", "after-condition", "retry after 2s"))
-    print(refusal_from_dynamic("not-a-category", "no"))
+        sys.stdout.write(str(describe(raw)) + "\n")
+    sys.stdout.write(
+        str(refusal_from_dynamic("transient venue failure", "after-condition", "retry after 2s"))
+        + "\n"
+    )
+    sys.stdout.write(str(refusal_from_dynamic("not-a-category", "no")) + "\n")
 
 
 if __name__ == "__main__":

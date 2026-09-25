@@ -31,6 +31,7 @@ Shows what the third B-14 ladder rung pins down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.doors import api
@@ -135,8 +136,12 @@ def signal_only_pass_isolates_the_raw_signal() -> None:
     assert minted.category is RefusalCategory.POLICY_REJECTION
     direct = api.refuse_signal_pass_act("enter")
     assert direct.category is RefusalCategory.POLICY_REJECTION
-    print("signal-only pass over the B-2 loop with orders disabled; trading locked, strategy flat")
-    print("minting an entry, an exit, or a command during the pass is a policy rejection")
+    sys.stdout.write(
+        "signal-only pass over the B-2 loop with orders disabled; trading locked, strategy flat\n"
+    )
+    sys.stdout.write(
+        "minting an entry, an exit, or a command during the pass is a policy rejection\n"
+    )
 
 
 def next_bar_return_alignment_is_look_ahead_safe() -> None:
@@ -149,7 +154,9 @@ def next_bar_return_alignment_is_look_ahead_safe() -> None:
     assert api.RETURN_BASIS == "log-returns"
     # A raw binary-float close is refused: closes are exact Price integers.
     assert is_refusal(api.SignalBar.try_create(_instant(_BASE_NS), 1.5, True))
-    print("signal at bar t scored on the next bar's log return; closes cross the AD-22 carve-out")
+    sys.stdout.write(
+        "signal at bar t scored on the next bar's log return; closes cross the AD-22 carve-out\n"
+    )
 
 
 def zero_edge_null_and_one_tailed_p_value() -> None:
@@ -186,9 +193,9 @@ def zero_edge_null_and_one_tailed_p_value() -> None:
         "flat gate",
     )
     assert 0 < flat_result.p_value < 1
-    print(
+    sys.stdout.write(
         "detrended zero-edge null; one-tailed p-value = fraction of null resamples "
-        "at/above observed"
+        "at/above observed\n"
     )
 
 
@@ -221,8 +228,12 @@ def scheme_and_parameters_are_configurable() -> None:
     assert is_refusal(
         api.run_significance_gate(signals=bars, base_seed=7, resampling_scheme=api.SCHEME_IID)
     )
-    print("resampling scheme is iid, block, or stationary with a configurable block length")
-    print("iterations and the minimum-observation floor are configurable with no ratified value")
+    sys.stdout.write(
+        "resampling scheme is iid, block, or stationary with a configurable block length\n"
+    )
+    sys.stdout.write(
+        "iterations and the minimum-observation floor are configurable with no ratified value\n"
+    )
 
 
 def insufficient_data_and_reproducibility() -> None:
@@ -238,7 +249,7 @@ def insufficient_data_and_reproducibility() -> None:
     )
     assert is_refusal(below)
     assert below.category is RefusalCategory.INVALID_INPUT
-    print("below the configured floor is a typed refusal, never a fabricated p-value")
+    sys.stdout.write("below the configured floor is a typed refusal, never a fabricated p-value\n")
     # Floor unset: a low-confidence warning label instead of a hard number.
     unset = _unwrap(
         api.run_significance_gate(
@@ -248,7 +259,7 @@ def insufficient_data_and_reproducibility() -> None:
     )
     assert unset.low_confidence is True
     assert unset.low_confidence_label == api.LOW_CONFIDENCE_FLOOR_UNSET_LABEL
-    print("an unset minimum-observation floor emits a low-confidence warning label")
+    sys.stdout.write("an unset minimum-observation floor emits a low-confidence warning label\n")
     # Seed provenance recorded; re-running reproduces the null distribution bit-for-bit.
     assert unset.provenance.base_seed == 7
     assert unset.provenance.seed_derivation_rule == api.SIGNIFICANCE_SEED_DERIVATION_RULE
@@ -262,7 +273,9 @@ def insufficient_data_and_reproducibility() -> None:
     )
     assert unset.null.fingerprint == again.null.fingerprint
     assert _unwrap(unset.fingerprint(), "fp") == _unwrap(again.fingerprint(), "fp2")
-    print("seed provenance recorded; re-running reproduces the null distribution bit-for-bit")
+    sys.stdout.write(
+        "seed provenance recorded; re-running reproduces the null distribution bit-for-bit\n"
+    )
 
 
 def the_gate_is_advisory_only() -> None:
@@ -285,9 +298,9 @@ def the_gate_is_advisory_only() -> None:
     assert is_refusal(api.refuse_gate_auto_merge("build-pipeline"))
     assert is_refusal(api.refuse_live_money_gate(api.RULE_SIGNIFICANCE_PROCEDURE))
     assert is_refusal(api.refuse_edge_claim(api.RULE_SIGNIFICANCE_PROCEDURE))
-    print(
+    sys.stdout.write(
         "advisory: world replay/simulated never live, robustness never edge; never auto-merges, "
-        "never gates live money; alpha thresholds deferred to GAP-0049"
+        "never gates live money; alpha thresholds deferred to GAP-0049\n"
     )
 
 
@@ -300,7 +313,7 @@ def main() -> None:
     scheme_and_parameters_are_configurable()
     insufficient_data_and_reproducibility()
     the_gate_is_advisory_only()
-    print("rule significance gate ok")
+    sys.stdout.write("rule significance gate ok\n")
 
 
 if __name__ == "__main__":

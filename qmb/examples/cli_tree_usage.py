@@ -19,6 +19,7 @@ Shows the things Story 16.1 / B-1 / AR-10 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from click.testing import CliRunner
@@ -68,7 +69,7 @@ def tree_is_the_platform_surface() -> None:
     catalog = runner.invoke(cli_main, ["data", "catalog"])
     assert catalog.exit_code == 0, catalog.output
     assert "download" in catalog.output
-    print("command tree groups: " + ", ".join(COMMAND_GROUPS))
+    sys.stdout.write(str("command tree groups: " + ", ".join(COMMAND_GROUPS)) + "\n")
 
 
 def missing_prerequisites_are_typed_refusals() -> None:
@@ -79,7 +80,7 @@ def missing_prerequisites_are_typed_refusals() -> None:
     invoked = runner.invoke(cli_main, ["backtest", "run"])
     assert invoked.exit_code != 0
     assert "unavailable dependency" in invoked.output + (invoked.stderr or "")
-    print("absent resources return typed refusal: " + refused.category)
+    sys.stdout.write(str("absent resources return typed refusal: " + refused.category) + "\n")
 
 
 def backtest_compiles_then_submits_without_a_door_run_id() -> None:
@@ -143,15 +144,15 @@ def backtest_compiles_then_submits_without_a_door_run_id() -> None:
     )
     assert seen == ["compile", "spawn"]
     assert submitted.run_id == config.fingerprint
-    print("compiled via compile_run_config; submitted to qmb.orchestrator")
-    print("run-id is the compiler fingerprint; door computed none")
+    sys.stdout.write("compiled via compile_run_config; submitted to qmb.orchestrator\n")
+    sys.stdout.write("run-id is the compiler fingerprint; door computed none\n")
 
 
 def main() -> None:
     tree_is_the_platform_surface()
     missing_prerequisites_are_typed_refusals()
     backtest_compiles_then_submits_without_a_door_run_id()
-    print("qmb CLI command tree ok")
+    sys.stdout.write("qmb CLI command tree ok\n")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ Shows the four things Story 5.4 pins down:
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -110,9 +111,9 @@ def main() -> None:
         and NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE is None,
         "numeric RPO/RTO stay null node/ops pointers",
     )
-    print(
+    sys.stdout.write(
         f"cadence pointer={BACKUP_CADENCE}; encryption_required={ENCRYPTION_REQUIRED}; "
-        "RPO/RTO null (node/ops-owned)"
+        "RPO/RTO null (node/ops-owned)\n"
     )
 
     schedule = refuse_schedule_ownership(request="install-nightly-cron")
@@ -126,7 +127,7 @@ def main() -> None:
         is_refusal(rpo) and rpo.category.value == "policy rejection",
         "numeric RPO ownership is policy rejection",
     )
-    print("schedule / numeric RPO ask: policy rejection (primitives only)")
+    sys.stdout.write("schedule / numeric RPO ask: policy rejection (primitives only)\n")
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -193,10 +194,10 @@ def main() -> None:
             full.kind is VerifyKind.FULL_RESTORE_REHEARSAL,
             "full-restore rehearsal issued a recoverability claim",
         )
-        print(
+        sys.stdout.write(
             f"cycle: rooms={len(report.rooms_backed_up)} including registry; "
             f"sample={report.sample_restore.kind.value}; "
-            f"full={full.kind.value}; encrypted; no credentials"
+            f"full={full.kind.value}; encrypted; no credentials\n"
         )
 
         simulated = cycle.run_once(
@@ -209,7 +210,7 @@ def main() -> None:
             is_refusal(simulated) and simulated.category.value == "policy rejection",
             "simulated is policy rejection",
         )
-        print("cross-world / simulated path: policy rejection")
+        sys.stdout.write("cross-world / simulated path: policy rejection\n")
 
 
 if __name__ == "__main__":

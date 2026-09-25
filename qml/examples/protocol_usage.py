@@ -23,6 +23,7 @@ Shows the things QL-7 / Story 12.1 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmf.core.chrono import CalendarIdentity, Instant
@@ -240,18 +241,18 @@ def replay_is_deterministic() -> bool:
 
 
 def main() -> None:
-    print(f"protocol format version: {PROTOCOL_FORMAT_VERSION}")
-    print(f"ladder is qml-ad5, not CT-numbered: {protocol_is_qml_ad5_not_ct()}")
+    sys.stdout.write(f"protocol format version: {PROTOCOL_FORMAT_VERSION}\n")
+    sys.stdout.write(f"ladder is qml-ad5, not CT-numbered: {protocol_is_qml_ad5_not_ct()}\n")
     constructed, empty, advisory = factory_constructs_and_emits_advisory_entry()
-    print(f"factory constructed: {constructed}")
-    print(f"zero intents on empty evidence: {empty}")
-    print(f"advisory stop is advisory: {advisory}")
+    sys.stdout.write(f"factory constructed: {constructed}\n")
+    sys.stdout.write(f"zero intents on empty evidence: {empty}\n")
+    sys.stdout.write(f"advisory stop is advisory: {advisory}\n")
     sizing = inbound_requested_r_is_invalid()
-    print(f"inbound requested_r is {sizing.category.value}")
+    sys.stdout.write(f"inbound requested_r is {sizing.category.value}\n")
     venue = venue_command_is_rejected()
-    print(f"venue command rejected: {venue.category.value}")
-    print(f"replay identical intents: {replay_is_deterministic()}")
-    print("protocol usage ok")
+    sys.stdout.write(f"venue command rejected: {venue.category.value}\n")
+    sys.stdout.write(f"replay identical intents: {replay_is_deterministic()}\n")
+    sys.stdout.write("protocol usage ok\n")
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ Shows the things B-3 / Story 13.5 pin down:
 
 from __future__ import annotations
 
+import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -227,8 +228,8 @@ def main() -> None:
     assert binding.starting_capital == _SEED
     assert binding.virtual_ledger.equity == _SEED
     assert compiled.fold_rating == FOLD_RATED
-    print(f"minted world=replay binding {binding.fingerprint.value}")
-    print("virtual ledger seeded from starting_capital")
+    sys.stdout.write(f"minted world=replay binding {binding.fingerprint.value}\n")
+    sys.stdout.write("virtual ledger seeded from starting_capital\n")
 
     missing = compile_run_config(
         port,
@@ -239,7 +240,7 @@ def main() -> None:
     )
     assert is_refusal(missing)
     assert missing.context["field"] == STARTING_CAPITAL_KEY
-    print("starting_capital is a mandatory run-spec field")
+    sys.stdout.write("starting_capital is a mandatory run-spec field\n")
 
     overridden = _unwrap(
         compile_run_config(
@@ -258,7 +259,7 @@ def main() -> None:
     assert overridden.replay_binding.seed_overridden is True
     assert overridden.fold_rating == FOLD_UNRATED
     assert overridden.binding_fp1 != compiled.binding_fp1
-    print("flag override stamps seed_overridden and forces the fold unrated")
+    sys.stdout.write("flag override stamps seed_overridden and forces the fold unrated\n")
 
     live = _unwrap(
         BookBindingRecord.try_create(
@@ -297,7 +298,7 @@ def main() -> None:
     assert is_refusal(compared)
     assert compared.category is RefusalCategory.POLICY_REJECTION
     assert _unwrap(live.fingerprint(), "live epoch") != binding.fingerprint
-    print("replay binding is incomparable to any live binding")
+    sys.stdout.write("replay binding is incomparable to any live binding\n")
 
     instrument = Instrument(venue=VenueId(value="venue-replay"), symbol="EURUSD")
     admitted = _unwrap(
@@ -332,7 +333,7 @@ def main() -> None:
     assert admitted.declared_full_loss_price is not None
     none_price = require_full_loss_before_open(None)
     assert is_refusal(none_price)
-    print("CT-23 admit requires an AD-40 full-loss price before any open")
+    sys.stdout.write("CT-23 admit requires an AD-40 full-loss price before any open\n")
 
     exit_record = _unwrap(
         mint_replay_exit(
@@ -358,10 +359,10 @@ def main() -> None:
     )
     assert exit_record.binding_epoch == binding.fingerprint
     assert exit_record.result_label.world is World.REPLAY
-    print("CT-29 exit is minted against the run's world=replay binding")
+    sys.stdout.write("CT-29 exit is minted against the run's world=replay binding\n")
 
-    print(f"qmb {qmb.__version__}")
-    print("replay binding ok")
+    sys.stdout.write(f"qmb {qmb.__version__}\n")
+    sys.stdout.write("replay binding ok\n")
 
 
 if __name__ == "__main__":
