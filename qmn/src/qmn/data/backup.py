@@ -185,41 +185,10 @@ class DrillMeasurement:
         measured_ns: object,
         evidence_fp1: object,
     ) -> Result[DrillMeasurement]:
-        rto_kind = clean_token(kind)
-        if rto_kind not in {"integrity", "full_dr"}:
-            return invalid(
-                "kind",
-                "an RTO drill kind is integrity | full_dr",
-                given=repr(kind),
-            )
-        drill_name = clean_token(drill)
-        if drill_name is None:
-            return invalid("drill", "a drill measurement names its unit or power")
-        if drill_name in SAMPLE_DRILL_NAMES:
-            return policy(
-                "drill",
-                "the nightly sample restore does not measure either RTO (DEC-0198, DEC-0252)",
-                failure_id=_RTO_ID,
-                drill=drill_name,
-            )
-        if rto_kind == "integrity" and drill_name not in INTEGRITY_DRILL_NAMES:
-            return policy(
-                "drill",
-                "the integrity-restore RTO is measured at the monthly full-restore "
-                "rehearsal (DEC-0198)",
-                failure_id=_RTO_ID,
-                drill=drill_name,
-                kind=rto_kind,
-            )
-        if rto_kind == "full_dr" and drill_name not in FULL_DR_DRILL_NAMES:
-            return policy(
-                "drill",
-                "the full-DR RTO is measured at the host-loss rehearsal "
-                "(restore_drill_run) (DEC-0198, DEC-0252)",
-                failure_id=_RTO_ID,
-                drill=drill_name,
-                kind=rto_kind,
-            )
+        named = _bind_drill_kind(kind, drill)
+        if is_refusal(named):
+            return named
+        rto_kind, drill_name = named.value
         measured = _as_ns(measured_ns, "measured_ns")
         if is_refusal(measured):
             return measured
@@ -354,63 +323,36 @@ class BackupCopyPurgeCandidate:
         ident = clean_token(copy_id)
         if ident is None:
             return invalid("copy_id", "a backup copy names a non-empty id")
-        version = _as_nonneg_int(copy_version, "copy_version")
-        if is_refusal(version):
-            return version
-        created = _as_ns(created_at_ns, "created_at_ns")
-        if is_refusal(created):
-            return created
-        now = _as_ns(now_ns, "now_ns")
-        if is_refusal(now):
-            return now
-        retention = _as_ns(retention_period_ns, "retention_period_ns")
-        if is_refusal(retention):
-            return retention
-        if retention.value <= 0:
-            return invalid(
-                "retention_period_ns",
-                "declared backup-set retention is a positive duration",
-                given=retention.value,
-            )
-        source = clean_token(retention_source)
-        if source not in {"declared", "provider-default"}:
-            return invalid(
-                "retention_source",
-                "retention source is declared | provider-default",
-                given=repr(retention_source),
-            )
-        if not isinstance(verified, bool):
-            return invalid("verified", "verified is a boolean", given=repr(verified))
-        if not isinstance(sealed_verified_remaining, bool):
-            return invalid(
-                "sealed_verified_remaining",
-                "sealed_verified_remaining is a boolean",
-                given=repr(sealed_verified_remaining),
-            )
-        if not isinstance(other_off_host_verified_remaining, bool):
-            return invalid(
-                "other_off_host_verified_remaining",
-                "other_off_host_verified_remaining is a boolean",
-                given=repr(other_off_host_verified_remaining),
-            )
-        proof_kind = clean_token(verification_kind)
-        if proof_kind is None:
-            return invalid(
-                "verification_kind",
-                "backup-set purge names the verification kind that produced the proof",
-                given=repr(verification_kind),
-            )
+        instants = _bind_purge_instants(
+            copy_version=copy_version,
+            created_at_ns=created_at_ns,
+            now_ns=now_ns,
+            retention_period_ns=retention_period_ns,
+        )
+        if is_refusal(instants):
+            return instants
+        version, created, now, retention = instants.value
+        flags = _bind_purge_flags(
+            retention_source=retention_source,
+            verified=verified,
+            sealed_verified_remaining=sealed_verified_remaining,
+            other_off_host_verified_remaining=other_off_host_verified_remaining,
+            verification_kind=verification_kind,
+        )
+        if is_refusal(flags):
+            return flags
+        source, proof_kind, verified_f, sealed_f, other_f = flags.value
         return Ok(
             cls(
                 copy_id=ident,
-                copy_version=version.value,
-                created_at_ns=created.value,
-                now_ns=now.value,
-                retention_period_ns=retention.value,
+                copy_version=version,
+                created_at_ns=created,
+                now_ns=now,
+                retention_period_ns=retention,
                 retention_source=source,
-                verified=verified,
-                sealed_verified_remaining=sealed_verified_remaining,
-                other_off_host_verified_remaining=other_off_host_verified_remaining,
+                verified=verified_f,
+                sealed_verified_remaining=sealed_f,
+                other_off_host_verified_remaining=other_f,
                 verification_kind=proof_kind,
             )
         )
@@ -519,6 +461,40 @@ def compile_backup_config(
     full_dr_drill: object = None,
 ) -> Result[BackupConfig]:
     """Compile the seven governed backup rows from a resolved node-config."""
+    rows = _collect_backup_rows(config)
+    if is_refusal(rows):
+        return rows
+    derived = derive_rpo_from_schedule(cadence)
+    if is_refusal(derived):
+        return derived
+    cited_rpo = _bind_declared_rpo(rows.value, derived.value)
+    if is_refusal(cited_rpo):
+        return cited_rpo
+    rtos = _bind_backup_rtos(rows.value, integrity_drill, full_dr_drill)
+    if is_refusal(rtos):
+        return rtos
+    integrity_rto, full_dr_rto = rtos.value
+    optionals = _bind_backup_optionals(rows.value)
+    if is_refusal(optionals):
+        return optionals
+    retention, cadence_ns, provider, custody = optionals.value
+    return Ok(
+        BackupConfig(
+            cadence=NIGHTLY_CADENCE,
+            derived_rpo_ns=derived.value,
+            integrity_rto_ns=integrity_rto,
+            full_dr_rto_ns=full_dr_rto,
+            retention_period_ns=retention,
+            verification_cadence_ns=cadence_ns,
+            provider=provider,
+            payload_key_custody=custody,
+            rows=rows.value,
+            soak_blocked=any(row.is_blank for row in rows.value.values()),
+        )
+    )
+
+
+def _collect_backup_rows(config: object) -> Result[dict[str, ResolvedValueRow]]:
     if not isinstance(config, ResolvedNodeConfig):
         return invalid(
             "config",
@@ -550,28 +526,35 @@ def compile_backup_config(
             "rows",
             "backup rows are distinct; a collapsed or aliased set is refused",
         )
+    return Ok(rows)
 
-    derived = derive_rpo_from_schedule(cadence)
-    if is_refusal(derived):
-        return derived
+
+def _bind_declared_rpo(
+    rows: Mapping[str, ResolvedValueRow], derived_ns: int
+) -> Result[None]:
     rpo_row = rows["backup_recovery_point_objective"]
-    if not rpo_row.is_blank:
-        rpo_value = _as_ns(rpo_row.value, "backup_recovery_point_objective")
-        if is_refusal(rpo_value):
-            return rpo_value
-        if rpo_value.value != derived.value:
-            return policy(
-                "backup_recovery_point_objective",
-                "RPO is derived from the actual nightly schedule and cannot be "
-                "declared independently (DEC-0198)",
-                failure_id=_RPO_ID,
-                derived_ns=derived.value,
-                given=rpo_value.value,
-            )
-        cited = _require_evidence(rpo_row)
-        if is_refusal(cited):
-            return cited
+    if rpo_row.is_blank:
+        return Ok(None)
+    rpo_value = _as_ns(rpo_row.value, "backup_recovery_point_objective")
+    if is_refusal(rpo_value):
+        return rpo_value
+    if rpo_value.value != derived_ns:
+        return policy(
+            "backup_recovery_point_objective",
+            "RPO is derived from the actual nightly schedule and cannot be "
+            "declared independently (DEC-0198)",
+            failure_id=_RPO_ID,
+            derived_ns=derived_ns,
+            given=rpo_value.value,
+        )
+    return _require_evidence(rpo_row)
 
+
+def _bind_backup_rtos(
+    rows: Mapping[str, ResolvedValueRow],
+    integrity_drill: object,
+    full_dr_drill: object,
+) -> Result[tuple[int | None, int | None]]:
     integrity = _bind_rto_row(
         rows["backup_recovery_time_objective_integrity"],
         drill=integrity_drill,
@@ -598,7 +581,12 @@ def compile_backup_config(
             "the two RTOs are recorded apart and never conflated (DEC-0198)",
             failure_id=_CONFLATE_ID,
         )
+    return Ok((integrity.value, full_dr.value))
 
+
+def _bind_backup_optionals(
+    rows: Mapping[str, ResolvedValueRow],
+) -> Result[tuple[int | None, int | None, str | None, str | None]]:
     retention = _optional_duration(rows["backup_retention_period"])
     if is_refusal(retention):
         return retention
@@ -611,22 +599,7 @@ def compile_backup_config(
     custody = _bind_custody(rows["backup_payload_key_custody"])
     if is_refusal(custody):
         return custody
-
-    soak_blocked = any(row.is_blank for row in rows.values())
-    return Ok(
-        BackupConfig(
-            cadence=NIGHTLY_CADENCE,
-            derived_rpo_ns=derived.value,
-            integrity_rto_ns=integrity.value,
-            full_dr_rto_ns=full_dr.value,
-            retention_period_ns=retention.value,
-            verification_cadence_ns=cadence_ns.value,
-            provider=provider.value,
-            payload_key_custody=custody.value,
-            rows=rows,
-            soak_blocked=soak_blocked,
-        )
-    )
+    return Ok((retention.value, cadence_ns.value, provider.value, custody.value))
 
 
 def refuse_payload_key_ceremony(*, request: object = None) -> TypedRefusal:
@@ -725,48 +698,16 @@ def try_bind_payload_cipher(
     ceremony: object = False,
 ) -> Result[BackupPayloadCipher]:
     """Bind the CT-14 cipher from backup-unit bootstrap material — never mint."""
-    if ceremony is True or PAYLOAD_KEY_CEREMONY_TONIGHT:
-        return refuse_payload_key_ceremony(request="ceremony")
-    holder_token = clean_token(holder)
-    slot_token = clean_token(slot)
-    origin = clean_token(minted_on)
-    if origin != "workstation":
-        return refuse_vps_minted_payload_key(minted_on=minted_on)
-    if holder_token == CONNECTION_MANAGER or slot_token in VENUE_SESSION_SLOTS:
-        return refuse_venue_shared_custody(holder=holder, slot=slot)
-    if holder_token != BACKUP_UNIT or slot_token != BACKUP_PAYLOAD_KEY_SLOT:
-        return refuse_venue_shared_custody(holder=holder, slot=slot)
-    if isinstance(key_material, SecretValue):
-        return policy(
-            "payload_key",
-            "secret values never enter the backup cipher constructor as a "
-            "logged value; bind raw bootstrap bytes from the backup unit "
-            "(CT-21, L34)",
-            failure_id=_MISSING_KEY_ID,
-        )
-    if key_material is None:
-        return unavailable(
-            "payload_key",
-            "restore refused: the workstation-escrowed payload key is missing",
-            failure_id=_MISSING_KEY_ID,
-        )
-    if not isinstance(key_material, (bytes, bytearray)):
-        return invalid(
-            "payload_key",
-            "payload key material is 32 raw bytes",
-            given=repr(type(key_material).__name__),
-        )
-    key = bytes(key_material)
-    if len(key) != PAYLOAD_KEY_SIZE:
-        return policy(
-            "payload_key",
-            "restore refused a missing or wrong payload key; the source copy "
-            "is not rewritten (DEC-0217)",
-            failure_id=_WRONG_KEY_ID,
-            size=len(key),
-        )
+    origin = _bind_cipher_origin(
+        holder=holder, slot=slot, minted_on=minted_on, ceremony=ceremony
+    )
+    if is_refusal(origin):
+        return origin
+    key = _bind_cipher_key(key_material)
+    if is_refusal(key):
+        return key
     source = nonce_source if nonce_source is not None else os_payload_nonce
-    return Ok(BackupPayloadCipher(key, source))
+    return Ok(BackupPayloadCipher(key.value, source))
 
 
 def restore_decrypt(
@@ -809,6 +750,37 @@ def evaluate_backup_copy_purge(
     journal: object,
 ) -> Result[BackupPurgeDecision]:
     """Age-out checks declared retention, verification, and the two-copy rule."""
+    bound = _bind_purge_inputs(candidate, journal)
+    if is_refusal(bound):
+        return bound
+    copy, sink = bound.value
+    refused = _purge_preconditions(copy, sink)
+    if refused is not None:
+        return refused
+    record = _purge_record(
+        copy,
+        allowed=True,
+        reason="declared-retention-verified-two-copy",
+    )
+    written = sink.append(record)
+    if is_refusal(written):
+        return written
+    return Ok(
+        BackupPurgeDecision(
+            allowed=True,
+            copy_id=copy.copy_id,
+            reason=(
+                "declared retention elapsed, verification succeeded, and the "
+                "two-copy rule still holds"
+            ),
+            journaled=True,
+        )
+    )
+
+
+def _bind_purge_inputs(
+    candidate: object, journal: object
+) -> Result[tuple[BackupCopyPurgeCandidate, BackupJournalSink]]:
     if not isinstance(candidate, BackupCopyPurgeCandidate):
         return invalid(
             "candidate",
@@ -821,45 +793,92 @@ def evaluate_backup_copy_purge(
             "backup-set purge journals the verdict; a journal sink is required",
             given=repr(type(journal).__name__),
         )
-    sink = cast("BackupJournalSink", journal)
+    return Ok((candidate, cast("BackupJournalSink", journal)))
+
+
+def _journal_purge_refusal(
+    candidate: BackupCopyPurgeCandidate,
+    sink: BackupJournalSink,
+    *,
+    reason: str,
+    refusal: TypedRefusal,
+) -> Result[BackupPurgeDecision]:
+    record = _purge_record(candidate, allowed=False, reason=reason)
+    written = sink.append(record)
+    if is_refusal(written):
+        return written
+    return refusal
+
+
+def _purge_preconditions(
+    candidate: BackupCopyPurgeCandidate, sink: BackupJournalSink
+) -> Result[BackupPurgeDecision] | None:
     if candidate.retention_source == "provider-default":
-        record = _purge_record(candidate, allowed=False, reason=_PROVIDER_DEFAULT_ID)
-        written = sink.append(record)
-        if is_refusal(written):
-            return written
-        return refuse_provider_default_retention()
-    if candidate.now_ns - candidate.created_at_ns < candidate.retention_period_ns:
-        record = _purge_record(candidate, allowed=False, reason=_RETENTION_ID)
-        written = sink.append(record)
-        if is_refusal(written):
-            return written
-        return policy(
+        return _journal_purge_refusal(
+            candidate,
+            sink,
+            reason=_PROVIDER_DEFAULT_ID,
+            refusal=refuse_provider_default_retention(),
+        )
+    retained = _purge_retention(candidate, sink)
+    if retained is not None:
+        return retained
+    verified = _purge_verified(candidate, sink)
+    if verified is not None:
+        return verified
+    return _purge_two_copy(candidate, sink)
+
+
+def _purge_retention(
+    candidate: BackupCopyPurgeCandidate, sink: BackupJournalSink
+) -> Result[BackupPurgeDecision] | None:
+    if candidate.now_ns - candidate.created_at_ns >= candidate.retention_period_ns:
+        return None
+    return _journal_purge_refusal(
+        candidate,
+        sink,
+        reason=_RETENTION_ID,
+        refusal=policy(
             "retention",
             "a backup copy ages out only after the declared retention period (TN-13)",
             failure_id=_RETENTION_ID,
             copy_id=candidate.copy_id,
             elapsed_ns=candidate.now_ns - candidate.created_at_ns,
             window_ns=candidate.retention_period_ns,
-        )
-    if not candidate.verified or candidate.verification_kind not in _RESTORE_PROOF_KINDS:
-        record = _purge_record(candidate, allowed=False, reason=_UNVERIFIED_ID)
-        written = sink.append(record)
-        if is_refusal(written):
-            return written
-        return policy(
+        ),
+    )
+
+
+def _purge_verified(
+    candidate: BackupCopyPurgeCandidate, sink: BackupJournalSink
+) -> Result[BackupPurgeDecision] | None:
+    if candidate.verified and candidate.verification_kind in _RESTORE_PROOF_KINDS:
+        return None
+    return _journal_purge_refusal(
+        candidate,
+        sink,
+        reason=_UNVERIFIED_ID,
+        refusal=policy(
             "verification",
             "backup-set purge requires successful restore verification; a "
             "monitoring result or provider default is not a restore proof (FR-065)",
             failure_id=_UNVERIFIED_ID,
             copy_id=candidate.copy_id,
             verification_kind=candidate.verification_kind,
-        )
-    if not candidate.sealed_verified_remaining or not candidate.other_off_host_verified_remaining:
-        record = _purge_record(candidate, allowed=False, reason=_TWO_COPY_ID)
-        written = sink.append(record)
-        if is_refusal(written):
-            return written
-        return policy(
+        ),
+    )
+
+
+def _purge_two_copy(
+    candidate: BackupCopyPurgeCandidate, sink: BackupJournalSink
+) -> Result[BackupPurgeDecision] | None:
+    if candidate.sealed_verified_remaining and candidate.other_off_host_verified_remaining:
+        return None
+    return _journal_purge_refusal(
+        candidate,
+        sink,
+        reason=_TWO_COPY_ID,
+        refusal=policy(
             "two_copy",
             "backup-set purge requires a verified sealed-archive copy and "
             "another verified off-host copy to remain (DEC-0253, DEC-0198)",
@@ -867,26 +886,58 @@ def evaluate_backup_copy_purge(
             copy_id=candidate.copy_id,
             sealed_verified_remaining=candidate.sealed_verified_remaining,
             other_off_host_verified_remaining=candidate.other_off_host_verified_remaining,
-        )
-    record = _purge_record(
-        candidate,
-        allowed=True,
-        reason="declared-retention-verified-two-copy",
+        ),
     )
-    written = sink.append(record)
-    if is_refusal(written):
-        return written
-    return Ok(
-        BackupPurgeDecision(
-            allowed=True,
-            copy_id=candidate.copy_id,
-            reason=(
-                "declared retention elapsed, verification succeeded, and the "
-                "two-copy rule still holds"
-            ),
-            journaled=True,
+
+
+def _bind_cipher_origin(
+    *, holder: object, slot: object, minted_on: object, ceremony: object
+) -> Result[None]:
+    if ceremony is True or PAYLOAD_KEY_CEREMONY_TONIGHT:
+        return refuse_payload_key_ceremony(request="ceremony")
+    holder_token = clean_token(holder)
+    slot_token = clean_token(slot)
+    origin = clean_token(minted_on)
+    if origin != "workstation":
+        return refuse_vps_minted_payload_key(minted_on=minted_on)
+    if holder_token == CONNECTION_MANAGER or slot_token in VENUE_SESSION_SLOTS:
+        return refuse_venue_shared_custody(holder=holder, slot=slot)
+    if holder_token != BACKUP_UNIT or slot_token != BACKUP_PAYLOAD_KEY_SLOT:
+        return refuse_venue_shared_custody(holder=holder, slot=slot)
+    return Ok(None)
+
+
+def _bind_cipher_key(key_material: object) -> Result[bytes]:
+    if isinstance(key_material, SecretValue):
+        return policy(
+            "payload_key",
+            "secret values never enter the backup cipher constructor as a "
+            "logged value; bind raw bootstrap bytes from the backup unit "
+            "(CT-21, L34)",
+            failure_id=_MISSING_KEY_ID,
         )
-    )
+    if key_material is None:
+        return unavailable(
+            "payload_key",
+            "restore refused: the workstation-escrowed payload key is missing",
+            failure_id=_MISSING_KEY_ID,
+        )
+    if not isinstance(key_material, (bytes, bytearray)):
+        return invalid(
+            "payload_key",
+            "payload key material is 32 raw bytes",
+            given=repr(type(key_material).__name__),
+        )
+    key = bytes(key_material)
+    if len(key) != PAYLOAD_KEY_SIZE:
+        return policy(
+            "payload_key",
+            "restore refused a missing or wrong payload key; the source copy "
+            "is not rewritten (DEC-0217)",
+            failure_id=_WRONG_KEY_ID,
+            size=len(key),
+        )
+    return Ok(key)
 
 
 def _purge_record(
@@ -900,6 +951,120 @@ def _purge_record(
     body["reason"] = reason
     body["retention_source_declared"] = candidate.retention_source == "declared"
     return MappingProxyType(body)
+
+
+def _bind_drill_kind(kind: object, drill: object) -> Result[tuple[str, str]]:
+    rto_kind = clean_token(kind)
+    if rto_kind not in {"integrity", "full_dr"}:
+        return invalid(
+            "kind",
+            "an RTO drill kind is integrity | full_dr",
+            given=repr(kind),
+        )
+    drill_name = clean_token(drill)
+    if drill_name is None:
+        return invalid("drill", "a drill measurement names its unit or power")
+    if drill_name in SAMPLE_DRILL_NAMES:
+        return policy(
+            "drill",
+            "the nightly sample restore does not measure either RTO (DEC-0198, DEC-0252)",
+            failure_id=_RTO_ID,
+            drill=drill_name,
+        )
+    if rto_kind == "integrity" and drill_name not in INTEGRITY_DRILL_NAMES:
+        return policy(
+            "drill",
+            "the integrity-restore RTO is measured at the monthly full-restore "
+            "rehearsal (DEC-0198)",
+            failure_id=_RTO_ID,
+            drill=drill_name,
+            kind=rto_kind,
+        )
+    if rto_kind == "full_dr" and drill_name not in FULL_DR_DRILL_NAMES:
+        return policy(
+            "drill",
+            "the full-DR RTO is measured at the host-loss rehearsal "
+            "(restore_drill_run) (DEC-0198, DEC-0252)",
+            failure_id=_RTO_ID,
+            drill=drill_name,
+            kind=rto_kind,
+        )
+    return Ok((rto_kind, drill_name))
+
+
+def _bind_purge_instants(
+    *,
+    copy_version: object,
+    created_at_ns: object,
+    now_ns: object,
+    retention_period_ns: object,
+) -> Result[tuple[int, int, int, int]]:
+    version = _as_nonneg_int(copy_version, "copy_version")
+    if is_refusal(version):
+        return version
+    created = _as_ns(created_at_ns, "created_at_ns")
+    if is_refusal(created):
+        return created
+    now = _as_ns(now_ns, "now_ns")
+    if is_refusal(now):
+        return now
+    retention = _as_ns(retention_period_ns, "retention_period_ns")
+    if is_refusal(retention):
+        return retention
+    if retention.value <= 0:
+        return invalid(
+            "retention_period_ns",
+            "declared backup-set retention is a positive duration",
+            given=retention.value,
+        )
+    return Ok((version.value, created.value, now.value, retention.value))
+
+
+def _bind_purge_flags(
+    *,
+    retention_source: object,
+    verified: object,
+    sealed_verified_remaining: object,
+    other_off_host_verified_remaining: object,
+    verification_kind: object,
+) -> Result[tuple[str, str, bool, bool, bool]]:
+    source = clean_token(retention_source)
+    if source not in {"declared", "provider-default"}:
+        return invalid(
+            "retention_source",
+            "retention source is declared | provider-default",
+            given=repr(retention_source),
+        )
+    if not isinstance(verified, bool):
+        return invalid("verified", "verified is a boolean", given=repr(verified))
+    if not isinstance(sealed_verified_remaining, bool):
+        return invalid(
+            "sealed_verified_remaining",
+            "sealed_verified_remaining is a boolean",
+            given=repr(sealed_verified_remaining),
+        )
+    if not isinstance(other_off_host_verified_remaining, bool):
+        return invalid(
+            "other_off_host_verified_remaining",
+            "other_off_host_verified_remaining is a boolean",
+            given=repr(other_off_host_verified_remaining),
+        )
+    proof_kind = clean_token(verification_kind)
+    if proof_kind is None:
+        return invalid(
+            "verification_kind",
+            "backup-set purge names the verification kind that produced the proof",
+            given=repr(verification_kind),
+        )
+    return Ok(
+        (
+            source,
+            proof_kind,
+            verified,
+            sealed_verified_remaining,
+            other_off_host_verified_remaining,
+        )
+    )
 
 
 def _bind_rto_row(
@@ -920,6 +1085,12 @@ def _bind_rto_row(
     cited = _require_evidence(row)
     if is_refusal(cited):
         return cited
+    return _measured_rto(row, drill, expected_kind)
+
+
+def _measured_rto(
+    row: ResolvedValueRow, drill: object, expected_kind: str
+) -> Result[int | None]:
     if not isinstance(drill, DrillMeasurement):
         return policy(
             row.name,

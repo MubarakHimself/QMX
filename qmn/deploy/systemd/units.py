@@ -126,7 +126,10 @@ def duration_to_systemd_sec(value: object) -> str:
             raise ValueError("duration value must be positive")
         seconds = int(value) if float(value).is_integer() else float(value)
         return f"{seconds}s"
-    text = str(value).strip()
+    return _duration_text_to_systemd_sec(str(value).strip())
+
+
+def _duration_text_to_systemd_sec(text: str) -> str:
     if not text:
         raise ValueError("duration value is blank")
     match = _DURATION_RE.match(text)
@@ -222,26 +225,40 @@ def inspect_unit_text(name: str, text: str) -> UnitInspection:
     is_timer = name.endswith(".timer")
     is_obs = name == OBSERVABILITY_UNIT
     is_node = name in node_unit_names()
-
     if is_timer:
-        # Timers have no Service hardening block; paired .service carries it.
-        if "[Timer]" not in text:
-            findings.append("timer missing [Timer] section")
-        return UnitInspection(
-            name=name,
-            is_node_unit=is_node,
-            is_timer=True,
-            ok=not findings,
-            findings=tuple(findings),
-        )
+        return _inspect_timer(name, text, is_node)
+    _inspect_hardening(text, is_obs, findings)
+    _inspect_qmn_service(name, text, findings)
+    _inspect_credentials(name, text, is_obs, findings)
+    return UnitInspection(
+        name=name,
+        is_node_unit=is_node,
+        is_timer=False,
+        ok=not findings,
+        findings=tuple(findings),
+    )
 
+
+def _inspect_timer(name: str, text: str, is_node: bool) -> UnitInspection:
+    findings: list[str] = []
+    if "[Timer]" not in text:
+        findings.append("timer missing [Timer] section")
+    return UnitInspection(
+        name=name,
+        is_node_unit=is_node,
+        is_timer=True,
+        ok=not findings,
+        findings=tuple(findings),
+    )
+
+
+def _inspect_hardening(text: str, is_obs: bool, findings: list[str]) -> None:
     user = _setting(text, "User")
     expected_user = OBSERVABILITY_SERVICE_ACCOUNT if is_obs else NODE_SERVICE_ACCOUNT
     if user != expected_user:
         findings.append(f"User={user!r} expected {expected_user!r}")
     if re.search(r"^DynamicUser\s*=\s*yes\b", text, re.MULTILINE | re.IGNORECASE):
         findings.append("DynamicUser=yes is forbidden")
-
     protect = _setting(text, "ProtectSystem")
     if protect != "strict":
         findings.append(f"ProtectSystem={protect!r} expected 'strict'")
@@ -249,43 +266,46 @@ def inspect_unit_text(name: str, text: str) -> UnitInspection:
         got = _setting(text, key)
         if got is None or got.lower() not in {"true", "yes", "1"}:
             findings.append(f"{key} missing or not enabled ({got!r})")
-
     rwp = _setting(text, "ReadWritePaths")
     expected_rwp = READ_WRITE_PATHS_OBS if is_obs else READ_WRITE_PATHS_NODE
     if rwp != expected_rwp:
         findings.append(f"ReadWritePaths={rwp!r} expected {expected_rwp!r}")
-
     families_raw = _setting(text, "RestrictAddressFamilies")
     if families_raw is None:
         findings.append("RestrictAddressFamilies missing")
-    else:
-        families = frozenset(families_raw.split())
-        if families != REQUIRED_RESTRICT_FAMILIES:
-            findings.append(
-                f"RestrictAddressFamilies={families_raw!r} "
-                f"expected {' '.join(sorted(REQUIRED_RESTRICT_FAMILIES))!r}"
-            )
+        return
+    families = frozenset(families_raw.split())
+    if families != REQUIRED_RESTRICT_FAMILIES:
+        findings.append(
+            f"RestrictAddressFamilies={families_raw!r} "
+            f"expected {' '.join(sorted(REQUIRED_RESTRICT_FAMILIES))!r}"
+        )
 
-    if name == "qmn.service":
-        if _setting(text, "Type") != "notify":
-            findings.append("qmn.service must be Type=notify")
-        if _setting(text, "RuntimeDirectory") != "qmn":
-            findings.append("qmn.service must declare RuntimeDirectory=qmn")
-        if "@DRAIN_WINDOW_SEC@" in text or "@WATCHDOG_INTERVAL_SEC@" in text:
-            findings.append("placeholders not rendered")
-        if _setting(text, "TimeoutStopSec") is None:
-            findings.append("TimeoutStopSec missing")
-        if _setting(text, "WatchdogSec") is None:
-            findings.append("WatchdogSec missing")
-        if POWERS_SOCKET_PATH not in text:
-            findings.append("powers socket path not referenced")
-        if _setting(text, "LogNamespace") != "qmn":
-            findings.append(
-                "qmn.service must set LogNamespace=qmn for the observability stack"
-            )
 
-    # Credential-consuming units: only LoadCredentialEncrypted, never plaintext
-    # LoadCredential for secret material; seal flag is provision-time.
+def _inspect_qmn_service(name: str, text: str, findings: list[str]) -> None:
+    if name != "qmn.service":
+        return
+    if _setting(text, "Type") != "notify":
+        findings.append("qmn.service must be Type=notify")
+    if _setting(text, "RuntimeDirectory") != "qmn":
+        findings.append("qmn.service must declare RuntimeDirectory=qmn")
+    if "@DRAIN_WINDOW_SEC@" in text or "@WATCHDOG_INTERVAL_SEC@" in text:
+        findings.append("placeholders not rendered")
+    if _setting(text, "TimeoutStopSec") is None:
+        findings.append("TimeoutStopSec missing")
+    if _setting(text, "WatchdogSec") is None:
+        findings.append("WatchdogSec missing")
+    if POWERS_SOCKET_PATH not in text:
+        findings.append("powers socket path not referenced")
+    if _setting(text, "LogNamespace") != "qmn":
+        findings.append(
+            "qmn.service must set LogNamespace=qmn for the observability stack"
+        )
+
+
+def _inspect_credentials(
+    name: str, text: str, is_obs: bool, findings: list[str]
+) -> None:
     load_plain = _all_settings(text, "LoadCredential")
     load_enc = _all_settings(text, "LoadCredentialEncrypted")
     if load_plain:
@@ -307,8 +327,6 @@ def inspect_unit_text(name: str, text: str) -> UnitInspection:
         findings.append(f"{name} must declare LoadCredentialEncrypted")
     if name == "qmn-news-calendar.service" and load_enc:
         findings.append("news-calendar unit must not receive credentials")
-
-    # Cross-unit credential isolation: venue material only on qmn.service.
     venue_creds = {
         "venue-client-id",
         "venue-client-secret",
@@ -316,19 +334,12 @@ def inspect_unit_text(name: str, text: str) -> UnitInspection:
         "venue-refresh-token",
         "venue-ctid-accounts",
     }
-    if not is_obs and name != "qmn.service":
-        for cred in load_enc:
-            cred_id = cred.split(":", 1)[0]
-            if cred_id in venue_creds or cred_id == "kek":
-                findings.append(f"{name} must not receive venue/kek credential {cred_id!r}")
-
-    return UnitInspection(
-        name=name,
-        is_node_unit=is_node,
-        is_timer=False,
-        ok=not findings,
-        findings=tuple(findings),
-    )
+    if is_obs or name == "qmn.service":
+        return
+    for cred in load_enc:
+        cred_id = cred.split(":", 1)[0]
+        if cred_id in venue_creds or cred_id == "kek":
+            findings.append(f"{name} must not receive venue/kek credential {cred_id!r}")
 
 
 def inspect_rendered_units(rendered: Mapping[str, str]) -> tuple[UnitInspection, ...]:
