@@ -457,72 +457,30 @@ def run_runtime_risk_gate(
     coverage = _unwrap(evaluate_runtime_risk_coverage())
     if isinstance(coverage, TypedRefusal):
         return coverage
-
     now = _unwrap(clock.wall_now())
     if isinstance(now, TypedRefusal):
         return now
     fx = _Fixtures(clock=clock, venue=venue, now=now)
+    return _runtime_risk_gate_report(fx, coverage)
 
+
+def _runtime_risk_gate_report(
+    fx: _Fixtures, coverage: RuntimeRiskCoverageReport
+) -> Result[RuntimeRiskGateReport]:
     book = _unwrap(BookDefinition.try_create(2, "USD", {}))
     if isinstance(book, TypedRefusal):
         return book
     bms = _unwrap(BmsDefinition.try_create(1, {}))
     if isinstance(bms, TypedRefusal):
         return bms
-
-    composed = _unwrap(_exercise_compose(fx))
-    if isinstance(composed, TypedRefusal):
-        return composed
-    entry = _unwrap(_exercise_entry_preservation(fx))
-    if isinstance(entry, TypedRefusal):
-        return entry
-    exits = _unwrap(_exercise_exits_under_blocks(fx))
-    if isinstance(exits, TypedRefusal):
-        return exits
-    paper = _unwrap(_exercise_paper_routing(fx))
-    if isinstance(paper, TypedRefusal):
-        return paper
-    unknown = _unwrap(_exercise_unknown(fx))
-    if isinstance(unknown, TypedRefusal):
-        return unknown
-    reconcile = _unwrap(_exercise_four_verdicts(fx))
-    if isinstance(reconcile, TypedRefusal):
-        return reconcile
-    compose = _unwrap(_exercise_priority_compose(fx))
-    if isinstance(compose, TypedRefusal):
-        return compose
-    bench = _unwrap(_exercise_bench(fx))
-    if isinstance(bench, TypedRefusal):
-        return bench
-    kill = _unwrap(_exercise_kill_line(fx))
-    if isinstance(kill, TypedRefusal):
-        return kill
-    activation = _unwrap(_exercise_next_day_activation(fx))
-    if isinstance(activation, TypedRefusal):
-        return activation
-    refusals = _unwrap(_produce_refusal_categories(fx))
-    if isinstance(refusals, TypedRefusal):
-        return refusals
-    journaled = _unwrap(_exercise_journal_before_dispatch())
-    if isinstance(journaled, TypedRefusal):
-        return journaled
-
-    _ = refuse_paper_profit_as_proof()
-    _ = refuse_manual_observation_as_proof()
-
+    proofs = _risk_gate_proofs(fx)
+    if is_refusal(proofs):
+        return proofs
+    composed, evidence_core, refusals = proofs.value
     evidence: dict[str, Mapping[str, object]] = {
-        "entry_preservation": entry,
-        "exits_under_blocks": exits,
-        "paper_routing": paper,
-        "unknown": unknown,
-        "four_verdict_reconciliation": reconcile,
-        "priority_compose_conflict": compose,
-        "bench": bench,
-        "kill_line": kill,
-        "next_day_activation": activation,
+        **evidence_core,
         "ct22_book_definition": MappingProxyType(book.fp1_identity()),
         "ct27_bms_definition": MappingProxyType(bms.fp1_identity()),
-        "journal_before_dispatch": journaled,
     }
     missing_scenario = [name for name in RUNTIME_RISK_SCENARIOS if name not in evidence]
     if missing_scenario:
@@ -548,6 +506,80 @@ def run_runtime_risk_gate(
             composition_sealed=composed["sealed"] is True,
         )
     )
+
+
+def _risk_gate_proofs(
+    fx: _Fixtures,
+) -> Result[tuple[Mapping[str, object], dict[str, Mapping[str, object]], dict[str, str]]]:
+    composed = _unwrap(_exercise_compose(fx))
+    if isinstance(composed, TypedRefusal):
+        return composed
+    entry = _unwrap(_exercise_entry_preservation(fx))
+    if isinstance(entry, TypedRefusal):
+        return entry
+    exits = _unwrap(_exercise_exits_under_blocks(fx))
+    if isinstance(exits, TypedRefusal):
+        return exits
+    paper = _unwrap(_exercise_paper_routing(fx))
+    if isinstance(paper, TypedRefusal):
+        return paper
+    unknown = _unwrap(_exercise_unknown(fx))
+    if isinstance(unknown, TypedRefusal):
+        return unknown
+    reconcile = _unwrap(_exercise_four_verdicts(fx))
+    if isinstance(reconcile, TypedRefusal):
+        return reconcile
+    compose = _unwrap(_exercise_priority_compose(fx))
+    if isinstance(compose, TypedRefusal):
+        return compose
+    remaining = _risk_gate_remaining_proofs(fx)
+    if is_refusal(remaining):
+        return remaining
+    bench, kill, activation, refusals, journaled = remaining.value
+    _ = refuse_paper_profit_as_proof()
+    _ = refuse_manual_observation_as_proof()
+    evidence = {
+        "entry_preservation": entry,
+        "exits_under_blocks": exits,
+        "paper_routing": paper,
+        "unknown": unknown,
+        "four_verdict_reconciliation": reconcile,
+        "priority_compose_conflict": compose,
+        "bench": bench,
+        "kill_line": kill,
+        "next_day_activation": activation,
+        "journal_before_dispatch": journaled,
+    }
+    return Ok((composed, evidence, refusals))
+
+
+def _risk_gate_remaining_proofs(
+    fx: _Fixtures,
+) -> Result[
+    tuple[
+        Mapping[str, object],
+        Mapping[str, object],
+        Mapping[str, object],
+        dict[str, str],
+        Mapping[str, object],
+    ]
+]:
+    bench = _unwrap(_exercise_bench(fx))
+    if isinstance(bench, TypedRefusal):
+        return bench
+    kill = _unwrap(_exercise_kill_line(fx))
+    if isinstance(kill, TypedRefusal):
+        return kill
+    activation = _unwrap(_exercise_next_day_activation(fx))
+    if isinstance(activation, TypedRefusal):
+        return activation
+    refusals = _unwrap(_produce_refusal_categories(fx))
+    if isinstance(refusals, TypedRefusal):
+        return refusals
+    journaled = _unwrap(_exercise_journal_before_dispatch())
+    if isinstance(journaled, TypedRefusal):
+        return journaled
+    return Ok((bench, kill, activation, refusals, journaled))
 
 
 def _scan_source_tokens(root: Path) -> tuple[frozenset[str], frozenset[str]]:
