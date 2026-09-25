@@ -42,7 +42,7 @@ from qmf.data.backup import (
     RestoreReceipt,
 )
 from qmf.data.store.backup_input import RecordExport, RoomExport
-from qmf.data.store.facade import EvidenceStore
+from qmf.data.store.facade import EvidenceStore, WorldStore
 from qmf.data.store.refusals import invalid_input, policy_rejection
 from qmf.data.store.rooms import RoomRole
 
@@ -282,11 +282,43 @@ class OffMachineVerify:
                 given=repr(copies),
             )
 
+        restored_rooms = self._rehearse_rooms(
+            world=world,
+            pairs=pairs.value,
+            into=into,
+            for_world=for_world,
+            expected=expected,
+            source_store=source_store,
+        )
+        if is_refusal(restored_rooms):
+            return restored_rooms
+        rooms, total, claim_world, claim_root = restored_rooms.value
+        return Ok(
+            RecoverabilityClaim(
+                kind=VerifyKind.FULL_RESTORE_REHEARSAL,
+                world=claim_world,
+                rooms=tuple(rooms),
+                record_count=total,
+                replacement_root=claim_root,
+                documented_restore_path=path.value,
+            )
+        )
+
+    def _rehearse_rooms(
+        self,
+        *,
+        world: object,
+        pairs: tuple[tuple[RoomRole, int], ...],
+        into: EvidenceStore,
+        for_world: object,
+        expected: Mapping[RoomRole, RoomExport],
+        source_store: EvidenceStore | None,
+    ) -> Result[tuple[list[VerifiedRoom], int, World, str]]:
         rooms: list[VerifiedRoom] = []
         total = 0
         claim_world: World | None = None
         claim_root: str | None = None
-        for role, version in pairs.value:
+        for role, version in pairs:
             exp = expected.get(role)
             if exp is None:
                 return invalid_input(
@@ -318,24 +350,12 @@ class OffMachineVerify:
             total += checked.value.record_count
             claim_world = exp.world
             claim_root = restored.value.replacement_root
-
-        # pairs.value is non-empty (guarded above), so both claim fields are set.
         if claim_world is None or claim_root is None:
             return invalid_input(
                 "copies",
                 "a full-restore rehearsal names at least one (room-role, copy_version) pair",
-                given=repr(copies),
             )
-        return Ok(
-            RecoverabilityClaim(
-                kind=VerifyKind.FULL_RESTORE_REHEARSAL,
-                world=claim_world,
-                rooms=tuple(rooms),
-                record_count=total,
-                replacement_root=claim_root,
-                documented_restore_path=path.value,
-            )
-        )
+        return Ok((rooms, total, claim_world, claim_root))
 
 
 def migrate_evidence(
@@ -359,6 +379,70 @@ def migrate_evidence(
     at backup-first are of the **source** evidence; the verify stage rehearses those
     copies against the preflight exports.
     """
+    setup = _migration_setup(world, room_roles, source, destination, verify_into)
+    if is_refusal(setup):
+        return setup
+    resolved, roles = setup.value
+    preflight = _migration_preflight(source, resolved, roles)
+    if is_refusal(preflight):
+        return preflight
+    expected, source_bundle, preflight_count = preflight.value
+    backed = _migration_backup_first(backup, expected, resolved, roles)
+    if is_refusal(backed):
+        return backed
+    receipts, copies = backed.value
+    dry = _migration_dry_run(expected, roles, resolved, transform)
+    if is_refusal(dry):
+        return dry
+    migrated_exports, dry_run_count = dry.value
+    migrated_count = _migration_write(restore, migrated_exports, destination, resolved, source)
+    if is_refusal(migrated_count):
+        return migrated_count
+    landed = _migration_confirm_destination(destination, resolved, migrated_exports)
+    if is_refusal(landed):
+        return landed
+    intact = _migration_confirm_source(source_bundle, resolved, expected)
+    if is_refusal(intact):
+        return intact
+    claim = verify.full_restore_rehearsal(
+        world=resolved,
+        copies=copies,
+        into=verify_into,
+        for_world=resolved,
+        expected=expected,
+        source_store=source,
+        documented_restore_path=str(source.root.resolve()),
+    )
+    if is_refusal(claim):
+        return claim
+    return Ok(
+        StoreMigrationReport(
+            restore_path=str(source.root.resolve()),
+            backed_up=True,
+            backup_receipts=tuple(receipts),
+            stages_completed=(
+                MigrationStage.PREFLIGHT,
+                MigrationStage.BACKUP_FIRST,
+                MigrationStage.DRY_RUN,
+                MigrationStage.MIGRATE,
+                MigrationStage.VERIFY,
+            ),
+            preflight_count=preflight_count,
+            dry_run_count=dry_run_count,
+            migrated_count=migrated_count.value,
+            destination_root=str(destination.root.resolve()),
+            recoverability=claim.value,
+        )
+    )
+
+
+def _migration_setup(
+    world: object,
+    room_roles: Sequence[object] | None,
+    source: EvidenceStore,
+    destination: EvidenceStore,
+    verify_into: EvidenceStore,
+) -> Result[tuple[World, tuple[RoomRole, ...]]]:
     resolved = _coerce_world(world)
     if resolved is None:
         return invalid_input(
@@ -373,42 +457,56 @@ def migrate_evidence(
             "governed evidence is refused (DEC-0110, DEC-0117)",
             requested=resolved.value,
         )
-
     roles = _resolve_roles(room_roles)
     if is_refusal(roles):
         return roles
-
     blocked = _refuse_overlapping_roots(source, destination, verify_into)
-    if blocked is not None:
+    if isinstance(blocked, TypedRefusal):
         return blocked
+    return Ok((resolved, roles.value))
 
-    # --- preflight: every room must already read back from the source ---
+
+def _migration_preflight(
+    source: EvidenceStore, resolved: World, roles: tuple[RoomRole, ...]
+) -> Result[tuple[dict[RoomRole, RoomExport], WorldStore, int]]:
     expected: dict[RoomRole, RoomExport] = {}
     source_bundle = source.for_world(resolved)
     if is_refusal(source_bundle):
         return source_bundle
-    for role in roles.value:
+    for role in roles:
         export = source_bundle.value.backup_input.read_room(role, for_world=resolved)
         if is_refusal(export):
             return export
         expected[role] = export.value
     preflight_count = sum(exp.record_count for exp in expected.values())
-    stages: list[MigrationStage] = [MigrationStage.PREFLIGHT]
+    return Ok((expected, source_bundle.value, preflight_count))
 
-    # --- backup-first: CT-14 off-machine copy of each room before any migrate write ---
+
+def _migration_backup_first(
+    backup: OffMachineBackup,
+    expected: dict[RoomRole, RoomExport],
+    resolved: World,
+    roles: tuple[RoomRole, ...],
+) -> Result[tuple[list[BackupCopyReceipt], dict[RoomRole, int]]]:
     receipts: list[BackupCopyReceipt] = []
     copies: dict[RoomRole, int] = {}
-    for role in roles.value:
+    for role in roles:
         copied = backup.copy_export(expected[role], for_world=resolved)
         if is_refusal(copied):
             return copied
         receipts.append(copied.value)
         copies[role] = copied.value.copy_version
-    stages.append(MigrationStage.BACKUP_FIRST)
+    return Ok((receipts, copies))
 
-    # --- dry-run: transform in memory; write nothing ---
+
+def _migration_dry_run(
+    expected: dict[RoomRole, RoomExport],
+    roles: tuple[RoomRole, ...],
+    resolved: World,
+    transform: RoomTransform | None,
+) -> Result[tuple[list[RoomExport], int]]:
     migrated_exports: list[RoomExport] = []
-    for role in roles.value:
+    for role in roles:
         candidate = expected[role]
         if transform is not None:
             transformed = transform(candidate)
@@ -431,9 +529,16 @@ def migrate_evidence(
                 )
         migrated_exports.append(candidate)
     dry_run_count = sum(exp.record_count for exp in migrated_exports)
-    stages.append(MigrationStage.DRY_RUN)
+    return Ok((migrated_exports, dry_run_count))
 
-    # --- migrate: write transformed exports into the destination (never the source) ---
+
+def _migration_write(
+    restore: OffMachineRestore,
+    migrated_exports: list[RoomExport],
+    destination: EvidenceStore,
+    resolved: World,
+    source: EvidenceStore,
+) -> Result[int]:
     migrated_count = 0
     for export in migrated_exports:
         written = restore.restore_export(
@@ -445,7 +550,12 @@ def migrate_evidence(
         if is_refusal(written):
             return written
         migrated_count += written.value.record_count
+    return Ok(migrated_count)
 
+
+def _migration_confirm_destination(
+    destination: EvidenceStore, resolved: World, migrated_exports: list[RoomExport]
+) -> Result[None]:
     dest_bundle = destination.for_world(resolved)
     if is_refusal(dest_bundle):
         return dest_bundle
@@ -464,11 +574,16 @@ def migrate_evidence(
                     "role": export.source_room_role.value,
                 },
             )
-    stages.append(MigrationStage.MIGRATE)
+    return Ok(None)
 
-    # Source must still match the preflight exports (never mutated).
+
+def _migration_confirm_source(
+    source_bundle: WorldStore,
+    resolved: World,
+    expected: dict[RoomRole, RoomExport],
+) -> Result[None]:
     for role, original in expected.items():
-        again = source_bundle.value.backup_input.read_room(role, for_world=resolved)
+        again = source_bundle.backup_input.read_room(role, for_world=resolved)
         if is_refusal(again):
             return again
         if not _exports_match(original, again.value):
@@ -477,34 +592,7 @@ def migrate_evidence(
                 "intact as the documented restore path (AR-32, DEC-0118)",
                 context={"signal": "source-mutated", "role": role.value},
             )
-
-    # --- verify: full-restore rehearsal of the backup-first off-machine copies ---
-    claim = verify.full_restore_rehearsal(
-        world=resolved,
-        copies=copies,
-        into=verify_into,
-        for_world=resolved,
-        expected=expected,
-        source_store=source,
-        documented_restore_path=str(source.root.resolve()),
-    )
-    if is_refusal(claim):
-        return claim
-    stages.append(MigrationStage.VERIFY)
-
-    return Ok(
-        StoreMigrationReport(
-            restore_path=str(source.root.resolve()),
-            backed_up=True,
-            backup_receipts=tuple(receipts),
-            stages_completed=tuple(stages),
-            preflight_count=preflight_count,
-            dry_run_count=dry_run_count,
-            migrated_count=migrated_count,
-            destination_root=str(destination.root.resolve()),
-            recoverability=claim.value,
-        )
-    )
+    return Ok(None)
 
 
 def _documented_path(

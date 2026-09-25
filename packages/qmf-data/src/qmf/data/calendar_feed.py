@@ -367,6 +367,31 @@ def decode_calendar_snapshot(
     Accepts ``bytes`` / ``str`` JSON, or an already-parsed list of event mappings.
     Impact labels are kept verbatim; no severity enum is minted (AC2).
     """
+    header = _calendar_snapshot_header(source, revision, known_at_ns)
+    if is_refusal(header):
+        return header
+    clean_source, clean_revision, known_at = header.value
+    items = _calendar_snapshot_items(payload)
+    if is_refusal(items):
+        return items
+    events: list[CalendarEvent] = []
+    for index, raw in enumerate(items.value):
+        decoded = _decode_one_calendar_event(
+            raw,
+            index=index,
+            source=clean_source,
+            revision=clean_revision,
+            known_at_ns=known_at,
+        )
+        if is_refusal(decoded):
+            return decoded
+        events.append(decoded.value)
+    return Ok(tuple(events))
+
+
+def _calendar_snapshot_header(
+    source: object, revision: object, known_at_ns: object
+) -> Result[tuple[str, str, int]]:
     clean_source = _clean_str(source)
     if clean_source is None:
         return invalid_input(
@@ -393,7 +418,10 @@ def decode_calendar_snapshot(
             "known_at_ns is required: int64 UTC-ns when the snapshot became knowable",
             given=repr(known_at_ns),
         )
+    return Ok((clean_source, clean_revision, known_at_ns))
 
+
+def _calendar_snapshot_items(payload: object) -> Result[list[object]]:
     items: object
     if isinstance(payload, (bytes, bytearray)):
         try:
@@ -413,61 +441,67 @@ def decode_calendar_snapshot(
             )
     else:
         items = payload
-
     if not isinstance(items, list):
         return invalid_input(
             "payload",
             "a calendar snapshot is a JSON array of event objects",
             given=repr(type(items)),
         )
+    return Ok(cast("list[object]", items))
 
-    events: list[CalendarEvent] = []
-    for index, raw in enumerate(cast("list[object]", items)):
-        if not isinstance(raw, Mapping):
-            return invalid_input(
-                "event",
-                "each calendar snapshot item is a mapping of provider fields",
-                index=index,
-                given=repr(raw),
-            )
-        block = cast("Mapping[str, object]", raw)
-        title = _clean_str(block.get("title") or block.get("Title")) or ""
-        currency = _clean_str(block.get("country") or block.get("Country") or block.get("currency"))
-        if currency is None:
-            return invalid_input(
-                "country",
-                "a calendar event carries a non-empty provider currency/country token",
-                index=index,
-            )
-        impact = _clean_str(block.get("impact") or block.get("Impact"))
-        if impact is None:
-            return invalid_input(
-                "impact",
-                "a calendar event carries the provider's impact label verbatim",
-                index=index,
-            )
-        date_raw = block.get("date") or block.get("Date")
-        parsed = _parse_event_time_ns(date_raw)
-        if is_refusal(parsed):
-            return parsed
-        event_ns, foreign = parsed.value
-        native = _clean_str(block.get("id") or block.get("source_native_id"))
-        if native is None:
-            native = _opaque_native_id(title, currency, str(date_raw))
-        events.append(
-            CalendarEvent(
-                source=clean_source,
-                source_native_id=native,
-                revision=clean_revision,
-                event_time_ns=event_ns,
-                known_at_ns=known_at_ns,
-                impact_label=impact,
-                currency=currency,
-                title=title,
-                foreign_timestamp=MappingProxyType(foreign),
-            )
+
+def _decode_one_calendar_event(
+    raw: object,
+    *,
+    index: int,
+    source: str,
+    revision: str,
+    known_at_ns: int,
+) -> Result[CalendarEvent]:
+    if not isinstance(raw, Mapping):
+        return invalid_input(
+            "event",
+            "each calendar snapshot item is a mapping of provider fields",
+            index=index,
+            given=repr(raw),
         )
-    return Ok(tuple(events))
+    block = cast("Mapping[str, object]", raw)
+    title = _clean_str(block.get("title") or block.get("Title")) or ""
+    currency = _clean_str(block.get("country") or block.get("Country") or block.get("currency"))
+    if currency is None:
+        return invalid_input(
+            "country",
+            "a calendar event carries a non-empty provider currency/country token",
+            index=index,
+        )
+    impact = _clean_str(block.get("impact") or block.get("Impact"))
+    if impact is None:
+        return invalid_input(
+            "impact",
+            "a calendar event carries the provider's impact label verbatim",
+            index=index,
+        )
+    date_raw = block.get("date") or block.get("Date")
+    parsed = _parse_event_time_ns(date_raw)
+    if is_refusal(parsed):
+        return parsed
+    event_ns, foreign = parsed.value
+    native = _clean_str(block.get("id") or block.get("source_native_id"))
+    if native is None:
+        native = _opaque_native_id(title, currency, str(date_raw))
+    return Ok(
+        CalendarEvent(
+            source=source,
+            source_native_id=native,
+            revision=revision,
+            event_time_ns=event_ns,
+            known_at_ns=known_at_ns,
+            impact_label=impact,
+            currency=currency,
+            title=title,
+            foreign_timestamp=MappingProxyType(foreign),
+        )
+    )
 
 
 # --- transport / adapter ----------------------------------------------------
@@ -547,6 +581,30 @@ class CalendarFeedAdapter:
 
         Required bounds: ``known_at_ns``. Optional: ``revision`` (default ``r1``).
         """
+        header = self._fetch_header(request)
+        if is_refusal(header):
+            return header
+        known_at, revision, bounds = header.value
+        fetched = self._fetch_snapshot_bytes(bounds)
+        if is_refusal(fetched):
+            return fetched
+        decoded = decode_calendar_snapshot(
+            fetched.value,
+            known_at_ns=known_at,
+            revision=revision,
+            source=CALENDAR_FEED_SOURCE,
+        )
+        if is_refusal(decoded):
+            return decoded
+        records = self._records_from_events(decoded.value)
+        if is_refusal(records):
+            return records
+        self._last_events = decoded.value
+        return Ok(tuple(records.value))
+
+    def _fetch_header(
+        self, request: SourceRequest
+    ) -> Result[tuple[int, str, dict[str, object]]]:
         if request.source != CALENDAR_FEED_SOURCE:
             return invalid_input(
                 "source",
@@ -562,13 +620,12 @@ class CalendarFeedAdapter:
                 given=repr(known_at),
             )
         revision = _clean_str(bounds.get("revision")) or "r1"
+        return Ok((known_at, revision, bounds))
 
+    def _fetch_snapshot_bytes(self, bounds: dict[str, object]) -> Result[bytes]:
         try:
             fetched = self._transport.fetch_snapshot(MappingProxyType(bounds))
         except Exception as exc:  # R-007: returned, never raised across CT-15
-            # A RAISED transport outage would bypass CalendarFeedImport.run's
-            # fail-closed data-quality journal and its alarm entirely; returning
-            # the refusal keeps the outage on the journaled path (6.4-AC1).
             return TypedRefusal(
                 category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
                 retryability=Retryability.YES,
@@ -584,20 +641,13 @@ class CalendarFeedAdapter:
                     "error": str(exc),
                 },
             )
-        if is_refusal(fetched):
-            return fetched
+        return fetched
 
-        decoded = decode_calendar_snapshot(
-            fetched.value,
-            known_at_ns=known_at,
-            revision=revision,
-            source=CALENDAR_FEED_SOURCE,
-        )
-        if is_refusal(decoded):
-            return decoded
-
+    def _records_from_events(
+        self, events: tuple[CalendarEvent, ...]
+    ) -> Result[list[ProviderRecord]]:
         records: list[ProviderRecord] = []
-        for event in decoded.value:
+        for event in events:
             instrument = _currency_instrument(event.currency, self._instruments)
             if is_refusal(instrument):
                 return invalid_input(
@@ -607,9 +657,7 @@ class CalendarFeedAdapter:
                     currency=event.currency,
                 )
             records.append(event.to_provider_record(instrument.value))
-
-        self._last_events = decoded.value
-        return Ok(tuple(records))
+        return Ok(records)
 
 
 # --- journalled import ------------------------------------------------------
@@ -712,37 +760,14 @@ class CalendarFeedImport:
         :class:`FailClosedSignal` (still ``Ok`` wrapping the signal so the caller
         can alarm without mistaking it for permission).
         """
-        if not coverage_known:
-            signal_result = fail_closed(
-                FailClosedReason.UNKNOWN_COVERAGE,
-                detail={"coverage_known": False},
-            )
-            if is_refusal(signal_result):
-                return signal_result
-            journaled = journal_fail_closed(
-                self._journal, signal_result.value, instant=journal_instant
-            )
-            if is_refusal(journaled):
-                return journaled
-            return Ok(signal_result.value)
-
-        if require_exposures_for is not None:
-            for code in require_exposures_for:
-                token = code.strip().upper()
-                if token not in self._exposures:
-                    signal_result = fail_closed(
-                        FailClosedReason.MISSING_CURRENCY_EXPOSURE,
-                        detail={"currency": token, "instrument_scope": "unknown"},
-                    )
-                    if is_refusal(signal_result):
-                        return signal_result
-                    journaled = journal_fail_closed(
-                        self._journal, signal_result.value, instant=journal_instant
-                    )
-                    if is_refusal(journaled):
-                        return journaled
-                    return Ok(signal_result.value)
-
+        closed = self._fail_closed_preflight(
+            journal_instant, coverage_known, require_exposures_for
+        )
+        if is_refusal(closed):
+            return closed
+        if closed.value is not None:
+            outcome: CalendarImportReceipt | FailClosedSignal = closed.value
+            return Ok(outcome)
         fetched = self._ingest.fetch_and_intake(
             request,
             writer=writer,
@@ -751,33 +776,16 @@ class CalendarFeedImport:
             sequence_start=sequence_start,
         )
         if is_refusal(fetched):
-            # Provider unavailable / rate-limited / malformed → fail closed (AC4).
-            detail: dict[str, object] = {
-                "refusal_category": fetched.category.value,
-                "retryability": fetched.retryability.value,
-                "provider_context": dict(fetched.context),
-            }
-            signal_result = fail_closed(FailClosedReason.FAILED_REFRESH, detail=detail)
-            if is_refusal(signal_result):
-                return signal_result
-            journaled = journal_fail_closed(
-                self._journal, signal_result.value, instant=journal_instant
-            )
-            if is_refusal(journaled):
-                return journaled
-            return Ok(signal_result.value)
-
+            failed = self._journal_failed_refresh(fetched, journal_instant)
+            if is_refusal(failed):
+                return failed
+            outcome = failed.value
+            return Ok(outcome)
         events = self._adapter.last_events
         intake_receipts = fetched.value
-        if boundary is not None:
-            for receipt in intake_receipts:
-                if receipt.outcome is IntakeOutcome.PRODUCED:
-                    admitted: Result[ObservationReceipt] = self._ingest.submit(
-                        receipt.observation, boundary
-                    )
-                    if is_refusal(admitted):
-                        return admitted
-
+        admitted = self._admit_produced(intake_receipts, boundary)
+        if is_refusal(admitted):
+            return admitted
         journaled = journal_import(
             self._journal,
             instant=journal_instant,
@@ -793,3 +801,76 @@ class CalendarFeedImport:
                 journal_receipt=journaled.value,
             )
         )
+
+    def _journal_signal(
+        self, signal: FailClosedSignal, journal_instant: object
+    ) -> Result[FailClosedSignal]:
+        journaled = journal_fail_closed(self._journal, signal, instant=journal_instant)
+        if is_refusal(journaled):
+            return journaled
+        return Ok(signal)
+
+    def _fail_closed_preflight(
+        self,
+        journal_instant: object,
+        coverage_known: bool,
+        require_exposures_for: Sequence[str] | None,
+    ) -> Result[FailClosedSignal | None]:
+        if not coverage_known:
+            signal_result = fail_closed(
+                FailClosedReason.UNKNOWN_COVERAGE,
+                detail={"coverage_known": False},
+            )
+            if is_refusal(signal_result):
+                return signal_result
+            journaled = self._journal_signal(signal_result.value, journal_instant)
+            if is_refusal(journaled):
+                return journaled
+            wrapped: FailClosedSignal | None = journaled.value
+            return Ok(wrapped)
+        if require_exposures_for is None:
+            return Ok(None)
+        for code in require_exposures_for:
+            token = code.strip().upper()
+            if token not in self._exposures:
+                signal_result = fail_closed(
+                    FailClosedReason.MISSING_CURRENCY_EXPOSURE,
+                    detail={"currency": token, "instrument_scope": "unknown"},
+                )
+                if is_refusal(signal_result):
+                    return signal_result
+                journaled = self._journal_signal(signal_result.value, journal_instant)
+                if is_refusal(journaled):
+                    return journaled
+                wrapped = journaled.value
+                return Ok(wrapped)
+        return Ok(None)
+
+    def _journal_failed_refresh(
+        self, fetched: TypedRefusal, journal_instant: object
+    ) -> Result[FailClosedSignal]:
+        detail: dict[str, object] = {
+            "refusal_category": fetched.category.value,
+            "retryability": fetched.retryability.value,
+            "provider_context": dict(fetched.context),
+        }
+        signal_result = fail_closed(FailClosedReason.FAILED_REFRESH, detail=detail)
+        if is_refusal(signal_result):
+            return signal_result
+        return self._journal_signal(signal_result.value, journal_instant)
+
+    def _admit_produced(
+        self,
+        intake_receipts: Sequence[IntakeReceipt],
+        boundary: SourceObservationBoundary | None,
+    ) -> Result[None]:
+        if boundary is None:
+            return Ok(None)
+        for receipt in intake_receipts:
+            if receipt.outcome is IntakeOutcome.PRODUCED:
+                admitted: Result[ObservationReceipt] = self._ingest.submit(
+                    receipt.observation, boundary
+                )
+                if is_refusal(admitted):
+                    return admitted
+        return Ok(None)

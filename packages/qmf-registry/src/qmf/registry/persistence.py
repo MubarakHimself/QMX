@@ -1104,6 +1104,43 @@ def migrate_registry_format(
     serialized artifact stamps its contract format version throughout, so history stays
     readable forever (AR-25).
     """
+    version = _migration_target_version(to_format_version, source, destination)
+    if is_refusal(version):
+        return version
+    preflight = _migration_preflight(records, source)
+    if is_refusal(preflight):
+        return preflight
+    backup_path = _migration_backup_first(source, destination, backup_sink)
+    if is_refusal(backup_path):
+        return backup_path
+    migrated = _migration_dry_run(records, transform, version.value)
+    if is_refusal(migrated):
+        return migrated
+    receipts = _migration_persist(migrated.value, destination)
+    if is_refusal(receipts):
+        return receipts
+    verified = _migration_verify(records, migrated.value, source, destination, version.value)
+    if is_refusal(verified):
+        return verified
+    return Ok(
+        MigrationReport(
+            restore_path=str(source.root),
+            backed_up=True,
+            backup_path=backup_path.value,
+            records_only=True,
+            preflight_count=preflight.value,
+            dry_run_count=len(migrated.value),
+            migrated_count=len(receipts.value),
+            verified_count=verified.value,
+            to_format_version=version.value,
+            receipts=tuple(receipts.value),
+        )
+    )
+
+
+def _migration_target_version(
+    to_format_version: object, source: RegistryPersistence, destination: RegistryPersistence
+) -> Result[int]:
     if (
         not isinstance(to_format_version, int)
         or isinstance(to_format_version, bool)
@@ -1130,8 +1167,12 @@ def migrate_registry_format(
             source_world=source.world.value,
             destination_world=destination.world.value,
         )
+    return Ok(to_format_version)
 
-    # preflight — every record must already read back from the source.
+
+def _migration_preflight(
+    records: Sequence[RegistrationRecord], source: RegistryPersistence
+) -> Result[int]:
     for record in records:
         key = persistence_fingerprint(record)
         if is_refusal(key):
@@ -1139,10 +1180,14 @@ def migrate_registry_format(
         present = source.load_record(key.value, for_world=source.world)
         if is_refusal(present):
             return present
-    preflight_count = len(records)
+    return Ok(len(records))
 
-    # backup-first — read the source's restorable export AND write a real backup artifact
-    # before any migrate write (backed_up reflects that real write, never a constant; M4).
+
+def _migration_backup_first(
+    source: RegistryPersistence,
+    destination: RegistryPersistence,
+    backup_sink: BackupSink | None,
+) -> Result[str]:
     export = source.backup_export()
     if is_refusal(export):
         return export
@@ -1156,17 +1201,19 @@ def migrate_registry_format(
         )
     if is_refusal(written):
         return written
-    backup_path = written.value
+    return Ok(written.value)
 
-    # dry-run — transform every record in memory; validate; write nothing.
+
+def _migration_dry_run(
+    records: Sequence[RegistrationRecord],
+    transform: RecordTransform,
+    to_format_version: int,
+) -> Result[list[RegistrationRecord]]:
     migrated: list[RegistrationRecord] = []
     for record in records:
         result = transform(record)
         if is_refusal(result):
             return result
-        # A RecordTransform is *typed* to return a record, but a mistyped transform can
-        # return anything at runtime; erase the static type so the guard is real (never a
-        # raised AttributeError when the version below is read off a non-record).
         candidate = cast("object", result.value)
         if not isinstance(candidate, RegistrationRecord):
             return _invalid(
@@ -1183,17 +1230,28 @@ def migrate_registry_format(
                 given=candidate.contract_format_version,
             )
         migrated.append(candidate)
-    dry_run_count = len(migrated)
+    return Ok(migrated)
 
-    # migrate — persist each migrated record to the destination (never the source).
+
+def _migration_persist(
+    migrated: list[RegistrationRecord], destination: RegistryPersistence
+) -> Result[list[StoreReceipt]]:
     receipts: list[StoreReceipt] = []
     for candidate in migrated:
         written = destination.persist_record(candidate)
         if is_refusal(written):
             return written
         receipts.append(written.value)
+    return Ok(receipts)
 
-    # verify — read every migrated record back, and confirm the source is unchanged.
+
+def _migration_verify(
+    records: Sequence[RegistrationRecord],
+    migrated: list[RegistrationRecord],
+    source: RegistryPersistence,
+    destination: RegistryPersistence,
+    to_format_version: int,
+) -> Result[int]:
     verified = 0
     for candidate in migrated:
         key = persistence_fingerprint(candidate)
@@ -1215,18 +1273,4 @@ def migrate_registry_format(
         still = source.load_record(key.value, for_world=source.world)
         if is_refusal(still):  # pragma: no cover - the source is only read, never mutated
             return still
-
-    return Ok(
-        MigrationReport(
-            restore_path=str(source.root),
-            backed_up=True,
-            backup_path=backup_path,
-            records_only=True,
-            preflight_count=preflight_count,
-            dry_run_count=dry_run_count,
-            migrated_count=len(receipts),
-            verified_count=verified,
-            to_format_version=to_format_version,
-            receipts=tuple(receipts),
-        )
-    )
+    return Ok(verified)

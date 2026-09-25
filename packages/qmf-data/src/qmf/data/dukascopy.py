@@ -281,6 +281,35 @@ class DecodedTick:
     source_timestamp_ms_offset: int
 
 
+def _require_fetch_span(
+    start_raw: object, end_raw: object, max_window_ns: int
+) -> Result[tuple[int, int]]:
+    if isinstance(start_raw, bool) or not isinstance(start_raw, int):
+        return invalid_input(
+            "start_ns",
+            "bounds.start_ns is required: int64 UTC-ns window start",
+            given=repr(start_raw),
+        )
+    if isinstance(end_raw, bool) or not isinstance(end_raw, int):
+        return invalid_input(
+            "end_ns",
+            "bounds.end_ns is required: int64 UTC-ns half-open window end — "
+            "unbounded / complete-corpus downloads are refused (FM-5)",
+            given=repr(end_raw),
+        )
+    if end_raw <= start_raw:
+        return invalid_input(
+            "window",
+            "a Dukascopy fetch window is a non-empty half-open [start_ns, end_ns)",
+            start_ns=start_raw,
+            end_ns=end_raw,
+        )
+    span = end_raw - start_raw
+    if span > max_window_ns:
+        return refuse_complete_corpus_download(request=f"window_ns={span}>max={max_window_ns}")
+    return Ok((start_raw, end_raw))
+
+
 def decode_bi5_ticks(
     compressed: object,
     *,
@@ -294,18 +323,24 @@ def decode_bi5_ticks(
     integers at ``price_scale`` — never binary floats on the money path.
     """
     _ = price_scale  # scale is applied by the caller when minting ForeignMoney
+    raw = _decompress_bi5(compressed)
+    if is_refusal(raw):
+        return raw
+    start = Instant.try_create(hour_start_ns)
+    if is_refusal(start):
+        return start
+    return Ok(_unpack_bi5_ticks(raw.value, start.value.value_ns))
+
+
+def _decompress_bi5(compressed: object) -> Result[bytes]:
     if not isinstance(compressed, (bytes, bytearray)):
         return invalid_input(
             "compressed",
             "a Dukascopy bi5 payload is raw bytes (LZMA-compressed hourly ticks)",
             given=repr(type(compressed)),
         )
-    start = Instant.try_create(hour_start_ns)
-    if is_refusal(start):
-        return start
     if len(compressed) == 0:
-        # Missing hour / weekend: no ticks, not an error (provider convention).
-        return Ok(())
+        return Ok(b"")
     try:
         raw = lzma.decompress(bytes(compressed))
     except lzma.LZMAError:
@@ -321,8 +356,11 @@ def decode_bi5_ticks(
             "truncated or malformed tick frames are invalid input (FM-2)",
             byte_length=len(raw),
         )
+    return Ok(raw)
+
+
+def _unpack_bi5_ticks(raw: bytes, base_ns: int) -> tuple[DecodedTick, ...]:
     ticks: list[DecodedTick] = []
-    base_ns = start.value.value_ns
     for offset in range(0, len(raw), TICK_RECORD_BYTES):
         ms_offset, ask_i, bid_i, ask_vol, bid_vol = _TICK_STRUCT.unpack_from(raw, offset)
         event_ns = base_ns + int(ms_offset) * NS_PER_MS
@@ -336,7 +374,7 @@ def decode_bi5_ticks(
                 source_timestamp_ms_offset=int(ms_offset),
             )
         )
-    return Ok(tuple(ticks))
+    return tuple(ticks)
 
 
 # --- transport / hour key ---------------------------------------------------
@@ -528,6 +566,44 @@ class DukascopyAdapter:
         Required bounds keys: ``symbol``, ``start_ns``, ``end_ns``. Optional:
         ``known_at_ns``, ``revision``, ``license_tag``, ``complete_corpus``.
         """
+        window = self._parse_fetch_window(request)
+        if is_refusal(window):
+            return window
+        symbol, start_raw, end_raw, known_at, revision, instrument, price_scale = window.value
+        hour_keys = _hour_keys_for_window(start_raw, end_raw, symbol)
+        if is_refusal(hour_keys):
+            return hour_keys
+        records = self._records_for_hours(
+            hour_keys.value,
+            symbol=symbol,
+            instrument=instrument,
+            start_ns=start_raw,
+            end_ns=end_raw,
+            known_at_ns=known_at,
+            revision=revision,
+            price_scale=price_scale,
+        )
+        if is_refusal(records):
+            return records
+        bounds = dict(request.bounds)
+        license_tag = parse_license_tag(bounds.get("license_tag", self._default_license))
+        stamped = self._record_window(
+            instrument=instrument,
+            start_ns=start_raw,
+            end_ns=end_raw,
+            license_tag=license_tag,
+            symbol=symbol,
+            revision=revision,
+            tick_count=len(records.value),
+        )
+        if is_refusal(stamped):
+            return stamped
+        self._last_window = stamped.value
+        return Ok(tuple(records.value))
+
+    def _parse_fetch_window(
+        self, request: SourceRequest
+    ) -> Result[tuple[str, int, int, int, str, Instrument, int]]:
         if request.source != DUKASCOPY_SOURCE:
             return invalid_input(
                 "source",
@@ -537,7 +613,6 @@ class DukascopyAdapter:
         bounds = dict(request.bounds)
         if bounds.get("complete_corpus") is True:
             return refuse_complete_corpus_download(request="complete_corpus=true")
-
         symbol = _clean_str(bounds.get("symbol"))
         if symbol is None:
             return invalid_input(
@@ -546,35 +621,12 @@ class DukascopyAdapter:
                 given=repr(bounds.get("symbol")),
             )
         symbol = symbol.upper()
-
-        start_raw = bounds.get("start_ns")
-        end_raw = bounds.get("end_ns")
-        if isinstance(start_raw, bool) or not isinstance(start_raw, int):
-            return invalid_input(
-                "start_ns",
-                "bounds.start_ns is required: int64 UTC-ns window start",
-                given=repr(start_raw),
-            )
-        if isinstance(end_raw, bool) or not isinstance(end_raw, int):
-            return invalid_input(
-                "end_ns",
-                "bounds.end_ns is required: int64 UTC-ns half-open window end — "
-                "unbounded / complete-corpus downloads are refused (FM-5)",
-                given=repr(end_raw),
-            )
-        if end_raw <= start_raw:
-            return invalid_input(
-                "window",
-                "a Dukascopy fetch window is a non-empty half-open [start_ns, end_ns)",
-                start_ns=start_raw,
-                end_ns=end_raw,
-            )
-        span = end_raw - start_raw
-        if span > self._max_window_ns:
-            return refuse_complete_corpus_download(
-                request=f"window_ns={span}>max={self._max_window_ns}"
-            )
-
+        span = _require_fetch_span(
+            bounds.get("start_ns"), bounds.get("end_ns"), self._max_window_ns
+        )
+        if is_refusal(span):
+            return span
+        start_raw, end_raw = span.value
         instrument = self._instruments.get(symbol)
         if instrument is None:
             return invalid_input(
@@ -583,7 +635,6 @@ class DukascopyAdapter:
                 "no evidence is emitted (FM-2, DEC-0107)",
                 symbol=symbol,
             )
-
         known_at = bounds.get("known_at_ns", end_raw)
         if isinstance(known_at, bool) or not isinstance(known_at, int):
             return invalid_input(
@@ -592,73 +643,96 @@ class DukascopyAdapter:
                 given=repr(known_at),
             )
         revision = _clean_str(bounds.get("revision")) or "r1"
-        license_tag = parse_license_tag(bounds.get("license_tag", self._default_license))
         price_scale = self._price_scales.get(symbol, DEFAULT_PRICE_SCALE)
+        return Ok((symbol, start_raw, end_raw, known_at, revision, instrument, price_scale))
 
-        hour_keys = _hour_keys_for_window(start_raw, end_raw, symbol)
-        if is_refusal(hour_keys):
-            return hour_keys
-
+    def _records_for_hours(
+        self,
+        hour_keys: tuple[DukascopyHourKey, ...],
+        *,
+        symbol: str,
+        instrument: Instrument,
+        start_ns: int,
+        end_ns: int,
+        known_at_ns: int,
+        revision: str,
+        price_scale: int,
+    ) -> Result[list[ProviderRecord]]:
         records: list[ProviderRecord] = []
-        for key in hour_keys.value:
-            hour_start = key.hour_start_ns()
-            if is_refusal(hour_start):
-                return hour_start
-            try:
-                fetched = self._transport.fetch_hour(key)
-            except Exception as exc:  # R-007: returned, never raised across CT-15
-                return TypedRefusal(
-                    category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
-                    retryability=Retryability.YES,
-                    context={
-                        "field": "transport",
-                        "reason": (
-                            "the injected Dukascopy transport raised instead of returning; "
-                            "a boundary failure is returned as a typed refusal, never raised "
-                            "across the CT-15 boundary (R-007, CT-04)"
-                        ),
-                        "hour_key": repr(key),
-                        "error_type": type(exc).__name__,
-                        "error": str(exc),
-                    },
-                )
-            if is_refusal(fetched):
-                return fetched
-            decoded = decode_bi5_ticks(
-                fetched.value,
-                hour_start_ns=hour_start.value,
+        for key in hour_keys:
+            hour_records = self._records_for_hour(
+                key,
+                symbol=symbol,
+                instrument=instrument,
+                start_ns=start_ns,
+                end_ns=end_ns,
+                known_at_ns=known_at_ns,
+                revision=revision,
                 price_scale=price_scale,
             )
-            if is_refusal(decoded):
-                return decoded
-            for tick in decoded.value:
-                if tick.event_time_ns < start_raw or tick.event_time_ns >= end_raw:
-                    continue
-                built = self._tick_to_record(
-                    tick,
-                    symbol=symbol,
-                    instrument=instrument,
-                    known_at_ns=known_at,
-                    revision=revision,
-                    price_scale=price_scale,
-                )
-                if is_refusal(built):
-                    return built
-                records.append(built.value)
+            if is_refusal(hour_records):
+                return hour_records
+            records.extend(hour_records.value)
+        return Ok(records)
 
-        window = self._record_window(
-            instrument=instrument,
-            start_ns=start_raw,
-            end_ns=end_raw,
-            license_tag=license_tag,
-            symbol=symbol,
-            revision=revision,
-            tick_count=len(records),
+    def _records_for_hour(
+        self,
+        key: DukascopyHourKey,
+        *,
+        symbol: str,
+        instrument: Instrument,
+        start_ns: int,
+        end_ns: int,
+        known_at_ns: int,
+        revision: str,
+        price_scale: int,
+    ) -> Result[list[ProviderRecord]]:
+        hour_start = key.hour_start_ns()
+        if is_refusal(hour_start):
+            return hour_start
+        try:
+            fetched = self._transport.fetch_hour(key)
+        except Exception as exc:  # R-007: returned, never raised across CT-15
+            return TypedRefusal(
+                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                retryability=Retryability.YES,
+                context={
+                    "field": "transport",
+                    "reason": (
+                        "the injected Dukascopy transport raised instead of returning; "
+                        "a boundary failure is returned as a typed refusal, never raised "
+                        "across the CT-15 boundary (R-007, CT-04)"
+                    ),
+                    "hour_key": repr(key),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+            )
+        if is_refusal(fetched):
+            return fetched
+        decoded = decode_bi5_ticks(
+            fetched.value,
+            hour_start_ns=hour_start.value,
+            price_scale=price_scale,
         )
-        if is_refusal(window):
-            return window
-        self._last_window = window.value
-        return Ok(tuple(records))
+        if is_refusal(decoded):
+            return decoded
+        records: list[ProviderRecord] = []
+        for tick in decoded.value:
+            if tick.event_time_ns < start_ns or tick.event_time_ns >= end_ns:
+                continue
+            built = self._tick_to_record(
+                tick,
+                symbol=symbol,
+                instrument=instrument,
+                known_at_ns=known_at_ns,
+                revision=revision,
+                price_scale=price_scale,
+            )
+            if is_refusal(built):
+                return built
+            records.append(built.value)
+        return Ok(records)
 
     def _tick_to_record(
         self,

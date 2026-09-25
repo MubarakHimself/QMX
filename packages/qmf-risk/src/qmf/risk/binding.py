@@ -221,6 +221,42 @@ class BookInstanceId:
         return Ok(cls(token))
 
 
+def _book_instance_identity(
+    instance_id: object,
+    book_definition_fingerprint: object,
+    account_id: object,
+    venue_id: object,
+    world: object,
+) -> Result[tuple[BookInstanceId, Fingerprint, str, VenueId, World]]:
+    if not isinstance(instance_id, BookInstanceId):
+        return invalid(
+            "instance_id",
+            "a Book instance carries an operator-minted BookInstanceId",
+            given=repr(instance_id),
+        )
+    if not isinstance(book_definition_fingerprint, Fingerprint):
+        return invalid(
+            "book_definition_fingerprint",
+            "a Book instance cites the CT-22 Book VERSION by fingerprint, never a version "
+            "string",
+            given=repr(book_definition_fingerprint),
+        )
+    account = clean_str(account_id)
+    if account is None:
+        return invalid("account_id", "a Book instance names an account id", given=repr(account_id))
+    if not isinstance(venue_id, VenueId):
+        return invalid("venue_id", "a Book instance names a VenueId", given=repr(venue_id))
+    resolved_world = coerce_enum(World, world)
+    if resolved_world is None:
+        return invalid(
+            "world",
+            "a Book instance declares its world (live on the live path)",
+            given=repr(world),
+            allowed=[member.value for member in World],
+        )
+    return Ok((instance_id, book_definition_fingerprint, account, venue_id, resolved_world))
+
+
 @dataclass(frozen=True, slots=True)
 class BookInstance:
     """An operator-minted Book-instance deployment record (AD-29; DEC-0143).
@@ -259,34 +295,12 @@ class BookInstance:
         ``world`` a :class:`~qmf.core.World`; and ``creation_sequence`` a non-negative
         integer (a bool is not a sequence).
         """
-        if not isinstance(instance_id, BookInstanceId):
-            return invalid(
-                "instance_id",
-                "a Book instance carries an operator-minted BookInstanceId",
-                given=repr(instance_id),
-            )
-        if not isinstance(book_definition_fingerprint, Fingerprint):
-            return invalid(
-                "book_definition_fingerprint",
-                "a Book instance cites the CT-22 Book VERSION by fingerprint, never a version "
-                "string",
-                given=repr(book_definition_fingerprint),
-            )
-        account = clean_str(account_id)
-        if account is None:
-            return invalid(
-                "account_id", "a Book instance names an account id", given=repr(account_id)
-            )
-        if not isinstance(venue_id, VenueId):
-            return invalid("venue_id", "a Book instance names a VenueId", given=repr(venue_id))
-        resolved_world = coerce_enum(World, world)
-        if resolved_world is None:
-            return invalid(
-                "world",
-                "a Book instance declares its world (live on the live path)",
-                given=repr(world),
-                allowed=[member.value for member in World],
-            )
+        identity = _book_instance_identity(
+            instance_id, book_definition_fingerprint, account_id, venue_id, world
+        )
+        if is_refusal(identity):
+            return identity
+        resolved_id, book_fp, account, resolved_venue, resolved_world = identity.value
         occurrence = clean_str(mint_occurrence)
         if occurrence is None:
             return invalid(
@@ -308,10 +322,10 @@ class BookInstance:
             )
         return Ok(
             cls(
-                instance_id=instance_id,
-                book_definition_fingerprint=book_definition_fingerprint,
+                instance_id=resolved_id,
+                book_definition_fingerprint=book_fp,
                 account_id=account,
-                venue_id=venue_id,
+                venue_id=resolved_venue,
                 world=resolved_world,
                 mint_occurrence=occurrence,
                 creation_sequence=creation_sequence,
@@ -889,6 +903,145 @@ class CapabilityCheckResult:
         return content
 
 
+def _bind_check_inputs(
+    requirements: object, profile: object, bms_rank_table: object
+) -> Result[tuple[BookBindingRequirements, VenueBindingProfile, ControlRankTable]]:
+    if not isinstance(requirements, BookBindingRequirements):
+        return invalid(
+            "requirements",
+            "the bind-time check reads a validated BookBindingRequirements",
+            given=repr(requirements),
+        )
+    if not isinstance(profile, VenueBindingProfile):
+        return invalid(
+            "profile",
+            "the bind-time check reads a VenueBindingProfile (the CT-18 projection)",
+            given=repr(profile),
+        )
+    if not isinstance(bms_rank_table, ControlRankTable):
+        return invalid(
+            "bms_rank_table",
+            "the bind-time check reads the BMS-declared ControlRankTable",
+            given=repr(bms_rank_table),
+        )
+    return Ok((requirements, profile, bms_rank_table))
+
+
+def _bind_check_flags(
+    live_path_rung_baseline_present: object,
+    is_second_book_on_account: object,
+    overlapping_instrument_set: object,
+) -> Result[tuple[bool, bool, bool]]:
+    if not isinstance(live_path_rung_baseline_present, bool):
+        return invalid(
+            "live_path_rung_baseline_present",
+            "a bind-time flag is a bool",
+            given=repr(live_path_rung_baseline_present),
+        )
+    if not isinstance(is_second_book_on_account, bool):
+        return invalid(
+            "is_second_book_on_account",
+            "a bind-time flag is a bool",
+            given=repr(is_second_book_on_account),
+        )
+    if not isinstance(overlapping_instrument_set, bool):
+        return invalid(
+            "overlapping_instrument_set",
+            "a bind-time flag is a bool",
+            given=repr(overlapping_instrument_set),
+        )
+    return Ok(
+        (
+            live_path_rung_baseline_present,
+            is_second_book_on_account,
+            overlapping_instrument_set,
+        )
+    )
+
+
+def _bind_check_currency_and_caps(
+    requirements: BookBindingRequirements, profile: VenueBindingProfile
+) -> Result[tuple[str, PositionModel]]:
+    missing_caps = requirements.required_venue_capabilities - profile.declared_capabilities
+    if missing_caps:
+        return unsupported(
+            "required_venue_capabilities",
+            "the venue does not declare a capability the Book requires; the shortfall refuses "
+            "at bind time, never at trade time",
+            missing=sorted(missing_caps),
+        )
+    settlement_currency = profile.settlement_currency
+    if settlement_currency is None:
+        return unavailable(
+            "settlement_currency",
+            "the account settlement currency is not measured yet; it rides the venue-observation "
+            "profile and refuses at bind time until measured",
+        )
+    if settlement_currency != requirements.accounting_currency:
+        return policy(
+            "settlement_currency",
+            "the account settlement currency does not match the Book's accounting_currency; no "
+            "rate source is ratified and a silent conversion is the one error no report shows",
+            settlement_currency=settlement_currency,
+            accounting_currency=requirements.accounting_currency,
+        )
+    position_model = profile.position_model
+    if position_model is None:
+        return unavailable(
+            "position_model",
+            "the venue position model is not measured yet; the shared-flatten resolution needs "
+            "it and refuses at bind time until measured",
+        )
+    return Ok((settlement_currency, position_model))
+
+
+def _bind_check_flatten(
+    position_model: PositionModel,
+    *,
+    second_book: bool,
+    overlapping: bool,
+    shared_flatten_signature: object,
+) -> Result[str | None]:
+    resolved_signature = clean_str(shared_flatten_signature)
+    netted_overlap = (
+        position_model is PositionModel.NETTING and second_book and overlapping
+    )
+    if netted_overlap and resolved_signature is None:
+        return unsupported(
+            "shared_flatten_signature",
+            "a second Book on a netting account whose live bindings may trade an overlapping "
+            "instrument set needs the operator's signed shared-flatten limitation; one Book per "
+            "netted account is the default",
+        )
+    return Ok(resolved_signature if netted_overlap else None)
+
+
+def _bind_check_sensors(
+    requirements: BookBindingRequirements,
+    sensor_baselines_present: object,
+    live_path_rung_baseline_present: bool,
+    bms_rank_table: ControlRankTable,
+) -> Result[None]:
+    baselines = _coerce_token_set("sensor_baselines_present", sensor_baselines_present)
+    if isinstance(baselines, TypedRefusal):
+        return baselines
+    missing_baselines = requirements.required_sensor_ids - baselines
+    if missing_baselines:
+        return unavailable(
+            "sensor_baselines_present",
+            "a live binding needs a present SQS baseline artifact for every sensor the Book's "
+            "doors read; a missing baseline refuses at bind time",
+            missing=sorted(missing_baselines),
+        )
+    if not live_path_rung_baseline_present:
+        return unavailable(
+            "live_path_rung_baseline_present",
+            "a live binding needs a recorded live-path rung baseline on this deployment's "
+            "declared (OS, CPU-class) tuple; its absence refuses at bind time",
+        )
+    return check_rank_table_non_contradiction(requirements.control_policy_ranks, bms_rank_table)
+
+
 def bind_time_capability_check(
     *,
     requirements: object,
@@ -926,120 +1079,162 @@ def bind_time_capability_check(
     :class:`CapabilityCheckResult` records the satisfied list — an identity field of the
     binding.
     """
-    if not isinstance(requirements, BookBindingRequirements):
-        return invalid(
-            "requirements",
-            "the bind-time check reads a validated BookBindingRequirements",
-            given=repr(requirements),
-        )
-    if not isinstance(profile, VenueBindingProfile):
-        return invalid(
-            "profile",
-            "the bind-time check reads a VenueBindingProfile (the CT-18 projection)",
-            given=repr(profile),
-        )
-    if not isinstance(bms_rank_table, ControlRankTable):
-        return invalid(
-            "bms_rank_table",
-            "the bind-time check reads the BMS-declared ControlRankTable",
-            given=repr(bms_rank_table),
-        )
-    for name, flag in (
-        ("live_path_rung_baseline_present", live_path_rung_baseline_present),
-        ("is_second_book_on_account", is_second_book_on_account),
-        ("overlapping_instrument_set", overlapping_instrument_set),
-    ):
-        if not isinstance(flag, bool):
-            return invalid(name, "a bind-time flag is a bool", given=repr(flag))
-
-    # 1. required venue capabilities
-    missing_caps = requirements.required_venue_capabilities - profile.declared_capabilities
-    if missing_caps:
-        return unsupported(
-            "required_venue_capabilities",
-            "the venue does not declare a capability the Book requires; the shortfall refuses "
-            "at bind time, never at trade time",
-            missing=sorted(missing_caps),
-        )
-
-    # 2. settlement currency matches the Book's accounting_currency
-    settlement_currency = profile.settlement_currency
-    if settlement_currency is None:
-        return unavailable(
-            "settlement_currency",
-            "the account settlement currency is not measured yet; it rides the venue-observation "
-            "profile and refuses at bind time until measured",
-        )
-    if settlement_currency != requirements.accounting_currency:
-        return policy(
-            "settlement_currency",
-            "the account settlement currency does not match the Book's accounting_currency; no "
-            "rate source is ratified and a silent conversion is the one error no report shows",
-            settlement_currency=settlement_currency,
-            accounting_currency=requirements.accounting_currency,
-        )
-
-    # 3. shared-flatten signature where netted (AC6)
-    position_model = profile.position_model
-    if position_model is None:
-        return unavailable(
-            "position_model",
-            "the venue position model is not measured yet; the shared-flatten resolution needs "
-            "it and refuses at bind time until measured",
-        )
-    resolved_signature = clean_str(shared_flatten_signature)
-    netted_overlap = (
-        position_model is PositionModel.NETTING
-        and is_second_book_on_account
-        and overlapping_instrument_set
+    inputs = _bind_check_inputs(requirements, profile, bms_rank_table)
+    if is_refusal(inputs):
+        return inputs
+    reqs, venue_profile, rank_table = inputs.value
+    flags = _bind_check_flags(
+        live_path_rung_baseline_present, is_second_book_on_account, overlapping_instrument_set
     )
-    if netted_overlap and resolved_signature is None:
-        return unsupported(
-            "shared_flatten_signature",
-            "a second Book on a netting account whose live bindings may trade an overlapping "
-            "instrument set needs the operator's signed shared-flatten limitation; one Book per "
-            "netted account is the default",
-        )
-
-    # 4. SQS baseline present for every sensor the Book's doors read
-    baselines = _coerce_token_set("sensor_baselines_present", sensor_baselines_present)
-    if isinstance(baselines, TypedRefusal):
-        return baselines
-    missing_baselines = requirements.required_sensor_ids - baselines
-    if missing_baselines:
-        return unavailable(
-            "sensor_baselines_present",
-            "a live binding needs a present SQS baseline artifact for every sensor the Book's "
-            "doors read; a missing baseline refuses at bind time",
-            missing=sorted(missing_baselines),
-        )
-
-    # 5. live-path rung baseline recorded on this deployment
-    if not live_path_rung_baseline_present:
-        return unavailable(
-            "live_path_rung_baseline_present",
-            "a live binding needs a recorded live-path rung baseline on this deployment's "
-            "declared (OS, CPU-class) tuple; its absence refuses at bind time",
-        )
-
-    # 6. the Book's control_policy does not contradict the BMS rank table
-    non_contradiction = check_rank_table_non_contradiction(
-        requirements.control_policy_ranks, bms_rank_table
+    if is_refusal(flags):
+        return flags
+    live_rung, second_book, overlapping = flags.value
+    currency = _bind_check_currency_and_caps(reqs, venue_profile)
+    if is_refusal(currency):
+        return currency
+    settlement_currency, position_model = currency.value
+    flatten = _bind_check_flatten(
+        position_model,
+        second_book=second_book,
+        overlapping=overlapping,
+        shared_flatten_signature=shared_flatten_signature,
     )
-    if is_refusal(non_contradiction):
-        return non_contradiction
-
+    if is_refusal(flatten):
+        return flatten
+    sensors = _bind_check_sensors(
+        reqs, sensor_baselines_present, live_rung, rank_table
+    )
+    if is_refusal(sensors):
+        return sensors
     return Ok(
         CapabilityCheckResult(
             position_model=position_model,
             settlement_currency=settlement_currency,
-            satisfied_capabilities=requirements.required_venue_capabilities,
-            shared_flatten_signature=resolved_signature if netted_overlap else None,
-            satisfied_sensor_baselines=requirements.required_sensor_ids,
+            satisfied_capabilities=reqs.required_venue_capabilities,
+            shared_flatten_signature=flatten.value,
+            satisfied_sensor_baselines=reqs.required_sensor_ids,
             live_path_rung_baseline_present=True,
             rank_table_non_contradicted=True,
         )
     )
+
+
+def _binding_tuple_identity(
+    book_instance_id: object,
+    bms_instance_id: object,
+    venue_id: object,
+    account_id: object,
+    world: object,
+    book_definition_fingerprint: object,
+    bms_definition_fingerprint: object,
+) -> Result[
+    tuple[BookInstanceId, BmsInstanceId, VenueId, str, World, Fingerprint, Fingerprint]
+]:
+    if not isinstance(book_instance_id, BookInstanceId):
+        return invalid(
+            "book_instance_id",
+            "the tuple carries a BookInstanceId",
+            given=repr(book_instance_id),
+        )
+    if not isinstance(bms_instance_id, BmsInstanceId):
+        return invalid(
+            "bms_instance_id", "the tuple carries a BmsInstanceId", given=repr(bms_instance_id)
+        )
+    if not isinstance(venue_id, VenueId):
+        return invalid("venue_id", "the tuple carries a VenueId", given=repr(venue_id))
+    account = clean_str(account_id)
+    if account is None:
+        return invalid("account_id", "the tuple carries an account id", given=repr(account_id))
+    resolved_world = coerce_enum(World, world)
+    if resolved_world is None:
+        return invalid(
+            "world",
+            "the tuple carries a world (live on the live path)",
+            given=repr(world),
+            allowed=[member.value for member in World],
+        )
+    if not isinstance(book_definition_fingerprint, Fingerprint):
+        return invalid(
+            "book_definition_fingerprint",
+            "a binding cites the CT-22 Book VERSION by fingerprint",
+            given=repr(book_definition_fingerprint),
+        )
+    if not isinstance(bms_definition_fingerprint, Fingerprint):
+        return invalid(
+            "bms_definition_fingerprint",
+            "a binding cites the CT-27 BMS VERSION by fingerprint",
+            given=repr(bms_definition_fingerprint),
+        )
+    return Ok(
+        (
+            book_instance_id,
+            bms_instance_id,
+            venue_id,
+            account,
+            resolved_world,
+            book_definition_fingerprint,
+            bms_definition_fingerprint,
+        )
+    )
+
+
+def _binding_payload(
+    state_carry: object, capability_check_result: object
+) -> Result[tuple[StateCarry, CapabilityCheckResult]]:
+    if not isinstance(state_carry, StateCarry):
+        return invalid(
+            "state_carry",
+            "a binding carries a mandatory, complete StateCarry declaration",
+            given=repr(state_carry),
+        )
+    if not isinstance(capability_check_result, CapabilityCheckResult):
+        return invalid(
+            "capability_check_result",
+            "a binding carries the recorded bind-time CapabilityCheckResult",
+            given=repr(capability_check_result),
+        )
+    return Ok((state_carry, capability_check_result))
+
+
+def _binding_optional_edges(
+    state_carry: StateCarry,
+    carries_ledger_edge: object,
+    continues_performance_edge: object,
+    pairing_record: object,
+    supersedes: object,
+) -> Result[
+    tuple[
+        SignedLedgerEdge | None,
+        ContinuesPerformanceEdge | None,
+        PairingRecord | None,
+        Fingerprint | None,
+    ]
+]:
+    edge = _optional(carries_ledger_edge, SignedLedgerEdge, "carries_ledger_edge")
+    if isinstance(edge, TypedRefusal):
+        return edge
+    continues = _optional(
+        continues_performance_edge, ContinuesPerformanceEdge, "continues_performance_edge"
+    )
+    if isinstance(continues, TypedRefusal):
+        return continues
+    pairing = _optional(pairing_record, PairingRecord, "pairing_record")
+    if isinstance(pairing, TypedRefusal):
+        return pairing
+    superseded = _optional(supersedes, Fingerprint, "supersedes")
+    if isinstance(superseded, TypedRefusal):
+        return superseded
+    if state_carry.carried_counters() and edge is None:
+        return invalid(
+            "state_carry",
+            "a carry counter is legal only under an accompanying human-signed carries-ledger "
+            "edge; what carries is declared, never inferred, and never read off an edge's "
+            "mere presence",
+            carried=[
+                c.value for c in sorted(state_carry.carried_counters(), key=lambda k: k.value)
+            ],
+        )
+    return Ok((edge, continues, pairing, superseded))
 
 
 # --- the binding record ------------------------------------------------------
@@ -1100,89 +1295,44 @@ class BookBindingRecord:
         result (it is applied there), so the record can never disagree with the check. The
         two lineage edges are independent — neither is inferred from the other.
         """
-        if not isinstance(book_instance_id, BookInstanceId):
-            return invalid(
-                "book_instance_id",
-                "the tuple carries a BookInstanceId",
-                given=repr(book_instance_id),
-            )
-        if not isinstance(bms_instance_id, BmsInstanceId):
-            return invalid(
-                "bms_instance_id", "the tuple carries a BmsInstanceId", given=repr(bms_instance_id)
-            )
-        if not isinstance(venue_id, VenueId):
-            return invalid("venue_id", "the tuple carries a VenueId", given=repr(venue_id))
-        account = clean_str(account_id)
-        if account is None:
-            return invalid("account_id", "the tuple carries an account id", given=repr(account_id))
-        resolved_world = coerce_enum(World, world)
-        if resolved_world is None:
-            return invalid(
-                "world",
-                "the tuple carries a world (live on the live path)",
-                given=repr(world),
-                allowed=[member.value for member in World],
-            )
-        if not isinstance(book_definition_fingerprint, Fingerprint):
-            return invalid(
-                "book_definition_fingerprint",
-                "a binding cites the CT-22 Book VERSION by fingerprint",
-                given=repr(book_definition_fingerprint),
-            )
-        if not isinstance(bms_definition_fingerprint, Fingerprint):
-            return invalid(
-                "bms_definition_fingerprint",
-                "a binding cites the CT-27 BMS VERSION by fingerprint",
-                given=repr(bms_definition_fingerprint),
-            )
-        if not isinstance(state_carry, StateCarry):
-            return invalid(
-                "state_carry",
-                "a binding carries a mandatory, complete StateCarry declaration",
-                given=repr(state_carry),
-            )
-        if not isinstance(capability_check_result, CapabilityCheckResult):
-            return invalid(
-                "capability_check_result",
-                "a binding carries the recorded bind-time CapabilityCheckResult",
-                given=repr(capability_check_result),
-            )
-        edge = _optional(carries_ledger_edge, SignedLedgerEdge, "carries_ledger_edge")
-        if isinstance(edge, TypedRefusal):
-            return edge
-        continues = _optional(
-            continues_performance_edge, ContinuesPerformanceEdge, "continues_performance_edge"
+        identity = _binding_tuple_identity(
+            book_instance_id,
+            bms_instance_id,
+            venue_id,
+            account_id,
+            world,
+            book_definition_fingerprint,
+            bms_definition_fingerprint,
         )
-        if isinstance(continues, TypedRefusal):
-            return continues
-        pairing = _optional(pairing_record, PairingRecord, "pairing_record")
-        if isinstance(pairing, TypedRefusal):
-            return pairing
-        superseded = _optional(supersedes, Fingerprint, "supersedes")
-        if isinstance(superseded, TypedRefusal):
-            return superseded
-        if state_carry.carried_counters() and edge is None:
-            return invalid(
-                "state_carry",
-                "a carry counter is legal only under an accompanying human-signed carries-ledger "
-                "edge; what carries is declared, never inferred, and never read off an edge's "
-                "mere presence",
-                carried=[
-                    c.value for c in sorted(state_carry.carried_counters(), key=lambda k: k.value)
-                ],
-            )
+        if is_refusal(identity):
+            return identity
+        book_id, bms_id, resolved_venue, account, resolved_world, book_fp, bms_fp = identity.value
+        payload = _binding_payload(state_carry, capability_check_result)
+        if is_refusal(payload):
+            return payload
+        carry, check = payload.value
+        extras = _binding_optional_edges(
+            carry,
+            carries_ledger_edge,
+            continues_performance_edge,
+            pairing_record,
+            supersedes,
+        )
+        if is_refusal(extras):
+            return extras
+        edge, continues, pairing, superseded = extras.value
         return Ok(
             cls(
-                book_instance_id=book_instance_id,
-                bms_instance_id=bms_instance_id,
-                venue_id=venue_id,
+                book_instance_id=book_id,
+                bms_instance_id=bms_id,
+                venue_id=resolved_venue,
                 account_id=account,
                 world=resolved_world,
-                book_definition_fingerprint=book_definition_fingerprint,
-                bms_definition_fingerprint=bms_definition_fingerprint,
-                state_carry=state_carry,
-                capability_check_result=capability_check_result,
-                shared_flatten_signature=capability_check_result.shared_flatten_signature,
+                book_definition_fingerprint=book_fp,
+                bms_definition_fingerprint=bms_fp,
+                state_carry=carry,
+                capability_check_result=check,
+                shared_flatten_signature=check.shared_flatten_signature,
                 carries_ledger_edge=edge,
                 continues_performance_edge=continues,
                 pairing_record=pairing,
@@ -1267,6 +1417,58 @@ def _optional(
 # --- the append-only binding log (mint guard) --------------------------------
 
 
+def _check_binding_supersedes(
+    record: BookBindingRecord,
+    *,
+    by_fingerprint: dict[str, BookBindingRecord],
+    superseded: set[str],
+    live_by_book: dict[str, str],
+) -> Result[None]:
+    book_key = record.book_instance_id.value
+    if record.supersedes is None:
+        if book_key in live_by_book:
+            return invalid(
+                "record",
+                "a Book binds exactly one BMS at a time; a second live binding for a Book "
+                "instance must supersede its current live binding (re-binding mints a supersedes "
+                "edge)",
+                book_instance_id=book_key,
+                current=live_by_book[book_key],
+            )
+        return Ok(None)
+    prior_value = record.supersedes.value
+    prior = by_fingerprint.get(prior_value)
+    if prior is None:
+        return unavailable(
+            "supersedes",
+            "a superseding binding must name an existing prior binding; a supersedes edge "
+            "never dangles",
+            given=prior_value,
+        )
+    if prior.book_instance_id.value != book_key:
+        return invalid(
+            "supersedes",
+            "a binding may supersede only the same Book instance's prior binding",
+            book_instance_id=book_key,
+            prior_book_instance_id=prior.book_instance_id.value,
+        )
+    if prior_value in superseded:
+        return invalid(
+            "supersedes",
+            "the named prior binding is already superseded; the version graph is "
+            "append-only and a binding is superseded at most once",
+            given=prior_value,
+        )
+    if live_by_book.get(book_key) != prior_value:
+        return invalid(
+            "supersedes",
+            "a re-bind must supersede the Book instance's current live binding",
+            given=prior_value,
+            current=live_by_book.get(book_key),
+        )
+    return Ok(None)
+
+
 class BookBindingLog:
     """An append-only, in-memory guard over binding minting (CT-28; DEC-0143).
 
@@ -1318,46 +1520,14 @@ class BookBindingLog:
                 binding_fingerprint=fp_value,
             )
         book_key = record.book_instance_id.value
-        if record.supersedes is not None:
-            prior_value = record.supersedes.value
-            prior = self._by_fingerprint.get(prior_value)
-            if prior is None:
-                return unavailable(
-                    "supersedes",
-                    "a superseding binding must name an existing prior binding; a supersedes edge "
-                    "never dangles",
-                    given=prior_value,
-                )
-            if prior.book_instance_id.value != book_key:
-                return invalid(
-                    "supersedes",
-                    "a binding may supersede only the same Book instance's prior binding",
-                    book_instance_id=book_key,
-                    prior_book_instance_id=prior.book_instance_id.value,
-                )
-            if prior_value in self._superseded:
-                return invalid(
-                    "supersedes",
-                    "the named prior binding is already superseded; the version graph is "
-                    "append-only and a binding is superseded at most once",
-                    given=prior_value,
-                )
-            if self._live_by_book.get(book_key) != prior_value:
-                return invalid(
-                    "supersedes",
-                    "a re-bind must supersede the Book instance's current live binding",
-                    given=prior_value,
-                    current=self._live_by_book.get(book_key),
-                )
-        elif book_key in self._live_by_book:
-            return invalid(
-                "record",
-                "a Book binds exactly one BMS at a time; a second live binding for a Book "
-                "instance must supersede its current live binding (re-binding mints a supersedes "
-                "edge)",
-                book_instance_id=book_key,
-                current=self._live_by_book[book_key],
-            )
+        lineage = _check_binding_supersedes(
+            record,
+            by_fingerprint=self._by_fingerprint,
+            superseded=self._superseded,
+            live_by_book=self._live_by_book,
+        )
+        if is_refusal(lineage):
+            return lineage
         self._by_fingerprint[fp_value] = record
         self._order.append(epoch.value)
         if record.supersedes is not None:
