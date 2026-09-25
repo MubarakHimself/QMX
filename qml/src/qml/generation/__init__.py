@@ -348,29 +348,194 @@ def _refuse_extra(extra: object) -> Result[None]:
         )
     mapping = cast("Mapping[object, object]", extra)
     for key, value in mapping.items():
-        token = _normalize_token(key)
-        if token is None:
-            continue
-        if token in {"dsl", "qml_dsl", "qml"}:
-            refused = refuse_qml_dsl(value if value is not None else key)
-            if is_refusal(refused):
-                return refused
-        if token in RANDOM_CONDITION_SCHEMA_KEYS:
-            return refuse_random_condition_schema(key)
-        if (
-            (isinstance(key, str) and key in GAP_0085_NOUNS)
-            or token in GAP_0085_MECHANISM_FIELDS
-            or token == _MECHANISMS_FIELD
-        ):
-            return refuse_gap_0085_nouns(mapping if token == _MECHANISMS_FIELD else key)
-        if token in {"algorithm", "generator_algorithm"} or token in GAP_0063_ALGORITHM_CHOICES:
-            return refuse_generator_algorithm(
-                value if value is not None else key,
-                as_default=True,
-            )
-        if token in {"no_code", "nocode", "no-code"}:
-            return refuse_no_code_authoring(value if value is not None else key)
+        blocked = _refuse_extra_item(mapping, key, value)
+        if is_refusal(blocked):
+            return blocked
     return _refuse_random_condition_payload(mapping)
+
+
+def _refuse_extra_item(
+    mapping: Mapping[object, object],
+    key: object,
+    value: object,
+) -> Result[None]:
+    token = _normalize_token(key)
+    if token is None:
+        return Ok(None)
+    if token in {"dsl", "qml_dsl", "qml"}:
+        refused = refuse_qml_dsl(value if value is not None else key)
+        if is_refusal(refused):
+            return refused
+    if token in RANDOM_CONDITION_SCHEMA_KEYS:
+        return refuse_random_condition_schema(key)
+    if (
+        (isinstance(key, str) and key in GAP_0085_NOUNS)
+        or token in GAP_0085_MECHANISM_FIELDS
+        or token == _MECHANISMS_FIELD
+    ):
+        return refuse_gap_0085_nouns(mapping if token == _MECHANISMS_FIELD else key)
+    if token in {"algorithm", "generator_algorithm"} or token in GAP_0063_ALGORITHM_CHOICES:
+        return refuse_generator_algorithm(
+            value if value is not None else key,
+            as_default=True,
+        )
+    if token in {"no_code", "nocode", "no-code"}:
+        return refuse_no_code_authoring(value if value is not None else key)
+    return Ok(None)
+
+
+def _refuse_authoring_surfaces(
+    *,
+    dsl: object,
+    random_condition: object,
+    algorithm: object,
+    no_code: object,
+    mechanisms: object,
+    extra: object,
+) -> Result[None]:
+    blocked = refuse_qml_dsl(dsl)
+    if is_refusal(blocked):
+        return blocked
+    blocked = refuse_random_condition_schema(random_condition)
+    if is_refusal(blocked):
+        return blocked
+    blocked = refuse_generator_algorithm(algorithm, as_default=algorithm is not None)
+    if is_refusal(blocked):
+        return blocked
+    blocked = refuse_no_code_authoring(no_code)
+    if is_refusal(blocked):
+        return blocked
+    if mechanisms is not None:
+        refused_nouns = refuse_gap_0085_nouns(mechanisms)
+        if is_refusal(refused_nouns):
+            return refused_nouns
+    return _refuse_extra(extra)
+
+
+def _refuse_authoring_payloads(
+    confluence_legs: object,
+    confluence: object,
+    parameter_space: object,
+    logic_source: object,
+) -> Result[None]:
+    for value in (confluence_legs, confluence, parameter_space):
+        blocked = _refuse_random_condition_payload(value)
+        if is_refusal(blocked):
+            return blocked
+    for value in (confluence_legs, confluence, parameter_space, logic_source):
+        blocked = _refuse_gap_0085_payload(value)
+        if is_refusal(blocked):
+            return blocked
+    return Ok(None)
+
+
+def _mint_authored_confluence(
+    confluence: object,
+    confluence_legs: object,
+) -> Result[Confluence | None]:
+    if confluence is not None and not isinstance(confluence, Confluence):
+        parsed = mint_confluence(confluence)
+        if is_refusal(parsed):
+            return parsed
+        return Ok(parsed.value)
+    if isinstance(confluence, Confluence):
+        return Ok(confluence)
+    if confluence_legs is not None:
+        parsed = mint_confluence(confluence_legs)
+        if is_refusal(parsed):
+            return parsed
+        return Ok(parsed.value)
+    return Ok(None)
+
+
+def _mint_authored_logic(
+    *,
+    logic_reference: object,
+    logic_source: object,
+    logic_distribution: object,
+    logic_version: object,
+) -> Result[LogicIdentity | None]:
+    if logic_reference is not None:
+        if isinstance(logic_reference, LogicIdentity):
+            return Ok(logic_reference)
+        parsed_logic = LogicIdentity.try_from_payload(logic_reference)
+        if is_refusal(parsed_logic):
+            return parsed_logic
+        return Ok(parsed_logic.value)
+    if logic_source is None:
+        return Ok(None)
+    if not isinstance(logic_source, Mapping):
+        return invalid(
+            "logic_source",
+            "logic-source bytes are an in-memory path -> text mapping",
+            given=type(logic_source).__name__,
+        )
+    source_map = cast("Mapping[object, object]", logic_source)
+    blocked = _refuse_source_dsl(source_map)
+    if is_refusal(blocked):
+        return blocked
+    tree = {str(path): str(content) for path, content in source_map.items()}
+    parsed_logic = mint_logic_identity(logic_distribution, logic_version, tree)
+    if is_refusal(parsed_logic):
+        return parsed_logic
+    return Ok(parsed_logic.value)
+
+
+def _mint_authored_bot(
+    *,
+    strategy_family_id: object,
+    parameter_space: object,
+    footprint: object,
+    permitted_exit_intents: object,
+    minted_confluence: Confluence | None,
+    minted_logic: LogicIdentity | None,
+) -> Result[BotDefinition | None]:
+    bot_requested = (
+        strategy_family_id is not None
+        or parameter_space is not None
+        or footprint is not None
+        or permitted_exit_intents not in ((), None)
+    )
+    if not bot_requested:
+        return Ok(None)
+    cites: object = [minted_confluence] if minted_confluence is not None else None
+    parsed_bot = mint_bot_definition(
+        strategy_family_id=strategy_family_id,
+        confluence_set=cites,
+        parameter_space=parameter_space,
+        footprint=footprint,
+        permitted_exit_intents=permitted_exit_intents,
+        logic_reference=minted_logic,
+    )
+    if is_refusal(parsed_bot):
+        return parsed_bot
+    return Ok(parsed_bot.value)
+
+
+def _refuse_identical_parent(
+    parent_bot_fp1: object,
+    minted_bot: BotDefinition | None,
+) -> Result[None]:
+    if parent_bot_fp1 is None:
+        return Ok(None)
+    parent = _coerce_fingerprint(parent_bot_fp1, "parent_bot_fp1")
+    if is_refusal(parent):
+        return parent
+    if minted_bot is None:
+        return Ok(None)
+    child = minted_bot.fingerprint_content()
+    if is_refusal(child):
+        return child
+    if child.value == parent.value:
+        return invalid(
+            "parent_bot_fp1",
+            "generation authors new CT-33/CT-34 content and/or logic-source "
+            "bytes; identical content is not a new structure and is not "
+            "search either — search keeps the same bot fp1 via run-spec "
+            "parameter overlays",
+            bot_fp1=parent.value.value,
+        )
+    return Ok(None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -429,138 +594,60 @@ def author_new_structure(
 
     QML authors. The host mints the CT-06 envelope. QMB does not author.
     """
-    blocked = refuse_qml_dsl(dsl)
-    if is_refusal(blocked):
-        return blocked
-    blocked = refuse_random_condition_schema(random_condition)
-    if is_refusal(blocked):
-        return blocked
-    blocked = refuse_generator_algorithm(algorithm, as_default=algorithm is not None)
-    if is_refusal(blocked):
-        return blocked
-    blocked = refuse_no_code_authoring(no_code)
-    if is_refusal(blocked):
-        return blocked
-    if mechanisms is not None:
-        refused_nouns = refuse_gap_0085_nouns(mechanisms)
-        if is_refusal(refused_nouns):
-            return refused_nouns
-    blocked = _refuse_extra(extra)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_random_condition_payload(confluence_legs)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_random_condition_payload(confluence)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_random_condition_payload(parameter_space)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_gap_0085_payload(confluence_legs)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_gap_0085_payload(confluence)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_gap_0085_payload(parameter_space)
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_gap_0085_payload(logic_source)
-    if is_refusal(blocked):
-        return blocked
-
-    minted_confluence: Confluence | None = None
-    if confluence is not None and not isinstance(confluence, Confluence):
-        parsed = mint_confluence(confluence)
-        if is_refusal(parsed):
-            return parsed
-        minted_confluence = parsed.value
-    elif isinstance(confluence, Confluence):
-        minted_confluence = confluence
-    elif confluence_legs is not None:
-        parsed = mint_confluence(confluence_legs)
-        if is_refusal(parsed):
-            return parsed
-        minted_confluence = parsed.value
-
-    minted_logic: LogicIdentity | None = None
-    if logic_reference is not None:
-        if isinstance(logic_reference, LogicIdentity):
-            minted_logic = logic_reference
-        else:
-            parsed_logic = LogicIdentity.try_from_payload(logic_reference)
-            if is_refusal(parsed_logic):
-                return parsed_logic
-            minted_logic = parsed_logic.value
-    elif logic_source is not None:
-        if not isinstance(logic_source, Mapping):
-            return invalid(
-                "logic_source",
-                "logic-source bytes are an in-memory path -> text mapping",
-                given=type(logic_source).__name__,
-            )
-        source_map = cast("Mapping[object, object]", logic_source)
-        blocked = _refuse_source_dsl(source_map)
-        if is_refusal(blocked):
-            return blocked
-        tree = {str(path): str(content) for path, content in source_map.items()}
-        parsed_logic = mint_logic_identity(logic_distribution, logic_version, tree)
-        if is_refusal(parsed_logic):
-            return parsed_logic
-        minted_logic = parsed_logic.value
-
-    minted_bot: BotDefinition | None = None
-    bot_requested = (
-        strategy_family_id is not None
-        or parameter_space is not None
-        or footprint is not None
-        or permitted_exit_intents not in ((), None)
+    blocked = _refuse_authoring_surfaces(
+        dsl=dsl,
+        random_condition=random_condition,
+        algorithm=algorithm,
+        no_code=no_code,
+        mechanisms=mechanisms,
+        extra=extra,
     )
-    if bot_requested:
-        cites: object = [minted_confluence] if minted_confluence is not None else None
-        parsed_bot = mint_bot_definition(
-            strategy_family_id=strategy_family_id,
-            confluence_set=cites,
-            parameter_space=parameter_space,
-            footprint=footprint,
-            permitted_exit_intents=permitted_exit_intents,
-            logic_reference=minted_logic,
-        )
-        if is_refusal(parsed_bot):
-            return parsed_bot
-        minted_bot = parsed_bot.value
-
-    if minted_confluence is None and minted_logic is None and minted_bot is None:
+    if is_refusal(blocked):
+        return blocked
+    blocked = _refuse_authoring_payloads(
+        confluence_legs, confluence, parameter_space, logic_source
+    )
+    if is_refusal(blocked):
+        return blocked
+    minted_confluence = _mint_authored_confluence(confluence, confluence_legs)
+    if is_refusal(minted_confluence):
+        return minted_confluence
+    minted_logic = _mint_authored_logic(
+        logic_reference=logic_reference,
+        logic_source=logic_source,
+        logic_distribution=logic_distribution,
+        logic_version=logic_version,
+    )
+    if is_refusal(minted_logic):
+        return minted_logic
+    minted_bot = _mint_authored_bot(
+        strategy_family_id=strategy_family_id,
+        parameter_space=parameter_space,
+        footprint=footprint,
+        permitted_exit_intents=permitted_exit_intents,
+        minted_confluence=minted_confluence.value,
+        minted_logic=minted_logic.value,
+    )
+    if is_refusal(minted_bot):
+        return minted_bot
+    if (
+        minted_confluence.value is None
+        and minted_logic.value is None
+        and minted_bot.value is None
+    ):
         return invalid(
             "authored_structure",
             "generation authors new CT-33/CT-34 content and/or logic-source bytes; "
             "an empty payload is not a new structure",
         )
-
-    if parent_bot_fp1 is not None:
-        parent = _coerce_fingerprint(parent_bot_fp1, "parent_bot_fp1")
-        if is_refusal(parent):
-            return parent
-        if minted_bot is not None:
-            child = minted_bot.fingerprint_content()
-            if is_refusal(child):
-                return child
-            if child.value == parent.value:
-                return invalid(
-                    "parent_bot_fp1",
-                    "generation authors new CT-33/CT-34 content and/or logic-source "
-                    "bytes; identical content is not a new structure and is not "
-                    "search either — search keeps the same bot fp1 via run-spec "
-                    "parameter overlays",
-                    bot_fp1=parent.value.value,
-                )
-
+    blocked = _refuse_identical_parent(parent_bot_fp1, minted_bot.value)
+    if is_refusal(blocked):
+        return blocked
     return Ok(
         AuthoredStructure(
             act=ActKind.GENERATION,
-            confluence=minted_confluence,
-            logic=minted_logic,
-            bot=minted_bot,
+            confluence=minted_confluence.value,
+            logic=minted_logic.value,
+            bot=minted_bot.value,
         )
     )

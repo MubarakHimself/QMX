@@ -120,6 +120,208 @@ def _confirmation_delay(value: object) -> Result[int | None]:
 
 
 @dataclass(frozen=True, slots=True)
+class _TemplateIdentity:
+    kind: ProducerKind
+    formula: str
+    version: int
+
+
+@dataclass(frozen=True, slots=True)
+class _TemplateShape:
+    inputs: tuple[Mapping[str, object], ...]
+    calendars: tuple[CalendarIdentity, ...]
+    alignment: AlignmentPolicy
+    missing_policy: MissingValuePolicy
+    warm: int
+
+
+@dataclass(frozen=True, slots=True)
+class _TemplateSpace:
+    schema: tuple[Mapping[str, object], ...]
+    modes: tuple[str, ...]
+    arithmetic: Mapping[str, object]
+    space: dict[str, str]
+    fixed: Mapping[str, ExactRational]
+
+
+@dataclass(frozen=True, slots=True)
+class _TemplateBounds:
+    emission: Mapping[str, object] | None
+    warm_up_time_bound: Mapping[str, object] | None
+    budget: Mapping[str, object] | None
+    delay: int | None
+    unbounded: bool
+
+
+def _template_identity(mapping: Mapping[str, object]) -> Result[_TemplateIdentity]:
+    kind = coerce_enum(ProducerKind, mapping.get("producer_kind", ProducerKind.INDICATOR))
+    if kind is None:
+        return invalid(
+            "producer_kind",
+            "a producer template is indicator (CT-16) or structure (CT-17)",
+            given=repr(mapping.get("producer_kind")),
+        )
+    formula = clean_token(mapping.get("formula_id"))
+    if formula is None:
+        return _missing_identity_field("formula_id")
+    version = positive_int(mapping.get("contract_format_version"))
+    if version is None:
+        return invalid(
+            "contract_format_version",
+            "the per-configured-producer contract format version is a positive integer ordinal",
+            given=repr(mapping.get("contract_format_version")),
+            layer=1,
+            journal=True,
+        )
+    return Ok(_TemplateIdentity(kind=kind, formula=formula, version=version))
+
+
+def _template_shape(mapping: Mapping[str, object]) -> Result[_TemplateShape]:
+    inputs = coerce_inputs(mapping.get("inputs"))
+    if is_refusal(inputs):
+        return inputs
+    calendars = coerce_calendars(mapping.get("calendar_requirements"))
+    if is_refusal(calendars):
+        return calendars
+    alignment = coerce_enum(AlignmentPolicy, mapping.get("alignment_policy"))
+    if alignment is None:
+        return invalid(
+            "alignment_policy",
+            "the alignment policy is one of the closed set; as-of is the only "
+            "governed-evidence-legal value",
+            given=repr(mapping.get("alignment_policy")),
+            layer=1,
+            journal=True,
+        )
+    missing_policy = coerce_enum(MissingValuePolicy, mapping.get("missing_value_policy"))
+    if missing_policy is None:
+        return invalid(
+            "missing_value_policy",
+            "the missing-value policy is one of the closed set; forward-fill and "
+            "interpolation are never legal",
+            given=repr(mapping.get("missing_value_policy")),
+            layer=1,
+            journal=True,
+        )
+    warm = nonneg_int(mapping.get("warm_up"))
+    if warm is None:
+        return invalid(
+            "warm_up",
+            "warm-up is a non-negative integer count of completed input observations, "
+            "identical across modes (never ticks, never a Duration)",
+            given=repr(mapping.get("warm_up")),
+            layer=1,
+            journal=True,
+        )
+    return Ok(
+        _TemplateShape(
+            inputs=inputs.value,
+            calendars=calendars.value,
+            alignment=alignment,
+            missing_policy=missing_policy,
+            warm=warm,
+        )
+    )
+
+
+def _template_space(mapping: Mapping[str, object]) -> Result[_TemplateSpace]:
+    schema = coerce_output_schema(mapping.get("output_schema"))
+    if is_refusal(schema):
+        return schema
+    modes = coerce_modes(mapping.get("supported_modes"))
+    if is_refusal(modes):
+        return modes
+    arithmetic = arithmetic_reference_identity(
+        mapping.get("arithmetic_reference_configuration")
+    )
+    if is_refusal(arithmetic):
+        return arithmetic
+    space = _space_bound_map(mapping.get("space_bound"))
+    if is_refusal(space):
+        return space
+    fixed = coerce_parameters(mapping.get("fixed_parameters", mapping.get("parameters")))
+    if is_refusal(fixed):
+        return fixed
+    overlap = sorted(set(space.value).intersection(fixed.value))
+    if overlap:
+        return invalid(
+            "space_bound",
+            "a parameter is either fixed or space-bound, never both",
+            overlap=overlap,
+        )
+    return Ok(
+        _TemplateSpace(
+            schema=schema.value,
+            modes=modes.value,
+            arithmetic=arithmetic.value,
+            space=space.value,
+            fixed=fixed.value,
+        )
+    )
+
+
+def _template_bounds(mapping: Mapping[str, object]) -> Result[_TemplateBounds]:
+    emission = _optional_emission(mapping)
+    if is_refusal(emission):
+        return emission
+    bound_identity = _optional_warm_up_time_bound(mapping)
+    if is_refusal(bound_identity):
+        return bound_identity
+    budget = _optional_declared_budget(mapping)
+    if is_refusal(budget):
+        return budget
+    delay = _confirmation_delay(
+        mapping.get("confirmation_delay_bound", mapping.get("confirmation_delay"))
+    )
+    if is_refusal(delay):
+        return delay
+    unbounded = mapping.get("confirmation_delay") == "unbounded" or (
+        isinstance(mapping.get("confirmation_delay_bound"), str)
+        and mapping.get("confirmation_delay_bound") == "unbounded"
+    )
+    return Ok(
+        _TemplateBounds(
+            emission=emission.value,
+            warm_up_time_bound=bound_identity.value,
+            budget=budget.value,
+            delay=None if unbounded else delay.value,
+            unbounded=unbounded,
+        )
+    )
+
+
+def _optional_emission(mapping: Mapping[str, object]) -> Result[Mapping[str, object] | None]:
+    if mapping.get("emission_policy") is None:
+        return Ok(None)
+    built = emission_policy_identity(mapping["emission_policy"])
+    if is_refusal(built):
+        return built
+    return Ok(built.value)
+
+
+def _optional_warm_up_time_bound(
+    mapping: Mapping[str, object],
+) -> Result[Mapping[str, object] | None]:
+    if mapping.get("warm_up_time_bound") is None:
+        return Ok(None)
+    duration = coerce_duration(mapping["warm_up_time_bound"])
+    if is_refusal(duration):
+        return duration
+    return Ok(duration.value.fp1_identity())
+
+
+def _optional_declared_budget(
+    mapping: Mapping[str, object],
+) -> Result[Mapping[str, object] | None]:
+    if mapping.get("declared_budget") is None:
+        return Ok(None)
+    built_budget = declared_budget_identity(mapping["declared_budget"])
+    if is_refusal(built_budget):
+        return built_budget
+    return Ok(built_budget.value)
+
+
+@dataclass(frozen=True, slots=True)
 class ProducerTemplate:
     """A complete CT-16/CT-17 configuration minus only space-bound parameter values."""
 
@@ -225,132 +427,38 @@ class ProducerTemplate:
 
     @classmethod
     def _from_complete(cls, mapping: Mapping[str, object]) -> Result[ProducerTemplate]:
-        kind = coerce_enum(ProducerKind, mapping.get("producer_kind", ProducerKind.INDICATOR))
-        if kind is None:
-            return invalid(
-                "producer_kind",
-                "a producer template is indicator (CT-16) or structure (CT-17)",
-                given=repr(mapping.get("producer_kind")),
-            )
-        formula = clean_token(mapping.get("formula_id"))
-        if formula is None:
-            return _missing_identity_field("formula_id")
-        version = positive_int(mapping.get("contract_format_version"))
-        if version is None:
-            return invalid(
-                "contract_format_version",
-                "the per-configured-producer contract format version is a positive integer ordinal",
-                given=repr(mapping.get("contract_format_version")),
-                layer=1,
-                journal=True,
-            )
-        inputs = coerce_inputs(mapping.get("inputs"))
-        if is_refusal(inputs):
-            return inputs
-        calendars = coerce_calendars(mapping.get("calendar_requirements"))
-        if is_refusal(calendars):
-            return calendars
-        alignment = coerce_enum(AlignmentPolicy, mapping.get("alignment_policy"))
-        if alignment is None:
-            return invalid(
-                "alignment_policy",
-                "the alignment policy is one of the closed set; as-of is the only "
-                "governed-evidence-legal value",
-                given=repr(mapping.get("alignment_policy")),
-                layer=1,
-                journal=True,
-            )
-        missing_policy = coerce_enum(MissingValuePolicy, mapping.get("missing_value_policy"))
-        if missing_policy is None:
-            return invalid(
-                "missing_value_policy",
-                "the missing-value policy is one of the closed set; forward-fill and "
-                "interpolation are never legal",
-                given=repr(mapping.get("missing_value_policy")),
-                layer=1,
-                journal=True,
-            )
-        warm = nonneg_int(mapping.get("warm_up"))
-        if warm is None:
-            return invalid(
-                "warm_up",
-                "warm-up is a non-negative integer count of completed input observations, "
-                "identical across modes (never ticks, never a Duration)",
-                given=repr(mapping.get("warm_up")),
-                layer=1,
-                journal=True,
-            )
-        schema = coerce_output_schema(mapping.get("output_schema"))
-        if is_refusal(schema):
-            return schema
-        modes = coerce_modes(mapping.get("supported_modes"))
-        if is_refusal(modes):
-            return modes
-        arithmetic = arithmetic_reference_identity(
-            mapping.get("arithmetic_reference_configuration")
-        )
-        if is_refusal(arithmetic):
-            return arithmetic
-        space = _space_bound_map(mapping.get("space_bound"))
+        identity = _template_identity(mapping)
+        if is_refusal(identity):
+            return identity
+        shape = _template_shape(mapping)
+        if is_refusal(shape):
+            return shape
+        space = _template_space(mapping)
         if is_refusal(space):
             return space
-        fixed = coerce_parameters(mapping.get("fixed_parameters", mapping.get("parameters")))
-        if is_refusal(fixed):
-            return fixed
-        overlap = sorted(set(space.value).intersection(fixed.value))
-        if overlap:
-            return invalid(
-                "space_bound",
-                "a parameter is either fixed or space-bound, never both",
-                overlap=overlap,
-            )
-        emission: Mapping[str, object] | None = None
-        if mapping.get("emission_policy") is not None:
-            built = emission_policy_identity(mapping["emission_policy"])
-            if is_refusal(built):
-                return built
-            emission = built.value
-        bound_identity: Mapping[str, object] | None = None
-        if mapping.get("warm_up_time_bound") is not None:
-            duration = coerce_duration(mapping["warm_up_time_bound"])
-            if is_refusal(duration):
-                return duration
-            bound_identity = duration.value.fp1_identity()
-        budget: Mapping[str, object] | None = None
-        if mapping.get("declared_budget") is not None:
-            built_budget = declared_budget_identity(mapping["declared_budget"])
-            if is_refusal(built_budget):
-                return built_budget
-            budget = built_budget.value
-        delay = _confirmation_delay(
-            mapping.get("confirmation_delay_bound", mapping.get("confirmation_delay"))
-        )
-        if is_refusal(delay):
-            return delay
-        unbounded = mapping.get("confirmation_delay") == "unbounded" or (
-            isinstance(mapping.get("confirmation_delay_bound"), str)
-            and mapping.get("confirmation_delay_bound") == "unbounded"
-        )
+        bounds = _template_bounds(mapping)
+        if is_refusal(bounds):
+            return bounds
         return Ok(
             cls(
-                producer_kind=kind,
-                formula_id=formula,
-                contract_format_version=version,
-                inputs=inputs.value,
-                calendar_requirements=calendars.value,
-                alignment_policy=alignment,
-                missing_value_policy=missing_policy,
-                warm_up=warm,
-                output_schema=schema.value,
-                supported_modes=modes.value,
-                arithmetic_reference_configuration=arithmetic.value,
-                space_bound=space.value,
-                fixed_parameters=fixed.value,
-                emission_policy=emission,
-                warm_up_time_bound=bound_identity,
-                declared_budget=budget,
-                confirmation_delay_bound=None if unbounded else delay.value,
-                confirmation_delay_unbounded=unbounded,
+                producer_kind=identity.value.kind,
+                formula_id=identity.value.formula,
+                contract_format_version=identity.value.version,
+                inputs=shape.value.inputs,
+                calendar_requirements=shape.value.calendars,
+                alignment_policy=shape.value.alignment,
+                missing_value_policy=shape.value.missing_policy,
+                warm_up=shape.value.warm,
+                output_schema=space.value.schema,
+                supported_modes=space.value.modes,
+                arithmetic_reference_configuration=space.value.arithmetic,
+                space_bound=space.value.space,
+                fixed_parameters=space.value.fixed,
+                emission_policy=bounds.value.emission,
+                warm_up_time_bound=bounds.value.warm_up_time_bound,
+                declared_budget=bounds.value.budget,
+                confirmation_delay_bound=bounds.value.delay,
+                confirmation_delay_unbounded=bounds.value.unbounded,
             )
         )
 
