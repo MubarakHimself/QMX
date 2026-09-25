@@ -488,50 +488,18 @@ def allocate_writer_ids(
 
     allocated: list[WriterId] = []
     seen: set[tuple[str, str, str, str]] = {supervisor.value.order_tuple()}
-    stream_items = cast("Sequence[object]", streams)
-    for index, raw_item in enumerate(stream_items):
-        if isinstance(raw_item, (str, bytes)) or not isinstance(raw_item, Sequence):
-            return invalid(
-                "streams",
-                "each allocation entry is a (role, stream) pair",
-                index=index,
-                given=type(raw_item).__name__,
-            )
-        pair = tuple(cast("Sequence[object]", raw_item))
-        if len(pair) != 2:
-            return invalid(
-                "streams",
-                "each allocation entry is a (role, stream) pair",
-                index=index,
-                given=f"len={len(pair)}",
-            )
-        role, stream = pair[0], pair[1]
-        role_token = clean_token(role)
-        stream_token = clean_token(stream)
-        if role_token is None or stream_token is None:
-            return invalid(
-                "streams",
-                "role and stream tokens are non-blank",
-                index=index,
-            )
-        if role_token == SUPERVISOR_ROLE and stream_token == SUPERVISOR_STREAM:
-            return policy(
-                "streams",
-                "Compose may never re-issue the reserved supervisor WriterId",
-                index=index,
-            )
-        writer = WriterId.try_create(machine_token, role_token, stream_token, boot_token)
-        if is_refusal(writer):
-            return writer
-        key = writer.value.order_tuple()
-        if key in seen:
-            return policy(
-                "writer_ids",
-                "allocated WriterIds must be pairwise distinct before Seal",
-                colliding=list(key),
-            )
-        seen.add(key)
-        allocated.append(writer.value)
+    for index, raw_item in enumerate(cast("Sequence[object]", streams)):
+        minted = _allocate_one_writer(
+            machine_token=machine_token,
+            boot_token=boot_token,
+            raw_item=raw_item,
+            index=index,
+            seen=seen,
+        )
+        if is_refusal(minted):
+            return minted
+        seen.add(minted.value.order_tuple())
+        allocated.append(minted.value)
 
     allocation = WriterAllocation(supervisor=supervisor.value, allocated=tuple(allocated))
     if not allocation.pairwise_distinct():
@@ -540,6 +508,56 @@ def allocate_writer_ids(
             "allocated WriterIds must be pairwise distinct before Seal",
         )
     return Ok(allocation)
+
+
+def _allocate_one_writer(
+    *,
+    machine_token: str,
+    boot_token: str,
+    raw_item: object,
+    index: int,
+    seen: set[tuple[str, str, str, str]],
+) -> Result[WriterId]:
+    if isinstance(raw_item, (str, bytes)) or not isinstance(raw_item, Sequence):
+        return invalid(
+            "streams",
+            "each allocation entry is a (role, stream) pair",
+            index=index,
+            given=type(raw_item).__name__,
+        )
+    pair = tuple(cast("Sequence[object]", raw_item))
+    if len(pair) != 2:
+        return invalid(
+            "streams",
+            "each allocation entry is a (role, stream) pair",
+            index=index,
+            given=f"len={len(pair)}",
+        )
+    role_token = clean_token(pair[0])
+    stream_token = clean_token(pair[1])
+    if role_token is None or stream_token is None:
+        return invalid(
+            "streams",
+            "role and stream tokens are non-blank",
+            index=index,
+        )
+    if role_token == SUPERVISOR_ROLE and stream_token == SUPERVISOR_STREAM:
+        return policy(
+            "streams",
+            "Compose may never re-issue the reserved supervisor WriterId",
+            index=index,
+        )
+    writer = WriterId.try_create(machine_token, role_token, stream_token, boot_token)
+    if is_refusal(writer):
+        return writer
+    key = writer.value.order_tuple()
+    if key in seen:
+        return policy(
+            "writer_ids",
+            "allocated WriterIds must be pairwise distinct before Seal",
+            colliding=list(key),
+        )
+    return Ok(writer.value)
 
 
 def compute_composition_fp(inputs: object) -> Result[tuple[Fingerprint, Fingerprint | None]]:
@@ -603,45 +621,37 @@ def _run_preflight(
 def _evaluate_check(
     name: str, facts: PreflightFacts
 ) -> tuple[bool, str, dict[str, object]]:
-    if name == "host_machine_tuple":
-        return (
-            facts.host_machine_tuple_ok,
-            "preflight.host.machine_tuple",
-            {},
-        )
-    if name == "disk_headroom":
-        return facts.disk_headroom_ok, "preflight.disk.headroom", {}
-    if name == "chrony_waitsync":
-        return facts.chrony_synced, "preflight.clock.chrony", {}
     if name == "credential_is_set":
-        extra = extra_holders(facts.secret_holders)
-        if extra:
-            return (
-                False,
-                "secrets.holder.fifth",
-                {"extra_holders": list(extra)},
-            )
-        missing = [
-            ref
-            for ref in facts.required_credential_refs
-            if facts.credential_is_set.get(ref) is not True
-        ]
-        return (
-            not missing,
-            "preflight.credential.is_set",
-            {"missing_refs": missing},
-        )
-    if name == "store_reachability":
-        return facts.stores_reachable, "preflight.store.reachability", {}
-    if name == "tree_ownership_modes":
-        return facts.tree_ownership_ok, "preflight.tree.ownership", {}
-    if name == "dependency_pins":
-        return facts.dependency_pins_ok, "preflight.deps.pins", {}
-    if name == "unit_principals":
-        return facts.unit_principals_ok, "preflight.unit.principals", {}
-    if name == "writer_id_namespace":
-        return facts.writer_id_namespace_ok, "preflight.writer.namespace", {}
-    return False, f"preflight.unknown.{name}", {"unknown_check": name}
+        return _evaluate_credential_check(facts)
+    checks: dict[str, tuple[bool, str]] = {
+        "host_machine_tuple": (facts.host_machine_tuple_ok, "preflight.host.machine_tuple"),
+        "disk_headroom": (facts.disk_headroom_ok, "preflight.disk.headroom"),
+        "chrony_waitsync": (facts.chrony_synced, "preflight.clock.chrony"),
+        "store_reachability": (facts.stores_reachable, "preflight.store.reachability"),
+        "tree_ownership_modes": (facts.tree_ownership_ok, "preflight.tree.ownership"),
+        "dependency_pins": (facts.dependency_pins_ok, "preflight.deps.pins"),
+        "unit_principals": (facts.unit_principals_ok, "preflight.unit.principals"),
+        "writer_id_namespace": (facts.writer_id_namespace_ok, "preflight.writer.namespace"),
+    }
+    found = checks.get(name)
+    if found is None:
+        return False, f"preflight.unknown.{name}", {"unknown_check": name}
+    ok, failure_id = found
+    return ok, failure_id, {}
+
+
+def _evaluate_credential_check(
+    facts: PreflightFacts,
+) -> tuple[bool, str, dict[str, object]]:
+    extra = extra_holders(facts.secret_holders)
+    if extra:
+        return False, "secrets.holder.fifth", {"extra_holders": list(extra)}
+    missing = [
+        ref
+        for ref in facts.required_credential_refs
+        if facts.credential_is_set.get(ref) is not True
+    ]
+    return not missing, "preflight.credential.is_set", {"missing_refs": missing}
 
 
 def run_boot_ceremony(
@@ -669,11 +679,128 @@ def run_boot_ceremony(
     (Story 26.11 / QMX-F067). No operator CLI exists on this path (DEC-0211).
     Check mode never opens a sequencer and never mutates runtime state.
     """
+    bound = _bind_ceremony_inputs(
+        boot_epoch_id=boot_epoch_id,
+        machine=machine,
+        unit_role=unit_role,
+        mode=mode,
+        config=config,
+        composition_inputs=composition_inputs,
+        boot_attempt_sink=boot_attempt_sink,
+        preflight=preflight,
+        reason=reason,
+        mutate_runtime_state=mutate_runtime_state,
+    )
+    if is_refusal(bound):
+        return bound
+    ctx = bound.value
+    ctx.writer_streams = writer_streams
+    ctx.workload_claims = workload_claims
+    ctx.risk_population = risk_population
+    ctx.shadow_consumer_wiring = shadow_consumer_wiring
+    doors = bind_supervisor_doors(binder=door_binder)
+    if is_refusal(doors):
+        return doors
+    ctx.doors = doors.value
+    supervisor = reserved_supervisor_writer(
+        machine=ctx.machine_token, boot_epoch_id=ctx.boot_token
+    )
+    if is_refusal(supervisor):
+        return supervisor
+    ctx.supervisor = supervisor.value
+    written = _write_first_attempt(ctx)
+    if is_refusal(written):
+        return written
+    if written.value is not None:
+        return Ok(written.value)
+    preflighted = _ceremony_preflight(ctx)
+    if is_refusal(preflighted):
+        return preflighted
+    if preflighted.value is not None:
+        return Ok(preflighted.value)
+    composed = _ceremony_compose(ctx)
+    if is_refusal(composed):
+        return composed
+    if composed.value is not None:
+        return Ok(composed.value)
+    return _ceremony_fingerprint_seal(ctx)
+
+
+@dataclass(slots=True)
+class _CeremonyCtx:
+    boot_mode: BootMode
+    boot_token: str
+    machine_token: str
+    role_token: str
+    reason_token: str | None
+    sink: BootAttemptSink
+    resolved: ResolvedNodeConfig | None
+    facts: PreflightFacts
+    composition_inputs: CompositionFingerprintInputs
+    writer_streams: object = ()
+    workload_claims: object = ()
+    risk_population: object = None
+    shadow_consumer_wiring: object = ()
+    doors: BoundSupervisorDoors | None = None
+    supervisor: WriterId | None = None
+    attempt: BootAttemptRecord | None = None
+    status_map: dict[str, object] | None = None
+    allocation: WriterAllocation | None = None
+    composition_classes: ResolvedCompositionClasses | None = None
+    fingerprinted_inputs: CompositionFingerprintInputs | None = None
+
+
+def _bind_ceremony_inputs(
+    *,
+    boot_epoch_id: object,
+    machine: object,
+    unit_role: object,
+    mode: object,
+    config: object | None,
+    composition_inputs: object,
+    boot_attempt_sink: object,
+    preflight: object | None,
+    reason: object | None,
+    mutate_runtime_state: bool,
+) -> Result[_CeremonyCtx]:
     mode_name = clean_token(mode)
     if mode_name not in {"live", "check"}:
         return invalid("mode", "boot ceremony mode is live or check", given=repr(mode))
     boot_mode: BootMode = "check" if mode_name == "check" else "live"
+    tokens = _bind_ceremony_tokens(boot_epoch_id, machine, unit_role)
+    if is_refusal(tokens):
+        return tokens
+    boot_token, machine_token, role_token = tokens.value
+    sink = _bind_ceremony_sink(boot_attempt_sink)
+    if is_refusal(sink):
+        return sink
+    if boot_mode == "check" and mutate_runtime_state:
+        return policy(
+            "mutate_runtime_state",
+            "check mode is safe on production paths without mutating runtime state",
+        )
+    bound_cfg = _bind_ceremony_config(config, preflight, composition_inputs)
+    if is_refusal(bound_cfg):
+        return bound_cfg
+    resolved, facts, inputs = bound_cfg.value
+    return Ok(
+        _CeremonyCtx(
+            boot_mode=boot_mode,
+            boot_token=boot_token,
+            machine_token=machine_token,
+            role_token=role_token,
+            reason_token=clean_token(reason) if reason is not None else None,
+            sink=sink.value,
+            resolved=resolved,
+            facts=facts,
+            composition_inputs=inputs,
+        )
+    )
 
+
+def _bind_ceremony_tokens(
+    boot_epoch_id: object, machine: object, unit_role: object
+) -> Result[tuple[str, str, str]]:
     boot_token = clean_token(boot_epoch_id)
     if boot_token is None:
         return invalid("boot_epoch_id", "a boot epoch id names the process start")
@@ -683,6 +810,10 @@ def run_boot_ceremony(
     role_token = clean_token(unit_role)
     if role_token is None:
         return invalid("unit_role", "the boot-attempt stamps the unit role")
+    return Ok((boot_token, machine_token, role_token))
+
+
+def _bind_ceremony_sink(boot_attempt_sink: object) -> Result[BootAttemptSink]:
     if not isinstance(boot_attempt_sink, InMemoryBootAttemptSink) and not (
         hasattr(boot_attempt_sink, "append") and hasattr(boot_attempt_sink, "amend")
     ):
@@ -691,17 +822,16 @@ def run_boot_ceremony(
             "the supervisor stream sink persists boot-attempt records",
             given=type(boot_attempt_sink).__name__,
         )
-    sink = cast("BootAttemptSink", boot_attempt_sink)
+    return Ok(cast("BootAttemptSink", boot_attempt_sink))
 
-    if boot_mode == "check" and mutate_runtime_state:
-        return policy(
-            "mutate_runtime_state",
-            "check mode is safe on production paths without mutating runtime state",
-        )
 
-    resolved: ResolvedNodeConfig | None
+def _bind_ceremony_config(
+    config: object | None,
+    preflight: object | None,
+    composition_inputs: object,
+) -> Result[tuple[ResolvedNodeConfig | None, PreflightFacts, CompositionFingerprintInputs]]:
     if config is None:
-        resolved = None
+        resolved: ResolvedNodeConfig | None = None
     elif isinstance(config, ResolvedNodeConfig):
         resolved = config
     else:
@@ -710,7 +840,6 @@ def run_boot_ceremony(
             "Compose draws from one ResolvedNodeConfig artifact when supplied",
             given=type(config).__name__,
         )
-
     if preflight is None:
         facts = PreflightFacts()
     elif isinstance(preflight, PreflightFacts):
@@ -721,7 +850,6 @@ def run_boot_ceremony(
             "preflight facts are a PreflightFacts probe set",
             given=type(preflight).__name__,
         )
-
     if not isinstance(composition_inputs, CompositionFingerprintInputs):
         return invalid(
             "composition_inputs",
@@ -733,314 +861,211 @@ def run_boot_ceremony(
             "composition_inputs",
             "composition_fp cites the same resolved node-config fingerprint Compose used",
         )
+    return Ok((resolved, facts, composition_inputs))
 
-    reason_token = clean_token(reason) if reason is not None else None
 
-    # --- Act 0a: bind doors first ---
-    doors = bind_supervisor_doors(binder=door_binder)
-    if is_refusal(doors):
-        return doors
-
-    supervisor = reserved_supervisor_writer(machine=machine_token, boot_epoch_id=boot_token)
-    if is_refusal(supervisor):
-        return supervisor
-
-    # --- Act 0b: first durable write ---
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="doors_bound",
-        writer=supervisor.value,
+def _attempt(
+    ctx: _CeremonyCtx,
+    *,
+    stage: str,
+    failure_id: str | None = None,
+    composition_fp: Fingerprint | None = None,
+) -> BootAttemptRecord:
+    return BootAttemptRecord(
+        boot_epoch_id=ctx.boot_token,
+        unit_role=ctx.role_token,
+        stage=stage,
+        writer=cast("WriterId", ctx.supervisor),
         sequence=0,
-        reason=reason_token,
+        reason=ctx.reason_token,
+        failure_id=failure_id,
+        composition_fp=composition_fp,
     )
-    written = sink.append(attempt)
+
+
+def _ceremony_refuse(
+    ctx: _CeremonyCtx,
+    *,
+    stage: str,
+    failure_id: str,
+    cause: TypedRefusal,
+    boot_attempt: BootAttemptRecord | None = None,
+    preflight_status: Mapping[str, object] | None = None,
+    amend: bool = True,
+) -> Result[BootCeremonyOutcome | None]:
+    attempt = boot_attempt or _attempt(ctx, stage=stage, failure_id=failure_id)
+    if amend:
+        ctx.sink.amend(attempt)
+    ctx.attempt = attempt
+    if ctx.boot_mode == "check":
+        return _check_mode_refusal(cause)
+    stand_down: BootCeremonyOutcome | None = _stand_down_outcome(
+        mode=ctx.boot_mode,
+        doors=cast("BoundSupervisorDoors", ctx.doors),
+        boot_attempt=attempt,
+        stage=stage,
+        preflight_status=preflight_status
+        if preflight_status is not None
+        else (ctx.status_map or {"ok": False}),
+        failure_id=failure_id,
+    )
+    return Ok(stand_down)
+
+
+def _write_first_attempt(ctx: _CeremonyCtx) -> Result[BootCeremonyOutcome | None]:
+    attempt = _attempt(ctx, stage="doors_bound")
+    written = ctx.sink.append(attempt)
     if is_refusal(written):
-        # Sink failure after doors bound → stand-down-alive (not a door-bind exit).
-        if boot_mode == "check":
-            return _check_mode_refusal(written)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="doors_bound",
-                preflight_status={"ok": False, "failure": "boot_attempt_write"},
-                failure_id="boot.attempt.write",
-            )
+        return _ceremony_refuse(
+            ctx,
+            stage="doors_bound",
+            failure_id="boot.attempt.write",
+            cause=written,
+            boot_attempt=attempt,
+            preflight_status={"ok": False, "failure": "boot_attempt_write"},
+            amend=False,
         )
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="boot_attempt_written",
-        writer=supervisor.value,
-        sequence=0,
-        reason=reason_token,
-    )
-    amended = sink.amend(attempt)
+    amended_record = _attempt(ctx, stage="boot_attempt_written")
+    amended = ctx.sink.amend(amended_record)
     if is_refusal(amended):
-        if boot_mode == "check":
-            return _check_mode_refusal(amended)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=written.value,
-                stage="doors_bound",
-                preflight_status={"ok": False, "failure": "boot_attempt_amend"},
-                failure_id="boot.attempt.amend",
-            )
+        return _ceremony_refuse(
+            ctx,
+            stage="doors_bound",
+            failure_id="boot.attempt.amend",
+            cause=amended,
+            boot_attempt=written.value,
+            preflight_status={"ok": False, "failure": "boot_attempt_amend"},
+            amend=False,
         )
-    attempt = amended.value
+    ctx.attempt = amended.value
+    return Ok(None)
 
-    # --- Act 1: preflight ---
-    preflight_result = _run_preflight(facts=facts, mode=boot_mode, config=resolved)
+
+def _ceremony_preflight(ctx: _CeremonyCtx) -> Result[BootCeremonyOutcome | None]:
+    preflight_result = _run_preflight(
+        facts=ctx.facts, mode=ctx.boot_mode, config=ctx.resolved
+    )
     if is_refusal(preflight_result):
         failure_id = str(preflight_result.context.get("failure_id", "preflight.detected"))
         status = preflight_result.context.get("status", {"ok": False})
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
+        return _ceremony_refuse(
+            ctx,
             stage="preflight",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
             failure_id=failure_id,
+            cause=preflight_result,
+            preflight_status=cast("Mapping[str, object]", status),
         )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(preflight_result)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="preflight",
-                preflight_status=cast("Mapping[str, object]", status),
-                failure_id=failure_id,
-            )
-        )
-    status_map = dict(preflight_result.value)
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="preflight",
-        writer=supervisor.value,
-        sequence=0,
-        reason=reason_token,
-    )
-    sink.amend(attempt)
+    ctx.status_map = dict(preflight_result.value)
+    ctx.attempt = _attempt(ctx, stage="preflight")
+    ctx.sink.amend(ctx.attempt)
+    return Ok(None)
 
-    # --- Act 2: compose (WriterIds + light/heavy gate) ---
+
+def _ceremony_compose(ctx: _CeremonyCtx) -> Result[BootCeremonyOutcome | None]:
     allocation = allocate_writer_ids(
-        machine=machine_token,
-        boot_epoch_id=boot_token,
-        streams=writer_streams,
+        machine=ctx.machine_token,
+        boot_epoch_id=ctx.boot_token,
+        streams=ctx.writer_streams,
     )
     if is_refusal(allocation):
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
-            stage="compose",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
-            failure_id="compose.writer_ids",
+        return _ceremony_refuse(
+            ctx, stage="compose", failure_id="compose.writer_ids", cause=allocation
         )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(allocation)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="compose",
-                preflight_status=status_map,
-                failure_id="compose.writer_ids",
-            )
-        )
-
-    classified = _classify_workload_claims(workload_claims)
+    classified = _classify_workload_claims(ctx.workload_claims)
     if is_refusal(classified):
-        failure_id = str(
-            classified.context.get("failure_id", "compose.light_heavy")
-        )
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
+        return _ceremony_refuse(
+            ctx,
             stage="compose",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
-            failure_id=failure_id,
+            failure_id=str(classified.context.get("failure_id", "compose.light_heavy")),
+            cause=classified,
         )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(classified)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="compose",
-                preflight_status=status_map,
-                failure_id=failure_id,
-            )
+    isolated = _compose_isolation(ctx)
+    if is_refusal(isolated) or isolated.value is not None:
+        return isolated
+    population = _admit_risk_population(ctx.risk_population)
+    if is_refusal(population):
+        return _ceremony_refuse(
+            ctx,
+            stage="compose",
+            failure_id=str(
+                population.context.get("failure_id", "compose.risk_population")
+            ),
+            cause=population,
         )
-    composition_classes = classified.value
-    fingerprinted_inputs = _with_workload_claim_identities(
-        composition_inputs, composition_classes.identity_content
+    ctx.allocation = allocation.value
+    ctx.composition_classes = classified.value
+    ctx.fingerprinted_inputs = _with_workload_claim_identities(
+        ctx.composition_inputs, classified.value.identity_content
     )
+    ctx.attempt = _attempt(ctx, stage="compose")
+    ctx.sink.amend(ctx.attempt)
+    return Ok(None)
 
+
+def _compose_isolation(ctx: _CeremonyCtx) -> Result[BootCeremonyOutcome | None]:
     from qmn.mis.shadow import (  # noqa: PLC0415 — leaf isolation check at Compose
         refuse_shadow_governed_wiring,
     )
 
-    isolation = refuse_shadow_governed_wiring(shadow_consumer_wiring)
+    isolation = refuse_shadow_governed_wiring(ctx.shadow_consumer_wiring)
     if is_refusal(isolation):
-        failure_id = str(
-            isolation.context.get("failure_id", "compose.shadow_isolation")
-        )
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
+        return _ceremony_refuse(
+            ctx,
             stage="compose",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
-            failure_id=failure_id,
+            failure_id=str(
+                isolation.context.get("failure_id", "compose.shadow_isolation")
+            ),
+            cause=isolation,
         )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(isolation)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="compose",
-                preflight_status=status_map,
-                failure_id=failure_id,
-            )
-        )
+    return Ok(None)
 
-    population = _admit_risk_population(risk_population)
-    if is_refusal(population):
-        failure_id = str(
-            population.context.get("failure_id", "compose.risk_population")
-        )
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
-            stage="compose",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
-            failure_id=failure_id,
-        )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(population)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="compose",
-                preflight_status=status_map,
-                failure_id=failure_id,
-            )
-        )
 
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="compose",
-        writer=supervisor.value,
-        sequence=0,
-        reason=reason_token,
-    )
-    sink.amend(attempt)
-
-    # --- Act 3: fingerprint ---
-    fps = compute_composition_fp(fingerprinted_inputs)
+def _ceremony_fingerprint_seal(ctx: _CeremonyCtx) -> Result[BootCeremonyOutcome]:
+    fps = compute_composition_fp(ctx.fingerprinted_inputs)
     if is_refusal(fps):
-        attempt = BootAttemptRecord(
-            boot_epoch_id=boot_token,
-            unit_role=role_token,
+        refused = _ceremony_refuse(
+            ctx,
             stage="fingerprint",
-            writer=supervisor.value,
-            sequence=0,
-            reason=reason_token,
             failure_id="fingerprint.composition_fp",
+            cause=fps,
         )
-        sink.amend(attempt)
-        if boot_mode == "check":
-            return _check_mode_refusal(fps)
-        return Ok(
-            _stand_down_outcome(
-                mode=boot_mode,
-                doors=doors.value,
-                boot_attempt=attempt,
-                stage="fingerprint",
-                preflight_status=status_map,
-                failure_id="fingerprint.composition_fp",
-            )
-        )
+        if is_refusal(refused):
+            return refused
+        return Ok(cast("BootCeremonyOutcome", refused.value))
     composition_fp, shadow_fp = fps.value
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="fingerprint",
-        writer=supervisor.value,
-        sequence=0,
-        reason=reason_token,
-        composition_fp=composition_fp,
-    )
-    sink.amend(attempt)
-
-    # --- Act 4: seal ---
-    opens_sequencer = boot_mode == "live"
+    ctx.attempt = _attempt(ctx, stage="fingerprint", composition_fp=composition_fp)
+    ctx.sink.amend(ctx.attempt)
+    opens_sequencer = ctx.boot_mode == "live"
     sealed_epoch = SealedBootEpoch(
         composition_fp=composition_fp,
         shadow_composition_fp=shadow_fp,
-        writer_allocation=allocation.value,
-        boot_epoch_id=boot_token,
+        writer_allocation=cast("WriterAllocation", ctx.allocation),
+        boot_epoch_id=ctx.boot_token,
         sealed=True,
         ready=True,
         opens_sequencer=opens_sequencer,
-        composition_classes=composition_classes,
+        composition_classes=ctx.composition_classes,
     )
-    attempt = BootAttemptRecord(
-        boot_epoch_id=boot_token,
-        unit_role=role_token,
-        stage="seal",
-        writer=supervisor.value,
-        sequence=0,
-        reason=reason_token,
-        composition_fp=composition_fp,
-    )
-    sink.amend(attempt)
-    _ = sealed_epoch  # epoch is carried on the outcome fields below
-
+    attempt = _attempt(ctx, stage="seal", composition_fp=composition_fp)
+    ctx.sink.amend(attempt)
+    _ = sealed_epoch
     return Ok(
         BootCeremonyOutcome(
-            mode=boot_mode,
-            doors=doors.value,
+            mode=ctx.boot_mode,
+            doors=cast("BoundSupervisorDoors", ctx.doors),
             boot_attempt=attempt,
             stage_reached="seal",
-            preflight_status=status_map,
+            preflight_status=ctx.status_map or {},
             composition_fp=composition_fp,
             shadow_composition_fp=shadow_fp,
-            writer_allocation=allocation.value,
+            writer_allocation=ctx.allocation,
             sealed=True,
             ready=True,
             stand_down_alive=False,
             opens_sequencer=opens_sequencer,
             exit_code=None,
             failure_id=None,
-            composition_classes=composition_classes,
+            composition_classes=ctx.composition_classes,
         )
     )
 
