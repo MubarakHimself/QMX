@@ -772,6 +772,43 @@ def _refuse_shakedown_plan_flags(plan: ShakedownPlan) -> Result[None]:
 
 
 def _assemble_shakedown_evidence(plan: ShakedownPlan) -> Result[ShakedownEvidence]:
+    core = _exercise_shakedown_core(plan)
+    if is_refusal(core):
+        return core
+    rest = _exercise_shakedown_path(plan)
+    if is_refusal(rest):
+        return rest
+    windows, effects, ledger, kill = core.value
+    recon, sqs, containment, command, layer2 = rest.value
+    return Ok(
+        ShakedownEvidence(
+            binding_identity=plan.binding_identity,
+            shakedown_role=plan.shakedown_role,
+            exercises_run=SHAKEDOWN_EXERCISES,
+            layer2=layer2,
+            window_settings=windows,
+            effect_matrix=effects,
+            paper_ledger=ledger,
+            kill_line_breached=kill,
+            reconciliation=recon,
+            sqs_baseline=sqs,
+            sqs_live_conditioned=False,
+            containment=containment,
+            command_path_submitted_live=False,
+            venue_client_kind=command,
+            for_human_signature=SHAKEDOWN_FOR_HUMAN_SIGNATURE,
+            is_performance_proof=SHAKEDOWN_IS_PERFORMANCE_PROOF,
+            live_binding_used=False,
+            invented_ksa_or_soak_numbers=False,
+        )
+    )
+
+
+def _exercise_shakedown_core(
+    plan: ShakedownPlan,
+) -> Result[
+    tuple[ResolvedWindowSettings, CompiledEffectMatrix, BindingVirtualLedger, bool]
+]:
     windows = _exercise_windows(plan)
     if is_refusal(windows):
         return windows
@@ -784,6 +821,14 @@ def _assemble_shakedown_evidence(plan: ShakedownPlan) -> Result[ShakedownEvidenc
     kill = _exercise_kill_line(plan)
     if is_refusal(kill):
         return kill
+    return Ok((windows.value, effects.value, ledger.value, kill.value))
+
+
+def _exercise_shakedown_path(
+    plan: ShakedownPlan,
+) -> Result[
+    tuple[ReconciliationReport, SqsBaselineKey, SeatContainment, str, Layer2Result]
+]:
     recon = _exercise_reconciliation(plan)
     if is_refusal(recon):
         return recon
@@ -805,26 +850,7 @@ def _assemble_shakedown_evidence(plan: ShakedownPlan) -> Result[ShakedownEvidenc
     if is_refusal(layer2):
         return layer2
     return Ok(
-        ShakedownEvidence(
-            binding_identity=plan.binding_identity,
-            shakedown_role=plan.shakedown_role,
-            exercises_run=SHAKEDOWN_EXERCISES,
-            layer2=layer2.value,
-            window_settings=windows.value,
-            effect_matrix=effects.value,
-            paper_ledger=ledger.value,
-            kill_line_breached=kill.value,
-            reconciliation=recon.value,
-            sqs_baseline=sqs.value,
-            sqs_live_conditioned=False,
-            containment=containment.value,
-            command_path_submitted_live=False,
-            venue_client_kind=command.value,
-            for_human_signature=SHAKEDOWN_FOR_HUMAN_SIGNATURE,
-            is_performance_proof=SHAKEDOWN_IS_PERFORMANCE_PROOF,
-            live_binding_used=False,
-            invented_ksa_or_soak_numbers=False,
-        )
+        (recon.value, sqs.value, containment.value, command.value, layer2.value)
     )
 
 
