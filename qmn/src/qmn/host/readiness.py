@@ -421,27 +421,9 @@ def settings_status_from_config(config: object) -> Result[SettingsStatusReport]:
             given=len(config.rows),
             failure_id=_ID_SETTINGS,
         )
-    blank_boot = tuple(
-        sorted(
-            name
-            for name, row in config.rows.items()
-            if BLANK_EFFECT_BOOT in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
-        )
-    )
-    blank_live = tuple(
-        sorted(
-            name
-            for name, row in config.rows.items()
-            if BLANK_EFFECT_LIVE in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
-        )
-    )
-    blank_soak = tuple(
-        sorted(
-            name
-            for name, row in config.rows.items()
-            if BLANK_EFFECT_SOAK in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
-        )
-    )
+    blank_boot = _blank_effect_names(config, BLANK_EFFECT_BOOT)
+    blank_live = _blank_effect_names(config, BLANK_EFFECT_LIVE)
+    blank_soak = _blank_effect_names(config, BLANK_EFFECT_SOAK)
     ftr07 = tuple(
         sorted(
             name
@@ -462,6 +444,16 @@ def settings_status_from_config(config: object) -> Result[SettingsStatusReport]:
             may_boot=config.may_boot(),
             may_bind_role_live=config.may_bind_role_live(),
             may_start_soak=config.may_start_soak(),
+        )
+    )
+
+
+def _blank_effect_names(config: ResolvedNodeConfig, effect: object) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            name
+            for name, row in config.rows.items()
+            if effect in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
         )
     )
 
@@ -506,15 +498,7 @@ def list_readiness_human_inputs(
     return tuple(records)
 
 
-def compile_demo_roster(
-    *,
-    demo_binding: object,
-    paired: object,
-    extra_bindings: object = (),
-    sensing_only: object = (),
-    protective_reserve_capacity: object,
-) -> Result[CompiledDemoRoster]:
-    """Compose a demo roster and require the paired paper target (TN-9)."""
+def _require_demo_binding(demo_binding: object) -> Result[AccountBindingDecl]:
     if not isinstance(demo_binding, AccountBindingDecl):
         return invalid(
             "demo_binding",
@@ -537,6 +521,12 @@ def compile_demo_roster(
             world=demo_binding.world.value,
             failure_id=_ID_ROSTER,
         )
+    return Ok(demo_binding)
+
+
+def _require_paired_paper_target(
+    demo_binding: AccountBindingDecl, paired: object
+) -> Result[PairedDemoBinding]:
     if not isinstance(paired, PairedDemoBinding):
         return invalid(
             "paired",
@@ -572,11 +562,29 @@ def compile_demo_roster(
             paper_account=paired.paper_target.account_id,
             failure_id=_ID_ROSTER,
         )
+    return Ok(paired)
+
+
+def compile_demo_roster(
+    *,
+    demo_binding: object,
+    paired: object,
+    extra_bindings: object = (),
+    sensing_only: object = (),
+    protective_reserve_capacity: object,
+) -> Result[CompiledDemoRoster]:
+    """Compose a demo roster and require the paired paper target (TN-9)."""
+    bound = _require_demo_binding(demo_binding)
+    if is_refusal(bound):
+        return bound
+    paired_ok = _require_paired_paper_target(bound.value, paired)
+    if is_refusal(paired_ok):
+        return paired_ok
     extras = _as_binding_tuple(extra_bindings)
     if is_refusal(extras):
         return extras
     composition = compose_roster_runtime(
-        account_bindings=(demo_binding, *extras.value),
+        account_bindings=(bound.value, *extras.value),
         sensing_only=sensing_only,
         protective_reserve_capacity=protective_reserve_capacity,
     )
@@ -591,7 +599,7 @@ def compile_demo_roster(
             "compiled demo roster must seal at least one demo command stream",
             failure_id=_ID_ROSTER,
         )
-    return Ok(CompiledDemoRoster(composition=composition.value, paired=paired))
+    return Ok(CompiledDemoRoster(composition=composition.value, paired=paired_ok.value))
 
 
 def assemble_paper_milestone_readiness(
@@ -964,49 +972,52 @@ def _parse_gate_results(value: object) -> Result[tuple[GateResult, ...]]:
         )
     parsed: list[GateResult] = []
     for name in MACHINE_GATES:
-        raw = body[name]
-        if isinstance(raw, GateResult):
-            if raw.name != name:
-                return invalid(
-                    "gate_results",
-                    "gate result name must match the mapping key",
-                    given=raw.name,
-                    expected=name,
-                    failure_id=_ID_GATE,
-                )
-            parsed.append(raw)
-            continue
-        if not isinstance(raw, Mapping):
-            return invalid(
-                name,
-                "a gate result is GateResult or a mapping with ok and evidence_fp1",
-                given=type(raw).__name__,
-                failure_id=_ID_GATE,
-            )
-        entry = cast("Mapping[str, object]", raw)
-        ok = entry.get("ok")
-        if not isinstance(ok, bool):
-            return invalid(
-                name,
-                "gate ok is a bool",
-                given=repr(ok),
-                failure_id=_ID_GATE,
-            )
-        evidence = entry.get("evidence_fp1")
-        if isinstance(evidence, Fingerprint):
-            fp = evidence
-        else:
-            parsed_fp = Fingerprint.try_create(evidence)
-            if is_refusal(parsed_fp):
-                return invalid(
-                    name,
-                    "gate evidence_fp1 is a Fingerprint",
-                    given=repr(evidence),
-                    failure_id=_ID_GATE,
-                )
-            fp = parsed_fp.value
-        parsed.append(GateResult(name=name, ok=ok, evidence_fp1=fp))
+        item = _parse_one_gate(name, body[name])
+        if is_refusal(item):
+            return item
+        parsed.append(item.value)
     return Ok(tuple(parsed))
+
+
+def _parse_one_gate(name: str, raw: object) -> Result[GateResult]:
+    if isinstance(raw, GateResult):
+        if raw.name != name:
+            return invalid(
+                "gate_results",
+                "gate result name must match the mapping key",
+                given=raw.name,
+                expected=name,
+                failure_id=_ID_GATE,
+            )
+        return Ok(raw)
+    if not isinstance(raw, Mapping):
+        return invalid(
+            name,
+            "a gate result is GateResult or a mapping with ok and evidence_fp1",
+            given=type(raw).__name__,
+            failure_id=_ID_GATE,
+        )
+    entry = cast("Mapping[str, object]", raw)
+    ok = entry.get("ok")
+    if not isinstance(ok, bool):
+        return invalid(
+            name,
+            "gate ok is a bool",
+            given=repr(ok),
+            failure_id=_ID_GATE,
+        )
+    evidence = entry.get("evidence_fp1")
+    if isinstance(evidence, Fingerprint):
+        return Ok(GateResult(name=name, ok=ok, evidence_fp1=evidence))
+    parsed_fp = Fingerprint.try_create(evidence)
+    if is_refusal(parsed_fp):
+        return invalid(
+            name,
+            "gate evidence_fp1 is a Fingerprint",
+            given=repr(evidence),
+            failure_id=_ID_GATE,
+        )
+    return Ok(GateResult(name=name, ok=ok, evidence_fp1=parsed_fp.value))
 
 
 def _parse_presence(value: object) -> Result[Mapping[str, bool]]:

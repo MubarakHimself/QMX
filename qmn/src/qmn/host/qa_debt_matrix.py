@@ -673,6 +673,25 @@ def run_paper_milestone_qa_debt_gate(
     refused = _refuse_qa_debt_input_flags(spec)
     if is_refusal(refused):
         return refused
+    workspace = _bind_qa_debt_workspace(spec)
+    if is_refusal(workspace):
+        return workspace
+    root, rows, battery = workspace.value
+    indexed = _index_qa_debt_rows(root, rows)
+    if is_refusal(indexed):
+        return indexed
+    checked = _validate_qa_debt_workspace_gates(root, battery)
+    if is_refusal(checked):
+        return checked
+    mutation = _resolve_mutation_status(spec)
+    if is_refusal(mutation):
+        return mutation
+    return _stamp_qa_debt_matrix(indexed.value, battery, mutation.value)
+
+
+def _bind_qa_debt_workspace(
+    spec: QaDebtGateInputs,
+) -> Result[tuple[Path, tuple[QaDebtRow, ...], tuple[BatteryItem, ...]]]:
     root = spec.workspace if spec.workspace is not None else workspace_root()
     if not root.is_dir():
         return invalid(
@@ -683,19 +702,16 @@ def run_paper_milestone_qa_debt_gate(
         )
     rows = spec.rows if spec.rows is not None else NODE_QA_DEBT_ROWS
     battery = spec.battery if spec.battery is not None else PERMANENT_BATTERY_ITEMS
-    indexed = _index_qa_debt_rows(root, rows)
-    if is_refusal(indexed):
-        return indexed
+    return Ok((root, rows, battery))
+
+
+def _validate_qa_debt_workspace_gates(
+    root: Path, battery: tuple[BatteryItem, ...]
+) -> Result[None]:
     checked = _validate_qa_debt_battery(root, battery)
     if is_refusal(checked):
         return checked
-    modules = _validate_mutation_modules(root)
-    if is_refusal(modules):
-        return modules
-    mutation = _resolve_mutation_status(spec)
-    if is_refusal(mutation):
-        return mutation
-    return _stamp_qa_debt_matrix(indexed.value, battery, mutation.value)
+    return _validate_mutation_modules(root)
 
 
 def _refuse_qa_debt_input_flags(spec: QaDebtGateInputs) -> Result[None]:

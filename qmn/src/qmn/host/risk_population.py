@@ -213,69 +213,28 @@ class PopulationBindingRecord:
         attribution_instruments: object = None,
         shared_flatten_signature: object = None,
     ) -> Result[PopulationBindingRecord]:
-        binding = clean_token(binding_id)
-        book = clean_token(book_instance_id)
-        bms = clean_token(bms_instance_id)
-        venue = clean_token(venue_id)
-        account = clean_token(account_id)
-        env = clean_token(environment)
-        model = clean_token(position_model)
-        if (
-            binding is None
-            or book is None
-            or bms is None
-            or venue is None
-            or account is None
-            or env is None
-            or model is None
-        ):
-            return invalid(
-                "binding",
-                "a binding record names binding, book, BMS, venue, account, "
-                "environment, and position_model",
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        if not isinstance(role, AccountRole):
-            return invalid(
-                "role",
-                "a binding role is an AccountRole",
-                given=repr(role),
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        if not isinstance(world, World):
-            return invalid(
-                "world",
-                "a binding world is a World",
-                given=repr(world),
-                failure_id="compose.risk_population.referential_integrity",
-            )
-        if model not in {PositionModelKind.NETTING.value, PositionModelKind.HEDGING.value}:
-            return invalid(
-                "position_model",
-                "position model is netting|hedging",
-                given=model,
-                failure_id="compose.risk_population.netting_partitions",
-            )
-        inst = _token_set(instruments, "instruments")
-        if is_refusal(inst):
-            return inst
-        attrib: frozenset[str] | None
-        if attribution_instruments is None:
-            attrib = None
-        else:
-            attrib_set = _token_set(attribution_instruments, "attribution_instruments")
-            if is_refusal(attrib_set):
-                return attrib_set
-            attrib = attrib_set.value
-        sig = None
-        if shared_flatten_signature is not None:
-            sig = clean_token(shared_flatten_signature)
-            if sig is None:
-                return invalid(
-                    "shared_flatten_signature",
-                    "shared-flatten signature is a non-blank token when supplied",
-                    failure_id="compose.risk_population.netting_partitions",
-                )
+        ids = _bind_population_binding_ids(
+            binding_id=binding_id,
+            book_instance_id=book_instance_id,
+            bms_instance_id=bms_instance_id,
+            venue_id=venue_id,
+            account_id=account_id,
+            environment=environment,
+            position_model=position_model,
+            role=role,
+            world=world,
+        )
+        if is_refusal(ids):
+            return ids
+        extras = _bind_population_binding_sets(
+            instruments=instruments,
+            attribution_instruments=attribution_instruments,
+            shared_flatten_signature=shared_flatten_signature,
+        )
+        if is_refusal(extras):
+            return extras
+        binding, book, bms, venue, account, env, model, bound_role, bound_world = ids.value
+        inst, attrib, sig = extras.value
         return Ok(
             cls(
                 binding_id=binding,
@@ -283,15 +242,102 @@ class PopulationBindingRecord:
                 bms_instance_id=bms,
                 venue_id=venue,
                 account_id=account,
-                role=role,
-                world=world,
+                role=bound_role,
+                world=bound_world,
                 environment=env,
                 position_model=model,
-                instruments=inst.value,
+                instruments=inst,
                 attribution_instruments=attrib,
                 shared_flatten_signature=sig,
             )
         )
+
+
+def _bind_population_binding_ids(
+    *,
+    binding_id: object,
+    book_instance_id: object,
+    bms_instance_id: object,
+    venue_id: object,
+    account_id: object,
+    environment: object,
+    position_model: object,
+    role: object,
+    world: object,
+) -> Result[tuple[str, str, str, str, str, str, str, AccountRole, World]]:
+    binding = clean_token(binding_id)
+    book = clean_token(book_instance_id)
+    bms = clean_token(bms_instance_id)
+    venue = clean_token(venue_id)
+    account = clean_token(account_id)
+    env = clean_token(environment)
+    model = clean_token(position_model)
+    if (
+        binding is None
+        or book is None
+        or bms is None
+        or venue is None
+        or account is None
+        or env is None
+        or model is None
+    ):
+        return invalid(
+            "binding",
+            "a binding record names binding, book, BMS, venue, account, "
+            "environment, and position_model",
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    if not isinstance(role, AccountRole):
+        return invalid(
+            "role",
+            "a binding role is an AccountRole",
+            given=repr(role),
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    if not isinstance(world, World):
+        return invalid(
+            "world",
+            "a binding world is a World",
+            given=repr(world),
+            failure_id="compose.risk_population.referential_integrity",
+        )
+    if model not in {PositionModelKind.NETTING.value, PositionModelKind.HEDGING.value}:
+        return invalid(
+            "position_model",
+            "position model is netting|hedging",
+            given=model,
+            failure_id="compose.risk_population.netting_partitions",
+        )
+    return Ok((binding, book, bms, venue, account, env, model, role, world))
+
+
+def _bind_population_binding_sets(
+    *,
+    instruments: object,
+    attribution_instruments: object,
+    shared_flatten_signature: object,
+) -> Result[tuple[frozenset[str], frozenset[str] | None, str | None]]:
+    inst = _token_set(instruments, "instruments")
+    if is_refusal(inst):
+        return inst
+    attrib: frozenset[str] | None
+    if attribution_instruments is None:
+        attrib = None
+    else:
+        attrib_set = _token_set(attribution_instruments, "attribution_instruments")
+        if is_refusal(attrib_set):
+            return attrib_set
+        attrib = attrib_set.value
+    sig = None
+    if shared_flatten_signature is not None:
+        sig = clean_token(shared_flatten_signature)
+        if sig is None:
+            return invalid(
+                "shared_flatten_signature",
+                "shared-flatten signature is a non-blank token when supplied",
+                failure_id="compose.risk_population.netting_partitions",
+            )
+    return Ok((inst.value, attrib, sig))
 
 
 def _token_set(value: object, field: str) -> Result[frozenset[str]]:
@@ -685,43 +731,49 @@ def admit_runtime_risk_population(graph: object) -> Result[Layer1PopulationProof
             given=type(graph).__name__,
             failure_id="compose.risk_population",
         )
+    checked = _run_layer1_checks(graph)
+    if is_refusal(checked):
+        return checked
+    return _layer1_proof(graph)
 
+
+def _run_layer1_checks(graph: RuntimeRiskGraph) -> Result[None]:
     referential = _check_referential_integrity(graph)
     if is_refusal(referential):
         return _failure(referential, failure_id="compose.risk_population.referential_integrity")
-
     ranks = _check_total_unique_rank(graph)
     if is_refusal(ranks):
         return _failure(ranks, failure_id="compose.risk_population.total_unique_rank")
-
     scopes = _check_declared_scopes(graph)
     if is_refusal(scopes):
         return _failure(scopes, failure_id="compose.risk_population.declared_scopes")
-
     netting = _check_netting_partitions(graph)
     if is_refusal(netting):
         return _failure(netting, failure_id="compose.risk_population.netting_partitions")
+    return _run_layer1_cardinalities(graph)
 
+
+def _run_layer1_cardinalities(graph: RuntimeRiskGraph) -> Result[None]:
     bms_card = _check_one_bms_per_account_many_books(graph)
     if is_refusal(bms_card):
         return _failure(
             bms_card, failure_id="compose.risk_population.one_bms_per_account"
         )
-
     book_card = _check_one_book_per_bot(graph)
     if is_refusal(book_card):
         return _failure(book_card, failure_id="compose.risk_population.one_book_per_bot")
-
     paper_card = _check_one_active_paper_target(graph)
     if is_refusal(paper_card):
         return _failure(
             paper_card, failure_id="compose.risk_population.one_active_paper_target"
         )
-
     roster = _check_roster_alignment(graph)
     if is_refusal(roster):
         return _failure(roster, failure_id="compose.risk_population.cardinalities")
+    return Ok(None)
 
+
+def _layer1_proof(graph: RuntimeRiskGraph) -> Result[Layer1PopulationProof]:
     streams = tuple(sorted({row.stream_key for row in graph.bindings}))
     return Ok(
         Layer1PopulationProof(
