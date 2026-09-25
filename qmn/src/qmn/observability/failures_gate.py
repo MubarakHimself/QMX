@@ -17,9 +17,7 @@ alert allow-list is required to match the notification-tier column exactly.
 from __future__ import annotations
 
 import ast
-import os
 import re
-import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -333,7 +331,6 @@ _TYPED_ID = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$")
 _FR_ID = re.compile(r"^FR-\d+$")
 _RECIPE_HEADER = re.compile(r"^([a-z][a-z0-9-]*)\s")
 _SKIP_SCAN_NAMES: Final[frozenset[str]] = frozenset({"failures_gate.py"})
-_MAX_SOURCE_BYTES: Final[int] = 1 << 20  # 1 MiB
 
 # Phrases in product-user affordance text that resolve to a named capability.
 _AFFORDANCE_PHRASES: Final[Mapping[str, str]] = MappingProxyType(
@@ -428,7 +425,7 @@ def collect_emitted_failure_ids(src_root: Path | None = None) -> frozenset[str]:
     for path in sorted(root.rglob("*.py")):
         if path.name in _SKIP_SCAN_NAMES:
             continue
-        found.update(_emitted_ids_from_path(path, contain_within=root))
+        found.update(_emitted_ids_from_path(path))
     found.update(CLOCK_BAND_FAILURE_IDS.values())
     return frozenset(token for token in found if token)
 
@@ -478,69 +475,10 @@ def _emitted_ids_from_tree(tree: ast.AST) -> frozenset[str]:
     return frozenset(found)
 
 
-def _resolve_contained_py(path: Path, contain_within: Path) -> Path | None:
+def _emitted_ids_from_path(path: Path) -> frozenset[str]:
     try:
-        resolved = Path(os.path.realpath(path))
-        root_real = Path(os.path.realpath(contain_within))
-    except OSError:
-        return None
-    if path.is_symlink() or not resolved.is_relative_to(root_real):
-        return None
-    if not path.is_file() or path.is_symlink():
-        return None
-    return resolved
-
-
-def _read_fd_capped_text(fd: int) -> str | None:
-    try:
-        info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode):
-            return None
-        size = info.st_size
-        if size > _MAX_SOURCE_BYTES:
-            return None
-        limit = _MAX_SOURCE_BYTES if size <= 0 else min(size, _MAX_SOURCE_BYTES)
-        buf = bytearray()
-        while len(buf) < limit:
-            chunk = os.read(fd, limit - len(buf))
-            if not chunk:
-                break
-            buf.extend(chunk)
-        if size <= 0 and len(buf) >= _MAX_SOURCE_BYTES:
-            extra = os.read(fd, 1)
-            if extra:
-                return None
-        return bytes(buf).decode("utf-8")
-    except (OSError, UnicodeDecodeError):
-        return None
-
-
-def _read_contained_py(path: Path, *, contain_within: Path) -> str | None:
-    """Read a regular in-root source file under a size cap; skip on any fault."""
-    if _resolve_contained_py(path, contain_within) is None:
-        return None
-    try:
-        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
-        # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
-        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
-            path,
-            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0),
-        )
-    except OSError:
-        return None
-    try:
-        return _read_fd_capped_text(fd)
-    finally:
-        os.close(fd)
-
-
-def _emitted_ids_from_path(path: Path, *, contain_within: Path) -> frozenset[str]:
-    text = _read_contained_py(path, contain_within=contain_within)
-    if text is None:
-        return frozenset()
-    try:
-        tree = ast.parse(text, filename=str(path))
-    except SyntaxError:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
         return frozenset()
     return _emitted_ids_from_tree(tree)
 
