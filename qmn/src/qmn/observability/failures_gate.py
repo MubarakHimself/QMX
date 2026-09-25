@@ -331,6 +331,7 @@ _TYPED_ID = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$")
 _FR_ID = re.compile(r"^FR-\d+$")
 _RECIPE_HEADER = re.compile(r"^([a-z][a-z0-9-]*)\s")
 _SKIP_SCAN_NAMES: Final[frozenset[str]] = frozenset({"failures_gate.py"})
+_MAX_SOURCE_BYTES: Final[int] = 1 << 20  # 1 MiB
 
 # Phrases in product-user affordance text that resolve to a named capability.
 _AFFORDANCE_PHRASES: Final[Mapping[str, str]] = MappingProxyType(
@@ -425,7 +426,7 @@ def collect_emitted_failure_ids(src_root: Path | None = None) -> frozenset[str]:
     for path in sorted(root.rglob("*.py")):
         if path.name in _SKIP_SCAN_NAMES:
             continue
-        found.update(_emitted_ids_from_path(path))
+        found.update(_emitted_ids_from_path(path, contain_within=root))
     found.update(CLOCK_BAND_FAILURE_IDS.values())
     return frozenset(token for token in found if token)
 
@@ -475,9 +476,26 @@ def _emitted_ids_from_tree(tree: ast.AST) -> frozenset[str]:
     return frozenset(found)
 
 
-def _emitted_ids_from_path(path: Path) -> frozenset[str]:
+def _emitted_ids_from_path(path: Path, *, contain_within: Path) -> frozenset[str]:
+    """Parse one production source after a regular in-root size-capped check.
+
+    The path is resolved and must be a regular file inside ``contain_within`` —
+    never a symlink, never resolving out of the scan root — and its size is
+    capped before the read, so a planted symlink or an oversized file can
+    neither redirect nor unbound it. Unreadable or unparseable files are
+    skipped so the rest of the scan still runs.
+    """
     try:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        resolved = path.resolve()
+        root = contain_within.resolve()
+        if path.is_symlink():
+            return frozenset()
+        if not resolved.is_file() or not resolved.is_relative_to(root):
+            return frozenset()
+        size = resolved.stat().st_size
+        if size > _MAX_SOURCE_BYTES:
+            return frozenset()
+        tree = ast.parse(resolved.read_text(encoding="utf-8"), filename=str(resolved))
     except (OSError, SyntaxError):
         return frozenset()
     return _emitted_ids_from_tree(tree)
