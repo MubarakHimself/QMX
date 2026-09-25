@@ -371,6 +371,7 @@ def test_envelope_fields_compare_when_nested() -> None:
         reconcile_policy="query-then-decide",
         input_hash="fp1:sha256:" + ("a" * 64),
         call_depth=0,
+        caller_kind="user",
         caller_session_ref="psess:desk-1",
     )
     assert is_ok(envelope)

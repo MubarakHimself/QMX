@@ -46,6 +46,7 @@ def test_matching_instance_and_config_still_dispatch() -> None:
     assert bound.grant.config_revision == bound.instance.config_revision == 4
     assert bound.envelope.instance_id == "inst:1"
     assert bound.envelope.config_revision == 4
+    assert bound.envelope.caller_kind.value == "user"
     assert len(executed) == 1
 
 

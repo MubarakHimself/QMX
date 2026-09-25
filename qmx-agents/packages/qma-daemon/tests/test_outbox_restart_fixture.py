@@ -63,6 +63,8 @@ def test_crash_replays_unacked_and_accepts_b_once(tmp_path: Path) -> None:
         assert field in payload
     assert set(payload) <= set(INVOCATION_ENVELOPE_FIELDS)
     assert payload["op_id"] == "qmb.analysis.project"
+    assert payload["caller_kind"] == "workflow"
+    assert "instance_id" in payload
     assert report.successor_node_id == "survey"
     body = report.to_payload()
     assert body["outbox_row_count"] == 1

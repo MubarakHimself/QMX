@@ -98,6 +98,7 @@ def _envelope_payload(**overrides: object) -> dict[str, object]:
         "reconcile_policy": "query-then-decide",
         "input_hash": _hash(),
         "call_depth": 0,
+        "caller_kind": "user",
     }
     payload.update(overrides)
     return payload

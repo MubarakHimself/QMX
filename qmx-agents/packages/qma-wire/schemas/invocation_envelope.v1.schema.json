@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/invocation_envelope.v1.schema.json",
   "title": "QMA InvocationEnvelope (CT-40 additive; FR-WF-17; cheap-veto A3)",
-  "description": "Signed/bound request context for every public call. Not authority by assertion. Host resolves contribution, descriptor, and GrantRecord from authoritative stores and compares every bound field before execution. No new CT number — do not mint CT-52. Signature algorithm remains GAP-DESK-ENVELOPE-CRYPTO; mismatch refuse is still required. Not on the wire at inspect SHA 270e992 (DEC-0437, DEC-0450; GAP-0096).",
+  "description": "Signed/bound request context for every public call. Not authority by assertion. Host resolves contribution, descriptor, and GrantRecord from authoritative stores and compares every bound field before execution. Story 60.3 additive CT-40 format mint: required closed caller_kind user | agent | workflow (DEC-0464). Envelope instance_id remains required. No new CT number — do not mint CT-52. Signature algorithm remains GAP-DESK-ENVELOPE-CRYPTO; mismatch refuse is still required. Envelope types existed at inspect SHA 34c148b; caller_kind did not (DEC-0465). Not on the wire at inspect SHA 270e992 (DEC-0437, DEC-0450; GAP-0096). DEC-0464 is a dated follow-up of DEC-0437; do not set DEC-0437 superseded_by.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,7 +18,8 @@
     "idempotency_key",
     "reconcile_policy",
     "input_hash",
-    "call_depth"
+    "call_depth",
+    "caller_kind"
   ],
   "properties": {
     "logical_invocation_id": { "type": "string", "minLength": 1 },
@@ -57,6 +58,10 @@
     },
     "input_hash": { "type": "string", "minLength": 1 },
     "parent_logical_invocation_id": { "type": "string", "minLength": 1 },
-    "call_depth": { "type": "integer", "minimum": 0 }
+    "call_depth": { "type": "integer", "minimum": 0 },
+    "caller_kind": {
+      "type": "string",
+      "enum": ["user", "agent", "workflow"]
+    }
   }
 }

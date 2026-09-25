@@ -39,6 +39,7 @@ from qma.core.ports.cardinality import Cardinality
 from qma.core.refusals import UnsupportedDoor
 from qma.core.vocabulary import (
     CLOSED_VOCABULARIES,
+    CallerKind,
     DoorAdapter,
     EdgeMapping,
     EffectClass,
@@ -184,6 +185,8 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     assert "door_adapter" in names
     assert "reconcile_policy" in names
     assert "effect_retry_outcome" in names
+    assert "caller_kind" in names
+    assert {member.value for member in CallerKind} == {"user", "agent", "workflow"}
     assert {member.value for member in OutputShape} == {
         "value",
         "artifact_ref",
@@ -266,6 +269,10 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     }
     with pytest.raises(VocabularyError):
         parse_closed(GrantEvaluationMoment, "silent-latest")
+    with pytest.raises(VocabularyError):
+        parse_closed(CallerKind, "widget")
+    with pytest.raises(VocabularyError):
+        parse_closed(CallerKind, "system")
 
 
 def test_missing_refusal_codes_are_refused() -> None:

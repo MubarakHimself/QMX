@@ -83,6 +83,7 @@ def _envelope_payload(**overrides: object) -> dict[str, object]:
         "reconcile_policy": "query-then-decide",
         "input_hash": _hash(),
         "call_depth": 0,
+        "caller_kind": "user",
     }
     payload.update(overrides)
     return payload
@@ -240,6 +241,7 @@ def test_child_logical_invocation_id_derives_from_parent_tuple() -> None:
         logical_invocation_id=derived.value,
         parent_logical_invocation_id="inv:1",
         call_depth=1,
+        caller_kind="workflow",
     )
     nested = public_call_nested(nested_payload, _INPUT, stores)
     assert is_ok(nested)
@@ -249,6 +251,7 @@ def test_child_logical_invocation_id_derives_from_parent_tuple() -> None:
             logical_invocation_id="inv:forged",
             parent_logical_invocation_id="inv:1",
             call_depth=1,
+            caller_kind="workflow",
         ),
         _INPUT,
         stores,
@@ -270,6 +273,7 @@ def test_nested_public_call_does_not_union_permissions() -> None:
         logical_invocation_id=derived.value,
         parent_logical_invocation_id="inv:1",
         call_depth=1,
+        caller_kind="workflow",
     )
     refused = public_call_nested(
         nested_payload,

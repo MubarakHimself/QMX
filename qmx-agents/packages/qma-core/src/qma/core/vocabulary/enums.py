@@ -16,6 +16,7 @@ __all__ = [
     "TASK_MISSION_TERMINAL_STATES",
     "ArtifactCompleteness",
     "AskOnTimeout",
+    "CallerKind",
     "DeliveryState",
     "DoorAdapter",
     "EdgeMapping",
@@ -599,6 +600,19 @@ class ReconcilePolicy(StrEnum):
     QUERY_THEN_DECIDE = "query-then-decide"
     UNKNOWN_MANUAL = "unknown-manual"
     NEVER_RETRY = "never-retry"
+
+
+class CallerKind(StrEnum):
+    """Closed InvocationEnvelope caller_kind (kit AD-4; DEC-0464).
+
+    Named amendment of parent AD-24 / DEC-0437. Every public call names
+    ``user``, ``agent``, or ``workflow``. No other caller kind (no widget).
+    Envelope ``instance_id`` remains required. DEC-0437 is not superseded.
+    """
+
+    USER = "user"
+    AGENT = "agent"
+    WORKFLOW = "workflow"
 
 
 class EffectRetryOutcome(StrEnum):

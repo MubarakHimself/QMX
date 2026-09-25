@@ -54,6 +54,7 @@ def main() -> None:
         "reconcile_policy": "query-then-decide",
         "input_hash": hashed.value,
         "call_depth": 0,
+        "caller_kind": "user",
     }
     grant = GrantRecord.try_create(
         grant_id="grant:1",

@@ -5,12 +5,16 @@ GrantRecord minting, immutability, and GrantRevocation live in
 GrantRecord shape used on every public call.
 
 Every public call carries the CONTRACTS §1b / cheap-veto A3 field set.
-The envelope is signed/bound request context, not authority by assertion
-(RC-03; FR-WF-17; FR-WF-18). Transport never bypasses it. Host resolve +
-compare of contribution, descriptor, and GrantRecord happens before
-execution. Crypto algorithm remains GAP-DESK-ENVELOPE-CRYPTO; mismatch
-refuse is still required (NFR-WF-16). Not on the wire at inspect SHA
-270e992 (DEC-0450; GAP-0096). No new CT (do not mint CT-52).
+Story 60.3 adds closed ``caller_kind`` ``user | agent | workflow`` as an
+additive CT-40 format mint (DEC-0464). Envelope ``instance_id`` remains
+required. The envelope is signed/bound request context, not authority by
+assertion (RC-03; FR-WF-17; FR-WF-18). Transport never bypasses it. Host
+resolve + compare of contribution, descriptor, and GrantRecord happens
+before execution. Crypto algorithm remains GAP-DESK-ENVELOPE-CRYPTO;
+mismatch refuse is still required (NFR-WF-16). Envelope types existed at
+inspect SHA 34c148b; ``caller_kind`` did not (DEC-0465). Not on the wire
+at inspect SHA 270e992 (DEC-0450; GAP-0096). No new CT (do not mint CT-52).
+DEC-0464 is a dated follow-up of DEC-0437; DEC-0437 is not superseded.
 """
 
 from __future__ import annotations
@@ -32,7 +36,7 @@ from qma.core.refusals.variants import (
     InvocationEnvelopeRequired,
     StaleObservation,
 )
-from qma.core.vocabulary.enums import EffectClass, ReconcilePolicy
+from qma.core.vocabulary.enums import CallerKind, EffectClass, ReconcilePolicy
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.wire.auth import FORBIDDEN_SECRET_SURFACE_KEYS, assert_no_secret_on_wire_surface
 from qma.wire.envelope import WireEnvelope
@@ -51,13 +55,23 @@ from qmf.core.refusal import (
 
 __all__ = [
     "AMBIGUOUS_RESOLUTION_TOKENS",
+    "CALLER_KINDS",
+    "CALLER_KIND_EXISTED_AT_INSPECT_SHA",
+    "CALLER_KIND_INSPECT_SHA",
+    "CALLER_KIND_IS_GRANT",
+    "DEC_0437_SUPERSEDED_BY",
+    "DEC_0464_FOLLOWS_DEC_0437",
     "ENVELOPE_CRYPTO_ALGORITHM_SELECTED",
     "ENVELOPE_CRYPTO_GAP",
+    "ENVELOPE_INSTANCE_ID_REMAINS_REQUIRED",
+    "FORBIDDEN_CALLER_KINDS",
     "GRANT_RECORD_FIELDS",
     "GRANT_RECORD_FORBIDDEN_FIELDS",
     "INVOCATION_ENVELOPE_CONTRACT",
     "INVOCATION_ENVELOPE_DTO_OWNER",
+    "INVOCATION_ENVELOPE_EXISTED_AT_INSPECT_SHA_34C148B",
     "INVOCATION_ENVELOPE_FIELDS",
+    "INVOCATION_ENVELOPE_FIELDS_AT_INSPECT_SHA",
     "INVOCATION_ENVELOPE_INSPECT_SHAS",
     "INVOCATION_ENVELOPE_IS_AUTHORITY",
     "INVOCATION_ENVELOPE_NEW_CT_MINTED",
@@ -79,6 +93,8 @@ __all__ = [
     "ParameterCeiling",
     "PublicCallTransport",
     "bind_invocation_envelope",
+    "claim_caller_kind_at_inspect_sha",
+    "claim_invocation_envelope_absent_at_inspect_sha",
     "compute_input_hash",
     "dispatch_public_call",
     "format_utc_iso_z",
@@ -105,8 +121,18 @@ INVOCATION_ENVELOPE_WIRED_AT_INSPECT_SHA: Final[bool] = False
 INVOCATION_ENVELOPE_IS_AUTHORITY: Final[bool] = False
 ENVELOPE_CRYPTO_GAP: Final[str] = "GAP-DESK-ENVELOPE-CRYPTO"
 ENVELOPE_CRYPTO_ALGORITHM_SELECTED: Final[bool] = False
+CALLER_KIND_INSPECT_SHA: Final[str] = "34c148b"
+INVOCATION_ENVELOPE_EXISTED_AT_INSPECT_SHA_34C148B: Final[bool] = True
+CALLER_KIND_EXISTED_AT_INSPECT_SHA: Final[bool] = False
+CALLER_KIND_IS_GRANT: Final[bool] = False
+ENVELOPE_INSTANCE_ID_REMAINS_REQUIRED: Final[bool] = True
+DEC_0464_FOLLOWS_DEC_0437: Final[str] = "DEC-0464"
+DEC_0437_SUPERSEDED_BY: Final[None] = None
+CALLER_KINDS: Final[frozenset[str]] = frozenset(member.value for member in CallerKind)
+FORBIDDEN_CALLER_KINDS: Final[frozenset[str]] = frozenset({"widget"})
 
-INVOCATION_ENVELOPE_FIELDS: Final[tuple[str, ...]] = (
+# Story 54.2 catalogue at inspect SHA 34c148b — caller_kind is the additive mint.
+INVOCATION_ENVELOPE_FIELDS_AT_INSPECT_SHA: Final[tuple[str, ...]] = (
     "logical_invocation_id",
     "attempt_id",
     "op_id",
@@ -123,6 +149,10 @@ INVOCATION_ENVELOPE_FIELDS: Final[tuple[str, ...]] = (
     "input_hash",
     "parent_logical_invocation_id",
     "call_depth",
+)
+INVOCATION_ENVELOPE_FIELDS: Final[tuple[str, ...]] = (
+    *INVOCATION_ENVELOPE_FIELDS_AT_INSPECT_SHA,
+    "caller_kind",
 )
 INVOCATION_ENVELOPE_OPTIONAL_FIELDS: Final[frozenset[str]] = frozenset(
     {
@@ -169,6 +199,57 @@ def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
         retryability=Retryability.NO,
         context=context,
     )
+
+
+def _policy(field: str, reason: str, **extra: object) -> TypedRefusal:
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def claim_caller_kind_at_inspect_sha(existed: object) -> Result[bool]:
+    """Claiming ``caller_kind`` existed at ``34c148b`` fails Story 60.3."""
+    if existed is True or existed == "true":
+        return _policy(
+            "caller_kind",
+            "InvocationEnvelope.caller_kind did not exist at inspect SHA 34c148b "
+            "(DEC-0465; NFR-PG-04; NFR-PG-05)",
+            existed_at_inspect_sha=False,
+            envelope_existed_at_inspect_sha=True,
+            inspect_sha=CALLER_KIND_INSPECT_SHA,
+            fields_at_inspect_sha=list(INVOCATION_ENVELOPE_FIELDS_AT_INSPECT_SHA),
+        )
+    if existed is not False:
+        return _invalid(
+            "existed_at_inspect_sha",
+            "inspect-SHA claim is a boolean",
+            given=repr(existed),
+        )
+    return Ok(False)
+
+
+def claim_invocation_envelope_absent_at_inspect_sha(absent: object) -> Result[bool]:
+    """Claiming InvocationEnvelope was absent at ``34c148b`` fails Story 60.3."""
+    if absent is True or absent == "true":
+        return _policy(
+            "invocation_envelope",
+            "InvocationEnvelope existed at inspect SHA 34c148b; caller_kind did not "
+            "(DEC-0465; NFR-PG-04; NFR-PG-05)",
+            existed_at_inspect_sha=True,
+            caller_kind_existed_at_inspect_sha=False,
+            inspect_sha=CALLER_KIND_INSPECT_SHA,
+        )
+    if absent is not False:
+        return _invalid(
+            "absent_at_inspect_sha",
+            "inspect-SHA claim is a boolean",
+            given=repr(absent),
+        )
+    return Ok(False)
 
 
 def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
@@ -270,6 +351,27 @@ def _parse_reconcile(value: object) -> Result[ReconcilePolicy]:
         return Ok(parse_closed(ReconcilePolicy, value))
     except VocabularyError as exc:
         return _invalid("reconcile_policy", str(exc), given=repr(value))
+
+
+def _parse_caller_kind(value: object) -> Result[CallerKind]:
+    try:
+        parsed = parse_closed(CallerKind, value)
+    except VocabularyError as exc:
+        return _invalid(
+            "caller_kind",
+            str(exc),
+            given=repr(value),
+            allowed=sorted(CALLER_KINDS),
+            widget=False,
+        )
+    if parsed.value in FORBIDDEN_CALLER_KINDS:
+        return _invalid(
+            "caller_kind",
+            "caller_kind is user | agent | workflow; widget is not a caller kind",
+            given=parsed.value,
+            allowed=sorted(CALLER_KINDS),
+        )
+    return Ok(parsed)
 
 
 def _parse_input_hash(value: object) -> Result[str]:
@@ -645,7 +747,11 @@ class InstanceRecord:
 
 @dataclass(frozen=True, slots=True)
 class InvocationEnvelope:
-    """CONTRACTS §1b InvocationEnvelope (cheap-veto A3). Not authority."""
+    """CONTRACTS §1b InvocationEnvelope (cheap-veto A3). Not authority.
+
+    ``caller_kind`` is the Story 60.3 named amendment (DEC-0464). It is
+    request context, not a grant. ``instance_id`` stays required.
+    """
 
     logical_invocation_id: str
     attempt_id: int
@@ -660,6 +766,7 @@ class InvocationEnvelope:
     reconcile_policy: ReconcilePolicy
     input_hash: str
     call_depth: int
+    caller_kind: CallerKind
     caller_session_ref: str | None = None
     callee_session_ref: str | None = None
     parent_logical_invocation_id: str | None = None
@@ -668,6 +775,7 @@ class InvocationEnvelope:
         payload: dict[str, object] = {
             "attempt_id": self.attempt_id,
             "call_depth": self.call_depth,
+            "caller_kind": self.caller_kind.value,
             "config_revision": self.config_revision,
             "contribution": dict(self.contribution.to_payload()),
             "effect_class": self.effect_class.value,
@@ -768,6 +876,9 @@ def parse_invocation_envelope(value: object) -> Result[InvocationEnvelope]:
     depth = _require_int("call_depth", body["call_depth"], minimum=0)
     if is_refusal(depth):
         return depth
+    caller_kind = _parse_caller_kind(body["caller_kind"])
+    if is_refusal(caller_kind):
+        return caller_kind
     if depth.value == 0 and parent.value is not None:
         return _invalid(
             "parent_logical_invocation_id",
@@ -793,6 +904,7 @@ def parse_invocation_envelope(value: object) -> Result[InvocationEnvelope]:
             reconcile_policy=reconcile.value,
             input_hash=input_hash.value,
             call_depth=depth.value,
+            caller_kind=caller_kind.value,
             caller_session_ref=caller.value,
             callee_session_ref=callee.value,
             parent_logical_invocation_id=parent.value,
@@ -1080,7 +1192,11 @@ def bind_invocation_envelope(
         Mapping[str, object],
     ]
 ]:
-    """Resolve stores and compare every bound field. Envelope is not authority."""
+    """Resolve stores and compare every bound field. Envelope is not authority.
+
+    ``caller_kind`` is validated on parse; it is not a GrantRecord field and
+    does not replace hop compare of contribution, descriptor, and grant.
+    """
     contribution = _resolve_contribution(stores, envelope.contribution)
     if is_refusal(contribution):
         return contribution
@@ -1183,6 +1299,13 @@ def dispatch_public_call(
         return parsed
     env = parsed.value
     if door is PublicCallTransport.NESTED:
+        if env.caller_kind is not CallerKind.WORKFLOW:
+            return _invalid(
+                "caller_kind",
+                "nested public calls carry caller_kind=workflow",
+                given=env.caller_kind.value,
+                allowed=["workflow"],
+            )
         if env.parent_logical_invocation_id is None or env.call_depth < 1:
             return _invalid(
                 "call_depth",

@@ -222,6 +222,7 @@ def envelope_for_outbox_row(
         reconcile_policy=reconcile_policy,
         input_hash=hashed.value,
         call_depth=0,
+        caller_kind="workflow",
     )
 
 
