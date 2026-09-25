@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import cast
+
 from qma.core.control.primitives import Skill
 from qma.core.ports.copilot import (
     APP_USE_MAY_APPLY,
@@ -86,7 +89,10 @@ def test_one_copilot_product_identity_and_optional_panel_contract() -> None:
     assert engine.context["prefix"] == "sess:"
     transfer = refuse_context_transfer("transcript")
     assert is_refusal(transfer)
-    assert list(transfer.context["allowed"]) == ["change_request", "selected_refs"]
+    assert list(cast("Sequence[object]", transfer.context["allowed"])) == [
+        "change_request",
+        "selected_refs",
+    ]
 
 
 def test_tool_availability_is_four_way_intersection_and_hooks_cannot_rescue() -> None:
