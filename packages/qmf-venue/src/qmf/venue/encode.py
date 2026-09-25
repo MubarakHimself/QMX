@@ -40,7 +40,14 @@ from qmf.core import (
     is_refusal,
 )
 from qmf.venue.capabilities import CapabilityDeclaration, CapabilityFieldName
-from qmf.venue.commands import Command, CommandKind, OrderType, ProtectionSide, TimeInForce
+from qmf.venue.commands import (
+    Command,
+    CommandKind,
+    OrderParameters,
+    OrderType,
+    ProtectionSide,
+    TimeInForce,
+)
 from qmf.venue.connection import encode_framed_payload
 from qmf.venue.ctrader import MARKET_DATA_WIRE_SCALE_EXPONENT
 from qmf.venue.proto import CompiledProto
@@ -469,21 +476,13 @@ def _finish(
     )
 
 
-# --- per-kind encoders ------------------------------------------------------
-
-
-def encode_place_order(
+def _require_encode_context(
     command: object,
-    *,
     compiled: object,
     declaration: object,
-    ctid_trader_account_id: object,
-    symbol_id: object,
-    trade_side: object,
-    client_msg_id: object = None,
-) -> Result[EncodedCommand]:
-    """Encode a ``place_order`` Command as ProtoOANewOrderReq (payloadType 2106)."""
-    resolved = _require_command(command, CommandKind.PLACE_ORDER)
+    kind: CommandKind,
+) -> Result[tuple[Command, CompiledProto, CapabilityDeclaration]]:
+    resolved = _require_command(command, kind)
     if is_refusal(resolved):
         return resolved
     proto = _require_compiled(compiled)
@@ -492,16 +491,29 @@ def encode_place_order(
     decl = _require_declaration(declaration)
     if is_refusal(decl):
         return decl
-    kind_ok = _require_kind_declared(decl.value, CommandKind.PLACE_ORDER)
+    kind_ok = _require_kind_declared(decl.value, kind)
     if is_refusal(kind_ok):
         return kind_ok
-    params = resolved.value.order_parameters
+    return Ok((resolved.value, proto.value, decl.value))
+
+
+def _apply_writes(writes: Sequence[Result[bool]]) -> Result[bool]:
+    for write in writes:
+        if is_refusal(write):
+            return write
+    return Ok(True)
+
+
+def _admit_place_order_params(
+    command: Command, declaration: CapabilityDeclaration
+) -> Result[OrderParameters]:
+    params = command.order_parameters
     if params is None:
         return _invalid("order_parameters", "place_order carries typed OrderParameters")
-    admitted = decl.value.order_parameter(order_type=params.order_type)
+    admitted = declaration.order_parameter(order_type=params.order_type)
     if is_refusal(admitted):
         return admitted
-    subset = decl.value.static_value(CapabilityFieldName.ORDER_PARAMETER_SUBSET)
+    subset = declaration.static_value(CapabilityFieldName.ORDER_PARAMETER_SUBSET)
     if is_ok(subset):
         raw_subset: object = subset.value
         if isinstance(raw_subset, Mapping):
@@ -511,15 +523,13 @@ def encode_place_order(
                 tif_tokens, (str, bytes)
             )
             if has_tif and tuple(cast("Sequence[object]", tif_tokens)):
-                tif_ok = decl.value.order_parameter(time_in_force=params.time_in_force)
+                tif_ok = declaration.order_parameter(time_in_force=params.time_in_force)
                 if is_refusal(tif_ok):
                     return tif_ok
-    ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
-    if is_refusal(ctid):
-        return ctid
-    symbol = _require_int("symbol_id", symbol_id, minimum=1)
-    if is_refusal(symbol):
-        return symbol
+    return Ok(params)
+
+
+def _place_order_side_wire(trade_side: object) -> Result[int]:
     if isinstance(trade_side, float):
         return _float_refused("trade_side", trade_side)
     side_token = trade_side.strip().lower() if isinstance(trade_side, str) else None
@@ -530,6 +540,10 @@ def encode_place_order(
             "place_order encodes ProtoOA tradeSide buy | sell",
             given=repr(trade_side),
         )
+    return Ok(side_wire)
+
+
+def _place_order_type_wires(params: OrderParameters) -> Result[tuple[int, int]]:
     type_wire = _ORDER_TYPE_WIRE.get(params.order_type)
     if type_wire is None:  # pragma: no cover - OrderType is closed
         return _unsupported(
@@ -546,57 +560,258 @@ def encode_place_order(
             requested=params.time_in_force.value,
             capability="order_parameter_subset",
         )
+    return Ok((type_wire, tif_wire))
+
+
+def _write_optional_price(
+    message: Message, price: Price | None, field: str
+) -> Result[bool]:
+    if price is None:
+        return Ok(True)
+    wire = _price_wire(price, field)
+    if is_refusal(wire):
+        return wire
+    return _set_int(message, (field,), wire.value)
+
+
+def _write_optional_relative_stop(
+    message: Message, delta: PriceDelta | None
+) -> Result[bool]:
+    if delta is None:
+        return Ok(True)
+    relative = _delta_wire(delta, "relativeStopLoss")
+    if is_refusal(relative):
+        return relative
+    return _set_int(message, ("relativeStopLoss",), relative.value, required=False)
+
+
+def _write_place_order_optional_prices(
+    message: Message, params: OrderParameters
+) -> Result[bool]:
+    limit = _write_optional_price(message, params.limit_price, "limitPrice")
+    if is_refusal(limit):
+        return limit
+    stop = _write_optional_price(message, params.stop_price, "stopPrice")
+    if is_refusal(stop):
+        return stop
+    return _write_optional_relative_stop(message, params.protective_stop_distance)
+
+
+def _venue_native_subject(
+    command: Command, *, field: str, reason: str
+) -> Result[int]:
+    if isinstance(command.subject_reference, float):
+        return _float_refused("subject_reference", command.subject_reference)
+    native_id = _venue_native_id(command.subject_reference)
+    if native_id is None:
+        return _invalid("subject_reference", reason, given=repr(command.subject_reference))
+    _ = field
+    return Ok(native_id)
+
+
+@dataclass(frozen=True, slots=True)
+class _ClosePositionWires:
+    ctid: int
+    position_id: int
+    volume: int | None
+    msg_id: str
+
+
+def _close_position_wires(
+    *,
+    command: Command,
+    ctid_trader_account_id: object,
+    volume: object,
+    client_msg_id: object,
+) -> Result[_ClosePositionWires]:
+    ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
+    if is_refusal(ctid):
+        return ctid
+    position_id = _venue_native_subject(
+        command,
+        field="positionId",
+        reason="close_position encodes a venue-native integer positionId",
+    )
+    if is_refusal(position_id):
+        return position_id
+    wire_volume = _optional_close_volume(volume)
+    if is_refusal(wire_volume):
+        return wire_volume
+    msg_id = _client_msg_id(command, client_msg_id)
+    if is_refusal(msg_id):
+        return msg_id
+    return Ok(
+        _ClosePositionWires(
+            ctid=ctid.value,
+            position_id=position_id.value,
+            volume=wire_volume.value,
+            msg_id=msg_id.value,
+        )
+    )
+
+
+def _optional_close_volume(volume: object) -> Result[int | None]:
+    if isinstance(volume, float):
+        return _float_refused("volume", volume)
+    if volume is None:
+        return Ok(None)
+    if not isinstance(volume, Quantity):
+        return _invalid(
+            "volume",
+            "close volume is an exact qmf-core Quantity; a binary float is refused",
+            given=repr(volume),
+        )
+    scaled = _quantity_wire(volume, "volume")
+    if is_refusal(scaled):
+        return scaled
+    return Ok(scaled.value)
+
+
+@dataclass(frozen=True, slots=True)
+class _PlaceOrderWires:
+    ctid: int
+    symbol: int
+    side_wire: int
+    type_wire: int
+    tif_wire: int
+    volume: int
+    msg_id: str
+
+
+def _place_order_wires(
+    *,
+    command: Command,
+    params: OrderParameters,
+    ctid_trader_account_id: object,
+    symbol_id: object,
+    trade_side: object,
+    client_msg_id: object,
+) -> Result[_PlaceOrderWires]:
+    ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
+    if is_refusal(ctid):
+        return ctid
+    symbol = _require_int("symbol_id", symbol_id, minimum=1)
+    if is_refusal(symbol):
+        return symbol
+    side_wire = _place_order_side_wire(trade_side)
+    if is_refusal(side_wire):
+        return side_wire
+    type_wires = _place_order_type_wires(params)
+    if is_refusal(type_wires):
+        return type_wires
+    type_wire, tif_wire = type_wires.value
     volume = _quantity_wire(params.quantity, "volume")
     if is_refusal(volume):
         return volume
-    msg_id = _client_msg_id(resolved.value, client_msg_id)
+    msg_id = _client_msg_id(command, client_msg_id)
     if is_refusal(msg_id):
         return msg_id
-    inner = _message_class(proto.value, _PLACE_ORDER_NAMES)
+    return Ok(
+        _PlaceOrderWires(
+            ctid=ctid.value,
+            symbol=symbol.value,
+            side_wire=side_wire.value,
+            type_wire=type_wire,
+            tif_wire=tif_wire,
+            volume=volume.value,
+            msg_id=msg_id.value,
+        )
+    )
+
+
+def _admit_close_all(
+    command: Command, declaration: CapabilityDeclaration
+) -> Result[bool]:
+    primitive = _require_close_all_primitive(declaration)
+    if is_refusal(primitive):
+        return primitive
+    if command.close_scope is None:
+        return _invalid("close_scope", "close_all carries a typed close scope")
+    scope = declaration.close_scope(command.close_scope)
+    if is_refusal(scope):
+        return scope
+    return Ok(True)
+
+
+def _write_amend_protection_level(
+    message: Message, command: Command
+) -> Result[bool]:
+    amendment = command.protection_amendment
+    if amendment is None:
+        return _invalid(
+            "protection_amendment", "amend_protection carries a typed ProtectionAmendment"
+        )
+    level = amendment.reference_price.add(amendment.new_distance)
+    if is_refusal(level):
+        return level
+    wire_level = _price_wire(level.value, "protection_level")
+    if is_refusal(wire_level):
+        return wire_level
+    field = "stopLoss" if amendment.protection_side is ProtectionSide.STOP else "takeProfit"
+    return _set_int(message, (field,), wire_level.value)
+
+
+# --- per-kind encoders ------------------------------------------------------
+
+
+def encode_place_order(
+    command: object,
+    *,
+    compiled: object,
+    declaration: object,
+    ctid_trader_account_id: object,
+    symbol_id: object,
+    trade_side: object,
+    client_msg_id: object = None,
+) -> Result[EncodedCommand]:
+    """Encode a ``place_order`` Command as ProtoOANewOrderReq (payloadType 2106)."""
+    context = _require_encode_context(
+        command, compiled, declaration, CommandKind.PLACE_ORDER
+    )
+    if is_refusal(context):
+        return context
+    resolved, proto, decl = context.value
+    params = _admit_place_order_params(resolved, decl)
+    if is_refusal(params):
+        return params
+    wires = _place_order_wires(
+        command=resolved,
+        params=params.value,
+        ctid_trader_account_id=ctid_trader_account_id,
+        symbol_id=symbol_id,
+        trade_side=trade_side,
+        client_msg_id=client_msg_id,
+    )
+    if is_refusal(wires):
+        return wires
+    inner = _message_class(proto, _PLACE_ORDER_NAMES)
     if is_refusal(inner):
         return inner
     name, cls = inner.value
     message = cls()
-    writes: tuple[Result[bool], ...] = (
-        _set_int(message, ("ctidTraderAccountId",), ctid.value),
-        _set_int(message, ("symbolId",), symbol.value),
-        _set_int(message, ("orderType",), type_wire),
-        _set_int(message, ("tradeSide",), side_wire),
-        _set_int(message, ("volume",), volume.value),
-        _set_int(message, ("timeInForce",), tif_wire, required=False),
-        _set_str(message, ("clientOrderId",), msg_id.value, required=False),
+    writes = _apply_writes(
+        (
+            _set_int(message, ("ctidTraderAccountId",), wires.value.ctid),
+            _set_int(message, ("symbolId",), wires.value.symbol),
+            _set_int(message, ("orderType",), wires.value.type_wire),
+            _set_int(message, ("tradeSide",), wires.value.side_wire),
+            _set_int(message, ("volume",), wires.value.volume),
+            _set_int(message, ("timeInForce",), wires.value.tif_wire, required=False),
+            _set_str(message, ("clientOrderId",), wires.value.msg_id, required=False),
+        )
     )
-    for write in writes:
-        if is_refusal(write):
-            return write
-    if params.limit_price is not None:
-        limit = _price_wire(params.limit_price, "limitPrice")
-        if is_refusal(limit):
-            return limit
-        written = _set_int(message, ("limitPrice",), limit.value)
-        if is_refusal(written):
-            return written
-    if params.stop_price is not None:
-        stop = _price_wire(params.stop_price, "stopPrice")
-        if is_refusal(stop):
-            return stop
-        written = _set_int(message, ("stopPrice",), stop.value)
-        if is_refusal(written):
-            return written
-    if params.protective_stop_distance is not None:
-        relative = _delta_wire(params.protective_stop_distance, "relativeStopLoss")
-        if is_refusal(relative):
-            return relative
-        written = _set_int(message, ("relativeStopLoss",), relative.value, required=False)
-        if is_refusal(written):
-            return written
+    if is_refusal(writes):
+        return writes
+    optional = _write_place_order_optional_prices(message, params.value)
+    if is_refusal(optional):
+        return optional
     return _finish(
-        command=resolved.value,
-        compiled=proto.value,
+        command=resolved,
+        compiled=proto,
         inner_name=name,
         payload_type=PROTO_OA_NEW_ORDER_REQ,
         payload=message.SerializeToString(),
-        client_msg_id=msg_id.value,
+        client_msg_id=wires.value.msg_id,
     )
 
 
@@ -609,47 +824,41 @@ def encode_cancel_order(
     client_msg_id: object = None,
 ) -> Result[EncodedCommand]:
     """Encode a ``cancel_order`` Command as ProtoOACancelOrderReq (payloadType 2108)."""
-    resolved = _require_command(command, CommandKind.CANCEL_ORDER)
-    if is_refusal(resolved):
-        return resolved
-    proto = _require_compiled(compiled)
-    if is_refusal(proto):
-        return proto
-    decl = _require_declaration(declaration)
-    if is_refusal(decl):
-        return decl
-    kind_ok = _require_kind_declared(decl.value, CommandKind.CANCEL_ORDER)
-    if is_refusal(kind_ok):
-        return kind_ok
+    context = _require_encode_context(
+        command, compiled, declaration, CommandKind.CANCEL_ORDER
+    )
+    if is_refusal(context):
+        return context
+    resolved, proto, _decl = context.value
     ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
     if is_refusal(ctid):
         return ctid
-    if isinstance(resolved.value.subject_reference, float):
-        return _float_refused("subject_reference", resolved.value.subject_reference)
-    order_id = _venue_native_id(resolved.value.subject_reference)
-    if order_id is None:
-        return _invalid(
-            "subject_reference",
-            "cancel_order encodes a venue-native integer orderId",
-            given=repr(resolved.value.subject_reference),
-        )
-    msg_id = _client_msg_id(resolved.value, client_msg_id)
+    order_id = _venue_native_subject(
+        resolved,
+        field="orderId",
+        reason="cancel_order encodes a venue-native integer orderId",
+    )
+    if is_refusal(order_id):
+        return order_id
+    msg_id = _client_msg_id(resolved, client_msg_id)
     if is_refusal(msg_id):
         return msg_id
-    inner = _message_class(proto.value, _CANCEL_ORDER_NAMES)
+    inner = _message_class(proto, _CANCEL_ORDER_NAMES)
     if is_refusal(inner):
         return inner
     name, cls = inner.value
     message = cls()
-    for write in (
-        _set_int(message, ("ctidTraderAccountId",), ctid.value),
-        _set_int(message, ("orderId",), order_id),
-    ):
-        if is_refusal(write):
-            return write
+    writes = _apply_writes(
+        (
+            _set_int(message, ("ctidTraderAccountId",), ctid.value),
+            _set_int(message, ("orderId",), order_id.value),
+        )
+    )
+    if is_refusal(writes):
+        return writes
     return _finish(
-        command=resolved.value,
-        compiled=proto.value,
+        command=resolved,
+        compiled=proto,
         inner_name=name,
         payload_type=PROTO_OA_CANCEL_ORDER_REQ,
         payload=message.SerializeToString(),
@@ -667,74 +876,49 @@ def encode_close_position(
     client_msg_id: object = None,
 ) -> Result[EncodedCommand]:
     """Encode a ``close_position`` Command as ProtoOAClosePositionReq (payloadType 2111)."""
-    resolved = _require_command(command, CommandKind.CLOSE_POSITION)
-    if is_refusal(resolved):
-        return resolved
-    proto = _require_compiled(compiled)
-    if is_refusal(proto):
-        return proto
-    decl = _require_declaration(declaration)
-    if is_refusal(decl):
-        return decl
-    kind_ok = _require_kind_declared(decl.value, CommandKind.CLOSE_POSITION)
-    if is_refusal(kind_ok):
-        return kind_ok
-    if resolved.value.close_scope is None:
+    context = _require_encode_context(
+        command, compiled, declaration, CommandKind.CLOSE_POSITION
+    )
+    if is_refusal(context):
+        return context
+    resolved, proto, decl = context.value
+    if resolved.close_scope is None:
         return _invalid("close_scope", "close_position carries a typed close scope")
-    scope = decl.value.close_scope(resolved.value.close_scope)
+    scope = decl.close_scope(resolved.close_scope)
     if is_refusal(scope):
         return scope
-    ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
-    if is_refusal(ctid):
-        return ctid
-    if isinstance(resolved.value.subject_reference, float):
-        return _float_refused("subject_reference", resolved.value.subject_reference)
-    position_id = _venue_native_id(resolved.value.subject_reference)
-    if position_id is None:
-        return _invalid(
-            "subject_reference",
-            "close_position encodes a venue-native integer positionId",
-            given=repr(resolved.value.subject_reference),
-        )
-    if isinstance(volume, float):
-        return _float_refused("volume", volume)
-    wire_volume: int | None = None
-    if volume is not None:
-        if not isinstance(volume, Quantity):
-            return _invalid(
-                "volume",
-                "close volume is an exact qmf-core Quantity; a binary float is refused",
-                given=repr(volume),
-            )
-        scaled = _quantity_wire(volume, "volume")
-        if is_refusal(scaled):
-            return scaled
-        wire_volume = scaled.value
-    msg_id = _client_msg_id(resolved.value, client_msg_id)
-    if is_refusal(msg_id):
-        return msg_id
-    inner = _message_class(proto.value, _CLOSE_POSITION_NAMES)
+    wires = _close_position_wires(
+        command=resolved,
+        ctid_trader_account_id=ctid_trader_account_id,
+        volume=volume,
+        client_msg_id=client_msg_id,
+    )
+    if is_refusal(wires):
+        return wires
+    inner = _message_class(proto, _CLOSE_POSITION_NAMES)
     if is_refusal(inner):
         return inner
     name, cls = inner.value
     message = cls()
-    for write in (
-        _set_int(message, ("ctidTraderAccountId",), ctid.value),
-        _set_int(message, ("positionId",), position_id),
-    ):
-        if is_refusal(write):
-            return write
-    if wire_volume is not None:
-        written = _set_int(message, ("volume",), wire_volume)
-        if is_refusal(written):
-            return written
+    writes = _apply_writes(
+        (
+            _set_int(message, ("ctidTraderAccountId",), wires.value.ctid),
+            _set_int(message, ("positionId",), wires.value.position_id),
+        )
+    )
+    if is_refusal(writes):
+        return writes
+    if wires.value.volume is not None:
+        extra = _set_int(message, ("volume",), wires.value.volume)
+        if is_refusal(extra):
+            return extra
     return _finish(
-        command=resolved.value,
-        compiled=proto.value,
+        command=resolved,
+        compiled=proto,
         inner_name=name,
         payload_type=PROTO_OA_CLOSE_POSITION_REQ,
         payload=message.SerializeToString(),
-        client_msg_id=msg_id.value,
+        client_msg_id=wires.value.msg_id,
     )
 
 
@@ -753,36 +937,23 @@ def encode_close_all(
     a ``ProtoOAClosePositionReq`` carrying the account (and optional symbol) after
     the CT-18 ``close_all`` primitive and close scope admit the command.
     """
-    resolved = _require_command(command, CommandKind.CLOSE_ALL)
-    if is_refusal(resolved):
-        return resolved
-    proto = _require_compiled(compiled)
-    if is_refusal(proto):
-        return proto
-    decl = _require_declaration(declaration)
-    if is_refusal(decl):
-        return decl
-    kind_ok = _require_kind_declared(decl.value, CommandKind.CLOSE_ALL)
-    if is_refusal(kind_ok):
-        return kind_ok
-    primitive = _require_close_all_primitive(decl.value)
-    if is_refusal(primitive):
-        return primitive
-    if resolved.value.close_scope is None:
-        return _invalid("close_scope", "close_all carries a typed close scope")
-    scope = decl.value.close_scope(resolved.value.close_scope)
-    if is_refusal(scope):
-        return scope
+    context = _require_encode_context(command, compiled, declaration, CommandKind.CLOSE_ALL)
+    if is_refusal(context):
+        return context
+    resolved, proto, decl = context.value
+    admitted = _admit_close_all(resolved, decl)
+    if is_refusal(admitted):
+        return admitted
     ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
     if is_refusal(ctid):
         return ctid
     symbol = _optional_int("symbol_id", symbol_id)
     if is_refusal(symbol):
         return symbol
-    msg_id = _client_msg_id(resolved.value, client_msg_id)
+    msg_id = _client_msg_id(resolved, client_msg_id)
     if is_refusal(msg_id):
         return msg_id
-    inner = _message_class(proto.value, _CLOSE_POSITION_NAMES)
+    inner = _message_class(proto, _CLOSE_POSITION_NAMES)
     if is_refusal(inner):
         return inner
     name, cls = inner.value
@@ -795,8 +966,8 @@ def encode_close_all(
         if is_refusal(extra):
             return extra
     return _finish(
-        command=resolved.value,
-        compiled=proto.value,
+        command=resolved,
+        compiled=proto,
         inner_name=name,
         payload_type=PROTO_OA_CLOSE_POSITION_REQ,
         payload=message.SerializeToString(),
@@ -813,62 +984,44 @@ def encode_amend_protection(
     client_msg_id: object = None,
 ) -> Result[EncodedCommand]:
     """Encode ``amend_protection`` as ProtoOAAmendPositionSLTPReq (payloadType 2110)."""
-    resolved = _require_command(command, CommandKind.AMEND_PROTECTION)
-    if is_refusal(resolved):
-        return resolved
-    proto = _require_compiled(compiled)
-    if is_refusal(proto):
-        return proto
-    decl = _require_declaration(declaration)
-    if is_refusal(decl):
-        return decl
-    kind_ok = _require_kind_declared(decl.value, CommandKind.AMEND_PROTECTION)
-    if is_refusal(kind_ok):
-        return kind_ok
-    amendment = resolved.value.protection_amendment
-    if amendment is None:
-        return _invalid(
-            "protection_amendment", "amend_protection carries a typed ProtectionAmendment"
-        )
+    context = _require_encode_context(
+        command, compiled, declaration, CommandKind.AMEND_PROTECTION
+    )
+    if is_refusal(context):
+        return context
+    resolved, proto, _decl = context.value
     ctid = _require_int("ctid_trader_account_id", ctid_trader_account_id, minimum=1)
     if is_refusal(ctid):
         return ctid
-    if isinstance(resolved.value.subject_reference, float):
-        return _float_refused("subject_reference", resolved.value.subject_reference)
-    position_id = _venue_native_id(resolved.value.subject_reference)
-    if position_id is None:
-        return _invalid(
-            "subject_reference",
-            "amend_protection encodes a venue-native integer positionId",
-            given=repr(resolved.value.subject_reference),
-        )
-    level = amendment.reference_price.add(amendment.new_distance)
-    if is_refusal(level):
-        return level
-    wire_level = _price_wire(level.value, "protection_level")
-    if is_refusal(wire_level):
-        return wire_level
-    msg_id = _client_msg_id(resolved.value, client_msg_id)
+    position_id = _venue_native_subject(
+        resolved,
+        field="positionId",
+        reason="amend_protection encodes a venue-native integer positionId",
+    )
+    if is_refusal(position_id):
+        return position_id
+    msg_id = _client_msg_id(resolved, client_msg_id)
     if is_refusal(msg_id):
         return msg_id
-    inner = _message_class(proto.value, _AMEND_NAMES)
+    inner = _message_class(proto, _AMEND_NAMES)
     if is_refusal(inner):
         return inner
     name, cls = inner.value
     message = cls()
-    for write in (
-        _set_int(message, ("ctidTraderAccountId",), ctid.value),
-        _set_int(message, ("positionId",), position_id),
-    ):
-        if is_refusal(write):
-            return write
-    field = "stopLoss" if amendment.protection_side is ProtectionSide.STOP else "takeProfit"
-    written = _set_int(message, (field,), wire_level.value)
-    if is_refusal(written):
-        return written
+    writes = _apply_writes(
+        (
+            _set_int(message, ("ctidTraderAccountId",), ctid.value),
+            _set_int(message, ("positionId",), position_id.value),
+        )
+    )
+    if is_refusal(writes):
+        return writes
+    level = _write_amend_protection_level(message, resolved)
+    if is_refusal(level):
+        return level
     return _finish(
-        command=resolved.value,
-        compiled=proto.value,
+        command=resolved,
+        compiled=proto,
         inner_name=name,
         payload_type=PROTO_OA_AMEND_POSITION_SLTP_REQ,
         payload=message.SerializeToString(),
@@ -908,6 +1061,27 @@ def encode_command(
             ctid_trader_account_id=ctid_trader_account_id,
             client_msg_id=client_msg_id,
         )
+    return _encode_close_or_amend(
+        command,
+        compiled=compiled,
+        declaration=declaration,
+        ctid_trader_account_id=ctid_trader_account_id,
+        symbol_id=symbol_id,
+        volume=volume,
+        client_msg_id=client_msg_id,
+    )
+
+
+def _encode_close_or_amend(
+    command: Command,
+    *,
+    compiled: object,
+    declaration: object,
+    ctid_trader_account_id: object,
+    symbol_id: object,
+    volume: object,
+    client_msg_id: object,
+) -> Result[EncodedCommand]:
     if command.kind is CommandKind.CLOSE_POSITION:
         return encode_close_position(
             command,

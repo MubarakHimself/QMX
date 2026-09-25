@@ -433,6 +433,127 @@ def _coerce_active_controls(value: object) -> tuple[ActiveControl, ...] | TypedR
     return tuple(items)
 
 
+def _routing_blocking_allowed(blocked_act: object) -> Result[bool]:
+    from qmf.risk.control_action import check_exit_preservation  # noqa: PLC0415
+
+    preserved = check_exit_preservation(blocked_act=blocked_act)
+    if is_refusal(preserved):
+        if preserved.category is not RefusalCategory.POLICY_REJECTION:
+            return preserved
+        return Ok(False)
+    return Ok(True)
+
+
+def _routing_mode_and_seat(
+    book_mode: object, seat_state: object
+) -> Result[tuple[BookMode, SeatState]]:
+    resolved_mode = coerce_enum(BookMode, book_mode)
+    if resolved_mode is None:
+        return invalid(
+            "book_mode",
+            "routing reads a resolved Book mode (LIVE|PAPER) from the read-time fold",
+            given=repr(book_mode),
+        )
+    resolved_seat = coerce_enum(SeatState, seat_state)
+    if resolved_seat is None:
+        return invalid(
+            "seat_state",
+            "routing reads a seat state (active|benched)",
+            given=repr(seat_state),
+            allowed=[member.value for member in SeatState],
+        )
+    return Ok((resolved_mode, resolved_seat))
+
+
+def _routing_targets(
+    live_target: object, paper_target: object
+) -> Result[tuple[ExecutionTarget, ExecutionTarget | None]]:
+    if not isinstance(live_target, ExecutionTarget):
+        return invalid(
+            "live_target", "routing reads the live ExecutionTarget", given=repr(live_target)
+        )
+    if live_target.role is not AccountRole.LIVE:
+        return invalid(
+            "live_target",
+            "the live execution target carries the live account role",
+            given=live_target.role.value,
+        )
+    if paper_target is None:
+        return Ok((live_target, None))
+    if not isinstance(paper_target, ExecutionTarget):
+        return invalid(
+            "paper_target",
+            "the paper-routing target is an ExecutionTarget or None",
+            given=repr(paper_target),
+        )
+    if paper_target.role is AccountRole.LIVE:
+        return invalid(
+            "paper_target",
+            "the paper-routing target is a paired demo account, never the live account; "
+            "live and demo are distinct streams",
+            given=paper_target.role.value,
+        )
+    return Ok((live_target, paper_target))
+
+
+def _blocked_resolution(
+    controls: tuple[ActiveControl, ...], *, blocking_allowed: bool
+) -> ExecutionResolution | None:
+    blocking = next((c for c in controls if c.disposition is TriggerDisposition.BLOCKS_PAPER), None)
+    if blocking is None or not blocking_allowed:
+        return None
+    return ExecutionResolution(
+        outcome=RoutingOutcome.BLOCKED,
+        routing_reason=(
+            "a blocks-paper control blocks live and paper alike; the decision is "
+            "recorded, and recording is not trading"
+        ),
+        blocking_control_id=blocking.control_id,
+    )
+
+
+def _paper_route_reason(
+    resolved_mode: BookMode, resolved_seat: SeatState, routes: ActiveControl | None
+) -> str:
+    if resolved_mode is BookMode.PAPER:
+        return "Book mode PAPER selects the paired target without changing the binding identity"
+    if resolved_seat is SeatState.BENCHED:
+        return "a benched seat routes to the paired target without re-minting the binding"
+    control_id = routes.control_id if routes is not None else "routes-to-paper control"
+    return f"a routes-to-paper control ({control_id}) routes to the paired target"
+
+
+def _paper_resolution(
+    *,
+    resolved_mode: BookMode,
+    resolved_seat: SeatState,
+    controls: tuple[ActiveControl, ...],
+    resolved_paper: ExecutionTarget | None,
+) -> Result[ExecutionResolution] | None:
+    routes = next(
+        (c for c in controls if c.disposition is TriggerDisposition.ROUTES_TO_PAPER), None
+    )
+    to_paper = (
+        resolved_mode is BookMode.PAPER or resolved_seat is SeatState.BENCHED or routes is not None
+    )
+    if not to_paper:
+        return None
+    if resolved_paper is None:
+        return unavailable(
+            "paper_target",
+            "paper routing needs the single resolved paper-routing target for this binding; "
+            "no resolvable target makes the paper transition an unavailable-dependency "
+            "refusal, and live trading is unaffected",
+        )
+    return Ok(
+        ExecutionResolution(
+            outcome=RoutingOutcome.ROUTED_PAPER,
+            routing_reason=_paper_route_reason(resolved_mode, resolved_seat, routes),
+            execution_target=resolved_paper,
+        )
+    )
+
+
 def resolve_execution_target(
     *,
     book_mode: object,
@@ -461,115 +582,152 @@ def resolve_execution_target(
     ``live_target`` must carry the ``live`` role and ``paper_target`` (when present) must
     not — live and demo are distinct streams.
     """
-    # Local import avoids the established control_action -> exit_record -> door -> paper
-    # module cycle while keeping the single CT-30 guard authoritative.
-    from qmf.risk.control_action import check_exit_preservation  # noqa: PLC0415
-
-    preserved = check_exit_preservation(blocked_act=blocked_act)
-    blocking_allowed = True
-    if is_refusal(preserved):
-        if preserved.category is not RefusalCategory.POLICY_REJECTION:
-            return preserved
-        blocking_allowed = False
-
-    resolved_mode = coerce_enum(BookMode, book_mode)
-    if resolved_mode is None:
-        return invalid(
-            "book_mode",
-            "routing reads a resolved Book mode (LIVE|PAPER) from the read-time fold",
-            given=repr(book_mode),
-        )
-    resolved_seat = coerce_enum(SeatState, seat_state)
-    if resolved_seat is None:
-        return invalid(
-            "seat_state",
-            "routing reads a seat state (active|benched)",
-            given=repr(seat_state),
-            allowed=[member.value for member in SeatState],
-        )
+    blocking_allowed = _routing_blocking_allowed(blocked_act)
+    if is_refusal(blocking_allowed):
+        return blocking_allowed
+    mode_and_seat = _routing_mode_and_seat(book_mode, seat_state)
+    if is_refusal(mode_and_seat):
+        return mode_and_seat
+    resolved_mode, resolved_seat = mode_and_seat.value
     controls = _coerce_active_controls(active_controls)
     if isinstance(controls, TypedRefusal):
         return controls
-    if not isinstance(live_target, ExecutionTarget):
-        return invalid(
-            "live_target", "routing reads the live ExecutionTarget", given=repr(live_target)
-        )
-    if live_target.role is not AccountRole.LIVE:
-        return invalid(
-            "live_target",
-            "the live execution target carries the live account role",
-            given=live_target.role.value,
-        )
-    resolved_paper: ExecutionTarget | None
-    if paper_target is None:
-        resolved_paper = None
-    elif isinstance(paper_target, ExecutionTarget):
-        if paper_target.role is AccountRole.LIVE:
-            return invalid(
-                "paper_target",
-                "the paper-routing target is a paired demo account, never the live account; "
-                "live and demo are distinct streams",
-                given=paper_target.role.value,
-            )
-        resolved_paper = paper_target
-    else:
-        return invalid(
-            "paper_target",
-            "the paper-routing target is an ExecutionTarget or None",
-            given=repr(paper_target),
-        )
-
-    blocking = next((c for c in controls if c.disposition is TriggerDisposition.BLOCKS_PAPER), None)
-    if blocking is not None and blocking_allowed:
-        return Ok(
-            ExecutionResolution(
-                outcome=RoutingOutcome.BLOCKED,
-                routing_reason=(
-                    "a blocks-paper control blocks live and paper alike; the decision is "
-                    "recorded, and recording is not trading"
-                ),
-                blocking_control_id=blocking.control_id,
-            )
-        )
-
-    routes = next(
-        (c for c in controls if c.disposition is TriggerDisposition.ROUTES_TO_PAPER), None
+    targets = _routing_targets(live_target, paper_target)
+    if is_refusal(targets):
+        return targets
+    resolved_live, resolved_paper = targets.value
+    blocked = _blocked_resolution(controls, blocking_allowed=blocking_allowed.value)
+    if blocked is not None:
+        return Ok(blocked)
+    paper = _paper_resolution(
+        resolved_mode=resolved_mode,
+        resolved_seat=resolved_seat,
+        controls=controls,
+        resolved_paper=resolved_paper,
     )
-    to_paper = (
-        resolved_mode is BookMode.PAPER or resolved_seat is SeatState.BENCHED or routes is not None
-    )
-    if to_paper:
-        if resolved_paper is None:
-            return unavailable(
-                "paper_target",
-                "paper routing needs the single resolved paper-routing target for this binding; "
-                "no resolvable target makes the paper transition an unavailable-dependency "
-                "refusal, and live trading is unaffected",
-            )
-        if resolved_mode is BookMode.PAPER:
-            reason = (
-                "Book mode PAPER selects the paired target without changing the binding identity"
-            )
-        elif resolved_seat is SeatState.BENCHED:
-            reason = "a benched seat routes to the paired target without re-minting the binding"
-        else:
-            control_id = routes.control_id if routes is not None else "routes-to-paper control"
-            reason = f"a routes-to-paper control ({control_id}) routes to the paired target"
-        return Ok(
-            ExecutionResolution(
-                outcome=RoutingOutcome.ROUTED_PAPER,
-                routing_reason=reason,
-                execution_target=resolved_paper,
-            )
-        )
-
+    if paper is not None:
+        return paper
     return Ok(
         ExecutionResolution(
             outcome=RoutingOutcome.ROUTED_LIVE,
             routing_reason="LIVE mode, active seat, and no routing control — route to live",
-            execution_target=live_target,
+            execution_target=resolved_live,
         )
     )
+
+
+def _transition_identities(
+    book_instance_id: object,
+    book_binding_ref: object,
+    mode: object,
+    transition_instant: object,
+    trigger_kind: object,
+) -> Result[tuple[BookInstanceId, Fingerprint, BookMode, Instant, TriggerKind]]:
+    if not isinstance(book_instance_id, BookInstanceId):
+        return invalid(
+            "book_instance_id",
+            "a transition names the Book instance it applies to — never a new Book",
+            given=repr(book_instance_id),
+        )
+    if not isinstance(book_binding_ref, Fingerprint):
+        return invalid(
+            "book_binding_ref",
+            "a transition cites the AD-29 binding epoch it mints/applies to, by fingerprint",
+            given=repr(book_binding_ref),
+        )
+    resolved_mode = validate_book_mode(mode)
+    if is_refusal(resolved_mode):
+        return resolved_mode
+    if not isinstance(transition_instant, Instant):
+        return invalid(
+            "transition_instant",
+            "a transition is dated with an injected Instant (never a clock read below the "
+            "composition root)",
+            given=repr(transition_instant),
+        )
+    if not isinstance(trigger_kind, TriggerKind):
+        return invalid(
+            "trigger_kind",
+            "a transition carries the TriggerKind that occasioned it, with its mandatory "
+            "disposition",
+            given=repr(trigger_kind),
+        )
+    return Ok(
+        (book_instance_id, book_binding_ref, resolved_mode.value, transition_instant, trigger_kind)
+    )
+
+
+def _transition_paper_fields(
+    paper_target_ref: object, paper_epoch_ref: object
+) -> Result[tuple[ExecutionTarget | None, Fingerprint | None]]:
+    target: ExecutionTarget | None = None
+    if paper_target_ref is not None:
+        if not isinstance(paper_target_ref, ExecutionTarget):
+            return invalid(
+                "paper_target_ref",
+                "the paper target is an ExecutionTarget when present",
+                given=repr(paper_target_ref),
+            )
+        if paper_target_ref.role is AccountRole.LIVE:
+            return invalid(
+                "paper_target_ref",
+                "the paper-routing target is a paired demo account, never the live account",
+                given=paper_target_ref.role.value,
+            )
+        target = paper_target_ref
+    epoch: Fingerprint | None = None
+    if paper_epoch_ref is not None:
+        if not isinstance(paper_epoch_ref, Fingerprint):
+            return invalid(
+                "paper_epoch_ref",
+                "the paper epoch is cited by fingerprint when present",
+                given=repr(paper_epoch_ref),
+            )
+        epoch = paper_epoch_ref
+    return Ok((target, epoch))
+
+
+def _optional_operator_signature(operator_signature: object) -> Result[str | None]:
+    if operator_signature is None:
+        return Ok(None)
+    signature = clean_str(operator_signature)
+    if signature is None:
+        return invalid(
+            "operator_signature",
+            "an operator signature is a non-empty token when present",
+            given=repr(operator_signature),
+        )
+    return Ok(signature)
+
+
+def _align_transition_paper_fields(
+    book_mode: BookMode,
+    target: ExecutionTarget | None,
+    epoch: Fingerprint | None,
+) -> Result[tuple[ExecutionTarget | None, Fingerprint | None]]:
+    if book_mode is BookMode.PAPER:
+        if target is None:
+            return invalid(
+                "paper_target_ref",
+                "a PAPER-resulting transition carries the single resolved paper-routing target",
+            )
+        if epoch is None:
+            return invalid(
+                "paper_epoch_ref",
+                "a PAPER-resulting transition carries the paper epoch in force",
+            )
+        return Ok((target, epoch))
+    if target is not None:
+        return invalid(
+            "paper_target_ref",
+            "a LIVE-resulting transition omits the paper target (present only for PAPER)",
+        )
+    if epoch is not None:
+        return invalid(
+            "paper_epoch_ref",
+            "a LIVE-resulting transition omits the paper epoch (present only for PAPER)",
+        )
+    return Ok((None, None))
 
 
 # --- the CT-24 binding-transition record and the read-time mode fold ---------
@@ -618,101 +776,33 @@ class BindingTransitionRecord:
         PAPER transition requires ``paper_target_ref`` and ``paper_epoch_ref``, a LIVE
         transition omits both.
         """
-        if not isinstance(book_instance_id, BookInstanceId):
-            return invalid(
-                "book_instance_id",
-                "a transition names the Book instance it applies to — never a new Book",
-                given=repr(book_instance_id),
-            )
-        if not isinstance(book_binding_ref, Fingerprint):
-            return invalid(
-                "book_binding_ref",
-                "a transition cites the AD-29 binding epoch it mints/applies to, by fingerprint",
-                given=repr(book_binding_ref),
-            )
-        resolved_mode = validate_book_mode(mode)
-        if is_refusal(resolved_mode):
-            return resolved_mode
-        book_mode = resolved_mode.value
-        if not isinstance(transition_instant, Instant):
-            return invalid(
-                "transition_instant",
-                "a transition is dated with an injected Instant (never a clock read below the "
-                "composition root)",
-                given=repr(transition_instant),
-            )
-        if not isinstance(trigger_kind, TriggerKind):
-            return invalid(
-                "trigger_kind",
-                "a transition carries the TriggerKind that occasioned it, with its mandatory "
-                "disposition",
-                given=repr(trigger_kind),
-            )
-        target: ExecutionTarget | None = None
-        if paper_target_ref is not None:
-            if not isinstance(paper_target_ref, ExecutionTarget):
-                return invalid(
-                    "paper_target_ref",
-                    "the paper target is an ExecutionTarget when present",
-                    given=repr(paper_target_ref),
-                )
-            if paper_target_ref.role is AccountRole.LIVE:
-                return invalid(
-                    "paper_target_ref",
-                    "the paper-routing target is a paired demo account, never the live account",
-                    given=paper_target_ref.role.value,
-                )
-            target = paper_target_ref
-        epoch: Fingerprint | None = None
-        if paper_epoch_ref is not None:
-            if not isinstance(paper_epoch_ref, Fingerprint):
-                return invalid(
-                    "paper_epoch_ref",
-                    "the paper epoch is cited by fingerprint when present",
-                    given=repr(paper_epoch_ref),
-                )
-            epoch = paper_epoch_ref
-        signature: str | None = None
-        if operator_signature is not None:
-            signature = clean_str(operator_signature)
-            if signature is None:
-                return invalid(
-                    "operator_signature",
-                    "an operator signature is a non-empty token when present",
-                    given=repr(operator_signature),
-                )
-        if book_mode is BookMode.PAPER:
-            if target is None:
-                return invalid(
-                    "paper_target_ref",
-                    "a PAPER-resulting transition carries the single resolved paper-routing target",
-                )
-            if epoch is None:
-                return invalid(
-                    "paper_epoch_ref",
-                    "a PAPER-resulting transition carries the paper epoch in force",
-                )
-        else:
-            if target is not None:
-                return invalid(
-                    "paper_target_ref",
-                    "a LIVE-resulting transition omits the paper target (present only for PAPER)",
-                )
-            if epoch is not None:
-                return invalid(
-                    "paper_epoch_ref",
-                    "a LIVE-resulting transition omits the paper epoch (present only for PAPER)",
-                )
+        identities = _transition_identities(
+            book_instance_id, book_binding_ref, mode, transition_instant, trigger_kind
+        )
+        if is_refusal(identities):
+            return identities
+        instance_id, binding_ref, book_mode, instant, trigger = identities.value
+        paper_fields = _transition_paper_fields(paper_target_ref, paper_epoch_ref)
+        if is_refusal(paper_fields):
+            return paper_fields
+        target, epoch = paper_fields.value
+        signature = _optional_operator_signature(operator_signature)
+        if is_refusal(signature):
+            return signature
+        aligned = _align_transition_paper_fields(book_mode, target, epoch)
+        if is_refusal(aligned):
+            return aligned
+        aligned_target, aligned_epoch = aligned.value
         return Ok(
             cls(
-                book_instance_id=book_instance_id,
-                book_binding_ref=book_binding_ref,
+                book_instance_id=instance_id,
+                book_binding_ref=binding_ref,
                 mode=book_mode,
-                transition_instant=transition_instant,
-                trigger_kind=trigger_kind,
-                paper_target_ref=target,
-                paper_epoch_ref=epoch,
-                operator_signature=signature,
+                transition_instant=instant,
+                trigger_kind=trigger,
+                paper_target_ref=aligned_target,
+                paper_epoch_ref=aligned_epoch,
+                operator_signature=signature.value,
             )
         )
 
@@ -822,53 +912,70 @@ class BindingTransitionStream:
         ``data_quality_reason`` for the caller to journal and alarm.
         """
         if not isinstance(book_instance_id, BookInstanceId):
-            return ModeFoldResult(
-                mode=BookMode.PAPER,
-                fail_closed=True,
-                data_quality_reason=(
-                    "the mode fold received a non-BookInstanceId key; fail-closed to the "
-                    "most-restrictive PAPER"
-                ),
+            return _fail_closed_paper(
+                "the mode fold received a non-BookInstanceId key; fail-closed to the "
+                "most-restrictive PAPER"
             )
-        bound: int | None = None
-        if as_of is not None:
-            if not isinstance(as_of, Instant):
-                return ModeFoldResult(
-                    mode=BookMode.PAPER,
-                    fail_closed=True,
-                    data_quality_reason=(
-                        "the mode fold's knowledge-time bound must be an Instant; fail-closed "
-                        "to PAPER"
-                    ),
-                )
-            bound = as_of.value_ns
+        bound = _mode_fold_bound(as_of)
+        if isinstance(bound, ModeFoldResult):
+            return bound
         records = self._by_book.get(book_instance_id.value, [])
         considered = [r for r in records if bound is None or r.transition_instant.value_ns <= bound]
         if not considered:
-            return ModeFoldResult(
-                mode=BookMode.PAPER,
-                fail_closed=True,
-                data_quality_reason=(
-                    "no transition record establishes a mode for this Book at the knowledge-time "
-                    "bound; a Book is never live without a record — fail-closed to the "
-                    "most-restrictive PAPER"
-                ),
+            return _fail_closed_paper(
+                "no transition record establishes a mode for this Book at the knowledge-time "
+                "bound; a Book is never live without a record — fail-closed to the "
+                "most-restrictive PAPER"
             )
-        latest_instant = max(r.transition_instant.value_ns for r in considered)
-        latest_modes = {
-            r.mode for r in considered if r.transition_instant.value_ns == latest_instant
-        }
-        if len(latest_modes) == 1:
-            return ModeFoldResult(mode=next(iter(latest_modes)), fail_closed=False)
-        return ModeFoldResult(
-            mode=BookMode.PAPER,
-            fail_closed=True,
-            data_quality_reason=(
-                "two transitions share the latest instant with differing modes; the declared "
-                "equal-instant disposition is the most-restrictive PAPER — journal data quality "
-                "and alarm"
-            ),
+        return _fold_latest_mode(considered)
+
+
+def _fail_closed_paper(reason: str) -> ModeFoldResult:
+    return ModeFoldResult(mode=BookMode.PAPER, fail_closed=True, data_quality_reason=reason)
+
+
+def _mode_fold_bound(as_of: object) -> int | ModeFoldResult | None:
+    if as_of is None:
+        return None
+    if not isinstance(as_of, Instant):
+        return _fail_closed_paper(
+            "the mode fold's knowledge-time bound must be an Instant; fail-closed to PAPER"
         )
+    return as_of.value_ns
+
+
+def _fold_latest_mode(considered: list[BindingTransitionRecord]) -> ModeFoldResult:
+    latest_instant = max(r.transition_instant.value_ns for r in considered)
+    latest_modes = {r.mode for r in considered if r.transition_instant.value_ns == latest_instant}
+    if len(latest_modes) == 1:
+        return ModeFoldResult(mode=next(iter(latest_modes)), fail_closed=False)
+    return _fail_closed_paper(
+        "two transitions share the latest instant with differing modes; the declared "
+        "equal-instant disposition is the most-restrictive PAPER — journal data quality "
+        "and alarm"
+    )
+
+
+def _demo_execution_target(value: object, *, field: str) -> Result[ExecutionTarget]:
+    if not isinstance(value, ExecutionTarget):
+        return invalid(field, "a paper-target record carries an ExecutionTarget", given=repr(value))
+    if value.role is AccountRole.LIVE:
+        return invalid(
+            field,
+            "the paper-routing target is a paired demo account, never the live account",
+            given=value.role.value,
+        )
+    return Ok(value)
+
+
+def _optional_fingerprint_field(
+    value: object, *, field: str, reason: str
+) -> Result[Fingerprint | None]:
+    if value is None:
+        return Ok(None)
+    if not isinstance(value, Fingerprint):
+        return invalid(field, reason, given=repr(value))
+    return Ok(value)
 
 
 # --- the single active paper-routing target per binding ----------------------
@@ -899,23 +1006,14 @@ class PaperTargetRecord:
         supersedes: object = None,
     ) -> Result[PaperTargetRecord]:
         """Validate and build a :class:`PaperTargetRecord`, value-or-refusal."""
+        target = _demo_execution_target(paper_target, field="paper_target")
+        if is_refusal(target):
+            return target
         if not isinstance(binding_ref, Fingerprint):
             return invalid(
                 "binding_ref",
                 "a paper-target record cites the live binding epoch by fingerprint",
                 given=repr(binding_ref),
-            )
-        if not isinstance(paper_target, ExecutionTarget):
-            return invalid(
-                "paper_target",
-                "a paper-target record carries an ExecutionTarget",
-                given=repr(paper_target),
-            )
-        if paper_target.role is AccountRole.LIVE:
-            return invalid(
-                "paper_target",
-                "the paper-routing target is a paired demo account, never the live account",
-                given=paper_target.role.value,
             )
         if not isinstance(dated_at, Instant):
             return invalid(
@@ -923,21 +1021,19 @@ class PaperTargetRecord:
                 "a paper-target record is dated with an injected Instant",
                 given=repr(dated_at),
             )
-        superseded: Fingerprint | None = None
-        if supersedes is not None:
-            if not isinstance(supersedes, Fingerprint):
-                return invalid(
-                    "supersedes",
-                    "a superseding paper-target record names the prior record by fingerprint",
-                    given=repr(supersedes),
-                )
-            superseded = supersedes
+        superseded = _optional_fingerprint_field(
+            supersedes,
+            field="supersedes",
+            reason="a superseding paper-target record names the prior record by fingerprint",
+        )
+        if is_refusal(superseded):
+            return superseded
         return Ok(
             cls(
                 binding_ref=binding_ref,
-                paper_target=paper_target,
+                paper_target=target.value,
                 dated_at=dated_at,
-                supersedes=superseded,
+                supersedes=superseded.value,
             )
         )
 
@@ -1070,6 +1166,89 @@ class PaperTargetLog:
         return Ok(self._records[active].paper_target)
 
 
+def _paper_epoch_identity(
+    book_instance_id: object, binding_ref: object, dated_at: object
+) -> Result[tuple[BookInstanceId, Fingerprint, Instant]]:
+    if not isinstance(book_instance_id, BookInstanceId):
+        return invalid(
+            "book_instance_id",
+            "a paper epoch names the Book instance it belongs to",
+            given=repr(book_instance_id),
+        )
+    if not isinstance(binding_ref, Fingerprint):
+        return invalid(
+            "binding_ref",
+            "a paper epoch cites the binding epoch it is in force for, by fingerprint",
+            given=repr(binding_ref),
+        )
+    if not isinstance(dated_at, Instant):
+        return invalid(
+            "dated_at", "a paper epoch is dated with an injected Instant", given=repr(dated_at)
+        )
+    return Ok((book_instance_id, binding_ref, dated_at))
+
+
+def _paper_epoch_balance(starting_balance: object) -> Result[Money]:
+    if not isinstance(starting_balance, Money):
+        return invalid(
+            "starting_balance",
+            "a paper starting balance is exact Money (a scaled integer, never a binary float)",
+            given=repr(starting_balance),
+        )
+    if starting_balance.currency != V1_NUMERAIRE:
+        return policy(
+            "starting_balance",
+            "the paper starting balance is Money in the V1 numeraire (USD); a non-USD balance "
+            "is refused — no rate source is ratified",
+            given=starting_balance.currency,
+            numeraire=V1_NUMERAIRE,
+        )
+    if starting_balance.value <= 0:
+        return invalid(
+            "starting_balance",
+            "a paper starting balance is a positive amount sized for data-collection realism",
+            given=starting_balance.value,
+        )
+    return Ok(starting_balance)
+
+
+def _paper_epoch_lineage(
+    boundary_kind: object, supersedes: object
+) -> Result[tuple[TreasuryBoundaryKind | None, Fingerprint | None]]:
+    resolved_kind: TreasuryBoundaryKind | None = None
+    if boundary_kind is not None:
+        resolved_kind = coerce_enum(TreasuryBoundaryKind, boundary_kind)
+        if resolved_kind is None:
+            return invalid(
+                "boundary_kind",
+                "a paper reset's boundary kind is paper_epoch_reset",
+                given=repr(boundary_kind),
+                allowed=[member.value for member in TreasuryBoundaryKind],
+            )
+    superseded = _optional_fingerprint_field(
+        supersedes,
+        field="supersedes",
+        reason="a paper reset names the epoch it follows by fingerprint (its lineage edge)",
+    )
+    if is_refusal(superseded):
+        return superseded
+    if superseded.value is not None:
+        if resolved_kind is not TreasuryBoundaryKind.PAPER_EPOCH_RESET:
+            return invalid(
+                "boundary_kind",
+                "a superseding paper epoch is a reset — its boundary kind is paper_epoch_reset",
+                given=repr(boundary_kind),
+            )
+    elif resolved_kind is not None:
+        return invalid(
+            "boundary_kind",
+            "the first paper epoch at flip carries no supersedes edge and no reset boundary "
+            "kind; only a reset is a treasury boundary event",
+            given=repr(boundary_kind),
+        )
+    return Ok((resolved_kind, superseded.value))
+
+
 # --- paper epochs: frozen evidence, operator-signed resets -------------------
 
 
@@ -1114,38 +1293,13 @@ class PaperEpochRecord:
         both a ``supersedes`` edge and ``boundary_kind = paper_epoch_reset``; the first
         epoch carries neither — a mismatch is ``invalid input``.
         """
-        if not isinstance(book_instance_id, BookInstanceId):
-            return invalid(
-                "book_instance_id",
-                "a paper epoch names the Book instance it belongs to",
-                given=repr(book_instance_id),
-            )
-        if not isinstance(binding_ref, Fingerprint):
-            return invalid(
-                "binding_ref",
-                "a paper epoch cites the binding epoch it is in force for, by fingerprint",
-                given=repr(binding_ref),
-            )
-        if not isinstance(starting_balance, Money):
-            return invalid(
-                "starting_balance",
-                "a paper starting balance is exact Money (a scaled integer, never a binary float)",
-                given=repr(starting_balance),
-            )
-        if starting_balance.currency != V1_NUMERAIRE:
-            return policy(
-                "starting_balance",
-                "the paper starting balance is Money in the V1 numeraire (USD); a non-USD balance "
-                "is refused — no rate source is ratified",
-                given=starting_balance.currency,
-                numeraire=V1_NUMERAIRE,
-            )
-        if starting_balance.value <= 0:
-            return invalid(
-                "starting_balance",
-                "a paper starting balance is a positive amount sized for data-collection realism",
-                given=starting_balance.value,
-            )
+        identity = _paper_epoch_identity(book_instance_id, binding_ref, dated_at)
+        if is_refusal(identity):
+            return identity
+        instance_id, binding, dated = identity.value
+        balance = _paper_epoch_balance(starting_balance)
+        if is_refusal(balance):
+            return balance
         signature = clean_str(operator_signature)
         if signature is None:
             return invalid(
@@ -1153,50 +1307,17 @@ class PaperEpochRecord:
                 "a paper epoch is operator-signed; the signature is a non-empty token",
                 given=repr(operator_signature),
             )
-        if not isinstance(dated_at, Instant):
-            return invalid(
-                "dated_at", "a paper epoch is dated with an injected Instant", given=repr(dated_at)
-            )
-        resolved_kind: TreasuryBoundaryKind | None = None
-        if boundary_kind is not None:
-            resolved_kind = coerce_enum(TreasuryBoundaryKind, boundary_kind)
-            if resolved_kind is None:
-                return invalid(
-                    "boundary_kind",
-                    "a paper reset's boundary kind is paper_epoch_reset",
-                    given=repr(boundary_kind),
-                    allowed=[member.value for member in TreasuryBoundaryKind],
-                )
-        superseded: Fingerprint | None = None
-        if supersedes is not None:
-            if not isinstance(supersedes, Fingerprint):
-                return invalid(
-                    "supersedes",
-                    "a paper reset names the epoch it follows by fingerprint (its lineage edge)",
-                    given=repr(supersedes),
-                )
-            superseded = supersedes
-        if superseded is not None:
-            if resolved_kind is not TreasuryBoundaryKind.PAPER_EPOCH_RESET:
-                return invalid(
-                    "boundary_kind",
-                    "a superseding paper epoch is a reset — its boundary kind is paper_epoch_reset",
-                    given=repr(boundary_kind),
-                )
-        elif resolved_kind is not None:
-            return invalid(
-                "boundary_kind",
-                "the first paper epoch at flip carries no supersedes edge and no reset boundary "
-                "kind; only a reset is a treasury boundary event",
-                given=repr(boundary_kind),
-            )
+        lineage = _paper_epoch_lineage(boundary_kind, supersedes)
+        if is_refusal(lineage):
+            return lineage
+        resolved_kind, superseded = lineage.value
         return Ok(
             cls(
-                book_instance_id=book_instance_id,
-                binding_ref=binding_ref,
-                starting_balance=starting_balance,
+                book_instance_id=instance_id,
+                binding_ref=binding,
+                starting_balance=balance.value,
                 operator_signature=signature,
-                dated_at=dated_at,
+                dated_at=dated,
                 boundary_kind=resolved_kind,
                 supersedes=superseded,
             )
@@ -1222,6 +1343,56 @@ class PaperEpochRecord:
     def fingerprint(self) -> Result[Fingerprint]:
         """The paper epoch's ``fp1`` over its full canonical content."""
         return fingerprint(self.fp1_identity())
+
+
+def _check_epoch_supersedes(
+    record: PaperEpochRecord,
+    *,
+    records: dict[str, PaperEpochRecord],
+    superseded: set[str],
+    current: str | None,
+) -> Result[None]:
+    binding_key = record.binding_ref.value
+    if record.supersedes is None:
+        if current is not None:
+            return invalid(
+                "record",
+                "a binding has one first paper epoch; a fresh balance is a reset that supersedes "
+                "the current epoch, never a second first-epoch (the running balance never mutates)",
+                binding_ref=binding_key,
+                current=current,
+            )
+        return Ok(None)
+    prior_value = record.supersedes.value
+    prior = records.get(prior_value)
+    if prior is None:
+        return unavailable(
+            "supersedes",
+            "a superseding paper epoch must name an existing prior epoch; a lineage edge "
+            "never dangles",
+            given=prior_value,
+        )
+    if prior.binding_ref.value != binding_key:
+        return invalid(
+            "supersedes",
+            "a paper epoch may supersede only the same binding's prior epoch",
+            binding_ref=binding_key,
+            prior_binding_ref=prior.binding_ref.value,
+        )
+    if prior_value in superseded:
+        return invalid(
+            "supersedes",
+            "the named prior epoch is already superseded; a reset supersedes at most once",
+            given=prior_value,
+        )
+    if current != prior_value:
+        return invalid(
+            "supersedes",
+            "a reset must supersede the binding's current paper epoch",
+            given=prior_value,
+            current=current,
+        )
+    return Ok(None)
 
 
 class PaperEpochLog:
@@ -1264,44 +1435,14 @@ class PaperEpochLog:
             )
         binding_key = record.binding_ref.value
         current = self._current_by_binding.get(binding_key)
-        if record.supersedes is not None:
-            prior_value = record.supersedes.value
-            prior = self._records.get(prior_value)
-            if prior is None:
-                return unavailable(
-                    "supersedes",
-                    "a superseding paper epoch must name an existing prior epoch; a lineage edge "
-                    "never dangles",
-                    given=prior_value,
-                )
-            if prior.binding_ref.value != binding_key:
-                return invalid(
-                    "supersedes",
-                    "a paper epoch may supersede only the same binding's prior epoch",
-                    binding_ref=binding_key,
-                    prior_binding_ref=prior.binding_ref.value,
-                )
-            if prior_value in self._superseded:
-                return invalid(
-                    "supersedes",
-                    "the named prior epoch is already superseded; a reset supersedes at most once",
-                    given=prior_value,
-                )
-            if current != prior_value:
-                return invalid(
-                    "supersedes",
-                    "a reset must supersede the binding's current paper epoch",
-                    given=prior_value,
-                    current=current,
-                )
-        elif current is not None:
-            return invalid(
-                "record",
-                "a binding has one first paper epoch; a fresh balance is a reset that supersedes "
-                "the current epoch, never a second first-epoch (the running balance never mutates)",
-                binding_ref=binding_key,
-                current=current,
-            )
+        lineage = _check_epoch_supersedes(
+            record,
+            records=self._records,
+            superseded=self._superseded,
+            current=current,
+        )
+        if is_refusal(lineage):
+            return lineage
         self._records[fp_value] = record
         self._order.append(fp.value)
         if record.supersedes is not None:
@@ -1393,25 +1534,11 @@ class ReturnToLiveOutcome:
     is_resume: bool
 
 
-def authorize_return_to_live(
-    *,
+def _return_to_live_inputs(
     clearing_cause: object,
-    operator_signature: object = None,
-    justified_by_paper_performance: object = False,
-) -> Result[ReturnToLiveOutcome]:
-    """Authorize a return toward live under the AC6 asymmetry (DEC-0149, DEC-0041).
-
-    The rules, in order:
-
-    * **paper performance never authorizes a return** — ``justified_by_paper_performance``
-      is a ``policy rejection``;
-    * a **clocked mechanical** clear returns **automatically**, minting a CT-24 transition
-      and carrying no operator signature — it is never a CT-30 resume (a signature passed
-      here is ``invalid input``, since a signed return is a different clearing cause);
-    * anything **touching real money** requires an operator signature (AD-18), absent it a
-      ``policy rejection``: a **first live entry** is a signed CT-24 transition, and a
-      **control stand-down** clears only by an operator CT-30 resume.
-    """
+    operator_signature: object,
+    justified_by_paper_performance: object,
+) -> Result[tuple[ClearingCause, str | None]]:
     cause = coerce_enum(ClearingCause, clearing_cause)
     if cause is None:
         return invalid(
@@ -1433,22 +1560,22 @@ def authorize_return_to_live(
             "paper performance never authorizes a return to live; only a clocked mechanical clear "
             "(automatic) or an operator signature does",
         )
-    signature: str | None = None
-    if operator_signature is not None:
-        signature = clean_str(operator_signature)
-        if signature is None:
-            return invalid(
-                "operator_signature",
-                "an operator signature is a non-empty token when present",
-                given=repr(operator_signature),
-            )
+    signature = _optional_operator_signature(operator_signature)
+    if is_refusal(signature):
+        return signature
+    return Ok((cause, signature.value))
+
+
+def _return_to_live_outcome(
+    cause: ClearingCause, signature: str | None
+) -> Result[ReturnToLiveOutcome]:
     if cause is ClearingCause.CLOCKED_MECHANICAL:
         if signature is not None:
             return invalid(
                 "operator_signature",
                 "a clocked mechanical clear carries no operator signature and mints a CT-24 "
                 "transition, never a CT-30 resume; a signed return is a different clearing cause",
-                given=repr(operator_signature),
+                given=repr(signature),
             )
         return Ok(
             ReturnToLiveOutcome(
@@ -1481,6 +1608,34 @@ def authorize_return_to_live(
             is_resume=True,
         )
     )
+
+
+def authorize_return_to_live(
+    *,
+    clearing_cause: object,
+    operator_signature: object = None,
+    justified_by_paper_performance: object = False,
+) -> Result[ReturnToLiveOutcome]:
+    """Authorize a return toward live under the AC6 asymmetry (DEC-0149, DEC-0041).
+
+    The rules, in order:
+
+    * **paper performance never authorizes a return** — ``justified_by_paper_performance``
+      is a ``policy rejection``;
+    * a **clocked mechanical** clear returns **automatically**, minting a CT-24 transition
+      and carrying no operator signature — it is never a CT-30 resume (a signature passed
+      here is ``invalid input``, since a signed return is a different clearing cause);
+    * anything **touching real money** requires an operator signature (AD-18), absent it a
+      ``policy rejection``: a **first live entry** is a signed CT-24 transition, and a
+      **control stand-down** clears only by an operator CT-30 resume.
+    """
+    inputs = _return_to_live_inputs(
+        clearing_cause, operator_signature, justified_by_paper_performance
+    )
+    if is_refusal(inputs):
+        return inputs
+    cause, signature = inputs.value
+    return _return_to_live_outcome(cause, signature)
 
 
 def mint_return_to_live_transition(
