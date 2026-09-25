@@ -562,209 +562,52 @@ def build_evaluation_config(
     acceptance_min_per_class_recall_override: object | None = None,
 ) -> Result[EvaluationConfig]:
     """Mint the fingerprinted evaluation config from Story 30.1-30.4 inputs."""
-    if allow_profit_inference is True:
-        return refuse_profit_inference(claim="allow_profit_inference=True")
-    if allow_profit_inference not in (False, None):
-        return invalid(
-            "allow_profit_inference",
-            "allow_profit_inference is False for regime evaluation",
-            given=repr(allow_profit_inference),
-        )
-    if allow_live_authority_inference is True:
-        return refuse_live_authority_inference(claim="allow_live_authority_inference=True")
-    if allow_live_authority_inference not in (False, None):
-        return invalid(
-            "allow_live_authority_inference",
-            "allow_live_authority_inference is False for regime evaluation",
-            given=repr(allow_live_authority_inference),
-        )
-    if allow_post_hoc_threshold is True or acceptance_macro_f1_override is not None:
-        return refuse_post_hoc_threshold(
-            claim={
-                "allow_post_hoc_threshold": allow_post_hoc_threshold,
-                "acceptance_macro_f1_override": acceptance_macro_f1_override,
-            }
-        )
-    if acceptance_min_per_class_recall_override is not None:
-        return refuse_post_hoc_threshold(
-            claim={
-                "acceptance_min_per_class_recall_override": (
-                    acceptance_min_per_class_recall_override
-                )
-            }
-        )
-    if allow_post_hoc_threshold not in (False, None):
-        return invalid(
-            "allow_post_hoc_threshold",
-            "allow_post_hoc_threshold is False for regime evaluation",
-            given=repr(allow_post_hoc_threshold),
-        )
-    if mutate_trained_artifact is True:
-        return refuse_artifact_mutation(claim="mutate_trained_artifact=True")
-    if mutate_trained_artifact not in (False, None):
-        return invalid(
-            "mutate_trained_artifact",
-            "mutate_trained_artifact is False for evaluation",
-            given=repr(mutate_trained_artifact),
-        )
-    if mutate_sealed_holdout is True:
-        return refuse_holdout_mutation(claim="mutate_sealed_holdout=True")
-    if mutate_sealed_holdout not in (False, None):
-        return invalid(
-            "mutate_sealed_holdout",
-            "mutate_sealed_holdout is False for evaluation",
-            given=repr(mutate_sealed_holdout),
-        )
-    if not isinstance(artifact, TrainingArtifact):
-        return invalid(
-            "artifact",
-            "evaluation takes a completed TrainingArtifact from Story 30.4",
-            given=type(artifact).__name__,
-        )
-    registerable = assert_registerable_training_artifact(artifact)
-    if is_refusal(registerable):
-        return policy(
-            "artifact",
-            "evaluation requires a completed registerable training artifact",
-            failure_id="mis.regime_eval.incomplete_training",
-            status=artifact.record.status.value,
-        )
-    if artifact.record.status is not TrainingTerminalStatus.COMPLETED:
-        return policy(
-            "artifact",
-            "evaluation requires a completed training terminal record",
-            failure_id="mis.regime_eval.incomplete_training",
-            status=artifact.record.status.value,
-        )
-    if not isinstance(labeled, LabeledCorpus):
-        return invalid(
-            "labeled",
-            "evaluation takes a LabeledCorpus from Story 30.3",
-            given=type(labeled).__name__,
-        )
-    if not isinstance(cleaned, CleanedCorpus):
-        return invalid(
-            "cleaned",
-            "evaluation takes the CleanedCorpus cited by the labeled corpus",
-            given=type(cleaned).__name__,
-        )
-    out = clean_token(output_dir)
-    if out is None:
-        return invalid("output_dir", "output_dir is a non-blank path string")
-
-    resolved = _resolve_contract(design=design, contract=contract)
-    if is_refusal(resolved):
-        return resolved
-    design_artifact, resolved_contract = resolved.value
-    if labeled.design_fp.value != resolved_contract.design_fp.value:
-        return policy(
-            "design_fp",
-            "labeled corpus must cite the accepted Story 30.1 design fingerprint",
-            labeled=labeled.design_fp.value,
-            design=resolved_contract.design_fp.value,
-        )
-    if cleaned.design_fp.value != resolved_contract.design_fp.value:
-        return policy(
-            "design_fp",
-            "cleaned corpus must cite the accepted Story 30.1 design fingerprint",
-            cleaned=cleaned.design_fp.value,
-            design=resolved_contract.design_fp.value,
-        )
-    if artifact.design_fp.value != resolved_contract.design_fp.value:
-        return policy(
-            "design_fp",
-            "training artifact must cite the accepted Story 30.1 design fingerprint",
-            artifact=artifact.design_fp.value,
-            design=resolved_contract.design_fp.value,
-        )
-    unchanged = assert_design_unchanged(labeled.design_fp, design=design_artifact)
-    if is_refusal(unchanged):
-        return unchanged
-
-    eval_contract = resolved_contract.evaluation
-    if eval_contract.refuse_profit_inference is not True:
-        return refuse_profit_inference(claim="design.refuse_profit_inference=False")
-    if eval_contract.refuse_live_authority_inference is not True:
-        return refuse_live_authority_inference(claim="design.refuse_live_authority_inference=False")
-    if eval_contract.refuse_on_holdout_leak is not True:
-        return policy(
-            "holdout_leak",
-            "evaluation contract must refuse holdout leak",
-            failure_id="mis.regime_eval.holdout_leak",
-        )
-
-    backend_token = EVALUATION_BACKEND_DETERMINISTIC if backend is None else clean_token(backend)
-    if backend_token not in {
-        EVALUATION_BACKEND_DETERMINISTIC,
-        EVALUATION_BACKEND_LIGHTGBM,
-    }:
-        return invalid(
-            "backend",
-            "backend is deterministic-surrogate or lightgbm",
-            given=repr(backend),
-        )
-    # Tests and poe never run LightGBM; operator machines may choose it.
-    if backend_token == EVALUATION_BACKEND_LIGHTGBM and _model_is_surrogate(artifact.model_text):
-        backend_token = EVALUATION_BACKEND_DETERMINISTIC
-
-    labeled_fp = labeled.fingerprint()
-    if is_refusal(labeled_fp):
-        return labeled_fp
-    cleaned_fp = cleaned.fingerprint()
-    if is_refusal(cleaned_fp):
-        return cleaned_fp
-    if labeled.cleaned_fp.value != cleaned_fp.value.value:
-        return policy(
-            "cleaned_fp",
-            "cleaned corpus fingerprint must match the labeled corpus citation",
-            labeled=labeled.cleaned_fp.value,
-            cleaned=cleaned_fp.value.value,
-        )
-    # Cite the completed training candidate without re-fingerprinting host-local
-    # nullable resource fields (e.g. peak_rss_bytes) that fp1 omits as null.
-    artifact_fp = fingerprint(
-        {
-            "class": "regime-training-artifact-cite",
-            "artifact_id": artifact.artifact_id,
-            "model_fp": artifact.model_fp.value,
-            "config_fp": artifact.config_fp.value,
-            "code_fp": artifact.code_fp.value,
-            "matrix_fp": artifact.matrix_fp.value,
-            "design_fp": artifact.design_fp.value,
-            "registerable": artifact.registerable,
-            "status": artifact.record.status.value,
-        }
+    blocked = _refuse_eval_allowances(
+        allow_profit_inference=allow_profit_inference,
+        allow_live_authority_inference=allow_live_authority_inference,
+        allow_post_hoc_threshold=allow_post_hoc_threshold,
+        mutate_trained_artifact=mutate_trained_artifact,
+        mutate_sealed_holdout=mutate_sealed_holdout,
+        acceptance_macro_f1_override=acceptance_macro_f1_override,
+        acceptance_min_per_class_recall_override=acceptance_min_per_class_recall_override,
     )
-    if is_refusal(artifact_fp):
-        return artifact_fp
-    contract_fp = resolved_contract.fingerprint()
-    if is_refusal(contract_fp):
-        return contract_fp
-
-    cmd: tuple[str, ...]
-    if command is None:
-        cmd = ("python", "-m", "qmn.mis.regime_eval", "--output-dir", out)
-    elif isinstance(command, Sequence) and not isinstance(command, (str, bytes)):
-        tokens = tuple(str(item) for item in cast("Sequence[object]", command))
-        if not tokens:
-            return invalid("command", "command is a non-empty argv sequence")
-        cmd = tokens
-    else:
-        return invalid("command", "command is an argv sequence", given=type(command).__name__)
-
+    if is_refusal(blocked):
+        return blocked
+    inputs = _require_eval_inputs(
+        artifact=artifact, labeled=labeled, cleaned=cleaned, output_dir=output_dir
+    )
+    if is_refusal(inputs):
+        return inputs
+    artifact_obj, labeled_corpus, cleaned_corpus, out = inputs.value
+    cited = _cite_eval_design(
+        artifact_obj, labeled_corpus, cleaned_corpus, design=design, contract=contract
+    )
+    if is_refusal(cited):
+        return cited
+    resolved_contract, eval_contract = cited.value
+    backend_token = _eval_backend_token(backend, artifact_obj.model_text)
+    if is_refusal(backend_token):
+        return backend_token
+    fps = _eval_input_fingerprints(artifact_obj, labeled_corpus, cleaned_corpus, resolved_contract)
+    if is_refusal(fps):
+        return fps
+    labeled_fp, cleaned_fp, artifact_fp, contract_fp = fps.value
+    cmd = _eval_command_argv(out, command)
+    if is_refusal(cmd):
+        return cmd
     return Ok(
         EvaluationConfig(
             design_fp=resolved_contract.design_fp,
-            contract_fp=contract_fp.value,
-            training_artifact_fp=artifact_fp.value,
-            model_fp=artifact.model_fp,
-            labeled_fp=labeled_fp.value,
-            cleaned_fp=cleaned_fp.value,
-            splits_fp=labeled.splits_fp,
+            contract_fp=contract_fp,
+            training_artifact_fp=artifact_fp,
+            model_fp=artifact_obj.model_fp,
+            labeled_fp=labeled_fp,
+            cleaned_fp=cleaned_fp,
+            splits_fp=labeled_corpus.splits_fp,
             evaluation_contract=eval_contract,
-            backend=backend_token,
+            backend=backend_token.value,
             output_dir=out,
-            command=cmd,
+            command=cmd.value,
             grants_money_path_authority=False,
             grants_governed_binding=False,
             allows_profit_inference=False,
@@ -804,11 +647,8 @@ def run_offline_evaluation(
     LightGBM prediction is optional and lazy; tests use the deterministic
     surrogate path only (never under poe test).
     """
-    model_before = None
-    if isinstance(artifact, TrainingArtifact):
-        model_before = artifact.model_text
-
-    config = build_evaluation_config(
+    model_before = artifact.model_text if isinstance(artifact, TrainingArtifact) else None
+    opened = _open_eval_session(
         artifact=artifact,
         labeled=labeled,
         cleaned=cleaned,
@@ -817,200 +657,22 @@ def run_offline_evaluation(
         command=command,
         design=design,
         contract=contract,
+        lock_path=lock_path,
         allow_profit_inference=allow_profit_inference,
         allow_live_authority_inference=allow_live_authority_inference,
         allow_post_hoc_threshold=allow_post_hoc_threshold,
         mutate_trained_artifact=mutate_trained_artifact,
         mutate_sealed_holdout=mutate_sealed_holdout,
         acceptance_macro_f1_override=acceptance_macro_f1_override,
-        acceptance_min_per_class_recall_override=(acceptance_min_per_class_recall_override),
-    )
-    if is_refusal(config):
-        return config
-
-    code_fp = _evaluation_code_fp()
-    if is_refusal(code_fp):
-        return code_fp
-    config_fp = config.value.fingerprint()
-    if is_refusal(config_fp):
-        return config_fp
-
-    lock = resolve_dependency_lock(lock_path=lock_path)
-    if is_refusal(lock):
-        return lock
-
-    out_root = Path(config.value.output_dir)
-    prepared = _ensure_contained_dir(out_root, contain_within=out_root)
-    if is_refusal(prepared):
-        return prepared
-    written = _write_json(
-        out_root / _CONFIG_FILENAME,
-        config.value.fp1_identity(),
-        contain_within=out_root,
-        message="evaluation output directory is not writable",
-    )
-    if is_refusal(written):
-        return written
-
-    matrix = build_evaluation_matrix(
-        cleaned,
-        labeled,
+        acceptance_min_per_class_recall_override=acceptance_min_per_class_recall_override,
         peer_features=peer_features,
-        design=design,
-        contract=contract,
-        mutate_sealed_holdout=False,
+        predict_fn=predict_fn,
     )
-    if is_refusal(matrix):
-        return matrix
-    matrix_fp = matrix.value.fingerprint()
-    if is_refusal(matrix_fp):
-        return matrix_fp
-
-    if not isinstance(artifact, TrainingArtifact):
-        return invalid(
-            "artifact",
-            "evaluation takes a completed TrainingArtifact from Story 30.4",
-            given=type(artifact).__name__,
-        )
-    if predict_fn is not None:
-        selected: Result[PredictFn] = Ok(predict_fn)
-    else:
-        selected = _select_predictor(config.value.backend, artifact.model_text)
-    if is_refusal(selected):
-        return selected
-    predict = selected.value
-
-    context: dict[str, object] = {
-        "model_text": artifact.model_text,
-        "model_fp": artifact.model_fp.value,
-        "feature_ids": list(matrix.value.feature_ids),
-        "class_vocabulary": list(matrix.value.class_vocabulary),
-        "train_rows": matrix.value.train_rows,
-        "backend": config.value.backend,
-    }
-
-    train_ctx = {**context, "split_role": SegmentRole.TRAIN.value}
-    train_preds = predict(matrix.value.train_rows, train_ctx)
-    if is_refusal(train_preds):
-        return train_preds
-    valid_ctx = {**context, "split_role": SegmentRole.VALIDATION.value}
-    valid_preds = predict(matrix.value.validation_rows, valid_ctx)
-    if is_refusal(valid_preds):
-        return valid_preds
-    holdout_ctx = {**context, "split_role": _SPLIT_ROLE_HOLDOUT}
-    holdout_preds = predict(matrix.value.holdout_rows, holdout_ctx)
-    if is_refusal(holdout_preds):
-        return holdout_preds
-
-    # Stability: deterministic predictor re-run must agree (Story 30.1 check).
-    holdout_again = predict(matrix.value.holdout_rows, holdout_ctx)
-    if is_refusal(holdout_again):
-        return holdout_again
-    stability_agreed = _predictions_agree(holdout_preds.value, holdout_again.value)
-    if not stability_agreed:
-        return refuse_reproducibility_mismatch(
-            expected_fp=_predictions_fp(holdout_preds.value),
-            observed_fp=_predictions_fp(holdout_again.value),
-        )
-
-    eval_contract = config.value.evaluation_contract
-    train_scores = _score_split(
-        train_preds.value,
-        split_role=SegmentRole.TRAIN.value,
-        vocabulary=matrix.value.class_vocabulary,
-        feature_ids=matrix.value.feature_ids,
+    if is_refusal(opened):
+        return opened
+    return _finish_offline_evaluation(
+        opened.value, artifact=artifact, model_before=model_before, prior_report_fp=prior_report_fp
     )
-    validation_scores = _score_split(
-        valid_preds.value,
-        split_role=SegmentRole.VALIDATION.value,
-        vocabulary=matrix.value.class_vocabulary,
-        feature_ids=matrix.value.feature_ids,
-    )
-    holdout_scores = _score_split(
-        holdout_preds.value,
-        split_role=_SPLIT_ROLE_HOLDOUT,
-        vocabulary=matrix.value.class_vocabulary,
-        feature_ids=matrix.value.feature_ids,
-    )
-    if is_refusal(train_scores):
-        return train_scores
-    if is_refusal(validation_scores):
-        return validation_scores
-    if is_refusal(holdout_scores):
-        return holdout_scores
-
-    baselines = _baseline_comparisons(
-        holdout_rows=matrix.value.holdout_rows,
-        train_rows=matrix.value.train_rows,
-        candidate_macro=(
-            holdout_scores.value.macro_f1_num,
-            holdout_scores.value.macro_f1_den,
-        ),
-        baseline_ids=eval_contract.baseline_comparisons,
-        feature_ids=matrix.value.feature_ids,
-        vocabulary=matrix.value.class_vocabulary,
-    )
-    if is_refusal(baselines):
-        return baselines
-
-    verdict, cause = _acceptance_verdict(
-        holdout_scores.value,
-        eval_contract,
-    )
-
-    if model_before is not None and artifact.model_text != model_before:
-        return refuse_artifact_mutation(claim="model_text_changed")
-
-    locations = {
-        "output_dir": config.value.output_dir,
-        "config": f"{config.value.output_dir}/{_CONFIG_FILENAME}",
-        "report": f"{config.value.output_dir}/{_REPORT_FILENAME}",
-    }
-    report = EvaluationReport(
-        artifact_id=REGIME_EVAL_ARTIFACT_ID,
-        verdict=verdict,
-        cause=cause,
-        config_fp=config_fp.value,
-        code_fp=code_fp.value,
-        dependency_lock_fp=lock.value.lock_fp,
-        design_fp=config.value.design_fp,
-        model_fp=config.value.model_fp,
-        training_artifact_fp=config.value.training_artifact_fp,
-        matrix_fp=matrix_fp.value,
-        train_scores=train_scores.value,
-        validation_scores=validation_scores.value,
-        holdout_scores=holdout_scores.value,
-        baseline_comparisons=baselines.value,
-        calibration_check=eval_contract.calibration_check,
-        stability_check=eval_contract.stability_check,
-        stability_agreed=stability_agreed,
-        acceptance_macro_f1_num=eval_contract.acceptance_macro_f1_num,
-        acceptance_macro_f1_den=eval_contract.acceptance_macro_f1_den,
-        acceptance_min_per_class_recall_num=(eval_contract.acceptance_min_per_class_recall_num),
-        acceptance_min_per_class_recall_den=(eval_contract.acceptance_min_per_class_recall_den),
-        output_locations=locations,
-        trained_artifact_mutated=False,
-        sealed_holdout_mutated=False,
-        grants_money_path_authority=False,
-        grants_governed_binding=False,
-    )
-    governed_fp = report.governed_fingerprint()
-    if is_refusal(governed_fp):
-        return governed_fp
-    if prior_report_fp is not None:
-        check = assert_evaluation_reproducible(report, prior_report_fp)
-        if is_refusal(check):
-            return check
-
-    written_report = _write_json(
-        out_root / _REPORT_FILENAME,
-        report.as_jsonable(),
-        contain_within=out_root,
-        message="evaluation report could not be written",
-    )
-    if is_refusal(written_report):
-        return written_report
-    return Ok(report)
 
 
 def assert_evaluation_reproducible(
@@ -1126,6 +788,571 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 # --- internals -----------------------------------------------------------------
+
+
+def _refuse_eval_allowances(
+    *,
+    allow_profit_inference: object,
+    allow_live_authority_inference: object,
+    allow_post_hoc_threshold: object,
+    mutate_trained_artifact: object,
+    mutate_sealed_holdout: object,
+    acceptance_macro_f1_override: object | None,
+    acceptance_min_per_class_recall_override: object | None,
+) -> Result[None]:
+    if allow_profit_inference is True:
+        return refuse_profit_inference(claim="allow_profit_inference=True")
+    if allow_profit_inference not in (False, None):
+        return invalid(
+            "allow_profit_inference",
+            "allow_profit_inference is False for regime evaluation",
+            given=repr(allow_profit_inference),
+        )
+    if allow_live_authority_inference is True:
+        return refuse_live_authority_inference(claim="allow_live_authority_inference=True")
+    if allow_live_authority_inference not in (False, None):
+        return invalid(
+            "allow_live_authority_inference",
+            "allow_live_authority_inference is False for regime evaluation",
+            given=repr(allow_live_authority_inference),
+        )
+    thresholds = _refuse_eval_thresholds(
+        allow_post_hoc_threshold=allow_post_hoc_threshold,
+        acceptance_macro_f1_override=acceptance_macro_f1_override,
+        acceptance_min_per_class_recall_override=acceptance_min_per_class_recall_override,
+    )
+    if is_refusal(thresholds):
+        return thresholds
+    if mutate_trained_artifact is True:
+        return refuse_artifact_mutation(claim="mutate_trained_artifact=True")
+    if mutate_trained_artifact not in (False, None):
+        return invalid(
+            "mutate_trained_artifact",
+            "mutate_trained_artifact is False for evaluation",
+            given=repr(mutate_trained_artifact),
+        )
+    if mutate_sealed_holdout is True:
+        return refuse_holdout_mutation(claim="mutate_sealed_holdout=True")
+    if mutate_sealed_holdout not in (False, None):
+        return invalid(
+            "mutate_sealed_holdout",
+            "mutate_sealed_holdout is False for evaluation",
+            given=repr(mutate_sealed_holdout),
+        )
+    return Ok(None)
+
+
+def _refuse_eval_thresholds(
+    *,
+    allow_post_hoc_threshold: object,
+    acceptance_macro_f1_override: object | None,
+    acceptance_min_per_class_recall_override: object | None,
+) -> Result[None]:
+    if allow_post_hoc_threshold is True or acceptance_macro_f1_override is not None:
+        return refuse_post_hoc_threshold(
+            claim={
+                "allow_post_hoc_threshold": allow_post_hoc_threshold,
+                "acceptance_macro_f1_override": acceptance_macro_f1_override,
+            }
+        )
+    if acceptance_min_per_class_recall_override is not None:
+        return refuse_post_hoc_threshold(
+            claim={
+                "acceptance_min_per_class_recall_override": (
+                    acceptance_min_per_class_recall_override
+                )
+            }
+        )
+    if allow_post_hoc_threshold not in (False, None):
+        return invalid(
+            "allow_post_hoc_threshold",
+            "allow_post_hoc_threshold is False for regime evaluation",
+            given=repr(allow_post_hoc_threshold),
+        )
+    return Ok(None)
+
+
+def _require_eval_inputs(
+    *,
+    artifact: object,
+    labeled: object,
+    cleaned: object,
+    output_dir: object,
+) -> Result[tuple[TrainingArtifact, LabeledCorpus, CleanedCorpus, str]]:
+    if not isinstance(artifact, TrainingArtifact):
+        return invalid(
+            "artifact",
+            "evaluation takes a completed TrainingArtifact from Story 30.4",
+            given=type(artifact).__name__,
+        )
+    registerable = assert_registerable_training_artifact(artifact)
+    if is_refusal(registerable):
+        return policy(
+            "artifact",
+            "evaluation requires a completed registerable training artifact",
+            failure_id="mis.regime_eval.incomplete_training",
+            status=artifact.record.status.value,
+        )
+    if artifact.record.status is not TrainingTerminalStatus.COMPLETED:
+        return policy(
+            "artifact",
+            "evaluation requires a completed training terminal record",
+            failure_id="mis.regime_eval.incomplete_training",
+            status=artifact.record.status.value,
+        )
+    if not isinstance(labeled, LabeledCorpus):
+        return invalid(
+            "labeled",
+            "evaluation takes a LabeledCorpus from Story 30.3",
+            given=type(labeled).__name__,
+        )
+    if not isinstance(cleaned, CleanedCorpus):
+        return invalid(
+            "cleaned",
+            "evaluation takes the CleanedCorpus cited by the labeled corpus",
+            given=type(cleaned).__name__,
+        )
+    out = clean_token(output_dir)
+    if out is None:
+        return invalid("output_dir", "output_dir is a non-blank path string")
+    return Ok((artifact, labeled, cleaned, out))
+
+
+def _cite_eval_design(
+    artifact: TrainingArtifact,
+    labeled: LabeledCorpus,
+    cleaned: CleanedCorpus,
+    *,
+    design: RegimeClassifierDesign | None,
+    contract: ExecutableRegimeContract | None,
+) -> Result[tuple[ExecutableRegimeContract, EvaluationContract]]:
+    resolved = _resolve_contract(design=design, contract=contract)
+    if is_refusal(resolved):
+        return resolved
+    design_artifact, resolved_contract = resolved.value
+    if labeled.design_fp.value != resolved_contract.design_fp.value:
+        return policy(
+            "design_fp",
+            "labeled corpus must cite the accepted Story 30.1 design fingerprint",
+            labeled=labeled.design_fp.value,
+            design=resolved_contract.design_fp.value,
+        )
+    if cleaned.design_fp.value != resolved_contract.design_fp.value:
+        return policy(
+            "design_fp",
+            "cleaned corpus must cite the accepted Story 30.1 design fingerprint",
+            cleaned=cleaned.design_fp.value,
+            design=resolved_contract.design_fp.value,
+        )
+    if artifact.design_fp.value != resolved_contract.design_fp.value:
+        return policy(
+            "design_fp",
+            "training artifact must cite the accepted Story 30.1 design fingerprint",
+            artifact=artifact.design_fp.value,
+            design=resolved_contract.design_fp.value,
+        )
+    unchanged = assert_design_unchanged(labeled.design_fp, design=design_artifact)
+    if is_refusal(unchanged):
+        return unchanged
+    eval_contract = resolved_contract.evaluation
+    if eval_contract.refuse_profit_inference is not True:
+        return refuse_profit_inference(claim="design.refuse_profit_inference=False")
+    if eval_contract.refuse_live_authority_inference is not True:
+        return refuse_live_authority_inference(claim="design.refuse_live_authority_inference=False")
+    if eval_contract.refuse_on_holdout_leak is not True:
+        return policy(
+            "holdout_leak",
+            "evaluation contract must refuse holdout leak",
+            failure_id="mis.regime_eval.holdout_leak",
+        )
+    return Ok((resolved_contract, eval_contract))
+
+
+def _eval_backend_token(backend: object | None, model_text: str) -> Result[str]:
+    backend_token = EVALUATION_BACKEND_DETERMINISTIC if backend is None else clean_token(backend)
+    if backend_token not in {
+        EVALUATION_BACKEND_DETERMINISTIC,
+        EVALUATION_BACKEND_LIGHTGBM,
+    }:
+        return invalid(
+            "backend",
+            "backend is deterministic-surrogate or lightgbm",
+            given=repr(backend),
+        )
+    if backend_token == EVALUATION_BACKEND_LIGHTGBM and _model_is_surrogate(model_text):
+        backend_token = EVALUATION_BACKEND_DETERMINISTIC
+    return Ok(backend_token)
+
+
+def _eval_input_fingerprints(
+    artifact: TrainingArtifact,
+    labeled: LabeledCorpus,
+    cleaned: CleanedCorpus,
+    resolved_contract: ExecutableRegimeContract,
+) -> Result[tuple[Fingerprint, Fingerprint, Fingerprint, Fingerprint]]:
+    labeled_fp = labeled.fingerprint()
+    if is_refusal(labeled_fp):
+        return labeled_fp
+    cleaned_fp = cleaned.fingerprint()
+    if is_refusal(cleaned_fp):
+        return cleaned_fp
+    if labeled.cleaned_fp.value != cleaned_fp.value.value:
+        return policy(
+            "cleaned_fp",
+            "cleaned corpus fingerprint must match the labeled corpus citation",
+            labeled=labeled.cleaned_fp.value,
+            cleaned=cleaned_fp.value.value,
+        )
+    artifact_fp = fingerprint(
+        {
+            "class": "regime-training-artifact-cite",
+            "artifact_id": artifact.artifact_id,
+            "model_fp": artifact.model_fp.value,
+            "config_fp": artifact.config_fp.value,
+            "code_fp": artifact.code_fp.value,
+            "matrix_fp": artifact.matrix_fp.value,
+            "design_fp": artifact.design_fp.value,
+            "registerable": artifact.registerable,
+            "status": artifact.record.status.value,
+        }
+    )
+    if is_refusal(artifact_fp):
+        return artifact_fp
+    contract_fp = resolved_contract.fingerprint()
+    if is_refusal(contract_fp):
+        return contract_fp
+    return Ok((labeled_fp.value, cleaned_fp.value, artifact_fp.value, contract_fp.value))
+
+
+def _eval_command_argv(out: str, command: object | None) -> Result[tuple[str, ...]]:
+    if command is None:
+        return Ok(("python", "-m", "qmn.mis.regime_eval", "--output-dir", out))
+    if isinstance(command, Sequence) and not isinstance(command, (str, bytes)):
+        tokens = tuple(str(item) for item in cast("Sequence[object]", command))
+        if not tokens:
+            return invalid("command", "command is a non-empty argv sequence")
+        return Ok(tokens)
+    return invalid("command", "command is an argv sequence", given=type(command).__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class _EvalSession:
+    config: EvaluationConfig
+    config_fp: Fingerprint
+    code_fp: Fingerprint
+    lock_fp: str
+    out_root: Path
+    matrix: EvaluationMatrix
+    matrix_fp: Fingerprint
+    artifact: TrainingArtifact
+    predict: PredictFn
+
+
+def _open_eval_session(
+    *,
+    artifact: object,
+    labeled: object,
+    cleaned: object,
+    output_dir: object,
+    backend: object | None,
+    command: object | None,
+    design: RegimeClassifierDesign | None,
+    contract: ExecutableRegimeContract | None,
+    lock_path: object | None,
+    allow_profit_inference: object,
+    allow_live_authority_inference: object,
+    allow_post_hoc_threshold: object,
+    mutate_trained_artifact: object,
+    mutate_sealed_holdout: object,
+    acceptance_macro_f1_override: object | None,
+    acceptance_min_per_class_recall_override: object | None,
+    peer_features: Mapping[str, Mapping[str, float]] | None,
+    predict_fn: PredictFn | None,
+) -> Result[_EvalSession]:
+    config = build_evaluation_config(
+        artifact=artifact,
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=output_dir,
+        backend=backend,
+        command=command,
+        design=design,
+        contract=contract,
+        allow_profit_inference=allow_profit_inference,
+        allow_live_authority_inference=allow_live_authority_inference,
+        allow_post_hoc_threshold=allow_post_hoc_threshold,
+        mutate_trained_artifact=mutate_trained_artifact,
+        mutate_sealed_holdout=mutate_sealed_holdout,
+        acceptance_macro_f1_override=acceptance_macro_f1_override,
+        acceptance_min_per_class_recall_override=acceptance_min_per_class_recall_override,
+    )
+    if is_refusal(config):
+        return config
+    prepared = _eval_session_fps(config.value, lock_path=lock_path)
+    if is_refusal(prepared):
+        return prepared
+    config_fp, code_fp, lock_fp, out_root = prepared.value
+    matrix = build_evaluation_matrix(
+        cleaned,
+        labeled,
+        peer_features=peer_features,
+        design=design,
+        contract=contract,
+        mutate_sealed_holdout=False,
+    )
+    if is_refusal(matrix):
+        return matrix
+    matrix_fp = matrix.value.fingerprint()
+    if is_refusal(matrix_fp):
+        return matrix_fp
+    if not isinstance(artifact, TrainingArtifact):
+        return invalid(
+            "artifact",
+            "evaluation takes a completed TrainingArtifact from Story 30.4",
+            given=type(artifact).__name__,
+        )
+    selected: Result[PredictFn] = (
+        Ok(predict_fn)
+        if predict_fn is not None
+        else _select_predictor(config.value.backend, artifact.model_text)
+    )
+    if is_refusal(selected):
+        return selected
+    return Ok(
+        _EvalSession(
+            config=config.value,
+            config_fp=config_fp,
+            code_fp=code_fp,
+            lock_fp=lock_fp,
+            out_root=out_root,
+            matrix=matrix.value,
+            matrix_fp=matrix_fp.value,
+            artifact=artifact,
+            predict=selected.value,
+        )
+    )
+
+
+def _eval_session_fps(
+    config: EvaluationConfig, *, lock_path: object | None
+) -> Result[tuple[Fingerprint, Fingerprint, str, Path]]:
+    code_fp = _evaluation_code_fp()
+    if is_refusal(code_fp):
+        return code_fp
+    config_fp = config.fingerprint()
+    if is_refusal(config_fp):
+        return config_fp
+    lock = resolve_dependency_lock(lock_path=lock_path)
+    if is_refusal(lock):
+        return lock
+    out_root = Path(config.output_dir)
+    prepared = _ensure_contained_dir(out_root, contain_within=out_root)
+    if is_refusal(prepared):
+        return prepared
+    written = _write_json(
+        out_root / _CONFIG_FILENAME,
+        config.fp1_identity(),
+        contain_within=out_root,
+        message="evaluation output directory is not writable",
+    )
+    if is_refusal(written):
+        return written
+    return Ok((config_fp.value, code_fp.value, lock.value.lock_fp, out_root))
+
+
+def _finish_offline_evaluation(
+    session: _EvalSession,
+    *,
+    artifact: object,
+    model_before: str | None,
+    prior_report_fp: object | None,
+) -> Result[EvaluationReport]:
+    scored = _eval_split_scores(session)
+    if is_refusal(scored):
+        return scored
+    train_scores, validation_scores, holdout_scores, baselines, stability_agreed = scored.value
+    if (
+        model_before is not None
+        and isinstance(artifact, TrainingArtifact)
+        and artifact.model_text != model_before
+    ):
+        return refuse_artifact_mutation(claim="model_text_changed")
+    verdict, cause = _acceptance_verdict(holdout_scores, session.config.evaluation_contract)
+    report = _mint_eval_report(
+        session,
+        train_scores=train_scores,
+        validation_scores=validation_scores,
+        holdout_scores=holdout_scores,
+        baselines=baselines,
+        stability_agreed=stability_agreed,
+        verdict=verdict,
+        cause=cause,
+    )
+    governed_fp = report.governed_fingerprint()
+    if is_refusal(governed_fp):
+        return governed_fp
+    if prior_report_fp is not None:
+        check = assert_evaluation_reproducible(report, prior_report_fp)
+        if is_refusal(check):
+            return check
+    written_report = _write_json(
+        session.out_root / _REPORT_FILENAME,
+        report.as_jsonable(),
+        contain_within=session.out_root,
+        message="evaluation report could not be written",
+    )
+    if is_refusal(written_report):
+        return written_report
+    return Ok(report)
+
+
+def _eval_split_scores(
+    session: _EvalSession,
+) -> Result[
+    tuple[
+        EvaluationSplitScores,
+        EvaluationSplitScores,
+        EvaluationSplitScores,
+        tuple[BaselineComparisonResult, ...],
+        bool,
+    ]
+]:
+    preds = _eval_predictions(session)
+    if is_refusal(preds):
+        return preds
+    train_preds, valid_preds, holdout_preds, stability_agreed = preds.value
+    train_scores = _score_split(
+        train_preds,
+        split_role=SegmentRole.TRAIN.value,
+        vocabulary=session.matrix.class_vocabulary,
+        feature_ids=session.matrix.feature_ids,
+    )
+    validation_scores = _score_split(
+        valid_preds,
+        split_role=SegmentRole.VALIDATION.value,
+        vocabulary=session.matrix.class_vocabulary,
+        feature_ids=session.matrix.feature_ids,
+    )
+    holdout_scores = _score_split(
+        holdout_preds,
+        split_role=_SPLIT_ROLE_HOLDOUT,
+        vocabulary=session.matrix.class_vocabulary,
+        feature_ids=session.matrix.feature_ids,
+    )
+    if is_refusal(train_scores):
+        return train_scores
+    if is_refusal(validation_scores):
+        return validation_scores
+    if is_refusal(holdout_scores):
+        return holdout_scores
+    baselines = _baseline_comparisons(
+        holdout_rows=session.matrix.holdout_rows,
+        train_rows=session.matrix.train_rows,
+        candidate_macro=(
+            holdout_scores.value.macro_f1_num,
+            holdout_scores.value.macro_f1_den,
+        ),
+        baseline_ids=session.config.evaluation_contract.baseline_comparisons,
+        feature_ids=session.matrix.feature_ids,
+        vocabulary=session.matrix.class_vocabulary,
+    )
+    if is_refusal(baselines):
+        return baselines
+    return Ok(
+        (
+            train_scores.value,
+            validation_scores.value,
+            holdout_scores.value,
+            baselines.value,
+            stability_agreed,
+        )
+    )
+
+
+def _eval_predictions(
+    session: _EvalSession,
+) -> Result[
+    tuple[tuple[PredictionRow, ...], tuple[PredictionRow, ...], tuple[PredictionRow, ...], bool]
+]:
+    context: dict[str, object] = {
+        "model_text": session.artifact.model_text,
+        "model_fp": session.artifact.model_fp.value,
+        "feature_ids": list(session.matrix.feature_ids),
+        "class_vocabulary": list(session.matrix.class_vocabulary),
+        "train_rows": session.matrix.train_rows,
+        "backend": session.config.backend,
+    }
+    train_preds = session.predict(
+        session.matrix.train_rows, {**context, "split_role": SegmentRole.TRAIN.value}
+    )
+    if is_refusal(train_preds):
+        return train_preds
+    valid_preds = session.predict(
+        session.matrix.validation_rows, {**context, "split_role": SegmentRole.VALIDATION.value}
+    )
+    if is_refusal(valid_preds):
+        return valid_preds
+    holdout_ctx = {**context, "split_role": _SPLIT_ROLE_HOLDOUT}
+    holdout_preds = session.predict(session.matrix.holdout_rows, holdout_ctx)
+    if is_refusal(holdout_preds):
+        return holdout_preds
+    holdout_again = session.predict(session.matrix.holdout_rows, holdout_ctx)
+    if is_refusal(holdout_again):
+        return holdout_again
+    stability_agreed = _predictions_agree(holdout_preds.value, holdout_again.value)
+    if not stability_agreed:
+        return refuse_reproducibility_mismatch(
+            expected_fp=_predictions_fp(holdout_preds.value),
+            observed_fp=_predictions_fp(holdout_again.value),
+        )
+    return Ok((train_preds.value, valid_preds.value, holdout_preds.value, stability_agreed))
+
+
+def _mint_eval_report(
+    session: _EvalSession,
+    *,
+    train_scores: EvaluationSplitScores,
+    validation_scores: EvaluationSplitScores,
+    holdout_scores: EvaluationSplitScores,
+    baselines: tuple[BaselineComparisonResult, ...],
+    stability_agreed: bool,
+    verdict: EvaluationVerdict,
+    cause: str,
+) -> EvaluationReport:
+    eval_contract = session.config.evaluation_contract
+    locations = {
+        "output_dir": session.config.output_dir,
+        "config": f"{session.config.output_dir}/{_CONFIG_FILENAME}",
+        "report": f"{session.config.output_dir}/{_REPORT_FILENAME}",
+    }
+    return EvaluationReport(
+        artifact_id=REGIME_EVAL_ARTIFACT_ID,
+        verdict=verdict,
+        cause=cause,
+        config_fp=session.config_fp,
+        code_fp=session.code_fp,
+        dependency_lock_fp=session.lock_fp,
+        design_fp=session.config.design_fp,
+        model_fp=session.config.model_fp,
+        training_artifact_fp=session.config.training_artifact_fp,
+        matrix_fp=session.matrix_fp,
+        train_scores=train_scores,
+        validation_scores=validation_scores,
+        holdout_scores=holdout_scores,
+        baseline_comparisons=baselines,
+        calibration_check=eval_contract.calibration_check,
+        stability_check=eval_contract.stability_check,
+        stability_agreed=stability_agreed,
+        acceptance_macro_f1_num=eval_contract.acceptance_macro_f1_num,
+        acceptance_macro_f1_den=eval_contract.acceptance_macro_f1_den,
+        acceptance_min_per_class_recall_num=eval_contract.acceptance_min_per_class_recall_num,
+        acceptance_min_per_class_recall_den=eval_contract.acceptance_min_per_class_recall_den,
+        output_locations=locations,
+        trained_artifact_mutated=False,
+        sealed_holdout_mutated=False,
+        grants_money_path_authority=False,
+        grants_governed_binding=False,
+    )
 
 
 def _resolve_contract(

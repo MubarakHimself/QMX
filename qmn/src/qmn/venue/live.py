@@ -351,159 +351,56 @@ class LiveCTraderClient:
         declared_lookback: object = None,
     ) -> Result[LiveCTraderClient]:
         """Build a live client for ``(world, VenueId)`` with injected Clock/ErrorMap."""
-        if not isinstance(world, World):
-            return _invalid(
-                "world", "live client is selected by (world, VenueId)", given=repr(world)
-            )
-        if world is World.REPLAY:
-            return TypedRefusal(
-                category=RefusalCategory.POLICY_REJECTION,
-                retryability=Retryability.NO,
-                context={
-                    "field": "world",
-                    "reason": "replay compositions bind the replay VenueClientPort, "
-                    "never the live cTrader client",
-                    "world": world.value,
-                },
-            )
-        if not isinstance(venue_id, VenueId) or venue_id.value.strip() == "":
-            return _invalid(
-                "venue_id", "live client requires a valid VenueId", given=repr(venue_id)
-            )
-        if venue_id.value.startswith("conformance:"):
-            return TypedRefusal(
-                category=RefusalCategory.POLICY_REJECTION,
-                retryability=Retryability.NO,
-                context={
-                    "field": "venue_id",
-                    "reason": "conformance: VenueId selects the FEAT-0023 double, "
-                    "not the live cTrader client",
-                    "venue_id": venue_id.value,
-                },
-            )
-        if not isinstance(clock, Clock):
-            return _invalid(
-                "clock",
-                "the composition root injects a Clock; the live client never reads "
-                "the system clock",
-                given=repr(clock),
-            )
-        if not isinstance(error_map, ErrorMap):
-            return _invalid(
-                "error_map",
-                "the live client resolves venue codes against a pinned ErrorMap",
-                given=repr(error_map),
-            )
-        if not isinstance(session_epoch, str) or session_epoch.strip() == "":
-            return _invalid(
-                "session_epoch",
-                "a non-empty session-epoch id rides every observation",
-                given=repr(session_epoch),
-            )
-        cm: ConnectionManager | None
-        if connection_manager is None:
-            cm = None
-        elif isinstance(connection_manager, ConnectionManager):
-            cm = connection_manager
-        else:
-            return _invalid(
-                "connection_manager",
-                "when supplied, connection_manager must be a ConnectionManager",
-                given=repr(connection_manager),
-            )
-        rec: EventRecorder | None
-        if recorder is None:
-            rec = None
-        elif isinstance(recorder, EventRecorder):
-            rec = recorder
-        else:
-            return _invalid(
-                "recorder",
-                "when supplied, recorder must be an EventRecorder",
-                given=repr(recorder),
-            )
-        bound_intake: _LiveIntake | None
-        if intake is None:
-            bound_intake = None
-        elif callable(getattr(intake, "record", None)):
-            bound_intake = cast("_LiveIntake", intake)
-        else:
-            return _invalid(
-                "intake",
-                "when supplied, intake is a GovernedLiveIntake (record method)",
-                given=repr(type(intake).__name__),
-            )
-        loop = _coerce_event_loop(event_loop)
-        if is_refusal(loop):
-            return loop
-        host = _coerce_optional_host(open_api_host)
-        if is_refusal(host):
-            return host
-        tag = _coerce_optional_proto_tag(proto_tag)
-        if is_refusal(tag):
-            return tag
-        port = _coerce_open_api_port(open_api_port)
-        if is_refusal(port):
-            return port
-        tls = _coerce_optional_ssl_context(ssl_context)
-        if is_refusal(tls):
-            return tls
-        hostname = _coerce_optional_host(server_hostname, field_name="server_hostname")
-        if is_refusal(hostname):
-            return hostname
-        cred = _coerce_optional_credential_ref(credential_ref)
-        if is_refusal(cred):
-            return cred
-        lookback: Duration | None = None
-        if declared_lookback is not None:
-            resolved_lookback = _coerce_declared_lookback(declared_lookback)
-            if is_refusal(resolved_lookback):
-                return resolved_lookback
-            lookback = resolved_lookback.value
-        production_host = host.value
-        if production_host is not None:
-            if cm is None:
-                return _invalid(
-                    "connection_manager",
-                    "production Open API connect uses the node's injected "
-                    "ConnectionManager; LiveCTraderClient never constructs one",
-                )
-            if loop.value is None:
-                return _invalid(
-                    "event_loop",
-                    "production Open API connect requires the node's injected "
-                    "asyncio loop; LiveCTraderClient never creates one",
-                )
-            if tag.value is None:
-                return _invalid(
-                    "proto_tag",
-                    "the Spotware proto release tag is a positive integer injected "
-                    "from registry:venue_protocol_artifact",
-                    given=repr(proto_tag),
-                )
-        if cred.value is not None and cm is None:
-            return _invalid(
-                "connection_manager",
-                "credential session open uses the node's injected ConnectionManager; "
-                "LiveCTraderClient never constructs one",
-            )
+        identity = _live_world_venue(world, venue_id)
+        if is_refusal(identity):
+            return identity
+        world_v, venue = identity.value
+        deps = _live_injected_deps(
+            clock=clock,
+            error_map=error_map,
+            session_epoch=session_epoch,
+            connection_manager=connection_manager,
+            recorder=recorder,
+            intake=intake,
+        )
+        if is_refusal(deps):
+            return deps
+        cm, rec, bound_intake, epoch = deps.value
+        wire = _live_wire_fields(
+            event_loop=event_loop,
+            open_api_host=open_api_host,
+            proto_tag=proto_tag,
+            open_api_port=open_api_port,
+            ssl_context=ssl_context,
+            server_hostname=server_hostname,
+            credential_ref=credential_ref,
+            declared_lookback=declared_lookback,
+        )
+        if is_refusal(wire):
+            return wire
+        loop, host, tag, port, tls, hostname, cred, lookback = wire.value
+        guarded = _live_production_guards(
+            host=host, cm=cm, loop=loop, tag=tag, proto_tag=proto_tag, cred=cred
+        )
+        if is_refusal(guarded):
+            return guarded
         return Ok(
             cls(
-                _world=world,
-                _venue_id=venue_id,
-                _clock=clock,
-                _error_map=error_map,
-                _session_epoch=session_epoch.strip(),
+                _world=world_v,
+                _venue_id=venue,
+                _clock=cast("Clock", clock),
+                _error_map=cast("ErrorMap", error_map),
+                _session_epoch=epoch,
                 _connection_manager=cm,
                 _recorder=rec,
                 _intake=bound_intake,
-                _event_loop=loop.value,
-                _open_api_host=production_host,
-                _proto_tag=tag.value,
-                _open_api_port=port.value,
-                _ssl_context=tls.value,
-                _server_hostname=hostname.value,
-                _credential_ref=cred.value,
+                _event_loop=loop,
+                _open_api_host=host,
+                _proto_tag=tag,
+                _open_api_port=port,
+                _ssl_context=tls,
+                _server_hostname=hostname,
+                _credential_ref=cred,
                 _declared_lookback=lookback,
             )
         )
@@ -1614,6 +1511,200 @@ def _unknown_after_encode(
         observation=observation,
         journal_event=JournalEvent.for_outcome(fp, command.kind, SubmissionOutcome.UNKNOWN),
     )
+
+
+def _live_world_venue(world: object, venue_id: object) -> Result[tuple[World, VenueId]]:
+    if not isinstance(world, World):
+        return _invalid("world", "live client is selected by (world, VenueId)", given=repr(world))
+    if world is World.REPLAY:
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "world",
+                "reason": "replay compositions bind the replay VenueClientPort, "
+                "never the live cTrader client",
+                "world": world.value,
+            },
+        )
+    if not isinstance(venue_id, VenueId) or venue_id.value.strip() == "":
+        return _invalid("venue_id", "live client requires a valid VenueId", given=repr(venue_id))
+    if venue_id.value.startswith("conformance:"):
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "venue_id",
+                "reason": "conformance: VenueId selects the FEAT-0023 double, "
+                "not the live cTrader client",
+                "venue_id": venue_id.value,
+            },
+        )
+    return Ok((world, venue_id))
+
+
+def _live_injected_deps(
+    *,
+    clock: object,
+    error_map: object,
+    session_epoch: object,
+    connection_manager: object,
+    recorder: object,
+    intake: object,
+) -> Result[tuple[ConnectionManager | None, EventRecorder | None, _LiveIntake | None, str]]:
+    if not isinstance(clock, Clock):
+        return _invalid(
+            "clock",
+            "the composition root injects a Clock; the live client never reads the system clock",
+            given=repr(clock),
+        )
+    if not isinstance(error_map, ErrorMap):
+        return _invalid(
+            "error_map",
+            "the live client resolves venue codes against a pinned ErrorMap",
+            given=repr(error_map),
+        )
+    if not isinstance(session_epoch, str) or session_epoch.strip() == "":
+        return _invalid(
+            "session_epoch",
+            "a non-empty session-epoch id rides every observation",
+            given=repr(session_epoch),
+        )
+    cm: ConnectionManager | None
+    if connection_manager is None:
+        cm = None
+    elif isinstance(connection_manager, ConnectionManager):
+        cm = connection_manager
+    else:
+        return _invalid(
+            "connection_manager",
+            "when supplied, connection_manager must be a ConnectionManager",
+            given=repr(connection_manager),
+        )
+    rec: EventRecorder | None
+    if recorder is None:
+        rec = None
+    elif isinstance(recorder, EventRecorder):
+        rec = recorder
+    else:
+        return _invalid(
+            "recorder",
+            "when supplied, recorder must be an EventRecorder",
+            given=repr(recorder),
+        )
+    bound_intake: _LiveIntake | None
+    if intake is None:
+        bound_intake = None
+    elif callable(getattr(intake, "record", None)):
+        bound_intake = cast("_LiveIntake", intake)
+    else:
+        return _invalid(
+            "intake",
+            "when supplied, intake is a GovernedLiveIntake (record method)",
+            given=repr(type(intake).__name__),
+        )
+    return Ok((cm, rec, bound_intake, session_epoch.strip()))
+
+
+def _live_wire_fields(
+    *,
+    event_loop: object,
+    open_api_host: object,
+    proto_tag: object,
+    open_api_port: object,
+    ssl_context: object,
+    server_hostname: object,
+    credential_ref: object,
+    declared_lookback: object,
+) -> Result[
+    tuple[
+        asyncio.AbstractEventLoop | None,
+        str | None,
+        int | None,
+        int,
+        ssl.SSLContext | None,
+        str | None,
+        SecretRef | None,
+        Duration | None,
+    ]
+]:
+    loop = _coerce_event_loop(event_loop)
+    if is_refusal(loop):
+        return loop
+    host = _coerce_optional_host(open_api_host)
+    if is_refusal(host):
+        return host
+    tag = _coerce_optional_proto_tag(proto_tag)
+    if is_refusal(tag):
+        return tag
+    port = _coerce_open_api_port(open_api_port)
+    if is_refusal(port):
+        return port
+    tls = _coerce_optional_ssl_context(ssl_context)
+    if is_refusal(tls):
+        return tls
+    hostname = _coerce_optional_host(server_hostname, field_name="server_hostname")
+    if is_refusal(hostname):
+        return hostname
+    cred = _coerce_optional_credential_ref(credential_ref)
+    if is_refusal(cred):
+        return cred
+    lookback: Duration | None = None
+    if declared_lookback is not None:
+        resolved_lookback = _coerce_declared_lookback(declared_lookback)
+        if is_refusal(resolved_lookback):
+            return resolved_lookback
+        lookback = resolved_lookback.value
+    return Ok(
+        (
+            loop.value,
+            host.value,
+            tag.value,
+            port.value,
+            tls.value,
+            hostname.value,
+            cred.value,
+            lookback,
+        )
+    )
+
+
+def _live_production_guards(
+    *,
+    host: str | None,
+    cm: ConnectionManager | None,
+    loop: asyncio.AbstractEventLoop | None,
+    tag: int | None,
+    proto_tag: object,
+    cred: SecretRef | None,
+) -> Result[None]:
+    if host is not None:
+        if cm is None:
+            return _invalid(
+                "connection_manager",
+                "production Open API connect uses the node's injected "
+                "ConnectionManager; LiveCTraderClient never constructs one",
+            )
+        if loop is None:
+            return _invalid(
+                "event_loop",
+                "production Open API connect requires the node's injected "
+                "asyncio loop; LiveCTraderClient never creates one",
+            )
+        if tag is None:
+            return _invalid(
+                "proto_tag",
+                "the Spotware proto release tag is a positive integer injected "
+                "from registry:venue_protocol_artifact",
+                given=repr(proto_tag),
+            )
+    if cred is not None and cm is None:
+        return _invalid(
+            "connection_manager",
+            "credential session open uses the node's injected ConnectionManager; "
+            "LiveCTraderClient never constructs one",
+        )
+    return Ok(None)
 
 
 def _invalid(field_name: str, reason: str, **extra: object) -> TypedRefusal:
