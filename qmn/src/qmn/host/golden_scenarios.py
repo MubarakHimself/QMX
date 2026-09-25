@@ -1684,6 +1684,38 @@ def _collapse_flats(
     stream: CommandStreamKey,
     table: ControlRankTable,
 ) -> Result[Mapping[str, object]]:
+    actions = _flatten_control_actions(fx, stream)
+    if is_refusal(actions):
+        return actions
+    candidates = _flatten_dispatch_candidates(actions.value, stream)
+    if is_refusal(candidates):
+        return candidates
+    plan = dispatch_ranked_controls(
+        candidates.value,
+        table,
+        stream=stream,
+        arbitration_seed=f"{fx.seed}-collapse",
+    )
+    if is_refusal(plan):
+        return plan
+    emit_flatten = sum(
+        1 for item in plan.value.emit if item.record.action_kind is ControlActionKind.FLATTEN
+    )
+    if emit_flatten != 1 or len(plan.value.suppressed) != 2:
+        return policy(
+            "collapse",
+            "identical mechanical close commands collapse to one emission",
+            emit_flatten=emit_flatten,
+            suppressed=len(plan.value.suppressed),
+        )
+    return Ok(
+        MappingProxyType({"emit_flatten": emit_flatten, "suppressed": len(plan.value.suppressed)})
+    )
+
+
+def _flatten_control_actions(
+    fx: _Fixtures, stream: CommandStreamKey
+) -> Result[tuple[object, object, object]]:
     kill_line = mint_control_action(
         ControlActionKind.FLATTEN,
         "book-1",
@@ -1729,6 +1761,12 @@ def _collapse_flats(
         return window
     if is_refusal(bot_close):
         return bot_close
+    return Ok((kill_line.value, window.value, bot_close.value))
+
+
+def _flatten_dispatch_candidates(
+    actions: tuple[object, object, object], stream: CommandStreamKey
+) -> Result[list[DispatchCandidate]]:
     enforcement = EnforcementScope(
         subject_scope=SubjectScope.BINDING,
         scope_ref="binding-1",
@@ -1736,9 +1774,9 @@ def _collapse_flats(
     )
     candidates: list[DispatchCandidate] = []
     for record, origin, ordinal in (
-        (kill_line.value, CandidateOrigin.CT30, 0),
-        (window.value, CandidateOrigin.CT30, 1),
-        (bot_close.value, CandidateOrigin.RISK_NON_INCREASING, 2),
+        (actions[0], CandidateOrigin.CT30, 0),
+        (actions[1], CandidateOrigin.CT30, 1),
+        (actions[2], CandidateOrigin.RISK_NON_INCREASING, 2),
     ):
         cand = DispatchCandidate.try_create(
             record, enforcement, origin=origin, arrival_ordinal=ordinal
@@ -1746,27 +1784,7 @@ def _collapse_flats(
         if is_refusal(cand):
             return cand
         candidates.append(cand.value)
-    plan = dispatch_ranked_controls(
-        candidates,
-        table,
-        stream=stream,
-        arbitration_seed=f"{fx.seed}-collapse",
-    )
-    if is_refusal(plan):
-        return plan
-    emit_flatten = sum(
-        1 for item in plan.value.emit if item.record.action_kind is ControlActionKind.FLATTEN
-    )
-    if emit_flatten != 1 or len(plan.value.suppressed) != 2:
-        return policy(
-            "collapse",
-            "identical mechanical close commands collapse to one emission",
-            emit_flatten=emit_flatten,
-            suppressed=len(plan.value.suppressed),
-        )
-    return Ok(
-        MappingProxyType({"emit_flatten": emit_flatten, "suppressed": len(plan.value.suppressed)})
-    )
+    return Ok(candidates)
 
 
 def _conflict_pair(
@@ -1848,6 +1866,77 @@ def _mint_exit(
     authority: ClosingAuthority,
     commission: int,
 ) -> Result[ExitRecord]:
+    parts = _golden_exit_parts(fx, seed, realized_pnl, authority, commission)
+    if is_refusal(parts):
+        return parts
+    distance, amount, pnl, fill, pos, label, costs, arb_fp, vobs_fp = parts.value
+    return mint_exit_record(
+        virtual_position_ref=pos,
+        opening_bot_id="bot-scn0011",
+        original_risk_distance=distance,
+        original_risk_amount=amount,
+        fill_references=(fill,),
+        realized_pnl=pnl,
+        cost_components=costs,
+        close_reason=close_reason,
+        mechanism=close_reason,
+        outcome=outcome,
+        closing_authority=authority,
+        close_reason_mapping_version=1,
+        result_label=label,
+        loss_predicate_format_version=1,
+        binding_epoch=epoch,
+        recorded_at=fx.now,
+        arbitration_record_ref=arb_fp,
+        venue_observation_ref=vobs_fp,
+    )
+
+
+def _golden_exit_costs(commission: int) -> Result[tuple[CostComponent, ...]]:
+    if not commission:
+        return Ok(())
+    fee = _money(commission)
+    if is_refusal(fee):
+        return fee
+    cost = CostComponent.try_create("commission", fee.value, "broker")
+    if is_refusal(cost):
+        return cost
+    return Ok((cost.value,))
+
+
+def _golden_exit_refs(
+    fx: _Fixtures, seed: str, authority: ClosingAuthority
+) -> Result[tuple[Fingerprint | None, Fingerprint | None]]:
+    if authority is ClosingAuthority.VENUE:
+        vobs = _unwrap(_fp(fx, f"venue-obs-{seed}"))
+        if isinstance(vobs, TypedRefusal):
+            return vobs
+        return Ok((None, vobs))
+    arb = _unwrap(_fp(fx, f"arb-{seed}"))
+    if isinstance(arb, TypedRefusal):
+        return arb
+    return Ok((arb, None))
+
+
+def _golden_exit_parts(
+    fx: _Fixtures,
+    seed: str,
+    realized_pnl: int,
+    authority: ClosingAuthority,
+    commission: int,
+) -> Result[
+    tuple[
+        PriceDelta,
+        Money,
+        Money,
+        Fingerprint,
+        Fingerprint,
+        ExitResultLabel,
+        tuple[CostComponent, ...],
+        Fingerprint | None,
+        Fingerprint | None,
+    ]
+]:
     instrument = _instrument(fx.venue_id)
     if is_refusal(instrument):
         return instrument
@@ -1869,46 +1958,25 @@ def _mint_exit(
     label = ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE)
     if is_refusal(label):
         return label
-    costs: tuple[CostComponent, ...] = ()
-    if commission:
-        fee = _money(commission)
-        if is_refusal(fee):
-            return fee
-        cost = CostComponent.try_create("commission", fee.value, "broker")
-        if is_refusal(cost):
-            return cost
-        costs = (cost.value,)
-    arb_fp: Fingerprint | None = None
-    vobs_fp: Fingerprint | None = None
-    if authority is ClosingAuthority.VENUE:
-        vobs = _unwrap(_fp(fx, f"venue-obs-{seed}"))
-        if isinstance(vobs, TypedRefusal):
-            return vobs
-        vobs_fp = vobs
-    else:
-        arb = _unwrap(_fp(fx, f"arb-{seed}"))
-        if isinstance(arb, TypedRefusal):
-            return arb
-        arb_fp = arb
-    return mint_exit_record(
-        virtual_position_ref=pos,
-        opening_bot_id="bot-scn0011",
-        original_risk_distance=distance.value,
-        original_risk_amount=amount.value,
-        fill_references=(fill,),
-        realized_pnl=pnl.value,
-        cost_components=costs,
-        close_reason=close_reason,
-        mechanism=close_reason,
-        outcome=outcome,
-        closing_authority=authority,
-        close_reason_mapping_version=1,
-        result_label=label.value,
-        loss_predicate_format_version=1,
-        binding_epoch=epoch,
-        recorded_at=fx.now,
-        arbitration_record_ref=arb_fp,
-        venue_observation_ref=vobs_fp,
+    costs = _golden_exit_costs(commission)
+    if is_refusal(costs):
+        return costs
+    refs = _golden_exit_refs(fx, seed, authority)
+    if is_refusal(refs):
+        return refs
+    arb_fp, vobs_fp = refs.value
+    return Ok(
+        (
+            distance.value,
+            amount.value,
+            pnl.value,
+            fill,
+            pos,
+            label.value,
+            costs.value,
+            arb_fp,
+            vobs_fp,
+        )
     )
 
 
@@ -1978,34 +2046,10 @@ def _risk_graph_core(
     ]
 ]:
     venue_token = venue.value
-    bms = _unwrap(
-        PopulationBmsRecord.try_create(
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            definition_fp1="bms-def-1",
-        )
-    )
-    if isinstance(bms, TypedRefusal):
-        return bms
-    book_a = _unwrap(
-        PopulationBookRecord.try_create(
-            book_instance_id="book-1",
-            bms_instance_id="bms-1",
-            definition_fp1="book-def-1",
-        )
-    )
-    if isinstance(book_a, TypedRefusal):
-        return book_a
-    book_b = _unwrap(
-        PopulationBookRecord.try_create(
-            book_instance_id="book-2",
-            bms_instance_id="bms-1",
-            definition_fp1="book-def-2",
-        )
-    )
-    if isinstance(book_b, TypedRefusal):
-        return book_b
+    books = _golden_risk_books(venue_token)
+    if is_refusal(books):
+        return books
+    bms, book_a, book_b = books.value
     bind_a = _risk_binding(venue_token, "bind-1", "book-1", "EURUSD")
     if is_refusal(bind_a):
         return bind_a
@@ -2043,6 +2087,40 @@ def _risk_graph_core(
     if isinstance(paired, TypedRefusal):
         return paired
     return Ok((bms, book_a, book_b, bind_a.value, bind_b.value, seat_a, seat_b, paired))
+
+
+def _golden_risk_books(
+    venue_token: str,
+) -> Result[tuple[PopulationBmsRecord, PopulationBookRecord, PopulationBookRecord]]:
+    bms = _unwrap(
+        PopulationBmsRecord.try_create(
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            definition_fp1="bms-def-1",
+        )
+    )
+    if isinstance(bms, TypedRefusal):
+        return bms
+    book_a = _unwrap(
+        PopulationBookRecord.try_create(
+            book_instance_id="book-1",
+            bms_instance_id="bms-1",
+            definition_fp1="book-def-1",
+        )
+    )
+    if isinstance(book_a, TypedRefusal):
+        return book_a
+    book_b = _unwrap(
+        PopulationBookRecord.try_create(
+            book_instance_id="book-2",
+            bms_instance_id="bms-1",
+            definition_fp1="book-def-2",
+        )
+    )
+    if isinstance(book_b, TypedRefusal):
+        return book_b
+    return Ok((bms, book_a, book_b))
 
 
 def _risk_binding(

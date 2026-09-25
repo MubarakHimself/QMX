@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, TypeVar
+from typing import Final, TypeAlias, TypeVar
 
 from qmf.core import (
     Account,
@@ -126,9 +126,11 @@ from qmn.journal_dispatch import (
     RecordingJournalSink,
     journal_before_effect,
 )
-from qmn.ledger import refuse_paper_pnl_to_treasury
+from qmn.ledger import VirtualPosition, refuse_paper_pnl_to_treasury
 from qmn.order import (
+    AuthorizedIntent,
     CommandStreamUnknownBoundary,
+    FrozenRPreservation,
     PostAdmissionKind,
     admit_entry_at_book_door,
     mint_ct29_from_frozen_r,
@@ -757,8 +759,74 @@ def _windows_for(binding_id: str) -> Result[tuple[WindowRecord, ...]]:
     return Ok(tuple(built))
 
 
+_RiskGraphCore: TypeAlias = tuple[
+    PopulationBmsRecord,
+    PopulationBookRecord,
+    PopulationBookRecord,
+    PopulationBindingRecord,
+    PopulationBindingRecord,
+    SeatRecord,
+    SeatRecord,
+    PairedTargetRecord,
+]
+_RiskGraphExtras: TypeAlias = tuple[
+    PriorityRecord,
+    CapabilityRecord,
+    CapabilityRecord,
+    ScopeRecord,
+    tuple[WindowRecord, ...],
+    tuple[WindowRecord, ...],
+]
+
+
 def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
-    venue_token = venue.value
+    core = _risk_graph_core(venue)
+    if is_refusal(core):
+        return core
+    extras = _risk_graph_extras(venue)
+    if is_refusal(extras):
+        return extras
+    bms, book_a, book_b, bind_a, bind_b, seat_a, seat_b, paired = core.value
+    priority, cap_a, cap_b, scope, windows_a, windows_b = extras.value
+    return RuntimeRiskGraph.try_create(
+        bms=(bms,),
+        books=(book_a, book_b),
+        bindings=(bind_a, bind_b),
+        seats=(seat_a, seat_b),
+        paired_targets=(paired,),
+        windows=windows_a + windows_b,
+        priorities=(priority,),
+        capabilities=(cap_a, cap_b),
+        scopes=(scope,),
+    )
+
+
+def _risk_binding(
+    venue_token: str, binding_id: str, book_instance_id: str, instrument: str
+) -> Result[PopulationBindingRecord]:
+    bind = _unwrap(
+        PopulationBindingRecord.try_create(
+            binding_id=binding_id,
+            book_instance_id=book_instance_id,
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            role=AccountRole.LIVE,
+            world=World.LIVE,
+            environment="live",
+            position_model="netting",
+            instruments=frozenset({instrument}),
+            attribution_instruments=frozenset({instrument}),
+        )
+    )
+    if isinstance(bind, TypedRefusal):
+        return bind
+    return Ok(bind)
+
+
+def _risk_graph_books(
+    venue_token: str,
+) -> Result[tuple[PopulationBmsRecord, PopulationBookRecord, PopulationBookRecord]]:
     bms = _unwrap(
         PopulationBmsRecord.try_create(
             bms_instance_id="bms-1",
@@ -787,56 +855,31 @@ def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
     )
     if isinstance(book_b, TypedRefusal):
         return book_b
-    bind_a = _unwrap(
-        PopulationBindingRecord.try_create(
-            binding_id="bind-1",
-            book_instance_id="book-1",
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            role=AccountRole.LIVE,
-            world=World.LIVE,
-            environment="live",
-            position_model="netting",
-            instruments=frozenset({"EURUSD"}),
-            attribution_instruments=frozenset({"EURUSD"}),
-        )
-    )
-    if isinstance(bind_a, TypedRefusal):
+    return Ok((bms, book_a, book_b))
+
+
+def _risk_graph_core(venue: VenueId) -> Result[_RiskGraphCore]:
+    venue_token = venue.value
+    books = _risk_graph_books(venue_token)
+    if is_refusal(books):
+        return books
+    bms, book_a, book_b = books.value
+    bind_a = _risk_binding(venue_token, "bind-1", "book-1", "EURUSD")
+    if is_refusal(bind_a):
         return bind_a
-    bind_b = _unwrap(
-        PopulationBindingRecord.try_create(
-            binding_id="bind-2",
-            book_instance_id="book-2",
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            role=AccountRole.LIVE,
-            world=World.LIVE,
-            environment="live",
-            position_model="netting",
-            instruments=frozenset({"GBPUSD"}),
-            attribution_instruments=frozenset({"GBPUSD"}),
-        )
-    )
-    if isinstance(bind_b, TypedRefusal):
+    bind_b = _risk_binding(venue_token, "bind-2", "book-2", "GBPUSD")
+    if is_refusal(bind_b):
         return bind_b
     seat_a = _unwrap(
         SeatRecord.try_create(
-            seat_id="seat-1",
-            bot_id="bot-1",
-            book_instance_id="book-1",
-            binding_id="bind-1",
+            seat_id="seat-1", bot_id="bot-1", book_instance_id="book-1", binding_id="bind-1"
         )
     )
     if isinstance(seat_a, TypedRefusal):
         return seat_a
     seat_b = _unwrap(
         SeatRecord.try_create(
-            seat_id="seat-2",
-            bot_id="bot-2",
-            book_instance_id="book-2",
-            binding_id="bind-2",
+            seat_id="seat-2", bot_id="bot-2", book_instance_id="book-2", binding_id="bind-2"
         )
     )
     if isinstance(seat_b, TypedRefusal):
@@ -851,15 +894,15 @@ def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
     )
     if isinstance(paired, TypedRefusal):
         return paired
+    return Ok((bms, book_a, book_b, bind_a.value, bind_b.value, seat_a, seat_b, paired))
+
+
+def _risk_graph_extras(venue: VenueId) -> Result[_RiskGraphExtras]:
     ranks = _unwrap(_rank_table())
     if isinstance(ranks, TypedRefusal):
         return ranks
     priority = _unwrap(
-        PriorityRecord.try_create(
-            venue_id=venue_token,
-            account_id="acct-1",
-            rank_table=ranks,
-        )
+        PriorityRecord.try_create(venue_id=venue.value, account_id="acct-1", rank_table=ranks)
     )
     if isinstance(priority, TypedRefusal):
         return priority
@@ -890,17 +933,7 @@ def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
     windows_b = _unwrap(_windows_for("bind-2"))
     if isinstance(windows_b, TypedRefusal):
         return windows_b
-    return RuntimeRiskGraph.try_create(
-        bms=(bms,),
-        books=(book_a, book_b),
-        bindings=(bind_a, bind_b),
-        seats=(seat_a, seat_b),
-        paired_targets=(paired,),
-        windows=windows_a + windows_b,
-        priorities=(priority,),
-        capabilities=(cap_a, cap_b),
-        scopes=(scope,),
-    )
+    return Ok((priority, cap_a, cap_b, scope, windows_a, windows_b))
 
 
 def _composition_inputs() -> Result[CompositionFingerprintInputs]:
@@ -983,6 +1016,30 @@ def _exercise_compose(fx: _Fixtures) -> Result[Mapping[str, object]]:
 
 
 def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
+    authorized = _admit_preserved_entry(fx)
+    if is_refusal(authorized):
+        return authorized
+    placed = _place_preserved_entry(fx, authorized.value)
+    if is_refusal(placed):
+        return placed
+    command, position, preserved = placed.value
+    exit_record = _exit_from_preserved_entry(fx, position)
+    if is_refusal(exit_record):
+        return exit_record
+    return Ok(
+        MappingProxyType(
+            {
+                "authorized_intent": authorized.value.fp1_identity(),
+                "command_kind": command.kind.value,
+                "exit_record": exit_record.value.fp1_identity(),
+                "frozen_r": preserved.faces.fp1_identity(),
+                "rebased": preserved.rebased,
+            }
+        )
+    )
+
+
+def _admit_preserved_entry(fx: _Fixtures) -> Result[AuthorizedIntent]:
     venue = fx.venue_id
     instrument = _instrument(venue)
     if is_refusal(instrument):
@@ -1015,33 +1072,45 @@ def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
     )
     if is_refusal(entry):
         return entry
+    return _authorize_preserved_entry(instrument.value, price.value, entry.value, requested.value)
+
+
+def _authorize_preserved_entry(
+    instrument: Instrument,
+    price: Price,
+    entry: EntryIntent,
+    requested: ExactRational,
+) -> Result[AuthorizedIntent]:
     logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
     if is_refusal(logic):
         return logic
     rate = _rate(1_000)
     if is_refusal(rate):
         return rate
-    factor = ValueFactor.try_create(100_000, 1, instrument.value, "USD")
+    factor = ValueFactor.try_create(100_000, 1, instrument, "USD")
     if is_refusal(factor):
         return factor
-    authorized = admit_entry_at_book_door(
-        intent=entry.value,
-        entry_price=price.value,
+    return admit_entry_at_book_door(
+        intent=entry,
+        entry_price=price,
         exit_logic_ref=logic.value,
         module=_OffsetStopModule(),
-        book_resolved_requested_r=requested.value,
+        book_resolved_requested_r=requested,
         r_unit_price=rate.value,
         value_factor=factor.value,
         money_scale=2,
     )
-    if is_refusal(authorized):
-        return authorized
-    account = _account(venue, "acct-1", AccountRole.LIVE)
+
+
+def _place_preserved_entry(
+    fx: _Fixtures, authorized: AuthorizedIntent
+) -> Result[tuple[Command, VirtualPosition, FrozenRPreservation]]:
+    account = _account(fx.venue_id, "acct-1", AccountRole.LIVE)
     if is_refusal(account):
         return account
     command = mint_place_order_from_authorized(
-        authorized.value,
-        venue_id=venue,
+        authorized,
+        venue_id=fx.venue_id,
         account=account.value,
         session_epoch=_SESSION,
         ordering_ordinal=1,
@@ -1055,10 +1124,7 @@ def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
     if isinstance(cmd_fp, TypedRefusal):
         return cmd_fp
     position = mint_virtual_from_authorized(
-        authorized.value,
-        binding_epoch=epoch,
-        bot_id="bot-a",
-        command_identity=cmd_fp,
+        authorized, binding_epoch=epoch, bot_id="bot-a", command_identity=cmd_fp
     )
     if is_refusal(position):
         return position
@@ -1070,6 +1136,10 @@ def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
             "frozen_r",
             "a fill must not re-base frozen R except the journaled partial-entry path",
         )
+    return Ok((command.value, position.value, preserved.value))
+
+
+def _exit_from_preserved_entry(fx: _Fixtures, position: VirtualPosition) -> Result[ExitRecord]:
     pnl = _unwrap(_money(-10_000))
     if isinstance(pnl, TypedRefusal):
         return pnl
@@ -1088,8 +1158,8 @@ def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
     cost = _unwrap(CostComponent.try_create("commission", commission, "broker"))
     if isinstance(cost, TypedRefusal):
         return cost
-    exit_record = mint_ct29_from_frozen_r(
-        position.value,
+    return mint_ct29_from_frozen_r(
+        position,
         realized_pnl=pnl,
         fill_references=(fill_fp,),
         cost_components=(cost,),
@@ -1102,19 +1172,6 @@ def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
         loss_predicate_format_version=1,
         recorded_at=fx.now,
         venue_observation_ref=venue_obs,
-    )
-    if is_refusal(exit_record):
-        return exit_record
-    return Ok(
-        MappingProxyType(
-            {
-                "authorized_intent": authorized.value.fp1_identity(),
-                "command_kind": command.value.kind.value,
-                "exit_record": exit_record.value.fp1_identity(),
-                "frozen_r": preserved.value.faces.fp1_identity(),
-                "rebased": preserved.value.rebased,
-            }
-        )
     )
 
 
@@ -1540,6 +1597,60 @@ def _mint_exit(
     close_reason: CloseReason = CloseReason.PROTECTIVE_STOP_FILL,
     authority: ClosingAuthority = ClosingAuthority.VENUE,
 ) -> Result[ExitRecord]:
+    parts = _exit_record_parts(seed, realized_pnl, authority)
+    if is_refusal(parts):
+        return parts
+    distance, amount, pnl, fill, pos, label, arb_fp, vobs_fp = parts.value
+    return mint_exit_record(
+        virtual_position_ref=pos,
+        opening_bot_id="bot-alpha",
+        original_risk_distance=distance,
+        original_risk_amount=amount,
+        fill_references=(fill,),
+        realized_pnl=pnl,
+        cost_components=(),
+        close_reason=close_reason,
+        mechanism=close_reason,
+        outcome=outcome,
+        closing_authority=authority,
+        close_reason_mapping_version=1,
+        result_label=label,
+        loss_predicate_format_version=1,
+        binding_epoch=epoch,
+        recorded_at=now,
+        arbitration_record_ref=arb_fp,
+        venue_observation_ref=vobs_fp,
+    )
+
+
+def _exit_authority_refs(
+    seed: str, authority: ClosingAuthority
+) -> Result[tuple[Fingerprint | None, Fingerprint | None]]:
+    if authority is not ClosingAuthority.VENUE:
+        arb = _unwrap(_fp(f"arb-{seed}"))
+        if isinstance(arb, TypedRefusal):
+            return arb
+        return Ok((arb, None))
+    vobs = _unwrap(_fp(f"venue-obs-{seed}"))
+    if isinstance(vobs, TypedRefusal):
+        return vobs
+    return Ok((None, vobs))
+
+
+def _exit_record_parts(
+    seed: str, realized_pnl: int, authority: ClosingAuthority
+) -> Result[
+    tuple[
+        PriceDelta,
+        Money,
+        Money,
+        Fingerprint,
+        Fingerprint,
+        ExitResultLabel,
+        Fingerprint | None,
+        Fingerprint | None,
+    ]
+]:
     venue = _unwrap(VenueId.try_create("ctrader"))
     if isinstance(venue, TypedRefusal):
         return venue
@@ -1564,38 +1675,11 @@ def _mint_exit(
     label = _unwrap(ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE))
     if isinstance(label, TypedRefusal):
         return label
-    arb_fp: Fingerprint | None = None
-    vobs_fp: Fingerprint | None = None
-    if authority is not ClosingAuthority.VENUE:
-        arb = _unwrap(_fp(f"arb-{seed}"))
-        if isinstance(arb, TypedRefusal):
-            return arb
-        arb_fp = arb
-    else:
-        vobs = _unwrap(_fp(f"venue-obs-{seed}"))
-        if isinstance(vobs, TypedRefusal):
-            return vobs
-        vobs_fp = vobs
-    return mint_exit_record(
-        virtual_position_ref=pos,
-        opening_bot_id="bot-alpha",
-        original_risk_distance=distance,
-        original_risk_amount=amount,
-        fill_references=(fill,),
-        realized_pnl=pnl,
-        cost_components=(),
-        close_reason=close_reason,
-        mechanism=close_reason,
-        outcome=outcome,
-        closing_authority=authority,
-        close_reason_mapping_version=1,
-        result_label=label,
-        loss_predicate_format_version=1,
-        binding_epoch=epoch,
-        recorded_at=now,
-        arbitration_record_ref=arb_fp,
-        venue_observation_ref=vobs_fp,
-    )
+    refs = _exit_authority_refs(seed, authority)
+    if is_refusal(refs):
+        return refs
+    arb_fp, vobs_fp = refs.value
+    return Ok((distance, amount, pnl, fill, pos, label, arb_fp, vobs_fp))
 
 
 def _exercise_bench(fx: _Fixtures) -> Result[Mapping[str, object]]:
