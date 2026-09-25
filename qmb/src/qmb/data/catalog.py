@@ -368,102 +368,161 @@ def _resolve_store(body: Mapping[str, object]) -> EvidenceStore | None:
     return EvidenceStore(Path(destination))
 
 
+@dataclass(frozen=True, slots=True)
+class _CoverageQuery:
+    venue: str | None
+    symbols: tuple[str, ...]
+    resolution: str | None
+    side_raw: object
+    start_ns: int | None
+    end_ns: int | None
+
+
 def _apply_query(
     present: Sequence[CoverageEntry],
     body: Mapping[str, object],
 ) -> Result[tuple[CoverageEntry, ...]]:
     """Filter present rows; emit explicit ``not present`` for requested absences."""
-    venue = clean_token(body.get("venue"))
-    symbol = clean_token(body.get("symbol", body.get("symbols")))
-    if symbol is not None and "," in symbol:
-        # Multi-symbol list queries enumerate each token.
-        symbols = tuple(part.strip() for part in symbol.split(",") if part.strip())
-    elif isinstance(body.get("symbol"), Sequence) and not isinstance(
-        body.get("symbol"), (str, bytes)
-    ):
-        items = cast("Sequence[object]", body.get("symbol"))
-        symbols = tuple(token for token in (clean_token(item) for item in items) if token)
-    elif symbol is not None:
-        symbols = (symbol,)
-    else:
-        symbols = ()
+    parsed = _parse_coverage_query(body)
+    if is_refusal(parsed):
+        return parsed
+    query = parsed.value
+    if not _query_is_active(query):
+        return Ok(tuple(present))
+    projection = _coverage_query_projection(present, query)
+    if is_refusal(projection):
+        return projection
+    if projection.value is None:
+        return Ok(tuple(present))
+    venues, symbols, sides, resolution = projection.value
+    return Ok(_emit_coverage_entries(present, query, venues, symbols, sides, resolution))
 
-    resolution = clean_token(body.get("resolution"))
-    side_raw = body.get("side")
+
+def _parse_coverage_query(body: Mapping[str, object]) -> Result[_CoverageQuery]:
     start_ns = _optional_ns(body.get("start", body.get("start_ns")), field="start")
     if is_refusal(start_ns):
         return start_ns
     end_ns = _optional_ns(body.get("end", body.get("end_ns")), field="end")
     if is_refusal(end_ns):
         return end_ns
-
-    querying = any(
-        value is not None
-        for value in (
-            venue,
-            symbols or None,
-            resolution,
-            side_raw,
-            start_ns.value,
-            end_ns.value,
+    return Ok(
+        _CoverageQuery(
+            venue=clean_token(body.get("venue")),
+            symbols=_query_symbols(body),
+            resolution=clean_token(body.get("resolution")),
+            side_raw=body.get("side"),
+            start_ns=start_ns.value,
+            end_ns=end_ns.value,
         )
     )
-    if not querying:
-        return Ok(tuple(present))
 
-    sides = _expand_sides(side_raw if side_raw is not None else DownloadSide.BOTH.value)
+
+def _query_symbols(body: Mapping[str, object]) -> tuple[str, ...]:
+    symbol = clean_token(body.get("symbol", body.get("symbols")))
+    if symbol is not None and "," in symbol:
+        # Multi-symbol list queries enumerate each token.
+        return tuple(part.strip() for part in symbol.split(",") if part.strip())
+    raw = body.get("symbol")
+    if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+        items = cast("Sequence[object]", raw)
+        return tuple(token for token in (clean_token(item) for item in items) if token)
+    if symbol is not None:
+        return (symbol,)
+    return ()
+
+
+def _query_is_active(query: _CoverageQuery) -> bool:
+    return any(
+        value is not None
+        for value in (
+            query.venue,
+            query.symbols or None,
+            query.resolution,
+            query.side_raw,
+            query.start_ns,
+            query.end_ns,
+        )
+    )
+
+
+def _coverage_query_projection(
+    present: Sequence[CoverageEntry],
+    query: _CoverageQuery,
+) -> Result[tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...], str] | None]:
+    sides = _expand_sides(query.side_raw if query.side_raw is not None else DownloadSide.BOTH.value)
     if is_refusal(sides):
         return sides
-    wanted_resolution = resolution or "tick"
-    wanted_symbols = symbols if symbols else sorted({entry.symbol for entry in present})
-    if venue is not None:
-        venues: tuple[str, ...] = (venue,)
-    elif present:
-        venues = tuple(sorted({entry.venue for entry in present}))
-    else:
-        venues = ()
+    wanted_resolution = query.resolution or "tick"
+    wanted_symbols = query.symbols or tuple(sorted({entry.symbol for entry in present}))
+    venues = _query_venues(present, query)
+    if venues and wanted_symbols:
+        return Ok((venues, wanted_symbols, sides.value, wanted_resolution))
+    # Named query with nothing to project over — still emit not-present shells
+    # when venue+symbol were explicit; otherwise keep the unfiltered present set.
+    if query.venue is None or not query.symbols:
+        return Ok(None)
+    return Ok(((query.venue,), query.symbols, sides.value, wanted_resolution))
 
-    if not venues or not wanted_symbols:
-        # Named query with nothing to project over — still emit not-present shells
-        # when venue+symbol were explicit; otherwise keep the unfiltered present set.
-        if venue is None or not symbols:
-            return Ok(tuple(present))
-        venues = (venue,)
-        wanted_symbols = symbols
 
+def _query_venues(present: Sequence[CoverageEntry], query: _CoverageQuery) -> tuple[str, ...]:
+    if query.venue is not None:
+        return (query.venue,)
+    if present:
+        return tuple(sorted({entry.venue for entry in present}))
+    return ()
+
+
+def _emit_coverage_entries(
+    present: Sequence[CoverageEntry],
+    query: _CoverageQuery,
+    venues: tuple[str, ...],
+    symbols: tuple[str, ...],
+    sides: tuple[str, ...],
+    resolution: str,
+) -> tuple[CoverageEntry, ...]:
     entries: list[CoverageEntry] = []
     for venue_token in venues:
-        for symbol_token in wanted_symbols:
-            for side_token in sides.value:
+        for symbol_token in symbols:
+            for side_token in sides:
                 match = _find_present(
                     present,
                     venue=venue_token,
                     symbol=symbol_token,
-                    resolution=wanted_resolution,
+                    resolution=resolution,
                     side=side_token,
-                    start_ns=start_ns.value,
-                    end_ns=end_ns.value,
+                    start_ns=query.start_ns,
+                    end_ns=query.end_ns,
                 )
                 if match is not None:
                     entries.append(match)
-                else:
-                    entries.append(
-                        CoverageEntry(
-                            venue=venue_token,
-                            symbol=symbol_token,
-                            resolution=wanted_resolution,
-                            side=side_token,
-                            status=NOT_PRESENT,
-                            start_ns=start_ns.value,
-                            end_ns=end_ns.value,
-                            observation_count=None,
-                            provenance=None,
-                            license_tag=None,
-                            revision=None,
-                            source=None,
-                        )
-                    )
-    return Ok(tuple(entries))
+                    continue
+                entries.append(
+                    _absent_coverage_entry(venue_token, symbol_token, resolution, side_token, query)
+                )
+    return tuple(entries)
+
+
+def _absent_coverage_entry(
+    venue: str,
+    symbol: str,
+    resolution: str,
+    side: str,
+    query: _CoverageQuery,
+) -> CoverageEntry:
+    return CoverageEntry(
+        venue=venue,
+        symbol=symbol,
+        resolution=resolution,
+        side=side,
+        status=NOT_PRESENT,
+        start_ns=query.start_ns,
+        end_ns=query.end_ns,
+        observation_count=None,
+        provenance=None,
+        license_tag=None,
+        revision=None,
+        source=None,
+    )
 
 
 def _find_present(
@@ -479,22 +538,47 @@ def _find_present(
     """Latest matching present row; optional window must be covered by the row."""
     matches: list[CoverageEntry] = []
     for entry in present:
-        if entry.status != PRESENT:
-            continue
-        if entry.venue != venue or entry.symbol != symbol:
-            continue
-        if entry.resolution != resolution or entry.side != side:
-            continue
-        if start_ns is not None and end_ns is not None:
-            if entry.start_ns is None or entry.end_ns is None:
-                continue
-            if entry.start_ns > start_ns or entry.end_ns < end_ns:
-                continue
-        matches.append(entry)
+        if _entry_matches_query(
+            entry,
+            venue=venue,
+            symbol=symbol,
+            resolution=resolution,
+            side=side,
+            start_ns=start_ns,
+            end_ns=end_ns,
+        ):
+            matches.append(entry)
     if not matches:
         return None
     # Current bitemporal revision: last matching row in scan order (revision-sorted).
     return matches[-1]
+
+
+def _entry_matches_query(
+    entry: CoverageEntry,
+    *,
+    venue: str,
+    symbol: str,
+    resolution: str,
+    side: str,
+    start_ns: int | None,
+    end_ns: int | None,
+) -> bool:
+    if entry.status != PRESENT:
+        return False
+    if entry.venue != venue or entry.symbol != symbol:
+        return False
+    if entry.resolution != resolution or entry.side != side:
+        return False
+    return _entry_covers_window(entry, start_ns, end_ns)
+
+
+def _entry_covers_window(entry: CoverageEntry, start_ns: int | None, end_ns: int | None) -> bool:
+    if start_ns is None or end_ns is None:
+        return True
+    if entry.start_ns is None or entry.end_ns is None:
+        return False
+    return entry.start_ns <= start_ns and entry.end_ns >= end_ns
 
 
 def _entry_from_row(row: Mapping[str, object]) -> CoverageEntry:
@@ -577,20 +661,26 @@ def _optional_ns(value: object, *, field: str) -> Result[int | None]:
     if isinstance(value, int):
         return Ok(value)
     if isinstance(value, str) and value.strip() != "":
-        token = value.strip()
-        if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
-            return Ok(int(token))
-        try:
-            if token.endswith("Z"):
-                token = token[:-1] + "+00:00"
-            parsed = datetime.fromisoformat(token)
-            if parsed.tzinfo is None:
-                parsed = parsed.replace(tzinfo=timezone.utc)
-            return Ok(int(parsed.timestamp() * 1_000_000_000))
-        except ValueError:
-            return invalid(
-                field,
-                f"{field} is int64 UTC-ns or an ISO-8601 timestamp",
-                given=repr(value),
-            )
+        parsed = _optional_ns_from_token(value.strip(), field=field, given=value)
+        if is_refusal(parsed):
+            return parsed
+        return Ok(parsed.value)
     return invalid(field, f"{field} is int64 UTC-ns or ISO-8601 when provided", given=repr(value))
+
+
+def _optional_ns_from_token(token: str, *, field: str, given: object) -> Result[int]:
+    if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
+        return Ok(int(token))
+    try:
+        if token.endswith("Z"):
+            token = token[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(token)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return Ok(int(parsed.timestamp() * 1_000_000_000))
+    except ValueError:
+        return invalid(
+            field,
+            f"{field} is int64 UTC-ns or an ISO-8601 timestamp",
+            given=repr(given),
+        )

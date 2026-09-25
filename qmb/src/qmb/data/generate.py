@@ -587,6 +587,22 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
     refuses a config that binds a replay clock to synthetic-tainted data
     (``invalid input``; world is provenance-derived, B-7 wins) (FM-3).
     """
+    body = _unwrap_generator_body(resources)
+    if is_refusal(body):
+        return body
+    identity = _resolve_generator_identity(body.value)
+    if is_refusal(identity):
+        return identity
+    window = _resolve_generator_window(body.value)
+    if is_refusal(window):
+        return window
+    extras = _resolve_generator_extras(body.value, identity.value[0], scale=window.value[0])
+    if is_refusal(extras):
+        return extras
+    return Ok(_finish_generator_config(body.value, identity.value, window.value, extras.value))
+
+
+def _unwrap_generator_body(resources: object) -> Result[Mapping[str, object]]:
     if not isinstance(resources, Mapping):
         return invalid(
             "resources",
@@ -599,21 +615,23 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
         outer_clock_refusal = _refuse_replay_clock_on_synthetic(body)
         if outer_clock_refusal is not None:
             return outer_clock_refusal
-
         merged: dict[str, object] = dict(cast("Mapping[str, object]", inner))
         for key in ("destination", "output_root", "calendar", "source_series"):
             if key in body and key not in merged:
                 merged[key] = body[key]
         body = merged
-
     clock_refusal = _refuse_replay_clock_on_synthetic(body)
     if clock_refusal is not None:
         return clock_refusal
+    return Ok(body)
 
+
+def _resolve_generator_identity(
+    body: Mapping[str, object],
+) -> Result[tuple[str, str, Instrument, tuple[str, ...]]]:
     process = _resolve_process(body.get("process"))
     if is_refusal(process):
         return process
-
     asset_class = clean_token(body.get("asset_class")) or ASSET_CLASS_FOREX_CFD
     if asset_class != ASSET_CLASS_FOREX_CFD:
         return unsupported(
@@ -622,16 +640,18 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
             given=asset_class,
             legal=[ASSET_CLASS_FOREX_CFD],
         )
-
     instrument = _resolve_instrument(body)
     if is_refusal(instrument):
         return instrument
-    venue_symbol = instrument.value
-
     events = _resolve_events(body, process.value, asset_class)
     if is_refusal(events):
         return events
+    return Ok((process.value, asset_class, instrument.value, events.value))
 
+
+def _resolve_generator_window(
+    body: Mapping[str, object],
+) -> Result[tuple[int, int, str, int, int, int]]:
     scale = _as_positive_int(body.get("scale"), "scale")
     if is_refusal(scale):
         return scale
@@ -657,11 +677,15 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
             start_ns=start.value,
             end_ns=end.value,
         )
+    return Ok((scale.value, tick.value, resolution, step.value, start.value, end.value))
 
-    source_dataset_id = _resolve_source_dataset_id(body, process.value)
+
+def _resolve_generator_extras(
+    body: Mapping[str, object], process: str, *, scale: int
+) -> Result[tuple[str, int, int, str, RoundingMode, Mapping[str, str]]]:
+    source_dataset_id = _resolve_source_dataset_id(body, process)
     if is_refusal(source_dataset_id):
         return source_dataset_id
-
     seed = _as_non_negative_int(body.get("seed", _DEFAULT_SEED), "seed")
     if is_refusal(seed):
         return seed
@@ -670,41 +694,57 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
     )
     if is_refusal(scenario_count):
         return scenario_count
-
-    claim = _resolve_claim_class(body.get("claim_class"), process.value)
+    claim = _resolve_claim_class(body.get("claim_class"), process)
     if is_refusal(claim):
         return claim
-
     rounding = _resolve_rounding(body.get("rounding_mode", body.get("rounding")))
     if is_refusal(rounding):
         return rounding
-
-    params = _resolve_process_params(body, process.value, scale=scale.value)
+    params = _resolve_process_params(body, process, scale=scale)
     if is_refusal(params):
         return params
+    return Ok(
+        (
+            source_dataset_id.value,
+            seed.value,
+            scenario_count.value,
+            claim.value,
+            rounding.value,
+            params.value,
+        )
+    )
 
-    config = ResolvedGeneratorConfig(
-        process=process.value,
+
+def _finish_generator_config(
+    body: Mapping[str, object],
+    identity: tuple[str, str, Instrument, tuple[str, ...]],
+    window: tuple[int, int, str, int, int, int],
+    extras: tuple[str, int, int, str, RoundingMode, Mapping[str, str]],
+) -> ResolvedGeneratorConfig:
+    process, asset_class, venue_symbol, events = identity
+    scale, tick_size, resolution, bar_step_ns, start_ns, end_ns = window
+    source_dataset_id, seed, scenario_count, claim, rounding, params = extras
+    return ResolvedGeneratorConfig(
+        process=process,
         asset_class=asset_class,
         venue=venue_symbol.venue.value,
         symbol=venue_symbol.symbol,
-        scale=scale.value,
-        tick_size=tick.value,
+        scale=scale,
+        tick_size=tick_size,
         resolution=resolution,
-        bar_step_ns=step.value,
-        start_ns=start.value,
-        end_ns=end.value,
+        bar_step_ns=bar_step_ns,
+        start_ns=start_ns,
+        end_ns=end_ns,
         calendar_rule_set=clean_token(body.get("calendar_rule_set", body.get("rule_set")))
         or "forex-17NY",
-        source_dataset_id=source_dataset_id.value,
-        seed=seed.value,
-        scenario_count=scenario_count.value,
-        claim_class=claim.value,
-        rounding_mode=rounding.value.value,
-        process_params=params.value,
-        events=events.value,
+        source_dataset_id=source_dataset_id,
+        seed=seed,
+        scenario_count=scenario_count,
+        claim_class=claim,
+        rounding_mode=rounding.value,
+        process_params=params,
+        events=events,
     )
-    return Ok(config)
 
 
 # --- the generation entry point ----------------------------------------------
@@ -738,79 +778,115 @@ def generate(
     resolved = resolve_generator_config(resources)
     if is_refusal(resolved):
         return resolved
-    config = resolved.value
     body: Mapping[str, object] = (
         cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
     )
+    produced = _produce_generation(
+        resolved.value,
+        calendar=calendar,
+        source_series=source_series,
+        output_root=output_root,
+        generated_at_ns=generated_at_ns,
+        resources=body,
+    )
+    if is_refusal(produced):
+        return produced
+    return Ok(produced.value)
 
+
+def _produce_generation(
+    config: ResolvedGeneratorConfig,
+    *,
+    calendar: MarketHoursCalendar | None,
+    source_series: object,
+    output_root: object,
+    generated_at_ns: int | None,
+    resources: Mapping[str, object],
+) -> Result[GenerateReceipt]:
     source_loaded = _resolve_source_series_with_lineage(
-        config, source_series=source_series, resources=body
+        config, source_series=source_series, resources=resources
     )
     if is_refusal(source_loaded):
         return source_loaded
     source_bars, source_scale_factor = source_loaded.value
-
-    grid = build_generation_grid(config, calendar=calendar, resources=body)
+    grid = build_generation_grid(config, calendar=calendar, resources=resources)
     if is_refusal(grid):
         return grid
-
     produced = run_generator_adapter(config, grid=grid.value, source_bars=source_bars)
     if is_refusal(produced):
         return produced
-    bars = produced.value
-
-    materialized = _materialize_config(config, output_root=output_root, resources=body)
+    materialized = _materialize_config(config, output_root=output_root, resources=resources)
     if is_refusal(materialized):
         return materialized
     run_id, artifact_path, written = materialized.value
-
-    artifact_fp = _artifact_fingerprint(run_id.value, bars)
+    artifact_fp = _artifact_fingerprint(run_id.value, produced.value)
     if is_refusal(artifact_fp):
         return artifact_fp
-
     tainted = _store_taint(
         config,
         run_id=run_id,
         generated_at_ns=generated_at_ns,
         output_root=output_root,
-        resources=body,
+        resources=resources,
     )
     if is_refusal(tainted):
         return tainted
-    partition, provenance_record, provenance_path, provenance_written = tainted.value
-
     return Ok(
-        GenerateReceipt(
-            command="generate",
-            process=config.process,
-            venue=config.venue,
-            symbol=config.symbol,
-            scale=config.scale,
-            tick_size=config.tick_size,
-            resolution=config.resolution,
-            world=GENERATOR_WORLD,
-            origin=SYNTHETIC_ORIGIN,
-            claim_class=config.claim_class,
-            source_dataset_id=config.source_dataset_id,
-            config_fingerprint=run_id.value,
-            config_artifact_path=artifact_path,
-            config_artifact_written=written,
-            store_partition=partition,
-            store_provenance=provenance_record,
-            store_provenance_path=provenance_path,
-            store_provenance_written=provenance_written,
-            bar_count=len(bars),
-            start_ns=config.start_ns,
-            end_ns=config.end_ns,
-            seed=config.seed,
-            scenario_count=config.scenario_count,
+        _generation_receipt(
+            config,
+            bars=produced.value,
+            run_id=run_id,
+            artifact_path=artifact_path,
+            written=written,
+            artifact_fp=artifact_fp.value,
+            tainted=tainted.value,
             source_scale_factor=source_scale_factor,
-            rng_family=RNG_FAMILY,
-            rng_algorithm=RNG_ALGORITHM,
-            rng_version=RNG_VERSION,
-            artifact_fingerprint=artifact_fp.value.value,
-            bars=bars,
         )
+    )
+
+
+def _generation_receipt(
+    config: ResolvedGeneratorConfig,
+    *,
+    bars: tuple[SyntheticBar, ...],
+    run_id: Fingerprint,
+    artifact_path: str,
+    written: bool,
+    artifact_fp: Fingerprint,
+    tainted: tuple[str, dict[str, object], str, bool],
+    source_scale_factor: int,
+) -> GenerateReceipt:
+    partition, provenance_record, provenance_path, provenance_written = tainted
+    return GenerateReceipt(
+        command="generate",
+        process=config.process,
+        venue=config.venue,
+        symbol=config.symbol,
+        scale=config.scale,
+        tick_size=config.tick_size,
+        resolution=config.resolution,
+        world=GENERATOR_WORLD,
+        origin=SYNTHETIC_ORIGIN,
+        claim_class=config.claim_class,
+        source_dataset_id=config.source_dataset_id,
+        config_fingerprint=run_id.value,
+        config_artifact_path=artifact_path,
+        config_artifact_written=written,
+        store_partition=partition,
+        store_provenance=provenance_record,
+        store_provenance_path=provenance_path,
+        store_provenance_written=provenance_written,
+        bar_count=len(bars),
+        start_ns=config.start_ns,
+        end_ns=config.end_ns,
+        seed=config.seed,
+        scenario_count=config.scenario_count,
+        source_scale_factor=source_scale_factor,
+        rng_family=RNG_FAMILY,
+        rng_algorithm=RNG_ALGORITHM,
+        rng_version=RNG_VERSION,
+        artifact_fingerprint=artifact_fp.value,
+        bars=bars,
     )
 
 
@@ -1291,39 +1367,55 @@ def _draw_gbm(
     anchor = float(seed_price) / scale_div
     draws: list[_Draw] = []
     for _ in range(count):
-        log_return = rng.gauss(mu, sigma)
-        try:
-            stepped = anchor * math.exp(log_return)
-        except OverflowError:
-            stepped = math.inf
-        if not math.isfinite(stepped):
-            return invalid(
-                "volatility",
-                "the GBM path diverged to a non-finite price; lower the volatility",
-                volatility=config.process_params.get("volatility"),
-            )
-        close = convert.price(stepped)
-        if is_refusal(close):
-            return close
-        try:
-            anchor = float(close.value) / scale_div
-        except OverflowError:
-            # A finite but astronomically large price whose scaled integer exceeds the
-            # float-representable money path is a diverged GBM path — a typed refusal, the
-            # same category as a non-finite step, never an uncaught crash (R6, R8).
-            return invalid(
-                "volatility",
-                "the GBM path diverged beyond the representable price range; lower the volatility",
-                volatility=config.process_params.get("volatility"),
-            )
-        hi_ext = convert.offset(abs(rng.gauss(0.0, sigma / 2.0)) * anchor)
-        if is_refusal(hi_ext):
-            return hi_ext
-        lo_ext = convert.offset(abs(rng.gauss(0.0, sigma / 2.0)) * anchor)
-        if is_refusal(lo_ext):
-            return lo_ext
-        draws.append(_Draw(close=close.value, high_ext=hi_ext.value, low_ext=lo_ext.value))
+        stepped = _gbm_step(config, rng, convert, anchor, mu, sigma, scale_div)
+        if is_refusal(stepped):
+            return stepped
+        draw, anchor = stepped.value
+        draws.append(draw)
     return Ok(tuple(draws))
+
+
+def _gbm_step(
+    config: ResolvedGeneratorConfig,
+    rng: PinnedRng,
+    convert: _FloatToScaledInt,
+    anchor: float,
+    mu: float,
+    sigma: float,
+    scale_div: float,
+) -> Result[tuple[_Draw, float]]:
+    log_return = rng.gauss(mu, sigma)
+    try:
+        next_price = anchor * math.exp(log_return)
+    except OverflowError:
+        next_price = math.inf
+    if not math.isfinite(next_price):
+        return invalid(
+            "volatility",
+            "the GBM path diverged to a non-finite price; lower the volatility",
+            volatility=config.process_params.get("volatility"),
+        )
+    close = convert.price(next_price)
+    if is_refusal(close):
+        return close
+    try:
+        next_anchor = float(close.value) / scale_div
+    except OverflowError:
+        # A finite but astronomically large price whose scaled integer exceeds the
+        # float-representable money path is a diverged GBM path — a typed refusal, the
+        # same category as a non-finite step, never an uncaught crash (R6, R8).
+        return invalid(
+            "volatility",
+            "the GBM path diverged beyond the representable price range; lower the volatility",
+            volatility=config.process_params.get("volatility"),
+        )
+    hi_ext = convert.offset(abs(rng.gauss(0.0, sigma / 2.0)) * next_anchor)
+    if is_refusal(hi_ext):
+        return hi_ext
+    lo_ext = convert.offset(abs(rng.gauss(0.0, sigma / 2.0)) * next_anchor)
+    if is_refusal(lo_ext):
+        return lo_ext
+    return Ok((_Draw(close=close.value, high_ext=hi_ext.value, low_ext=lo_ext.value), next_anchor))
 
 
 # --- the named AD-7 float -> scaled-integer conversion boundary (R6) ---------
@@ -1787,49 +1879,46 @@ def _coerce_source_dataset_ref(body: Mapping[str, object]) -> Result[SourceDatas
     raw = body.get("source_dataset")
     if raw is None:
         # A bare id string is also accepted as the citation.
-        token = clean_token(body.get("source_dataset_id"))
-        if token is None:
-            return Ok(None)
-        if token == SOURCE_DATASET_NONE:
-            return Ok(None)
-        parts = token.split(":")
-        if len(parts) != 4 or any(part.strip() == "" for part in parts):
-            return invalid(
-                "source_dataset_id",
-                "a source-dataset id is venue:symbol:resolution:side",
-                given=token,
-            )
-        return Ok(SourceDatasetRef(parts[0], parts[1], parts[2], parts[3]))
+        return _source_dataset_from_token(
+            clean_token(body.get("source_dataset_id")), field="source_dataset_id"
+        )
     if isinstance(raw, str):
         if raw.strip() == "" or raw == SOURCE_DATASET_NONE:
             return Ok(None)
-        parts = raw.split(":")
-        if len(parts) != 4 or any(part.strip() == "" for part in parts):
-            return invalid(
-                "source_dataset", "a source-dataset id is venue:symbol:resolution:side", given=raw
-            )
-        return Ok(SourceDatasetRef(parts[0], parts[1], parts[2], parts[3]))
+        return _source_dataset_from_token(raw, field="source_dataset")
     if isinstance(raw, Mapping):
-        row = cast("Mapping[str, object]", raw)
-        venue = clean_token(row.get("venue"))
-        symbol = clean_token(row.get("symbol"))
-        resolution = clean_token(row.get("resolution"))
-        side = clean_token(row.get("side"))
-        if None in (venue, symbol, resolution, side):
-            return invalid(
-                "source_dataset",
-                "a source-dataset citation names venue, symbol, resolution, and side",
-                given=repr(row),
-            )
-        return Ok(
-            SourceDatasetRef(
-                cast("str", venue),
-                cast("str", symbol),
-                cast("str", resolution),
-                cast("str", side),
-            )
-        )
+        return _source_dataset_from_mapping(cast("Mapping[str, object]", raw))
     return invalid("source_dataset", "a source-dataset citation is a string id or a mapping")
+
+
+def _source_dataset_from_token(token: str | None, *, field: str) -> Result[SourceDatasetRef | None]:
+    if token is None or token == SOURCE_DATASET_NONE:
+        return Ok(None)
+    parts = token.split(":")
+    if len(parts) != 4 or any(part.strip() == "" for part in parts):
+        return invalid(field, "a source-dataset id is venue:symbol:resolution:side", given=token)
+    return Ok(SourceDatasetRef(parts[0], parts[1], parts[2], parts[3]))
+
+
+def _source_dataset_from_mapping(row: Mapping[str, object]) -> Result[SourceDatasetRef | None]:
+    venue = clean_token(row.get("venue"))
+    symbol = clean_token(row.get("symbol"))
+    resolution = clean_token(row.get("resolution"))
+    side = clean_token(row.get("side"))
+    if None in (venue, symbol, resolution, side):
+        return invalid(
+            "source_dataset",
+            "a source-dataset citation names venue, symbol, resolution, and side",
+            given=repr(row),
+        )
+    return Ok(
+        SourceDatasetRef(
+            cast("str", venue),
+            cast("str", symbol),
+            cast("str", resolution),
+            cast("str", side),
+        )
+    )
 
 
 def _resolve_claim_class(value: object, process: str) -> Result[str]:
@@ -1876,6 +1965,20 @@ def _resolve_process_params(
     body: Mapping[str, object], process: str, *, scale: int
 ) -> Result[Mapping[str, str]]:
     _ = scale
+    supplied = _supplied_process_params(body)
+    missing = _missing_required_param(process, supplied)
+    if missing is not None:
+        return missing
+    if process == BLOCK_BOOTSTRAP:
+        return _block_bootstrap_params(supplied)
+    if process == GAUSSIAN_NOISE:
+        return _gaussian_noise_params(supplied)
+    if process == GBM:
+        return _gbm_params(supplied)
+    return Ok(MappingProxyType({}))
+
+
+def _supplied_process_params(body: Mapping[str, object]) -> dict[str, object]:
     raw = body.get("process_params")
     supplied: dict[str, object] = {}
     if isinstance(raw, Mapping):
@@ -1884,8 +1987,10 @@ def _resolve_process_params(
     for key in ("block_length", "sigma", "seed_price", "volatility", "drift"):
         if key in body and key not in supplied:
             supplied[key] = body[key]
+    return supplied
 
-    params: dict[str, str] = {}
+
+def _missing_required_param(process: str, supplied: Mapping[str, object]) -> TypedRefusal | None:
     for key in _PROCESS_REQUIRED_PARAMS[process]:
         if key not in supplied:
             return invalid(
@@ -1895,42 +2000,52 @@ def _resolve_process_params(
                 process=process,
                 missing=key,
             )
-    if process == BLOCK_BOOTSTRAP:
-        block = _as_positive_int(supplied.get("block_length"), "block_length")
-        if is_refusal(block):
-            return block
-        params["block_length"] = str(block.value)
-    elif process == GAUSSIAN_NOISE:
-        sigma = _fraction_token(supplied.get("sigma"), "sigma")
-        if is_refusal(sigma):
-            return sigma
-        if sigma.value <= 0:
-            return invalid(
-                "sigma",
-                "the gaussian-noise sigma is a positive decimal",
-                given=repr(supplied.get("sigma")),
-            )
-        params["sigma"] = _decimal_token(supplied.get("sigma"))
-    elif process == GBM:
-        seed_price = _as_positive_int(supplied.get("seed_price"), "seed_price")
-        if is_refusal(seed_price):
-            return seed_price
-        params["seed_price"] = str(seed_price.value)
-        volatility = _fraction_token(supplied.get("volatility"), "volatility")
-        if is_refusal(volatility):
-            return volatility
-        if volatility.value <= 0:
-            return invalid(
-                "volatility",
-                "the gbm volatility is a positive decimal",
-                given=repr(supplied.get("volatility")),
-            )
-        params["volatility"] = _decimal_token(supplied.get("volatility"))
-        if "drift" in supplied:
-            drift = _fraction_token(supplied.get("drift"), "drift")
-            if is_refusal(drift):
-                return drift
-            params["drift"] = _decimal_token(supplied.get("drift"))
+    return None
+
+
+def _block_bootstrap_params(supplied: Mapping[str, object]) -> Result[Mapping[str, str]]:
+    block = _as_positive_int(supplied.get("block_length"), "block_length")
+    if is_refusal(block):
+        return block
+    return Ok(MappingProxyType({"block_length": str(block.value)}))
+
+
+def _gaussian_noise_params(supplied: Mapping[str, object]) -> Result[Mapping[str, str]]:
+    sigma = _fraction_token(supplied.get("sigma"), "sigma")
+    if is_refusal(sigma):
+        return sigma
+    if sigma.value <= 0:
+        return invalid(
+            "sigma",
+            "the gaussian-noise sigma is a positive decimal",
+            given=repr(supplied.get("sigma")),
+        )
+    return Ok(MappingProxyType({"sigma": _decimal_token(supplied.get("sigma"))}))
+
+
+def _gbm_params(supplied: Mapping[str, object]) -> Result[Mapping[str, str]]:
+    seed_price = _as_positive_int(supplied.get("seed_price"), "seed_price")
+    if is_refusal(seed_price):
+        return seed_price
+    volatility = _fraction_token(supplied.get("volatility"), "volatility")
+    if is_refusal(volatility):
+        return volatility
+    if volatility.value <= 0:
+        return invalid(
+            "volatility",
+            "the gbm volatility is a positive decimal",
+            given=repr(supplied.get("volatility")),
+        )
+    params: dict[str, str] = {
+        "seed_price": str(seed_price.value),
+        "volatility": _decimal_token(supplied.get("volatility")),
+    }
+    if "drift" not in supplied:
+        return Ok(MappingProxyType(params))
+    drift = _fraction_token(supplied.get("drift"), "drift")
+    if is_refusal(drift):
+        return drift
+    params["drift"] = _decimal_token(supplied.get("drift"))
     return Ok(MappingProxyType(params))
 
 
