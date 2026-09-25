@@ -92,8 +92,17 @@ MULTI_CONTRIBUTION_POINTS: Final[frozenset[str]] = frozenset(
 )
 
 # Retired / undeclared points that must never register (DEC-0300; GAP-0081).
+# ``view`` / ``copilot`` / ``copilot_profile`` are pack SDK request surfaces,
+# never contribution points (DEC-0452; Story 60.1).
 RETIRED_CONTRIBUTION_POINTS: Final[frozenset[str]] = frozenset(
-    {"ui_view", "command", "mission_template"}
+    {
+        "ui_view",
+        "command",
+        "mission_template",
+        "view",
+        "copilot",
+        "copilot_profile",
+    }
 )
 
 # Handle kinds are qma-core-owned; a plugin may never contribute one (AD-14).

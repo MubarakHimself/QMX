@@ -637,6 +637,7 @@ class PackLifecycleFixture:
     )
     _generation: int = field(default=0, init=False)
     _issued_scan_signatures: set[str] = field(default_factory=set[str], init=False)
+    _grant_ids: list[str] = field(default_factory=list[str], init=False)
 
     def __post_init__(self) -> None:
         if self.pins is None:
@@ -675,6 +676,10 @@ class PackLifecycleFixture:
 
     def pack(self, package_id: str) -> PackRecord | None:
         return self._packs.get(package_id)
+
+    def grant_ids(self) -> tuple[str, ...]:
+        """Session GrantRecord ids. Install/enable never append here (Story 60.1)."""
+        return tuple(self._grant_ids)
 
     def composition_modes(self) -> tuple[str, ...]:
         return COMPOSITION_MODES

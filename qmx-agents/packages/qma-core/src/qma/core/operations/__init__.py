@@ -13,6 +13,8 @@ from qma.core.operations.catalog import (
     public_operation_descriptors,
 )
 from qma.core.operations.descriptor import (
+    APPLICATION_LAYER_OP_OWNERS,
+    BROKER_VENUE_OP_OWNER,
     ERROR_REFUSAL_FAMILY,
     FORBIDDEN_DESCRIPTOR_FIELDS,
     OPERATION_DESCRIPTOR_CONTRACT,
@@ -22,6 +24,8 @@ from qma.core.operations.descriptor import (
     OPERATION_DESCRIPTOR_OWNER,
     OPERATION_DESCRIPTOR_WIRED_AT_INSPECT_SHA,
     OPERATOR_CLI_ADAPTER,
+    QMA_IS_HOST_RUNTIME,
+    QMF_IS_APPLICATION_LAYER_OP_OWNER,
     REQUIRED_REFUSAL_CODES,
     ErrorRefusalShape,
     OperationConfiguration,
@@ -57,6 +61,8 @@ from qma.core.operations.effects import (
 )
 
 __all__ = [
+    "APPLICATION_LAYER_OP_OWNERS",
+    "BROKER_VENUE_OP_OWNER",
     "EFFECT_RETRY_BY_CLASS",
     "ERROR_REFUSAL_FAMILY",
     "FORBIDDEN_DESCRIPTOR_FIELDS",
@@ -70,7 +76,9 @@ __all__ = [
     "OPERATOR_CLI_ADAPTER",
     "OPERATOR_CLI_ADAPTERS",
     "PUBLIC_OPERATION_PAYLOADS",
+    "QMA_IS_HOST_RUNTIME",
     "QMA_OPERATOR_CLI",
+    "QMF_IS_APPLICATION_LAYER_OP_OWNER",
     "QMN_OPERATOR_CLI",
     "RECONCILE_POLICIES",
     "REQUIRED_REFUSAL_CODES",

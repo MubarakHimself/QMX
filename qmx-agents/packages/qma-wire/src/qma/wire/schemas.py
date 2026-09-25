@@ -56,6 +56,7 @@ SCHEMA_FILES: Final[dict[str, str]] = {
     "federated_hit": "federated_hit.v1.schema.json",
     "contribution_pin": "contribution_pin.v1.schema.json",
     "contribution_listing": "contribution_listing.v1.schema.json",
+    "copilot_profile": "copilot_profile.v1.schema.json",
     "view_presentation": "view_presentation.v1.schema.json",
     "invocation_envelope": "invocation_envelope.v1.schema.json",
     "grant_record": "grant_record.v1.schema.json",

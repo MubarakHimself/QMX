@@ -68,7 +68,9 @@ if TYPE_CHECKING:
     from qma.daemon.journal.authoritative import AuthoritativeJournal
 
 __all__ = [
+    "ENABLE_AFTER_VALIDATE_MINTS_GRANT_RECORD",
     "FILE_WATCHER_ENABLED",
+    "INSTALL_MINTS_GRANT_RECORD",
     "LOAD_PHASES",
     "LoadedPlugin",
     "PluginActivator",
@@ -85,6 +87,9 @@ PluginActivator = Callable[[PluginContext], None]
 
 # Explicit-command only — never a file watcher or reactive remount (AD-21).
 FILE_WATCHER_ENABLED: Final[bool] = False
+# Story 60.1 — installing / enabling after validate is not granting.
+INSTALL_MINTS_GRANT_RECORD: Final[bool] = False
+ENABLE_AFTER_VALIDATE_MINTS_GRANT_RECORD: Final[bool] = False
 
 LOAD_PHASES: Final[tuple[str, ...]] = (
     "manifest_validation",
@@ -271,6 +276,8 @@ class LoadedPlugin:
     phases_completed: tuple[str, ...] = ()
     migration_report: PluginMigrationReport | None = None
     data_intact: bool = True
+    # Install / enable after validate never mint GrantRecord (Story 60.1).
+    grant_record_ids: tuple[str, ...] = ()
 
 
 @dataclass
@@ -424,7 +431,7 @@ class PluginLoader:
 
     def _check_permissions(self, manifest: PluginManifest) -> Result[frozenset[str]]:
         return check_plugin_permissions_at_load(
-            manifest.permissions,
+            manifest.requested_capabilities,
             allowed=self.permission_allowlist,
             plugin_id=manifest.id,
         )

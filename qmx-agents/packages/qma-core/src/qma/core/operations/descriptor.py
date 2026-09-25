@@ -28,6 +28,8 @@ from qmf.core import Ok, Result
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "APPLICATION_LAYER_OP_OWNERS",
+    "BROKER_VENUE_OP_OWNER",
     "ERROR_REFUSAL_FAMILY",
     "FORBIDDEN_DESCRIPTOR_FIELDS",
     "FORBIDDEN_OPERATOR_CLI_ADAPTERS",
@@ -38,6 +40,8 @@ __all__ = [
     "OPERATION_DESCRIPTOR_OWNER",
     "OPERATION_DESCRIPTOR_WIRED_AT_INSPECT_SHA",
     "OPERATOR_CLI_ADAPTER",
+    "QMA_IS_HOST_RUNTIME",
+    "QMF_IS_APPLICATION_LAYER_OP_OWNER",
     "REQUIRED_REFUSAL_CODES",
     "ErrorRefusalShape",
     "OperationConfiguration",
@@ -54,6 +58,22 @@ OPERATION_DESCRIPTOR_CONTRACT: Final[str] = "CONTRACTS §1"
 OPERATION_DESCRIPTOR_INSPECT_SHAS: Final[tuple[str, ...]] = ("270e992", "580b49a")
 OPERATION_DESCRIPTOR_WIRED_AT_INSPECT_SHA: Final[bool] = False
 OPERATION_DESCRIPTOR_NEW_CT_MINTED: Final[bool] = False
+# Owner of an op_id is the COMP on the descriptor among QMA/QMB/QML/QMN
+# (DEC-0453; FR-PG-05). QMA remains host/runtime; QMF is the toolbox.
+APPLICATION_LAYER_OP_OWNERS: Final[frozenset[str]] = frozenset(
+    {
+        "COMP-QMA",
+        "COMP-QMA-CORE",
+        "COMP-QMA-WIRE",
+        "COMP-QMA-DAEMON",
+        "COMP-QMB",
+        "COMP-QML",
+        "COMP-QMN",
+    }
+)
+QMA_IS_HOST_RUNTIME: Final[bool] = True
+QMF_IS_APPLICATION_LAYER_OP_OWNER: Final[bool] = False
+BROKER_VENUE_OP_OWNER: Final[str] = "COMP-QMN"
 ERROR_REFUSAL_FAMILY: Final[str] = "CT-04"
 OPERATOR_CLI_ADAPTER: Final[str] = DoorAdapter.QMB_CLI.value
 OPERATOR_CLI_OWNERS: Final[frozenset[str]] = frozenset({"COMP-QMB"})
@@ -321,6 +341,22 @@ def parse_operation_descriptor(payload: object) -> Result[OperationDescriptor]:
         return owner
     if not owner.value.startswith("COMP-"):
         return _invalid("owner", "owner must be a COMP-* id", given=owner.value)
+    if owner.value.startswith("COMP-QMF"):
+        return _policy(
+            "owner",
+            "QMF remains the toolbox, not an application-layer owner "
+            "(DEC-0453; FR-PG-05; FR-PG-06)",
+            given=owner.value,
+            qmf_is_application_layer_owner=False,
+            broker_venue_owner=BROKER_VENUE_OP_OWNER,
+        )
+    if owner.value not in APPLICATION_LAYER_OP_OWNERS:
+        return _invalid(
+            "owner",
+            "owner is the COMP on the descriptor among QMA/QMB/QML/QMN (DEC-0453; FR-PG-05)",
+            given=owner.value,
+            legal=sorted(APPLICATION_LAYER_OP_OWNERS),
+        )
     version_raw = body["version"]
     if not isinstance(version_raw, int) or isinstance(version_raw, bool) or version_raw < 1:
         return _invalid("version", "version must be a positive integer", given=repr(version_raw))

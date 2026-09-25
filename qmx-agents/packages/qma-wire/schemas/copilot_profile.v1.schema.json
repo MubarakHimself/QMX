@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/copilot_profile.v1.schema.json",
+  "title": "QMA pack copilot_profile request blob (CT-40 additive; Story 60.1)",
+  "description": "Optional pack copilot_profile is a request blob (DEC-0452). It is not a contribution point and not a grant. Suggested ops are display hints {op_id, op_version, qualified_id}. Absence is valid. No new CT number — do not mint CT-52. Inspect SHA 34c148b did not have this field.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "prompts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "suggested_ops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op_id", "op_version", "qualified_id"],
+        "properties": {
+          "op_id": { "type": "string", "minLength": 1 },
+          "op_version": { "type": "integer", "minimum": 1 },
+          "qualified_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

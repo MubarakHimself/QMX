@@ -12,6 +12,14 @@ from qma.core.plugins.contributes import (
     PackContributeError,
     parse_pack_contributes,
 )
+from qma.core.plugins.pack_sdk import (
+    CopilotProfile,
+    PackSdkError,
+    PackViewRequest,
+    parse_optional_copilot_profile,
+    parse_pack_views,
+    parse_requested_capabilities,
+)
 from qma.core.ports.cardinality import (
     HANDLE_KIND_CONTRIBUTION_POINTS,
     PORT_CONTRACT_BY_NAME,
@@ -26,8 +34,10 @@ __all__ = [
     "EMPTY_COLLECTION_KEYS",
     "OPERATOR_ASSIGNED_MANIFEST_FIELDS",
     "ContributionDecl",
+    "CopilotProfile",
     "ManifestError",
     "PackContribute",
+    "PackViewRequest",
     "PluginManifest",
     "PluginRosterEntry",
     "RollbackMode",
@@ -39,11 +49,14 @@ __all__ = [
 RollbackMode = Literal["forward_only"]
 
 # Declared collections are empty tuples when unused — never null (CT-42; FR-Q68).
+# ``requested_capabilities`` is the AMEND/alias of ``permissions`` (one field).
+# ``views`` holds optional view:* wire DTO requests, never contribution points.
 EMPTY_COLLECTION_KEYS: Final[tuple[str, ...]] = (
     "dependencies",
     "contributions",
     "permissions",
     "migrations",
+    "views",
 )
 
 # Operator-assigned at a human-gate command — refused on the load-time manifest.
@@ -71,7 +84,7 @@ class ContributionDecl:
 
 @dataclass(frozen=True, slots=True)
 class PluginManifest:
-    """Declarative plugin package identity and contribution surface."""
+    """Declarative plugin package identity and pack SDK request surface."""
 
     id: str
     version: str
@@ -84,6 +97,18 @@ class PluginManifest:
     migrations: tuple[Mapping[str, object], ...] = ()
     rollback: RollbackMode | None = None
     contributes: tuple[PackContribute, ...] = ()
+    copilot_profile: CopilotProfile | None = None
+    views: tuple[PackViewRequest, ...] = ()
+
+    @property
+    def requested_capabilities(self) -> tuple[str, ...]:
+        """Kit AMEND/alias of ``permissions`` — one request field, not a grant."""
+        return self.permissions
+
+    @property
+    def is_headless(self) -> bool:
+        """True when the pack omits ``view:*`` and omits ``copilot_profile``."""
+        return self.copilot_profile is None and not self.views
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,24 +243,24 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
 
     deps_raw = raw.get("dependencies", ())
     contribs_raw = raw.get("contributions", ())
-    perms_raw = raw.get("permissions", ())
     migrations_raw = raw.get("migrations", ())
     if not isinstance(deps_raw, Sequence) or isinstance(deps_raw, (str, bytes)):
         raise ManifestError("dependencies must be a sequence")
     if not isinstance(contribs_raw, Sequence) or isinstance(contribs_raw, (str, bytes)):
         raise ManifestError("contributions must be a sequence")
-    if not isinstance(perms_raw, Sequence) or isinstance(perms_raw, (str, bytes)):
-        raise ManifestError("permissions must be a sequence")
     if not isinstance(migrations_raw, Sequence) or isinstance(migrations_raw, (str, bytes)):
         raise ManifestError("migrations must be a sequence")
 
+    try:
+        permissions = parse_requested_capabilities(raw)
+    except PackSdkError as exc:
+        raise ManifestError(str(exc)) from exc
+
     deps_items = cast(Sequence[object], deps_raw)
-    perms_items = cast(Sequence[object], perms_raw)
     contrib_items = cast(Sequence[object], contribs_raw)
     migration_items = cast(Sequence[object], migrations_raw)
 
     dependencies = tuple(str(item) for item in deps_items)
-    permissions = tuple(str(item) for item in perms_items)
     contributions: list[ContributionDecl] = []
     seen_multi: set[str] = set()
     for item in contrib_items:
@@ -277,7 +302,9 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
             plugin_id=plugin_id,
             contributions=tuple(contributions),
         )
-    except PackContributeError as exc:
+        copilot_profile = parse_optional_copilot_profile(raw)
+        views = parse_pack_views(raw)
+    except (PackContributeError, PackSdkError) as exc:
         raise ManifestError(str(exc)) from exc
 
     return PluginManifest(
@@ -292,6 +319,8 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
         migrations=tuple(migrations),
         rollback=rollback,
         contributes=contributes,
+        copilot_profile=copilot_profile,
+        views=views,
     )
 
 

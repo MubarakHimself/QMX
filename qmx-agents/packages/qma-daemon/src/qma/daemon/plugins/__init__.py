@@ -48,7 +48,9 @@ from qma.daemon.plugins.load_refusal import (
     runtime_load_refusal,
 )
 from qma.daemon.plugins.loader import (
+    ENABLE_AFTER_VALIDATE_MINTS_GRANT_RECORD,
     FILE_WATCHER_ENABLED,
+    INSTALL_MINTS_GRANT_RECORD,
     LOAD_PHASES,
     LoadedPlugin,
     PluginActivator,
@@ -105,6 +107,7 @@ __all__ = [
     "DAEMON_PLUGIN_RENDERS",
     "DESK_PLUGIN_PACK_DESKS",
     "DESK_PLUGIN_PACK_IDS",
+    "ENABLE_AFTER_VALIDATE_MINTS_GRANT_RECORD",
     "EXCLUDED_CONTRIBUTION_POINTS",
     "EXPORTS_SECRETS_AUTHORIZES_EXPORT",
     "FILE_WATCHER_ENABLED",
@@ -114,6 +117,7 @@ __all__ = [
     "GAP_0081_STATUS",
     "GAP_0098_ID",
     "GAP_0098_STATUS",
+    "INSTALL_MINTS_GRANT_RECORD",
     "JOURNAL_CHECKPOINT_EVENT",
     "LOAD_PHASES",
     "MIGRATION_OWNER_DAEMON_CORE",

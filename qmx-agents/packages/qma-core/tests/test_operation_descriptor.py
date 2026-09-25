@@ -7,6 +7,8 @@ from typing import cast
 
 import pytest
 from qma.core.operations import (
+    APPLICATION_LAYER_OP_OWNERS,
+    BROKER_VENUE_OP_OWNER,
     ERROR_REFUSAL_FAMILY,
     FORBIDDEN_DESCRIPTOR_FIELDS,
     FORBIDDEN_OPERATOR_CLI_ADAPTERS,
@@ -19,7 +21,9 @@ from qma.core.operations import (
     OPERATOR_CLI_ADAPTER,
     OPERATOR_CLI_ADAPTERS,
     PUBLIC_OPERATION_PAYLOADS,
+    QMA_IS_HOST_RUNTIME,
     QMA_OPERATOR_CLI,
+    QMF_IS_APPLICATION_LAYER_OP_OWNER,
     QMN_OPERATOR_CLI,
     REQUIRED_REFUSAL_CODES,
     admit_operation_door,
@@ -414,3 +418,25 @@ def test_port_cardinality_is_not_operation_cardinality() -> None:
     assert {member.value for member in Cardinality} == {"singleton", "multi"}
     assert {member.value for member in OperationCardinality} == {"one", "many"}
     assert not set(Cardinality) & set(OperationCardinality)
+
+
+def test_op_owner_is_comp_among_qma_qmb_qml_qmn() -> None:
+    assert QMA_IS_HOST_RUNTIME is True
+    assert QMF_IS_APPLICATION_LAYER_OP_OWNER is False
+    assert BROKER_VENUE_OP_OWNER == "COMP-QMN"
+    owners = {item["owner"] for item in PUBLIC_OPERATION_PAYLOADS}
+    assert owners <= APPLICATION_LAYER_OP_OWNERS
+    assert "COMP-QMF" not in APPLICATION_LAYER_OP_OWNERS
+
+    toolbox = dict(_CONTRACTS_PROJECT)
+    toolbox["owner"] = "COMP-QMF-CORE"
+    refused_qmf = parse_operation_descriptor(toolbox)
+    assert is_refusal(refused_qmf)
+    assert refused_qmf.context["field"] == "owner"
+    assert refused_qmf.context["qmf_is_application_layer_owner"] is False
+
+    unknown = dict(_CONTRACTS_PROJECT)
+    unknown["owner"] = "COMP-OTHER"
+    refused_other = parse_operation_descriptor(unknown)
+    assert is_refusal(refused_other)
+    assert refused_other.context["field"] == "owner"

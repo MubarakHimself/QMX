@@ -123,6 +123,12 @@ def test_undeclared_ui_and_schemaless_contribution_rejected() -> None:
         validate_contribution_point("ui_view")
     with pytest.raises(PortError, match="undeclared or retired"):
         validate_contribution_point("command")
+    with pytest.raises(PortError, match="undeclared or retired"):
+        validate_contribution_point("view")
+    with pytest.raises(PortError, match="undeclared or retired"):
+        validate_contribution_point("copilot")
+    with pytest.raises(PortError, match="undeclared or retired"):
+        validate_contribution_point("copilot_profile")
     with pytest.raises(PortError, match="not one of the eight"):
         validate_contribution_point("invented_point")
     assert not has_qma_wire_schema("ui_view")

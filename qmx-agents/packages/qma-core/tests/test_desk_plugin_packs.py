@@ -53,6 +53,10 @@ def test_pack_manifests_parse_through_plugin_manifest() -> None:
         assert manifest.entrypoint == PACK_ENTRYPOINT
         assert manifest.dependencies == ()
         assert manifest.permissions == ()
+        assert manifest.requested_capabilities == ()
+        assert manifest.copilot_profile is None
+        assert manifest.views == ()
+        assert manifest.is_headless is True
         assert manifest.migrations == ()
         assert manifest.rollback is None
         assert manifest.contributions  # packs declare contributions, not a private path
