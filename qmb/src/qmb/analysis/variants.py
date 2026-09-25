@@ -228,12 +228,25 @@ def register_book_bms_variant(
     )
     if blocked is not None:
         return blocked
-    chosen = _one_definition(definition=definition, book=book, bms=bms, fragment=fragment)
-    if is_refusal(chosen):
-        return chosen
-    dummy = refuse_dummy_definition(chosen.value)
-    if dummy is not None:
-        return dummy
+    return _complete_book_bms_variant(
+        definition=definition,
+        book=book,
+        bms=bms,
+        fragment=fragment,
+        writer=writer,
+        created_at=created_at,
+        sequence=sequence,
+        origin=origin,
+        money_path_relevant=money_path_relevant,
+        approval_request=approval_request,
+        predecessor=predecessor,
+        ancestor=ancestor,
+    )
+
+
+def _require_variant_envelope(
+    writer: object, created_at: object, sequence: object
+) -> Result[tuple[WriterId, Instant, int]]:
     if not isinstance(writer, WriterId):
         return invalid(
             "writer",
@@ -255,9 +268,18 @@ def register_book_bms_variant(
             "the per-writer sequence is a non-negative int64 ordering key",
             given=repr(sequence),
         )
-    definition_fp = chosen.value.fingerprint()
-    if is_refusal(definition_fp):
-        return definition_fp
+    return Ok((writer, created_at, sequence))
+
+
+def _variant_money_path(
+    *,
+    origin: object,
+    money_path_relevant: object,
+    approval_request: object,
+    definition_fp: Fingerprint,
+    predecessor: object,
+    ancestor: object,
+) -> Result[tuple[str | None, bool, Mapping[str, object] | None]]:
     origin_token = _as_origin(origin)
     if isinstance(origin_token, TypedRefusal):
         return origin_token
@@ -272,15 +294,30 @@ def register_book_bms_variant(
         qma_emitted=qma_emitted,
         money_path_relevant=relevant,
         approval_request=request,
-        candidate_ref=definition_fp.value,
+        candidate_ref=definition_fp,
         predecessor=predecessor,
         ancestor=ancestor,
     )
     if gated is not None:
         return gated
-    kind = BOOK_RECORD_KIND if isinstance(chosen.value, BookDefinition) else BMS_RECORD_KIND
+    return Ok((origin_token, relevant, request))
+
+
+def _mint_variant_record(
+    definition: BookDefinition | BmsDefinition,
+    *,
+    definition_fp: Fingerprint,
+    origin_token: str | None,
+    relevant: bool,
+    request: Mapping[str, object] | None,
+    predecessor: object,
+    writer: WriterId,
+    sequence: int,
+    created_at: Instant,
+) -> Result[BookBmsVariant]:
+    kind = BOOK_RECORD_KIND if isinstance(definition, BookDefinition) else BMS_RECORD_KIND
     body = _record_body(
-        chosen.value,
+        definition,
         origin=origin_token,
         money_path_relevant=relevant,
         approval_request=request,
@@ -290,8 +327,8 @@ def register_book_bms_variant(
         return body
     minted = RegistrationRecord.try_create(
         kind,
-        chosen.value.contract_format_version,
-        (definition_fp.value,),
+        definition.contract_format_version,
+        (definition_fp,),
         body,
         writer,
         sequence,
@@ -303,12 +340,64 @@ def register_book_bms_variant(
         BookBmsVariant(
             kind=kind,
             contract=_CONTRACT_BY_KIND[kind],
-            definition_fp1=definition_fp.value,
+            definition_fp1=definition_fp,
             record=minted.value,
             origin=origin_token,
             money_path_relevant=relevant,
             approval_request=None if request is None else MappingProxyType(request),
         )
+    )
+
+
+def _complete_book_bms_variant(
+    *,
+    definition: object,
+    book: object,
+    bms: object,
+    fragment: object,
+    writer: object,
+    created_at: object,
+    sequence: object,
+    origin: object,
+    money_path_relevant: object,
+    approval_request: object,
+    predecessor: object,
+    ancestor: object,
+) -> Result[BookBmsVariant]:
+    chosen = _one_definition(definition=definition, book=book, bms=bms, fragment=fragment)
+    if is_refusal(chosen):
+        return chosen
+    dummy = refuse_dummy_definition(chosen.value)
+    if dummy is not None:
+        return dummy
+    envelope = _require_variant_envelope(writer, created_at, sequence)
+    if is_refusal(envelope):
+        return envelope
+    writer_id, instant, ordinal = envelope.value
+    definition_fp = chosen.value.fingerprint()
+    if is_refusal(definition_fp):
+        return definition_fp
+    money_path = _variant_money_path(
+        origin=origin,
+        money_path_relevant=money_path_relevant,
+        approval_request=approval_request,
+        definition_fp=definition_fp.value,
+        predecessor=predecessor,
+        ancestor=ancestor,
+    )
+    if is_refusal(money_path):
+        return money_path
+    origin_token, relevant, request = money_path.value
+    return _mint_variant_record(
+        chosen.value,
+        definition_fp=definition_fp.value,
+        origin_token=origin_token,
+        relevant=relevant,
+        request=request,
+        predecessor=predecessor,
+        writer=writer_id,
+        sequence=ordinal,
+        created_at=instant,
     )
 
 
@@ -361,33 +450,24 @@ def evaluate_book_bms_variant(
 
     Trade-list rescaling is refused as not Book/BMS truth (FR-W27, FR-W23).
     """
-    rescale_field = _requested_field(
-        {
-            "copied_trades": copied_trades,
-            "mm_simulator": mm_simulator,
-            "rescale": rescale,
-            "size_rescale": size_rescale,
-            "trade_list": trade_list,
-            "trade_list_rescale": trade_list_rescale,
-            "trades": trades,
-        },
-        _RESCALE_FIELDS,
+    blocked = _refuse_eval_rescale_or_patch(
+        extra=extra,
+        copied_trades=copied_trades,
+        mm_simulator=mm_simulator,
+        rescale=rescale,
+        size_rescale=size_rescale,
+        trade_list=trade_list,
+        trade_list_rescale=trade_list_rescale,
+        trades=trades,
+        overlay=overlay,
+        partial=partial,
+        patch=patch,
     )
-    if rescale_field is None:
-        rescale_field = next((key for key in extra if key in _RESCALE_FIELDS), None)
-    if rescale_field is not None:
-        return _refuse_rescale(rescale_field)
-    patch_field = _requested_field(
-        {"overlay": overlay, "partial": partial, "patch": patch},
-        ("overlay", "partial", "patch"),
-    )
-    if patch_field is not None:
-        return _refuse_patch(patch_field)
-    variant = _resolve_candidate(candidate=candidate, fp1=fp1, port=port)
-    if is_refusal(variant):
-        return variant
-    cited = _cite_in_config_or_layers(
-        variant.value,
+    if blocked is not None:
+        return blocked
+    cited = _cited_variant_layers(
+        candidate=candidate,
+        fp1=fp1,
         config=config,
         port=port,
         book_fragment=book_fragment,
@@ -446,6 +526,66 @@ def evaluate_book_bms_variant(
         sqlite=sqlite,
         database=database,
         daemon_sqlite=daemon_sqlite,
+    )
+
+
+def _refuse_eval_rescale_or_patch(
+    *,
+    extra: Mapping[str, object],
+    copied_trades: object,
+    mm_simulator: object,
+    rescale: object,
+    size_rescale: object,
+    trade_list: object,
+    trade_list_rescale: object,
+    trades: object,
+    overlay: object,
+    partial: object,
+    patch: object,
+) -> TypedRefusal | None:
+    rescale_field = _requested_field(
+        {
+            "copied_trades": copied_trades,
+            "mm_simulator": mm_simulator,
+            "rescale": rescale,
+            "size_rescale": size_rescale,
+            "trade_list": trade_list,
+            "trade_list_rescale": trade_list_rescale,
+            "trades": trades,
+        },
+        _RESCALE_FIELDS,
+    )
+    if rescale_field is None:
+        rescale_field = next((key for key in extra if key in _RESCALE_FIELDS), None)
+    if rescale_field is not None:
+        return _refuse_rescale(rescale_field)
+    patch_field = _requested_field(
+        {"overlay": overlay, "partial": partial, "patch": patch},
+        ("overlay", "partial", "patch"),
+    )
+    if patch_field is not None:
+        return _refuse_patch(patch_field)
+    return None
+
+
+def _cited_variant_layers(
+    *,
+    candidate: object,
+    fp1: object,
+    config: object,
+    port: object,
+    book_fragment: object,
+    bms_fragment: object,
+) -> Result[dict[str, object]]:
+    variant = _resolve_candidate(candidate=candidate, fp1=fp1, port=port)
+    if is_refusal(variant):
+        return variant
+    return _cite_in_config_or_layers(
+        variant.value,
+        config=config,
+        port=port,
+        book_fragment=book_fragment,
+        bms_fragment=bms_fragment,
     )
 
 
@@ -649,18 +789,47 @@ def _require_qma_money_path(
     return None
 
 
+def _diff_payload(request: Mapping[str, object]) -> Mapping[str, object]:
+    nested = request.get("payload")
+    if isinstance(nested, Mapping) and "fields" in nested:
+        return cast("Mapping[str, object]", nested)
+    diff = request.get("diff")
+    if isinstance(diff, Mapping) and "fields" in diff:
+        return cast("Mapping[str, object]", diff)
+    return request
+
+
+def _parse_diff_field(item: object, seen: set[str]) -> dict[str, object] | TypedRefusal:
+    if not isinstance(item, Mapping):
+        return invalid("fields", "each field-level diff entry is an object")
+    body = cast("Mapping[str, object]", item)
+    path = clean_token(body.get("path"))
+    if path is None or path not in MONEY_PATH_RELEVANT_FIELDS:
+        return invalid(
+            "path",
+            "field-level diff paths are exactly the money_path_relevant fields "
+            "risk, sizing, exit, protection, binding, priority",
+            given=repr(body.get("path")),
+        )
+    if path in seen:
+        return invalid("path", "field-level diff paths must be unique", path=path)
+    if "ancestor" not in body or body["ancestor"] is None:
+        return policy(
+            "ancestor",
+            "QMA never fills an unset money-path field; unset stays unset "
+            "(FR-W27, DEC-0274, Story 45.6 / FR-Q53)",
+            path=path,
+        )
+    seen.add(path)
+    return {"path": path, "ancestor": body["ancestor"], "proposed": body.get("proposed")}
+
+
 def _field_level_diff(
     request: Mapping[str, object],
     *,
     candidate_ref: Fingerprint,
 ) -> dict[str, object] | TypedRefusal:
-    payload = request
-    nested = request.get("payload")
-    if isinstance(nested, Mapping) and "fields" in nested:
-        payload = cast("Mapping[str, object]", nested)
-    diff = request.get("diff")
-    if isinstance(diff, Mapping) and "fields" in diff:
-        payload = cast("Mapping[str, object]", diff)
+    payload = _diff_payload(request)
     schema = clean_token(payload.get("schema"))
     if schema != MONEY_PATH_FIELD_DIFF_SCHEMA:
         return policy(
@@ -680,34 +849,10 @@ def _field_level_diff(
     parsed: list[dict[str, object]] = []
     seen: set[str] = set()
     for item in cast("Sequence[object]", fields):
-        if not isinstance(item, Mapping):
-            return invalid("fields", "each field-level diff entry is an object")
-        body = cast("Mapping[str, object]", item)
-        path = clean_token(body.get("path"))
-        if path is None or path not in MONEY_PATH_RELEVANT_FIELDS:
-            return invalid(
-                "path",
-                "field-level diff paths are exactly the money_path_relevant fields "
-                "risk, sizing, exit, protection, binding, priority",
-                given=repr(body.get("path")),
-            )
-        if path in seen:
-            return invalid("path", "field-level diff paths must be unique", path=path)
-        if "ancestor" not in body or body["ancestor"] is None:
-            return policy(
-                "ancestor",
-                "QMA never fills an unset money-path field; unset stays unset "
-                "(FR-W27, DEC-0274, Story 45.6 / FR-Q53)",
-                path=path,
-            )
-        seen.add(path)
-        parsed.append(
-            {
-                "path": path,
-                "ancestor": body["ancestor"],
-                "proposed": body.get("proposed"),
-            }
-        )
+        entry = _parse_diff_field(item, seen)
+        if isinstance(entry, TypedRefusal):
+            return entry
+        parsed.append(entry)
     if not parsed:
         return invalid(
             "fields",
@@ -996,6 +1141,48 @@ def _refuse_definition_abuses(
     shape_owner: object,
     zone: object,
 ) -> TypedRefusal | None:
+    patch_or_rescale = _refuse_patch_or_rescale(
+        extra=extra,
+        patch=patch,
+        overlay=overlay,
+        partial=partial,
+        delta=delta,
+        field_patch=field_patch,
+        partial_overlay=partial_overlay,
+        fragment=fragment,
+        trades=trades,
+        trade_list=trade_list,
+        copied_trades=copied_trades,
+        rescale=rescale,
+        size_rescale=size_rescale,
+        mm_simulator=mm_simulator,
+        trade_list_rescale=trade_list_rescale,
+    )
+    if patch_or_rescale is not None:
+        return patch_or_rescale
+    return _refuse_owner_mint_zone(
+        extra=extra, mint=mint, mint_into=mint_into, shape_owner=shape_owner, zone=zone
+    )
+
+
+def _refuse_patch_or_rescale(
+    *,
+    extra: Mapping[str, object],
+    patch: object,
+    overlay: object,
+    partial: object,
+    delta: object,
+    field_patch: object,
+    partial_overlay: object,
+    fragment: object,
+    trades: object,
+    trade_list: object,
+    copied_trades: object,
+    rescale: object,
+    size_rescale: object,
+    mm_simulator: object,
+    trade_list_rescale: object,
+) -> TypedRefusal | None:
     patch_field = _requested_field(
         {
             "delta": delta,
@@ -1029,6 +1216,17 @@ def _refuse_definition_abuses(
         rescale_field = next((key for key in extra if key in _RESCALE_FIELDS), None)
     if rescale_field is not None:
         return _refuse_rescale(rescale_field)
+    return None
+
+
+def _refuse_owner_mint_zone(
+    *,
+    extra: Mapping[str, object],
+    mint: object,
+    mint_into: object,
+    shape_owner: object,
+    zone: object,
+) -> TypedRefusal | None:
     owner = clean_token(shape_owner)
     if owner is not None and owner != BOOK_BMS_SHAPE_OWNER:
         return policy(
