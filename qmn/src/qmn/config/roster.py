@@ -365,46 +365,72 @@ def compose_roster_runtime(
     attribution, and blank protective reserve. Success seals WriterId stream
     names and connection pacer plans before use.
     """
+    parsed = _parse_roster_decls(
+        account_bindings=account_bindings,
+        sensing_only=sensing_only,
+        protective_reserve_capacity=protective_reserve_capacity,
+    )
+    if is_refusal(parsed):
+        return parsed
+    bindings, sensing, reserve = parsed.value
+    collided = _refuse_stream_collisions(bindings, sensing)
+    if is_refusal(collided):
+        return collided
+    netting = _prove_netting_attribution(bindings)
+    if is_refusal(netting):
+        return netting
+    plans = _compose_roster_plans(bindings, sensing, reserve)
+    if is_refusal(plans):
+        return plans
+    return _seal_roster_composition(bindings, sensing, plans.value)
+
+
+def _parse_roster_decls(
+    *,
+    account_bindings: object,
+    sensing_only: object,
+    protective_reserve_capacity: object,
+) -> Result[tuple[list[AccountBindingDecl], list[SensingOnlyDecl], int]]:
     if HAS_DEFAULT_VENUE_ACCOUNT_SINGLETON:  # pragma: no cover - pinned False
         return policy(
             "roster",
             "default venue/account singleton is refused; every key comes from the roster",
         )
-
     reserve = _as_non_negative_int(protective_reserve_capacity, "protective_reserve_capacity")
     if is_refusal(reserve):
         return reserve
-
     bindings_raw = _as_sequence(account_bindings, "account_bindings")
     if is_refusal(bindings_raw):
         return bindings_raw
     sensing_raw = _as_sequence(sensing_only, "sensing_only")
     if is_refusal(sensing_raw):
         return sensing_raw
-
     if not bindings_raw.value and not sensing_raw.value:
         return invalid(
             "roster",
             "roster must declare at least one account binding or sensing-only entry",
         )
-
     parsed_bindings: list[AccountBindingDecl] = []
     for index, raw in enumerate(bindings_raw.value):
         parsed = _parse_account_binding(raw, index=index)
         if is_refusal(parsed):
             return parsed
         parsed_bindings.append(parsed.value)
-
     parsed_sensing: list[SensingOnlyDecl] = []
     for index, raw in enumerate(sensing_raw.value):
         parsed = _parse_sensing_only(raw, index=index)
         if is_refusal(parsed):
             return parsed
         parsed_sensing.append(parsed.value)
+    return Ok((parsed_bindings, parsed_sensing, reserve.value))
 
-    # Duplicate operable (venue, account) rows refuse — one command stream each.
+
+def _refuse_stream_collisions(
+    bindings: Sequence[AccountBindingDecl],
+    sensing: Sequence[SensingOnlyDecl],
+) -> Result[None]:
     seen_streams: set[str] = set()
-    for binding in parsed_bindings:
+    for binding in bindings:
         key = f"{binding.venue_id}::{binding.account_id}"
         if key in seen_streams:
             return invalid(
@@ -413,11 +439,8 @@ def compose_roster_runtime(
                 stream=key,
             )
         seen_streams.add(key)
-
-    # Sensing-only may name the same account as a future live binding, but must
-    # not collide with an operable command stream already composed this epoch.
-    for sensing in parsed_sensing:
-        key = f"{sensing.venue_id}::{sensing.account_id}"
+    for row in sensing:
+        key = f"{row.venue_id}::{row.account_id}"
         if key in seen_streams:
             return policy(
                 "sensing_only",
@@ -426,119 +449,163 @@ def compose_roster_runtime(
                 "a second stream on the same (VenueId, account)",
                 stream=key,
             )
+    return Ok(None)
 
-    netting = _prove_netting_attribution(parsed_bindings)
-    if is_refusal(netting):
-        return netting
 
-    connections: dict[str, ConnectionRuntimeKey] = {}
-    pacers: dict[str, PacerBucketPlan] = {}
-    streams: list[CommandStreamPlan] = []
-    binding_keys: list[BindingRuntimeKey] = []
-    port_selections: dict[str, VenueClientSelection] = {}
-    sensing_plans: list[SensingOnlyPlan] = []
+@dataclass(frozen=True, slots=True)
+class _RosterPlans:
+    connections: dict[str, ConnectionRuntimeKey]
+    pacers: dict[str, PacerBucketPlan]
+    streams: list[CommandStreamPlan]
+    binding_keys: list[BindingRuntimeKey]
+    port_selections: dict[str, VenueClientSelection]
+    sensing_plans: list[SensingOnlyPlan]
 
-    for binding in parsed_bindings:
-        venue = VenueId.try_create(binding.venue_id)
-        if is_refusal(venue):
-            return venue
-        account = Account.try_create(binding.account_id, venue.value, binding.role)
-        if is_refusal(account):
-            return account
 
-        conn = ConnectionRuntimeKey(venue_id=binding.venue_id, environment=binding.environment)
-        connections[conn.token] = conn
-        if conn.token not in pacers:
-            pacers[conn.token] = PacerBucketPlan(
-                connection=conn,
-                throttle_scope=binding.throttle_scope,
-                protective_reserve_capacity=reserve.value,
-            )
-        elif pacers[conn.token].throttle_scope is not binding.throttle_scope:
-            return invalid(
-                "throttle_scope",
-                "all bindings on one (venue, environment) connection must declare "
-                "the same CT-18 throttle_scope",
-                connection=conn.token,
-            )
+def _compose_roster_plans(
+    bindings: Sequence[AccountBindingDecl],
+    sensing: Sequence[SensingOnlyDecl],
+    reserve: int,
+) -> Result[_RosterPlans]:
+    plans = _RosterPlans(
+        connections={},
+        pacers={},
+        streams=[],
+        binding_keys=[],
+        port_selections={},
+        sensing_plans=[],
+    )
+    for binding in bindings:
+        composed = _compose_one_binding(binding, reserve, plans)
+        if is_refusal(composed):
+            return composed
+    for row in sensing:
+        composed = _compose_one_sensing(row, plans)
+        if is_refusal(composed):
+            return composed
+    return Ok(plans)
 
-        selection = select_venue_client(binding.world, venue.value, binding.venue_client_kind)
-        if is_refusal(selection):
-            return selection
-        port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
-        port_selections[port_key] = selection.value
 
-        stream_key = CommandStreamRuntimeKey(
-            venue_id=binding.venue_id, account_id=binding.account_id
+def _compose_one_binding(
+    binding: AccountBindingDecl,
+    reserve: int,
+    plans: _RosterPlans,
+) -> Result[None]:
+    venue = VenueId.try_create(binding.venue_id)
+    if is_refusal(venue):
+        return venue
+    account = Account.try_create(binding.account_id, venue.value, binding.role)
+    if is_refusal(account):
+        return account
+    conn = ConnectionRuntimeKey(venue_id=binding.venue_id, environment=binding.environment)
+    plans.connections[conn.token] = conn
+    paced = _bind_pacer(conn, binding, reserve, plans.pacers)
+    if is_refusal(paced):
+        return paced
+    selection = select_venue_client(binding.world, venue.value, binding.venue_client_kind)
+    if is_refusal(selection):
+        return selection
+    port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
+    plans.port_selections[port_key] = selection.value
+    stream_key = CommandStreamRuntimeKey(venue_id=binding.venue_id, account_id=binding.account_id)
+    canonical = venue_command_stream(venue.value, account.value)
+    if canonical != stream_key.token:
+        return policy(
+            "command_stream",
+            "composed stream token must match venue_command_stream",
+            composed=stream_key.token,
+            canonical=canonical,
         )
-        canonical = venue_command_stream(venue.value, account.value)
-        if canonical != stream_key.token:
-            return policy(
-                "command_stream",
-                "composed stream token must match venue_command_stream",
-                composed=stream_key.token,
-                canonical=canonical,
-            )
-
-        binding_tuple: list[BindingRuntimeKey] = []
-        for book in binding.book_bindings:
-            key = BindingRuntimeKey(
-                book_instance_id=book.binding_id,
-                bms_instance_id=binding.bms_instance_id,
-                venue_id=binding.venue_id,
-                account_id=binding.account_id,
-                world=binding.world,
-            )
-            binding_tuple.append(key)
-            binding_keys.append(key)
-
-        streams.append(
-            CommandStreamPlan(
-                stream=stream_key,
-                connection=conn,
-                writer_role="command",
-                writer_stream=stream_key.token,
-                risk_writer_stream=f"risk:{stream_key.token}",
-                adapter_writer_stream=f"adapter:{stream_key.token}",
-                bindings=tuple(binding_tuple),
-                port_selection=selection.value,
-                pacer=pacers[conn.token],
-            )
+    binding_tuple: list[BindingRuntimeKey] = []
+    for book in binding.book_bindings:
+        key = BindingRuntimeKey(
+            book_instance_id=book.binding_id,
+            bms_instance_id=binding.bms_instance_id,
+            venue_id=binding.venue_id,
+            account_id=binding.account_id,
+            world=binding.world,
         )
-
-    for sensing in parsed_sensing:
-        venue = VenueId.try_create(sensing.venue_id)
-        if is_refusal(venue):
-            return venue
-        conn = ConnectionRuntimeKey(venue_id=sensing.venue_id, environment=sensing.environment)
-        connections[conn.token] = conn
-        selection = select_venue_client(sensing.world, venue.value, sensing.venue_client_kind)
-        if is_refusal(selection):
-            return selection
-        port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
-        port_selections[port_key] = selection.value
-        sensing_plans.append(
-            SensingOnlyPlan(
-                connection=conn,
-                venue_id=sensing.venue_id,
-                account_id=sensing.account_id,
-                credential_reference=sensing.credential_reference,
-                port_selection=selection.value,
-                opaque_metric_id=sensing.opaque_metric_id,
-            )
+        binding_tuple.append(key)
+        plans.binding_keys.append(key)
+    plans.streams.append(
+        CommandStreamPlan(
+            stream=stream_key,
+            connection=conn,
+            writer_role="command",
+            writer_stream=stream_key.token,
+            risk_writer_stream=f"risk:{stream_key.token}",
+            adapter_writer_stream=f"adapter:{stream_key.token}",
+            bindings=tuple(binding_tuple),
+            port_selection=selection.value,
+            pacer=plans.pacers[conn.token],
         )
+    )
+    return Ok(None)
 
+
+def _bind_pacer(
+    conn: ConnectionRuntimeKey,
+    binding: AccountBindingDecl,
+    reserve: int,
+    pacers: dict[str, PacerBucketPlan],
+) -> Result[None]:
+    if conn.token not in pacers:
+        pacers[conn.token] = PacerBucketPlan(
+            connection=conn,
+            throttle_scope=binding.throttle_scope,
+            protective_reserve_capacity=reserve,
+        )
+        return Ok(None)
+    if pacers[conn.token].throttle_scope is not binding.throttle_scope:
+        return invalid(
+            "throttle_scope",
+            "all bindings on one (venue, environment) connection must declare "
+            "the same CT-18 throttle_scope",
+            connection=conn.token,
+        )
+    return Ok(None)
+
+
+def _compose_one_sensing(row: SensingOnlyDecl, plans: _RosterPlans) -> Result[None]:
+    venue = VenueId.try_create(row.venue_id)
+    if is_refusal(venue):
+        return venue
+    conn = ConnectionRuntimeKey(venue_id=row.venue_id, environment=row.environment)
+    plans.connections[conn.token] = conn
+    selection = select_venue_client(row.world, venue.value, row.venue_client_kind)
+    if is_refusal(selection):
+        return selection
+    port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
+    plans.port_selections[port_key] = selection.value
+    plans.sensing_plans.append(
+        SensingOnlyPlan(
+            connection=conn,
+            venue_id=row.venue_id,
+            account_id=row.account_id,
+            credential_reference=row.credential_reference,
+            port_selection=selection.value,
+            opaque_metric_id=row.opaque_metric_id,
+        )
+    )
+    return Ok(None)
+
+
+def _seal_roster_composition(
+    bindings: Sequence[AccountBindingDecl],
+    sensing: Sequence[SensingOnlyDecl],
+    plans: _RosterPlans,
+) -> Result[RosterRuntimeComposition]:
     provisional = RosterRuntimeComposition(
-        account_bindings=tuple(parsed_bindings),
-        sensing_only=tuple(parsed_sensing),
-        connections=tuple(sorted(connections.values(), key=lambda c: c.token)),
-        command_streams=tuple(streams),
-        sensing_plans=tuple(sensing_plans),
-        binding_keys=tuple(binding_keys),
-        pacer_buckets=tuple(sorted(pacers.values(), key=lambda p: p.connection.token)),
+        account_bindings=tuple(bindings),
+        sensing_only=tuple(sensing),
+        connections=tuple(sorted(plans.connections.values(), key=lambda c: c.token)),
+        command_streams=tuple(plans.streams),
+        sensing_plans=tuple(plans.sensing_plans),
+        binding_keys=tuple(plans.binding_keys),
+        pacer_buckets=tuple(sorted(plans.pacers.values(), key=lambda p: p.connection.token)),
         port_selections=tuple(
             sorted(
-                port_selections.values(),
+                plans.port_selections.values(),
                 key=lambda s: (s.world.value, s.venue_id.value),
             )
         ),
@@ -619,99 +686,10 @@ def streams_independent(left: object, right: object) -> Result[bool]:
 
 def _parse_account_binding(raw: object, *, index: int) -> Result[AccountBindingDecl]:
     if not isinstance(raw, AccountBindingDecl):
-        if not isinstance(raw, Mapping):
-            return invalid(
-                "account_bindings",
-                "each account binding is an AccountBindingDecl or mapping",
-                index=index,
-                given=type(raw).__name__,
-            )
-        body = cast("Mapping[str, object]", raw)
-        venue_id = clean_token(body.get("venue_id"))
-        account_id = clean_token(body.get("account_id"))
-        role = _coerce_role(body.get("role"))
-        world = _coerce_world(body.get("world"))
-        environment = clean_token(body.get("environment"))
-        credential_reference = clean_token(body.get("credential_reference"))
-        credential_sharing = clean_token(body.get("credential_sharing"))
-        bms_fp = clean_token(body.get("bms_definition_fp1"))
-        bms_instance = clean_token(body.get("bms_instance_id"))
-        opaque = clean_token(body.get("opaque_metric_id"))
-        throttle = _coerce_throttle(body.get("throttle_scope"))
-        position = _coerce_position_model(body.get("position_model"))
-        if (
-            venue_id is None
-            or account_id is None
-            or role is None
-            or world is None
-            or environment is None
-            or credential_reference is None
-            or credential_sharing is None
-            or bms_fp is None
-            or bms_instance is None
-            or opaque is None
-            or throttle is None
-            or position is None
-        ):
-            return invalid(
-                "account_bindings",
-                "account binding requires venue_id, account_id, role, world, "
-                "environment, credential_reference, credential_sharing, "
-                "bms_definition_fp1, bms_instance_id, opaque_metric_id, "
-                "throttle_scope, and position_model",
-                index=index,
-            )
-        if environment not in _ENVIRONMENTS:
-            return invalid(
-                "environment",
-                "roster environment is demo | live",
-                index=index,
-                given=environment,
-            )
-        books_raw = body.get("book_bindings")
-        books = _parse_book_bindings(books_raw, index=index)
-        if is_refusal(books):
-            return books
-        carry = _parse_state_carry(body.get("state_carry"), index=index)
-        if is_refusal(carry):
-            return carry
-        carries_sig = body.get("carries_ledger_signature")
-        sig_token: str | None
-        if carries_sig is None:
-            sig_token = None
-        else:
-            sig_token = clean_token(carries_sig)
-            if sig_token is None:
-                return invalid(
-                    "carries_ledger_signature",
-                    "carries-ledger signature is a non-blank token when supplied",
-                    index=index,
-                )
-        if any(v is StateCarryChoice.CARRY for v in carry.value.values()) and (sig_token is None):
-            return invalid(
-                "carries_ledger_signature",
-                "state_carry carry requires a human-signed carries-ledger signature",
-                index=index,
-            )
-        raw = AccountBindingDecl(
-            venue_id=venue_id,
-            account_id=account_id,
-            role=role,
-            world=world,
-            environment=environment,
-            credential_reference=credential_reference,
-            credential_sharing=credential_sharing,
-            bms_definition_fp1=bms_fp,
-            bms_instance_id=bms_instance,
-            book_bindings=books.value,
-            state_carry=carry.value,
-            throttle_scope=throttle,
-            position_model=position,
-            opaque_metric_id=opaque,
-            carries_ledger_signature=sig_token,
-            venue_client_kind=_pass_through_kind(body.get("venue_client_kind")),
-        )
-
+        mapped = _account_binding_from_mapping(raw, index=index)
+        if is_refusal(mapped):
+            return mapped
+        raw = mapped.value
     binding = raw
     if binding.environment not in _ENVIRONMENTS:
         return invalid(
@@ -747,6 +725,159 @@ def _parse_account_binding(raw: object, *, index: int) -> Result[AccountBindingD
     return Ok(binding)
 
 
+def _account_binding_from_mapping(raw: object, *, index: int) -> Result[AccountBindingDecl]:
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "account_bindings",
+            "each account binding is an AccountBindingDecl or mapping",
+            index=index,
+            given=type(raw).__name__,
+        )
+    body = cast("Mapping[str, object]", raw)
+    tokens = _account_binding_tokens(body, index=index)
+    if is_refusal(tokens):
+        return tokens
+    (
+        venue_id,
+        account_id,
+        role,
+        world,
+        environment,
+        credential_reference,
+        credential_sharing,
+        bms_fp,
+        bms_instance,
+        opaque,
+        throttle,
+        position,
+    ) = tokens.value
+    books = _parse_book_bindings(body.get("book_bindings"), index=index)
+    if is_refusal(books):
+        return books
+    carry = _parse_state_carry(body.get("state_carry"), index=index)
+    if is_refusal(carry):
+        return carry
+    sig_token = _optional_carry_signature(body.get("carries_ledger_signature"), index=index)
+    if is_refusal(sig_token):
+        return sig_token
+    if any(v is StateCarryChoice.CARRY for v in carry.value.values()) and (sig_token.value is None):
+        return invalid(
+            "carries_ledger_signature",
+            "state_carry carry requires a human-signed carries-ledger signature",
+            index=index,
+        )
+    return Ok(
+        AccountBindingDecl(
+            venue_id=venue_id,
+            account_id=account_id,
+            role=role,
+            world=world,
+            environment=environment,
+            credential_reference=credential_reference,
+            credential_sharing=credential_sharing,
+            bms_definition_fp1=bms_fp,
+            bms_instance_id=bms_instance,
+            book_bindings=books.value,
+            state_carry=carry.value,
+            throttle_scope=throttle,
+            position_model=position,
+            opaque_metric_id=opaque,
+            carries_ledger_signature=sig_token.value,
+            venue_client_kind=_pass_through_kind(body.get("venue_client_kind")),
+        )
+    )
+
+
+def _account_binding_tokens(
+    body: Mapping[str, object], *, index: int
+) -> Result[
+    tuple[
+        str,
+        str,
+        AccountRole,
+        World,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        ThrottleScope,
+        PositionModelDecl,
+    ]
+]:
+    venue_id = clean_token(body.get("venue_id"))
+    account_id = clean_token(body.get("account_id"))
+    role = _coerce_role(body.get("role"))
+    world = _coerce_world(body.get("world"))
+    environment = clean_token(body.get("environment"))
+    credential_reference = clean_token(body.get("credential_reference"))
+    credential_sharing = clean_token(body.get("credential_sharing"))
+    bms_fp = clean_token(body.get("bms_definition_fp1"))
+    bms_instance = clean_token(body.get("bms_instance_id"))
+    opaque = clean_token(body.get("opaque_metric_id"))
+    throttle = _coerce_throttle(body.get("throttle_scope"))
+    position = _coerce_position_model(body.get("position_model"))
+    if (
+        venue_id is None
+        or account_id is None
+        or role is None
+        or world is None
+        or environment is None
+        or credential_reference is None
+        or credential_sharing is None
+        or bms_fp is None
+        or bms_instance is None
+        or opaque is None
+        or throttle is None
+        or position is None
+    ):
+        return invalid(
+            "account_bindings",
+            "account binding requires venue_id, account_id, role, world, "
+            "environment, credential_reference, credential_sharing, "
+            "bms_definition_fp1, bms_instance_id, opaque_metric_id, "
+            "throttle_scope, and position_model",
+            index=index,
+        )
+    if environment not in _ENVIRONMENTS:
+        return invalid(
+            "environment",
+            "roster environment is demo | live",
+            index=index,
+            given=environment,
+        )
+    return Ok(
+        (
+            venue_id,
+            account_id,
+            role,
+            world,
+            environment,
+            credential_reference,
+            credential_sharing,
+            bms_fp,
+            bms_instance,
+            opaque,
+            throttle,
+            position,
+        )
+    )
+
+
+def _optional_carry_signature(carries_sig: object, *, index: int) -> Result[str | None]:
+    if carries_sig is None:
+        return Ok(None)
+    sig_token = clean_token(carries_sig)
+    if sig_token is None:
+        return invalid(
+            "carries_ledger_signature",
+            "carries-ledger signature is a non-blank token when supplied",
+            index=index,
+        )
+    return Ok(sig_token)
+
+
 def _parse_book_bindings(raw: object, *, index: int) -> Result[tuple[BookBindingDecl, ...]]:
     seq = _as_sequence(raw, "book_bindings")
     if is_refusal(seq):
@@ -754,59 +885,10 @@ def _parse_book_bindings(raw: object, *, index: int) -> Result[tuple[BookBinding
     books: list[BookBindingDecl] = []
     seen_ids: set[str] = set()
     for book_index, item in enumerate(seq.value):
-        if isinstance(item, BookBindingDecl):
-            book = item
-        elif isinstance(item, Mapping):
-            body = cast("Mapping[str, object]", item)
-            binding_id = clean_token(body.get("binding_id"))
-            book_fp = clean_token(body.get("book_definition_fp1"))
-            instruments = _as_token_set(body.get("instruments"), "instruments")
-            if is_refusal(instruments):
-                return instruments
-            if binding_id is None or book_fp is None:
-                return invalid(
-                    "book_bindings",
-                    "book binding requires binding_id and book_definition_fp1",
-                    index=index,
-                    book_index=book_index,
-                )
-            attrib_raw = body.get("attribution_instruments")
-            attrib: frozenset[str] | None
-            if attrib_raw is None:
-                attrib = None
-            else:
-                attrib_set = _as_token_set(attrib_raw, "attribution_instruments")
-                if is_refusal(attrib_set):
-                    return attrib_set
-                attrib = attrib_set.value
-            sig = body.get("shared_flatten_signature")
-            sig_token: str | None
-            if sig is None:
-                sig_token = None
-            else:
-                sig_token = clean_token(sig)
-                if sig_token is None:
-                    return invalid(
-                        "shared_flatten_signature",
-                        "shared-flatten signature is a non-blank token when supplied",
-                        index=index,
-                        book_index=book_index,
-                    )
-            book = BookBindingDecl(
-                binding_id=binding_id,
-                book_definition_fp1=book_fp,
-                instruments=instruments.value,
-                attribution_instruments=attrib,
-                shared_flatten_signature=sig_token,
-            )
-        else:
-            return invalid(
-                "book_bindings",
-                "each book binding is a BookBindingDecl or mapping",
-                index=index,
-                book_index=book_index,
-                given=type(item).__name__,
-            )
+        parsed_book = _book_binding_item(item, index=index, book_index=book_index)
+        if is_refusal(parsed_book):
+            return parsed_book
+        book = parsed_book.value
         if book.binding_id in seen_ids:
             return invalid(
                 "binding_id",
@@ -824,6 +906,77 @@ def _parse_book_bindings(raw: object, *, index: int) -> Result[tuple[BookBinding
             )
         books.append(book)
     return Ok(tuple(books))
+
+
+def _book_binding_item(item: object, *, index: int, book_index: int) -> Result[BookBindingDecl]:
+    if isinstance(item, BookBindingDecl):
+        return Ok(item)
+    if not isinstance(item, Mapping):
+        return invalid(
+            "book_bindings",
+            "each book binding is a BookBindingDecl or mapping",
+            index=index,
+            book_index=book_index,
+            given=type(item).__name__,
+        )
+    body = cast("Mapping[str, object]", item)
+    binding_id = clean_token(body.get("binding_id"))
+    book_fp = clean_token(body.get("book_definition_fp1"))
+    instruments = _as_token_set(body.get("instruments"), "instruments")
+    if is_refusal(instruments):
+        return instruments
+    if binding_id is None or book_fp is None:
+        return invalid(
+            "book_bindings",
+            "book binding requires binding_id and book_definition_fp1",
+            index=index,
+            book_index=book_index,
+        )
+    attrib = _optional_token_set(body.get("attribution_instruments"), "attribution_instruments")
+    if is_refusal(attrib):
+        return attrib
+    sig_token = _optional_signature(
+        body.get("shared_flatten_signature"),
+        field="shared_flatten_signature",
+        index=index,
+        book_index=book_index,
+    )
+    if is_refusal(sig_token):
+        return sig_token
+    return Ok(
+        BookBindingDecl(
+            binding_id=binding_id,
+            book_definition_fp1=book_fp,
+            instruments=instruments.value,
+            attribution_instruments=attrib.value,
+            shared_flatten_signature=sig_token.value,
+        )
+    )
+
+
+def _optional_token_set(raw: object, field: str) -> Result[frozenset[str] | None]:
+    if raw is None:
+        return Ok(None)
+    parsed = _as_token_set(raw, field)
+    if is_refusal(parsed):
+        return parsed
+    return Ok(parsed.value)
+
+
+def _optional_signature(
+    raw: object, *, field: str, index: int, book_index: int
+) -> Result[str | None]:
+    if raw is None:
+        return Ok(None)
+    token = clean_token(raw)
+    if token is None:
+        return invalid(
+            field,
+            "shared-flatten signature is a non-blank token when supplied",
+            index=index,
+            book_index=book_index,
+        )
+    return Ok(token)
 
 
 def _parse_sensing_only(raw: object, *, index: int) -> Result[SensingOnlyDecl]:
@@ -951,86 +1104,108 @@ def _prove_netting_attribution(
         for binding in group:
             if binding.position_model is not PositionModelDecl.NETTING:
                 continue
-            books = binding.book_bindings
-            # Mandatory attribution declaration on every Book of a netted account.
-            for book in books:
-                if book.attribution_instruments is None:
-                    return policy(
-                        "attribution_instruments",
-                        "where CT-18 declares netting, the fill-to-virtual-position "
-                        "attribution declaration is mandatory; absence is a bind-time "
-                        "policy rejection",
-                        account=account_key,
-                        binding_id=book.binding_id,
-                    )
-                if not book.attribution_instruments:
-                    return invalid(
-                        "attribution_instruments",
-                        "netting attribution declaration must name a non-empty instrument set",
-                        account=account_key,
-                        binding_id=book.binding_id,
-                    )
-                # Attribution instruments must be a subset of the Book's instruments.
-                if not book.attribution_instruments <= book.instruments:
-                    return invalid(
-                        "attribution_instruments",
-                        "attribution instruments must be a subset of the Book's "
-                        "declared instruments",
-                        account=account_key,
-                        binding_id=book.binding_id,
-                    )
+            proved = _prove_one_netting_account(account_key, binding)
+            if is_refusal(proved):
+                return proved
+    return Ok(None)
 
-            # Shared-flatten signature for second Book with overlap.
-            if len(books) > 1:
-                for i, left in enumerate(books):
-                    for right in books[i + 1 :]:
-                        overlap = left.instruments & right.instruments
-                        if overlap and (
-                            left.shared_flatten_signature is None
-                            or right.shared_flatten_signature is None
-                        ):
-                            return unsupported(
-                                "shared_flatten_signature",
-                                "a second Book on a netting account whose live "
-                                "bindings may trade an overlapping instrument set "
-                                "needs the operator's signed shared-flatten "
-                                "limitation; one Book per netted account is the "
-                                "V1 default",
-                                account=account_key,
-                                overlapping=sorted(overlap),
-                            )
 
-            # Partition proof: jointly exhaustive and disjoint over the union.
-            covered: set[str] = set()
-            for book in books:
-                attrib = book.attribution_instruments
-                if attrib is None:
-                    continue  # already refused above
-                overlap = covered & attrib
-                if overlap:
-                    return invalid(
-                        "attribution_instruments",
-                        "netting attribution declarations on one account must be "
-                        "jointly disjoint; overlap is an invalid input refusal at "
-                        "compose, never a trade-time discovery",
-                        account=account_key,
-                        overlapping=sorted(overlap),
-                        binding_id=book.binding_id,
-                    )
-                covered |= attrib
-            universe: set[str] = set()
-            for book in books:
-                universe |= book.instruments
-            missing = universe - covered
-            if missing:
-                return invalid(
-                    "attribution_instruments",
-                    "netting attribution declarations on one account must be "
-                    "jointly exhaustive over every instrument the bindings may "
-                    "trade; gaps are an invalid input refusal at compose",
+def _prove_one_netting_account(account_key: str, binding: AccountBindingDecl) -> Result[None]:
+    books = binding.book_bindings
+    declared = _require_netting_attribution(account_key, books)
+    if is_refusal(declared):
+        return declared
+    shared = _require_shared_flatten(account_key, books)
+    if is_refusal(shared):
+        return shared
+    return _prove_attribution_partition(account_key, books)
+
+
+def _require_netting_attribution(
+    account_key: str, books: Sequence[BookBindingDecl]
+) -> Result[None]:
+    for book in books:
+        if book.attribution_instruments is None:
+            return policy(
+                "attribution_instruments",
+                "where CT-18 declares netting, the fill-to-virtual-position "
+                "attribution declaration is mandatory; absence is a bind-time "
+                "policy rejection",
+                account=account_key,
+                binding_id=book.binding_id,
+            )
+        if not book.attribution_instruments:
+            return invalid(
+                "attribution_instruments",
+                "netting attribution declaration must name a non-empty instrument set",
+                account=account_key,
+                binding_id=book.binding_id,
+            )
+        if not book.attribution_instruments <= book.instruments:
+            return invalid(
+                "attribution_instruments",
+                "attribution instruments must be a subset of the Book's declared instruments",
+                account=account_key,
+                binding_id=book.binding_id,
+            )
+    return Ok(None)
+
+
+def _require_shared_flatten(account_key: str, books: Sequence[BookBindingDecl]) -> Result[None]:
+    if len(books) <= 1:
+        return Ok(None)
+    for i, left in enumerate(books):
+        for right in books[i + 1 :]:
+            overlap = left.instruments & right.instruments
+            if overlap and (
+                left.shared_flatten_signature is None or right.shared_flatten_signature is None
+            ):
+                return unsupported(
+                    "shared_flatten_signature",
+                    "a second Book on a netting account whose live "
+                    "bindings may trade an overlapping instrument set "
+                    "needs the operator's signed shared-flatten "
+                    "limitation; one Book per netted account is the "
+                    "V1 default",
                     account=account_key,
-                    missing=sorted(missing),
+                    overlapping=sorted(overlap),
                 )
+    return Ok(None)
+
+
+def _prove_attribution_partition(
+    account_key: str, books: Sequence[BookBindingDecl]
+) -> Result[None]:
+    covered: set[str] = set()
+    for book in books:
+        attrib = book.attribution_instruments
+        if attrib is None:
+            continue
+        overlap = covered & attrib
+        if overlap:
+            return invalid(
+                "attribution_instruments",
+                "netting attribution declarations on one account must be "
+                "jointly disjoint; overlap is an invalid input refusal at "
+                "compose, never a trade-time discovery",
+                account=account_key,
+                overlapping=sorted(overlap),
+                binding_id=book.binding_id,
+            )
+        covered |= attrib
+    universe: set[str] = set()
+    for book in books:
+        universe |= book.instruments
+    missing = universe - covered
+    if missing:
+        return invalid(
+            "attribution_instruments",
+            "netting attribution declarations on one account must be "
+            "jointly exhaustive over every instrument the bindings may "
+            "trade; gaps are an invalid input refusal at compose",
+            account=account_key,
+            missing=sorted(missing),
+        )
     return Ok(None)
 
 
