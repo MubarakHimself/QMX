@@ -78,8 +78,9 @@ from qmn.capital import (
     originate_breakeven_ratchet,
     refuse_invented_kill_line_floor,
 )
+from qmn.capital.kill_line import KillLineBreachPackage
 from qmn.host._refuse import invalid, policy
-from qmn.mis.signal_snapshot import sqs_baseline_key
+from qmn.mis.signal_snapshot import SqsBaselineKey, sqs_baseline_key
 from qmn.order import (
     CommandIdentityBinder,
     CommandStreamUnknownBoundary,
@@ -114,6 +115,7 @@ from qmn.reconcile import (
     DriftResponseKind,
     LookbackStatus,
     ReadbackStatus,
+    ReconciliationReport,
     ReconciliationTrigger,
     apply_drift_response,
     build_equity_narrative,
@@ -304,35 +306,10 @@ def run_paper_milestone_failure_campaign(
             given=type(inputs).__name__,
             failure_id=_ID_INPUTS,
         )
-    if inputs.require_live_demo_account is True:
-        return refuse_live_demo_account_required()
-    if inputs.invent_ksa_matrix_values is True or inputs.invent_latency_gate is True:
-        return refuse_invented_ksa_or_latency_number(
-            invent_ksa_matrix_values=inputs.invent_ksa_matrix_values,
-            invent_latency_gate=inputs.invent_latency_gate,
-        )
-    if inputs.claim_demo_sqs_satisfies_live is True:
-        return policy(
-            "sqs",
-            "a demo-conditioned SQS baseline never satisfies a role=live binding",
-            failure_id=_ID_SQS,
-        )
-    if inputs.subtract_venue_from_virtual_equity is True:
-        differenced = refuse_equity_difference(None, None)
-        if is_refusal(differenced):
-            return policy(
-                "equity_difference",
-                "venue equity is never subtracted from virtual-ledger equity",
-                failure_id=_ID_EQUITY,
-            )
+    guarded = _campaign_input_guards(inputs)
+    if is_refusal(guarded):
+        return guarded
     venue = inputs.venue
-    if venue.kind is not VenueClientKind.CONFORMANCE:
-        return policy(
-            "venue",
-            "Story 28.3 injects through the FEAT-0023 conformance double, never live or replay",
-            given=venue.kind.value,
-            failure_id=_ID_VENUE,
-        )
 
     now = _unwrap(inputs.clock.wall_now())
     if isinstance(now, TypedRefusal):
@@ -428,6 +405,38 @@ def run_paper_milestone_failure_campaign(
             ksa_matrix_values_supplied=False,
         )
     )
+
+
+def _campaign_input_guards(inputs: FailureCampaignInputs) -> Result[None]:
+    if inputs.require_live_demo_account is True:
+        return refuse_live_demo_account_required()
+    if inputs.invent_ksa_matrix_values is True or inputs.invent_latency_gate is True:
+        return refuse_invented_ksa_or_latency_number(
+            invent_ksa_matrix_values=inputs.invent_ksa_matrix_values,
+            invent_latency_gate=inputs.invent_latency_gate,
+        )
+    if inputs.claim_demo_sqs_satisfies_live is True:
+        return policy(
+            "sqs",
+            "a demo-conditioned SQS baseline never satisfies a role=live binding",
+            failure_id=_ID_SQS,
+        )
+    if inputs.subtract_venue_from_virtual_equity is True:
+        differenced = refuse_equity_difference(None, None)
+        if is_refusal(differenced):
+            return policy(
+                "equity_difference",
+                "venue equity is never subtracted from virtual-ledger equity",
+                failure_id=_ID_EQUITY,
+            )
+    if inputs.venue.kind is not VenueClientKind.CONFORMANCE:
+        return policy(
+            "venue",
+            "Story 28.3 injects through the FEAT-0023 conformance double, never live or replay",
+            given=inputs.venue.kind.value,
+            failure_id=_ID_VENUE,
+        )
+    return Ok(None)
 
 
 def _unwrap(result: Result[T]) -> T | TypedRefusal:
@@ -1001,13 +1010,85 @@ def _exercise_protection_coincidence(
 ) -> Result[Mapping[str, object]]:
     if matrix_supplies_no_default_values() is not True:
         return refuse_invented_ksa_or_latency_number(matrix_defaults=True)
+    ksa = _protection_ksa(fx)
+    if is_refusal(ksa):
+        return ksa
+    compose = _protection_compose(fx)
+    if is_refusal(compose):
+        return compose
+    kill = _protection_kill_line(fx, inputs)
+    if is_refusal(kill):
+        return kill
+    live_target, paper_target, package = kill.value
+    windows = _unwrap(_news_and_dead_zone(fx))
+    if isinstance(windows, TypedRefusal):
+        return windows
+    sqs = _protection_sqs(fx)
+    if is_refusal(sqs):
+        return sqs
+    ratchet = _unwrap(_exercise_ratchet(fx, inputs))
+    if isinstance(ratchet, TypedRefusal):
+        return ratchet
+    bench = _unwrap(_exercise_bench(fx, inputs, live_target, paper_target))
+    if isinstance(bench, TypedRefusal):
+        return bench
+    folded, live_blocks_demo = ksa.value
+    emit_kinds = compose.value
+    demo_key, live_key = sqs.value
+    return Ok(
+        MappingProxyType(
+            {
+                "ad-37": {
+                    "compose_both_execute": True,
+                    "emit": sorted(emit_kinds),
+                    "exit_preservation": True,
+                },
+                "dead-zone": windows["dead_zone"],
+                "kill-line": {
+                    "binding_state": package.binding_state.value,
+                    "book_mode": package.book_mode.value,
+                    "close_reason": package.close_reason.value,
+                    "paper_flatten_stand_down": True,
+                },
+                "ksa": {
+                    "folded": folded.value,
+                    "live_connectivity_blocks_demo": live_blocks_demo,
+                    "operator_only_deescalation": True,
+                    "scoped_monotone": True,
+                },
+                "news": windows["news"],
+                "ratchet": ratchet,
+                "bench": bench,
+                "sqs": {
+                    "demo_environment": demo_key.environment,
+                    "live_environment": live_key.environment,
+                    "separated": True,
+                },
+            }
+        )
+    )
 
+
+def _protection_ksa(fx: _Fixtures) -> Result[tuple[KsaLevel, bool]]:
     live_scope = KsaEnforcementScope.stream(fx.venue_id, "acct-live")
     if is_refusal(live_scope):
         return _as_refusal(live_scope)
+    folded = _ksa_fold_orange(fx, live_scope.value)
+    if is_refusal(folded):
+        return folded
+    level, epoch = folded.value
+    blocked = _ksa_resume_and_demo_isolation(fx, live_scope.value, epoch)
+    if is_refusal(blocked):
+        return blocked
+    return Ok((level, blocked.value))
+
+
+def _ksa_fold_orange(
+    fx: _Fixtures, scope: KsaEnforcementScope
+) -> Result[tuple[KsaLevel, object]]:
     epoch = mint_level_epoch(
         epoch_id="ksa-epoch-28-3",
-        scope=live_scope.value,
+        scope=scope,
         opened_at=fx.now,
         opened_by="boot",
     )
@@ -1016,7 +1097,7 @@ def _exercise_protection_coincidence(
     yellow = mint_escalation(
         level=KsaLevel.YELLOW,
         trigger_class=KsaTriggerClass.CONNECTIVITY,
-        scope=live_scope.value,
+        scope=scope,
         level_epoch_id=epoch.value.epoch_id,
         issued_at=fx.now,
         writer_id="writer-z",
@@ -1030,7 +1111,7 @@ def _exercise_protection_coincidence(
     orange = mint_escalation(
         level=KsaLevel.ORANGE,
         trigger_class=KsaTriggerClass.UNKNOWN_STATE,
-        scope=live_scope.value,
+        scope=scope,
         level_epoch_id=epoch.value.epoch_id,
         issued_at=later.value,
         writer_id="writer-a",
@@ -1038,11 +1119,7 @@ def _exercise_protection_coincidence(
     )
     if is_refusal(orange):
         return _as_refusal(orange)
-    folded = fold_ksa_level(
-        (yellow.value, orange.value),
-        scope=live_scope.value,
-        epoch=epoch.value,
-    )
+    folded = fold_ksa_level((yellow.value, orange.value), scope=scope, epoch=epoch.value)
     if is_refusal(folded):
         return _as_refusal(folded)
     if folded.value is not KsaLevel.ORANGE:
@@ -1051,31 +1128,34 @@ def _exercise_protection_coincidence(
             "KSA fold is monotone non-decreasing within a level epoch",
             folded=folded.value.value,
         )
+    return Ok((folded.value, epoch.value))
+
+
+def _ksa_resume_and_demo_isolation(
+    fx: _Fixtures, scope: KsaEnforcementScope, epoch: object
+) -> Result[bool]:
     auto = resume(
-        scope=live_scope.value,
+        scope=scope,
         authority="reconnect",
         issued_at=fx.now,
-        prior_epoch=epoch.value,
+        prior_epoch=epoch,
         new_epoch_id="ksa-epoch-28-3-b",
         fresh_state_validated=True,
     )
     if not is_refusal(auto):
-        return policy(
-            "ksa",
-            "reconnect never de-escalates; resume is operator-only",
-        )
+        return policy("ksa", "reconnect never de-escalates; resume is operator-only")
     operator = resume(
-        scope=live_scope.value,
+        scope=scope,
         authority="operator",
         issued_at=fx.now,
-        prior_epoch=epoch.value,
+        prior_epoch=epoch,
         new_epoch_id="ksa-epoch-28-3-b",
         fresh_state_validated=True,
     )
     if is_refusal(operator):
         return _as_refusal(operator)
     live_blocks_demo = stream_blocked_by_escalation(
-        live_scope.value,
+        scope,
         target_venue_id=fx.venue_id,
         target_account_id="acct-demo",
         target_is_paired_demo=True,
@@ -1086,57 +1166,21 @@ def _exercise_protection_coincidence(
             "a live-stream connectivity escalation must not block paper routing "
             "to the paired demo stream",
         )
+    return Ok(live_blocks_demo)
 
+
+def _protection_compose(fx: _Fixtures) -> Result[set[str]]:
     stream = CommandStreamKey.try_create(fx.venue_id, "acct-demo")
     if is_refusal(stream):
         return _as_refusal(stream)
     table = _rank_table()
     if is_refusal(table):
         return _as_refusal(table)
-    suspend = mint_control_action(
-        ControlActionKind.SUSPEND_NEW,
-        "ksa-1",
-        AuthorityKind.PROTECTION_AUTHORITY,
-        SubjectScope.BINDING,
-        "binding-1",
-        0,
-        "kill-switch",
-        stream.value,
-        fx.now,
-    )
-    flatten = mint_control_action(
-        ControlActionKind.FLATTEN,
-        "book-1",
-        AuthorityKind.BOOK_POLICY,
-        SubjectScope.BINDING,
-        "binding-1",
-        1,
-        "kill-line",
-        stream.value,
-        fx.now,
-        trigger_class="kill_line_breach",
-    )
-    suspend_u = _unwrap(suspend)
-    if isinstance(suspend_u, TypedRefusal):
-        return suspend_u
-    flatten_u = _unwrap(flatten)
-    if isinstance(flatten_u, TypedRefusal):
-        return flatten_u
-    enforcement = EnforcementScope(
-        subject_scope=SubjectScope.BINDING,
-        scope_ref="binding-1",
-        stream=stream.value,
-    )
-    cand_a = DispatchCandidate.try_create(suspend_u, enforcement, origin="ct30", arrival_ordinal=99)
-    cand_b = DispatchCandidate.try_create(flatten_u, enforcement, origin="ct30", arrival_ordinal=0)
-    cand_a_u = _unwrap(cand_a)
-    if isinstance(cand_a_u, TypedRefusal):
-        return cand_a_u
-    cand_b_u = _unwrap(cand_b)
-    if isinstance(cand_b_u, TypedRefusal):
-        return cand_b_u
+    candidates = _protection_candidates(fx, stream.value)
+    if is_refusal(candidates):
+        return candidates
     plan = dispatch_ranked_controls(
-        [cand_a_u, cand_b_u],
+        candidates.value,
         table.value,
         stream=stream.value,
         arbitration_seed="story-28-3",
@@ -1154,7 +1198,60 @@ def _exercise_protection_coincidence(
             "suspend_new and kill-line flatten on one tick must both execute",
             emit=sorted(emit_kinds),
         )
+    return Ok(emit_kinds)
 
+
+def _protection_candidates(
+    fx: _Fixtures, stream: CommandStreamKey
+) -> Result[list[DispatchCandidate]]:
+    suspend = mint_control_action(
+        ControlActionKind.SUSPEND_NEW,
+        "ksa-1",
+        AuthorityKind.PROTECTION_AUTHORITY,
+        SubjectScope.BINDING,
+        "binding-1",
+        0,
+        "kill-switch",
+        stream,
+        fx.now,
+    )
+    flatten = mint_control_action(
+        ControlActionKind.FLATTEN,
+        "book-1",
+        AuthorityKind.BOOK_POLICY,
+        SubjectScope.BINDING,
+        "binding-1",
+        1,
+        "kill-line",
+        stream,
+        fx.now,
+        trigger_class="kill_line_breach",
+    )
+    suspend_u = _unwrap(suspend)
+    if isinstance(suspend_u, TypedRefusal):
+        return suspend_u
+    flatten_u = _unwrap(flatten)
+    if isinstance(flatten_u, TypedRefusal):
+        return flatten_u
+    enforcement = EnforcementScope(
+        subject_scope=SubjectScope.BINDING,
+        scope_ref="binding-1",
+        stream=stream,
+    )
+    cand_a = DispatchCandidate.try_create(suspend_u, enforcement, origin="ct30", arrival_ordinal=99)
+    cand_b = DispatchCandidate.try_create(flatten_u, enforcement, origin="ct30", arrival_ordinal=0)
+    cand_a_u = _unwrap(cand_a)
+    if isinstance(cand_a_u, TypedRefusal):
+        return cand_a_u
+    cand_b_u = _unwrap(cand_b)
+    if isinstance(cand_b_u, TypedRefusal):
+        return cand_b_u
+    return Ok([cand_a_u, cand_b_u])
+
+
+def _protection_kill_line(
+    fx: _Fixtures, inputs: FailureCampaignInputs
+) -> Result[tuple[ExecutionTarget, ExecutionTarget, KillLineBreachPackage]]:
     floor = inputs.kill_line_capital_floor
     if floor.value <= 0:
         return refuse_invented_kill_line_floor(given=floor.value, failure_id=_ID_FLOOR)
@@ -1186,11 +1283,10 @@ def _exercise_protection_coincidence(
     )
     if is_refusal(package):
         return _as_refusal(package)
+    return Ok((live_target, paper_target, package.value))
 
-    windows = _unwrap(_news_and_dead_zone(fx))
-    if isinstance(windows, TypedRefusal):
-        return windows
 
+def _protection_sqs(fx: _Fixtures) -> Result[tuple[SqsBaselineKey, SqsBaselineKey]]:
     instrument = _instrument(fx.venue_id)
     if is_refusal(instrument):
         return _as_refusal(instrument)
@@ -1206,46 +1302,7 @@ def _exercise_protection_coincidence(
             "demo-conditioned and live-conditioned SQS baselines must stay distinct",
             failure_id=_ID_SQS,
         )
-
-    ratchet = _unwrap(_exercise_ratchet(fx, inputs))
-    if isinstance(ratchet, TypedRefusal):
-        return ratchet
-    bench = _unwrap(_exercise_bench(fx, inputs, live_target, paper_target))
-    if isinstance(bench, TypedRefusal):
-        return bench
-
-    return Ok(
-        MappingProxyType(
-            {
-                "ad-37": {
-                    "compose_both_execute": True,
-                    "emit": sorted(emit_kinds),
-                    "exit_preservation": True,
-                },
-                "dead-zone": windows["dead_zone"],
-                "kill-line": {
-                    "binding_state": package.value.binding_state.value,
-                    "book_mode": package.value.book_mode.value,
-                    "close_reason": package.value.close_reason.value,
-                    "paper_flatten_stand_down": True,
-                },
-                "ksa": {
-                    "folded": folded.value.value,
-                    "live_connectivity_blocks_demo": live_blocks_demo,
-                    "operator_only_deescalation": True,
-                    "scoped_monotone": True,
-                },
-                "news": windows["news"],
-                "ratchet": ratchet,
-                "bench": bench,
-                "sqs": {
-                    "demo_environment": demo_key.environment,
-                    "live_environment": live_key.environment,
-                    "separated": True,
-                },
-            }
-        )
-    )
+    return Ok((demo_key, live_key))
 
 
 def _rank_table() -> Result[ControlRankTable]:
@@ -1264,6 +1321,49 @@ def _rank_table() -> Result[ControlRankTable]:
 
 
 def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
+    windows = _mint_news_and_dead_windows(fx)
+    if is_refusal(windows):
+        return windows
+    news, dead, instrument, start, known_at, news_cal, scope = windows.value
+    blocked = enforce_entry_at_book_door(
+        instrument=instrument,
+        book_mode=BookMode.PAPER,
+        decision_at=fx.now,
+        windows=(news, dead),
+        would_have_been_action={"class": "entry"},
+    )
+    if is_refusal(blocked):
+        return _as_refusal(blocked)
+    if blocked.value.blocked is not True:
+        return policy("windows", "news and dead-zone must block entries")
+    exit_ok = allow_protective_act_under_windows(proposed_act=ProposedWindowAct.EXIT)
+    if is_refusal(exit_ok):
+        return _as_refusal(exit_ok)
+    protect_ok = allow_protective_act_under_windows(
+        proposed_act=ProposedWindowAct.PROTECTION_ACTION
+    )
+    if is_refusal(protect_ok):
+        return _as_refusal(protect_ok)
+    disposition = _news_narrowing_held(fx, news, start, known_at, news_cal, scope)
+    if is_refusal(disposition):
+        return disposition
+    return Ok(
+        MappingProxyType(
+            {
+                "dead_zone": {"entries_blocked": True, "exit_preserved": True},
+                "news": {
+                    "entries_blocked": True,
+                    "exit_preserved": True,
+                    "widen_not_shrink": disposition.value.value,
+                },
+            }
+        )
+    )
+
+
+def _mint_news_and_dead_windows(
+    fx: _Fixtures,
+) -> Result[tuple[object, object, Instrument, Instant, Instant, CalendarIdentity, object]]:
     instrument = _instrument(fx.venue_id)
     if is_refusal(instrument):
         return _as_refusal(instrument)
@@ -1319,25 +1419,17 @@ def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
     )
     if is_refusal(dead):
         return _as_refusal(dead)
-    entry = enforce_entry_at_book_door(
-        instrument=instrument.value,
-        book_mode=BookMode.PAPER,
-        decision_at=fx.now,
-        windows=(news.value, dead.value),
-        would_have_been_action={"class": "entry"},
-    )
-    if is_refusal(entry):
-        return _as_refusal(entry)
-    if entry.value.blocked is not True:
-        return policy("windows", "news and dead-zone must block entries")
-    exit_ok = allow_protective_act_under_windows(proposed_act=ProposedWindowAct.EXIT)
-    if is_refusal(exit_ok):
-        return _as_refusal(exit_ok)
-    protect_ok = allow_protective_act_under_windows(
-        proposed_act=ProposedWindowAct.PROTECTION_ACTION
-    )
-    if is_refusal(protect_ok):
-        return _as_refusal(protect_ok)
+    return Ok((news.value, dead.value, instrument.value, start, known_at, news_cal, scope.value))
+
+
+def _news_narrowing_held(
+    fx: _Fixtures,
+    news: object,
+    start: Instant,
+    known_at: Instant,
+    news_cal: CalendarIdentity,
+    scope: object,
+) -> Result[NewsRevisionDisposition]:
     narrow_end = _unwrap(Instant.try_create(fx.now.value_ns + 100_000_000))
     if isinstance(narrow_end, TypedRefusal):
         return narrow_end
@@ -1350,7 +1442,7 @@ def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
     revision = mint_control_window(
         narrow_bounds.value,
         WindowKind.NEWS,
-        scope.value,
+        scope,
         "high-impact-news",
         news_cal,
         "win-nfp-28-3",
@@ -1359,7 +1451,7 @@ def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
     if is_refusal(revision):
         return _as_refusal(revision)
     log = ControlWindowRevisionLog(window_id="win-nfp-28-3")
-    first = apply_news_revision(log, news.value, decision_at=fx.now)
+    first = apply_news_revision(log, news, decision_at=fx.now)
     if is_refusal(first):
         return _as_refusal(first)
     new_log, _effective, _first_disposition = first.value
@@ -1367,7 +1459,7 @@ def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
         new_log,
         revision.value,
         decision_at=fx.now,
-        prior_in_force=news.value,
+        prior_in_force=news,
     )
     if is_refusal(revised):
         return _as_refusal(revised)
@@ -1378,18 +1470,7 @@ def _news_and_dead_zone(fx: _Fixtures) -> Result[Mapping[str, object]]:
             "a news-calendar revision must widen-not-shrink an in-force window",
             disposition=disposition.value,
         )
-    return Ok(
-        MappingProxyType(
-            {
-                "dead_zone": {"entries_blocked": True, "exit_preserved": True},
-                "news": {
-                    "entries_blocked": True,
-                    "exit_preserved": True,
-                    "widen_not_shrink": disposition.value,
-                },
-            }
-        )
-    )
+    return Ok(disposition)
 
 
 def _exercise_ratchet(fx: _Fixtures, inputs: FailureCampaignInputs) -> Result[Mapping[str, object]]:
@@ -1571,9 +1652,19 @@ def _mint_exit(
     )
 
 
-def _exercise_reconciliation(
-    fx: _Fixtures, venue: ConformanceDouble
-) -> Result[Mapping[str, object]]:
+def _reconciliation_runs(
+    fx: _Fixtures,
+) -> Result[
+    tuple[
+        ReconciliationReport,
+        ReconciliationReport,
+        ReconciliationReport,
+        ReconciliationReport,
+        Money,
+        Money,
+        Instant,
+    ]
+]:
     qty = _unwrap(_qty(100))
     if isinstance(qty, TypedRefusal):
         return qty
@@ -1636,6 +1727,16 @@ def _exercise_reconciliation(
     )
     if isinstance(lookback, TypedRefusal):
         return lookback
+    return Ok((reconciled, drift, unknown, lookback, venue_eq, virtual_eq, mark))
+
+
+def _exercise_reconciliation(
+    fx: _Fixtures, venue: ConformanceDouble
+) -> Result[Mapping[str, object]]:
+    runs = _reconciliation_runs(fx)
+    if is_refusal(runs):
+        return runs
+    reconciled, drift, unknown, lookback, venue_eq, virtual_eq, mark = runs.value
     observed = {
         reconciled.verdict.value,
         drift.verdict.value,
