@@ -707,13 +707,20 @@ class ChangeRequestFixture:
                 profile=session.profile.value,
                 branch="A",
             )
-        if session.app_instance_id != before.value.instance_id:
+        source_instance_id = session.app_instance_id
+        if source_instance_id is None:
+            return _invalid(
+                "app_instance_id",
+                "app_instance_id is required when profile=app-use (DEC-0463; FR-PG-09)",
+                profile=session.profile.value,
+            )
+        if source_instance_id != before.value.instance_id:
             return GrantWidenRefused.of(
                 grant_id="",
                 field="source_instance_id",
                 branch="B",
                 bound=before.value.instance_id,
-                given=session.app_instance_id,
+                given=source_instance_id,
             )
         if session.account_scope != before.value.account_scope:
             return GrantWidenRefused.of(
@@ -751,7 +758,7 @@ class ChangeRequestFixture:
             "from_session": session.product_session_id,
             "patch": dict(parsed_patch.value),
             "source_config_revision": session.context.config_revision,
-            "source_instance_id": session.app_instance_id,
+            "source_instance_id": source_instance_id,
             "targets": [dict(item.to_payload()) for item in parsed_targets.value],
         }
         hashed = hash_change_request(preimage)
@@ -760,7 +767,7 @@ class ChangeRequestFixture:
         request = ChangeRequest(
             change_request_id=ident.value,
             from_session=session.product_session_id,
-            source_instance_id=session.app_instance_id,
+            source_instance_id=source_instance_id,
             source_config_revision=session.context.config_revision,
             context_revision=session.context_revision,
             app_instance=app_instance,

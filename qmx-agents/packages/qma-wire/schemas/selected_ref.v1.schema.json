@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/selected_ref.v1.schema.json",
+  "title": "QMA selected_ref (CT-40 additive; Story 60.2)",
+  "description": "Closed selected_refs kinds are parent AD-8 plus instance_id (DEC-0463). Layout JSON, positions, widgets, and json-render trees remain refused in parse. Inspect SHA 34c148b lacked kind instance_id. No new CT number — do not mint CT-52. DEC-0463 is a dated follow-up of DEC-0421; do not set DEC-0421 superseded_by.",
+  "type": "object",
+  "required": ["kind"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "artifact",
+        "research_ref",
+        "contribution",
+        "template",
+        "dataset",
+        "run",
+        "attempt",
+        "node_ids",
+        "instance_id"
+      ]
+    },
+    "id": { "type": "string", "minLength": 1 },
+    "qualified_id": { "type": "string", "minLength": 1 },
+    "package_version": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 }
+  }
+}

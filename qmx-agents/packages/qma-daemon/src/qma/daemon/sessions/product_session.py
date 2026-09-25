@@ -1,4 +1,4 @@
-"""``product_session`` journal projection — bound request context (Stories 55.1–55.4).
+"""``product_session`` journal projection — bound request context (Stories 55.1–55.4, 60.2).
 
 COMP-QMA-DAEMON owns the sqlite fold over ``product_session.*``. Ids are
 ``psess:``; QMA Session ids remain ``sess:``. ``product_session.context`` is
@@ -22,6 +22,17 @@ Story 55.4: a tab/window/view is not a product_session and does not own
 grants or occupancy. ``view:*`` remains an AD-17 wire DTO only — not a
 plugin contribution point and not a ContributionHit (GAP-0081;
 SCN-0018 Branch B). Occupancy stays none. GAP-0081 chrome is not filled.
+
+Story 60.2 / DEC-0463: ``app_instance_id`` MAY be absent when
+``profile=authoring`` and remains required when ``profile=app-use``. No third
+profile. Home/main is authoring with ``app_instance_id`` absent. Invoke needs
+exactly one ``selected_refs`` kind ``instance_id``; envelope ``instance_id``
+is taken from that ref and stays required. Zero or many such refs is typed
+``INVALID_INPUT`` (ambiguous instance) — never latest, first, or all.
+DEC-0463 is a dated follow-up of DEC-0421; DEC-0421 is not superseded.
+ADR-0024 Decision is not rewritten. Types existed at inspect SHA ``34c148b``
+with required ``app_instance_id: str`` and ``SELECTED_REF_KINDS`` lacking
+``instance_id``.
 """
 
 from __future__ import annotations
@@ -36,7 +47,12 @@ from typing import Final, cast
 
 from qma.core.ontology.records import Profile, Session
 from qma.core.operations.descriptor import OperationDescriptor
-from qma.core.refusals.variants import EnvelopeMismatch, GrantMismatch, GrantWidenRefused
+from qma.core.refusals.variants import (
+    AmbiguousResolution,
+    EnvelopeMismatch,
+    GrantMismatch,
+    GrantWidenRefused,
+)
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.journal.authoritative import AuthoritativeJournal
@@ -63,6 +79,7 @@ from qma.wire.grant_record import (
     refuse_manifest_grant,
 )
 from qma.wire.invocation_envelope import (
+    AMBIGUOUS_RESOLUTION_TOKENS,
     AuthoritativeStores,
     BoundInvocation,
     ContributionBinding,
@@ -73,15 +90,41 @@ from qma.wire.invocation_envelope import (
     parse_invocation_envelope,
     parse_utc_iso_z,
 )
+from qma.wire.selected_ref import (
+    ADR_0024_DECISION_REWRITTEN,
+    DEC_0421_SUPERSEDED_BY,
+    DEC_0463_FOLLOWS_DEC_0421,
+    INSTANCE_ID_KIND,
+    INSTANCE_ID_KIND_EXISTED_AT_INSPECT_SHA,
+    PARENT_AD8_SELECTED_REF_KINDS,
+    SELECTED_REF_INSPECT_SHA,
+    SELECTED_REF_KINDS,
+    SelectedRef,
+    claim_instance_id_selected_ref_kind_at_inspect_sha,
+    parse_selected_ref,
+    parse_selected_refs,
+)
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
+    "ADR_0024_DECISION_REWRITTEN",
+    "APP_INSTANCE_ID_OPTIONAL_AT_INSPECT_SHA",
+    "APP_USE_APP_INSTANCE_REQUIRED",
+    "AUTHORING_APP_INSTANCE_OPTIONAL",
+    "AUTHORING_INSTANCE_OPTIONAL_INSPECT_SHA",
     "CHROME_KINDS",
     "CHROME_OWNS_GRANTS",
     "CHROME_OWNS_OCCUPANCY",
+    "DEC_0421_SUPERSEDED_BY",
+    "DEC_0463_FOLLOWS_DEC_0421",
+    "ENVELOPE_INSTANCE_ID_REMAINS_REQUIRED",
     "GAP_0081_CHROME_FILLED",
     "GRANT_SIXTH_STORE_MINTED",
+    "HOME_IS_AUTHORING_WITHOUT_INSTANCE",
+    "INSTANCE_ID_KIND",
+    "INSTANCE_ID_KIND_EXISTED_AT_INSPECT_SHA",
+    "PARENT_AD8_SELECTED_REF_KINDS",
     "PRODUCT_SESSION_CONTEXT_FIELDS",
     "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
     "PRODUCT_SESSION_FOLD_ID",
@@ -97,11 +140,14 @@ __all__ = [
     "PRODUCT_SESSION_STORE_CLASS",
     "PRODUCT_SESSION_TABLE",
     "PRODUCT_SESSION_TAB_WRITES",
+    "PRODUCT_SESSION_TYPES_EXISTED_AT_INSPECT_SHA_34C148B",
     "PRODUCT_SESSION_WIRED_AT_INSPECT_SHA",
     "QMA_SESSION_ID_PREFIX",
     "RECONNECT_KIND_QUERY",
     "RECONNECT_KIND_RESYNC",
+    "SELECTED_REF_INSPECT_SHA",
     "SELECTED_REF_KINDS",
+    "THIRD_PRODUCT_SESSION_PROFILE_MINTED",
     "TOOL_REGISTRY_REWRITTEN",
     "BoundProductSessionCall",
     "BoundSessionGrant",
@@ -112,15 +158,22 @@ __all__ = [
     "ReconnectSnapshot",
     "SelectedRef",
     "bind_public_call_to_context",
+    "claim_instance_id_selected_ref_kind_at_inspect_sha",
+    "claim_optional_authoring_instance_at_inspect_sha",
     "claim_product_session_at_inspect_sha",
     "compare_envelope_to_grant",
+    "invoke_instance_id_from_selected_refs",
     "looks_like_chrome_id",
     "parse_product_session_profile",
+    "parse_selected_ref",
+    "parse_selected_refs",
+    "refuse_ambiguous_instance",
     "refuse_chrome_owns_grants",
     "refuse_chrome_owns_occupancy",
     "refuse_reconnect_replays_intent",
     "refuse_tab_as_product_session",
     "refuse_tab_mints_session",
+    "resolve_authoring_invoke_instance",
 ]
 
 
@@ -140,6 +193,14 @@ PRODUCT_SESSION_SIXTH_COMP_MINTED: Final[bool] = False
 PRODUCT_SESSION_SIXTH_STORE_MINTED: Final[bool] = False
 PRODUCT_SESSION_NEW_CT_MINTED: Final[bool] = False
 PRODUCT_SESSION_TAB_WRITES: Final[bool] = False
+AUTHORING_INSTANCE_OPTIONAL_INSPECT_SHA: Final[str] = SELECTED_REF_INSPECT_SHA
+PRODUCT_SESSION_TYPES_EXISTED_AT_INSPECT_SHA_34C148B: Final[bool] = True
+APP_INSTANCE_ID_OPTIONAL_AT_INSPECT_SHA: Final[bool] = False
+AUTHORING_APP_INSTANCE_OPTIONAL: Final[bool] = True
+APP_USE_APP_INSTANCE_REQUIRED: Final[bool] = True
+HOME_IS_AUTHORING_WITHOUT_INSTANCE: Final[bool] = True
+THIRD_PRODUCT_SESSION_PROFILE_MINTED: Final[bool] = False
+ENVELOPE_INSTANCE_ID_REMAINS_REQUIRED: Final[bool] = True
 CHROME_KINDS: Final[frozenset[str]] = frozenset({"tab", "window", "view"})
 CHROME_OWNS_GRANTS: Final[bool] = False
 CHROME_OWNS_OCCUPANCY: Final[bool] = False
@@ -214,30 +275,6 @@ NOT_DURABLE_FIELDS: Final[frozenset[str]] = frozenset(
         "attachment",
         "layout",
         "board_layout",
-    }
-)
-SELECTED_REF_KINDS: Final[frozenset[str]] = frozenset(
-    {
-        "artifact",
-        "research_ref",
-        "contribution",
-        "template",
-        "dataset",
-        "run",
-        "attempt",
-        "node_ids",
-    }
-)
-_FORBIDDEN_SELECTED_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "board_layout",
-        "json-render",
-        "json_render",
-        "layout",
-        "positions",
-        "tree",
-        "widget",
-        "widgets",
     }
 )
 _TAB_FIELD_TOKENS: Final[frozenset[str]] = frozenset(
@@ -564,97 +601,143 @@ def _parse_instance_id(value: object) -> Result[str]:
     return _require_str("instance_id", value)
 
 
-@dataclass(frozen=True, slots=True)
-class SelectedRef:
-    """Typed selected ref. Layout JSON, widgets, and positions are refused."""
-
-    kind: str
-    id: str
-    extra: Mapping[str, object] = field(default_factory=dict[str, object])
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "extra", MappingProxyType(dict(self.extra)))
-
-    def to_payload(self) -> Mapping[str, object]:
-        payload: dict[str, object] = {"id": self.id, "kind": self.kind}
-        payload.update(dict(self.extra))
-        return MappingProxyType(payload)
-
-
-def parse_selected_ref(value: object) -> Result[SelectedRef]:
-    mapped = _as_mapping("selected_refs", value)
-    if is_refusal(mapped):
-        return mapped
-    body = mapped.value
-    stolen = sorted(key for key in body if key.casefold() in _FORBIDDEN_SELECTED_KEYS)
-    if stolen:
-        return _invalid(
-            "selected_refs",
-            "layout JSON, positions, widgets, and json-render trees are refused (FR-WF-31; AD-4)",
-            forbidden=stolen,
-        )
-    kind = _require_str("selected_refs.kind", body.get("kind"))
-    if is_refusal(kind):
-        return kind
-    if kind.value not in SELECTED_REF_KINDS:
-        return _invalid(
-            "selected_refs.kind",
-            "selected_refs kind is not in the closed AD-8 set",
-            given=kind.value,
-            allowed=sorted(SELECTED_REF_KINDS),
-        )
-    ident = body.get("id")
-    extra = {key: item for key, item in body.items() if key not in {"kind", "id"}}
-    if kind.value == "contribution" and ident is None:
-        qualified = _require_str("selected_refs.qualified_id", extra.get("qualified_id"))
-        if is_refusal(qualified):
-            return qualified
-        version = _require_str("selected_refs.package_version", extra.get("package_version"))
-        if is_refusal(version):
-            return version
-        ident = f"{qualified.value}@{version.value}"
-    if kind.value == "template" and ident is None:
-        qualified = _require_str("selected_refs.qualified_id", extra.get("qualified_id"))
-        if is_refusal(qualified):
-            return qualified
-        version = _require_str("selected_refs.version", extra.get("version"))
-        if is_refusal(version):
-            return version
-        ident = f"{qualified.value}@{version.value}"
-    parsed_id = _require_str("selected_refs.id", ident)
-    if is_refusal(parsed_id):
-        return parsed_id
-    return Ok(SelectedRef(kind=kind.value, id=parsed_id.value, extra=extra))
-
-
-def parse_selected_refs(value: object) -> Result[tuple[SelectedRef, ...]]:
+def _parse_optional_instance_id(value: object) -> Result[str | None]:
     if value is None:
-        return Ok(())
-    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
-        return _invalid("selected_refs", "selected_refs is an array of typed refs")
-    collected: list[SelectedRef] = []
-    for raw in cast("Sequence[object]", value):
-        parsed = parse_selected_ref(raw)
-        if is_refusal(parsed):
-            return parsed
-        collected.append(parsed.value)
-    return Ok(tuple(collected))
+        return Ok(None)
+    parsed = _parse_instance_id(value)
+    if is_refusal(parsed):
+        return parsed
+    return Ok(parsed.value)
+
+
+def _instance_id_refs(refs: Sequence[SelectedRef]) -> tuple[SelectedRef, ...]:
+    return tuple(ref for ref in refs if ref.kind == INSTANCE_ID_KIND)
+
+
+def refuse_ambiguous_instance(**extra: object) -> AmbiguousResolution:
+    """Zero or many ``instance_id`` refs: never latest, first, or all (DEC-0463)."""
+    extra.setdefault("reason", "ambiguous instance")
+    extra.setdefault("never_latest", True)
+    extra.setdefault("never_first", True)
+    extra.setdefault("never_all", True)
+    extra.setdefault("resolved_to_latest", False)
+    extra.setdefault("resolved_to_first", False)
+    extra.setdefault("resolved_to_all", False)
+    extra.setdefault("decision", DEC_0463_FOLLOWS_DEC_0421)
+    extra.setdefault("superseded_by", DEC_0421_SUPERSEDED_BY)
+    extra.setdefault("adr_0024_decision_rewritten", ADR_0024_DECISION_REWRITTEN)
+    return AmbiguousResolution.of(field="instance_id", **extra)
+
+
+def claim_optional_authoring_instance_at_inspect_sha(existed: object) -> Result[bool]:
+    """Claiming optional authoring ``app_instance_id`` existed at 34c148b fails."""
+    if existed is True or existed == "true":
+        return policy_rejection(
+            "app_instance_id",
+            "ProductSession.app_instance_id was required str at inspect SHA 34c148b; "
+            "optional authoring instance is Story 60.2 (DEC-0465; SCN-0023 Branch D)",
+            existed_at_inspect_sha=False,
+            inspect_sha=AUTHORING_INSTANCE_OPTIONAL_INSPECT_SHA,
+            types_existed=PRODUCT_SESSION_TYPES_EXISTED_AT_INSPECT_SHA_34C148B,
+        )
+    if existed is not False:
+        return _invalid(
+            "existed_at_inspect_sha",
+            "inspect-SHA claim is a boolean",
+            given=repr(existed),
+        )
+    return Ok(False)
+
+
+def invoke_instance_id_from_selected_refs(refs: object) -> Result[str]:
+    """Envelope ``instance_id`` is taken from exactly one kind ``instance_id`` ref."""
+    parsed = parse_selected_refs(refs)
+    if is_refusal(parsed):
+        return parsed
+    chosen = _instance_id_refs(parsed.value)
+    if len(chosen) != 1:
+        return refuse_ambiguous_instance(
+            count=len(chosen),
+            ids=[ref.id for ref in chosen],
+            reason="ambiguous instance: authoring invoke needs exactly one "
+            "selected_refs kind instance_id",
+        )
+    token = chosen[0].id
+    if token.casefold() in AMBIGUOUS_RESOLUTION_TOKENS:
+        return refuse_ambiguous_instance(
+            given=token,
+            count=1,
+            reason="ambiguous instance: host does not resolve to latest, first, or all",
+        )
+    return Ok(token)
+
+
+def resolve_authoring_invoke_instance(
+    session: ProductSession,
+    *,
+    selected_refs: object | None = None,
+    envelope_instance_id: object | None = None,
+) -> Result[str]:
+    """Bind invoke instance for authoring-without-instance (Story 60.2).
+
+    Envelope ``instance_id`` remains required. Exactly one selected
+    ``instance_id`` ref supplies it. Zero or many is ``INVALID_INPUT``.
+    """
+    if not ENVELOPE_INSTANCE_ID_REMAINS_REQUIRED:
+        return _invalid("instance_id", "envelope instance_id remains required on invoke")
+    if envelope_instance_id is None:
+        return EnvelopeMismatch.of(
+            field="instance_id",
+            cause="missing",
+            reason="envelope instance_id remains required on invoke (DEC-0464; FR-PG-12)",
+        )
+    parsed_envelope = _parse_instance_id(envelope_instance_id)
+    if is_refusal(parsed_envelope):
+        return EnvelopeMismatch.of(
+            field="instance_id",
+            cause="missing",
+            given=repr(envelope_instance_id),
+            reason="envelope instance_id remains required on invoke",
+        )
+    if session.app_instance_id is not None:
+        if parsed_envelope.value != session.app_instance_id:
+            return EnvelopeMismatch.of(
+                field="instance_id",
+                bound=session.app_instance_id,
+                given=parsed_envelope.value,
+                cause="stale",
+            )
+        return Ok(session.app_instance_id)
+    refs: object = session.selected_refs if selected_refs is None else selected_refs
+    taken = invoke_instance_id_from_selected_refs(refs)
+    if is_refusal(taken):
+        return taken
+    if taken.value != parsed_envelope.value:
+        return EnvelopeMismatch.of(
+            field="instance_id",
+            bound=taken.value,
+            given=parsed_envelope.value,
+            cause="stale",
+            reason="envelope instance_id is taken from the selected instance_id ref",
+        )
+    return Ok(taken.value)
 
 
 @dataclass(frozen=True, slots=True)
 class ProductSessionContext:
-    """Bound request context on a product_session (Story 55.1).
+    """Bound request context on a product_session (Story 55.1 / 60.2).
 
     Public calls missing or stale versus these fields are typed mismatch.
-    Occupancy remains none until live-adjacent.
+    Occupancy remains none until live-adjacent. ``instance_id`` is omitted
+    when home authoring has no selected instance (DEC-0463).
     """
 
     principal: str
     occupancy: str
     contribution: ContributionBinding
-    instance_id: str
     config_revision: int
     as_of: str
+    instance_id: str | None = None
     account_scope: str | None = None
 
     def __post_init__(self) -> None:
@@ -667,10 +750,11 @@ class ProductSessionContext:
             "as_of": self.as_of,
             "config_revision": self.config_revision,
             "contribution": dict(self.contribution.to_payload()),
-            "instance_id": self.instance_id,
             "occupancy": self.occupancy,
             "principal": self.principal,
         }
+        if self.instance_id is not None:
+            payload["instance_id"] = self.instance_id
         if self.account_scope is not None:
             payload["account_scope"] = self.account_scope
         return MappingProxyType(payload)
@@ -687,7 +771,7 @@ def parse_product_session_context(value: object) -> Result[ProductSessionContext
     missing = [
         field
         for field in PRODUCT_SESSION_CONTEXT_FIELDS
-        if field != "account_scope" and field not in body
+        if field not in {"account_scope", "instance_id"} and field not in body
     ]
     if missing:
         return EnvelopeMismatch.of(
@@ -705,7 +789,7 @@ def parse_product_session_context(value: object) -> Result[ProductSessionContext
     contribution = _parse_contribution(body["contribution"])
     if is_refusal(contribution):
         return contribution
-    instance_id = _parse_instance_id(body["instance_id"])
+    instance_id = _parse_optional_instance_id(body.get("instance_id"))
     if is_refusal(instance_id):
         return instance_id
     config_revision = _require_int("config_revision", body["config_revision"], minimum=0)
@@ -732,13 +816,13 @@ def parse_product_session_context(value: object) -> Result[ProductSessionContext
 
 @dataclass(frozen=True, slots=True)
 class ProductSession:
-    """Journal-derived product_session projection row (FR-WF-28; AD-8)."""
+    """Journal-derived product_session projection row (FR-WF-28; AD-8; DEC-0463)."""
 
     product_session_id: str
     profile: ProductSessionProfile
     principal: str
     context: ProductSessionContext
-    app_instance_id: str
+    app_instance_id: str | None = None
     context_revision: int = 0
     granted_ops: tuple[str, ...] = ()
     selected_refs: tuple[SelectedRef, ...] = ()
@@ -766,7 +850,6 @@ class ProductSession:
 
     def to_payload(self) -> Mapping[str, object]:
         payload: dict[str, object] = {
-            "app_instance_id": self.app_instance_id,
             "context": dict(self.context.to_payload()),
             "context_revision": self.context_revision,
             "cursor_generation": self.cursor_generation,
@@ -777,6 +860,8 @@ class ProductSession:
             "resume_cursor": self.resume_cursor,
             "selected_refs": [dict(ref.to_payload()) for ref in self.selected_refs],
         }
+        if self.app_instance_id is not None:
+            payload["app_instance_id"] = self.app_instance_id
         if self.account_scope is not None:
             payload["account_scope"] = self.account_scope
         return MappingProxyType(payload)
@@ -838,12 +923,7 @@ class ReconnectSnapshot:
 
 
 def _is_session_payload(payload: Mapping[str, object]) -> bool:
-    return (
-        "product_session_id" in payload
-        and "context" in payload
-        and "profile" in payload
-        and "app_instance_id" in payload
-    )
+    return "product_session_id" in payload and "context" in payload and "profile" in payload
 
 
 def _parse_tab_id(value: object) -> Result[str]:
@@ -922,6 +1002,8 @@ def bind_public_call_to_context(
                     cause="stale",
                     occupancy=PRODUCT_SESSION_OCCUPANCY,
                 )
+            continue
+        if field_name == "instance_id" and context.instance_id is None:
             continue
         if given is None:
             return EnvelopeMismatch.of(
@@ -1093,9 +1175,17 @@ def parse_product_session(value: object) -> Result[ProductSession]:
     context = parse_product_session_context(context_raw)
     if is_refusal(context):
         return context
-    app_instance = _require_str("app_instance_id", body.get("app_instance_id"))
+    app_instance = _parse_optional_instance_id(body.get("app_instance_id"))
     if is_refusal(app_instance):
         return app_instance
+    if profile.value is ProductSessionProfile.APP_USE and app_instance.value is None:
+        return _invalid(
+            "app_instance_id",
+            "app_instance_id is required when profile=app-use (DEC-0463; FR-PG-09)",
+            profile=profile.value.value,
+        )
+    if THIRD_PRODUCT_SESSION_PROFILE_MINTED:
+        return _invalid("profile", "no third ProductSessionProfile")
     if app_instance.value != context.value.instance_id:
         return EnvelopeMismatch.of(
             field="instance_id",
@@ -1219,7 +1309,8 @@ class ProductSessionService:
 
     def _index(self, session: ProductSession) -> None:
         self._rows[session.product_session_id] = session
-        self._by_instance[session.app_instance_id] = session.product_session_id
+        if session.app_instance_id is not None:
+            self._by_instance[session.app_instance_id] = session.product_session_id
 
     def _ensure_declared(self) -> Result[None]:
         journal = self.journal
@@ -1240,7 +1331,7 @@ class ProductSessionService:
         profile: object,
         principal: object,
         contribution: object,
-        instance_id: object,
+        instance_id: object | None,
         config_revision: object,
         as_of: object,
         account_scope: object = None,
@@ -1297,22 +1388,35 @@ class ProductSessionService:
         parsed_contribution = _parse_contribution(contribution)
         if is_refusal(parsed_contribution):
             return parsed_contribution
-        parsed_instance = _parse_instance_id(
-            instance_id if app_instance_id is None else app_instance_id
-        )
-        if is_refusal(parsed_instance):
-            return parsed_instance
         if app_instance_id is not None:
-            explicit = _parse_instance_id(instance_id)
-            if is_refusal(explicit):
-                return explicit
-            if explicit.value != parsed_instance.value:
-                return EnvelopeMismatch.of(
-                    field="instance_id",
-                    bound=parsed_instance.value,
-                    given=explicit.value,
-                    cause="stale",
-                )
+            parsed_app = _parse_instance_id(app_instance_id)
+            if is_refusal(parsed_app):
+                return parsed_app
+            if instance_id is not None:
+                explicit = _parse_instance_id(instance_id)
+                if is_refusal(explicit):
+                    return explicit
+                if explicit.value != parsed_app.value:
+                    return EnvelopeMismatch.of(
+                        field="instance_id",
+                        bound=parsed_app.value,
+                        given=explicit.value,
+                        cause="stale",
+                    )
+            bound_instance: str | None = parsed_app.value
+        else:
+            parsed_instance = _parse_optional_instance_id(instance_id)
+            if is_refusal(parsed_instance):
+                return parsed_instance
+            bound_instance = parsed_instance.value
+        if parsed_profile.value is ProductSessionProfile.APP_USE and bound_instance is None:
+            return _invalid(
+                "app_instance_id",
+                "app_instance_id is required when profile=app-use (DEC-0463; FR-PG-09)",
+                profile=parsed_profile.value.value,
+            )
+        if THIRD_PRODUCT_SESSION_PROFILE_MINTED:
+            return _invalid("profile", "no third ProductSessionProfile")
         parsed_revision = _require_int("config_revision", config_revision, minimum=0)
         if is_refusal(parsed_revision):
             return parsed_revision
@@ -1350,23 +1454,25 @@ class ProductSessionService:
                 bound=existing.profile.value,
                 given=parsed_profile.value,
             )
-        owner = self._by_instance.get(parsed_instance.value)
-        if owner is None:
-            for row in self._rows.values():
-                if row.app_instance_id == parsed_instance.value:
-                    owner = row.product_session_id
-                    break
-        if owner is not None and owner != session_id.value:
-            return refuse_tab_mints_session(
-                app_instance_id=parsed_instance.value,
-                bound=owner,
-                given=session_id.value,
-            )
+        owner = None
+        if bound_instance is not None:
+            owner = self._by_instance.get(bound_instance)
+            if owner is None:
+                for row in self._rows.values():
+                    if row.app_instance_id == bound_instance:
+                        owner = row.product_session_id
+                        break
+            if owner is not None and owner != session_id.value:
+                return refuse_tab_mints_session(
+                    app_instance_id=bound_instance,
+                    bound=owner,
+                    given=session_id.value,
+                )
         context = ProductSessionContext(
             principal=parsed_principal.value,
             occupancy=occupancy_parsed.value,
             contribution=parsed_contribution.value,
-            instance_id=parsed_instance.value,
+            instance_id=bound_instance,
             config_revision=parsed_revision.value,
             as_of=parsed_as_of.value,
             account_scope=parsed_scope.value,
@@ -1376,7 +1482,7 @@ class ProductSessionService:
             profile=parsed_profile.value,
             principal=parsed_principal.value,
             context=context,
-            app_instance_id=parsed_instance.value,
+            app_instance_id=bound_instance,
             context_revision=parsed_context_revision.value,
             granted_ops=parsed_ops.value,
             selected_refs=parsed_refs.value,
@@ -1638,7 +1744,9 @@ class ProductSessionService:
             folded[session.product_session_id] = session
         self._rows = folded
         self._by_instance = {
-            session.app_instance_id: session.product_session_id for session in folded.values()
+            session.app_instance_id: session.product_session_id
+            for session in folded.values()
+            if session.app_instance_id is not None
         }
         self._restored_from_journal = True
         if self._sqlite_store is not None:
@@ -1905,6 +2013,13 @@ class ProductSessionService:
                 bound=session.product_session_id,
                 granted=audience,
             )
+        grant_instance = session.context.instance_id if instance_id is None else instance_id
+        if grant_instance is None:
+            return _invalid(
+                "instance_id",
+                "GrantRecord instance_id is required; authoring home must name "
+                "the callee instance (DEC-0463)",
+            )
         minted = self.ledger.mint(
             issuer=_HOST_ISSUER,
             grant_id=grant_id,
@@ -1915,7 +2030,7 @@ class ProductSessionService:
                 if contribution is None
                 else contribution
             ),
-            instance_id=session.context.instance_id if instance_id is None else instance_id,
+            instance_id=grant_instance,
             config_revision=(
                 session.context.config_revision if config_revision is None else config_revision
             ),
@@ -2110,6 +2225,7 @@ class ProductSessionService:
         occupancy: object = PRODUCT_SESSION_OCCUPANCY,
         principal: object | None = None,
         as_of: object | None = None,
+        selected_refs: object | None = None,
         contributions: Mapping[tuple[str, str], ContributionRecord] | None = None,
         descriptors: Mapping[tuple[str, int], OperationDescriptor] | None = None,
         instances: Mapping[tuple[str, int], InstanceRecord] | None = None,
@@ -2125,6 +2241,13 @@ class ProductSessionService:
         if is_refusal(loaded):
             return loaded
         session = loaded.value
+        resolved_instance = resolve_authoring_invoke_instance(
+            session,
+            selected_refs=selected_refs,
+            envelope_instance_id=env.instance_id,
+        )
+        if is_refusal(resolved_instance):
+            return resolved_instance
         call: dict[str, object] = {
             "as_of": session.context.as_of if as_of is None else as_of,
             "envelope": env,
@@ -2139,6 +2262,13 @@ class ProductSessionService:
         resolved = self.resolve_grant(session.product_session_id, env.grant_id)
         if is_refusal(resolved):
             return resolved
+        if resolved.value.instance_id != resolved_instance.value:
+            return GrantMismatch.of(
+                field="instance_id",
+                grant_id=resolved.value.grant_id,
+                bound=resolved_instance.value,
+                granted=resolved.value.instance_id,
+            )
         compared = compare_envelope_to_grant(env, resolved.value)
         if is_refusal(compared):
             return compared
