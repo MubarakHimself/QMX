@@ -14,10 +14,17 @@ from qma.core.operations import (
     reconcile_external_egress,
 )
 from qma.core.ports.permissions import (
+    NESTED_INVOCATION_UNIONS_GRANTS,
     NESTED_INVOCATION_UNIONS_PERMISSIONS,
+    nested_invocation_grants,
     nested_invocation_permissions,
 )
-from qma.core.refusals import BlindRetryRefused, NestedPermissionUnionRefused, StaleObservation
+from qma.core.refusals import (
+    BlindRetryRefused,
+    NestedGrantUnionRefused,
+    NestedPermissionUnionRefused,
+    StaleObservation,
+)
 from qma.core.vocabulary import EffectClass, EffectRetryOutcome, JobHandleState, ReconcilePolicy
 from qmf.core import is_ok, is_refusal
 
@@ -221,3 +228,29 @@ def test_nested_invocation_does_not_union_permissions() -> None:
     )
     assert is_refusal(forced)
     assert isinstance(forced, NestedPermissionUnionRefused)
+
+
+def test_nested_invoke_does_not_union_grants() -> None:
+    assert NESTED_INVOCATION_UNIONS_GRANTS is False
+    callee_only = nested_invocation_grants(
+        ["grant:home", "grant:app"],
+        ["grant:app"],
+    )
+    assert is_ok(callee_only)
+    assert callee_only.value == frozenset({"grant:app"})
+    leaked = nested_invocation_grants(
+        ["grant:home"],
+        ["grant:app"],
+        proposed=["grant:home", "grant:app"],
+    )
+    assert is_refusal(leaked)
+    assert isinstance(leaked, NestedGrantUnionRefused)
+    extras = leaked.context["extras"]
+    assert extras in (("grant:home",), ["grant:home"])
+    forced = nested_invocation_grants(
+        ["grant:app"],
+        ["grant:app"],
+        union=True,
+    )
+    assert is_refusal(forced)
+    assert isinstance(forced, NestedGrantUnionRefused)

@@ -884,6 +884,9 @@ class HostGrantLedger:
         now: object,
         execute: Callable[[BoundInvocation], None] | None = None,
         parent_permissions: object | None = None,
+        parent_grants: object | None = None,
+        child_grants: object | None = None,
+        union_grants: bool = False,
     ) -> Result[BoundInvocation]:
         """Evaluate the grant at dispatch/nested-call, then hop-compare."""
         parsed = parse_invocation_envelope(envelope)
@@ -917,4 +920,7 @@ class HostGrantLedger:
             stores=stores,
             execute=execute,
             parent_permissions=parent_permissions,
+            parent_grants=parent_grants,
+            child_grants=child_grants,
+            union_grants=union_grants,
         )

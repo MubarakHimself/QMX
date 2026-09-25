@@ -16,7 +16,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from qma.core.refusals.variants import NestedPermissionUnionRefused
+from qma.core.refusals.variants import NestedGrantUnionRefused, NestedPermissionUnionRefused
 from qma.core.vocabulary.enums import HookControl, HookResultDecision
 from qma.core.vocabulary.hooks import (
     HOOK_RESULT_PRECEDENCE,
@@ -28,6 +28,7 @@ from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
+    "NESTED_INVOCATION_UNIONS_GRANTS",
     "NESTED_INVOCATION_UNIONS_PERMISSIONS",
     "PermissionMode",
     "PermissionPolicy",
@@ -37,11 +38,13 @@ __all__ = [
     "deny_binds_under_mode",
     "is_agent_path_enforcement_event",
     "narrow_permissions",
+    "nested_invocation_grants",
     "nested_invocation_permissions",
     "resolve_enforcement_decision",
 ]
 
 NESTED_INVOCATION_UNIONS_PERMISSIONS: Final[bool] = False
+NESTED_INVOCATION_UNIONS_GRANTS: Final[bool] = False
 
 # Single agent-path enforcement surface (FR-Q44; AD-10; AD-24).
 AGENT_PATH_ENFORCEMENT_EVENTS: Final[frozenset[str]] = frozenset(
@@ -170,6 +173,36 @@ def nested_invocation_permissions(
             union=False,
         )
     return Ok(child_set)
+
+
+def nested_invocation_grants(
+    caller: Iterable[str],
+    callee: Iterable[str],
+    *,
+    union: bool = False,
+    proposed: Iterable[str] | None = None,
+) -> Result[frozenset[str]]:
+    """Nested public calls run under the callee instance's GrantRecords (FR-PG-13).
+
+    Union with the caller's GrantRecords is refused. Callee extras versus the
+    caller are not a union — they stay callee-scoped (parent AD-10; DEC-0454).
+    """
+    caller_set = frozenset(item for item in caller if str(item).strip())
+    callee_set = frozenset(item for item in callee if str(item).strip())
+    extras: frozenset[str] = frozenset()
+    chosen = callee_set
+    if proposed is not None:
+        proposed_set = frozenset(item for item in proposed if str(item).strip())
+        extras = proposed_set - callee_set
+        chosen = proposed_set - extras
+    if union or extras:
+        return NestedGrantUnionRefused.of(
+            caller=tuple(sorted(caller_set)),
+            callee=tuple(sorted(callee_set)),
+            extras=tuple(sorted(extras)),
+            union=False,
+        )
+    return Ok(chosen)
 
 
 def compute_effective_permissions(

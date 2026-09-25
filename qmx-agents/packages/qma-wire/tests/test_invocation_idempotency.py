@@ -6,6 +6,7 @@ from qma.core.operations import public_operation_descriptors
 from qma.core.refusals import (
     EnvelopeMismatch,
     IdempotencyCollision,
+    NestedGrantUnionRefused,
     NestedPermissionUnionRefused,
 )
 from qma.wire import (
@@ -291,6 +292,59 @@ def test_nested_public_call_does_not_union_permissions() -> None:
     )
     assert is_ok(bound)
     assert isinstance(bound.value, BoundInvocation)
+
+
+def test_nested_public_call_does_not_union_grants() -> None:
+    derived = derive_child_logical_invocation_id(
+        parent_logical_invocation_id="inv:1",
+        call_depth=1,
+        child_op_id="qmb.analysis.project",
+        child_canonical_input_hash=_hash(),
+    )
+    assert is_ok(derived)
+    nested_payload = _envelope_payload(
+        logical_invocation_id=derived.value,
+        parent_logical_invocation_id="inv:1",
+        call_depth=1,
+        caller_kind="workflow",
+        grant_id="grant:1",
+    )
+    child = public_call_nested(
+        nested_payload,
+        _INPUT,
+        _stores(),
+        parent_grants=("grant:home",),
+        child_grants=("grant:1",),
+    )
+    assert is_ok(child)
+    assert child.value.grant.grant_id == "grant:1"
+    leaked = public_call_nested(
+        nested_payload,
+        _INPUT,
+        _stores(),
+        parent_grants=("grant:home", "grant:1"),
+        child_grants=("grant:1",),
+        union_grants=True,
+    )
+    assert is_refusal(leaked)
+    assert isinstance(leaked, NestedGrantUnionRefused)
+    assert leaked.context["union"] is False
+    caller_only = public_call_nested(
+        _envelope_payload(
+            logical_invocation_id=derived.value,
+            parent_logical_invocation_id="inv:1",
+            call_depth=1,
+            caller_kind="workflow",
+            grant_id="grant:1",
+            idempotency_key="idem:caller-grant",
+        ),
+        _INPUT,
+        _stores(),
+        parent_grants=("grant:1",),
+        child_grants=("grant:app",),
+    )
+    assert is_refusal(caller_only)
+    assert isinstance(caller_only, NestedGrantUnionRefused)
 
 
 def test_idempotency_domain_dataclass_round_trip() -> None:

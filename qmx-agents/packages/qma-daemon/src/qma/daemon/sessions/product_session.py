@@ -47,11 +47,13 @@ from typing import Final, cast
 
 from qma.core.ontology.records import Profile, Session
 from qma.core.operations.descriptor import OperationDescriptor
+from qma.core.ports.permissions import nested_invocation_grants
 from qma.core.refusals.variants import (
     AmbiguousResolution,
     EnvelopeMismatch,
     GrantMismatch,
     GrantWidenRefused,
+    NestedGrantUnionRefused,
 )
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
@@ -86,6 +88,7 @@ from qma.wire.invocation_envelope import (
     ContributionRecord,
     InstanceRecord,
     InvocationEnvelope,
+    PublicCallTransport,
     dispatch_public_call,
     parse_invocation_envelope,
     parse_utc_iso_z,
@@ -104,7 +107,15 @@ from qma.wire.selected_ref import (
     parse_selected_ref,
     parse_selected_refs,
 )
-from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal, is_refusal
+from qmf.core.refusal import (
+    Ok,
+    RefusalCategory,
+    Result,
+    Retryability,
+    TypedRefusal,
+    is_ok,
+    is_refusal,
+)
 from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
@@ -2231,6 +2242,8 @@ class ProductSessionService:
         instances: Mapping[tuple[str, int], InstanceRecord] | None = None,
         execute: Callable[[BoundInvocation], None] | None = None,
         parent_permissions: object | None = None,
+        caller_product_session_id: object | None = None,
+        union_grants: bool = False,
     ) -> Result[BoundSessionGrant]:
         """Bind context, resolve GrantRecord, GRANT_MISMATCH / revoke refuse."""
         parsed = parse_invocation_envelope(envelope)
@@ -2241,6 +2254,43 @@ class ProductSessionService:
         if is_refusal(loaded):
             return loaded
         session = loaded.value
+        callee_id = env.callee_session_ref
+        if callee_id is not None and callee_id != session.product_session_id:
+            callee_loaded = self.get(callee_id)
+            if is_refusal(callee_loaded):
+                return callee_loaded
+            session = callee_loaded.value
+        caller_ops: tuple[str, ...] = ()
+        caller_ref = caller_product_session_id
+        if caller_ref is None:
+            caller_ref = env.caller_session_ref
+        if caller_ref is not None:
+            caller_loaded = self.get(caller_ref)
+            if is_ok(caller_loaded):
+                caller_ops = caller_loaded.value.granted_ops
+        nested_transport = (
+            transport is PublicCallTransport.NESTED
+            or transport == PublicCallTransport.NESTED.value
+        )
+        if nested_transport:
+            proposed: object | None = (*caller_ops, *session.granted_ops) if union_grants else None
+            child_grants = nested_invocation_grants(
+                caller_ops,
+                session.granted_ops,
+                union=union_grants,
+                proposed=proposed,
+            )
+            if is_refusal(child_grants):
+                return child_grants
+            if env.grant_id not in child_grants.value:
+                extras = (env.grant_id,) if env.grant_id in caller_ops else ()
+                return NestedGrantUnionRefused.of(
+                    caller=tuple(sorted(caller_ops)),
+                    callee=tuple(sorted(session.granted_ops)),
+                    extras=extras,
+                    grant_id=env.grant_id,
+                    callee_session=session.product_session_id,
+                )
         resolved_instance = resolve_authoring_invoke_instance(
             session,
             selected_refs=selected_refs,
@@ -2296,6 +2346,9 @@ class ProductSessionService:
                 stores=stores,
                 execute=execute,
                 parent_permissions=parent_permissions,
+                parent_grants=caller_ops if nested_transport else None,
+                child_grants=session.granted_ops if nested_transport else None,
+                union_grants=union_grants,
             )
             if is_refusal(dispatched):
                 return dispatched

@@ -28,12 +28,13 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from qma.core.operations.descriptor import OperationDescriptor
-from qma.core.ports.permissions import nested_invocation_permissions
+from qma.core.ports.permissions import nested_invocation_grants, nested_invocation_permissions
 from qma.core.refusals.variants import (
     AmbiguousResolution,
     EnvelopeMismatch,
     GrantMismatch,
     InvocationEnvelopeRequired,
+    NestedGrantUnionRefused,
     StaleObservation,
 )
 from qma.core.vocabulary.enums import CallerKind, EffectClass, ReconcilePolicy
@@ -1286,6 +1287,9 @@ def dispatch_public_call(
     stores: AuthoritativeStores,
     execute: Callable[[BoundInvocation], None] | None = None,
     parent_permissions: object | None = None,
+    parent_grants: object | None = None,
+    child_grants: object | None = None,
+    union_grants: bool = False,
 ) -> Result[BoundInvocation]:
     """Dispatch a public call. Missing envelope is a typed refusal; no execute."""
     parsed_transport = _parse_transport(transport)
@@ -1344,6 +1348,38 @@ def dispatch_public_call(
         )
         if is_refusal(permitted):
             return permitted
+        if parent_grants is not None or child_grants is not None or union_grants:
+            caller_tokens: tuple[str, ...] = ()
+            if parent_grants is not None:
+                parsed_caller = _as_str_tokens("parent_grants", parent_grants)
+                if is_refusal(parsed_caller):
+                    return parsed_caller
+                caller_tokens = tuple(parsed_caller.value)
+            callee_tokens: tuple[str, ...] = (env.grant_id,)
+            if child_grants is not None:
+                parsed_callee = _as_str_tokens("child_grants", child_grants)
+                if is_refusal(parsed_callee):
+                    return parsed_callee
+                callee_tokens = tuple(parsed_callee.value)
+            proposed: object | None = None
+            if union_grants:
+                proposed = (*caller_tokens, *callee_tokens)
+            granted = nested_invocation_grants(
+                caller_tokens,
+                callee_tokens,
+                union=union_grants,
+                proposed=proposed,
+            )
+            if is_refusal(granted):
+                return granted
+            if env.grant_id not in granted.value:
+                leaked = (env.grant_id,) if env.grant_id in caller_tokens else ()
+                return NestedGrantUnionRefused.of(
+                    caller=tuple(sorted(caller_tokens)),
+                    callee=tuple(sorted(callee_tokens)),
+                    extras=leaked,
+                    grant_id=env.grant_id,
+                )
     bound = BoundInvocation(
         envelope=env,
         contribution=contribution,
@@ -1447,8 +1483,11 @@ def public_call_nested(
     *,
     execute: Callable[[BoundInvocation], None] | None = None,
     parent_permissions: object | None = None,
+    parent_grants: object | None = None,
+    child_grants: object | None = None,
+    union_grants: bool = False,
 ) -> Result[BoundInvocation]:
-    """Nested public call. Child id derives from parent; permissions do not union."""
+    """Nested public call. Child id derives from parent; grants do not union."""
     return dispatch_public_call(
         transport=PublicCallTransport.NESTED,
         envelope=envelope,
@@ -1456,4 +1495,7 @@ def public_call_nested(
         stores=stores,
         execute=execute,
         parent_permissions=parent_permissions,
+        parent_grants=parent_grants,
+        child_grants=child_grants,
+        union_grants=union_grants,
     )

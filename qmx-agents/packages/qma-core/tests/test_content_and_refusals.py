@@ -34,6 +34,7 @@ from qma.core.refusals import (
     InvocationEnvelopeRequired,
     LaptopOffContinuationRefused,
     ManifestIsNotGrant,
+    NestedGrantUnionRefused,
     NestedPermissionUnionRefused,
     NoCodeAuthoringRefused,
     NoEligibleDeployment,
@@ -96,6 +97,7 @@ EXPECTED_VARIANTS = (
     "IdempotencyCollision",
     "BlindRetryRefused",
     "NestedPermissionUnionRefused",
+    "NestedGrantUnionRefused",
     "GrantInactive",
     "GrantWidenRefused",
     "ManifestIsNotGrant",
@@ -242,6 +244,11 @@ def test_all_variant_factories_carry_structured_context() -> None:
             parent=("library.read",),
             child=("library.read", "library.run"),
             extras=("library.run",),
+        ),
+        NestedGrantUnionRefused.of(
+            caller=("grant:home",),
+            callee=("grant:app",),
+            extras=("grant:home",),
         ),
         GrantInactive.of(
             grant_id="grant:1",

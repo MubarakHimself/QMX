@@ -27,6 +27,7 @@ __all__ = [
     "InvocationEnvelopeRequired",
     "LaptopOffContinuationRefused",
     "ManifestIsNotGrant",
+    "NestedGrantUnionRefused",
     "NestedPermissionUnionRefused",
     "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
@@ -748,6 +749,40 @@ class NestedPermissionUnionRefused(QmaRefusal):
         return cls.create(context=context)
 
 
+class NestedGrantUnionRefused(QmaRefusal):
+    """Nested public call tried to union caller and callee GrantRecords (FR-PG-13).
+
+    The child runs under the callee instance's GrantRecords, not the caller's
+    plus the callee's. Nested invoke does not union grants (parent AD-10;
+    DEC-0454; Story 60.4).
+    """
+
+    VARIANT: ClassVar[str] = "NestedGrantUnionRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        caller: tuple[str, ...] | list[str],
+        callee: tuple[str, ...] | list[str],
+        extras: tuple[str, ...] | list[str] | None = None,
+        **extra: object,
+    ) -> NestedGrantUnionRefused:
+        context: dict[str, object] = {
+            "field": "nested_grants",
+            "caller": list(caller),
+            "callee": list(callee),
+            "union": False,
+            "code": "NESTED_GRANT_UNION",
+            "reason": "nested_invoke_does_not_union_grants",
+        }
+        if extras is not None:
+            context["extras"] = list(extras)
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class InvocationEnvelopeRequired(QmaRefusal):
     """A public call omitted ``InvocationEnvelope`` (FR-WF-17; FR-WF-25).
 
@@ -827,6 +862,7 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     IdempotencyCollision,
     BlindRetryRefused,
     NestedPermissionUnionRefused,
+    NestedGrantUnionRefused,
     GrantInactive,
     GrantWidenRefused,
     ManifestIsNotGrant,
