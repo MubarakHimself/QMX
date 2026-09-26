@@ -236,80 +236,32 @@ class OffMachineBackup:
         gate = _governed_world(export.world, for_world, field_label="export_world")
         if is_refusal(gate):
             return gate
-        world = gate.value
-
         copy_version = self._next_version
         # Advance before the put so a failed attempt never reuses the ordinal on retry
         # (each off-machine copy is a distinct versioned artifact — AC2).
         self._next_version = copy_version + 1
-
-        plaintext = _frame_plaintext(export)
-        try:
-            encrypted = self._cipher.encrypt(plaintext)
-        except Exception as exc:
-            return _storage_failure(
-                "payload cipher raised while encrypting the backup copy; completion "
-                "is not claimed (DEC-0109, DEC-0118)",
-                retryable=False,
-                context={"signal": "cipher-raised", "error_type": type(exc).__name__},
-            )
-        if is_refusal(encrypted):
-            return encrypted
-        ciphertext = encrypted.value
-        if not ciphertext:
-            return _storage_failure(
-                "payload cipher returned empty ciphertext; encryption is required and "
-                "an empty payload is treated as a corrupt copy — completion is not "
-                "claimed (DEC-0118)",
-                retryable=False,
-                context={"signal": "corrupt-copy", "copy_version": copy_version},
-            )
-
-        artifact = OffMachineCopy(
-            world=world,
-            copy_version=copy_version,
-            source_room_role=export.source_room_role,
-            payload=ciphertext,
+        ciphertext = _encrypt_backup_payload(
+            self._cipher, _frame_plaintext(export), copy_version=copy_version
         )
-        try:
-            put = self._storage.put(
-                world=artifact.world.value,
-                copy_version=artifact.copy_version,
-                source_room_role=artifact.source_room_role.value,
-                payload=artifact.payload,
-                format_version=artifact.format_version,
-            )
-        except Exception as exc:
-            return _storage_failure(
-                "object storage raised during the off-machine put; completion is not "
-                "claimed (DEC-0109, DEC-0118)",
-                retryable=True,
-                context={
-                    "signal": "storage-raised",
-                    "error_type": type(exc).__name__,
-                    "copy_version": copy_version,
-                },
-            )
-        if is_refusal(put):
-            # AC4: unreachable / rejected / corrupt object storage is always a
-            # storage-failure refusal at this boundary, even if a miswired adapter
-            # returned a different category.
-            if put.category is RefusalCategory.STORAGE_FAILURE:
-                return put
-            remapped = _remapped_adapter_context(put, copy_version=copy_version)
-            return _storage_failure(
-                "object storage refused the off-machine put; completion is not claimed "
-                "(DEC-0109, DEC-0118)",
-                retryable=put.retryability is Retryability.YES,
-                context=remapped,
-            )
-
-        return Ok(
-            BackupCopyReceipt(
-                world=world,
+        if is_refusal(ciphertext):
+            return ciphertext
+        put = _put_encrypted_copy(
+            self._storage,
+            OffMachineCopy(
+                world=gate.value,
                 copy_version=copy_version,
                 source_room_role=export.source_room_role,
-                payload_fingerprint=_fp1_of(ciphertext),
+                payload=ciphertext.value,
+            ),
+        )
+        if is_refusal(put):
+            return put
+        return Ok(
+            BackupCopyReceipt(
+                world=gate.value,
+                copy_version=copy_version,
+                source_room_role=export.source_room_role,
+                payload_fingerprint=_fp1_of(ciphertext.value),
                 record_count=export.record_count,
             )
         )
@@ -345,108 +297,25 @@ class OffMachineRestore:
         root from ``source_store`` when the source is supplied — an in-place rewrite
         of the only copy is a ``policy rejection``.
         """
-        role = _coerce_role(source_room_role)
-        if role is None:
-            return invalid_input(
-                "source_room_role",
-                "source_room_role is one of the seven room-roles",
-                given=repr(source_room_role),
-                allowed=[member.value for member in RoomRole],
-            )
-        if isinstance(copy_version, bool) or copy_version < 1:
-            return invalid_input(
-                "copy_version",
-                "copy_version is a positive ordinal identifying one off-machine artifact",
-                given=repr(copy_version),
-            )
-        resolved_world = _coerce_world(world)
-        if resolved_world is None:
-            return invalid_input(
-                "world",
-                "world is a World or one of the closed set live | replay | simulated",
-                given=repr(world),
-            )
-        gate = _governed_world(resolved_world, for_world, field_label="copy_world")
-        if is_refusal(gate):
-            return gate
-
-        blocked = _refuse_in_place(into, source_store)
-        if blocked is not None:
-            return blocked
-
-        try:
-            fetched = self._storage.get(
-                world=resolved_world.value,
-                copy_version=copy_version,
-                source_room_role=role.value,
-                format_version=BACKUP_CONTRACT_FORMAT_VERSION,
-            )
-        except Exception as exc:
-            return _storage_failure(
-                "object storage raised during the off-machine get; completion is not "
-                "claimed (DEC-0109, DEC-0118)",
-                retryable=True,
-                context={
-                    "signal": "storage-raised",
-                    "error_type": type(exc).__name__,
-                    "copy_version": copy_version,
-                },
-            )
-        if is_refusal(fetched):
-            if fetched.category is RefusalCategory.STORAGE_FAILURE:
-                return fetched
-            remapped = _remapped_adapter_context(fetched, copy_version=copy_version)
-            return _storage_failure(
-                "object storage refused the off-machine get; completion is not claimed "
-                "(DEC-0109, DEC-0118)",
-                retryable=fetched.retryability is Retryability.YES,
-                context=remapped,
-            )
-        ciphertext = fetched.value
-        if not ciphertext:
-            return _storage_failure(
-                "object storage returned an empty payload; a missing or corrupt copy "
-                "yields no restore completion (DEC-0118)",
-                retryable=False,
-                context={"signal": "corrupt-copy", "copy_version": copy_version},
-            )
-
-        try:
-            decrypted = self._cipher.decrypt(ciphertext)
-        except Exception as exc:
-            return _storage_failure(
-                "payload cipher raised while decrypting the backup copy; completion "
-                "is not claimed (DEC-0109, DEC-0118)",
-                retryable=False,
-                context={"signal": "cipher-raised", "error_type": type(exc).__name__},
-            )
-        if is_refusal(decrypted):
-            return decrypted
-        plaintext = decrypted.value
-        export = _unframe_plaintext(plaintext)
+        bound = _bind_restore_copy(
+            world=world,
+            copy_version=copy_version,
+            source_room_role=source_room_role,
+            into=into,
+            for_world=for_world,
+            source_store=source_store,
+        )
+        if is_refusal(bound):
+            return bound
+        export = _load_copy_export(self._storage, self._cipher, bound.value)
         if is_refusal(export):
             return export
-        if export.value.world is not resolved_world:
-            return policy_rejection(
-                "world",
-                "the decrypted copy's world does not match the requested restore world; "
-                "storage separation delivers world isolation (DEC-0117)",
-                requested=resolved_world.value,
-                export_world=export.value.world.value,
-            )
-        if export.value.source_room_role is not role:
-            return policy_rejection(
-                "source_room_role",
-                "the decrypted copy's room-role does not match the requested restore role",
-                requested=role.value,
-                export_role=export.value.source_room_role.value,
-            )
         return self.restore_export(
             export.value,
             into=into,
             for_world=for_world,
             source_store=source_store,
-            copy_version=copy_version,
+            copy_version=bound.value.copy_version,
         )
 
     def restore_export(
@@ -505,6 +374,212 @@ class OffMachineRestore:
             "forever (DEC-0118)",
             signal="refuse-delete-only-copy",
         )
+
+
+@dataclass(frozen=True, slots=True)
+class _RestoreCopySpec:
+    """Bound restore-copy identity after world/role/in-place gates."""
+
+    world: World
+    copy_version: int
+    role: RoomRole
+
+
+def _encrypt_backup_payload(
+    cipher: PayloadCipher, plaintext: bytes, *, copy_version: int
+) -> Result[bytes]:
+    """Encrypt framed export bytes; empty ciphertext is a corrupt copy."""
+    try:
+        encrypted = cipher.encrypt(plaintext)
+    except Exception as exc:
+        return _storage_failure(
+            "payload cipher raised while encrypting the backup copy; completion "
+            "is not claimed (DEC-0109, DEC-0118)",
+            retryable=False,
+            context={"signal": "cipher-raised", "error_type": type(exc).__name__},
+        )
+    if is_refusal(encrypted):
+        return encrypted
+    ciphertext = encrypted.value
+    if not ciphertext:
+        return _storage_failure(
+            "payload cipher returned empty ciphertext; encryption is required and "
+            "an empty payload is treated as a corrupt copy — completion is not "
+            "claimed (DEC-0118)",
+            retryable=False,
+            context={"signal": "corrupt-copy", "copy_version": copy_version},
+        )
+    return Ok(ciphertext)
+
+
+def _put_encrypted_copy(storage: ObjectStorage, artifact: OffMachineCopy) -> Result[StoragePutAck]:
+    """Put one versioned ciphertext; remap non-storage-failure adapter refusals (AC4)."""
+    try:
+        put = storage.put(
+            world=artifact.world.value,
+            copy_version=artifact.copy_version,
+            source_room_role=artifact.source_room_role.value,
+            payload=artifact.payload,
+            format_version=artifact.format_version,
+        )
+    except Exception as exc:
+        return _storage_failure(
+            "object storage raised during the off-machine put; completion is not "
+            "claimed (DEC-0109, DEC-0118)",
+            retryable=True,
+            context={
+                "signal": "storage-raised",
+                "error_type": type(exc).__name__,
+                "copy_version": artifact.copy_version,
+            },
+        )
+    if not is_refusal(put):
+        return put
+    # AC4: unreachable / rejected / corrupt object storage is always a
+    # storage-failure refusal at this boundary, even if a miswired adapter
+    # returned a different category.
+    if put.category is RefusalCategory.STORAGE_FAILURE:
+        return put
+    remapped = _remapped_adapter_context(put, copy_version=artifact.copy_version)
+    return _storage_failure(
+        "object storage refused the off-machine put; completion is not claimed "
+        "(DEC-0109, DEC-0118)",
+        retryable=put.retryability is Retryability.YES,
+        context=remapped,
+    )
+
+
+def _bind_restore_copy(
+    *,
+    world: object,
+    copy_version: int,
+    source_room_role: object,
+    into: EvidenceStore,
+    for_world: object,
+    source_store: EvidenceStore | None,
+) -> Result[_RestoreCopySpec]:
+    """Validate restore-copy identity and refuse in-place rewrite of the only copy."""
+    role = _coerce_role(source_room_role)
+    if role is None:
+        return invalid_input(
+            "source_room_role",
+            "source_room_role is one of the seven room-roles",
+            given=repr(source_room_role),
+            allowed=[member.value for member in RoomRole],
+        )
+    if isinstance(copy_version, bool) or copy_version < 1:
+        return invalid_input(
+            "copy_version",
+            "copy_version is a positive ordinal identifying one off-machine artifact",
+            given=repr(copy_version),
+        )
+    resolved_world = _coerce_world(world)
+    if resolved_world is None:
+        return invalid_input(
+            "world",
+            "world is a World or one of the closed set live | replay | simulated",
+            given=repr(world),
+        )
+    gate = _governed_world(resolved_world, for_world, field_label="copy_world")
+    if is_refusal(gate):
+        return gate
+    blocked = _refuse_in_place(into, source_store)
+    if blocked is not None:
+        return blocked
+    return Ok(_RestoreCopySpec(world=resolved_world, copy_version=copy_version, role=role))
+
+
+def _fetch_copy_ciphertext(
+    storage: ObjectStorage, *, world: World, copy_version: int, role: RoomRole
+) -> Result[bytes]:
+    """Fetch one versioned ciphertext; empty payload is a corrupt copy."""
+    try:
+        fetched = storage.get(
+            world=world.value,
+            copy_version=copy_version,
+            source_room_role=role.value,
+            format_version=BACKUP_CONTRACT_FORMAT_VERSION,
+        )
+    except Exception as exc:
+        return _storage_failure(
+            "object storage raised during the off-machine get; completion is not "
+            "claimed (DEC-0109, DEC-0118)",
+            retryable=True,
+            context={
+                "signal": "storage-raised",
+                "error_type": type(exc).__name__,
+                "copy_version": copy_version,
+            },
+        )
+    if is_refusal(fetched):
+        if fetched.category is RefusalCategory.STORAGE_FAILURE:
+            return fetched
+        remapped = _remapped_adapter_context(fetched, copy_version=copy_version)
+        return _storage_failure(
+            "object storage refused the off-machine get; completion is not claimed "
+            "(DEC-0109, DEC-0118)",
+            retryable=fetched.retryability is Retryability.YES,
+            context=remapped,
+        )
+    ciphertext = fetched.value
+    if not ciphertext:
+        return _storage_failure(
+            "object storage returned an empty payload; a missing or corrupt copy "
+            "yields no restore completion (DEC-0118)",
+            retryable=False,
+            context={"signal": "corrupt-copy", "copy_version": copy_version},
+        )
+    return Ok(ciphertext)
+
+
+def _decrypt_framed_export(
+    cipher: PayloadCipher, ciphertext: bytes, *, world: World, role: RoomRole
+) -> Result[RoomExport]:
+    """Decrypt and unframe a copy; refuse world/role mismatch on the envelope."""
+    try:
+        decrypted = cipher.decrypt(ciphertext)
+    except Exception as exc:
+        return _storage_failure(
+            "payload cipher raised while decrypting the backup copy; completion "
+            "is not claimed (DEC-0109, DEC-0118)",
+            retryable=False,
+            context={"signal": "cipher-raised", "error_type": type(exc).__name__},
+        )
+    if is_refusal(decrypted):
+        return decrypted
+    export = _unframe_plaintext(decrypted.value)
+    if is_refusal(export):
+        return export
+    if export.value.world is not world:
+        return policy_rejection(
+            "world",
+            "the decrypted copy's world does not match the requested restore world; "
+            "storage separation delivers world isolation (DEC-0117)",
+            requested=world.value,
+            export_world=export.value.world.value,
+        )
+    if export.value.source_room_role is not role:
+        return policy_rejection(
+            "source_room_role",
+            "the decrypted copy's room-role does not match the requested restore role",
+            requested=role.value,
+            export_role=export.value.source_room_role.value,
+        )
+    return Ok(export.value)
+
+
+def _load_copy_export(
+    storage: ObjectStorage, cipher: PayloadCipher, spec: _RestoreCopySpec
+) -> Result[RoomExport]:
+    """Fetch, decrypt, and unframe one bound off-machine copy."""
+    fetched = _fetch_copy_ciphertext(
+        storage, world=spec.world, copy_version=spec.copy_version, role=spec.role
+    )
+    if is_refusal(fetched):
+        return fetched
+    return _decrypt_framed_export(
+        cipher, fetched.value, world=spec.world, role=spec.role
+    )
 
 
 def _refuse_in_place(
@@ -715,6 +790,13 @@ def _governed_world(expected: World, for_world: object, *, field_label: str) -> 
                 "given": repr(for_world),
             },
         )
+    return _refuse_ungoverned_world(resolved, expected, field_label=field_label)
+
+
+def _refuse_ungoverned_world(
+    resolved: World, expected: World, *, field_label: str
+) -> Result[World]:
+    """Refuse simulated or cross-world backup/restore requests."""
     if resolved is World.SIMULATED:
         return TypedRefusal(
             category=RefusalCategory.POLICY_REJECTION,
@@ -812,20 +894,8 @@ def _unframe_plaintext(plaintext: bytes) -> Result[RoomExport]:
             retryable=False,
             context={"signal": "corrupt-copy", "detail": "bad-magic"},
         )
-    offset = len(_PLAINTEXT_MAGIC)
     try:
-        meta_len, offset = _read_u32(plaintext, offset)
-        meta_raw = plaintext[offset : offset + meta_len]
-        offset += meta_len
-        if len(meta_raw) != meta_len:
-            raise ValueError("truncated meta")
-        meta = _parse_meta(meta_raw.decode("utf-8"))
-        records: list[RecordExport] = []
-        for _ in range(meta["count"]):
-            record, offset = _read_record(plaintext, offset)
-            records.append(record)
-        if offset != len(plaintext):
-            raise ValueError("trailing bytes after framed records")
+        meta, records = _read_framed_body(plaintext, len(_PLAINTEXT_MAGIC))
     except (ValueError, KeyError, UnicodeDecodeError, struct.error) as exc:
         return _storage_failure(
             "decrypted backup envelope is corrupt or truncated; restore completion "
@@ -833,6 +903,28 @@ def _unframe_plaintext(plaintext: bytes) -> Result[RoomExport]:
             retryable=False,
             context={"signal": "corrupt-copy", "error": str(exc)},
         )
+    return _room_export_from_meta(meta, records)
+
+
+def _read_framed_body(plaintext: bytes, offset: int) -> tuple[_BackupMeta, list[RecordExport]]:
+    """Read meta + records from a framed plaintext body; raise on truncation."""
+    meta_len, offset = _read_u32(plaintext, offset)
+    meta_raw = plaintext[offset : offset + meta_len]
+    offset += meta_len
+    if len(meta_raw) != meta_len:
+        raise ValueError("truncated meta")
+    meta = _parse_meta(meta_raw.decode("utf-8"))
+    records: list[RecordExport] = []
+    for _ in range(meta["count"]):
+        record, offset = _read_record(plaintext, offset)
+        records.append(record)
+    if offset != len(plaintext):
+        raise ValueError("trailing bytes after framed records")
+    return meta, records
+
+
+def _room_export_from_meta(meta: _BackupMeta, records: list[RecordExport]) -> Result[RoomExport]:
+    """Bind framed meta world/role into a :class:`RoomExport`."""
     world = _coerce_world(meta["world"])
     if world is None:
         return _storage_failure(
