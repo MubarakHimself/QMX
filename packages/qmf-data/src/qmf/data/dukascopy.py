@@ -507,65 +507,35 @@ def _hour_keys_for_window(
     return Ok(tuple(keys))
 
 
-class DukascopyAdapter:
-    """CT-15 Dukascopy historical tick adapter — download-once, license-tagged.
-
-    Constructed with an injected :class:`DukascopyTransport` and a CT-03 instrument
-    map keyed by Dukascopy symbol. Implements the ingest
-    :class:`~qmf.data.ingest.ExternalSourcePort` ``fetch`` shape.
-    """
+class _DukascopyFetchWindow:
+    """Bounded hourly fetch plus license-tagged last window."""
 
     def __init__(
         self,
         transport: DukascopyTransport,
         *,
         instruments: Mapping[str, Instrument],
-        price_scales: Mapping[str, int] | None = None,
-        default_license: LicenseTag = LicenseTag.INTERNAL_ONLY,
-        max_window_ns: int = FACTORY_MAX_WINDOW_NS,
+        price_scales: Mapping[str, int],
+        default_license: LicenseTag,
+        max_window_ns: int,
     ) -> None:
         self._transport = transport
-        self._instruments = {
-            symbol.strip().upper(): instrument for symbol, instrument in instruments.items()
-        }
-        self._price_scales = {
-            symbol.strip().upper(): scale for symbol, scale in (price_scales or {}).items()
-        }
+        self._instruments = dict(instruments)
+        self._price_scales = dict(price_scales)
         self._default_license = default_license
         self._max_window_ns = max_window_ns
         self._last_window: LicensedSourceWindow | None = None
+        self._source = DUKASCOPY_SOURCE
 
     @property
     def source(self) -> str:
-        return DUKASCOPY_SOURCE
+        return self._source
 
     @property
     def last_window(self) -> LicensedSourceWindow | None:
-        """The most recently acquired licensed window, if any."""
         return self._last_window
 
-    def download_complete_corpus(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — bulk complete-corpus download is outside this pass (AC4)."""
-        return refuse_complete_corpus_download(request="download_complete_corpus")
-
-    def checkpoint(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — checkpoint ownership is application-owned (AC5)."""
-        return refuse_external_recovery(request="checkpoint")
-
-    def recover_external(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — QMF cannot require external recovery (AC5)."""
-        return refuse_external_recovery(request="recover_external")
-
-    def run_retry_loop(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — retries are application-owned (AC5)."""
-        return refuse_external_recovery(request="run_retry_loop")
-
     def fetch(self, request: SourceRequest, /) -> Result[tuple[ProviderRecord, ...]]:
-        """Fetch one bounded window and emit CT-15 :class:`ProviderRecord` values (AC1).
-
-        Required bounds keys: ``symbol``, ``start_ns``, ``end_ns``. Optional:
-        ``known_at_ns``, ``revision``, ``license_tag``, ``complete_corpus``.
-        """
         window = self._parse_fetch_window(request)
         if is_refusal(window):
             return window
@@ -604,7 +574,7 @@ class DukascopyAdapter:
     def _parse_fetch_window(
         self, request: SourceRequest
     ) -> Result[tuple[str, int, int, int, str, Instrument, int]]:
-        if request.source != DUKASCOPY_SOURCE:
+        if request.source != self._source:
             return invalid_input(
                 "source",
                 "DukascopyAdapter serves source 'dukascopy' only",
@@ -760,7 +730,7 @@ class DukascopyAdapter:
         }
         return Ok(
             ProviderRecord(
-                source=DUKASCOPY_SOURCE,
+                source=self._source,
                 source_native_id=native_id,
                 revision=revision,
                 event_time=tick.event_time_ns,
@@ -795,11 +765,11 @@ class DukascopyAdapter:
         interval = Interval.try_create(start.value, end.value)
         if is_refusal(interval):
             return interval
-        partition = SeriesPartition.try_create(DUKASCOPY_SOURCE, instrument, interval.value)
+        partition = SeriesPartition.try_create(self._source, instrument, interval.value)
         if is_refusal(partition):
             return partition
         provenance: dict[str, object] = {
-            "source": DUKASCOPY_SOURCE,
+            "source": self._source,
             "acquisition": "download-once",
             "provider_symbol": symbol,
             "revision": revision,
@@ -812,3 +782,107 @@ class DukascopyAdapter:
             license_tag=license_tag,
             provenance=provenance,
         )
+
+
+class _DukascopyCorpusBoundary:
+    """Complete-corpus asks this adapter never owns (AC4 / FM-5)."""
+
+    def __init__(self) -> None:
+        self._refuse = refuse_complete_corpus_download
+
+    def download_complete_corpus(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refuse(request="download_complete_corpus")
+
+
+class _DukascopyRecoveryBoundary:
+    """Checkpoint/retry/recovery asks that stay application-owned (AC5)."""
+
+    def __init__(self) -> None:
+        self._refuse = refuse_external_recovery
+
+    def checkpoint(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refuse(request="checkpoint")
+
+    def recover_external(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refuse(request="recover_external")
+
+    def run_retry_loop(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refuse(request="run_retry_loop")
+
+
+@dataclass(frozen=True, slots=True)
+class _DukascopyCollaborators:
+    """Fetch window plus corpus and recovery refusal boundaries."""
+
+    window: _DukascopyFetchWindow
+    corpus: _DukascopyCorpusBoundary
+    recovery: _DukascopyRecoveryBoundary
+
+
+class DukascopyAdapter:
+    """CT-15 Dukascopy historical tick adapter — download-once, license-tagged.
+
+    Constructed with an injected :class:`DukascopyTransport` and a CT-03 instrument
+    map keyed by Dukascopy symbol. Implements the ingest
+    :class:`~qmf.data.ingest.ExternalSourcePort` ``fetch`` shape.
+    """
+
+    def __init__(
+        self,
+        transport: DukascopyTransport,
+        *,
+        instruments: Mapping[str, Instrument],
+        price_scales: Mapping[str, int] | None = None,
+        default_license: LicenseTag = LicenseTag.INTERNAL_ONLY,
+        max_window_ns: int = FACTORY_MAX_WINDOW_NS,
+    ) -> None:
+        mapped = {
+            symbol.strip().upper(): instrument for symbol, instrument in instruments.items()
+        }
+        scales = {
+            symbol.strip().upper(): scale for symbol, scale in (price_scales or {}).items()
+        }
+        self._collaborators = _DukascopyCollaborators(
+            window=_DukascopyFetchWindow(
+                transport,
+                instruments=mapped,
+                price_scales=scales,
+                default_license=default_license,
+                max_window_ns=max_window_ns,
+            ),
+            corpus=_DukascopyCorpusBoundary(),
+            recovery=_DukascopyRecoveryBoundary(),
+        )
+
+    @property
+    def source(self) -> str:
+        return self._collaborators.window.source
+
+    @property
+    def last_window(self) -> LicensedSourceWindow | None:
+        """The most recently acquired licensed window, if any."""
+        return self._collaborators.window.last_window
+
+    def download_complete_corpus(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — bulk complete-corpus download is outside this pass (AC4)."""
+        return self._collaborators.corpus.download_complete_corpus(*_args, **_kwargs)
+
+    def checkpoint(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — checkpoint ownership is application-owned (AC5)."""
+        return self._collaborators.recovery.checkpoint(*_args, **_kwargs)
+
+    def recover_external(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — QMF cannot require external recovery (AC5)."""
+        return self._collaborators.recovery.recover_external(*_args, **_kwargs)
+
+    def run_retry_loop(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — retries are application-owned (AC5)."""
+        return self._collaborators.recovery.run_retry_loop(*_args, **_kwargs)
+
+    def fetch(self, request: SourceRequest, /) -> Result[tuple[ProviderRecord, ...]]:
+        """Fetch one bounded window and emit CT-15 :class:`ProviderRecord` values (AC1).
+
+        Required bounds keys: ``symbol``, ``start_ns``, ``end_ns``. Optional:
+        ``known_at_ns``, ``revision``, ``license_tag``, ``complete_corpus``.
+        """
+        return self._collaborators.window.fetch(request)

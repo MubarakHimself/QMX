@@ -310,15 +310,8 @@ class ExternalSourcePort(Protocol):
 # --- seam -------------------------------------------------------------------
 
 
-class ExternalSourceIngest:
-    """COMP-QMF-DATA-INGEST — owns CT-15 calls and CT-10 producer normalization.
-
-    Constructed with an injected :class:`ExternalSourcePort`. Each successful
-    :meth:`intake` / :meth:`fetch_and_intake` yields :class:`IntakeReceipt` values the
-    application routes to :class:`SourceObservationBoundary` (or via :meth:`submit`).
-    An in-process ledger keys prior intakes by :class:`IntakeKey` so a duplicate
-    arrival is idempotent (AC2).
-    """
+class _ExternalSourceIntake:
+    """CT-15 fetch plus idempotent ledger intake. Owns the port and in-process ledger."""
 
     def __init__(self, port: ExternalSourcePort) -> None:
         self._port = port
@@ -326,7 +319,6 @@ class ExternalSourceIngest:
 
     @property
     def port(self) -> ExternalSourcePort:
-        """The injected CT-15 provider port."""
         return self._port
 
     def normalize(
@@ -339,14 +331,6 @@ class ExternalSourceIngest:
         receive_wall_time: object,
         receive_monotonic_diagnostic: object | None = None,
     ) -> Result[tuple[SourceObservation, IntakeKey, Instrument, TickQuote | None]]:
-        """Validate a provider record and mint a CT-10 :class:`SourceObservation` (AC1–AC4).
-
-        Does not consult the idempotent ledger and does not persist — pure
-        normalize. A missing bitemporal field, intake key part, or CT-03 instrument
-        mapping is ``invalid input`` and emits no observation. When bid/ask are
-        present they are preserved as a :class:`~qmf.data.ticks.TickQuote` (fourth
-        tuple element); a presented mid is refused (Story 6.2).
-        """
         if not isinstance(record, ProviderRecord):
             return _invalid(
                 "record",
@@ -397,12 +381,6 @@ class ExternalSourceIngest:
         receive_wall_time: object,
         receive_monotonic_diagnostic: object | None = None,
     ) -> Result[IntakeReceipt]:
-        """Normalize under the idempotent ``(source, native id, revision)`` key (AC2).
-
-        A previously seen key returns the prior receipt with
-        :attr:`IntakeOutcome.IDEMPOTENT` — earlier evidence is never erased or silently
-        merged. A new revision is a new artifact with its own ``fp1``.
-        """
         normalized = self.normalize(
             record,
             writer=writer,
@@ -452,12 +430,6 @@ class ExternalSourceIngest:
         sequence_start: int = 0,
         receive_monotonic_diagnostic: object | None = None,
     ) -> Result[tuple[IntakeReceipt, ...]]:
-        """Call the CT-15 port once and intake every returned record (AC1, AC5).
-
-        A port refusal (rate-limit / unavailable) propagates unchanged — no fabricated
-        observation is minted. ``sequence_start`` is the per-writer sequence of the first
-        produced record; subsequent produced (non-idempotent) records increment it.
-        """
         if not isinstance(request, SourceRequest):
             return _invalid(
                 "request",
@@ -510,6 +482,145 @@ class ExternalSourceIngest:
                 sequence += 1
         return Ok(tuple(receipts))
 
+    def known_key(self, key: IntakeKey) -> bool:
+        return key in self._ledger
+
+
+class _ExternalSourceHandoff:
+    """Application-routed CT-10 boundary hand-off (AC1)."""
+
+    def submit(
+        self,
+        observation: object,
+        boundary: SourceObservationBoundary,
+    ) -> Result[ObservationReceipt]:
+        return boundary.admit(observation)
+
+
+class _ExternalSourceScheduleBoundary:
+    """Scheduler/daemon/retry asks this seam never owns (AC6 / FM-5)."""
+
+    def __init__(self) -> None:
+        self._refuse = refuse_schedule_ownership
+
+    def start_scheduler(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
+        return self._refuse(request="start_scheduler")
+
+    def run_daemon(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
+        return self._refuse(request="run_daemon")
+
+    def run_retry_loop(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
+        return self._refuse(request="run_retry_loop")
+
+
+@dataclass(frozen=True, slots=True)
+class _ExternalSourceCollaborators:
+    """Intake port plus submit and schedule-refusal boundaries."""
+
+    intake: _ExternalSourceIntake
+    handoff: _ExternalSourceHandoff
+    schedule: _ExternalSourceScheduleBoundary
+
+
+class ExternalSourceIngest:
+    """COMP-QMF-DATA-INGEST — owns CT-15 calls and CT-10 producer normalization.
+
+    Constructed with an injected :class:`ExternalSourcePort`. Each successful
+    :meth:`intake` / :meth:`fetch_and_intake` yields :class:`IntakeReceipt` values the
+    application routes to :class:`SourceObservationBoundary` (or via :meth:`submit`).
+    An in-process ledger keys prior intakes by :class:`IntakeKey` so a duplicate
+    arrival is idempotent (AC2).
+    """
+
+    def __init__(self, port: ExternalSourcePort) -> None:
+        self._collaborators = _ExternalSourceCollaborators(
+            intake=_ExternalSourceIntake(port),
+            handoff=_ExternalSourceHandoff(),
+            schedule=_ExternalSourceScheduleBoundary(),
+        )
+
+    @property
+    def port(self) -> ExternalSourcePort:
+        """The injected CT-15 provider port."""
+        return self._collaborators.intake.port
+
+    def normalize(
+        self,
+        record: object,
+        *,
+        writer: object,
+        sequence: object,
+        world: object,
+        receive_wall_time: object,
+        receive_monotonic_diagnostic: object | None = None,
+    ) -> Result[tuple[SourceObservation, IntakeKey, Instrument, TickQuote | None]]:
+        """Validate a provider record and mint a CT-10 :class:`SourceObservation` (AC1–AC4).
+
+        Does not consult the idempotent ledger and does not persist — pure
+        normalize. A missing bitemporal field, intake key part, or CT-03 instrument
+        mapping is ``invalid input`` and emits no observation. When bid/ask are
+        present they are preserved as a :class:`~qmf.data.ticks.TickQuote` (fourth
+        tuple element); a presented mid is refused (Story 6.2).
+        """
+        return self._collaborators.intake.normalize(
+            record,
+            writer=writer,
+            sequence=sequence,
+            world=world,
+            receive_wall_time=receive_wall_time,
+            receive_monotonic_diagnostic=receive_monotonic_diagnostic,
+        )
+
+    def intake(
+        self,
+        record: object,
+        *,
+        writer: object,
+        sequence: object,
+        world: object,
+        receive_wall_time: object,
+        receive_monotonic_diagnostic: object | None = None,
+    ) -> Result[IntakeReceipt]:
+        """Normalize under the idempotent ``(source, native id, revision)`` key (AC2).
+
+        A previously seen key returns the prior receipt with
+        :attr:`IntakeOutcome.IDEMPOTENT` — earlier evidence is never erased or silently
+        merged. A new revision is a new artifact with its own ``fp1``.
+        """
+        return self._collaborators.intake.intake(
+            record,
+            writer=writer,
+            sequence=sequence,
+            world=world,
+            receive_wall_time=receive_wall_time,
+            receive_monotonic_diagnostic=receive_monotonic_diagnostic,
+        )
+
+    def fetch_and_intake(
+        self,
+        request: object,
+        *,
+        writer: object,
+        world: object,
+        receive_wall_time: object,
+        sequence_start: int = 0,
+        receive_monotonic_diagnostic: object | None = None,
+    ) -> Result[tuple[IntakeReceipt, ...]]:
+        """Call the CT-15 port once and intake every returned record (AC1, AC5).
+
+        A port refusal (rate-limit / unavailable) propagates unchanged — no fabricated
+        observation is minted. ``sequence_start`` is the per-writer sequence of the first
+        produced record; subsequent produced (non-idempotent) records increment it.
+        """
+        return self._collaborators.intake.fetch_and_intake(
+            request,
+            writer=writer,
+            world=world,
+            receive_wall_time=receive_wall_time,
+            sequence_start=sequence_start,
+            receive_monotonic_diagnostic=receive_monotonic_diagnostic,
+        )
+
     def submit(
         self,
         observation: object,
@@ -520,23 +631,23 @@ class ExternalSourceIngest:
         Thin composition helper: ingest never reaches into the store itself for CT-15
         payloads; the application injects the boundary and routes producer values.
         """
-        return boundary.admit(observation)
+        return self._collaborators.handoff.submit(observation, boundary)
 
     def known_key(self, key: IntakeKey) -> bool:
         """Whether ``key`` has already been intake'd in this process ledger."""
-        return key in self._ledger
+        return self._collaborators.intake.known_key(key)
 
     def start_scheduler(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
         """Always refuse — scheduling is application-owned (AC6 / FM-5)."""
-        return refuse_schedule_ownership(request="start_scheduler")
+        return self._collaborators.schedule.start_scheduler(*_args, **_kwargs)
 
     def run_daemon(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
         """Always refuse — process supervision is application-owned (AC6 / FM-5)."""
-        return refuse_schedule_ownership(request="run_daemon")
+        return self._collaborators.schedule.run_daemon(*_args, **_kwargs)
 
     def run_retry_loop(self, *_args: object, **_kwargs: object) -> Result[IntakeReceipt]:
         """Always refuse — retries are application-owned (AC6 / FM-5)."""
-        return refuse_schedule_ownership(request="run_retry_loop")
+        return self._collaborators.schedule.run_retry_loop(*_args, **_kwargs)
 
 
 # --- field resolvers --------------------------------------------------------
