@@ -14,6 +14,12 @@ refusal). Envelope ``call_depth`` is checked against the host-registered
 recursion ceiling; this story mints no number and does not reuse the
 GAP-0108 retry-attempt ceiling row.
 
+Story 63.3 / FR-PG-28. A widget binds ``start`` of template T. The press
+is an enveloped invoke with ``caller_kind=user|agent`` and required
+``instance_id``. Dispose does not cancel the Mission. A widget
+contribution point without an envelope is refused. Parent AD-10 four
+modes remain; GAP-0081 chrome is not filled.
+
 Nested Mission occupancy was absent at inspect SHA ``34c148b``. Envelope
 ``call_depth`` / ``parent_logical_invocation_id`` and AD-3 lifecycle verbs
 already existed there as CONNECT fixtures (DEC-0465; NFR-PG-04).
@@ -31,7 +37,7 @@ from qma.core.operations import public_operation_descriptors
 from qma.core.operations.descriptor import OperationDescriptor
 from qma.core.ports.jobs import JobHandle
 from qma.core.ports.permissions import nested_invocation_grants
-from qma.core.vocabulary.enums import CallerKind, LifecycleVerb
+from qma.core.vocabulary.enums import CallerKind, JobHandleState, LifecycleVerb
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.journal.variables import (
@@ -50,6 +56,24 @@ from qma.daemon.taskgraph.records import (
     TaskGraph,
     TaskGraphNode,
 )
+from qma.daemon.taskgraph.widget_start import (
+    FIFTH_COMPOSITION_MODE_MINTED,
+    GAP_0081_CHROME_FILLED,
+    PARENT_AD10_COMPOSITION_MODES,
+    WIDGET_DISPOSE_CANCELS_MISSION,
+    WIDGET_START_CALLER_KINDS,
+    WIDGET_START_IMPLEMENTED,
+    WIDGET_START_VERB,
+    WIDGETS_OWN_INVOKE,
+    WidgetStartBinding,
+    WidgetStartedMission,
+    parse_widget_start_binding,
+    refuse_fifth_composition_mode,
+    refuse_gap_0081_widget_chrome,
+    refuse_widget_contribution_without_envelope,
+    refuse_widget_owned_invoke,
+    widget_contribution_point_name,
+)
 from qma.wire.invocation_envelope import InvocationEnvelope, parse_invocation_envelope
 from qmf.core import Ok, Result, is_refusal
 from qmf.core.refusal import TypedRefusal
@@ -59,6 +83,7 @@ __all__ = [
     "CALL_DEPTH_EXISTED_AT_INSPECT_SHA",
     "CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW",
     "FIFTH_COMPOSITION_MODE_MINTED",
+    "GAP_0081_CHROME_FILLED",
     "GAP_0108_IS_RETRY_ATTEMPT_CEILING",
     "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY",
     "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY",
@@ -73,16 +98,28 @@ __all__ = [
     "PARENT_LOGICAL_INVOCATION_ID_EXISTED_AT_INSPECT_SHA",
     "RECURSION_CEILING_ROW_IMPLEMENTED",
     "SECOND_VERB_SET_MINTED",
+    "WIDGETS_OWN_INVOKE",
+    "WIDGET_DISPOSE_CANCELS_MISSION",
+    "WIDGET_START_CALLER_KINDS",
+    "WIDGET_START_IMPLEMENTED",
+    "WIDGET_START_VERB",
     "NestedMissionHost",
     "NestedMissionOccupancy",
     "ParentMissionRun",
+    "WidgetStartBinding",
+    "WidgetStartedMission",
     "bind_call_depth_ceiling_key",
     "claim_nested_connect_surface_absent_at_inspect_sha",
     "claim_nested_mission_occupancy_at_inspect_sha",
     "include_subgraph_at_author",
     "nested_callee_from_node",
+    "parse_widget_start_binding",
+    "refuse_fifth_composition_mode",
+    "refuse_gap_0081_widget_chrome",
     "refuse_live_graph_splice",
     "refuse_live_task_graph_merge",
+    "refuse_widget_contribution_without_envelope",
+    "refuse_widget_owned_invoke",
 ]
 
 
@@ -92,7 +129,6 @@ CALL_DEPTH_EXISTED_AT_INSPECT_SHA: Final[bool] = True
 PARENT_LOGICAL_INVOCATION_ID_EXISTED_AT_INSPECT_SHA: Final[bool] = True
 LIFECYCLE_VERBS_EXISTED_AT_INSPECT_SHA: Final[bool] = True
 SECOND_VERB_SET_MINTED: Final[bool] = False
-FIFTH_COMPOSITION_MODE_MINTED: Final[bool] = False
 INCLUDE_AT_AUTHOR_IMPLEMENTED: Final[bool] = True
 RECURSION_CEILING_ROW_IMPLEMENTED: Final[bool] = True
 CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW: Final[bool] = False
@@ -112,12 +148,6 @@ _CALL_DEPTH_CEILING_KEYS: Final[frozenset[str]] = frozenset(
 NESTED_MISSION_OCCUPANCY_FOLLOWS: Final[str] = "job_handle"
 NESTED_MISSION_LIFECYCLE_VERBS: Final[frozenset[str]] = frozenset(
     member.value for member in LifecycleVerb
-)
-PARENT_AD10_COMPOSITION_MODES: Final[tuple[str, ...]] = (
-    "consume_artifact",
-    "invoke_op",
-    "graph_template_coordinate",
-    "composite_instance_graph",
 )
 _NESTED_CALLEE_OP_ID: Final[str] = "qma.procedure.start"
 
@@ -546,6 +576,13 @@ class NestedMissionHost:
     _by_parent_node: dict[tuple[str, str], str] = field(
         default_factory=dict[tuple[str, str], str], init=False
     )
+    _widgets: dict[str, WidgetStartBinding] = field(
+        default_factory=dict[str, WidgetStartBinding], init=False
+    )
+    _widget_jobs: dict[str, str] = field(default_factory=dict[str, str], init=False)
+    _widget_starts: dict[str, WidgetStartedMission] = field(
+        default_factory=dict[str, WidgetStartedMission], init=False
+    )
 
     @property
     def templates(self) -> GraphTemplateCatalog:
@@ -554,6 +591,22 @@ class NestedMissionHost:
     @property
     def fifth_composition_mode_minted(self) -> bool:
         return FIFTH_COMPOSITION_MODE_MINTED
+
+    @property
+    def widgets_own_invoke(self) -> bool:
+        return WIDGETS_OWN_INVOKE
+
+    @property
+    def widget_dispose_cancels_mission(self) -> bool:
+        return WIDGET_DISPOSE_CANCELS_MISSION
+
+    @property
+    def gap_0081_chrome_filled(self) -> bool:
+        return GAP_0081_CHROME_FILLED
+
+    @property
+    def widget_start_implemented(self) -> bool:
+        return WIDGET_START_IMPLEMENTED
 
     @property
     def include_at_author_implemented(self) -> bool:
@@ -719,7 +772,231 @@ class NestedMissionHost:
         if nested is not None:
             live = self.jobs.handle_for(job_id)
             return live if live is not None else nested.handle
+        started = self._widget_starts.get(job_id)
+        if started is not None:
+            live = self.jobs.handle_for(job_id)
+            return live if live is not None else started.handle
         return self.jobs.handle_for(job_id)
+
+    def widget_binding(self, widget_id: str) -> WidgetStartBinding | None:
+        return self._widgets.get(widget_id)
+
+    def widget_start_for(self, widget_id: str) -> WidgetStartedMission | None:
+        job_id = self._widget_jobs.get(widget_id)
+        if job_id is None:
+            return None
+        return self._widget_starts.get(job_id)
+
+    def bind_widget_start(
+        self,
+        widget_id: object,
+        template: object,
+        *,
+        verb: object = WIDGET_START_VERB,
+        composition_mode: object | None = None,
+        owns_invoke: object = False,
+        is_contribution_point: object = False,
+        gap_0081_chrome: object = False,
+    ) -> Result[WidgetStartBinding]:
+        """Bind a widget to ``start`` of Graph Template T. Host owns invoke."""
+        resolved = self._resolve_widget_template(template)
+        if is_refusal(resolved):
+            return resolved
+        binding = parse_widget_start_binding(
+            widget_id,
+            qualified_id=resolved.value.qualified_id,
+            version=resolved.value.version,
+            verb=verb,
+            composition_mode=composition_mode,
+            owns_invoke=owns_invoke,
+            is_contribution_point=is_contribution_point,
+            gap_0081_chrome=gap_0081_chrome,
+        )
+        if is_refusal(binding):
+            return binding
+        self._widgets[binding.value.widget_id] = binding.value
+        return binding
+
+    def press_widget(
+        self,
+        widget_id: object,
+        *,
+        envelope: object | None,
+        owner: Quant,
+        goal: str | None = None,
+    ) -> Result[WidgetStartedMission]:
+        """User/agent press. Envelope required. Widget does not own invoke."""
+        if envelope is None:
+            return refuse_widget_contribution_without_envelope(point="widget")
+        if not isinstance(widget_id, str) or widget_id.strip() == "":
+            return invalid_input(
+                "widget_id",
+                "widget id is a non-empty string",
+                given=repr(widget_id),
+            )
+        token = widget_id.strip()
+        binding = self._widgets.get(token)
+        if binding is None:
+            return invalid_input(
+                "widget_id",
+                "widget must be bound to start of template T before press",
+                given=token,
+                owns_invoke=WIDGETS_OWN_INVOKE,
+            )
+        parsed_env = parse_invocation_envelope(envelope)
+        if is_refusal(parsed_env):
+            return parsed_env
+        env = parsed_env.value
+        if env.instance_id.strip() == "":
+            return invalid_input(
+                "instance_id",
+                "envelope instance_id remains required on widget start",
+            )
+        if env.caller_kind not in WIDGET_START_CALLER_KINDS:
+            return invalid_input(
+                "caller_kind",
+                "widget start carries caller_kind=user or agent; nested "
+                "workflow-to-workflow uses caller_kind=workflow",
+                given=env.caller_kind.value,
+                allowed=sorted(kind.value for kind in WIDGET_START_CALLER_KINDS),
+            )
+        if env.call_depth != 0:
+            return invalid_input(
+                "call_depth",
+                "widget start is a top-level invoke_op, not a nested Mission",
+                call_depth=env.call_depth,
+                composition_mode=binding.composition_mode,
+                fifth_composition_mode_minted=FIFTH_COMPOSITION_MODE_MINTED,
+            )
+        if env.contribution.qualified_id != binding.template_qualified_id:
+            return invalid_input(
+                "contribution.qualified_id",
+                "envelope contribution is Graph Template T (qualified_id, version)",
+                given=env.contribution.qualified_id,
+                expected=binding.template_qualified_id,
+            )
+        if env.contribution.package_version != binding.template_version:
+            return invalid_input(
+                "contribution.package_version",
+                "envelope contribution is Graph Template T (qualified_id, version)",
+                given=env.contribution.package_version,
+                expected=binding.template_version,
+            )
+        template = self.templates.get_versioned(
+            binding.template_qualified_id, binding.template_version
+        )
+        if template is None:
+            return invalid_input(
+                "template",
+                "widget binds start of a registered Graph Template T",
+                qualified_id=binding.template_qualified_id,
+                version=binding.template_version,
+            )
+        compiled = self.compile_parent(
+            owner=owner,
+            template=template,
+            goal=goal if goal is not None else f"widget-start {template.qualified_id}",
+        )
+        if is_refusal(compiled):
+            return compiled
+        started = WidgetStartedMission(
+            binding=binding,
+            envelope=env,
+            owner=owner,
+            mission=compiled.value.mission,
+            task_graph=compiled.value.task_graph,
+            handle=compiled.value.handle,
+        )
+        self._widget_jobs[token] = started.handle.job_id
+        self._widget_starts[started.handle.job_id] = started
+        return Ok(started)
+
+    def dispose_widget(
+        self,
+        widget_id: object,
+        *,
+        cancel: bool = False,
+        job_id: object | None = None,
+    ) -> Result[WidgetStartBinding]:
+        """Dispose the widget. The Mission's JobHandle is not cancelled."""
+        if cancel or WIDGET_DISPOSE_CANCELS_MISSION:
+            return policy_rejection(
+                "widget",
+                "disposing the widget does not cancel the Mission (FR-PG-28; "
+                "SCN-0025 Then 1; UX-DR-PG-02)",
+                cancels=WIDGET_DISPOSE_CANCELS_MISSION,
+                owns_invoke=WIDGETS_OWN_INVOKE,
+            )
+        if not isinstance(widget_id, str) or widget_id.strip() == "":
+            return invalid_input(
+                "widget_id",
+                "widget id is a non-empty string",
+                given=repr(widget_id),
+            )
+        token = widget_id.strip()
+        binding = self._widgets.get(token)
+        if binding is None:
+            return invalid_input(
+                "widget_id",
+                "dispose names a bound widget",
+                given=token,
+            )
+        resolved_job = job_id if job_id is not None else self._widget_jobs.get(token)
+        if resolved_job is not None:
+            if not isinstance(resolved_job, str) or resolved_job.strip() == "":
+                return invalid_input(
+                    "job_id",
+                    "job_id is a non-empty string",
+                    given=repr(resolved_job),
+                )
+            detached = self.jobs.on_client_detach(resolved_job.strip(), event="ui_client_detach")
+            if is_refusal(detached):
+                return detached
+            if detached.value.state in {
+                JobHandleState.CANCELLED,
+                JobHandleState.ABORTED,
+                JobHandleState.FAILED,
+                JobHandleState.DONE,
+            }:
+                return policy_rejection(
+                    "job_handle",
+                    "disposing the widget must not cancel the Mission",
+                    state=detached.value.state.value,
+                    cancels=WIDGET_DISPOSE_CANCELS_MISSION,
+                )
+        self._widgets.pop(token, None)
+        return Ok(binding)
+
+    def execute_widget_contribution_point(
+        self,
+        point: object,
+        *,
+        envelope: object | None = None,
+        widget_id: object | None = None,
+        owner: Quant | None = None,
+    ) -> Result[WidgetStartedMission]:
+        """Widget contribution execute is refused; host press requires envelope."""
+        token = widget_contribution_point_name(point)
+        if envelope is None:
+            return refuse_widget_contribution_without_envelope(
+                point=token if token is not None else point
+            )
+        return refuse_widget_owned_invoke(
+            given=token if token is not None else point,
+            envelope_present=True,
+            widget_id=widget_id,
+            owner_present=owner is not None,
+        )
+
+    def mint_composition_mode(self, mode: object) -> Result[str]:
+        """Parent AD-10 four modes remain. Widget is not a fifth."""
+        if isinstance(mode, str) and mode in PARENT_AD10_COMPOSITION_MODES:
+            return Ok(mode)
+        return refuse_fifth_composition_mode(mode)
+
+    def fill_gap_0081_chrome(self) -> Result[None]:
+        """Widget start must not fill GAP-0081 chrome."""
+        return refuse_gap_0081_widget_chrome()
 
     def invoke(
         self,
@@ -1090,6 +1367,50 @@ class NestedMissionHost:
                 reused_retry_row=CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW,
             )
         return Ok(None)
+
+    def _resolve_widget_template(self, value: object) -> Result[GraphTemplate]:
+        if isinstance(value, TaskGraph):
+            return invalid_input(
+                "template",
+                "widget binds start of a Graph Template, not a live Task Graph",
+                runtime_merge=False,
+                owns_invoke=WIDGETS_OWN_INVOKE,
+            )
+        if isinstance(value, GraphTemplate):
+            found = self.templates.get_versioned(value.qualified_id, value.version)
+            if found is None:
+                stored = self.register_template(value)
+                if is_refusal(stored):
+                    return stored
+                found = self.templates.get_versioned(value.qualified_id, value.version)
+            if found is None:
+                return invalid_input(
+                    "template",
+                    "widget binds start of a registered Graph Template T",
+                    qualified_id=value.qualified_id,
+                    version=value.version,
+                )
+            return Ok(found)
+        if isinstance(value, Mapping):
+            body = cast("Mapping[object, object]", value)
+            qualified = body.get("qualified_id")
+            version = body.get("version")
+            if isinstance(qualified, str) and isinstance(version, str):
+                found = self.templates.get_versioned(qualified.strip(), version.strip())
+                if found is None:
+                    return invalid_input(
+                        "template",
+                        "widget binds start of a registered Graph Template T "
+                        "(qualified_id, version)",
+                        qualified_id=qualified,
+                        version=version,
+                    )
+                return Ok(found)
+        return invalid_input(
+            "template",
+            "widget binds start of Graph Template T (qualified_id, version)",
+            given="mapping" if isinstance(value, Mapping) else type(value).__name__,
+        )
 
     def _resolve_template(self, value: object, *, field: str) -> Result[GraphTemplate]:
         if isinstance(value, TaskGraph):
