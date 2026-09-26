@@ -35,8 +35,10 @@ from qmf.data import (
     EDGE_DISAGREES_WITH,
     EDGE_SUPERSEDES,
     ExternalSourceIngest,
+    IntakeReceipt,
     ProviderRecord,
     SourceRequest,
+    TickObservation,
     TickQuote,
     link_revision,
     refuse_mid_merge,
@@ -78,37 +80,75 @@ class _DemoPort:
         return Ok(())
 
 
-def bid_ask_preserved(ingest: ExternalSourceIngest) -> str:
-    receipt = _unwrap(
+def _quote(
+    source: str,
+    native_id: str,
+    *,
+    event_delta: int = 0,
+    bid: int = 110250,
+    ask: int = 110260,
+    revision: str = "r1",
+    known_at: int | None = None,
+    bid_timestamp: dict[str, str] | None = None,
+    ask_timestamp: dict[str, str] | None = None,
+    correction_of: object | None = None,
+) -> ProviderRecord:
+    return ProviderRecord(
+        source=source,
+        source_native_id=native_id,
+        revision=revision,
+        event_time=_EVENT_NS + event_delta,
+        known_at=_KNOWN_NS if known_at is None else known_at,
+        instrument=_instrument(),
+        bid={"verbatim": bid, "scale": 5},
+        ask={"verbatim": ask, "scale": 5},
+        bid_timestamp=bid_timestamp,
+        ask_timestamp=ask_timestamp,
+        correction_of=correction_of,
+    )
+
+
+def _intake_tick(
+    ingest: ExternalSourceIngest,
+    record: ProviderRecord,
+    *,
+    stream: str = "ticks",
+    sequence: int,
+    what: str,
+) -> IntakeReceipt:
+    return _unwrap(
         ingest.intake(
-            ProviderRecord(
-                source="dukascopy",
-                source_native_id="EURUSD#42",
-                revision="r1",
-                event_time=_EVENT_NS,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110260, "scale": 5},
-                bid_timestamp={
-                    "verbatim": "2026-08-21T12:00:00.123",
-                    "zone": "UTC",
-                    "offset": "+00:00",
-                    "resolution": "ms",
-                },
-                ask_timestamp={
-                    "verbatim": "2026-08-21T12:00:00.124",
-                    "zone": "UTC",
-                    "offset": "+00:00",
-                    "resolution": "ms",
-                },
-            ),
-            writer=_writer(),
-            sequence=0,
+            record,
+            writer=_writer(stream),
+            sequence=sequence,
             world=World.LIVE,
             receive_wall_time=_RECEIVE_NS,
         ),
-        "dukascopy tick",
+        what,
+    )
+
+
+def bid_ask_preserved(ingest: ExternalSourceIngest) -> str:
+    receipt = _intake_tick(
+        ingest,
+        _quote(
+            "dukascopy",
+            "EURUSD#42",
+            bid_timestamp={
+                "verbatim": "2026-08-21T12:00:00.123",
+                "zone": "UTC",
+                "offset": "+00:00",
+                "resolution": "ms",
+            },
+            ask_timestamp={
+                "verbatim": "2026-08-21T12:00:00.124",
+                "zone": "UTC",
+                "offset": "+00:00",
+                "resolution": "ms",
+            },
+        ),
+        sequence=0,
+        what="dukascopy tick",
     )
     quote = receipt.quote
     if not isinstance(quote, TickQuote):
@@ -123,93 +163,55 @@ def bid_ask_preserved(ingest: ExternalSourceIngest) -> str:
     )
 
 
-def disagreement_edges(ingest: ExternalSourceIngest) -> str:
-    dukas = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="dukascopy",
-                source_native_id="EURUSD#same-fact",
-                revision="r1",
-                event_time=_EVENT_NS + 10,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110260, "scale": 5},
-            ),
-            writer=_writer("dukascopy"),
-            sequence=1,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
-        ),
-        "dukascopy fact",
+def _agree_pair(ingest: ExternalSourceIngest) -> tuple[TickObservation, TickObservation]:
+    dukas = _intake_tick(
+        ingest,
+        _quote("dukascopy", "EURUSD#same-fact", event_delta=10),
+        stream="dukascopy",
+        sequence=1,
+        what="dukascopy fact",
     )
-    agree = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="broker-feed",
-                source_native_id="EURUSD#peer-agree",
-                revision="r1",
-                event_time=_EVENT_NS + 10,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110260, "scale": 5},
-            ),
-            writer=_writer("broker"),
-            sequence=0,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
-        ),
-        "broker agree",
-    )
-    disagree = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="broker-feed",
-                source_native_id="EURUSD#peer-disagree",
-                revision="r1",
-                event_time=_EVENT_NS + 20,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110999, "scale": 5},
-            ),
-            writer=_writer("broker"),
-            sequence=1,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
-        ),
-        "broker disagree peer",
-    )
-    dukas_b = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="dukascopy",
-                source_native_id="EURUSD#same-fact-b",
-                revision="r1",
-                event_time=_EVENT_NS + 20,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110260, "scale": 5},
-            ),
-            writer=_writer("dukascopy"),
-            sequence=2,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
-        ),
-        "dukascopy disagree fact",
+    agree = _intake_tick(
+        ingest,
+        _quote("broker-feed", "EURUSD#peer-agree", event_delta=10),
+        stream="broker",
+        sequence=0,
+        what="broker agree",
     )
     if dukas.tick is None or agree.tick is None:
         raise AssertionError("expected agree ticks")
+    return dukas.tick, agree.tick
+
+
+def _disagree_pair(ingest: ExternalSourceIngest) -> tuple[TickObservation, TickObservation]:
+    disagree = _intake_tick(
+        ingest,
+        _quote("broker-feed", "EURUSD#peer-disagree", event_delta=20, ask=110999),
+        stream="broker",
+        sequence=1,
+        what="broker disagree peer",
+    )
+    dukas_b = _intake_tick(
+        ingest,
+        _quote("dukascopy", "EURUSD#same-fact-b", event_delta=20),
+        stream="dukascopy",
+        sequence=2,
+        what="dukascopy disagree fact",
+    )
     if dukas_b.tick is None or disagree.tick is None:
         raise AssertionError("expected disagree ticks")
+    return dukas_b.tick, disagree.tick
+
+
+def disagreement_edges(ingest: ExternalSourceIngest) -> str:
+    left, right = _agree_pair(ingest)
+    other, peer = _disagree_pair(ingest)
     corr = _unwrap(
-        relate_source_facts(dukas.tick, agree.tick, writer=_writer("lineage")),
+        relate_source_facts(left, right, writer=_writer("lineage")),
         "corroborates",
     )
     disc = _unwrap(
-        relate_source_facts(dukas_b.tick, disagree.tick, writer=_writer("lineage")),
+        relate_source_facts(other, peer, writer=_writer("lineage")),
         "disagrees-with",
     )
     _require(corr.edge_type == EDGE_CORROBORATES, "corroborates edge")
@@ -218,44 +220,26 @@ def disagreement_edges(ingest: ExternalSourceIngest) -> str:
 
 
 def revision_linked(ingest: ExternalSourceIngest) -> str:
-    first = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="dukascopy",
-                source_native_id="EURUSD#rev",
-                revision="r1",
-                event_time=_EVENT_NS + 30,
-                known_at=_KNOWN_NS,
-                instrument=_instrument(),
-                bid={"verbatim": 110250, "scale": 5},
-                ask={"verbatim": 110260, "scale": 5},
-            ),
-            writer=_writer(),
-            sequence=3,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
-        ),
-        "r1",
+    first = _intake_tick(
+        ingest,
+        _quote("dukascopy", "EURUSD#rev", event_delta=30),
+        sequence=3,
+        what="r1",
     )
-    second = _unwrap(
-        ingest.intake(
-            ProviderRecord(
-                source="dukascopy",
-                source_native_id="EURUSD#rev",
-                revision="r2",
-                event_time=_EVENT_NS + 30,
-                known_at=_KNOWN_NS + 1,
-                instrument=_instrument(),
-                bid={"verbatim": 110251, "scale": 5},
-                ask={"verbatim": 110261, "scale": 5},
-                correction_of=first.observation.fingerprint,
-            ),
-            writer=_writer(),
-            sequence=4,
-            world=World.LIVE,
-            receive_wall_time=_RECEIVE_NS,
+    second = _intake_tick(
+        ingest,
+        _quote(
+            "dukascopy",
+            "EURUSD#rev",
+            event_delta=30,
+            revision="r2",
+            known_at=_KNOWN_NS + 1,
+            bid=110251,
+            ask=110261,
+            correction_of=first.observation.fingerprint,
         ),
-        "r2",
+        sequence=4,
+        what="r2",
     )
     _require(
         first.observation.fingerprint.value != second.observation.fingerprint.value,

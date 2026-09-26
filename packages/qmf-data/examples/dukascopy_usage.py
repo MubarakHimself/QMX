@@ -98,10 +98,8 @@ class _DemoTransport:
         return Ok(b"")
 
 
-def main() -> None:
-    transport = _DemoTransport()
-    adapter = DukascopyAdapter(transport, instruments={"EURUSD": _instrument()})
-    bounds = {
+def _hour_bounds() -> dict[str, object]:
+    return {
         "symbol": "EURUSD",
         "start_ns": _HOUR_NS,
         "end_ns": _END_NS,
@@ -109,13 +107,13 @@ def main() -> None:
         "revision": "r1",
         "license_tag": PERSONAL_USE_LICENSE,
     }
-    request = SourceRequest(source=DUKASCOPY_SOURCE, bounds=bounds)
 
-    # AC1 — bounded fetch → CT-15 records → CT-10 via ingest seam.
-    ingest = ExternalSourceIngest(adapter)
+
+def download_once_intake(ingest: ExternalSourceIngest, adapter: DukascopyAdapter) -> None:
+    """AC1: bounded fetch → CT-15 records → CT-10 via ingest seam."""
     receipts = _unwrap(
         ingest.fetch_and_intake(
-            request,
+            SourceRequest(source=DUKASCOPY_SOURCE, bounds=_hour_bounds()),
             writer=_writer(),
             world=World.LIVE,
             receive_wall_time=_RECEIVE_NS,
@@ -132,16 +130,14 @@ def main() -> None:
         f"download-once CT-10: source={first.observation.source} "
         f"ticks={len(receipts)} bid={quote.bid.verbatim} ask={quote.ask.verbatim}\n"
     )
-
     with tempfile.TemporaryDirectory() as tmp:
         boundary = SourceObservationBoundary(EvidenceStore(Path(tmp) / "store"))
-        admitted = _unwrap(
-            ingest.submit(first.observation, boundary),
-            "CT-10 admit",
-        )
+        admitted = _unwrap(ingest.submit(first.observation, boundary), "CT-10 admit")
         sys.stdout.write(f"admitted to raw archive: {admitted.archive.outcome.value}\n")
 
-    # AC2 — license-tagged window; unlicensed refuses governed evidence.
+
+def license_tagged_window(adapter: DukascopyAdapter) -> None:
+    """AC2: personal-use window is offered; unknown tag is policy rejection."""
     window = adapter.last_window
     if window is None:
         raise AssertionError("expected window recorded")
@@ -150,7 +146,6 @@ def main() -> None:
         f"license-tagged window: tag={offered.license_tag.value} "
         f"partition={offered.partition.partition_key}\n"
     )
-
     unknown = _unwrap(
         LicensedSourceWindow.try_create(
             partition=window.partition,
@@ -167,29 +162,45 @@ def main() -> None:
     )
     sys.stdout.write("unlicensed window refused for governed evidence\n")
 
-    # AC3 — malformed bi5 / unmappable symbol.
+
+def malformed_and_unmapped(adapter: DukascopyAdapter) -> None:
+    """AC3: malformed bi5 / unmappable symbol are invalid input."""
     bad = decode_bi5_ticks(b"not-compressed", hour_start_ns=_HOUR_NS)
     if not is_refusal(bad) or bad.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected bad bi5 invalid input")
     unmapped = adapter.fetch(
         SourceRequest(
             source=DUKASCOPY_SOURCE,
-            bounds={**bounds, "symbol": "NOSUCH"},
+            bounds={**_hour_bounds(), "symbol": "NOSUCH"},
         )
     )
     if not is_refusal(unmapped) or unmapped.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected unmappable instrument invalid input")
     sys.stdout.write("malformed / unmappable -> invalid input\n")
 
-    # AC4 — complete corpus refused.
+
+def complete_corpus_refused(adapter: DukascopyAdapter) -> None:
+    """AC4: complete-corpus download is refused."""
     corpus = adapter.download_complete_corpus()
     _require(is_refusal(corpus), "complete corpus refused")
     sys.stdout.write("complete-corpus download refused (bounded adapter only)\n")
 
-    # AC5 — recovery ownership refused.
+
+def recovery_ownership_refused(adapter: DukascopyAdapter) -> None:
+    """AC5: external recovery / checkpoint ownership is application-owned."""
     recovery = adapter.recover_external()
     _require(is_refusal(recovery), "external recovery refused")
     sys.stdout.write("external recovery / checkpoint ownership refused (application-owned)\n")
+
+
+def main() -> None:
+    adapter = DukascopyAdapter(_DemoTransport(), instruments={"EURUSD": _instrument()})
+    ingest = ExternalSourceIngest(adapter)
+    download_once_intake(ingest, adapter)
+    license_tagged_window(adapter)
+    malformed_and_unmapped(adapter)
+    complete_corpus_refused(adapter)
+    recovery_ownership_refused(adapter)
 
 
 if __name__ == "__main__":

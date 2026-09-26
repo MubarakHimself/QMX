@@ -38,6 +38,7 @@ from qmf.data import (
     NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE,
     NODE_OPS_BACKUP_RETENTION_PERIOD,
     NODE_OPS_RESTORE_VERIFICATION_CADENCE,
+    BackupCopyReceipt,
     EvidenceStore,
     OffMachineBackup,
     OffMachineRestore,
@@ -47,7 +48,7 @@ from qmf.data import (
     migrate_evidence,
     refuse_snapshot_alone_claim,
 )
-from qmf.data.store import RoomRole
+from qmf.data.store import RoomExport, RoomRole, WorldStore
 
 T = TypeVar("T")
 
@@ -107,8 +108,8 @@ class _MemoryBucket:
         return Ok(payload)
 
 
-def main() -> None:
-    """Drive sample-restore, corrupt refusal, migration sequence, and null pointers."""
+def null_node_ops_pointers() -> None:
+    """Numeric cadence / RPO / RTO / retention stay null node/ops pointers."""
     _require(NODE_OPS_RESTORE_VERIFICATION_CADENCE is None, "cadence stays null")
     _require(NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE is None, "RPO stays null")
     _require(NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE is None, "RTO stays null")
@@ -118,6 +119,9 @@ def main() -> None:
         "(never filled from a recommendation)\n"
     )
 
+
+def snapshot_alone_is_refused() -> None:
+    """Recoverability is never claimed from a snapshot alone."""
     alone = refuse_snapshot_alone_claim(world=World.LIVE, copy_version=1)
     _require(
         is_refusal(alone) and alone.category.value == "policy rejection",
@@ -125,116 +129,159 @@ def main() -> None:
     )
     sys.stdout.write("snapshot alone: policy rejection (no recoverability claim)\n")
 
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        source = EvidenceStore(root / "source")
-        live = _unwrap(source.for_world(World.LIVE), "live world store")
-        _unwrap(
-            live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
-            "raw append",
-        )
-        writer = _unwrap(
-            WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
-            "writer id",
-        )
-        _unwrap(
-            live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
-            "registry record",
-        )
-        _unwrap(
-            live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
-            "lineage edge",
-        )
-        jw = _unwrap(WriterId.try_create("node-a", "data", "dq", "boot-1"), "journal writer")
-        _unwrap(
-            live.journal.append("dq", jw, {"event_type": "data quality", "n": 0}),
-            "journal append",
-        )
 
-        export = _unwrap(
-            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-            "CT-26 raw export",
-        )
-        bucket = _MemoryBucket()
-        cipher = _XorCipher()
-        receipt = _unwrap(
-            OffMachineBackup(bucket, cipher).copy_export(export, for_world=World.LIVE),
-            "CT-14 encrypted copy",
-        )
+def _populate_source(source: EvidenceStore) -> WorldStore:
+    live = _unwrap(source.for_world(World.LIVE), "live world store")
+    _unwrap(
+        live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
+        "raw append",
+    )
+    writer = _unwrap(
+        WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
+        "writer id",
+    )
+    _unwrap(
+        live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
+        "registry record",
+    )
+    _unwrap(
+        live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
+        "lineage edge",
+    )
+    jw = _unwrap(WriterId.try_create("node-a", "data", "dq", "boot-1"), "journal writer")
+    _unwrap(
+        live.journal.append("dq", jw, {"event_type": "data quality", "n": 0}),
+        "journal append",
+    )
+    return live
 
-        claim = _unwrap(
-            OffMachineVerify(bucket, cipher).sample_restore(
-                world=World.LIVE,
-                copy_version=receipt.copy_version,
-                source_room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE,
-                into=EvidenceStore(root / "sample-replacement"),
-                for_world=World.LIVE,
-                expected=export,
-                source_store=source,
-            ),
-            "sample-restore verify",
-        )
-        _require(claim.kind is VerifyKind.SAMPLE_RESTORE, "claim kind is sample-restore")
-        _require(claim.record_count == 1, "sample claim covers one record")
-        sys.stdout.write(
-            f"sample-restore: recoverability claimed "
-            f"(kind={claim.kind.value}; records={claim.record_count})\n"
-        )
 
-        bucket.objects[("live", receipt.copy_version, "immutable raw archive")] = b"CORRUPT!!"
-        corrupt = OffMachineVerify(bucket, cipher).sample_restore(
+def _raw_export_and_copy(
+    live: WorldStore, bucket: _MemoryBucket, cipher: _XorCipher
+) -> tuple[RoomExport, BackupCopyReceipt]:
+    export = _unwrap(
+        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+        "CT-26 raw export",
+    )
+    receipt = _unwrap(
+        OffMachineBackup(bucket, cipher).copy_export(export, for_world=World.LIVE),
+        "CT-14 encrypted copy",
+    )
+    return export, receipt
+
+
+def sample_restore_claim(
+    root: Path,
+    source: EvidenceStore,
+    export: RoomExport,
+    receipt: BackupCopyReceipt,
+    bucket: _MemoryBucket,
+    cipher: _XorCipher,
+) -> None:
+    """Sample-restore is a recoverability claim, not a snapshot-alone assertion."""
+    claim = _unwrap(
+        OffMachineVerify(bucket, cipher).sample_restore(
             world=World.LIVE,
             copy_version=receipt.copy_version,
             source_room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE,
-            into=EvidenceStore(root / "corrupt-replacement"),
+            into=EvidenceStore(root / "sample-replacement"),
             for_world=World.LIVE,
             expected=export,
             source_store=source,
-        )
-        _require(
-            is_refusal(corrupt) and corrupt.category.value == "storage failure",
-            "corrupt restore is storage failure",
-        )
-        sys.stdout.write("corrupt restore: storage failure (no recoverability claim)\n")
+        ),
+        "sample-restore verify",
+    )
+    _require(claim.kind is VerifyKind.SAMPLE_RESTORE, "claim kind is sample-restore")
+    _require(claim.record_count == 1, "sample claim covers one record")
+    sys.stdout.write(
+        f"sample-restore: recoverability claimed "
+        f"(kind={claim.kind.value}; records={claim.record_count})\n"
+    )
 
-        # Fresh bucket for the migration rehearsal (prior corruption stays isolated).
-        mig_bucket = _MemoryBucket()
-        mig_cipher = _XorCipher()
-        report = _unwrap(
-            migrate_evidence(
-                source=source,
-                destination=EvidenceStore(root / "destination"),
-                verify_into=EvidenceStore(root / "verify-into"),
-                world=World.LIVE,
-                backup=OffMachineBackup(mig_bucket, mig_cipher),
-                restore=OffMachineRestore(mig_bucket, mig_cipher),
-                verify=OffMachineVerify(mig_bucket, mig_cipher),
-                room_roles=(
-                    RoomRole.IMMUTABLE_RAW_ARCHIVE,
-                    RoomRole.JOURNAL,
-                    RoomRole.REGISTRY_ROOM,
-                ),
+
+def corrupt_restore_is_storage_failure(
+    root: Path,
+    source: EvidenceStore,
+    export: RoomExport,
+    receipt: BackupCopyReceipt,
+    bucket: _MemoryBucket,
+    cipher: _XorCipher,
+) -> None:
+    """A corrupt restore yields storage failure, not a recoverability claim."""
+    bucket.objects[("live", receipt.copy_version, "immutable raw archive")] = b"CORRUPT!!"
+    corrupt = OffMachineVerify(bucket, cipher).sample_restore(
+        world=World.LIVE,
+        copy_version=receipt.copy_version,
+        source_room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE,
+        into=EvidenceStore(root / "corrupt-replacement"),
+        for_world=World.LIVE,
+        expected=export,
+        source_store=source,
+    )
+    _require(
+        is_refusal(corrupt) and corrupt.category.value == "storage failure",
+        "corrupt restore is storage failure",
+    )
+    sys.stdout.write("corrupt restore: storage failure (no recoverability claim)\n")
+
+
+def staged_migration(
+    root: Path, source: EvidenceStore, live: WorldStore, export: RoomExport
+) -> None:
+    """Migration is preflight → backup-first → dry-run → migrate → verify."""
+    mig_bucket = _MemoryBucket()
+    mig_cipher = _XorCipher()
+    report = _unwrap(
+        migrate_evidence(
+            source=source,
+            destination=EvidenceStore(root / "destination"),
+            verify_into=EvidenceStore(root / "verify-into"),
+            world=World.LIVE,
+            backup=OffMachineBackup(mig_bucket, mig_cipher),
+            restore=OffMachineRestore(mig_bucket, mig_cipher),
+            verify=OffMachineVerify(mig_bucket, mig_cipher),
+            room_roles=(
+                RoomRole.IMMUTABLE_RAW_ARCHIVE,
+                RoomRole.JOURNAL,
+                RoomRole.REGISTRY_ROOM,
             ),
-            "staged migration",
-        )
-        _require(report.stages_completed == MIGRATION_SEQUENCE, "all five stages ran")
-        _require(report.backed_up is True, "backup-first wrote off-machine copies")
-        _require(
-            report.recoverability.kind is VerifyKind.FULL_RESTORE_REHEARSAL,
-            "migration verify used full-restore rehearsal",
-        )
-        source_again = _unwrap(
-            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-            "source reread after migration",
-        )
-        _require(
-            source_again.records[0].canonical == export.records[0].canonical,
-            "migration never mutated the only local copy",
-        )
-        sys.stdout.write(
-            "migration: preflight -> backup-first -> dry-run -> migrate -> verify; "
-            "source untouched; recoverability via full-restore rehearsal\n"
-        )
+        ),
+        "staged migration",
+    )
+    _require(report.stages_completed == MIGRATION_SEQUENCE, "all five stages ran")
+    _require(report.backed_up is True, "backup-first wrote off-machine copies")
+    _require(
+        report.recoverability.kind is VerifyKind.FULL_RESTORE_REHEARSAL,
+        "migration verify used full-restore rehearsal",
+    )
+    source_again = _unwrap(
+        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+        "source reread after migration",
+    )
+    _require(
+        source_again.records[0].canonical == export.records[0].canonical,
+        "migration never mutated the only local copy",
+    )
+    sys.stdout.write(
+        "migration: preflight -> backup-first -> dry-run -> migrate -> verify; "
+        "source untouched; recoverability via full-restore rehearsal\n"
+    )
+
+
+def main() -> None:
+    """Drive sample-restore, corrupt refusal, migration sequence, and null pointers."""
+    null_node_ops_pointers()
+    snapshot_alone_is_refused()
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        source = EvidenceStore(root / "source")
+        live = _populate_source(source)
+        bucket = _MemoryBucket()
+        cipher = _XorCipher()
+        export, receipt = _raw_export_and_copy(live, bucket, cipher)
+        sample_restore_claim(root, source, export, receipt, bucket, cipher)
+        corrupt_restore_is_storage_failure(root, source, export, receipt, bucket, cipher)
+        staged_migration(root, source, live, export)
 
 
 if __name__ == "__main__":

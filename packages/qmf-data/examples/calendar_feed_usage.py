@@ -119,14 +119,12 @@ class _DemoTransport:
         return Ok(self.body)
 
 
-def main() -> None:
-    transport = _DemoTransport()
-    adapter = CalendarFeedAdapter(transport)
-    ingest = ExternalSourceIngest(adapter)
-    bounds = {"known_at_ns": _KNOWN_NS, "revision": "r1"}
-    request = SourceRequest(source=CALENDAR_FEED_SOURCE, bounds=bounds)
-
-    # AC1 — provider-native identity through CT-15 → CT-10; revision is a new artifact.
+def governed_intake(
+    ingest: ExternalSourceIngest,
+    adapter: CalendarFeedAdapter,
+    request: SourceRequest,
+) -> str:
+    """AC1: provider-native identity through CT-15 → CT-10."""
     receipts = _unwrap(
         ingest.fetch_and_intake(
             request,
@@ -146,8 +144,13 @@ def main() -> None:
         f"governed CT-10: source={first.observation.source} "
         f"events={len(receipts)} ids={[e.source_native_id for e in events]}\n"
     )
+    return first.observation.fingerprint.value
 
-    # Same revision → idempotent.
+
+def revision_is_append_only(
+    ingest: ExternalSourceIngest, request: SourceRequest, first_fp: str
+) -> None:
+    """AC1: same revision is idempotent; a new revision is a distinct fp1."""
     same = _unwrap(
         ingest.fetch_and_intake(
             request,
@@ -159,11 +162,9 @@ def main() -> None:
         "idempotent re-intake",
     )
     _require(same[0].outcome is IntakeOutcome.IDEMPOTENT, "duplicate key idempotent")
-
-    # New revision → distinct fingerprint.
     rev = _unwrap(
         ingest.fetch_and_intake(
-            SourceRequest(source=CALENDAR_FEED_SOURCE, bounds={**bounds, "revision": "r2"}),
+            SourceRequest(source=CALENDAR_FEED_SOURCE, bounds={**request.bounds, "revision": "r2"}),
             writer=_writer(),
             world=World.LIVE,
             receive_wall_time=_RECEIVE_NS,
@@ -173,15 +174,18 @@ def main() -> None:
     )
     _require(rev[0].outcome is IntakeOutcome.PRODUCED, "new revision produced")
     _require(
-        rev[0].observation.fingerprint.value != first.observation.fingerprint.value,
+        rev[0].observation.fingerprint.value != first_fp,
         "revision mints new fp1",
     )
     sys.stdout.write(
-        f"revision append-only: r1={first.observation.fingerprint.value[-12:]} "
+        f"revision append-only: r1={first_fp[-12:]} "
         f"r2={rev[0].observation.fingerprint.value[-12:]}\n"
     )
 
-    # AC2 — verbatim impact; no window/permission; no minted severity.
+
+def verbatim_impact_labels(adapter: CalendarFeedAdapter) -> None:
+    """AC2: impact labels stored verbatim; no minted severity scale."""
+    events = adapter.last_events
     _require(events[0].impact_label == "High", "impact High verbatim")
     _require(events[1].impact_label == "Medium", "impact Medium verbatim")
     severity = refuse_minted_severity_scale(request="demo")
@@ -191,75 +195,101 @@ def main() -> None:
         f"(no QMX severity; feed defines no window)\n"
     )
 
+
+def _calendar_importer(adapter: CalendarFeedAdapter, tmp: str) -> CalendarFeedImport:
+    store = EvidenceStore(Path(tmp) / "store")
+    world = _unwrap(store.for_world(World.LIVE), "live world")
+    jw = JournalWriter(world.journal, _writer("dq"), stream_name="dq")
+    return CalendarFeedImport(
+        adapter,
+        ExternalSourceIngest(adapter),
+        jw,
+        currency_exposures={"USD": {"ok": True}, "EUR": {"ok": True}},
+    )
+
+
+def journaled_calendar_import(importer: CalendarFeedImport, request: SourceRequest) -> None:
+    """AC3: every import is journaled as a data-quality event."""
+    imported_raw = _unwrap(
+        importer.run(
+            request,
+            writer=_writer(),
+            world=World.LIVE,
+            receive_wall_time=_RECEIVE_NS,
+            journal_instant=_JOURNAL_NS,
+        ),
+        "journaled import",
+    )
+    if not isinstance(imported_raw, CalendarImportReceipt):
+        raise AssertionError("expected import receipt")
+    imported: CalendarImportReceipt = imported_raw
+    _require(
+        imported.journal_receipt.event.payload["signal"] == "calendar-import",
+        "data-quality import signal",
+    )
+    sys.stdout.write(
+        f"import journaled as data quality: "
+        f"events={imported.journal_receipt.event.payload['event_count']} "
+        f"defines_window={imported.journal_receipt.event.payload['defines_window']}\n"
+    )
+
+
+def fail_closed_refresh(
+    importer: CalendarFeedImport, transport: _DemoTransport, request: SourceRequest
+) -> None:
+    """AC4: failed refresh fails closed, journaled, no live skip."""
+    transport.fail()
+    closed_raw = _unwrap(
+        importer.run(
+            request,
+            writer=_writer(),
+            world=World.LIVE,
+            receive_wall_time=_RECEIVE_NS,
+            journal_instant=_JOURNAL_NS + 1,
+        ),
+        "fail-closed refresh",
+    )
+    if not isinstance(closed_raw, FailClosedSignal):
+        raise AssertionError("expected fail-closed signal")
+    closed: FailClosedSignal = closed_raw
+    _require(closed.reason is FailClosedReason.FAILED_REFRESH, "failed-refresh")
+    _require(closed.treated_as_affected and closed.alarm, "treated-as-affected+alarm")
+    skip = refuse_live_skip(request="demo")
+    _require(is_refusal(skip), "live skip refused")
+    sys.stdout.write(
+        f"fail-closed degradation: reason={closed.reason.value} "
+        f"treated_as_affected={closed.treated_as_affected} (no live skip)\n"
+    )
+
+
+def legal_archiving_posture(importer: CalendarFeedImport) -> None:
+    """AC5: retention is not claimed authorized."""
+    retention = refuse_authorized_retention_claim()
+    _require(is_refusal(retention), "authorized retention refused")
+    _require(
+        importer.legal_archiving_posture == LEGAL_ARCHIVING_POSTURE,
+        "open operator item",
+    )
+    sys.stdout.write(
+        f"legal archiving posture: {LEGAL_ARCHIVING_POSTURE} (not claimed authorized)\n"
+    )
+
+
+def main() -> None:
+    transport = _DemoTransport()
+    adapter = CalendarFeedAdapter(transport)
+    ingest = ExternalSourceIngest(adapter)
+    request = SourceRequest(
+        source=CALENDAR_FEED_SOURCE, bounds={"known_at_ns": _KNOWN_NS, "revision": "r1"}
+    )
+    first_fp = governed_intake(ingest, adapter, request)
+    revision_is_append_only(ingest, request, first_fp)
+    verbatim_impact_labels(adapter)
     with tempfile.TemporaryDirectory() as tmp:
-        store = EvidenceStore(Path(tmp) / "store")
-        world = _unwrap(store.for_world(World.LIVE), "live world")
-        jw = JournalWriter(world.journal, _writer("dq"), stream_name="dq")
-        importer = CalendarFeedImport(
-            adapter,
-            ExternalSourceIngest(adapter),
-            jw,
-            currency_exposures={"USD": {"ok": True}, "EUR": {"ok": True}},
-        )
-
-        # AC3 — every import journaled as data quality.
-        imported_raw = _unwrap(
-            importer.run(
-                request,
-                writer=_writer(),
-                world=World.LIVE,
-                receive_wall_time=_RECEIVE_NS,
-                journal_instant=_JOURNAL_NS,
-            ),
-            "journaled import",
-        )
-        if not isinstance(imported_raw, CalendarImportReceipt):
-            raise AssertionError("expected import receipt")
-        imported: CalendarImportReceipt = imported_raw
-        _require(
-            imported.journal_receipt.event.payload["signal"] == "calendar-import",
-            "data-quality import signal",
-        )
-        sys.stdout.write(
-            f"import journaled as data quality: "
-            f"events={imported.journal_receipt.event.payload['event_count']} "
-            f"defines_window={imported.journal_receipt.event.payload['defines_window']}\n"
-        )
-
-        # AC4 — failed refresh fails closed, journaled, no live skip.
-        transport.fail()
-        closed_raw = _unwrap(
-            importer.run(
-                request,
-                writer=_writer(),
-                world=World.LIVE,
-                receive_wall_time=_RECEIVE_NS,
-                journal_instant=_JOURNAL_NS + 1,
-            ),
-            "fail-closed refresh",
-        )
-        if not isinstance(closed_raw, FailClosedSignal):
-            raise AssertionError("expected fail-closed signal")
-        closed: FailClosedSignal = closed_raw
-        _require(closed.reason is FailClosedReason.FAILED_REFRESH, "failed-refresh")
-        _require(closed.treated_as_affected and closed.alarm, "treated-as-affected+alarm")
-        skip = refuse_live_skip(request="demo")
-        _require(is_refusal(skip), "live skip refused")
-        sys.stdout.write(
-            f"fail-closed degradation: reason={closed.reason.value} "
-            f"treated_as_affected={closed.treated_as_affected} (no live skip)\n"
-        )
-
-        # AC5 — retention not claimed authorized.
-        retention = refuse_authorized_retention_claim()
-        _require(is_refusal(retention), "authorized retention refused")
-        _require(
-            importer.legal_archiving_posture == LEGAL_ARCHIVING_POSTURE,
-            "open operator item",
-        )
-        sys.stdout.write(
-            f"legal archiving posture: {LEGAL_ARCHIVING_POSTURE} (not claimed authorized)\n"
-        )
+        importer = _calendar_importer(adapter, tmp)
+        journaled_calendar_import(importer, request)
+        fail_closed_refresh(importer, transport, request)
+        legal_archiving_posture(importer)
 
 
 if __name__ == "__main__":
