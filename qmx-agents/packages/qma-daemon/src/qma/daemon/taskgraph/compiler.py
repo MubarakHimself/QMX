@@ -119,6 +119,13 @@ class GraphTemplateCatalog:
     def get(self, qualified_id: str) -> GraphTemplate | None:
         return self._templates.get(qualified_id)
 
+    def get_versioned(self, qualified_id: str, version: str) -> GraphTemplate | None:
+        """Lookup by compile identity ``(qualified_id, version)`` (AD-13)."""
+        template = self._templates.get(qualified_id)
+        if template is None or template.version != version:
+            return None
+        return template
+
     def __contains__(self, qualified_id: object) -> bool:
         return isinstance(qualified_id, str) and qualified_id in self._templates
 
