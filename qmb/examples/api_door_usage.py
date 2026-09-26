@@ -15,7 +15,6 @@ Shows the things Story 16.3 / B-1 / B-4 / B-13 / AR-58 pin down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -54,8 +53,8 @@ def importable_reexport() -> None:
     assert api.compile_run_config is qmb.compile_run_config
     assert api.STRUCTURAL_SEED is qmb.STRUCTURAL_SEED
     assert api.CHANNEL == "uv add qmb"
-    sys.stdout.write("importable from uv-added qmb as qmb.doors.api\n")
-    sys.stdout.write("thin re-export: api.run is qmb.run\n")
+    print("importable from uv-added qmb as qmb.doors.api")
+    print("thin re-export: api.run is qmb.run")
 
 
 def refusals_return_verbatim() -> None:
@@ -68,7 +67,7 @@ def refusals_return_verbatim() -> None:
     assert is_refusal(refused)
     assert isinstance(refused, TypedRefusal)
     assert refused.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write("refusal returned verbatim, not raised\n")
+    print("refusal returned verbatim, not raised")
 
 
 def ui_consumes_in_process() -> None:
@@ -77,7 +76,7 @@ def ui_consumes_in_process() -> None:
     assert identity["stacked_over_http"] is False
     assert identity["consumer"] == "ui-backend"
     assert identity["transport"] == "in-process"
-    sys.stdout.write("UI backend consumes this in-process; never HTTP\n")
+    print("UI backend consumes this in-process; never HTTP")
 
 
 def direct_run_writes_no_ledger(output_root: Path) -> None:
@@ -104,7 +103,7 @@ def direct_run_writes_no_ledger(output_root: Path) -> None:
         "merge",
     )
     assert merged == ()
-    sys.stdout.write("direct library run() produces no governed evidence\n")
+    print("direct library run() produces no governed evidence")
 
 
 def main() -> None:
@@ -113,7 +112,7 @@ def main() -> None:
     ui_consumes_in_process()
     with tempfile.TemporaryDirectory(prefix="qmb_api_door_", ignore_cleanup_errors=True) as tmp:
         direct_run_writes_no_ledger(Path(tmp))
-    sys.stdout.write("qmb Python API door ok\n")
+    print("qmb Python API door ok")
 
 
 if __name__ == "__main__":

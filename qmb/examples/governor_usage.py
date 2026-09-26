@@ -15,7 +15,6 @@ Shows the things Story 15.2 / AR-50 / B-5 / FM-6 pin down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -158,17 +157,17 @@ def main() -> None:
     assert qmb.CPU_BUDGET_KEY == CPU_BUDGET_KEY
     assert qmb.spawn_governed is spawn_governed
     identity_names_registry_keys_not_a_spine_budget()
-    sys.stdout.write("min(cpu budget, memory budget)\n")
+    print("min(cpu budget, memory budget)")
     min_cpu_memory_is_the_tighter_budget()
-    sys.stdout.write("enqueue-on-full\n")
+    print("enqueue-on-full")
     enqueue_on_full_then_admit_next()
-    sys.stdout.write("finish then admit next\n")
+    print("finish then admit next")
     too_large_for_the_declared_budget_is_typed_refusal()
-    sys.stdout.write("typed refusal when projected peak exceeds the declared budget\n")
+    print("typed refusal when projected peak exceeds the declared budget")
     with tempfile.TemporaryDirectory(prefix="qmb_gov_", ignore_cleanup_errors=True) as tmp:
         governed_spawn_under_cpu_one(Path(tmp))
-    sys.stdout.write("12-14 concurrent is a motivating reference, never a validated budget\n")
-    sys.stdout.write("governor ok\n")
+    print("12-14 concurrent is a motivating reference, never a validated budget")
+    print("governor ok")
 
 
 if __name__ == "__main__":

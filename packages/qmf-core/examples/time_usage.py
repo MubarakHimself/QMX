@@ -23,7 +23,6 @@ Shows the five things CT-02 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core.chrono import (
@@ -123,15 +122,13 @@ def ordering_has_no_causal_meaning(clock: Clock) -> WriterSequencer:
 def main() -> None:
     epoch, later = instants_are_exact_and_checked()
     display = _unwrap(render_utc_iso8601(epoch), "display")
-    sys.stdout.write(f"instant 0 renders (display-only, {display.zone}) as {display.text}\n")
+    print(f"instant 0 renders (display-only, {display.zone}) as {display.text}")
 
     day = trading_dates_are_calendar_scoped()
-    sys.stdout.write(
-        f"trading date {day.date_value.isoformat()} is scoped to {day.calendar.rule_set}\n"
-    )
+    print(f"trading date {day.date_value.isoformat()} is scoped to {day.calendar.rule_set}")
 
     causality_reads_instants_only(epoch, later)
-    sys.stdout.write("causality compares instants only; equal instants refuse to tie-break\n")
+    print("causality compares instants only; equal instants refuse to tie-break")
 
     clock: Clock = DataDrivenClock(
         boot_epoch_id="boot-2026-08-21T00:00Z",
@@ -139,15 +136,13 @@ def main() -> None:
         monotonic_ns=[10, 42],
     )
     first_wall, elapsed = clock_is_injected(clock)
-    sys.stdout.write(
+    print(
         f"injected clock wall_now = {first_wall.value_ns} ns; "
-        f"monotonic elapsed = {elapsed.value_ns} ns\n"
+        f"monotonic elapsed = {elapsed.value_ns} ns"
     )
 
     sequencer = ordering_has_no_causal_meaning(clock)
-    sys.stdout.write(
-        f"writer minted a strictly-increasing sequence; next is {sequencer.next_sequence}\n"
-    )
+    print(f"writer minted a strictly-increasing sequence; next is {sequencer.next_sequence}")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ Shows the things SC-10 / B-2 / CT-12 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.runloop import (
@@ -222,16 +221,16 @@ def evidence_range_is_trading_interval() -> None:
 def main() -> None:
     assert qmb.WARMUP_MECHANISM == WARMUP_MECHANISM
     same_loop_trading_locked()
-    sys.stdout.write("same event-slice loop during warm-up; trading locked\n")
+    print("same event-slice loop during warm-up; trading locked")
     acting_is_policy_rejection()
-    sys.stdout.write("acting during warm-up is policy rejection\n")
+    print("acting during warm-up is policy rejection")
     embargo_is_observation_count()
-    sys.stdout.write("embargo is an observation count, never a Duration; no second window\n")
+    print("embargo is an observation count, never a Duration; no second window")
     preseed_is_not_warmup()
-    sys.stdout.write("pre-seeding buffers is not warm-up\n")
+    print("pre-seeding buffers is not warm-up")
     evidence_range_is_trading_interval()
-    sys.stdout.write("evidence range is the trading interval only\n")
-    sys.stdout.write("in-loop warm-up ok\n")
+    print("evidence range is the trading interval only")
+    print("in-loop warm-up ok")
 
 
 if __name__ == "__main__":

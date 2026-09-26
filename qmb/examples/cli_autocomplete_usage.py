@@ -18,7 +18,6 @@ Shows the things Story 16.4 / B-1 / B-15 / AR-55 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from click.shell_completion import ShellComplete
@@ -100,8 +99,8 @@ def enumerate_through_the_one_port() -> RegistryReadPort:
     assert [item.value for item in offered] == ["scalping"]
     assert offered[0].cite() == resolved.cite() == book.stable_id.value
     assert HOLDS_CACHE is False
-    sys.stdout.write("autocomplete enumerates through the one registry-read port\n")
-    sys.stdout.write(str("same answers as resolve: " + offered[0].cite()) + "\n")
+    print("autocomplete enumerates through the one registry-read port")
+    print("same answers as resolve: " + offered[0].cite())
     return port
 
 
@@ -123,8 +122,8 @@ def new_book_is_a_fresher_as_of_set(port: RegistryReadPort) -> None:
     new_names = [item.value for item in complete_registry(fresh, kind=BOOK_RECORD_KIND)]
     assert old_names == ["scalping"]
     assert new_names == ["scalping", "swing"]
-    sys.stdout.write("new Book arrives as a fresher as-of set\n")
-    sys.stdout.write("never a door cache refresh\n")
+    print("new Book arrives as a fresher as-of set")
+    print("never a door cache refresh")
 
 
 def click_native_shell_complete() -> None:
@@ -140,15 +139,15 @@ def click_native_shell_complete() -> None:
     assert [item.value for item in items] == ["scalping"]
     assert AUTOCOMPLETE == "click.shell_complete"
     assert complete_registry(None) == ()
-    sys.stdout.write("click native shell_complete\n")
-    sys.stdout.write("missing port yields no candidates, not a live query\n")
+    print("click native shell_complete")
+    print("missing port yields no candidates, not a live query")
 
 
 def main_example() -> None:
     bound = enumerate_through_the_one_port()
     new_book_is_a_fresher_as_of_set(bound)
     click_native_shell_complete()
-    sys.stdout.write("qmb CLI registry autocomplete ok\n")
+    print("qmb CLI registry autocomplete ok")
 
 
 if __name__ == "__main__":

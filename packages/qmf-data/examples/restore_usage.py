@@ -16,7 +16,6 @@ Shows the four things Story 5.2 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -32,16 +31,14 @@ from qmf.core import (
     is_refusal,
 )
 from qmf.data import (
-    BackupCopyReceipt,
     EvidenceStore,
     HoldoutSeal,
     OffMachineBackup,
     OffMachineRestore,
-    RestoreReceipt,
     StoragePutAck,
 )
 from qmf.data.splits import SplitBoundary
-from qmf.data.store import RoomExport, RoomRole, WorldStore
+from qmf.data.store import RoomRole
 
 T = TypeVar("T")
 
@@ -106,181 +103,137 @@ def _instant_boundary(value_ns: int) -> SplitBoundary:
     return _unwrap(SplitBoundary.try_create(instant), "split boundary")
 
 
-def _populate_source(source: EvidenceStore) -> WorldStore:
-    live = _unwrap(source.for_world(World.LIVE), "live world store")
-    _unwrap(
-        live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
-        "raw append",
-    )
-    writer = _unwrap(
-        WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
-        "writer id",
-    )
-    _unwrap(
-        live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
-        "registry record",
-    )
-    _unwrap(
-        live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
-        "lineage edge",
-    )
-    return live
-
-
-def _export_and_copy(
-    live: WorldStore, bucket: _MemoryBucket, cipher: _XorCipher
-) -> tuple[RoomExport, BackupCopyReceipt]:
-    export = _unwrap(
-        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-        "CT-26 raw export",
-    )
-    _require(
-        b"1700000000000000000" in export.records[0].canonical,
-        "int64 UTC-ns timestamp present in source export",
-    )
-    receipt = _unwrap(
-        OffMachineBackup(bucket, cipher).copy_export(export, for_world=World.LIVE),
-        "CT-14 encrypted copy",
-    )
-    return export, receipt
-
-
-def _wired_holdout_seal() -> HoldoutSeal:
-    # Seal sits ABOVE stored rows' event-time so the open-position read is pre-seal
-    # content (AC4; DEC-0119).
-    return _unwrap(
-        HoldoutSeal.try_create(
-            seal_boundary=_instant_boundary(2_000_000_000_000_000_000),
-            calendar_identity=_calendar(),
-            world=World.LIVE,
-            holdout_months=12,
-        ),
-        "holdout seal",
-    )
-
-
-def _confirm_verbatim_restore(
-    restored_live: WorldStore,
-    live: WorldStore,
-    export: RoomExport,
-    source: EvidenceStore,
-    restored: RestoreReceipt,
-) -> None:
-    _require(
-        restored.replacement_root != str(source.root.resolve()),
-        "restore targeted a distinct replacement root",
-    )
-    reread = _unwrap(
-        restored_live.append_store.read_raw(
-            export.records[0].fingerprint,
-            for_world=World.LIVE,
-            at=_instant_boundary(1_800_000_000_000_000_000),
-        ),
-        "restored raw read outside seal",
-    )
-    _require(
-        any(row.get("t") == 1_700_000_000_000_000_000 for row in reread),
-        "restored timestamps are verbatim int64 UTC-ns",
-    )
-    source_again = _unwrap(
-        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-        "source CT-26 reread",
-    )
-    _require(
-        source_again.records[0].canonical == export.records[0].canonical,
-        "restore never rewrote the only local copy",
-    )
-    sys.stdout.write(
-        "restore into replacement: timestamps verbatim; "
-        "source untouched; off-machine version retained\n"
-    )
-
-
-def restore_into_replacement(
-    root: Path,
-    source: EvidenceStore,
-    live: WorldStore,
-    export: RoomExport,
-    receipt: BackupCopyReceipt,
-    restore: OffMachineRestore,
-) -> WorldStore:
-    """Restore into a distinct replacement root; timestamps stay verbatim."""
-    replacement = EvidenceStore(root / "replacement", seal=_wired_holdout_seal())
-    restored = _unwrap(
-        restore.restore_copy(
-            world=World.LIVE,
-            copy_version=receipt.copy_version,
-            source_room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE,
-            into=replacement,
-            for_world=World.LIVE,
-            source_store=source,
-        ),
-        "CT-14 restore into replacement",
-    )
-    restored_live = _unwrap(replacement.for_world(World.LIVE), "replacement live")
-    _confirm_verbatim_restore(restored_live, live, export, source, restored)
-    return restored_live
-
-
-def sealed_restored_read(restored_live: WorldStore, export: RoomExport) -> None:
-    """Restored reads still enforce the 12-month seal as policy rejection."""
-    sealed = restored_live.append_store.read_raw(
-        export.records[0].fingerprint,
-        for_world=World.LIVE,
-        at=_instant_boundary(2_500_000_000_000_000_000),
-    )
-    _require(is_refusal(sealed), "sealed restored read refuses")
-    _require(
-        is_refusal(sealed) and sealed.category.value == "policy rejection",
-        "sealed restored read is policy rejection",
-    )
-    sys.stdout.write("restored seal enforcement: policy rejection on sealed holdout\n")
-
-
-def restore_policy_refusals(
-    restore: OffMachineRestore, export: RoomExport, source: EvidenceStore, root: Path
-) -> None:
-    """Cross-world, in-place, and discard-only-copy are policy rejection."""
-    cross = restore.restore_export(
-        export, into=EvidenceStore(root / "cross"), for_world=World.REPLAY, source_store=source
-    )
-    _require(
-        is_refusal(cross) and cross.category.value == "policy rejection",
-        "cross-world restore is policy rejection",
-    )
-    in_place = restore.restore_export(
-        export, into=source, for_world=World.LIVE, source_store=source
-    )
-    _require(
-        is_refusal(in_place) and in_place.category.value == "policy rejection",
-        "in-place restore is policy rejection",
-    )
-    discard = restore.discard_local_raw(source)
-    _require(
-        is_refusal(discard) and discard.category.value == "policy rejection",
-        "discard of only local raw is policy rejection",
-    )
-    sys.stdout.write(
-        "cross-world / in-place / discard-only-copy: policy rejection "
-        "(raw originals kept forever)\n"
-    )
-
-
 def main() -> None:
     """Drive backup → restore into a replacement store with seal and world gates."""
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         source = EvidenceStore(root / "source")
-        live = _populate_source(source)
+        live = _unwrap(source.for_world(World.LIVE), "live world store")
+        _unwrap(
+            live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
+            "raw append",
+        )
+        writer = _unwrap(
+            WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
+            "writer id",
+        )
+        _unwrap(
+            live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
+            "registry record",
+        )
+        _unwrap(
+            live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
+            "lineage edge",
+        )
+
+        export = _unwrap(
+            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+            "CT-26 raw export",
+        )
+        _require(
+            b"1700000000000000000" in export.records[0].canonical,
+            "int64 UTC-ns timestamp present in source export",
+        )
+
         bucket = _MemoryBucket()
         cipher = _XorCipher()
-        export, receipt = _export_and_copy(live, bucket, cipher)
-        restore = OffMachineRestore(bucket, cipher)
-        restored_live = restore_into_replacement(
-            root, source, live, export, receipt, restore
+        receipt = _unwrap(
+            OffMachineBackup(bucket, cipher).copy_export(export, for_world=World.LIVE),
+            "CT-14 encrypted copy",
         )
-        sealed_restored_read(restored_live, export)
-        restore_policy_refusals(restore, export, source, root)
+
+        # The seal boundary sits ABOVE the stored rows' event-time (t = 1.7e18) so the
+        # open-position read below reads genuinely pre-seal content: the seal position is
+        # derived from the stored content itself, never only the caller's declared `at`
+        # (AC4; DEC-0119).
+        seal = _unwrap(
+            HoldoutSeal.try_create(
+                seal_boundary=_instant_boundary(2_000_000_000_000_000_000),
+                calendar_identity=_calendar(),
+                world=World.LIVE,
+                holdout_months=12,
+            ),
+            "holdout seal",
+        )
+        replacement = EvidenceStore(root / "replacement", seal=seal)
+        restore = OffMachineRestore(bucket, cipher)
+        restored = _unwrap(
+            restore.restore_copy(
+                world=World.LIVE,
+                copy_version=receipt.copy_version,
+                source_room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE,
+                into=replacement,
+                for_world=World.LIVE,
+                source_store=source,
+            ),
+            "CT-14 restore into replacement",
+        )
+        _require(
+            restored.replacement_root != str(source.root.resolve()),
+            "restore targeted a distinct replacement root",
+        )
+        restored_live = _unwrap(replacement.for_world(World.LIVE), "replacement live")
+        reread = _unwrap(
+            restored_live.append_store.read_raw(
+                export.records[0].fingerprint,
+                for_world=World.LIVE,
+                at=_instant_boundary(1_800_000_000_000_000_000),
+            ),
+            "restored raw read outside seal",
+        )
+        _require(
+            any(row.get("t") == 1_700_000_000_000_000_000 for row in reread),
+            "restored timestamps are verbatim int64 UTC-ns",
+        )
+        # Source still intact after restore.
+        source_again = _unwrap(
+            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+            "source CT-26 reread",
+        )
+        _require(
+            source_again.records[0].canonical == export.records[0].canonical,
+            "restore never rewrote the only local copy",
+        )
+        print(
+            "restore into replacement: timestamps verbatim; "
+            "source untouched; off-machine version retained"
+        )
+
+        sealed = restored_live.append_store.read_raw(
+            export.records[0].fingerprint,
+            for_world=World.LIVE,
+            at=_instant_boundary(2_500_000_000_000_000_000),
+        )
+        _require(is_refusal(sealed), "sealed restored read refuses")
+        _require(
+            is_refusal(sealed) and sealed.category.value == "policy rejection",
+            "sealed restored read is policy rejection",
+        )
+        print("restored seal enforcement: policy rejection on sealed holdout")
+
+        cross = restore.restore_export(
+            export, into=EvidenceStore(root / "cross"), for_world=World.REPLAY, source_store=source
+        )
+        _require(
+            is_refusal(cross) and cross.category.value == "policy rejection",
+            "cross-world restore is policy rejection",
+        )
+        in_place = restore.restore_export(
+            export, into=source, for_world=World.LIVE, source_store=source
+        )
+        _require(
+            is_refusal(in_place) and in_place.category.value == "policy rejection",
+            "in-place restore is policy rejection",
+        )
+        discard = restore.discard_local_raw(source)
+        _require(
+            is_refusal(discard) and discard.category.value == "policy rejection",
+            "discard of only local raw is policy rejection",
+        )
+        print(
+            "cross-world / in-place / discard-only-copy: policy rejection "
+            "(raw originals kept forever)"
+        )
 
 
 if __name__ == "__main__":

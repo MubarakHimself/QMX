@@ -23,7 +23,6 @@ Shows the things B-4 / B-5 / B-12 / spec R10-R12 / Story 20.3 pin down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
@@ -231,9 +230,7 @@ def one_line_per_combo_with_coordinates(runs: Path, ledger_root: Path) -> None:
             "unit_kind" in measure or measure.get("class") == "undefined-measure"
             for measure in line.measures
         )
-    sys.stdout.write(
-        "each combo: one confirmation line carrying label, CT-32, measures, and coordinates\n"
-    )
+    print("each combo: one confirmation line carrying label, CT-32, measures, and coordinates")
 
 
 def concurrency_never_changes_a_result(runs_a: Path, runs_b: Path, ledger_root: Path) -> None:
@@ -265,9 +262,7 @@ def concurrency_never_changes_a_result(runs_a: Path, runs_b: Path, ledger_root: 
         "concurrent",
     )
     assert sequential.fp1_identity() == concurrent.fp1_identity()
-    sys.stdout.write(
-        "concurrency is scheduling only: same run ids and CT-32 fingerprints either way\n"
-    )
+    print("concurrency is scheduling only: same run ids and CT-32 fingerprints either way")
 
 
 def one_refusal_is_a_line_not_a_batch_abort(runs: Path, ledger_root: Path) -> None:
@@ -313,7 +308,7 @@ def one_refusal_is_a_line_not_a_batch_abort(runs: Path, ledger_root: Path) -> No
         "book-bar",
     )
     assert len(confirmed) == 3  # the Book bar (confirmation) sees only the survivors
-    sys.stdout.write("one combo's refusal is that combo's aborted line; the batch continued\n")
+    print("one combo's refusal is that combo's aborted line; the batch continued")
 
 
 def main() -> None:
@@ -327,7 +322,7 @@ def main() -> None:
         one_line_per_combo_with_coordinates(root / "runs1", root / "ledger1")
         concurrency_never_changes_a_result(root / "runs2", root / "runs3", root / "ledger_conc")
         one_refusal_is_a_line_not_a_batch_abort(root / "runs4", root / "ledger3")
-    sys.stdout.write("sweep batch ok\n")
+    print("sweep batch ok")
 
 
 if __name__ == "__main__":

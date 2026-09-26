@@ -20,7 +20,6 @@ Shows the four things CT-03 pins down:
 
 from __future__ import annotations
 
-import sys
 from datetime import date
 from typing import TypeVar
 
@@ -95,21 +94,19 @@ def refusals_never_default() -> tuple[TypedRefusal, TypedRefusal]:
 
 def main() -> None:
     eurusd_a, eurusd_b = two_brokers_never_mix()
-    sys.stdout.write(f"two venues, one symbol, distinct instruments: {eurusd_a != eurusd_b}\n")
+    print(f"two venues, one symbol, distinct instruments: {eurusd_a != eurusd_b}")
 
     account = account_carries_one_role(eurusd_a.venue)
-    sys.stdout.write(f"account {account.account_id} role={account.role.value}\n")
+    print(f"account {account.account_id} role={account.role.value}")
 
     history = rename_is_a_new_record(eurusd_a.venue)
-    sys.stdout.write(f"rename appended a new record; history has {len(history)} entries\n")
+    print(f"rename appended a new record; history has {len(history)} entries")
 
     missing_venue, null_field = refusals_never_default()
-    sys.stdout.write(
-        f"missing venue refused: {missing_venue.category.value} / {missing_venue.context['field']}\n"  # noqa: E501
+    print(
+        f"missing venue refused: {missing_venue.category.value} / {missing_venue.context['field']}"
     )
-    sys.stdout.write(
-        f"null field refused: {null_field.category.value} / {null_field.context['field']}\n"
-    )
+    print(f"null field refused: {null_field.category.value} / {null_field.context['field']}")
 
 
 if __name__ == "__main__":

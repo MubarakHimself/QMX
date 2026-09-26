@@ -20,7 +20,6 @@ Shows the things FEE-4 / FEE-5 / B-6 pin down:
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -108,7 +107,7 @@ def main() -> None:
     )
     scheduler = FinancingScheduler(schedule_ref="broker-swap-table", calibration=cal)
     assert FINANCING_IS_ORDER_FILL is False
-    sys.stdout.write("financing is a scheduled cash event, not an order fill\n")
+    print("financing is a scheduled cash event, not an order fill")
 
     calendar = _BrokerCalendar(
         rollover=_instant(),
@@ -132,8 +131,8 @@ def main() -> None:
     event = applied.events[0]
     assert event.day_multiplier == 3
     assert event.amount.as_fraction() == _money(-1050).as_fraction()
-    sys.stdout.write("applied at the broker calendar rollover, not per slice\n")
-    sys.stdout.write("triple-swap weekday and multiplier come from the artifact\n")
+    print("applied at the broker calendar rollover, not per slice")
+    print("triple-swap weekday and multiplier come from the artifact")
 
     skipped = _unwrap(
         apply_financing_rollover(
@@ -151,7 +150,7 @@ def main() -> None:
         "skip",
     )
     assert skipped.events == ()
-    sys.stdout.write("weekend/holiday handling comes from the artifact\n")
+    print("weekend/holiday handling comes from the artifact")
 
     missing = FinancingScheduler(schedule_ref="broker-swap-table").schedule(
         stream_id="eurusd",
@@ -160,12 +159,12 @@ def main() -> None:
     assert is_refusal(missing)
     unknown = scheduler.schedule(stream_id="gbpusd", direction=Direction.LONG)
     assert is_refusal(unknown)
-    sys.stdout.write("missing calibration is typed refusal, never silent zero\n")
+    print("missing calibration is typed refusal, never silent zero")
 
     assert event.journal_event.event_type is JournalEventType.RISK_TRANSITION
     assert event.journal_event.payload["kind"] == FINANCING_JOURNAL_KIND
     assert event.journal_event.event_type is not JournalEventType.FILL
-    sys.stdout.write("distinct CT-13 journal event, not a fill\n")
+    print("distinct CT-13 journal event, not a fill")
 
     drag = _unwrap(
         decompose_cost_drag(
@@ -177,10 +176,10 @@ def main() -> None:
         "cost-drag",
     )
     assert [item.name for item in _unwrap(drag.components(), "lines")] == list(COST_DRAG_COMPONENTS)
-    sys.stdout.write("cost drag decomposes fill P&L / slippage / commission / financing\n")
-    sys.stdout.write("CT-32 label declares the financing calibration fingerprint\n")
-    sys.stdout.write("optimistic taint; no edge claim until GAP-0048\n")
-    sys.stdout.write("financing ok\n")
+    print("cost drag decomposes fill P&L / slippage / commission / financing")
+    print("CT-32 label declares the financing calibration fingerprint")
+    print("optimistic taint; no edge claim until GAP-0048")
+    print("financing ok")
 
 
 if __name__ == "__main__":

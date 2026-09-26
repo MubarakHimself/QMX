@@ -291,17 +291,17 @@ class PassiveHubTree:
 
     def write_published(self, fragment: object) -> Result[None]:
         """Closed: published is read-only from this door."""
-        _ = fragment
+        del fragment
         return refuse_published_direct_write(target=HUB_PUBLISHED_NAME)
 
     def read_inbox_for_promotion(self, *, writer: object, artifact_key: object) -> Result[None]:
         """Closed: promotion pull cannot source the inbox."""
-        _ = (writer, artifact_key)
+        del writer, artifact_key
         return refuse_inbox_promotion_read(source=HUB_INBOX_NAME)
 
     def sync_into_inbox(self, payload: object) -> Result[None]:
         """Closed: evidence sync is not an inbound hub crossing."""
-        _ = payload
+        del payload
         refused = refuse_inbound_crossing(crossing="evidence-sync")
         if is_refusal(refused):
             return refused

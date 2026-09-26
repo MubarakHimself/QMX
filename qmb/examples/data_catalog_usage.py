@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import lzma
 import struct
-import sys
 import tempfile
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
@@ -99,9 +98,9 @@ def main() -> None:
     _require(identity["view_engine"] == "duckdb", "DuckDB rebuildable view")
     _require(identity["view_is_evidence_bearing"] is False, "view never evidence")
     _require(identity["catalog_aliases_list"] is True, "catalog aliases list")
-    sys.stdout.write(
+    print(
         f"catalog identity: kind={identity['coverage_kind']} "
-        f"engine={identity['view_engine']} evidence={identity['view_is_evidence_bearing']}\n"
+        f"engine={identity['view_engine']} evidence={identity['view_is_evidence_bearing']}"
     )
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -128,9 +127,9 @@ def main() -> None:
             "world": World.REPLAY,
         }
         receipt = _unwrap(download(resources), "download")
-        sys.stdout.write(
+        print(
             f"downloaded: produced={receipt.produced} side={receipt.side} "
-            f"license={receipt.license_tag}\n"
+            f"license={receipt.license_tag}"
         )
 
         # Coverage derives from the persisted CT-10 observations, so a side's
@@ -159,9 +158,9 @@ def main() -> None:
         view_fp = present.view_fingerprint
         _require(view_fp is not None, "DuckDB view fingerprint stamped")
         assert view_fp is not None
-        sys.stdout.write(
+        print(
             f"list both: bid={by_side['bid'].status} ask={by_side['ask'].status} "
-            f"view={present.view_engine} fp={view_fp[:24]}...\n"
+            f"view={present.view_engine} fp={view_fp[:24]}..."
         )
 
         missing = _unwrap(
@@ -180,7 +179,7 @@ def main() -> None:
         )
         _require(len(missing.entries) == 1, "one absent row")
         _require(missing.entries[0].status == NOT_PRESENT, "absent is a value")
-        sys.stdout.write(f"absent window: status={missing.entries[0].status} (not a refusal)\n")
+        print(f"absent window: status={missing.entries[0].status} (not a refusal)")
 
         aliased = _unwrap(catalog({"destination": str(root), "store": store}), "catalog alias")
         listed = _unwrap(list_data({"destination": str(root), "store": store}), "list all")
@@ -191,7 +190,7 @@ def main() -> None:
             == [entry.as_mapping() for entry in listed.entries],
             "catalog aliases list coverage rows",
         )
-        sys.stdout.write(f"catalog aliases list: entries={len(listed.entries)}\n")
+        print(f"catalog aliases list: entries={len(listed.entries)}")
 
         door = _unwrap(
             invoke_data(
@@ -211,12 +210,12 @@ def main() -> None:
         _require(door["command"] == "list", "door command")
         _require(door_view["engine"] == "duckdb", "door view engine")
         _require(door_view["is_evidence_bearing"] is False, "door view never evidence")
-        sys.stdout.write(
+        print(
             f"CLI and Python API share coverage: command={door['command']} "
-            f"entries={len(door_entries)} engine={door_view['engine']}\n"
+            f"entries={len(door_entries)} engine={door_view['engine']}"
         )
 
-    sys.stdout.write("data catalog ok\n")
+    print("data catalog ok")
 
 
 if __name__ == "__main__":

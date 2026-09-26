@@ -15,7 +15,6 @@ Shows the things AR-58 / B-2 / B-5 / FM-11 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import ResolvedRunConfig
@@ -166,13 +165,13 @@ def main() -> None:
     assert qmb.RESULT_CONTRACT == RESULT_CONTRACT
     assert qmb.reproduce_run is reproduce_run
     fingerprint_value = identical_inputs_identical_fingerprint()
-    sys.stdout.write("two identical runs share one CT-32 fingerprint\n")
+    print("two identical runs share one CT-32 fingerprint")
     reproduce_or_refuse(fingerprint_value)
-    sys.stdout.write("re-run under resolved config reproduces; mismatch is typed refusal\n")
+    print("re-run under resolved config reproduces; mismatch is typed refusal")
     concurrency_is_scheduling_only(fingerprint_value)
-    sys.stdout.write("concurrency is scheduling only; run() does not depend on siblings\n")
-    sys.stdout.write("no HTML/charts in the fingerprint\n")
-    sys.stdout.write("golden-slice determinism ok\n")
+    print("concurrency is scheduling only; run() does not depend on siblings")
+    print("no HTML/charts in the fingerprint")
+    print("golden-slice determinism ok")
 
 
 if __name__ == "__main__":

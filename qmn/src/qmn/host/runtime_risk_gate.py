@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, TypeAlias, TypeVar
+from typing import Final, TypeVar
 
 from qmf.core import (
     Account,
@@ -126,11 +126,9 @@ from qmn.journal_dispatch import (
     RecordingJournalSink,
     journal_before_effect,
 )
-from qmn.ledger import VirtualPosition, refuse_paper_pnl_to_treasury
+from qmn.ledger import refuse_paper_pnl_to_treasury
 from qmn.order import (
-    AuthorizedIntent,
     CommandStreamUnknownBoundary,
-    FrozenRPreservation,
     PostAdmissionKind,
     admit_entry_at_book_door,
     mint_ct29_from_frozen_r,
@@ -459,30 +457,72 @@ def run_runtime_risk_gate(
     coverage = _unwrap(evaluate_runtime_risk_coverage())
     if isinstance(coverage, TypedRefusal):
         return coverage
+
     now = _unwrap(clock.wall_now())
     if isinstance(now, TypedRefusal):
         return now
     fx = _Fixtures(clock=clock, venue=venue, now=now)
-    return _runtime_risk_gate_report(fx, coverage)
 
-
-def _runtime_risk_gate_report(
-    fx: _Fixtures, coverage: RuntimeRiskCoverageReport
-) -> Result[RuntimeRiskGateReport]:
     book = _unwrap(BookDefinition.try_create(2, "USD", {}))
     if isinstance(book, TypedRefusal):
         return book
     bms = _unwrap(BmsDefinition.try_create(1, {}))
     if isinstance(bms, TypedRefusal):
         return bms
-    proofs = _risk_gate_proofs(fx)
-    if is_refusal(proofs):
-        return proofs
-    composed, evidence_core, refusals = proofs.value
+
+    composed = _unwrap(_exercise_compose(fx))
+    if isinstance(composed, TypedRefusal):
+        return composed
+    entry = _unwrap(_exercise_entry_preservation(fx))
+    if isinstance(entry, TypedRefusal):
+        return entry
+    exits = _unwrap(_exercise_exits_under_blocks(fx))
+    if isinstance(exits, TypedRefusal):
+        return exits
+    paper = _unwrap(_exercise_paper_routing(fx))
+    if isinstance(paper, TypedRefusal):
+        return paper
+    unknown = _unwrap(_exercise_unknown(fx))
+    if isinstance(unknown, TypedRefusal):
+        return unknown
+    reconcile = _unwrap(_exercise_four_verdicts(fx))
+    if isinstance(reconcile, TypedRefusal):
+        return reconcile
+    compose = _unwrap(_exercise_priority_compose(fx))
+    if isinstance(compose, TypedRefusal):
+        return compose
+    bench = _unwrap(_exercise_bench(fx))
+    if isinstance(bench, TypedRefusal):
+        return bench
+    kill = _unwrap(_exercise_kill_line(fx))
+    if isinstance(kill, TypedRefusal):
+        return kill
+    activation = _unwrap(_exercise_next_day_activation(fx))
+    if isinstance(activation, TypedRefusal):
+        return activation
+    refusals = _unwrap(_produce_refusal_categories(fx))
+    if isinstance(refusals, TypedRefusal):
+        return refusals
+    journaled = _unwrap(_exercise_journal_before_dispatch())
+    if isinstance(journaled, TypedRefusal):
+        return journaled
+
+    _ = refuse_paper_profit_as_proof()
+    _ = refuse_manual_observation_as_proof()
+
     evidence: dict[str, Mapping[str, object]] = {
-        **evidence_core,
+        "entry_preservation": entry,
+        "exits_under_blocks": exits,
+        "paper_routing": paper,
+        "unknown": unknown,
+        "four_verdict_reconciliation": reconcile,
+        "priority_compose_conflict": compose,
+        "bench": bench,
+        "kill_line": kill,
+        "next_day_activation": activation,
         "ct22_book_definition": MappingProxyType(book.fp1_identity()),
         "ct27_bms_definition": MappingProxyType(bms.fp1_identity()),
+        "journal_before_dispatch": journaled,
     }
     missing_scenario = [name for name in RUNTIME_RISK_SCENARIOS if name not in evidence]
     if missing_scenario:
@@ -508,80 +548,6 @@ def _runtime_risk_gate_report(
             composition_sealed=composed["sealed"] is True,
         )
     )
-
-
-def _risk_gate_proofs(
-    fx: _Fixtures,
-) -> Result[tuple[Mapping[str, object], dict[str, Mapping[str, object]], dict[str, str]]]:
-    composed = _unwrap(_exercise_compose(fx))
-    if isinstance(composed, TypedRefusal):
-        return composed
-    entry = _unwrap(_exercise_entry_preservation(fx))
-    if isinstance(entry, TypedRefusal):
-        return entry
-    exits = _unwrap(_exercise_exits_under_blocks(fx))
-    if isinstance(exits, TypedRefusal):
-        return exits
-    paper = _unwrap(_exercise_paper_routing(fx))
-    if isinstance(paper, TypedRefusal):
-        return paper
-    unknown = _unwrap(_exercise_unknown(fx))
-    if isinstance(unknown, TypedRefusal):
-        return unknown
-    reconcile = _unwrap(_exercise_four_verdicts(fx))
-    if isinstance(reconcile, TypedRefusal):
-        return reconcile
-    compose = _unwrap(_exercise_priority_compose(fx))
-    if isinstance(compose, TypedRefusal):
-        return compose
-    remaining = _risk_gate_remaining_proofs(fx)
-    if is_refusal(remaining):
-        return remaining
-    bench, kill, activation, refusals, journaled = remaining.value
-    _ = refuse_paper_profit_as_proof()
-    _ = refuse_manual_observation_as_proof()
-    evidence = {
-        "entry_preservation": entry,
-        "exits_under_blocks": exits,
-        "paper_routing": paper,
-        "unknown": unknown,
-        "four_verdict_reconciliation": reconcile,
-        "priority_compose_conflict": compose,
-        "bench": bench,
-        "kill_line": kill,
-        "next_day_activation": activation,
-        "journal_before_dispatch": journaled,
-    }
-    return Ok((composed, evidence, refusals))
-
-
-def _risk_gate_remaining_proofs(
-    fx: _Fixtures,
-) -> Result[
-    tuple[
-        Mapping[str, object],
-        Mapping[str, object],
-        Mapping[str, object],
-        dict[str, str],
-        Mapping[str, object],
-    ]
-]:
-    bench = _unwrap(_exercise_bench(fx))
-    if isinstance(bench, TypedRefusal):
-        return bench
-    kill = _unwrap(_exercise_kill_line(fx))
-    if isinstance(kill, TypedRefusal):
-        return kill
-    activation = _unwrap(_exercise_next_day_activation(fx))
-    if isinstance(activation, TypedRefusal):
-        return activation
-    refusals = _unwrap(_produce_refusal_categories(fx))
-    if isinstance(refusals, TypedRefusal):
-        return refusals
-    journaled = _unwrap(_exercise_journal_before_dispatch())
-    if isinstance(journaled, TypedRefusal):
-        return journaled
-    return Ok((bench, kill, activation, refusals, journaled))
 
 
 def _scan_source_tokens(root: Path) -> tuple[frozenset[str], frozenset[str]]:
@@ -616,29 +582,29 @@ def _scan_source_tokens(root: Path) -> tuple[frozenset[str], frozenset[str]]:
 
 class _SecretStore:
     def read(self, ref: object, /) -> Result[object]:
-        _ = ref
+        del ref
         return unpersistable("no such credential")
 
     def atomic_replace(self, ref: object, new_value: object, /) -> Result[object]:
-        _ = new_value
+        del new_value
         return Ok(ref)
 
 
 class _ObsSink:
     def emit(self, observation: object, /) -> SinkResult:
-        _ = observation
+        del observation
         return Ok(SinkAck())
 
 
 class _JournalSink:
     def append(self, event: object, /) -> SinkResult:
-        _ = event
+        del event
         return Ok(SinkAck())
 
 
 class _RecordSink:
     def write(self, record: object, /) -> SinkResult:
-        _ = record
+        del record
         return Ok(SinkAck())
 
 
@@ -650,7 +616,7 @@ class _OffsetStopModule:
         direction: Direction,
         cited_evidence: CitedEvidence,
     ) -> Result[Price]:
-        _ = cited_evidence
+        del cited_evidence
         if direction is Direction.LONG:
             value = entry_price.value - 1_000
         else:
@@ -666,7 +632,7 @@ class _NoStopModule:
         direction: Direction,
         cited_evidence: CitedEvidence,
     ) -> Result[Price]:
-        _ = (entry_price, direction, cited_evidence)
+        del entry_price, direction, cited_evidence
         return refuse_no_full_loss_price(module="no-stop")
 
 
@@ -676,14 +642,14 @@ class _DayBoundary:
     next_ns: int
 
     def trading_date_for(self, instant: Instant) -> Result[TradingDate]:
-        _ = instant
+        del instant
         civil = CivilDate.try_create(2026, 9, 1)
         if is_refusal(civil):
             return civil
         return TradingDate.try_create(self.calendar_identity, civil.value)
 
     def next_boundary_after(self, instant: Instant) -> Result[Instant]:
-        _ = instant
+        del instant
         return Instant.try_create(self.next_ns)
 
     @property
@@ -759,74 +725,8 @@ def _windows_for(binding_id: str) -> Result[tuple[WindowRecord, ...]]:
     return Ok(tuple(built))
 
 
-_RiskGraphCore: TypeAlias = tuple[
-    PopulationBmsRecord,
-    PopulationBookRecord,
-    PopulationBookRecord,
-    PopulationBindingRecord,
-    PopulationBindingRecord,
-    SeatRecord,
-    SeatRecord,
-    PairedTargetRecord,
-]
-_RiskGraphExtras: TypeAlias = tuple[
-    PriorityRecord,
-    CapabilityRecord,
-    CapabilityRecord,
-    ScopeRecord,
-    tuple[WindowRecord, ...],
-    tuple[WindowRecord, ...],
-]
-
-
 def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
-    core = _risk_graph_core(venue)
-    if is_refusal(core):
-        return core
-    extras = _risk_graph_extras(venue)
-    if is_refusal(extras):
-        return extras
-    bms, book_a, book_b, bind_a, bind_b, seat_a, seat_b, paired = core.value
-    priority, cap_a, cap_b, scope, windows_a, windows_b = extras.value
-    return RuntimeRiskGraph.try_create(
-        bms=(bms,),
-        books=(book_a, book_b),
-        bindings=(bind_a, bind_b),
-        seats=(seat_a, seat_b),
-        paired_targets=(paired,),
-        windows=windows_a + windows_b,
-        priorities=(priority,),
-        capabilities=(cap_a, cap_b),
-        scopes=(scope,),
-    )
-
-
-def _risk_binding(
-    venue_token: str, binding_id: str, book_instance_id: str, instrument: str
-) -> Result[PopulationBindingRecord]:
-    bind = _unwrap(
-        PopulationBindingRecord.try_create(
-            binding_id=binding_id,
-            book_instance_id=book_instance_id,
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            role=AccountRole.LIVE,
-            world=World.LIVE,
-            environment="live",
-            position_model="netting",
-            instruments=frozenset({instrument}),
-            attribution_instruments=frozenset({instrument}),
-        )
-    )
-    if isinstance(bind, TypedRefusal):
-        return bind
-    return Ok(bind)
-
-
-def _risk_graph_books(
-    venue_token: str,
-) -> Result[tuple[PopulationBmsRecord, PopulationBookRecord, PopulationBookRecord]]:
+    venue_token = venue.value
     bms = _unwrap(
         PopulationBmsRecord.try_create(
             bms_instance_id="bms-1",
@@ -855,31 +755,56 @@ def _risk_graph_books(
     )
     if isinstance(book_b, TypedRefusal):
         return book_b
-    return Ok((bms, book_a, book_b))
-
-
-def _risk_graph_core(venue: VenueId) -> Result[_RiskGraphCore]:
-    venue_token = venue.value
-    books = _risk_graph_books(venue_token)
-    if is_refusal(books):
-        return books
-    bms, book_a, book_b = books.value
-    bind_a = _risk_binding(venue_token, "bind-1", "book-1", "EURUSD")
-    if is_refusal(bind_a):
+    bind_a = _unwrap(
+        PopulationBindingRecord.try_create(
+            binding_id="bind-1",
+            book_instance_id="book-1",
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            role=AccountRole.LIVE,
+            world=World.LIVE,
+            environment="live",
+            position_model="netting",
+            instruments=frozenset({"EURUSD"}),
+            attribution_instruments=frozenset({"EURUSD"}),
+        )
+    )
+    if isinstance(bind_a, TypedRefusal):
         return bind_a
-    bind_b = _risk_binding(venue_token, "bind-2", "book-2", "GBPUSD")
-    if is_refusal(bind_b):
+    bind_b = _unwrap(
+        PopulationBindingRecord.try_create(
+            binding_id="bind-2",
+            book_instance_id="book-2",
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            role=AccountRole.LIVE,
+            world=World.LIVE,
+            environment="live",
+            position_model="netting",
+            instruments=frozenset({"GBPUSD"}),
+            attribution_instruments=frozenset({"GBPUSD"}),
+        )
+    )
+    if isinstance(bind_b, TypedRefusal):
         return bind_b
     seat_a = _unwrap(
         SeatRecord.try_create(
-            seat_id="seat-1", bot_id="bot-1", book_instance_id="book-1", binding_id="bind-1"
+            seat_id="seat-1",
+            bot_id="bot-1",
+            book_instance_id="book-1",
+            binding_id="bind-1",
         )
     )
     if isinstance(seat_a, TypedRefusal):
         return seat_a
     seat_b = _unwrap(
         SeatRecord.try_create(
-            seat_id="seat-2", bot_id="bot-2", book_instance_id="book-2", binding_id="bind-2"
+            seat_id="seat-2",
+            bot_id="bot-2",
+            book_instance_id="book-2",
+            binding_id="bind-2",
         )
     )
     if isinstance(seat_b, TypedRefusal):
@@ -894,15 +819,15 @@ def _risk_graph_core(venue: VenueId) -> Result[_RiskGraphCore]:
     )
     if isinstance(paired, TypedRefusal):
         return paired
-    return Ok((bms, book_a, book_b, bind_a.value, bind_b.value, seat_a, seat_b, paired))
-
-
-def _risk_graph_extras(venue: VenueId) -> Result[_RiskGraphExtras]:
     ranks = _unwrap(_rank_table())
     if isinstance(ranks, TypedRefusal):
         return ranks
     priority = _unwrap(
-        PriorityRecord.try_create(venue_id=venue.value, account_id="acct-1", rank_table=ranks)
+        PriorityRecord.try_create(
+            venue_id=venue_token,
+            account_id="acct-1",
+            rank_table=ranks,
+        )
     )
     if isinstance(priority, TypedRefusal):
         return priority
@@ -933,7 +858,17 @@ def _risk_graph_extras(venue: VenueId) -> Result[_RiskGraphExtras]:
     windows_b = _unwrap(_windows_for("bind-2"))
     if isinstance(windows_b, TypedRefusal):
         return windows_b
-    return Ok((priority, cap_a, cap_b, scope, windows_a, windows_b))
+    return RuntimeRiskGraph.try_create(
+        bms=(bms,),
+        books=(book_a, book_b),
+        bindings=(bind_a, bind_b),
+        seats=(seat_a, seat_b),
+        paired_targets=(paired,),
+        windows=windows_a + windows_b,
+        priorities=(priority,),
+        capabilities=(cap_a, cap_b),
+        scopes=(scope,),
+    )
 
 
 def _composition_inputs() -> Result[CompositionFingerprintInputs]:
@@ -1016,30 +951,6 @@ def _exercise_compose(fx: _Fixtures) -> Result[Mapping[str, object]]:
 
 
 def _exercise_entry_preservation(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    authorized = _admit_preserved_entry(fx)
-    if is_refusal(authorized):
-        return authorized
-    placed = _place_preserved_entry(fx, authorized.value)
-    if is_refusal(placed):
-        return placed
-    command, position, preserved = placed.value
-    exit_record = _exit_from_preserved_entry(fx, position)
-    if is_refusal(exit_record):
-        return exit_record
-    return Ok(
-        MappingProxyType(
-            {
-                "authorized_intent": authorized.value.fp1_identity(),
-                "command_kind": command.kind.value,
-                "exit_record": exit_record.value.fp1_identity(),
-                "frozen_r": preserved.faces.fp1_identity(),
-                "rebased": preserved.rebased,
-            }
-        )
-    )
-
-
-def _admit_preserved_entry(fx: _Fixtures) -> Result[AuthorizedIntent]:
     venue = fx.venue_id
     instrument = _instrument(venue)
     if is_refusal(instrument):
@@ -1072,45 +983,33 @@ def _admit_preserved_entry(fx: _Fixtures) -> Result[AuthorizedIntent]:
     )
     if is_refusal(entry):
         return entry
-    return _authorize_preserved_entry(instrument.value, price.value, entry.value, requested.value)
-
-
-def _authorize_preserved_entry(
-    instrument: Instrument,
-    price: Price,
-    entry: EntryIntent,
-    requested: ExactRational,
-) -> Result[AuthorizedIntent]:
     logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
     if is_refusal(logic):
         return logic
     rate = _rate(1_000)
     if is_refusal(rate):
         return rate
-    factor = ValueFactor.try_create(100_000, 1, instrument, "USD")
+    factor = ValueFactor.try_create(100_000, 1, instrument.value, "USD")
     if is_refusal(factor):
         return factor
-    return admit_entry_at_book_door(
-        intent=entry,
-        entry_price=price,
+    authorized = admit_entry_at_book_door(
+        intent=entry.value,
+        entry_price=price.value,
         exit_logic_ref=logic.value,
         module=_OffsetStopModule(),
-        book_resolved_requested_r=requested,
+        book_resolved_requested_r=requested.value,
         r_unit_price=rate.value,
         value_factor=factor.value,
         money_scale=2,
     )
-
-
-def _place_preserved_entry(
-    fx: _Fixtures, authorized: AuthorizedIntent
-) -> Result[tuple[Command, VirtualPosition, FrozenRPreservation]]:
-    account = _account(fx.venue_id, "acct-1", AccountRole.LIVE)
+    if is_refusal(authorized):
+        return authorized
+    account = _account(venue, "acct-1", AccountRole.LIVE)
     if is_refusal(account):
         return account
     command = mint_place_order_from_authorized(
-        authorized,
-        venue_id=fx.venue_id,
+        authorized.value,
+        venue_id=venue,
         account=account.value,
         session_epoch=_SESSION,
         ordering_ordinal=1,
@@ -1124,7 +1023,10 @@ def _place_preserved_entry(
     if isinstance(cmd_fp, TypedRefusal):
         return cmd_fp
     position = mint_virtual_from_authorized(
-        authorized, binding_epoch=epoch, bot_id="bot-a", command_identity=cmd_fp
+        authorized.value,
+        binding_epoch=epoch,
+        bot_id="bot-a",
+        command_identity=cmd_fp,
     )
     if is_refusal(position):
         return position
@@ -1136,10 +1038,6 @@ def _place_preserved_entry(
             "frozen_r",
             "a fill must not re-base frozen R except the journaled partial-entry path",
         )
-    return Ok((command.value, position.value, preserved.value))
-
-
-def _exit_from_preserved_entry(fx: _Fixtures, position: VirtualPosition) -> Result[ExitRecord]:
     pnl = _unwrap(_money(-10_000))
     if isinstance(pnl, TypedRefusal):
         return pnl
@@ -1158,8 +1056,8 @@ def _exit_from_preserved_entry(fx: _Fixtures, position: VirtualPosition) -> Resu
     cost = _unwrap(CostComponent.try_create("commission", commission, "broker"))
     if isinstance(cost, TypedRefusal):
         return cost
-    return mint_ct29_from_frozen_r(
-        position,
+    exit_record = mint_ct29_from_frozen_r(
+        position.value,
         realized_pnl=pnl,
         fill_references=(fill_fp,),
         cost_components=(cost,),
@@ -1172,6 +1070,19 @@ def _exit_from_preserved_entry(fx: _Fixtures, position: VirtualPosition) -> Resu
         loss_predicate_format_version=1,
         recorded_at=fx.now,
         venue_observation_ref=venue_obs,
+    )
+    if is_refusal(exit_record):
+        return exit_record
+    return Ok(
+        MappingProxyType(
+            {
+                "authorized_intent": authorized.value.fp1_identity(),
+                "command_kind": command.value.kind.value,
+                "exit_record": exit_record.value.fp1_identity(),
+                "frozen_r": preserved.value.faces.fp1_identity(),
+                "rebased": preserved.value.rebased,
+            }
+        )
     )
 
 
@@ -1440,7 +1351,7 @@ def _exercise_unknown(fx: _Fixtures) -> Result[Mapping[str, object]]:
 
 
 def _exercise_four_verdicts(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    _ = fx
+    del fx
     qty = _qty(100)
     drifted = _qty(150)
     cash = _money(50_000_00)
@@ -1597,60 +1508,6 @@ def _mint_exit(
     close_reason: CloseReason = CloseReason.PROTECTIVE_STOP_FILL,
     authority: ClosingAuthority = ClosingAuthority.VENUE,
 ) -> Result[ExitRecord]:
-    parts = _exit_record_parts(seed, realized_pnl, authority)
-    if is_refusal(parts):
-        return parts
-    distance, amount, pnl, fill, pos, label, arb_fp, vobs_fp = parts.value
-    return mint_exit_record(
-        virtual_position_ref=pos,
-        opening_bot_id="bot-alpha",
-        original_risk_distance=distance,
-        original_risk_amount=amount,
-        fill_references=(fill,),
-        realized_pnl=pnl,
-        cost_components=(),
-        close_reason=close_reason,
-        mechanism=close_reason,
-        outcome=outcome,
-        closing_authority=authority,
-        close_reason_mapping_version=1,
-        result_label=label,
-        loss_predicate_format_version=1,
-        binding_epoch=epoch,
-        recorded_at=now,
-        arbitration_record_ref=arb_fp,
-        venue_observation_ref=vobs_fp,
-    )
-
-
-def _exit_authority_refs(
-    seed: str, authority: ClosingAuthority
-) -> Result[tuple[Fingerprint | None, Fingerprint | None]]:
-    if authority is not ClosingAuthority.VENUE:
-        arb = _unwrap(_fp(f"arb-{seed}"))
-        if isinstance(arb, TypedRefusal):
-            return arb
-        return Ok((arb, None))
-    vobs = _unwrap(_fp(f"venue-obs-{seed}"))
-    if isinstance(vobs, TypedRefusal):
-        return vobs
-    return Ok((None, vobs))
-
-
-def _exit_record_parts(
-    seed: str, realized_pnl: int, authority: ClosingAuthority
-) -> Result[
-    tuple[
-        PriceDelta,
-        Money,
-        Money,
-        Fingerprint,
-        Fingerprint,
-        ExitResultLabel,
-        Fingerprint | None,
-        Fingerprint | None,
-    ]
-]:
     venue = _unwrap(VenueId.try_create("ctrader"))
     if isinstance(venue, TypedRefusal):
         return venue
@@ -1675,11 +1532,38 @@ def _exit_record_parts(
     label = _unwrap(ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE))
     if isinstance(label, TypedRefusal):
         return label
-    refs = _exit_authority_refs(seed, authority)
-    if is_refusal(refs):
-        return refs
-    arb_fp, vobs_fp = refs.value
-    return Ok((distance, amount, pnl, fill, pos, label, arb_fp, vobs_fp))
+    arb_fp: Fingerprint | None = None
+    vobs_fp: Fingerprint | None = None
+    if authority is not ClosingAuthority.VENUE:
+        arb = _unwrap(_fp(f"arb-{seed}"))
+        if isinstance(arb, TypedRefusal):
+            return arb
+        arb_fp = arb
+    else:
+        vobs = _unwrap(_fp(f"venue-obs-{seed}"))
+        if isinstance(vobs, TypedRefusal):
+            return vobs
+        vobs_fp = vobs
+    return mint_exit_record(
+        virtual_position_ref=pos,
+        opening_bot_id="bot-alpha",
+        original_risk_distance=distance,
+        original_risk_amount=amount,
+        fill_references=(fill,),
+        realized_pnl=pnl,
+        cost_components=(),
+        close_reason=close_reason,
+        mechanism=close_reason,
+        outcome=outcome,
+        closing_authority=authority,
+        close_reason_mapping_version=1,
+        result_label=label,
+        loss_predicate_format_version=1,
+        binding_epoch=epoch,
+        recorded_at=now,
+        arbitration_record_ref=arb_fp,
+        venue_observation_ref=vobs_fp,
+    )
 
 
 def _exercise_bench(fx: _Fixtures) -> Result[Mapping[str, object]]:
@@ -1923,59 +1807,37 @@ def _exercise_journal_before_dispatch() -> Result[Mapping[str, object]]:
 def _produce_refusal_categories(fx: _Fixtures) -> Result[dict[str, str]]:
     """Named production paths for every CT-04 category — not enum tautologies."""
     paths: dict[str, str] = {}
-    seeded = _seed_book_refusal_paths(paths)
-    if is_refusal(seeded):
-        return seeded
-    close_partial = refuse_close_partial()
-    paths[close_partial.category.value] = "refuse_close_partial"
-    populated = _seed_population_refusal_paths(fx, paths)
-    if is_refusal(populated):
-        return populated
-    stored = _seed_storage_refusal_paths(paths)
-    if is_refusal(stored):
-        return stored
-    if RefusalCategory.INVALID_INPUT.value not in paths:
-        filled = _seed_no_stop_invalid_input(fx, paths)
-        if is_refusal(filled):
-            return filled
-    return Ok(paths)
 
-
-def _seed_book_refusal_paths(paths: dict[str, str]) -> Result[None]:
     invalid_book = BookDefinition.try_create(2, 1.5, {})
     if not is_refusal(invalid_book):
         return policy("refusal_category", "CT-22 must refuse a non-USD/non-string currency")
     if invalid_book.category is not RefusalCategory.INVALID_INPUT:
-        return _seed_non_invalid_book_paths(paths)
-    paths[RefusalCategory.INVALID_INPUT.value] = "BookDefinition.try_create/invalid-currency"
-    return Ok(None)
-
-
-def _seed_non_invalid_book_paths(paths: dict[str, str]) -> Result[None]:
-    # non-USD string is policy; a float/non-string should be invalid input.
-    unsupported_version = BookDefinition.try_create(99, "USD", {})
-    if not is_refusal(unsupported_version):
-        return policy("refusal_category", "unknown Book format must refuse")
-    if unsupported_version.category is RefusalCategory.UNSUPPORTED_CAPABILITY:
-        paths[RefusalCategory.UNSUPPORTED_CAPABILITY.value] = (
-            "BookDefinition.try_create/unknown-format"
+        # non-USD string is policy; a float/non-string should be invalid input.
+        unsupported_version = BookDefinition.try_create(99, "USD", {})
+        if not is_refusal(unsupported_version):
+            return policy("refusal_category", "unknown Book format must refuse")
+        if unsupported_version.category is RefusalCategory.UNSUPPORTED_CAPABILITY:
+            paths[RefusalCategory.UNSUPPORTED_CAPABILITY.value] = (
+                "BookDefinition.try_create/unknown-format"
+            )
+        invalid_intent = admit_entry_at_book_door(
+            intent="not-an-intent",
+            entry_price="x",
+            exit_logic_ref="y",
+            module=_OffsetStopModule(),
+            book_resolved_requested_r="z",
+            r_unit_price="z",
+            value_factor="z",
+            money_scale=2,
         )
-    invalid_intent = admit_entry_at_book_door(
-        intent="not-an-intent",
-        entry_price="x",
-        exit_logic_ref="y",
-        module=_OffsetStopModule(),
-        book_resolved_requested_r="z",
-        r_unit_price="z",
-        value_factor="z",
-        money_scale=2,
-    )
-    if is_refusal(invalid_intent):
-        paths[invalid_intent.category.value] = "admit_entry_at_book_door/invalid"
-    return Ok(None)
+        if is_refusal(invalid_intent):
+            paths[invalid_intent.category.value] = "admit_entry_at_book_door/invalid"
+    else:
+        paths[RefusalCategory.INVALID_INPUT.value] = "BookDefinition.try_create/invalid-currency"
 
+    close_partial = refuse_close_partial()
+    paths[close_partial.category.value] = "refuse_close_partial"
 
-def _seed_population_refusal_paths(fx: _Fixtures, paths: dict[str, str]) -> Result[None]:
     graph = _risk_graph(fx.venue_id)
     if is_refusal(graph):
         return graph
@@ -1995,24 +1857,24 @@ def _seed_population_refusal_paths(fx: _Fixtures, paths: dict[str, str]) -> Resu
             "a dangling seat must refuse Layer-1 population admission",
         )
     paths[missing.category.value] = "admit_runtime_risk_population/referential_integrity"
+
     stale = refuse_stale_exit_before_intent(
         closing_exit_record=None, persisted=False, journaled=False
     )
     if not is_refusal(stale):
         return policy("refusal_category", "stale exit must refuse the next intent")
     paths[stale.category.value] = "refuse_stale_exit_before_intent"
+
     paper = refuse_paper_profit_as_proof()
     paths[paper.category.value] = "refuse_paper_profit_as_proof"
+
     unknown = _exercise_unknown(fx)
     if is_refusal(unknown):
         return unknown
     paths[str(unknown.value["refusal_category"])] = (
         "CommandStreamUnknownBoundary.admit/place_under_unknown"
     )
-    return Ok(None)
 
-
-def _seed_storage_refusal_paths(paths: dict[str, str]) -> Result[None]:
     storage = journal_before_effect(
         kind="control",
         payload={"class": "d010-storage"},
@@ -2022,105 +1884,63 @@ def _seed_storage_refusal_paths(paths: dict[str, str]) -> Result[None]:
     if not is_refusal(storage):
         return policy("refusal_category", "journal failure must be a storage failure")
     paths[storage.category.value] = "journal_before_effect/storage_failure"
+
     unsupported = BookDefinition.try_create(99, "USD", {})
     if is_refusal(unsupported):
         paths[unsupported.category.value] = "BookDefinition.try_create/unknown-format"
-    return Ok(None)
 
-
-def _seed_no_stop_invalid_input(fx: _Fixtures, paths: dict[str, str]) -> Result[None]:
-    bound = _bind_no_stop_entry(fx)
-    if is_refusal(bound):
-        return bound
-    entry, price, logic, requested, rate, factor = bound.value
-    refused_entry = admit_entry_at_book_door(
-        intent=entry,
-        entry_price=price,
-        exit_logic_ref=logic,
-        module=_NoStopModule(),
-        book_resolved_requested_r=requested,
-        r_unit_price=rate,
-        value_factor=factor,
-        money_scale=2,
-    )
-    if is_refusal(refused_entry):
-        paths[refused_entry.category.value] = "admit_entry_at_book_door/no-full-loss"
-    return Ok(None)
-
-
-def _bind_no_stop_entry(
-    fx: _Fixtures,
-) -> Result[
-    tuple[EntryIntent, Price, ExitLogicRef, ExactRational, ExactRational, ValueFactor]
-]:
-    cited = _bind_no_stop_cited(fx)
-    if is_refusal(cited):
-        return cited
-    instrument, price, target, reason, evidence, requested = cited.value
-    entry = EntryIntent.try_create(
-        instrument,
-        Direction.LONG,
-        reason,
-        target,
-        proposed_r=requested,
-        cited_evidence=evidence,
-    )
-    if is_refusal(entry):
-        return entry
-    logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
-    if is_refusal(logic):
-        return logic
-    rate = _rate(1_000)
-    if is_refusal(rate):
-        return rate
-    factor = ValueFactor.try_create(100_000, 1, instrument, "USD")
-    if is_refusal(factor):
-        return factor
-    return Ok(
-        (
-            entry.value,
-            price,
-            logic.value,
-            requested,
-            rate.value,
-            factor.value,
-        )
-    )
-
-
-def _bind_no_stop_cited(
-    fx: _Fixtures,
-) -> Result[
-    tuple[Instrument, Price, ExecutionTarget, ReasonCode, CitedEvidence, ExactRational]
-]:
-    no_stop = _instrument(fx.venue_id)
-    if is_refusal(no_stop):
-        return no_stop
-    price = Price.try_create(110_000, no_stop.value, 5)
-    if is_refusal(price):
-        return price
-    target = ExecutionTarget.try_create(AccountRole.LIVE, fx.venue_id, "acct-1")
-    if is_refusal(target):
-        return target
-    reason = ReasonCode.try_create("momentum-break", "scalper-v1")
-    if is_refusal(reason):
-        return reason
-    slot = EvidenceSlot.try_create("sqs", "sqs-ref-1", fx.now)
-    if is_refusal(slot):
-        return slot
-    cited = CitedEvidence.try_create(sqs_reading=slot.value)
-    if is_refusal(cited):
-        return cited
-    requested = _r(1)
-    if is_refusal(requested):
-        return requested
-    return Ok(
-        (
+    if RefusalCategory.INVALID_INPUT.value not in paths:
+        no_stop = _instrument(fx.venue_id)
+        if is_refusal(no_stop):
+            return no_stop
+        price = Price.try_create(110_000, no_stop.value, 5)
+        if is_refusal(price):
+            return price
+        target = ExecutionTarget.try_create(AccountRole.LIVE, fx.venue_id, "acct-1")
+        if is_refusal(target):
+            return target
+        reason = ReasonCode.try_create("momentum-break", "scalper-v1")
+        if is_refusal(reason):
+            return reason
+        slot = EvidenceSlot.try_create("sqs", "sqs-ref-1", fx.now)
+        if is_refusal(slot):
+            return slot
+        cited = CitedEvidence.try_create(sqs_reading=slot.value)
+        if is_refusal(cited):
+            return cited
+        requested = _r(1)
+        if is_refusal(requested):
+            return requested
+        entry = EntryIntent.try_create(
             no_stop.value,
-            price.value,
-            target.value,
+            Direction.LONG,
             reason.value,
-            cited.value,
-            requested.value,
+            target.value,
+            proposed_r=requested.value,
+            cited_evidence=cited.value,
         )
-    )
+        if is_refusal(entry):
+            return entry
+        logic = ExitLogicRef.try_create("book.default.evidence_stop", {"style": "structure"})
+        if is_refusal(logic):
+            return logic
+        rate = _rate(1_000)
+        if is_refusal(rate):
+            return rate
+        factor = ValueFactor.try_create(100_000, 1, no_stop.value, "USD")
+        if is_refusal(factor):
+            return factor
+        refused_entry = admit_entry_at_book_door(
+            intent=entry.value,
+            entry_price=price.value,
+            exit_logic_ref=logic.value,
+            module=_NoStopModule(),
+            book_resolved_requested_r=requested.value,
+            r_unit_price=rate.value,
+            value_factor=factor.value,
+            money_scale=2,
+        )
+        if is_refusal(refused_entry):
+            paths[refused_entry.category.value] = "admit_entry_at_book_door/no-full-loss"
+
+    return Ok(paths)

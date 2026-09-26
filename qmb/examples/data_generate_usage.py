@@ -23,7 +23,6 @@ Shows the things R1/R2/R6/R8 pin down for synthetic-series generation:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar, cast
@@ -91,8 +90,8 @@ def _base(**extra: object) -> dict[str, object]:
 
 def main() -> None:
     calendar = _calendar()
-    sys.stdout.write(" ".join(["processes:", str(" ".join(GENERATOR_PROCESSES))]) + "\n")
-    sys.stdout.write("the library is never swapped — only config variables change\n")
+    print("processes:", " ".join(GENERATOR_PROCESSES))
+    print("the library is never swapped — only config variables change")
 
     # from-scratch gbm — no source dataset (records 'none')
     with tempfile.TemporaryDirectory() as tmp:
@@ -115,14 +114,12 @@ def main() -> None:
             and bar.low > 0
             for bar in gbm.bars
         )
-        sys.stdout.write(
+        print(
             f"gbm: {gbm.bar_count} bars, source={gbm.source_dataset_id}, "
-            f"world={gbm.world}, origin={gbm.origin}\n"
+            f"world={gbm.world}, origin={gbm.origin}"
         )
-        sys.stdout.write(
-            f"gbm: tick-quantized integer money={tick_ok}; OHLC invariant holds={ohlc_ok}\n"
-        )
-        sys.stdout.write(f"gbm: config artifact recorded at {gbm.config_artifact_path}\n")
+        print(f"gbm: tick-quantized integer money={tick_ok}; OHLC invariant holds={ohlc_ok}")
+        print(f"gbm: config artifact recorded at {gbm.config_artifact_path}")
 
     # history-seeded block-bootstrap — cites a CT-10 source dataset
     block = _ok(
@@ -142,9 +139,9 @@ def main() -> None:
             calendar=calendar,
         )
     )
-    sys.stdout.write(
+    print(
         f"block-bootstrap: cites source-dataset id {block.source_dataset_id}, "
-        f"claim={block.claim_class}\n"
+        f"claim={block.claim_class}"
     )
 
     # determinism: same seed reproduces the series and its fingerprint
@@ -154,10 +151,7 @@ def main() -> None:
     once = _ok(
         generate(_base(process="gbm", seed_price=110_000, volatility="0.001"), calendar=calendar)
     )
-    sys.stdout.write(
-        " ".join(["deterministic:", str(again.config_fingerprint == once.config_fingerprint)])
-        + "\n"
-    )
+    print("deterministic:", again.config_fingerprint == once.config_fingerprint)
 
     # typed refusals (R8)
     unknown = resolve_generator_config(_base(process="regime-switching"))
@@ -170,11 +164,11 @@ def main() -> None:
         _base(process="gbm", seed_price=110_000, volatility="0.001", clock="replay")
     )
     assert is_refusal(replay) and replay.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write(
+    print(
         "refusals: unknown process=unsupported capability; "
-        "corporate-action=invalid input; replay clock=invalid input\n"
+        "corporate-action=invalid input; replay clock=invalid input"
     )
-    sys.stdout.write("data generate ok\n")
+    print("data generate ok")
 
 
 if __name__ == "__main__":

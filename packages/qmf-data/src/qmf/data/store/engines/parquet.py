@@ -70,7 +70,6 @@ class ParquetColumnarEngine:
         backfilled (H4, H5). A serialization or overflow error at this boundary is
         translated to a ``storage failure`` rather than crossing the seam (AC4).
         """
-        _ = rows
         try:
             self._dir.mkdir(parents=True, exist_ok=True)
             # The canonical bytes ARE the list of rows in canonical JSON; decode once

@@ -24,7 +24,6 @@ Shows the five things Story 5.1 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -45,7 +44,7 @@ from qmf.data import (
     OffMachineBackup,
     StoragePutAck,
 )
-from qmf.data.store import RoomExport, RoomRole, WorldStore
+from qmf.data.store import RoomRole
 
 T = TypeVar("T")
 
@@ -139,123 +138,106 @@ class _DownBucket:
         )
 
 
-def _populate_live(store: EvidenceStore) -> WorldStore:
-    live = _unwrap(store.for_world(World.LIVE), "live world store")
-    _unwrap(
-        live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
-        "raw append",
-    )
-    writer = _unwrap(
-        WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
-        "writer id",
-    )
-    _unwrap(
-        live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
-        "registry record",
-    )
-    _unwrap(
-        live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
-        "lineage edge",
-    )
-    return live
-
-
-def ct26_exports(live: WorldStore) -> RoomExport:
-    """CT-26 presents raw + registry records verbatim, including int64 UTC-ns."""
-    raw = _unwrap(
-        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-        "CT-26 raw export",
-    )
-    _require(raw.record_count == 1, "raw export has one record")
-    _require(
-        b"1700000000000000000" in raw.records[0].canonical,
-        "int64 UTC-ns timestamp passes through CT-26 verbatim",
-    )
-    registry = _unwrap(
-        live.backup_input.read_room(RoomRole.REGISTRY_ROOM, for_world=World.LIVE),
-        "CT-26 registry export",
-    )
-    _require(registry.record_count == 2, "registry export covers records + edges")
-    sys.stdout.write(
-        "CT-26 input: raw records=1 (timestamps verbatim), "
-        f"registry records={registry.record_count}\n"
-    )
-    return raw
-
-
-def ct14_versioned_copies(
-    raw: RoomExport, live: WorldStore
-) -> tuple[OffMachineBackup, RoomExport]:
-    """CT-14 encrypts a new versioned artifact without mutating the local copy."""
-    bucket = _MemoryBucket()
-    backup = OffMachineBackup(bucket, _XorCipher())
-    receipt = _unwrap(
-        backup.copy_export(raw, for_world=World.LIVE),
-        "CT-14 encrypted copy",
-    )
-    _require(receipt.copy_version == 1, "first copy is version 1")
-    _require(receipt.encryption_required is True, "receipt carries encryption pointer")
-    _require(
-        "credential" not in receipt.__dataclass_fields__,
-        "receipt embeds no credential field",
-    )
-    second = _unwrap(
-        backup.copy_export(raw, for_world=World.LIVE),
-        "second CT-14 copy",
-    )
-    _require(second.copy_version == 2, "second copy is a new version")
-    _require(
-        ("live", 1, "immutable raw archive") in bucket.objects
-        and ("live", 2, "immutable raw archive") in bucket.objects,
-        "both versioned artifacts retained; nothing mutated in place",
-    )
-    reread = _unwrap(
-        live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
-        "post-backup CT-26 reread",
-    )
-    _require(
-        reread.records[0].canonical == raw.records[0].canonical,
-        "backup never mutates the only local copy",
-    )
-    sys.stdout.write(
-        f"CT-14 copy: versions={receipt.copy_version},{second.copy_version}; "
-        "encrypted; local evidence untouched\n"
-    )
-    return backup, raw
-
-
-def cross_world_and_storage_failure(backup: OffMachineBackup, raw: RoomExport) -> None:
-    """Cross-world copy is policy rejection; unreachable storage is storage failure."""
-    cross = backup.copy_export(raw, for_world=World.REPLAY)
-    _require(is_refusal(cross), "cross-world copy refuses")
-    _require(
-        is_refusal(cross) and cross.category.value == "policy rejection",
-        "cross-world is policy rejection",
-    )
-    sys.stdout.write("cross-world / simulated path: policy rejection\n")
-
-    down = OffMachineBackup(_DownBucket(), _XorCipher())
-    failed = down.copy_export(raw, for_world=World.LIVE)
-    _require(is_refusal(failed), "unreachable storage refuses")
-    _require(
-        is_refusal(failed) and failed.category.value == "storage failure",
-        "unreachable storage is storage failure, not completion",
-    )
-    sys.stdout.write(
-        "object-storage failure: storage failure typed refusal "
-        "(no completion claimed; nothing raised)\n"
-    )
-
-
 def main() -> None:
     """Drive the CT-26 → CT-14 path end-to-end with injected seams."""
     _require(ENCRYPTION_REQUIRED is True, "encryption-required pointer is standing")
 
     with tempfile.TemporaryDirectory() as tmp:
-        live = _populate_live(EvidenceStore(Path(tmp)))
-        raw = ct26_exports(live)
-        backup, raw = ct14_versioned_copies(raw, live)
-        cross_world_and_storage_failure(backup, raw)
+        store = EvidenceStore(Path(tmp))
+        live = _unwrap(store.for_world(World.LIVE), "live world store")
+
+        # Populate evidence rooms the backup must cover (raw + registry).
+        _unwrap(
+            live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
+            "raw append",
+        )
+        writer = _unwrap(
+            WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
+            "writer id",
+        )
+        _unwrap(
+            live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
+            "registry record",
+        )
+        _unwrap(
+            live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
+            "lineage edge",
+        )
+
+        raw = _unwrap(
+            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+            "CT-26 raw export",
+        )
+        _require(raw.record_count == 1, "raw export has one record")
+        _require(
+            b"1700000000000000000" in raw.records[0].canonical,
+            "int64 UTC-ns timestamp passes through CT-26 verbatim",
+        )
+        registry = _unwrap(
+            live.backup_input.read_room(RoomRole.REGISTRY_ROOM, for_world=World.LIVE),
+            "CT-26 registry export",
+        )
+        _require(registry.record_count == 2, "registry export covers records + edges")
+        print(
+            "CT-26 input: raw records=1 (timestamps verbatim), "
+            f"registry records={registry.record_count}"
+        )
+
+        bucket = _MemoryBucket()
+        backup = OffMachineBackup(bucket, _XorCipher())
+        receipt = _unwrap(
+            backup.copy_export(raw, for_world=World.LIVE),
+            "CT-14 encrypted copy",
+        )
+        _require(receipt.copy_version == 1, "first copy is version 1")
+        _require(receipt.encryption_required is True, "receipt carries encryption pointer")
+        _require(
+            "credential" not in receipt.__dataclass_fields__,
+            "receipt embeds no credential field",
+        )
+        second = _unwrap(
+            backup.copy_export(raw, for_world=World.LIVE),
+            "second CT-14 copy",
+        )
+        _require(second.copy_version == 2, "second copy is a new version")
+        _require(
+            ("live", 1, "immutable raw archive") in bucket.objects
+            and ("live", 2, "immutable raw archive") in bucket.objects,
+            "both versioned artifacts retained; nothing mutated in place",
+        )
+        # Local evidence still intact after off-machine copies.
+        reread = _unwrap(
+            live.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE),
+            "post-backup CT-26 reread",
+        )
+        _require(
+            reread.records[0].canonical == raw.records[0].canonical,
+            "backup never mutates the only local copy",
+        )
+        print(
+            f"CT-14 copy: versions={receipt.copy_version},{second.copy_version}; "
+            "encrypted; local evidence untouched"
+        )
+
+        cross = backup.copy_export(raw, for_world=World.REPLAY)
+        _require(is_refusal(cross), "cross-world copy refuses")
+        _require(
+            is_refusal(cross) and cross.category.value == "policy rejection",
+            "cross-world is policy rejection",
+        )
+        print("cross-world / simulated path: policy rejection")
+
+        down = OffMachineBackup(_DownBucket(), _XorCipher())
+        failed = down.copy_export(raw, for_world=World.LIVE)
+        _require(is_refusal(failed), "unreachable storage refuses")
+        _require(
+            is_refusal(failed) and failed.category.value == "storage failure",
+            "unreachable storage is storage failure, not completion",
+        )
+        print(
+            "object-storage failure: storage failure typed refusal "
+            "(no completion claimed; nothing raised)"
+        )
 
 
 if __name__ == "__main__":

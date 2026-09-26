@@ -23,7 +23,6 @@ the canonical TA-Lib reference:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -132,12 +131,8 @@ def main() -> None:
             stream.update({"close": StreamingObservation(value, PresenceState.PRESENT, instant)})
         )
         channel = sample.channels["sma"]
-        sys.stdout.write(
-            f"update seq={sample.sequence}: {channel.presence.value} value={channel.value}\n"
-        )
-    sys.stdout.write(
-        f"health: ready={stream.health().ready} seen={stream.health().observations_seen}\n"
-    )
+        print(f"update seq={sample.sequence}: {channel.presence.value} value={channel.value}")
+    print(f"health: ready={stream.health().ready} seen={stream.health().observations_seen}")
 
     # 2. The tier-2 equality law: streaming equals batch by construction (comparator 0).
     series = _unwrap(
@@ -150,7 +145,7 @@ def main() -> None:
     )
     streaming_result = _unwrap(stream.result())
     equal = _unwrap(assert_mode_equality(configuration, batch_result, streaming_result))
-    sys.stdout.write(f"tier-2 equality law (streaming == batch, 0 ULP): {equal}\n")
+    print(f"tier-2 equality law (streaming == batch, 0 ULP): {equal}")
 
     # 3. Restore-equivalence: warm three, snapshot, restore, advance three.
     warm = _unwrap(
@@ -183,8 +178,8 @@ def main() -> None:
     equivalent = _unwrap(streaming_result.outputs["sma"].equals(restored_result.outputs["sma"]))
     snapshot_fp = _unwrap(snapshot.fingerprint())
     carries = snapshot_fp in restored_result.label.input_fingerprints
-    sys.stdout.write(f"restore-equivalence (values equal): {equivalent}\n")
-    sys.stdout.write(f"restored result carries snapshot fingerprint as input: {carries}\n")
+    print(f"restore-equivalence (values equal): {equivalent}")
+    print(f"restored result carries snapshot fingerprint as input: {carries}")
 
     # 4. A cross-tuple restore is an unavailable-dependency refusal (FM-7).
     other_scope = _unwrap(SnapshotScope.try_create("ubuntu-24.04", "ta-lib==0.7.1"))
@@ -196,7 +191,7 @@ def main() -> None:
         current_scope=other_scope,
     )
     assert is_refusal(cross), cross
-    sys.stdout.write(f"cross-tuple restore: {cross.category.value}\n")
+    print(f"cross-tuple restore: {cross.category.value}")
 
 
 if __name__ == "__main__":

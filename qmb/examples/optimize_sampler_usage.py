@@ -28,7 +28,6 @@ Shows the things B-8 / AR-50 / Story 21.4 pin down:
 
 from __future__ import annotations
 
-import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -115,9 +114,7 @@ def main() -> None:
     assert _unwrap(first.fingerprint(), "fp") == _unwrap(again.fingerprint(), "fp")
     assert first.size == 6
     assert api.SAMPLER_CONSULTS_OPTUNA_STORE is False
-    sys.stdout.write(
-        "pure sampler port: same (space, seed, priors, generation) proposes the identical batch\n"
-    )
+    print("pure sampler port: same (space, seed, priors, generation) proposes the identical batch")
 
     # 2. Condition on a completed generation; order of completion cannot change the model.
     priors = [
@@ -139,9 +136,9 @@ def main() -> None:
         "g1-shuffled",
     )
     assert _unwrap(ordered.fingerprint(), "fp") == _unwrap(shuffled.fingerprint(), "fp")
-    sys.stdout.write(
+    print(
         "identical trials regardless of completion order: "
-        "a shuffled ledger view proposes the same batch\n"
+        "a shuffled ledger view proposes the same batch"
     )
 
     # 3. A second ask before the outstanding tell is unsupported for the TPE-class adapter.
@@ -154,9 +151,7 @@ def main() -> None:
     refused = outstanding_stepper.ask()
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.UNSUPPORTED_CAPABILITY
-    sys.stdout.write(
-        "a second ask before the outstanding generation's tell is unsupported capability\n"
-    )
+    print("a second ask before the outstanding generation's tell is unsupported capability")
 
     # The barrier is the whole generation: condition on it, then the next ask advances.
     results = [
@@ -173,9 +168,9 @@ def main() -> None:
     assert is_refusal(partial)  # the barrier refuses a partial generation
     advanced = _unwrap(conditioned.ask(), "ask gen1")
     assert advanced[1].generation_index == 1
-    sys.stdout.write(
+    print(
         "propose -> run -> barrier -> condition: "
-        "a partial tell is refused; a full generation advances\n"
+        "a partial tell is refused; a full generation advances"
     )
 
     # 4. An internal float enters identity only through the named AD-7/AD-22 conversion.
@@ -190,9 +185,9 @@ def main() -> None:
     assert not any(isinstance(part, float) for part in identity.values())
     missing_mode = api.convert_sampled_value(atr, 1.734820, rounding="not-a-mode")
     assert is_refusal(missing_mode)
-    sys.stdout.write(
+    print(
         "an internal float enters identity only through a named AD-7/AD-22 conversion; "
-        "the float never does\n"
+        "the float never does"
     )
 
     # 5. Study admission: one registry as-of resolved through the B-15 port, frozen for every trial.
@@ -212,16 +207,14 @@ def main() -> None:
     assert admitted.registry_as_of == as_of.registry_as_of
     assert admitted.set_fingerprint == as_of.fingerprint
     assert admitted.label.registry_as_of_stamp()["fingerprint"] == as_of.fingerprint.value
-    sys.stdout.write(
+    print(
         "one registry as-of resolved through the B-15 port, frozen for every trial, "
-        "stamped into the study label\n"
+        "stamped into the study label"
     )
 
     assert is_refusal(admitted.port.resolve("mean-reversion"))
     assert is_refusal(admitted.port.resolve("mean-reversion@latest"))
-    sys.stdout.write(
-        "after admission, fragments resolve by explicit fingerprint, never name@latest\n"
-    )
+    print("after admission, fragments resolve by explicit fingerprint, never name@latest")
 
     # 6. Every trial label carries sampler identity, seed, generator provenance, and study_fp.
     admitted_stepper = _unwrap(admitted.stepper(batch_size=4), "stepper")
@@ -234,9 +227,7 @@ def main() -> None:
     assert label["seed"] == 4242
     assert label["study_fp"] == admitted.study_fp.value
     assert is_ok(fingerprint(label))
-    sys.stdout.write(
-        "every trial label carries sampler identity, seed, generator provenance, and study_fp\n"
-    )
+    print("every trial label carries sampler identity, seed, generator provenance, and study_fp")
 
     # A future optuna major bump is a contract-versioning event, never a transparent update.
     provenance = qmb.generator_provenance()
@@ -245,18 +236,16 @@ def main() -> None:
     refused_bump = api.refuse_sampler_contract_bump(bumped)
     assert is_refusal(refused_bump)
     assert refused_bump.category is RefusalCategory.UNSUPPORTED_CAPABILITY
-    sys.stdout.write(
-        "a future optuna major bump is a contract-versioning event, never a transparent update\n"
-    )
+    print("a future optuna major bump is a contract-versioning event, never a transparent update")
 
     # The qmb door is a thin wrapper over the one pure library sampler surface.
     assert api.propose_generation is qmb.propose_generation
     assert api.admit_study is qmb.admit_study
     assert api.convert_sampled_value is qmb.convert_sampled_value
-    sys.stdout.write("the qmb door is a thin wrapper over one pure library sampler surface\n")
+    print("the qmb door is a thin wrapper over one pure library sampler surface")
 
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("optuna TPE-class sampler ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("optuna TPE-class sampler ok")
 
 
 def _record(kind: str, body: object) -> RegistrationRecord:

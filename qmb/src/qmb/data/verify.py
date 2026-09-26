@@ -199,37 +199,6 @@ def verify_identity() -> dict[str, object]:
 
 def parse_verify_request(resources: Mapping[str, object]) -> Result[VerifyRequest]:
     """Validate door/library resources into a :class:`VerifyRequest`."""
-    named = _parse_verify_names(resources)
-    if is_refusal(named):
-        return named
-    archive, venue, symbol = named.value
-    window = _parse_verify_window(resources)
-    if is_refusal(window):
-        return window
-    start_ns, end_ns, resolution, side = window.value
-    guards = _parse_verify_guards(resources)
-    if is_refusal(guards):
-        return guards
-    tolerance, step, world, correlation, ticks = guards.value
-    return Ok(
-        VerifyRequest(
-            archive=archive,
-            venue=venue,
-            symbol=symbol,
-            start_ns=start_ns,
-            end_ns=end_ns,
-            resolution=resolution,
-            side=side,
-            edge_tolerance_ns=tolerance,
-            expected_step_ns=step,
-            world=world,
-            correlation_id=correlation,
-            ticks=ticks,
-        )
-    )
-
-
-def _parse_verify_names(resources: Mapping[str, object]) -> Result[tuple[str, str, str]]:
     archive = clean_token(resources.get("archive", resources.get("destination")))
     if archive is None:
         return invalid(
@@ -244,38 +213,26 @@ def _parse_verify_names(resources: Mapping[str, object]) -> Result[tuple[str, st
             "verify names a non-empty venue token",
             given=repr(resources.get("venue")),
         )
-    symbol = _parse_verify_symbol(resources)
-    if is_refusal(symbol):
-        return symbol
-    return Ok((archive, venue, symbol.value))
-
-
-def _parse_verify_symbol(resources: Mapping[str, object]) -> Result[str]:
     symbol = clean_token(resources.get("symbol", resources.get("symbols")))
-    if symbol is not None:
-        return Ok(symbol)
-    raw_symbols = resources.get("symbol", resources.get("symbols"))
-    if isinstance(raw_symbols, Sequence) and not isinstance(raw_symbols, (str, bytes)):
-        items = cast("Sequence[object]", raw_symbols)
-        tokens = tuple(token for token in (clean_token(item) for item in items) if token)
-        if len(tokens) == 1:
-            return Ok(tokens[0])
-        if len(tokens) > 1:
+    if symbol is None:
+        raw_symbols = resources.get("symbol", resources.get("symbols"))
+        if isinstance(raw_symbols, Sequence) and not isinstance(raw_symbols, (str, bytes)):
+            items = cast("Sequence[object]", raw_symbols)
+            tokens = tuple(token for token in (clean_token(item) for item in items) if token)
+            if len(tokens) == 1:
+                symbol = tokens[0]
+            elif len(tokens) > 1:
+                return invalid(
+                    "symbol",
+                    "verify checks one symbol window at a time",
+                    given=repr(tokens),
+                )
+        if symbol is None:
             return invalid(
                 "symbol",
-                "verify checks one symbol window at a time",
-                given=repr(tokens),
+                "verify names a non-empty symbol token",
+                given=repr(resources.get("symbol", resources.get("symbols"))),
             )
-    return invalid(
-        "symbol",
-        "verify names a non-empty symbol token",
-        given=repr(resources.get("symbol", resources.get("symbols"))),
-    )
-
-
-def _parse_verify_window(
-    resources: Mapping[str, object],
-) -> Result[tuple[int, int, str, DownloadSide]]:
     start = _as_ns(resources.get("start", resources.get("start_ns")), field="start")
     if is_refusal(start):
         return start
@@ -293,14 +250,6 @@ def _parse_verify_window(
     side = _as_side(resources.get("side", DownloadSide.BOTH.value))
     if is_refusal(side):
         return side
-    return Ok((start.value, end.value, resolution, side.value))
-
-
-def _parse_verify_guards(
-    resources: Mapping[str, object],
-) -> Result[
-    tuple[int | None, int | None, World, str | None, tuple[Mapping[str, object], ...] | None]
-]:
     tolerance = _optional_nonneg_ns(
         resources.get("edge_tolerance_ns", resources.get("edge_tolerance")),
         field="edge_tolerance_ns",
@@ -322,32 +271,22 @@ def _parse_verify_guards(
     ticks = _optional_ticks(resources.get("ticks", resources.get("observations")))
     if is_refusal(ticks):
         return ticks
-    return Ok((tolerance.value, step.value, world.value, correlation.value, ticks.value))
-
-
-class _WindowInspection:
-    __slots__ = (
-        "ask_present",
-        "bid_present",
-        "defects",
-        "edge_end",
-        "edge_start",
-        "interior_gaps",
-        "non_monotonic",
-        "price_taint",
-        "timestamps",
+    return Ok(
+        VerifyRequest(
+            archive=archive,
+            venue=venue,
+            symbol=symbol,
+            start_ns=start.value,
+            end_ns=end.value,
+            resolution=resolution,
+            side=side.value,
+            edge_tolerance_ns=tolerance.value,
+            expected_step_ns=step.value,
+            world=world.value,
+            correlation_id=correlation.value,
+            ticks=ticks.value,
+        )
     )
-
-    def __init__(self) -> None:
-        self.defects: list[IntegrityDefect] = []
-        self.interior_gaps: list[InteriorGap] = []
-        self.bid_present = 0
-        self.ask_present = 0
-        self.price_taint = 0
-        self.non_monotonic = 0
-        self.timestamps: list[int] = []
-        self.edge_start: int | None = None
-        self.edge_end: int | None = None
 
 
 def verify(
@@ -362,45 +301,29 @@ def verify(
     if is_refusal(parsed):
         return parsed
     request = parsed.value
-    evidence = _bind_verify_store(store, resources, request)
+
+    evidence = store
+    if evidence is None:
+        raw_store = resources.get("store")
+        if isinstance(raw_store, EvidenceStore):
+            evidence = raw_store
+        else:
+            evidence = EvidenceStore(Path(request.archive))
+
     rows = _load_rows(request, evidence=evidence, resources=resources)
     if is_refusal(rows):
         return rows
-    inspected = _inspect_window(request, evidence, rows.value)
-    if is_refusal(inspected):
-        return inspected
-    return _finish_verify(
-        request,
-        evidence=evidence,
-        writer=writer,
-        journal_writer=journal_writer,
-        resources=resources,
-        rows=rows.value,
-        inspection=inspected.value,
-    )
 
+    defects: list[IntegrityDefect] = []
+    interior_gaps: list[InteriorGap] = []
+    bid_present = 0
+    ask_present = 0
+    price_taint = 0
+    non_monotonic = 0
+    timestamps: list[int] = []
 
-def _bind_verify_store(
-    store: EvidenceStore | None,
-    resources: Mapping[str, object],
-    request: VerifyRequest,
-) -> EvidenceStore:
-    if store is not None:
-        return store
-    raw_store = resources.get("store")
-    if isinstance(raw_store, EvidenceStore):
-        return raw_store
-    return EvidenceStore(Path(request.archive))
-
-
-def _inspect_window(
-    request: VerifyRequest,
-    evidence: EvidenceStore,
-    rows: Sequence[Mapping[str, object]],
-) -> Result[_WindowInspection]:
-    acc = _WindowInspection()
-    if not rows:
-        acc.defects.append(
+    if not rows.value:
+        defects.append(
             IntegrityDefect(
                 code="empty_provider_return",
                 detail="provider/window returned no observations for the requested range",
@@ -412,170 +335,143 @@ def _inspect_window(
                 },
             )
         )
-        return Ok(acc)
-    scanned = _scan_row_integrity(request, evidence, rows, acc)
-    if is_refusal(scanned):
-        return scanned
-    _inspect_edges(request, acc)
-    return Ok(acc)
-
-
-def _scan_row_integrity(
-    request: VerifyRequest,
-    evidence: EvidenceStore,
-    rows: Sequence[Mapping[str, object]],
-    acc: _WindowInspection,
-) -> Result[None]:
-    for index, row in enumerate(rows):
-        checked = _inspect_one_row(index, row, acc)
-        if is_refusal(checked):
-            return checked
-    if request.side is DownloadSide.BOTH:
-        missing = _missing_both_sides(
-            request=request,
-            evidence=evidence,
-            bid_present=acc.bid_present,
-            ask_present=acc.ask_present,
-            rows=rows,
-        )
-        if is_refusal(missing):
-            return missing
-        acc.defects.extend(missing.value)
-    _inspect_interior_gaps(request, acc)
-    return Ok(None)
-
-
-def _inspect_one_row(index: int, row: Mapping[str, object], acc: _WindowInspection) -> Result[None]:
-    ts = _row_timestamp_ns(row)
-    if is_refusal(ts):
-        acc.defects.append(
-            IntegrityDefect(
-                code="non_integer_timestamp",
-                detail="timestamps must be monotonic int64 UTC-ns",
-                context={"index": index, "given": repr(row.get("t_ns", row.get("event_time_ns")))},
-            )
-        )
-        return Ok(None)
-    if acc.timestamps and ts.value < acc.timestamps[-1]:
-        acc.non_monotonic += 1
-        acc.defects.append(
-            IntegrityDefect(
-                code="non_monotonic_timestamp",
-                detail="timestamps must be monotonic non-decreasing int64 UTC-ns",
-                context={
-                    "index": index,
-                    "previous_ns": acc.timestamps[-1],
-                    "event_time_ns": ts.value,
-                },
-            )
-        )
-    acc.timestamps.append(ts.value)
-    _inspect_row_prices(index, row, acc)
-    return Ok(None)
-
-
-def _inspect_row_prices(index: int, row: Mapping[str, object], acc: _WindowInspection) -> None:
-    bid = _row_side_price(row, side="bid")
-    ask = _row_side_price(row, side="ask")
-    if bid.present:
-        acc.bid_present += 1
-    if ask.present:
-        acc.ask_present += 1
-    if bid.tainted:
-        acc.price_taint += 1
-        acc.defects.append(_price_taint_defect(index, "bid", bid.given))
-    if ask.tainted:
-        acc.price_taint += 1
-        acc.defects.append(_price_taint_defect(index, "ask", ask.given))
-    lone = _row_lone_price(row)
-    if lone.tainted:
-        acc.price_taint += 1
-        acc.defects.append(_price_taint_defect(index, "price", lone.given))
-
-
-def _price_taint_defect(index: int, side: str, given: object) -> IntegrityDefect:
-    return IntegrityDefect(
-        code="non_integer_price_taint",
-        detail="prices are exact scaled integers with no float taint (CT-01/AR-15)",
-        context={"index": index, "side": side, "given": repr(given)},
-    )
-
-
-def _inspect_interior_gaps(request: VerifyRequest, acc: _WindowInspection) -> None:
-    if request.expected_step_ns is None or len(acc.timestamps) < 2:
-        return
-    step = request.expected_step_ns
-    for index in range(1, len(acc.timestamps)):
-        delta = acc.timestamps[index] - acc.timestamps[index - 1]
-        if delta > step:
-            acc.interior_gaps.append(
-                InteriorGap(
-                    start_ns=acc.timestamps[index - 1],
-                    end_ns=acc.timestamps[index],
-                    expected_step_ns=step,
-                    delta_ns=delta,
+    else:
+        for index, row in enumerate(rows.value):
+            ts = _row_timestamp_ns(row)
+            if is_refusal(ts):
+                defects.append(
+                    IntegrityDefect(
+                        code="non_integer_timestamp",
+                        detail="timestamps must be monotonic int64 UTC-ns",
+                        context={
+                            "index": index,
+                            "given": repr(row.get("t_ns", row.get("event_time_ns"))),
+                        },
+                    )
                 )
+                continue
+            if timestamps and ts.value < timestamps[-1]:
+                non_monotonic += 1
+                defects.append(
+                    IntegrityDefect(
+                        code="non_monotonic_timestamp",
+                        detail="timestamps must be monotonic non-decreasing int64 UTC-ns",
+                        context={
+                            "index": index,
+                            "previous_ns": timestamps[-1],
+                            "event_time_ns": ts.value,
+                        },
+                    )
+                )
+            timestamps.append(ts.value)
+
+            bid = _row_side_price(row, side="bid")
+            ask = _row_side_price(row, side="ask")
+            if bid.present:
+                bid_present += 1
+            if ask.present:
+                ask_present += 1
+            if bid.tainted:
+                price_taint += 1
+                defects.append(
+                    IntegrityDefect(
+                        code="non_integer_price_taint",
+                        detail="prices are exact scaled integers with no float taint (CT-01/AR-15)",
+                        context={"index": index, "side": "bid", "given": repr(bid.given)},
+                    )
+                )
+            if ask.tainted:
+                price_taint += 1
+                defects.append(
+                    IntegrityDefect(
+                        code="non_integer_price_taint",
+                        detail="prices are exact scaled integers with no float taint (CT-01/AR-15)",
+                        context={"index": index, "side": "ask", "given": repr(ask.given)},
+                    )
+                )
+            lone = _row_lone_price(row)
+            if lone.tainted:
+                price_taint += 1
+                defects.append(
+                    IntegrityDefect(
+                        code="non_integer_price_taint",
+                        detail="prices are exact scaled integers with no float taint (CT-01/AR-15)",
+                        context={"index": index, "side": "price", "given": repr(lone.given)},
+                    )
+                )
+
+        if request.side is DownloadSide.BOTH:
+            missing = _missing_both_sides(
+                request=request,
+                evidence=evidence,
+                bid_present=bid_present,
+                ask_present=ask_present,
+                rows=rows.value,
             )
+            if is_refusal(missing):
+                return missing
+            defects.extend(missing.value)
 
+        if request.expected_step_ns is not None and len(timestamps) >= 2:
+            step = request.expected_step_ns
+            for index in range(1, len(timestamps)):
+                delta = timestamps[index] - timestamps[index - 1]
+                if delta > step:
+                    interior_gaps.append(
+                        InteriorGap(
+                            start_ns=timestamps[index - 1],
+                            end_ns=timestamps[index],
+                            expected_step_ns=step,
+                            delta_ns=delta,
+                        )
+                    )
 
-def _inspect_edges(request: VerifyRequest, acc: _WindowInspection) -> None:
-    if not acc.timestamps:
-        return
-    acc.edge_start = max(0, acc.timestamps[0] - request.start_ns)
-    acc.edge_end = max(0, request.end_ns - acc.timestamps[-1])
-    if request.edge_tolerance_ns is None:
-        return
-    limit = request.edge_tolerance_ns
-    if acc.edge_start > limit:
-        acc.defects.append(
-            IntegrityDefect(
-                code="edge_offset_beyond_tolerance",
-                detail="leading edge offset exceeds armed edge tolerance",
-                context={
-                    "edge": "start",
-                    "offset_ns": acc.edge_start,
-                    "tolerance_ns": limit,
-                    "first_ns": acc.timestamps[0],
-                    "start_ns": request.start_ns,
-                },
-            )
-        )
-    if acc.edge_end > limit:
-        acc.defects.append(
-            IntegrityDefect(
-                code="edge_offset_beyond_tolerance",
-                detail="trailing edge offset exceeds armed edge tolerance",
-                context={
-                    "edge": "end",
-                    "offset_ns": acc.edge_end,
-                    "tolerance_ns": limit,
-                    "last_ns": acc.timestamps[-1],
-                    "end_ns": request.end_ns,
-                },
-            )
-        )
+    edge_start: int | None = None
+    edge_end: int | None = None
+    if timestamps:
+        edge_start = max(0, timestamps[0] - request.start_ns)
+        edge_end = max(0, request.end_ns - timestamps[-1])
+        if request.edge_tolerance_ns is not None:
+            limit = request.edge_tolerance_ns
+            if edge_start > limit:
+                defects.append(
+                    IntegrityDefect(
+                        code="edge_offset_beyond_tolerance",
+                        detail="leading edge offset exceeds armed edge tolerance",
+                        context={
+                            "edge": "start",
+                            "offset_ns": edge_start,
+                            "tolerance_ns": limit,
+                            "first_ns": timestamps[0],
+                            "start_ns": request.start_ns,
+                        },
+                    )
+                )
+            if edge_end > limit:
+                defects.append(
+                    IntegrityDefect(
+                        code="edge_offset_beyond_tolerance",
+                        detail="trailing edge offset exceeds armed edge tolerance",
+                        context={
+                            "edge": "end",
+                            "offset_ns": edge_end,
+                            "tolerance_ns": limit,
+                            "last_ns": timestamps[-1],
+                            "end_ns": request.end_ns,
+                        },
+                    )
+                )
 
-
-def _finish_verify(
-    request: VerifyRequest,
-    *,
-    evidence: EvidenceStore,
-    writer: WriterId | None,
-    journal_writer: JournalWriter | None,
-    resources: Mapping[str, object],
-    rows: Sequence[Mapping[str, object]],
-    inspection: _WindowInspection,
-) -> Result[VerifyVerdict]:
     counts = IntegrityCounts(
-        observation_count=len(rows),
-        bid_present=inspection.bid_present,
-        ask_present=inspection.ask_present,
-        defect_count=len(inspection.defects),
-        interior_gap_count=len(inspection.interior_gaps),
-        price_taint_count=inspection.price_taint,
-        non_monotonic_count=inspection.non_monotonic,
+        observation_count=len(rows.value),
+        bid_present=bid_present,
+        ask_present=ask_present,
+        defect_count=len(defects),
+        interior_gap_count=len(interior_gaps),
+        price_taint_count=price_taint,
+        non_monotonic_count=non_monotonic,
     )
-    verdict_token = _VERDICT_FAIL if inspection.defects else _VERDICT_PASS
+    verdict_token = _VERDICT_FAIL if defects else _VERDICT_PASS
     journal_sequence = _journal_verdict(
         request=request,
         evidence=evidence,
@@ -584,36 +480,15 @@ def _finish_verify(
         resources=resources,
         verdict=verdict_token,
         counts=counts,
-        defects=tuple(inspection.defects),
-        interior_gaps=tuple(inspection.interior_gaps),
-        edge_start_offset_ns=inspection.edge_start,
-        edge_end_offset_ns=inspection.edge_end,
+        defects=tuple(defects),
+        interior_gaps=tuple(interior_gaps),
+        edge_start_offset_ns=edge_start,
+        edge_end_offset_ns=edge_end,
     )
     if is_refusal(journal_sequence):
         return journal_sequence
-    payload = _verify_payload(request, counts, inspection, verdict_token, journal_sequence.value)
-    if inspection.defects:
-        return policy(
-            "window_integrity",
-            "window integrity defects refuse governed use of this window (CT-04)",
-            signal="window-integrity-defect",
-            kind=INTEGRITY_KIND,
-            verdict=_VERDICT_FAIL,
-            is_edge_claim=False,
-            fills_gaps=False,
-            result=payload.as_mapping(),
-        )
-    return Ok(payload)
 
-
-def _verify_payload(
-    request: VerifyRequest,
-    counts: IntegrityCounts,
-    inspection: _WindowInspection,
-    verdict_token: str,
-    journal_sequence: int,
-) -> VerifyVerdict:
-    return VerifyVerdict(
+    payload = VerifyVerdict(
         command="verify",
         kind=INTEGRITY_KIND,
         verdict=verdict_token,
@@ -626,15 +501,27 @@ def _verify_payload(
         end_ns=request.end_ns,
         edge_tolerance_ns=request.edge_tolerance_ns,
         edge_guard_armed=request.edge_tolerance_ns is not None,
-        edge_start_offset_ns=inspection.edge_start,
-        edge_end_offset_ns=inspection.edge_end,
+        edge_start_offset_ns=edge_start,
+        edge_end_offset_ns=edge_end,
         counts=counts,
-        defects=tuple(inspection.defects),
-        interior_gaps=tuple(inspection.interior_gaps),
+        defects=tuple(defects),
+        interior_gaps=tuple(interior_gaps),
         correlation_id=request.correlation_id,
         journaled=True,
-        journal_sequence=journal_sequence,
+        journal_sequence=journal_sequence.value,
     )
+    if defects:
+        return policy(
+            "window_integrity",
+            "window integrity defects refuse governed use of this window (CT-04)",
+            signal="window-integrity-defect",
+            kind=INTEGRITY_KIND,
+            verdict=_VERDICT_FAIL,
+            is_edge_claim=False,
+            fills_gaps=False,
+            result=payload.as_mapping(),
+        )
+    return Ok(payload)
 
 
 # --- loaders ----------------------------------------------------------------
@@ -673,55 +560,43 @@ def _scan_observation_rows(
         except StoreEngineError:
             continue
         for item in artifact:
-            collected = _collect_scan_row(cast("Mapping[str, object]", item), request)
-            if collected is not None:
-                rows.append(collected)
+            mapping = cast("Mapping[str, object]", item)
+            if mapping.get("kind") == "qmb-data-coverage":
+                continue
+            rebuilt = SourceObservation.from_row(mapping)
+            if is_refusal(rebuilt):
+                # Non-observation artifacts (coverage already skipped) stay out.
+                if "event_time_ns" not in mapping:
+                    continue
+                # Persist float-tainted / corrupt rows as raw material for defect checks.
+                event = mapping.get("event_time_ns")
+                if (
+                    isinstance(event, int)
+                    and not isinstance(event, bool)
+                    and request.start_ns <= event < request.end_ns
+                ):
+                    rows.append(dict(mapping))
+                continue
+            event_ns = rebuilt.value.event_time.value_ns
+            if event_ns < request.start_ns or event_ns >= request.end_ns:
+                continue
+            native = rebuilt.value.source_native_id
+            # Symbol scoping for archive scans rides coverage / caller ticks;
+            # CT-10 rows are kept when their event-time falls in the window.
+            row: dict[str, object] = {
+                "t_ns": event_ns,
+                "event_time_ns": event_ns,
+                "source_native_id": native,
+                "fingerprint": rebuilt.value.fingerprint.value,
+            }
+            money = rebuilt.value.foreign_money
+            if money is not None:
+                row["price"] = {"verbatim": money.verbatim, "scale": money.scale}
+            # Coverage-backed bid/ask presence is checked separately; CT-10 rows
+            # may carry only foreign_money when quotes were not persisted.
+            rows.append(row)
     rows.sort(key=lambda item: int(cast("int", item.get("t_ns", 0))))
     return Ok(tuple(rows))
-
-
-def _collect_scan_row(
-    mapping: Mapping[str, object], request: VerifyRequest
-) -> dict[str, object] | None:
-    if mapping.get("kind") == "qmb-data-coverage":
-        return None
-    rebuilt = SourceObservation.from_row(mapping)
-    if is_refusal(rebuilt):
-        return _corrupt_scan_row(mapping, request)
-    event_ns = rebuilt.value.event_time.value_ns
-    if event_ns < request.start_ns or event_ns >= request.end_ns:
-        return None
-    # Symbol scoping for archive scans rides coverage / caller ticks;
-    # CT-10 rows are kept when their event-time falls in the window.
-    row: dict[str, object] = {
-        "t_ns": event_ns,
-        "event_time_ns": event_ns,
-        "source_native_id": rebuilt.value.source_native_id,
-        "fingerprint": rebuilt.value.fingerprint.value,
-    }
-    money = rebuilt.value.foreign_money
-    if money is not None:
-        row["price"] = {"verbatim": money.verbatim, "scale": money.scale}
-    # Coverage-backed bid/ask presence is checked separately; CT-10 rows
-    # may carry only foreign_money when quotes were not persisted.
-    return row
-
-
-def _corrupt_scan_row(
-    mapping: Mapping[str, object], request: VerifyRequest
-) -> dict[str, object] | None:
-    # Non-observation artifacts (coverage already skipped) stay out.
-    if "event_time_ns" not in mapping:
-        return None
-    # Persist float-tainted / corrupt rows as raw material for defect checks.
-    event = mapping.get("event_time_ns")
-    if (
-        isinstance(event, int)
-        and not isinstance(event, bool)
-        and request.start_ns <= event < request.end_ns
-    ):
-        return dict(mapping)
-    return None
 
 
 def _missing_both_sides(
@@ -732,62 +607,48 @@ def _missing_both_sides(
     ask_present: int,
     rows: Sequence[Mapping[str, object]],
 ) -> Result[list[IntegrityDefect]]:
+    defects: list[IntegrityDefect] = []
     # Prefer explicit tick-side fields when the window carries them.
-    if any("bid" in row or "ask" in row for row in rows):
-        return Ok(_missing_side_field_defects(bid_present, ask_present))
+    has_side_fields = any("bid" in row or "ask" in row for row in rows)
+    if has_side_fields:
+        if bid_present == 0:
+            defects.append(
+                IntegrityDefect(
+                    code="missing_requested_side",
+                    detail="side=both requires bid stream present",
+                    context={"side": "bid", "bid_present": bid_present, "ask_present": ask_present},
+                )
+            )
+        if ask_present == 0:
+            defects.append(
+                IntegrityDefect(
+                    code="missing_requested_side",
+                    detail="side=both requires ask stream present",
+                    context={"side": "ask", "bid_present": bid_present, "ask_present": ask_present},
+                )
+            )
+        return Ok(defects)
+
     scanned = scan_coverage_rows(evidence, world=request.world)
     if is_refusal(scanned):
         return scanned
-    present_sides = _present_coverage_sides(request, scanned.value)
-    return Ok(_missing_coverage_side_defects(present_sides, bid_present, ask_present))
-
-
-def _missing_side_field_defects(bid_present: int, ask_present: int) -> list[IntegrityDefect]:
-    defects: list[IntegrityDefect] = []
-    if bid_present == 0:
-        defects.append(
-            IntegrityDefect(
-                code="missing_requested_side",
-                detail="side=both requires bid stream present",
-                context={"side": "bid", "bid_present": bid_present, "ask_present": ask_present},
-            )
-        )
-    if ask_present == 0:
-        defects.append(
-            IntegrityDefect(
-                code="missing_requested_side",
-                detail="side=both requires ask stream present",
-                context={"side": "ask", "bid_present": bid_present, "ask_present": ask_present},
-            )
-        )
-    return defects
-
-
-def _present_coverage_sides(
-    request: VerifyRequest, rows: Sequence[Mapping[str, object]]
-) -> set[str]:
     present_sides: set[str] = set()
-    for row in rows:
+    for row in scanned.value:
         if row.get("kind") != "qmb-data-coverage" and row.get("status") not in {PRESENT, None}:
             continue
         if str(row.get("venue", "")) != request.venue:
             continue
         if str(row.get("symbol", "")) != request.symbol:
             continue
-        if str(row.get("resolution", "tick")) != request.resolution:
+        resolution = str(row.get("resolution", "tick"))
+        if resolution != request.resolution:
             continue
-        if str(row.get("status", PRESENT)) != PRESENT:
+        status = str(row.get("status", PRESENT))
+        if status != PRESENT:
             continue
         side_token = clean_token(row.get("side"))
         if side_token in {DownloadSide.BID.value, DownloadSide.ASK.value}:
             present_sides.add(side_token)
-    return present_sides
-
-
-def _missing_coverage_side_defects(
-    present_sides: set[str], bid_present: int, ask_present: int
-) -> list[IntegrityDefect]:
-    defects: list[IntegrityDefect] = []
     if DownloadSide.BID.value not in present_sides and bid_present == 0:
         defects.append(
             IntegrityDefect(
@@ -812,7 +673,7 @@ def _missing_coverage_side_defects(
                 },
             )
         )
-    return defects
+    return Ok(defects)
 
 
 def _journal_verdict(
@@ -830,66 +691,31 @@ def _journal_verdict(
     edge_end_offset_ns: int | None,
 ) -> Result[int]:
     """Record pass/fail through CT-13 data quality; propagate correlation_id."""
-    active = _bind_verify_journal(request, evidence, writer, journal_writer, resources)
-    if is_refusal(active):
-        return active
-    payload = _journal_payload(
-        request,
-        verdict=verdict,
-        counts=counts,
-        defects=defects,
-        interior_gaps=interior_gaps,
-        edge_start_offset_ns=edge_start_offset_ns,
-        edge_end_offset_ns=edge_end_offset_ns,
-    )
-    recorded = active.value.record_data_quality(
-        payload,
-        instant=resources.get("journal_instant", request.end_ns),
-        correlation_id=request.correlation_id,
-    )
-    if is_refusal(recorded):
-        return recorded
-    return Ok(recorded.value.event.sequence)
+    active = journal_writer
+    if active is None:
+        raw_jw = resources.get("journal_writer")
+        if isinstance(raw_jw, JournalWriter):
+            active = raw_jw
+    if active is None:
+        world_store = evidence.for_world(request.world)
+        if is_refusal(world_store):
+            return world_store
+        active_writer = writer
+        if active_writer is None:
+            raw_writer = resources.get("writer")
+            if isinstance(raw_writer, WriterId):
+                active_writer = raw_writer
+        if active_writer is None:
+            minted = WriterId.try_create("qmb", "data", "verify", "boot-1")
+            if is_refusal(minted):
+                return minted
+            active_writer = minted.value
+        active = JournalWriter(
+            world_store.value.journal,
+            active_writer,
+            stream_name=_JOURNAL_STREAM,
+        )
 
-
-def _bind_verify_journal(
-    request: VerifyRequest,
-    evidence: EvidenceStore,
-    writer: WriterId | None,
-    journal_writer: JournalWriter | None,
-    resources: Mapping[str, object],
-) -> Result[JournalWriter]:
-    if journal_writer is not None:
-        return Ok(journal_writer)
-    raw_jw = resources.get("journal_writer")
-    if isinstance(raw_jw, JournalWriter):
-        return Ok(raw_jw)
-    world_store = evidence.for_world(request.world)
-    if is_refusal(world_store):
-        return world_store
-    active_writer = writer
-    if active_writer is None:
-        raw_writer = resources.get("writer")
-        if isinstance(raw_writer, WriterId):
-            active_writer = raw_writer
-    if active_writer is None:
-        minted = WriterId.try_create("qmb", "data", "verify", "boot-1")
-        if is_refusal(minted):
-            return minted
-        active_writer = minted.value
-    return Ok(JournalWriter(world_store.value.journal, active_writer, stream_name=_JOURNAL_STREAM))
-
-
-def _journal_payload(
-    request: VerifyRequest,
-    *,
-    verdict: str,
-    counts: IntegrityCounts,
-    defects: tuple[IntegrityDefect, ...],
-    interior_gaps: tuple[InteriorGap, ...],
-    edge_start_offset_ns: int | None,
-    edge_end_offset_ns: int | None,
-) -> dict[str, object]:
     payload: dict[str, object] = {
         "signal": "window-integrity",
         "component": "COMP-QMB",
@@ -918,7 +744,15 @@ def _journal_payload(
         payload["edge_start_offset_ns"] = edge_start_offset_ns
     if edge_end_offset_ns is not None:
         payload["edge_end_offset_ns"] = edge_end_offset_ns
-    return payload
+    instant = resources.get("journal_instant", request.end_ns)
+    recorded = active.record_data_quality(
+        payload,
+        instant=instant,
+        correlation_id=request.correlation_id,
+    )
+    if is_refusal(recorded):
+        return recorded
+    return Ok(recorded.value.event.sequence)
 
 
 # --- row / value helpers ----------------------------------------------------
@@ -1034,22 +868,19 @@ def _as_ns(value: object, *, field: str) -> Result[int]:
     if isinstance(value, float):
         return invalid(field, f"{field} is int64 UTC-ns, never a float", given=repr(value))
     if isinstance(value, str) and value.strip() != "":
-        return _verify_ns_from_token(value.strip(), field=field, given=value)
+        token = value.strip()
+        if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
+            return Ok(int(token))
+        try:
+            if token.endswith("Z"):
+                token = token[:-1] + "+00:00"
+            parsed = datetime.fromisoformat(token)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return Ok(int(parsed.timestamp() * 1_000_000_000))
+        except ValueError:
+            return invalid(field, f"{field} is int64 UTC-ns or ISO-8601", given=value)
     return invalid(field, f"{field} is required int64 UTC-ns", given=repr(value))
-
-
-def _verify_ns_from_token(token: str, *, field: str, given: object) -> Result[int]:
-    if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
-        return Ok(int(token))
-    try:
-        if token.endswith("Z"):
-            token = token[:-1] + "+00:00"
-        parsed = datetime.fromisoformat(token)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return Ok(int(parsed.timestamp() * 1_000_000_000))
-    except ValueError:
-        return invalid(field, f"{field} is int64 UTC-ns or ISO-8601", given=given)
 
 
 def _optional_nonneg_ns(value: object, *, field: str) -> Result[int | None]:

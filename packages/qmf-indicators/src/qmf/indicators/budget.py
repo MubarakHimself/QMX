@@ -185,7 +185,6 @@ def _benchmark_proof(
     bounds are not benchmark-proven (an unmet reason); a measurement that regresses is also
     unmet. A malformed ``tolerance`` is a returned ``invalid input`` refusal.
     """
-    _ = configuration
     if tolerance is not None and not isinstance(tolerance, RegressionTolerance):
         return _invalid(
             "tolerance", "a RegressionTolerance is required (or omit it)", given=repr(tolerance)

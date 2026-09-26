@@ -504,8 +504,7 @@ class ConformanceDouble:
         No network and no Spotware token — the credentialed live path is tagged
         ``@pytest.mark.live`` separately.
         """
-        account = self._account
-        if not self._session_open or account is None:
+        if not self._session_open or self._account is None:
             return TypedRefusal(
                 category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
                 retryability=Retryability.AFTER_CONDITION,
@@ -515,39 +514,10 @@ class ConformanceDouble:
                 },
                 after_condition_descriptor="open_session",
             )
-        outcome = self._verify_measured_facts(account)
-        if is_refusal(outcome):
-            return outcome
-        return self._record_capability_profile(outcome.value)
-
-    @property
-    def verification(self) -> VenueFactVerification | None:
-        """The latest Story 24.2 verification outcome, if any."""
-        return self._verification
-
-    def submit(self, command: object) -> Result[SubmissionResult]:
-        gated = self._submit_readiness(command)
-        if is_refusal(gated):
-            return gated
-        ready = gated.value
-        case = self._armed if self._armed is not None else ConformanceCase.SUCCESS
-        receive = Instant.try_create(1_700_000_000_000_000_000)
-        if is_refusal(receive):
-            return receive
-        fp_result = ready.fingerprint()
-        if is_refusal(fp_result):
-            return fp_result
-        result = _resolve_case(case, ready, fp_result.value, receive.value)
-        if is_ok(result):
-            self._record_submit_observations(ready, case, result.value)
-        self._armed = None
-        return result
-
-    def _verify_measured_facts(self, account: Account) -> Result[VenueFactVerification]:
         declaration = ctrader_static_declaration()
         if is_refusal(declaration):
             return declaration
-        verifier = VenueFactVerifier.try_create(declaration.value, self._venue_id, account)
+        verifier = VenueFactVerifier.try_create(declaration.value, self._venue_id, self._account)
         if is_refusal(verifier):
             return verifier
         receive = Instant.try_create(1_700_000_000_000_000_000)
@@ -562,23 +532,22 @@ class ConformanceDouble:
         verified = verifier.value.verify(measured.value, received_at=receive.value)
         if is_refusal(verified):
             return verified
-        sequencer = verifier.value.require_command_sequencer(verified.value)
-        self._verification = verified.value
-        self._verifier = verifier.value
+        outcome = verified.value
+        sequencer = verifier.value.require_command_sequencer(outcome)
         if is_refusal(sequencer):
+            # Surface journaled data-quality defects; sequencer stays closed.
+            self._verification = outcome
+            self._verifier = verifier.value
             self._observations.append(
                 {
                     "kind": "data-quality",
-                    "journal": [event.as_mapping() for event in verified.value.journal],
-                    "defects": {key: value.value for key, value in verified.value.defects.items()},
+                    "journal": [event.as_mapping() for event in outcome.journal],
+                    "defects": {key: value.value for key, value in outcome.defects.items()},
                 }
             )
             return sequencer
-        return Ok(verified.value)
-
-    def _record_capability_profile(
-        self, outcome: VenueFactVerification
-    ) -> Result[Mapping[str, object]]:
+        self._verification = outcome
+        self._verifier = verifier.value
         self._capabilities_verified = True
         profile: dict[str, object] = {
             "position_model": self._position_model.value,
@@ -601,7 +570,12 @@ class ConformanceDouble:
         self._observations.append({"kind": "capability-profile", "profile": dict(profile)})
         return Ok(profile)
 
-    def _submit_readiness(self, command: object) -> Result[Command]:
+    @property
+    def verification(self) -> VenueFactVerification | None:
+        """The latest Story 24.2 verification outcome, if any."""
+        return self._verification
+
+    def submit(self, command: object) -> Result[SubmissionResult]:
         if isinstance(command, CompoundCommand):
             return compound_command_acceptance_blocked()
         if not isinstance(command, Command):
@@ -628,41 +602,58 @@ class ConformanceDouble:
         )
         if is_refusal(stop):
             return stop
-        return Ok(command)
-
-    def _record_submit_observations(
-        self, command: Command, case: ConformanceCase, result: SubmissionResult
-    ) -> None:
-        self._observations.append(
-            {
-                "kind": "encode-handoff",
-                "command_kind": command.kind.value,
-                "auto_retry": False,
-                "encoded": True,
-            }
-        )
-        self._observations.append(
-            {
-                "kind": "command-outcome",
-                "case": case.value,
-                "outcome": result.outcome.value,
-                "command_kind": command.kind.value,
-                "position_model": self._position_model.value,
-            }
-        )
-        if case is ConformanceCase.SUPERSEDED_BY_FILL:
+        case = self._armed if self._armed is not None else ConformanceCase.SUCCESS
+        receive = Instant.try_create(1_700_000_000_000_000_000)
+        if is_refusal(receive):
+            return receive
+        instant = receive.value
+        fp_result = command.fingerprint()
+        if is_refusal(fp_result):
+            return fp_result
+        fp = fp_result.value
+        result = _resolve_case(case, command, fp, instant)
+        if is_ok(result):
             self._observations.append(
                 {
-                    "kind": "subject-terminal",
-                    "resolution": SubjectResolution.SUPERSEDED_BY_TERMINAL_SUBJECT.value,
+                    "kind": "encode-handoff",
+                    "command_kind": command.kind.value,
+                    "auto_retry": False,
+                    "encoded": True,
                 }
             )
-        if case in {ConformanceCase.NETTING, ConformanceCase.HEDGING}:
             self._observations.append(
-                {"kind": "position-model", "position_model": self._position_model.value}
+                {
+                    "kind": "command-outcome",
+                    "case": case.value,
+                    "outcome": result.value.outcome.value,
+                    "command_kind": command.kind.value,
+                    "position_model": self._position_model.value,
+                }
             )
-        if case is ConformanceCase.PARTIAL:
-            self._observations.append({"kind": "fill", "partial": True, "observation_kind": "fill"})
+            if case is ConformanceCase.SUPERSEDED_BY_FILL:
+                self._observations.append(
+                    {
+                        "kind": "subject-terminal",
+                        "resolution": SubjectResolution.SUPERSEDED_BY_TERMINAL_SUBJECT.value,
+                    }
+                )
+            if case in {ConformanceCase.NETTING, ConformanceCase.HEDGING}:
+                self._observations.append(
+                    {
+                        "kind": "position-model",
+                        "position_model": self._position_model.value,
+                    }
+                )
+            if case is ConformanceCase.PARTIAL:
+                self._observations.append(
+                    {
+                        "kind": "fill",
+                        "partial": True,
+                        "observation_kind": "fill",
+                    }
+                )
+        self._armed = None
+        return result
 
     def observations(self) -> Result[Sequence[Mapping[str, object]]]:
         return Ok(tuple(dict(item) for item in self._observations))
@@ -1002,71 +993,18 @@ def run_port_contract_suite(
     closed — this suite opens it; live/replay must already hold any injected
     ``VenueFactVerification`` via ``accept_verification``).
     """
-    port = _require_port_contract_client(client)
-    if is_refusal(port):
-        return port
-    bound = _open_port_contract_session(port.value, account)
-    if is_refusal(bound):
-        return bound
-    resolved_account, profile = bound.value
-    return _drive_port_contract_suite(port.value, resolved_account, profile)
-
-
-def compare_port_contract_shapes(
-    shapes: object,
-) -> Result[Mapping[str, object]]:
-    """Fail when capability keys or refusal shapes diverge across implementations."""
-    normalized = _normalize_port_contract_shapes(shapes)
-    if is_refusal(normalized):
-        return normalized
-    keys = _require_capability_key_parity(normalized.value)
-    if is_refusal(keys):
-        return keys
-    refusal = _require_refusal_shape_parity(normalized.value)
-    if is_refusal(refusal):
-        return refusal
-    return Ok(
-        {
-            "compared": sorted(normalized.value),
-            "capability_keys": sorted(keys.value),
-            "parity": True,
-        }
-    )
-
-
-def _port_policy(
-    field: str,
-    reason: str,
-    *,
-    kind: object | None = None,
-    **extra: object,
-) -> TypedRefusal:
-    context: dict[str, object] = {"field": field, "reason": reason, **extra}
-    if kind is not None:
-        context["kind"] = kind
-    return TypedRefusal(
-        category=RefusalCategory.POLICY_REJECTION,
-        retryability=Retryability.NO,
-        context=context,
-    )
-
-
-def _port_invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
-    return TypedRefusal(
-        category=RefusalCategory.INVALID_INPUT,
-        retryability=Retryability.NO,
-        context={"field": field, "reason": reason, **extra},
-    )
-
-
-def _require_port_contract_client(client: object) -> Result[VenueClientPort]:
     if not isinstance(client, VenueClientPort):
-        return _port_invalid(
-            "client",
-            "port contract suite requires a VenueClientPort",
-            given=type(client).__name__,
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "client",
+                "reason": "port contract suite requires a VenueClientPort",
+                "given": type(client).__name__,
+            },
         )
-    if client.kind not in {
+    kind = client.kind
+    if kind not in {
         VenueClientKind.CONFORMANCE,
         VenueClientKind.REPLAY,
         VenueClientKind.CTRADER,
@@ -1077,140 +1015,145 @@ def _require_port_contract_client(client: object) -> Result[VenueClientPort]:
             context={
                 "field": "kind",
                 "reason": "port contract suite covers conformance | replay | ctrader",
-                "kind": getattr(client.kind, "value", repr(client.kind)),
+                "kind": getattr(kind, "value", repr(kind)),
             },
         )
+
     blocked = compound_command_acceptance_blocked()
     if blocked.category is not RefusalCategory.UNSUPPORTED_CAPABILITY:
-        return _port_policy(
-            "ftr02",
-            "FTR-02 block must remain unsupported-capability",
-            category=blocked.category.value,
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "ftr02",
+                "reason": "FTR-02 block must remain unsupported-capability",
+                "category": blocked.category.value,
+            },
         )
-    return Ok(client)
 
-
-def _resolve_port_account(client: VenueClientPort, account: object | None) -> Result[Account]:
+    resolved_account: Account
     if account is None:
         minted = Account.try_create("port-contract-acct", client.venue_id, AccountRole.DEMO)
         if is_refusal(minted):
             return minted
-        return Ok(minted.value)
-    if not isinstance(account, Account):
-        return _port_invalid(
-            "account",
-            "port contract suite binds an Account",
-            given=repr(account),
+        resolved_account = minted.value
+    elif isinstance(account, Account):
+        if account.venue != client.venue_id:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "account",
+                    "reason": "account must belong to the client's VenueId",
+                    "venue": client.venue_id.value,
+                    "account_venue": account.venue.value,
+                },
+            )
+        resolved_account = account
+    else:
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "account",
+                "reason": "port contract suite binds an Account",
+                "given": repr(account),
+            },
         )
-    if account.venue != client.venue_id:
-        return _port_invalid(
-            "account",
-            "account must belong to the client's VenueId",
-            venue=client.venue_id.value,
-            account_venue=account.venue.value,
-        )
-    return Ok(account)
 
-
-def _require_capability_profile(
-    kind: VenueClientKind,
-    profile: Mapping[str, object],
-) -> Result[None]:
-    missing = sorted(key for key in PORT_CONTRACT_CAPABILITY_KEYS if key not in profile)
-    if missing:
-        return _port_policy(
-            "capability_shape",
-            "capability profile missing required port-contract keys",
-            kind=kind.value,
-            missing=missing,
-            required=sorted(PORT_CONTRACT_CAPABILITY_KEYS),
-        )
-    if profile.get("verified") is not True:
-        return _port_policy(
-            "capability_shape",
-            "verified must be True after a successful verify_capabilities",
-            kind=kind.value,
-            verified=profile.get("verified"),
-        )
-    if profile.get("static_declaration_present") is not True:
-        return _port_policy(
-            "capability_shape",
-            "static_declaration_present must be True",
-            kind=kind.value,
-        )
-    return Ok(None)
-
-
-def _open_port_contract_session(
-    client: VenueClientPort,
-    account: object | None,
-) -> Result[tuple[Account, Mapping[str, object]]]:
-    resolved = _resolve_port_account(client, account)
-    if is_refusal(resolved):
-        return resolved
-    opened = client.open_session(resolved.value)
+    opened = client.open_session(resolved_account)
     if is_refusal(opened):
         return opened
     caps = client.verify_capabilities()
     if is_refusal(caps):
         return caps
-    shape = _require_capability_profile(client.kind, caps.value)
-    if is_refusal(shape):
-        return shape
-    return Ok((resolved.value, caps.value))
+    profile = caps.value
+    missing = sorted(key for key in PORT_CONTRACT_CAPABILITY_KEYS if key not in profile)
+    if missing:
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "capability_shape",
+                "reason": "capability profile missing required port-contract keys",
+                "kind": kind.value,
+                "missing": missing,
+                "required": sorted(PORT_CONTRACT_CAPABILITY_KEYS),
+            },
+        )
+    if profile.get("verified") is not True:
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "capability_shape",
+                "reason": "verified must be True after a successful verify_capabilities",
+                "kind": kind.value,
+                "verified": profile.get("verified"),
+            },
+        )
+    if profile.get("static_declaration_present") is not True:
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "capability_shape",
+                "reason": "static_declaration_present must be True",
+                "kind": kind.value,
+            },
+        )
 
+    submit_shape = _probe_submit_shape(client, resolved_account, kind)
+    if is_refusal(submit_shape):
+        return submit_shape
+    kind_shapes = _probe_supported_kind_shapes(client, resolved_account)
+    if is_refusal(kind_shapes):
+        return kind_shapes
 
-def _require_compound_blocked(
-    client: VenueClientPort,
-    account: Account,
-) -> Result[None]:
-    compound_cmd = _compound_probe(client.venue_id, account)
+    compound_cmd = _compound_probe(client.venue_id, resolved_account)
     if is_refusal(compound_cmd):
         return compound_cmd
     compound = client.submit(compound_cmd.value)
+    # Prefer the shared FTR-02 helper when the client short-circuits compounds;
+    # otherwise require the same unsupported-capability refusal category.
     if is_ok(compound):
-        return _port_policy(
-            "compound_command",
-            "compound-command acceptance must stay blocked (FTR-02)",
-            kind=client.kind.value,
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "compound_command",
+                "reason": "compound-command acceptance must stay blocked (FTR-02)",
+                "kind": kind.value,
+            },
         )
     if compound.category is not RefusalCategory.UNSUPPORTED_CAPABILITY:
-        return _port_policy(
-            "refusal_shape",
-            "compound-command refusal category diverged from FTR-02",
-            kind=client.kind.value,
-            expected=RefusalCategory.UNSUPPORTED_CAPABILITY.value,
-            got=compound.category.value,
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "refusal_shape",
+                "reason": "compound-command refusal category diverged from FTR-02",
+                "kind": kind.value,
+                "expected": RefusalCategory.UNSUPPORTED_CAPABILITY.value,
+                "got": compound.category.value,
+            },
         )
-    return Ok(None)
 
-
-def _drive_port_contract_suite(
-    client: VenueClientPort,
-    account: Account,
-    profile: Mapping[str, object],
-) -> Result[Mapping[str, object]]:
-    submit_shape = _probe_submit_shape(client, account, client.kind)
-    if is_refusal(submit_shape):
-        return submit_shape
-    kind_shapes = _probe_supported_kind_shapes(client, account)
-    if is_refusal(kind_shapes):
-        return kind_shapes
-    blocked = _require_compound_blocked(client, account)
-    if is_refusal(blocked):
-        return blocked
     observed = client.observations()
     if is_refusal(observed):
         return observed
-    reconcile_shape = _reconcile_shape(client.reconcile(), client.kind)
+    reconciled = client.reconcile()
+    reconcile_shape = _reconcile_shape(reconciled, kind)
     if is_refusal(reconcile_shape):
         return reconcile_shape
+
     closed = client.close_session()
     if is_refusal(closed):
         return closed
+
     return Ok(
         {
-            "kind": client.kind.value,
+            "kind": kind.value,
             "compound_command": "blocked-ftr02",
             "capability_keys": sorted(
                 key for key in profile if key in PORT_CONTRACT_CAPABILITY_KEYS
@@ -1224,45 +1167,59 @@ def _drive_port_contract_suite(
     )
 
 
-def _normalize_port_contract_shapes(
+def compare_port_contract_shapes(
     shapes: object,
-) -> Result[dict[str, Mapping[str, object]]]:
+) -> Result[Mapping[str, object]]:
+    """Fail when capability keys or refusal shapes diverge across implementations."""
     if not isinstance(shapes, Mapping):
-        return _port_invalid(
-            "shapes",
-            "compare_port_contract_shapes takes a non-empty kind → suite-result mapping",
-            given=type(shapes).__name__,
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "shapes",
+                "reason": "compare_port_contract_shapes takes a non-empty "
+                "kind → suite-result mapping",
+                "given": type(shapes).__name__,
+            },
         )
     incoming = cast("Mapping[object, object]", shapes)
     if not incoming:
-        return _port_invalid(
-            "shapes",
-            "compare_port_contract_shapes takes a non-empty kind → suite-result mapping",
-            given="empty-mapping",
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "shapes",
+                "reason": "compare_port_contract_shapes takes a non-empty "
+                "kind → suite-result mapping",
+                "given": "empty-mapping",
+            },
         )
     normalized: dict[str, Mapping[str, object]] = {}
     for key, value in incoming.items():
         kind_token: object = key.value if isinstance(key, VenueClientKind) else key
         if not isinstance(kind_token, str) or kind_token.strip() == "":
-            return _port_invalid(
-                "shapes",
-                "shape keys are VenueClientKind or kind value strings",
-                given=repr(key),
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "shapes",
+                    "reason": "shape keys are VenueClientKind or kind value strings",
+                    "given": repr(key),
+                },
             )
         if not isinstance(value, Mapping):
-            return _port_invalid(
-                "shapes",
-                "each shape value is a port-contract suite result mapping",
-                kind=kind_token,
-                given=type(value).__name__,
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "shapes",
+                    "reason": "each shape value is a port-contract suite result mapping",
+                    "kind": kind_token,
+                    "given": type(value).__name__,
+                },
             )
         normalized[kind_token.strip()] = cast("Mapping[str, object]", value)
-    return Ok(normalized)
 
-
-def _require_capability_key_parity(
-    normalized: Mapping[str, Mapping[str, object]],
-) -> Result[frozenset[str]]:
     capability_sets = {
         kind: frozenset(_string_list(result.get("capability_keys")))
         for kind, result in normalized.items()
@@ -1270,76 +1227,94 @@ def _require_capability_key_parity(
     reference_keys: frozenset[str] | None = None
     for kind, keys in capability_sets.items():
         if not PORT_CONTRACT_CAPABILITY_KEYS.issubset(keys):
-            return _port_policy(
-                "capability_shape",
-                "capability keys diverge from the shared port contract",
-                kind=kind,
-                missing=sorted(PORT_CONTRACT_CAPABILITY_KEYS - keys),
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "capability_shape",
+                    "reason": "capability keys diverge from the shared port contract",
+                    "kind": kind,
+                    "missing": sorted(PORT_CONTRACT_CAPABILITY_KEYS - keys),
+                },
             )
         if reference_keys is None:
             reference_keys = keys
         elif keys != reference_keys:
-            return _port_policy(
-                "capability_shape",
-                "capability-key sets diverge across VenueClientPort implementations",
-                kind=kind,
-                expected=sorted(reference_keys),
-                got=sorted(keys),
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "capability_shape",
+                    "reason": "capability-key sets diverge across VenueClientPort implementations",
+                    "kind": kind,
+                    "expected": sorted(reference_keys),
+                    "got": sorted(keys),
+                },
             )
-    return Ok(reference_keys or frozenset())
 
-
-def _require_kind_submit_handoff(kind: str, result: Mapping[str, object]) -> Result[None]:
-    kind_submit_shapes = result.get("kind_submit_shapes")
-    if not isinstance(kind_submit_shapes, Mapping) or kind == VenueClientKind.REPLAY.value:
-        return Ok(None)
-    for command_kind, shape in cast("Mapping[object, object]", kind_submit_shapes).items():
-        if not isinstance(shape, Mapping):
-            continue
-        body = dict(cast("Mapping[str, object]", shape))
-        if body.get("form") != "encode-handoff":
-            return _port_policy(
-                "refusal_shape",
-                "supported-kind submit must encode-handoff, not refuse",
-                kind=kind,
-                command_kind=command_kind,
-                got=body,
-            )
-    return Ok(None)
-
-
-def _require_refusal_shape_parity(
-    normalized: Mapping[str, Mapping[str, object]],
-) -> Result[None]:
     for kind, result in normalized.items():
         if result.get("compound_command") != "blocked-ftr02":
-            return _port_policy(
-                "refusal_shape",
-                "compound-command refusal shape diverged",
-                kind=kind,
-                got=result.get("compound_command"),
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "refusal_shape",
+                    "reason": "compound-command refusal shape diverged",
+                    "kind": kind,
+                    "got": result.get("compound_command"),
+                },
             )
         submit_shape = result.get("submit_shape")
         if not isinstance(submit_shape, Mapping):
-            return _port_policy(
-                "refusal_shape",
-                "submit_shape missing from suite result",
-                kind=kind,
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "refusal_shape",
+                    "reason": "submit_shape missing from suite result",
+                    "kind": kind,
+                },
             )
         expected = _expected_submit_shape(kind)
         got_shape = dict(cast("Mapping[str, object]", submit_shape))
         if got_shape != expected:
-            return _port_policy(
-                "refusal_shape",
-                "submit refusal/outcome shape diverged from the kind's port contract",
-                kind=kind,
-                expected=expected,
-                got=got_shape,
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "refusal_shape",
+                    "reason": "submit refusal/outcome shape diverged from the kind's port contract",
+                    "kind": kind,
+                    "expected": expected,
+                    "got": got_shape,
+                },
             )
-        handoff = _require_kind_submit_handoff(kind, result)
-        if is_refusal(handoff):
-            return handoff
-    return Ok(None)
+        kind_submit_shapes = result.get("kind_submit_shapes")
+        if isinstance(kind_submit_shapes, Mapping) and kind != VenueClientKind.REPLAY.value:
+            for command_kind, shape in cast("Mapping[object, object]", kind_submit_shapes).items():
+                if not isinstance(shape, Mapping):
+                    continue
+                form = dict(cast("Mapping[str, object]", shape)).get("form")
+                if form != "encode-handoff":
+                    return TypedRefusal(
+                        category=RefusalCategory.POLICY_REJECTION,
+                        retryability=Retryability.NO,
+                        context={
+                            "field": "refusal_shape",
+                            "reason": "supported-kind submit must encode-handoff, not refuse",
+                            "kind": kind,
+                            "command_kind": command_kind,
+                            "got": dict(cast("Mapping[str, object]", shape)),
+                        },
+                    )
+
+    return Ok(
+        {
+            "compared": sorted(normalized),
+            "capability_keys": sorted(reference_keys or ()),
+            "parity": True,
+        }
+    )
 
 
 def _string_list(value: object) -> list[str]:

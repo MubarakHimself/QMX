@@ -85,7 +85,7 @@ def accept_intents(
     they are speaking; it does not select a CT-23 reader (CT-23 is owned by
     qmf-risk). Unknown protocol versions are refused by the factory, not here.
     """
-    _ = protocol_format_version
+    del protocol_format_version
     permitted = _permitted_exit_names(permitted_exit_intents)
     if is_refusal(permitted):
         return permitted

@@ -283,32 +283,7 @@ def assemble_v1_measure_set(
     return Ok(tuple(ordered))
 
 
-_PNL_IDENTITIES: Final[frozenset[str]] = frozenset(MEASURE_IDENTITIES[0:5])
-_RATIO_IDENTITIES: Final[frozenset[str]] = frozenset(MEASURE_IDENTITIES[5:10])
-_TRADE_COUNT_IDENTITIES: Final[frozenset[str]] = frozenset(MEASURE_IDENTITIES[10:16])
-_TRADE_STAT_IDENTITIES: Final[frozenset[str]] = frozenset(MEASURE_IDENTITIES[16:22])
-_GROSS_IDENTITIES: Final[frozenset[str]] = frozenset(MEASURE_IDENTITIES[22:27])
-
-
 def _emit_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
-    if identity in _PNL_IDENTITIES:
-        return _emit_pnl_identity(identity, book)
-    if identity in _RATIO_IDENTITIES:
-        return _emit_ratio_identity(identity, book)
-    if identity in _TRADE_COUNT_IDENTITIES:
-        return _emit_trade_count_identity(identity, book)
-    if identity in _TRADE_STAT_IDENTITIES:
-        return _emit_trade_stat_identity(identity, book)
-    if identity in _GROSS_IDENTITIES:
-        return _emit_gross_identity(identity, book)
-    return invalid(
-        "measure_identity",
-        "V1 core measure set identities are the pinned MEASURE_IDENTITIES roster",
-        given=identity,
-    )
-
-
-def _emit_pnl_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
     if identity == "net_profit":
         return _money_slot(identity, book.net)
     if identity == "net_profit_ratio":
@@ -317,10 +292,8 @@ def _emit_pnl_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
         return _cagr_slot(book)
     if identity == "start_equity":
         return _money_slot(identity, book.start)
-    return _money_slot(identity, book.end)
-
-
-def _emit_ratio_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
+    if identity == "end_equity":
+        return _money_slot(identity, book.end)
     if identity == "sharpe_ratio":
         return _sharpe_slot(book)
     if identity == "sortino_ratio":
@@ -335,10 +308,8 @@ def _emit_ratio_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
                 "max drawdown is undefined when peak equity is zero and the path declines",
             )
         return _exact_ratio(identity, book.max_dd)
-    return _duration_slot(identity, book.recovery_ns)
-
-
-def _emit_trade_count_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
+    if identity == "max_drawdown_recovery":
+        return _duration_slot(identity, book.recovery_ns)
     if identity == "total_trades":
         return _count_slot(identity, len(book.trades))
     if identity == "winning_trades":
@@ -351,12 +322,10 @@ def _emit_trade_count_identity(identity: str, book: _Computed) -> Result[Measure
         return _rate_slot(
             identity, len(book.long_wins), len(book.long_trades), "no closed long trades"
         )
-    return _rate_slot(
-        identity, len(book.short_wins), len(book.short_trades), "no closed short trades"
-    )
-
-
-def _emit_trade_stat_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
+    if identity == "short_win_rate":
+        return _rate_slot(
+            identity, len(book.short_wins), len(book.short_trades), "no closed short trades"
+        )
     if identity == "profit_factor":
         return _profit_factor_slot(book)
     if identity == "expectancy":
@@ -367,10 +336,8 @@ def _emit_trade_stat_identity(identity: str, book: _Computed) -> Result[MeasureS
         return _mean_money_slot(identity, tuple(item.realized_pnl for item in book.losses))
     if identity == "largest_win":
         return _extreme_slot(identity, book.wins, winning=True)
-    return _extreme_slot(identity, book.losses, winning=False)
-
-
-def _emit_gross_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
+    if identity == "largest_loss":
+        return _extreme_slot(identity, book.losses, winning=False)
     if identity == "gross_profit":
         return _money_slot(identity, book.gross_profit)
     if identity == "gross_loss":
@@ -379,28 +346,13 @@ def _emit_gross_identity(identity: str, book: _Computed) -> Result[MeasureSlot]:
         return _money_slot(identity, book.fees)
     if identity == "winning_streak":
         return _count_slot(identity, book.winning_streak)
-    return _count_slot(identity, book.losing_streak)
-
-
-@dataclass(frozen=True, slots=True)
-class _ComputeInputs:
-    start: Money
-    period: Interval
-    trades: tuple[ClosedTrade, ...]
-    curve: tuple[EquityPoint, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _TradeBook:
-    end: Money
-    net: Money
-    fees: Money
-    wins: tuple[ClosedTrade, ...]
-    losses: tuple[ClosedTrade, ...]
-    gross_profit: Money
-    gross_loss: Money
-    longs: tuple[ClosedTrade, ...]
-    shorts: tuple[ClosedTrade, ...]
+    if identity == "losing_streak":
+        return _count_slot(identity, book.losing_streak)
+    return invalid(
+        "measure_identity",
+        "V1 core measure set identities are the pinned MEASURE_IDENTITIES roster",
+        given=identity,
+    )
 
 
 def _compute(
@@ -410,79 +362,6 @@ def _compute(
     trades: object,
     equity_curve: object,
 ) -> Result[_Computed]:
-    parsed = _compute_inputs(
-        starting_capital=starting_capital,
-        period=period,
-        trades=trades,
-        equity_curve=equity_curve,
-    )
-    if is_refusal(parsed):
-        return parsed
-    path = _equity_path(
-        parsed.value.start, parsed.value.period, parsed.value.trades, parsed.value.curve
-    )
-    if is_refusal(path):
-        return path
-    book = _compute_trade_book(parsed.value.start, path.value, parsed.value.trades)
-    if is_refusal(book):
-        return book
-    drawdown = _drawdown(path.value, parsed.value.period)
-    if is_refusal(drawdown):
-        return drawdown
-    win_streak, loss_streak = _streaks(parsed.value.trades)
-    return Ok(
-        _assemble_computed(
-            parsed.value,
-            path.value,
-            book.value,
-            max_dd=drawdown.value[0],
-            recovery_ns=drawdown.value[1],
-            win_streak=win_streak,
-            loss_streak=loss_streak,
-        )
-    )
-
-
-def _assemble_computed(
-    parsed: _ComputeInputs,
-    path: tuple[EquityPoint, ...],
-    book: _TradeBook,
-    *,
-    max_dd: Fraction | None,
-    recovery_ns: int,
-    win_streak: int,
-    loss_streak: int,
-) -> _Computed:
-    return _Computed(
-        start=parsed.start,
-        end=book.end,
-        net=book.net,
-        fees=book.fees,
-        gross_profit=book.gross_profit,
-        gross_loss=book.gross_loss,
-        trades=parsed.trades,
-        wins=book.wins,
-        losses=book.losses,
-        long_trades=book.longs,
-        short_trades=book.shorts,
-        long_wins=tuple(item for item in book.longs if item.realized_pnl.as_fraction() > 0),
-        short_wins=tuple(item for item in book.shorts if item.realized_pnl.as_fraction() > 0),
-        daily=_daily_equity(path),
-        period=parsed.period,
-        max_dd=max_dd,
-        recovery_ns=recovery_ns,
-        winning_streak=win_streak,
-        losing_streak=loss_streak,
-    )
-
-
-def _compute_inputs(
-    *,
-    starting_capital: object,
-    period: object,
-    trades: object,
-    equity_curve: object,
-) -> Result[_ComputeInputs]:
     if not isinstance(starting_capital, Money):
         return invalid(
             "starting_capital",
@@ -505,47 +384,52 @@ def _compute_inputs(
     currency_ok = _currency_guard(starting_capital, ordered_trades, points.value)
     if is_refusal(currency_ok):
         return currency_ok
-    return Ok(
-        _ComputeInputs(
-            start=starting_capital,
-            period=period,
-            trades=ordered_trades,
-            curve=points.value,
-        )
-    )
-
-
-def _compute_trade_book(
-    start: Money,
-    path: tuple[EquityPoint, ...],
-    trades: tuple[ClosedTrade, ...],
-) -> Result[_TradeBook]:
-    end = path[-1].equity if path else start
-    net = end.subtract(start)
+    path = _equity_path(starting_capital, period, ordered_trades, points.value)
+    if is_refusal(path):
+        return path
+    end = path.value[-1].equity if path.value else starting_capital
+    net = end.subtract(starting_capital)
     if is_refusal(net):
         return net
-    fees = _sum_money(start, tuple(item.fees for item in trades))
+    fees = _sum_money(starting_capital, tuple(item.fees for item in ordered_trades))
     if is_refusal(fees):
         return fees
-    wins = tuple(item for item in trades if item.realized_pnl.as_fraction() > 0)
-    losses = tuple(item for item in trades if item.realized_pnl.as_fraction() < 0)
-    gross_profit = _sum_money(start, tuple(item.realized_pnl for item in wins))
+    wins = tuple(item for item in ordered_trades if item.realized_pnl.as_fraction() > 0)
+    losses = tuple(item for item in ordered_trades if item.realized_pnl.as_fraction() < 0)
+    gross_profit = _sum_money(starting_capital, tuple(item.realized_pnl for item in wins))
     if is_refusal(gross_profit):
         return gross_profit
-    gross_loss = _sum_money(start, tuple(item.realized_pnl for item in losses))
+    gross_loss = _sum_money(starting_capital, tuple(item.realized_pnl for item in losses))
     if is_refusal(gross_loss):
         return gross_loss
+    longs = tuple(item for item in ordered_trades if item.side is TradeSide.LONG)
+    shorts = tuple(item for item in ordered_trades if item.side is TradeSide.SHORT)
+    drawdown = _drawdown(path.value, period)
+    if is_refusal(drawdown):
+        return drawdown
+    max_dd, recovery_ns = drawdown.value
+    win_streak, loss_streak = _streaks(ordered_trades)
     return Ok(
-        _TradeBook(
+        _Computed(
+            start=starting_capital,
             end=end,
             net=net.value,
             fees=fees.value,
-            wins=wins,
-            losses=losses,
             gross_profit=gross_profit.value,
             gross_loss=gross_loss.value,
-            longs=tuple(item for item in trades if item.side is TradeSide.LONG),
-            shorts=tuple(item for item in trades if item.side is TradeSide.SHORT),
+            trades=ordered_trades,
+            wins=wins,
+            losses=losses,
+            long_trades=longs,
+            short_trades=shorts,
+            long_wins=tuple(item for item in longs if item.realized_pnl.as_fraction() > 0),
+            short_wins=tuple(item for item in shorts if item.realized_pnl.as_fraction() > 0),
+            daily=_daily_equity(path.value),
+            period=period,
+            max_dd=max_dd,
+            recovery_ns=recovery_ns,
+            winning_streak=win_streak,
+            losing_streak=loss_streak,
         )
     )
 

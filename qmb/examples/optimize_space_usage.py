@@ -27,7 +27,6 @@ Shows the things B-8 / Story 21.1 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.doors import api
@@ -113,9 +112,7 @@ def main() -> None:
     assert isinstance(space, qmb.StudyParameterSpace)
     # One CT-33 schema, canonically ordered by name.
     assert space.parameter_names == ("atr_mult", "lookback", "mode", "stop", "use_atr")
-    sys.stdout.write(
-        f"typed search space validated at Study creation: {len(space.parameters)} parameters\n"
-    )
+    print(f"typed search space validated at Study creation: {len(space.parameters)} parameters")
 
     # Identity-bearing: same space in any order shares one fingerprint.
     reordered = _unwrap(qmb.coerce_study_space(list(reversed(_space()))), "reordered space")
@@ -123,9 +120,7 @@ def main() -> None:
     layer = space.run_config_layer()
     assert layer[qmb.STUDY_SPACE_KEY] == space.fp1_identity()
     assert _unwrap(fingerprint(layer[qmb.STUDY_SPACE_KEY]), "layer fp").value.startswith("fp1:")
-    sys.stdout.write(
-        "same space shares one fingerprint; it materializes as run-config identity content\n"
-    )
+    print("same space shares one fingerprint; it materializes as run-config identity content")
 
     # OPT-3: a numeric step wider than the span is refused, naming the parameter.
     wide = qmb.coerce_study_space([_int("lookback", 10, 20, 50)])
@@ -134,9 +129,7 @@ def main() -> None:
     assert wide.context["parameter"] == "lookback"
     bad_bounds = qmb.coerce_study_space([_int("lb", 50, 10, 1)])
     assert is_refusal(bad_bounds)
-    sys.stdout.write(
-        "a step wider than max - min is invalid input naming the parameter, never clamped\n"
-    )
+    print("a step wider than max - min is invalid input naming the parameter, never clamped")
 
     # OPT-1/3: categorical options rules.
     empty_options = qmb.coerce_study_space([_categorical("mode", [], "x")])
@@ -144,7 +137,7 @@ def main() -> None:
     missing_default = qmb.coerce_study_space([_categorical("mode", ["fast", "slow"], "medium")])
     assert is_refusal(missing_default)
     assert missing_default.context["field"] == "default"
-    sys.stdout.write("empty categorical options, or a default outside options, is invalid input\n")
+    print("empty categorical options, or a default outside options, is invalid input")
 
     # OPT-4: money is exact-integer minor units; a binary float is banned everywhere.
     money = _unwrap(qmb.coerce_study_space([_money("stop", 10, 100, 5)]), "money space")
@@ -170,19 +163,17 @@ def main() -> None:
     assert money_rational.context["parameter"] == "stop_r"
     float_bound = qmb.coerce_study_space([{**_money("stop", 10, 100, 5), "default": 12.5}])
     assert is_refusal(float_bound)
-    sys.stdout.write(
-        "money is exact-integer minor units; a binary float never enters the space's identity\n"
-    )
+    print("money is exact-integer minor units; a binary float never enters the space's identity")
 
     # The qmb door is a thin wrapper over the one pure library function.
     assert api.coerce_study_space is qmb.coerce_study_space
     door = api.coerce_study_space(_space())
     assert is_ok(door)
     assert _unwrap(door.value.fingerprint(), "door fp") == _unwrap(space.fingerprint(), "lib fp")
-    sys.stdout.write("the qmb door is a thin wrapper over one pure library validation function\n")
+    print("the qmb door is a thin wrapper over one pure library validation function")
 
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("study parameter space ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("study parameter space ok")
 
 
 if __name__ == "__main__":

@@ -147,7 +147,9 @@ class ReleasePlan:
 def _normalize_commit(commit: str) -> str:
     value = commit.strip().casefold()
     if not COMMIT_SHA_RE.fullmatch(value):
-        raise ValueError(f"commit must be a 7-40 hex SHA, got {commit!r}")
+        raise ValueError(
+            f"commit must be a 7-40 hex SHA, got {commit!r}"
+        )
     return value
 
 
@@ -199,7 +201,9 @@ def load_deployment_record(path: Path) -> DeploymentRecord:
             if isinstance(previous_commit, str) and previous_commit
             else None
         ),
-        previous_config_version=(previous_config if isinstance(previous_config, str) else None),
+        previous_config_version=(
+            previous_config if isinstance(previous_config, str) else None
+        ),
         recipe=str(recipe),
         check_mode_ok=bool(check_ok),
     )
@@ -259,7 +263,11 @@ def build_switch_plan(
         findings.append("check-mode boot refused — symlink flip blocked")
 
     root = _opt_root(opt_qmx)
-    prev = _normalize_commit(previous_commit) if previous_commit else read_current_commit(root)
+    prev = (
+        _normalize_commit(previous_commit)
+        if previous_commit
+        else read_current_commit(root)
+    )
     prev_config = previous_config_version
     if prev is not None and prev_config is None:
         prev_record_file = record_path(root, prev)
@@ -284,7 +292,10 @@ def build_switch_plan(
         ReleaseStep(
             kind="materialize",
             target=str(tree_path(root, target_commit)),
-            detail=(f"immutable clone at pinned commit into {TREES_DIR_NAME}/{target_commit}"),
+            detail=(
+                f"immutable clone at pinned commit into "
+                f"{TREES_DIR_NAME}/{target_commit}"
+            ),
             check_mode_only=check_only,
             requires_network=True,
         ),
@@ -389,7 +400,8 @@ def build_rollback_plan(
             previous_config_of_current = current_record.config_version
         else:
             findings.append(
-                f"no deployment record for current commit {current}; cannot resolve previous pair"
+                f"no deployment record for current commit {current}; "
+                "cannot resolve previous pair"
             )
     elif resolved_commit is not None:
         resolved_commit = _normalize_commit(resolved_commit)
@@ -399,7 +411,9 @@ def build_rollback_plan(
                 loaded = load_deployment_record(target_record_file)
                 resolved_config = loaded.config_version
             else:
-                findings.append(f"no deployment record for rollback target {resolved_commit}")
+                findings.append(
+                    f"no deployment record for rollback target {resolved_commit}"
+                )
         previous_of_current = current
 
     if resolved_commit is None:
@@ -436,7 +450,10 @@ def build_rollback_plan(
         ReleaseStep(
             kind="deployment_record",
             target=str(record_path(root, commit_label)),
-            detail=("record rollback onto previous (commit, config) pair; pair remains joined"),
+            detail=(
+                "record rollback onto previous (commit, config) pair; "
+                "pair remains joined"
+            ),
             check_mode_only=check_only,
         ),
     ]
@@ -575,7 +592,8 @@ def apply_plan_to_fixture(plan: ReleasePlan, opt_qmx: Path) -> DeploymentRecord:
         )
         _safe_io.write_text_exclusive_no_follow(
             out,
-            json.dumps(rollback_record.to_jsonable(), indent=2, sort_keys=True) + "\n",
+            json.dumps(rollback_record.to_jsonable(), indent=2, sort_keys=True)
+            + "\n",
             contain_within=deployments_dir(opt_qmx),
         )
         return rollback_record
@@ -680,21 +698,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         recipe = ROLLBACK_RECIPE
 
     if args.apply and args.fixture_root is None:
-        sys.stderr.write(
+        print(
             "refusing --apply without --fixture-root: run on the VPS under the "
             "ops principal sudo path; CI and workstations use --check-mode or "
-            "--fixture-root only\n"
+            "--fixture-root only",
+            file=sys.stderr,
         )
         return 2
 
-    mode: Literal["check", "apply"] = "apply" if args.fixture_root is not None else "check"
+    mode: Literal["check", "apply"] = (
+        "apply" if args.fixture_root is not None else "check"
+    )
 
     if recipe == SWITCH_RECIPE:
         if not args.commit:
-            sys.stderr.write("node-switch requires --commit\n")
+            print("node-switch requires --commit", file=sys.stderr)
             return 2
         if not args.config_version:
-            sys.stderr.write("node-switch requires --config-version\n")
+            print("node-switch requires --config-version", file=sys.stderr)
             return 2
         plan = build_switch_plan(
             commit=args.commit,
@@ -714,7 +735,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out is not None:
         write_plan(plan, args.out)
     else:
-        sys.stdout.write(str(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True)) + "\n")
+        print(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True))
 
     if not plan.ok:
         return 1

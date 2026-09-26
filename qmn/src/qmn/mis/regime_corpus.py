@@ -190,7 +190,9 @@ class CorpusAcquisitionPlan:
             "data_windows": self.data_windows.fp1_identity(),
             "calendar_kinds_named_apart": list(self.calendar_kinds_named_apart),
             "acquisition_context": self.acquisition_context,
-            "provider_fetch_in_training_forbidden": (self.provider_fetch_in_training_forbidden),
+            "provider_fetch_in_training_forbidden": (
+                self.provider_fetch_in_training_forbidden
+            ),
             "live_network_forbidden": self.live_network_forbidden,
             "world": self.world,
             "format_version": CORPUS_FORMAT_VERSION,
@@ -501,10 +503,13 @@ def build_acquisition_plan(
     if is_refusal(contract_fp):
         return contract_fp
     windows = resolved_contract.data_windows
-    if windows.source_law != ("governed-qmf-qmb-tools-only-no-provider-fetch-inside-training"):
+    if windows.source_law != (
+        "governed-qmf-qmb-tools-only-no-provider-fetch-inside-training"
+    ):
         return policy(
             "source_law",
-            "acquisition cites only governed QMF/QMB tools with no provider fetch inside training",
+            "acquisition cites only governed QMF/QMB tools with no provider "
+            "fetch inside training",
             given=windows.source_law,
         )
     if tuple(windows.sessions) != DECLARED_TRADING_SESSIONS:
@@ -545,18 +550,6 @@ def acquire_offline_corpus(
     Never opens a provider transport. A training-run context or live-network
     flag is a policy rejection.
     """
-    gated = _gate_offline_acquisition(plan, context=context, allow_live_network=allow_live_network)
-    if is_refusal(gated):
-        return gated
-    return _admit_source_receipts(gated.value, receipts)
-
-
-def _gate_offline_acquisition(
-    plan: object,
-    *,
-    context: object,
-    allow_live_network: object,
-) -> Result[CorpusAcquisitionPlan]:
     if not isinstance(plan, CorpusAcquisitionPlan):
         return invalid(
             "plan",
@@ -581,106 +574,15 @@ def _gate_offline_acquisition(
             "allow_live_network is False for offline corpus acquisition",
             given=repr(allow_live_network),
         )
-    return Ok(plan)
-
-
-def _receipt_identity_matches(
-    raw: SourceReceipt,
-    declaration: GovernedSourceDeclaration,
-) -> Result[None]:
-    if raw.dataset_id != declaration.dataset_id:
-        return policy(
-            "dataset_id",
-            "receipt dataset must match the declared governed dataset",
-            source_id=raw.source_id,
-            given=raw.dataset_id,
-            required=declaration.dataset_id,
-        )
-    if raw.license_tag != declaration.license_tag:
-        return policy(
-            "license_tag",
-            "receipt licence tag must match the declared governed licence",
-            source_id=raw.source_id,
-            given=raw.license_tag,
-            required=declaration.license_tag,
-        )
-    if declaration.revision_pin_required and clean_token(raw.revision) is None:
-        return invalid(
-            "revision",
-            "governed sources require a pinned revision identity",
-            source_id=raw.source_id,
-        )
-    if clean_token(raw.calendar_identity) is None:
-        return invalid(
-            "calendar_identity",
-            "every receipt records its calendar identity in-band",
-            source_id=raw.source_id,
-        )
-    return Ok(None)
-
-
-def _receipt_window_and_lineage(raw: SourceReceipt) -> Result[SourceReceipt]:
-    if raw.window_end_ns <= raw.window_start_ns:
-        return invalid(
-            "window",
-            "receipt window is a half-open [start, end) over UTC ns",
-            source_id=raw.source_id,
-            window_start_ns=raw.window_start_ns,
-            window_end_ns=raw.window_end_ns,
-        )
-    if raw.row_count < 0:
-        return invalid(
-            "row_count",
-            "receipt row_count is a non-negative integer",
-            given=raw.row_count,
-        )
-    if clean_token(raw.content_fp) is None:
-        return invalid(
-            "content_fp",
-            "receipt content fingerprint is required for lineage",
-            source_id=raw.source_id,
-        )
-    return Ok(raw)
-
-
-def _admit_one_receipt(
-    raw: SourceReceipt,
-    allowed: Mapping[str, GovernedSourceDeclaration],
-) -> Result[SourceReceipt]:
-    declaration = allowed.get(raw.source_id)
-    if declaration is None:
-        return policy(
-            "source_id",
-            "receipt source is not in the declared governed source set",
-            source_id=raw.source_id,
-            allowed=sorted(allowed),
-        )
-    identity = _receipt_identity_matches(raw, declaration)
-    if is_refusal(identity):
-        return identity
-    return _receipt_window_and_lineage(raw)
-
-
-def _receipt_sequence(receipts: object) -> Result[Sequence[object]]:
     if not isinstance(receipts, Sequence) or isinstance(receipts, (str, bytes)):
         return invalid(
             "receipts",
             "offline acquisition takes a sequence of SourceReceipt values",
             given=type(receipts).__name__,
         )
-    return Ok(cast("Sequence[object]", receipts))
-
-
-def _admit_source_receipts(
-    plan: CorpusAcquisitionPlan,
-    receipts: object,
-) -> Result[tuple[SourceReceipt, ...]]:
-    sequence = _receipt_sequence(receipts)
-    if is_refusal(sequence):
-        return sequence
     allowed = {row.source_id: row for row in plan.sources}
     admitted: list[SourceReceipt] = []
-    for index, raw in enumerate(sequence.value):
+    for index, raw in enumerate(cast("Sequence[object]", receipts)):
         if not isinstance(raw, SourceReceipt):
             return invalid(
                 "receipts",
@@ -688,10 +590,63 @@ def _admit_source_receipts(
                 index=index,
                 given=type(raw).__name__,
             )
-        checked = _admit_one_receipt(raw, allowed)
-        if is_refusal(checked):
-            return checked
-        admitted.append(checked.value)
+        declaration = allowed.get(raw.source_id)
+        if declaration is None:
+            return policy(
+                "source_id",
+                "receipt source is not in the declared governed source set",
+                source_id=raw.source_id,
+                allowed=sorted(allowed),
+            )
+        if raw.dataset_id != declaration.dataset_id:
+            return policy(
+                "dataset_id",
+                "receipt dataset must match the declared governed dataset",
+                source_id=raw.source_id,
+                given=raw.dataset_id,
+                required=declaration.dataset_id,
+            )
+        if raw.license_tag != declaration.license_tag:
+            return policy(
+                "license_tag",
+                "receipt licence tag must match the declared governed licence",
+                source_id=raw.source_id,
+                given=raw.license_tag,
+                required=declaration.license_tag,
+            )
+        if declaration.revision_pin_required and clean_token(raw.revision) is None:
+            return invalid(
+                "revision",
+                "governed sources require a pinned revision identity",
+                source_id=raw.source_id,
+            )
+        if clean_token(raw.calendar_identity) is None:
+            return invalid(
+                "calendar_identity",
+                "every receipt records its calendar identity in-band",
+                source_id=raw.source_id,
+            )
+        if raw.window_end_ns <= raw.window_start_ns:
+            return invalid(
+                "window",
+                "receipt window is a half-open [start, end) over UTC ns",
+                source_id=raw.source_id,
+                window_start_ns=raw.window_start_ns,
+                window_end_ns=raw.window_end_ns,
+            )
+        if raw.row_count < 0:
+            return invalid(
+                "row_count",
+                "receipt row_count is a non-negative integer",
+                given=raw.row_count,
+            )
+        if clean_token(raw.content_fp) is None:
+            return invalid(
+                "content_fp",
+                "receipt content fingerprint is required for lineage",
+                source_id=raw.source_id,
+            )
+        admitted.append(raw)
     if not admitted:
         return invalid("receipts", "offline acquisition requires at least one receipt")
     covered_sources = {row.source_id for row in admitted}
@@ -718,53 +673,12 @@ def clean_corpus(
     handling follows the design. Refused rows are counted; nothing is silently
     repaired or dropped. Raw row ids remain on the cleaned artifact for lineage.
     """
-    inputs = _clean_corpus_inputs(
-        plan=plan,
-        raw_rows=raw_rows,
-        source_receipts=source_receipts,
-        bar_interval_ns=bar_interval_ns,
-        silent_repair=silent_repair,
-    )
-    if is_refusal(inputs):
-        return inputs
-    plan_obj, rows, receipts, interval_ns = inputs.value
-    cleaned = _admit_cleaned_rows(rows, plan_obj, interval_ns)
-    if is_refusal(cleaned):
-        return cleaned
-    admitted, raw_ids, refusal_counts, gap_count = cleaned.value
-    return _cleaned_corpus_result(plan_obj, admitted, receipts, raw_ids, refusal_counts, gap_count)
-
-
-def _clean_corpus_inputs(
-    *,
-    plan: object,
-    raw_rows: object,
-    source_receipts: object,
-    bar_interval_ns: object,
-    silent_repair: object,
-) -> Result[tuple[CorpusAcquisitionPlan, Sequence[object], tuple[SourceReceipt, ...], int]]:
     if not isinstance(plan, CorpusAcquisitionPlan):
         return invalid(
             "plan",
             "cleaning takes a CorpusAcquisitionPlan",
             given=type(plan).__name__,
         )
-    interval = _require_m5_clean_interval(bar_interval_ns, silent_repair=silent_repair)
-    if is_refusal(interval):
-        return interval
-    if not isinstance(raw_rows, Sequence) or isinstance(raw_rows, (str, bytes)):
-        return invalid(
-            "raw_rows",
-            "cleaning takes a sequence of RawCorpusRow values",
-            given=type(raw_rows).__name__,
-        )
-    receipts = _source_receipt_tuple(source_receipts)
-    if is_refusal(receipts):
-        return receipts
-    return Ok((plan, cast("Sequence[object]", raw_rows), receipts.value, interval.value))
-
-
-def _require_m5_clean_interval(bar_interval_ns: object, *, silent_repair: object) -> Result[int]:
     if silent_repair is True:
         return refuse_silent_repair(action="silent_repair=True")
     if silent_repair not in (False, None):
@@ -786,36 +700,36 @@ def _require_m5_clean_interval(bar_interval_ns: object, *, silent_repair: object
             given=bar_interval_ns,
             required=BAR_INTERVAL_M5_NS,
         )
-    return Ok(bar_interval_ns)
-
-
-def _source_receipt_tuple(source_receipts: object) -> Result[tuple[SourceReceipt, ...]]:
+    if not isinstance(raw_rows, Sequence) or isinstance(raw_rows, (str, bytes)):
+        return invalid(
+            "raw_rows",
+            "cleaning takes a sequence of RawCorpusRow values",
+            given=type(raw_rows).__name__,
+        )
+    receipts: tuple[SourceReceipt, ...]
     if source_receipts is None:
-        return Ok(())
-    if not isinstance(source_receipts, Sequence) or isinstance(source_receipts, (str, bytes)):
+        receipts = ()
+    elif isinstance(source_receipts, Sequence) and not isinstance(
+        source_receipts, (str, bytes)
+    ):
+        built: list[SourceReceipt] = []
+        for index, item in enumerate(cast("Sequence[object]", source_receipts)):
+            if not isinstance(item, SourceReceipt):
+                return invalid(
+                    "source_receipts",
+                    "each source receipt is a SourceReceipt",
+                    index=index,
+                    given=type(item).__name__,
+                )
+            built.append(item)
+        receipts = tuple(built)
+    else:
         return invalid(
             "source_receipts",
             "source_receipts is a sequence of SourceReceipt values",
             given=type(source_receipts).__name__,
         )
-    built: list[SourceReceipt] = []
-    for index, item in enumerate(cast("Sequence[object]", source_receipts)):
-        if not isinstance(item, SourceReceipt):
-            return invalid(
-                "source_receipts",
-                "each source receipt is a SourceReceipt",
-                index=index,
-                given=type(item).__name__,
-            )
-        built.append(item)
-    return Ok(tuple(built))
 
-
-def _admit_cleaned_rows(
-    raw_rows: Sequence[object],
-    plan: CorpusAcquisitionPlan,
-    bar_interval_ns: int,
-) -> Result[tuple[list[CleanedCorpusRow], list[str], dict[str, int], int]]:
     allowed_sources = {row.source_id: row for row in plan.sources}
     allowed_sessions = set(plan.sessions)
     refusal_counts: dict[str, int] = {code.value: 0 for code in QualityIssueCode}
@@ -824,146 +738,79 @@ def _admit_cleaned_rows(
     seen_keys: set[tuple[str, str, int]] = set()
     prev_by_instrument: dict[str, int] = {}
     gap_count = 0
-    for index, raw_obj in enumerate(raw_rows):
-        if not isinstance(raw_obj, RawCorpusRow):
+
+    for index, raw in enumerate(cast("Sequence[object]", raw_rows)):
+        if not isinstance(raw, RawCorpusRow):
             return invalid(
                 "raw_rows",
                 "each raw row is a RawCorpusRow",
                 index=index,
-                given=type(raw_obj).__name__,
+                given=type(raw).__name__,
             )
-        raw_ids.append(raw_obj.row_id)
-        issues, gap = _row_quality_issues(
-            raw_obj,
-            allowed_sources=allowed_sources,
-            allowed_sessions=allowed_sessions,
-            seen_keys=seen_keys,
-            prev_by_instrument=prev_by_instrument,
-            bar_interval_ns=bar_interval_ns,
-        )
-        if gap:
-            gap_count += 1
-            refusal_counts[QualityIssueCode.GAP.value] += 1
+        raw_ids.append(raw.row_id)
+        issues: list[QualityIssueCode] = []
+        declaration = allowed_sources.get(raw.source_id)
+        if declaration is None:
+            issues.append(QualityIssueCode.FOREIGN_SOURCE)
+        elif raw.license_tag != declaration.license_tag:
+            issues.append(QualityIssueCode.MISSING_LICENSE)
+        if raw.session not in allowed_sessions:
+            issues.append(QualityIssueCode.UNKNOWN_SESSION)
+        if raw.scale_digits not in _ALLOWED_SCALE_DIGITS:
+            issues.append(QualityIssueCode.BAD_SCALE)
+        if raw.high_scaled < raw.low_scaled:
+            issues.append(QualityIssueCode.BAD_SCALE)
+        if (
+            raw.open_scaled > raw.high_scaled
+            or raw.open_scaled < raw.low_scaled
+            or raw.close_scaled > raw.high_scaled
+            or raw.close_scaled < raw.low_scaled
+        ):
+            issues.append(QualityIssueCode.BAD_SCALE)
+        if raw.knowledge_time_ns < raw.event_time_ns:
+            issues.append(QualityIssueCode.OUT_OF_ORDER)
+        if raw.is_correction or raw.correction_of is not None:
+            issues.append(QualityIssueCode.CORRECTION)
+        key = (raw.source_id, raw.instrument, raw.event_time_ns)
+        if key in seen_keys:
+            issues.append(QualityIssueCode.DUPLICATE)
+        prev = prev_by_instrument.get(raw.instrument)
+        if prev is not None:
+            if raw.event_time_ns < prev:
+                issues.append(QualityIssueCode.OUT_OF_ORDER)
+            elif raw.event_time_ns == prev:
+                issues.append(QualityIssueCode.DUPLICATE)
+            elif raw.event_time_ns - prev > bar_interval_ns:
+                # Gaps are reported, never filled. The following sealed bar is
+                # still eligible unless another issue refuses it.
+                gap_count += 1
+                refusal_counts[QualityIssueCode.GAP.value] += 1
+        if clean_token(raw.session) is None:
+            issues.append(QualityIssueCode.SESSION_BOUNDARY)
+
         if issues:
             for code in dict.fromkeys(issues):
                 refusal_counts[code.value] += 1
             continue
-        seen_keys.add((raw_obj.source_id, raw_obj.instrument, raw_obj.event_time_ns))
-        prev_by_instrument[raw_obj.instrument] = raw_obj.event_time_ns
-        admitted.append(_cleaned_row_from_raw(raw_obj))
-    return Ok((admitted, raw_ids, refusal_counts, gap_count))
 
+        seen_keys.add(key)
+        prev_by_instrument[raw.instrument] = raw.event_time_ns
+        admitted.append(
+            CleanedCorpusRow(
+                row_id=raw.row_id,
+                source_id=raw.source_id,
+                instrument=raw.instrument,
+                session=raw.session,
+                event_time_ns=raw.event_time_ns,
+                knowledge_time_ns=raw.knowledge_time_ns,
+                open_scaled=raw.open_scaled,
+                high_scaled=raw.high_scaled,
+                low_scaled=raw.low_scaled,
+                close_scaled=raw.close_scaled,
+                scale_digits=raw.scale_digits,
+            )
+        )
 
-def _row_source_session_issues(
-    raw: RawCorpusRow,
-    *,
-    allowed_sources: Mapping[str, GovernedSourceDeclaration],
-    allowed_sessions: set[str],
-) -> list[QualityIssueCode]:
-    issues: list[QualityIssueCode] = []
-    declaration = allowed_sources.get(raw.source_id)
-    if declaration is None:
-        issues.append(QualityIssueCode.FOREIGN_SOURCE)
-    elif declaration.license_tag != raw.license_tag:
-        issues.append(QualityIssueCode.MISSING_LICENSE)
-    if raw.session not in allowed_sessions:
-        issues.append(QualityIssueCode.UNKNOWN_SESSION)
-    if clean_token(raw.session) is None:
-        issues.append(QualityIssueCode.SESSION_BOUNDARY)
-    return issues
-
-
-def _ohlc_off_scale(raw: RawCorpusRow) -> bool:
-    return (
-        raw.high_scaled < raw.low_scaled
-        or raw.open_scaled > raw.high_scaled
-        or raw.open_scaled < raw.low_scaled
-        or raw.close_scaled > raw.high_scaled
-        or raw.close_scaled < raw.low_scaled
-    )
-
-
-def _row_bar_scale_issues(raw: RawCorpusRow) -> list[QualityIssueCode]:
-    issues: list[QualityIssueCode] = []
-    if raw.scale_digits not in _ALLOWED_SCALE_DIGITS or _ohlc_off_scale(raw):
-        issues.append(QualityIssueCode.BAD_SCALE)
-    if raw.knowledge_time_ns < raw.event_time_ns:
-        issues.append(QualityIssueCode.OUT_OF_ORDER)
-    if raw.is_correction or raw.correction_of is not None:
-        issues.append(QualityIssueCode.CORRECTION)
-    return issues
-
-
-def _row_order_gap(
-    raw: RawCorpusRow,
-    *,
-    seen_keys: set[tuple[str, str, int]],
-    prev_by_instrument: Mapping[str, int],
-    bar_interval_ns: int,
-) -> tuple[list[QualityIssueCode], bool]:
-    issues: list[QualityIssueCode] = []
-    key = (raw.source_id, raw.instrument, raw.event_time_ns)
-    if key in seen_keys:
-        issues.append(QualityIssueCode.DUPLICATE)
-    gap = False
-    prev = prev_by_instrument.get(raw.instrument)
-    if prev is not None:
-        if raw.event_time_ns < prev:
-            issues.append(QualityIssueCode.OUT_OF_ORDER)
-        elif raw.event_time_ns == prev:
-            issues.append(QualityIssueCode.DUPLICATE)
-        elif raw.event_time_ns - prev > bar_interval_ns:
-            gap = True
-    return issues, gap
-
-
-def _row_quality_issues(
-    raw: RawCorpusRow,
-    *,
-    allowed_sources: Mapping[str, GovernedSourceDeclaration],
-    allowed_sessions: set[str],
-    seen_keys: set[tuple[str, str, int]],
-    prev_by_instrument: Mapping[str, int],
-    bar_interval_ns: int,
-) -> tuple[list[QualityIssueCode], bool]:
-    issues = _row_source_session_issues(
-        raw, allowed_sources=allowed_sources, allowed_sessions=allowed_sessions
-    )
-    issues.extend(_row_bar_scale_issues(raw))
-    order_issues, gap = _row_order_gap(
-        raw,
-        seen_keys=seen_keys,
-        prev_by_instrument=prev_by_instrument,
-        bar_interval_ns=bar_interval_ns,
-    )
-    issues.extend(order_issues)
-    return issues, gap
-
-
-def _cleaned_row_from_raw(raw: RawCorpusRow) -> CleanedCorpusRow:
-    return CleanedCorpusRow(
-        row_id=raw.row_id,
-        source_id=raw.source_id,
-        instrument=raw.instrument,
-        session=raw.session,
-        event_time_ns=raw.event_time_ns,
-        knowledge_time_ns=raw.knowledge_time_ns,
-        open_scaled=raw.open_scaled,
-        high_scaled=raw.high_scaled,
-        low_scaled=raw.low_scaled,
-        close_scaled=raw.close_scaled,
-        scale_digits=raw.scale_digits,
-    )
-
-
-def _cleaned_corpus_result(
-    plan: CorpusAcquisitionPlan,
-    admitted: Sequence[CleanedCorpusRow],
-    receipts: tuple[SourceReceipt, ...],
-    raw_ids: Sequence[str],
-    refusal_counts: Mapping[str, int],
-    gap_count: int,
-) -> Result[CleanedCorpus]:
     sessions_present = tuple(
         session
         for session in DECLARED_TRADING_SESSIONS
@@ -983,9 +830,11 @@ def _cleaned_corpus_result(
             "quality report refusal counts",
             refused_count=sum(refusal_counts.values()),
         )
+
+    refused_count = sum(refusal_counts.values())
     quality = CorpusQualityReport(
         admitted_count=len(admitted),
-        refused_count=sum(refusal_counts.values()),
+        refused_count=refused_count,
         refusal_counts=MappingProxyType(dict(sorted(refusal_counts.items()))),
         gap_count=gap_count,
         sessions_represented=sessions_present,
@@ -1031,42 +880,12 @@ def materialize_corpus_splits(
     no-peek seal is enforced; the dataset/as-of set fingerprint is immutable for
     the later training run. This function does not train a model.
     """
-    prepared = _prepare_corpus_splits(
-        cleaned,
-        design=design,
-        contract=contract,
-        calendar_identity=calendar_identity,
-        holdout_months=holdout_months,
-        window_start_ns=window_start_ns,
-        window_end_ns=window_end_ns,
-    )
-    if is_refusal(prepared):
-        return prepared
-    return _mint_corpus_split_bundle(prepared.value)
-
-
-@dataclass(frozen=True, slots=True)
-class _CorpusSplitPrep:
-    cleaned: CleanedCorpus
-    contract: ExecutableRegimeContract
-    calendar_identity: CalendarIdentity
-    holdout_months: int
-    start_ns: int
-    end_ns: int
-    train_end: int
-    validation_end: int
-    holdout_end: int
-    purge_ns: int
-    embargo_ns: int
-    producer: ProducerHorizon
-
-
-def _resolve_split_contract(
-    cleaned: CleanedCorpus,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract | None,
-) -> Result[ExecutableRegimeContract]:
+    if not isinstance(cleaned, CleanedCorpus):
+        return invalid(
+            "cleaned",
+            "split materialization takes a CleanedCorpus",
+            given=type(cleaned).__name__,
+        )
     resolved_contract = contract
     if resolved_contract is None:
         minted = executable_regime_contract(design)
@@ -1086,41 +905,6 @@ def _resolve_split_contract(
             cleaned=cleaned.design_fp.value,
             contract=resolved_contract.design_fp.value,
         )
-    return Ok(resolved_contract)
-
-
-def _require_sealed_split_strategy(strategy: SplitStrategy) -> Result[None]:
-    if strategy.shuffle_forbidden is not True or strategy.holdout_sealed is not True:
-        return policy(
-            "split_strategy",
-            "corpus splits require time-ordered non-overlapping sealed holdout",
-        )
-    if strategy.ordering != "time-ordered-non-overlapping":
-        return policy(
-            "ordering",
-            "corpus splits are time-ordered and non-overlapping",
-            given=strategy.ordering,
-        )
-    return Ok(None)
-
-
-def _gate_corpus_split_inputs(
-    cleaned: object,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract | None,
-    calendar_identity: object,
-    holdout_months: object,
-) -> Result[tuple[CleanedCorpus, ExecutableRegimeContract, CalendarIdentity, int]]:
-    if not isinstance(cleaned, CleanedCorpus):
-        return invalid(
-            "cleaned",
-            "split materialization takes a CleanedCorpus",
-            given=type(cleaned).__name__,
-        )
-    resolved = _resolve_split_contract(cleaned, design=design, contract=contract)
-    if is_refusal(resolved):
-        return resolved
     if not isinstance(calendar_identity, CalendarIdentity):
         return invalid(
             "calendar_identity",
@@ -1137,20 +921,24 @@ def _gate_corpus_split_inputs(
             "holdout_months is a positive integer from registry:historical_holdout_months",
             given=repr(holdout_months),
         )
-    sealed = _require_sealed_split_strategy(resolved.value.split_strategy)
-    if is_refusal(sealed):
-        return sealed
-    return Ok((cleaned, resolved.value, calendar_identity, holdout_months))
 
+    strategy = resolved_contract.split_strategy
+    if strategy.shuffle_forbidden is not True or strategy.holdout_sealed is not True:
+        return policy(
+            "split_strategy",
+            "corpus splits require time-ordered non-overlapping sealed holdout",
+        )
+    if strategy.ordering != "time-ordered-non-overlapping":
+        return policy(
+            "ordering",
+            "corpus splits are time-ordered and non-overlapping",
+            given=strategy.ordering,
+        )
 
-def _split_window_and_boundaries(
-    cleaned: CleanedCorpus,
-    contract: ExecutableRegimeContract,
-    window_start_ns: object | None,
-    window_end_ns: object | None,
-) -> Result[tuple[int, int, int, int, int]]:
     bounds = _resolve_window_bounds(
-        cleaned, window_start_ns=window_start_ns, window_end_ns=window_end_ns
+        cleaned,
+        window_start_ns=window_start_ns,
+        window_end_ns=window_end_ns,
     )
     if is_refusal(bounds):
         return bounds
@@ -1158,7 +946,7 @@ def _split_window_and_boundaries(
     span = end_ns - start_ns
     if span <= 0:
         return invalid("window", "split window must be a positive half-open span")
-    strategy = contract.split_strategy
+
     train_end = start_ns + (span * strategy.train_fraction_num) // strategy.train_fraction_den
     validation_end = train_end + (
         (span * strategy.validation_fraction_num) // strategy.validation_fraction_den
@@ -1172,78 +960,22 @@ def _split_window_and_boundaries(
             validation_end=validation_end,
             holdout_end=holdout_end,
         )
-    return Ok((start_ns, end_ns, train_end, validation_end, holdout_end))
 
-
-def _split_purge_embargo(
-    contract: ExecutableRegimeContract,
-) -> Result[tuple[int, int, ProducerHorizon]]:
     bar_ns = BAR_INTERVAL_M5_NS
-    purge_ns = contract.leakage.purge_bars * bar_ns
-    embargo_ns = contract.leakage.embargo_bars * bar_ns
-    warm_ns = contract.data_windows.warm_up_bars * bar_ns
+    purge_ns = resolved_contract.leakage.purge_bars * bar_ns
+    embargo_ns = resolved_contract.leakage.embargo_bars * bar_ns
+    warm_ns = resolved_contract.data_windows.warm_up_bars * bar_ns
+    # CT-12 requires purge/embargo to cover the max cited-producer warm-up bound.
     producer_bound = max(purge_ns, embargo_ns, warm_ns)
     purge_ns = max(purge_ns, producer_bound)
     embargo_ns = max(embargo_ns, producer_bound)
-    producer = ProducerHorizon.try_create("mis:regime_classifier_v1", producer_bound)
+    producer = ProducerHorizon.try_create(
+        "mis:regime_classifier_v1",
+        producer_bound,
+    )
     if is_refusal(producer):
         return producer
-    return Ok((purge_ns, embargo_ns, producer.value))
 
-
-def _prepare_corpus_splits(
-    cleaned: object,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract | None,
-    calendar_identity: object,
-    holdout_months: object,
-    window_start_ns: object | None,
-    window_end_ns: object | None,
-) -> Result[_CorpusSplitPrep]:
-    gated = _gate_corpus_split_inputs(
-        cleaned,
-        design=design,
-        contract=contract,
-        calendar_identity=calendar_identity,
-        holdout_months=holdout_months,
-    )
-    if is_refusal(gated):
-        return gated
-    cleaned_corpus, resolved_contract, calendar, months = gated.value
-    bounds = _split_window_and_boundaries(
-        cleaned_corpus, resolved_contract, window_start_ns, window_end_ns
-    )
-    if is_refusal(bounds):
-        return bounds
-    start_ns, end_ns, train_end, validation_end, holdout_end = bounds.value
-    widths = _split_purge_embargo(resolved_contract)
-    if is_refusal(widths):
-        return widths
-    purge_ns, embargo_ns, producer = widths.value
-    return Ok(
-        _CorpusSplitPrep(
-            cleaned=cleaned_corpus,
-            contract=resolved_contract,
-            calendar_identity=calendar,
-            holdout_months=months,
-            start_ns=start_ns,
-            end_ns=end_ns,
-            train_end=train_end,
-            validation_end=validation_end,
-            holdout_end=holdout_end,
-            purge_ns=purge_ns,
-            embargo_ns=embargo_ns,
-            producer=producer,
-        )
-    )
-
-
-def _split_boundaries(
-    train_end: int,
-    validation_end: int,
-    holdout_end: int,
-) -> Result[tuple[SplitBoundary, SplitBoundary, SplitBoundary, SplitBoundary]]:
     train_boundary = SplitBoundary.try_create(train_end)
     if is_refusal(train_boundary):
         return train_boundary
@@ -1256,133 +988,92 @@ def _split_boundaries(
     seal_boundary = SplitBoundary.try_create(validation_end)
     if is_refusal(seal_boundary):
         return seal_boundary
-    return Ok(
-        (
-            train_boundary.value,
-            validation_boundary.value,
-            holdout_boundary.value,
-            seal_boundary.value,
-        )
-    )
 
-
-def _mint_combined_manifest(
-    prep: _CorpusSplitPrep,
-    train_boundary: SplitBoundary,
-    validation_boundary: SplitBoundary,
-    holdout_boundary: SplitBoundary,
-    seal_boundary: SplitBoundary,
-) -> Result[SplitManifest]:
     segments = SplitManifest.default_split_segments(
-        (train_boundary, validation_boundary, holdout_boundary)
+        (train_boundary.value, validation_boundary.value, holdout_boundary.value)
     )
     if is_refusal(segments):
         return segments
-    return SplitManifest.try_create(
-        calendar_identity=prep.calendar_identity,
+
+    combined = SplitManifest.try_create(
+        calendar_identity=calendar_identity,
         segments=segments.value,
-        seal_boundary=seal_boundary,
-        purge_width=Duration(value_ns=prep.purge_ns),
-        embargo_width=Duration(value_ns=prep.embargo_ns),
+        seal_boundary=seal_boundary.value,
+        purge_width=Duration(value_ns=purge_ns),
+        embargo_width=Duration(value_ns=embargo_ns),
         world=World.REPLAY,
-        cited_producers=(prep.producer,),
+        cited_producers=(producer.value,),
     )
+    if is_refusal(combined):
+        return combined
 
-
-def _mint_role_manifests(
-    prep: _CorpusSplitPrep,
-    train_boundary: SplitBoundary,
-    validation_boundary: SplitBoundary,
-    holdout_boundary: SplitBoundary,
-    seal_boundary: SplitBoundary,
-) -> Result[tuple[SplitManifest, SplitManifest, SplitManifest]]:
+    # Per-role manifests pin the same calendar/seal/widths and a single segment
+    # so train/validation/holdout each carry a distinct fingerprinted identity.
     train_only = _single_role_manifest(
-        calendar_identity=prep.calendar_identity,
+        calendar_identity=calendar_identity,
         role=SegmentRole.TRAIN,
-        boundary=train_boundary,
-        seal_boundary=seal_boundary,
-        purge_ns=prep.purge_ns,
-        embargo_ns=prep.embargo_ns,
-        producer=prep.producer,
+        boundary=train_boundary.value,
+        seal_boundary=seal_boundary.value,
+        purge_ns=purge_ns,
+        embargo_ns=embargo_ns,
+        producer=producer.value,
     )
     if is_refusal(train_only):
         return train_only
     validation_only = _single_role_manifest(
-        calendar_identity=prep.calendar_identity,
+        calendar_identity=calendar_identity,
         role=SegmentRole.VALIDATION,
-        boundary=validation_boundary,
-        seal_boundary=seal_boundary,
-        purge_ns=prep.purge_ns,
-        embargo_ns=prep.embargo_ns,
-        producer=prep.producer,
+        boundary=validation_boundary.value,
+        seal_boundary=seal_boundary.value,
+        purge_ns=purge_ns,
+        embargo_ns=embargo_ns,
+        producer=producer.value,
     )
     if is_refusal(validation_only):
         return validation_only
     holdout_only = _single_role_manifest(
-        calendar_identity=prep.calendar_identity,
+        calendar_identity=calendar_identity,
         role=SegmentRole.SEALED_TEST,
-        boundary=holdout_boundary,
-        seal_boundary=seal_boundary,
-        purge_ns=prep.purge_ns,
-        embargo_ns=prep.embargo_ns,
-        producer=prep.producer,
+        boundary=holdout_boundary.value,
+        seal_boundary=seal_boundary.value,
+        purge_ns=purge_ns,
+        embargo_ns=embargo_ns,
+        producer=producer.value,
     )
     if is_refusal(holdout_only):
         return holdout_only
-    return Ok((train_only.value, validation_only.value, holdout_only.value))
 
+    seal = HoldoutSeal.from_manifest(combined.value, holdout_months)
+    if is_refusal(seal):
+        return seal
 
-def _corpus_as_of_fp(
-    prep: _CorpusSplitPrep,
-    combined: SplitManifest,
-    train_only: SplitManifest,
-    validation_only: SplitManifest,
-    holdout_only: SplitManifest,
-) -> Result[Fingerprint]:
-    return fingerprint(
+    as_of = fingerprint(
         {
             "class": "regime-corpus-as-of-set",
-            "cleaned_artifact_id": prep.cleaned.artifact_id,
-            "cleaned_fp": _cleaned_fp_value(prep.cleaned),
-            "combined_split_id": combined.split_id,
-            "train_split_id": train_only.split_id,
-            "validation_split_id": validation_only.split_id,
-            "holdout_split_id": holdout_only.split_id,
-            "window_start_ns": prep.start_ns,
-            "window_end_ns": prep.end_ns,
-            "design_fp": prep.contract.design_fp.value,
+            "cleaned_artifact_id": cleaned.artifact_id,
+            "cleaned_fp": _cleaned_fp_value(cleaned),
+            "combined_split_id": combined.value.split_id,
+            "train_split_id": train_only.value.split_id,
+            "validation_split_id": validation_only.value.split_id,
+            "holdout_split_id": holdout_only.value.split_id,
+            "window_start_ns": start_ns,
+            "window_end_ns": end_ns,
+            "design_fp": resolved_contract.design_fp.value,
             "immutable": True,
         }
     )
-
-
-def _mint_corpus_split_bundle(prep: _CorpusSplitPrep) -> Result[CorpusSplitBundle]:
-    bounds = _split_boundaries(prep.train_end, prep.validation_end, prep.holdout_end)
-    if is_refusal(bounds):
-        return bounds
-    train_b, validation_b, holdout_b, seal_b = bounds.value
-    combined = _mint_combined_manifest(prep, train_b, validation_b, holdout_b, seal_b)
-    if is_refusal(combined):
-        return combined
-    roles = _mint_role_manifests(prep, train_b, validation_b, holdout_b, seal_b)
-    if is_refusal(roles):
-        return roles
-    train_only, validation_only, holdout_only = roles.value
-    seal = HoldoutSeal.from_manifest(combined.value, prep.holdout_months)
-    if is_refusal(seal):
-        return seal
-    as_of = _corpus_as_of_fp(prep, combined.value, train_only, validation_only, holdout_only)
     if is_refusal(as_of):
         return as_of
+
     return Ok(
         CorpusSplitBundle(
-            train_manifest=train_only,
-            validation_manifest=validation_only,
-            holdout_manifest=holdout_only,
+            train_manifest=train_only.value,
+            validation_manifest=validation_only.value,
+            holdout_manifest=holdout_only.value,
             combined_manifest=combined.value,
             holdout_seal=seal.value,
             as_of_set_fp=as_of.value,
-            split_strategy=prep.contract.split_strategy,
+            split_strategy=strategy,
             dataset_immutable=True,
             trains_model=False,
         )
@@ -1396,50 +1087,40 @@ def _cleaned_fp_value(cleaned: CleanedCorpus) -> str:
     return result.value.value
 
 
-def _optional_int64_ns(value: object | None, *, field: str, reason: str) -> Result[int | None]:
-    if value is None:
-        return Ok(None)
-    if isinstance(value, int) and not isinstance(value, bool):
-        return Ok(value)
-    return invalid(field, reason, given=repr(value))
-
-
 def _resolve_window_bounds(
     cleaned: CleanedCorpus,
     *,
     window_start_ns: object | None,
     window_end_ns: object | None,
 ) -> Result[tuple[int, int]]:
-    start = _optional_int64_ns(
-        window_start_ns,
-        field="window_start_ns",
-        reason="window_start_ns is an int64 UTC nanosecond count",
-    )
-    if is_refusal(start):
-        return start
-    end = _optional_int64_ns(
-        window_end_ns,
-        field="window_end_ns",
-        reason="window_end_ns is an int64 UTC nanosecond count",
-    )
-    if is_refusal(end):
-        return end
-    start_ns = (
-        min(row.event_time_ns for row in cleaned.rows) if start.value is None else start.value
-    )
-    end_ns = (
-        max(row.event_time_ns for row in cleaned.rows) + BAR_INTERVAL_M5_NS
-        if end.value is None
-        else end.value
-    )
-    if end_ns <= start_ns:
+    if window_start_ns is None:
+        start = min(row.event_time_ns for row in cleaned.rows)
+    elif isinstance(window_start_ns, int) and not isinstance(window_start_ns, bool):
+        start = window_start_ns
+    else:
+        return invalid(
+            "window_start_ns",
+            "window_start_ns is an int64 UTC nanosecond count",
+            given=repr(window_start_ns),
+        )
+    if window_end_ns is None:
+        end = max(row.event_time_ns for row in cleaned.rows) + BAR_INTERVAL_M5_NS
+    elif isinstance(window_end_ns, int) and not isinstance(window_end_ns, bool):
+        end = window_end_ns
+    else:
+        return invalid(
+            "window_end_ns",
+            "window_end_ns is an int64 UTC nanosecond count",
+            given=repr(window_end_ns),
+        )
+    if end <= start:
         return invalid(
             "window",
             "split window is a half-open [start, end) over UTC ns",
-            window_start_ns=start_ns,
-            window_end_ns=end_ns,
+            window_start_ns=start,
+            window_end_ns=end,
         )
-    return Ok((start_ns, end_ns))
+    return Ok((start, end))
 
 
 def _single_role_manifest(
@@ -1489,30 +1170,6 @@ def materialize_training_corpus(
             "train_model is False; Story 30.2 does not train",
             given=repr(train_model),
         )
-    parts = _build_training_corpus_parts(
-        raw_rows=raw_rows,
-        receipts=receipts,
-        calendar_identity=calendar_identity,
-        holdout_months=holdout_months,
-        design=design,
-        context=context,
-        allow_live_network=allow_live_network,
-    )
-    if is_refusal(parts):
-        return parts
-    return _training_corpus_result(*parts.value)
-
-
-def _build_training_corpus_parts(
-    *,
-    raw_rows: object,
-    receipts: object,
-    calendar_identity: object,
-    holdout_months: object,
-    design: RegimeClassifierDesign | None,
-    context: object,
-    allow_live_network: object,
-) -> Result[tuple[CorpusAcquisitionPlan, CleanedCorpus, CorpusSplitBundle]]:
     plan = build_acquisition_plan(design=design)
     if is_refusal(plan):
         return plan
@@ -1524,7 +1181,11 @@ def _build_training_corpus_parts(
     )
     if is_refusal(admitted):
         return admitted
-    cleaned = clean_corpus(raw_rows, plan.value, source_receipts=admitted.value)
+    cleaned = clean_corpus(
+        raw_rows,
+        plan.value,
+        source_receipts=admitted.value,
+    )
     if is_refusal(cleaned):
         return cleaned
     splits = materialize_corpus_splits(
@@ -1535,33 +1196,25 @@ def _build_training_corpus_parts(
     )
     if is_refusal(splits):
         return splits
-    return Ok((plan.value, cleaned.value, splits.value))
-
-
-def _training_corpus_result(
-    plan: CorpusAcquisitionPlan,
-    cleaned: CleanedCorpus,
-    splits: CorpusSplitBundle,
-) -> Result[RegimeTrainingCorpus]:
-    plan_fp = plan.fingerprint()
+    plan_fp = plan.value.fingerprint()
     if is_refusal(plan_fp):
         return plan_fp
-    cleaned_fp = cleaned.fingerprint()
+    cleaned_fp = cleaned.value.fingerprint()
     if is_refusal(cleaned_fp):
         return cleaned_fp
-    splits_fp = splits.fingerprint()
+    splits_fp = splits.value.fingerprint()
     if is_refusal(splits_fp):
         return splits_fp
     return Ok(
         RegimeTrainingCorpus(
             artifact_id=REGIME_CORPUS_ARTIFACT_ID,
-            design_fp=plan.design_fp,
-            contract_fp=plan.contract_fp,
+            design_fp=plan.value.design_fp,
+            contract_fp=plan.value.contract_fp,
             plan_fp=plan_fp.value,
             cleaned_fp=cleaned_fp.value,
             splits_fp=splits_fp.value,
-            cleaned=cleaned,
-            splits=splits,
+            cleaned=cleaned.value,
+            splits=splits.value,
             grants_money_path_authority=False,
             trains_model=False,
         )

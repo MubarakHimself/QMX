@@ -87,7 +87,6 @@ LEASH_B_SPLIT_UNIT_KINDS: Final[MappingProxyType[str, UnitKind]] = MappingProxyT
 
 def _require_section(field: str, section: object, expected_name: str) -> TemplateSection | None:
     """Return ``section`` if it is a :class:`TemplateSection` of the expected name."""
-    _ = field
     if isinstance(section, TemplateSection) and section.name == expected_name:
         return section
     return None

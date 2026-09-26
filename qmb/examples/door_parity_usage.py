@@ -19,7 +19,6 @@ Shows the things Story 16.5 / B-1 / AR-58 pin down:
 from __future__ import annotations
 
 import json
-import sys
 
 from click.testing import CliRunner
 from qmb.doors import (
@@ -44,17 +43,14 @@ def shipped_doors_share_the_catalog() -> None:
     assert set(flatten_capabilities()) == cli
     assert SHIPPED_DOORS == ("cli", "api")
     assert MCP_SHIPPED is False
-    sys.stdout.write(
-        str("CLI and Python API reconcile derived surfaces: " + ", ".join(flatten_capabilities()))
-        + "\n"
-    )
-    sys.stdout.write("shipped doors: " + ", ".join(SHIPPED_DOORS) + "; MCP not in the door-set\n")
+    print("CLI and Python API reconcile derived surfaces: " + ", ".join(flatten_capabilities()))
+    print("shipped doors: " + ", ".join(SHIPPED_DOORS) + "; MCP not in the door-set")
 
 
 def missing_capability_is_a_parity_failure() -> None:
     gaps = capability_gaps(cli_names={*cli_capability_surface(), "secret_only"})
     assert gaps["missing_api"] == ("secret_only",)
-    sys.stdout.write("a capability on one door missing from the other fails\n")
+    print("a capability on one door missing from the other fails")
 
 
 def refusals_render_per_transport() -> None:
@@ -88,8 +84,8 @@ def refusals_render_per_transport() -> None:
     assert clicked.stdout.strip() == ""
     payload = json.loads(clicked.stderr)
     assert payload == json.loads(render_refusal(python_refusal))
-    sys.stdout.write("CLI: nonzero exit + stderr JSON\n")
-    sys.stdout.write("Python: refusal union verbatim\n")
+    print("CLI: nonzero exit + stderr JSON")
+    print("Python: refusal union verbatim")
 
 
 def catalog_and_config_show_match() -> None:
@@ -98,7 +94,7 @@ def catalog_and_config_show_match() -> None:
     shown = runner.invoke(main, ["config", "show"])
     assert shown.exit_code == 0, shown.output
     assert shown.stdout.strip() == identity["class"]
-    sys.stdout.write(str("config show class: " + str(identity["class"])) + "\n")
+    print("config show class: " + str(identity["class"]))
 
 
 if __name__ == "__main__":
@@ -106,4 +102,4 @@ if __name__ == "__main__":
     missing_capability_is_a_parity_failure()
     refusals_render_per_transport()
     catalog_and_config_show_match()
-    sys.stdout.write("qmb door parity ok\n")
+    print("qmb door parity ok")

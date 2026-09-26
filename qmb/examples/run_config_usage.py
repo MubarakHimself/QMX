@@ -25,7 +25,6 @@ Shows the things B-3 / Story 13.4 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -234,7 +233,7 @@ def main() -> None:
     assert compiled.keys["fill"] == "flag-fill"
     assert compiled.keys["horizon"] == 5
     assert compiled.world is World.REPLAY
-    sys.stdout.write("same inputs yield a byte-identical resolved artifact\n")
+    print("same inputs yield a byte-identical resolved artifact")
 
     assert compiled.bot_fp1 == bot.stable_id
     assert compiled.book_fp1 == book_fragment.source_fp1
@@ -249,7 +248,7 @@ def main() -> None:
     )
     assert is_refusal(named)
     assert named.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write(f"cites by fp1, never name@version; bot {compiled.bot_fp1.value}\n")
+    print(f"cites by fp1, never name@version; bot {compiled.bot_fp1.value}")
 
     collision = merge_book_bms_keys(
         {"admission": {"x": 1}, "accounting": {"stolen": 1}},
@@ -266,9 +265,7 @@ def main() -> None:
         "sanctioned overlap",
     )
     assert ranked["reporting"] == {"from": "bms"}
-    sys.stdout.write(
-        "Book/BMS collision is a compile-time refusal; sanctioned overlap BMS outranks Book\n"
-    )
+    print("Book/BMS collision is a compile-time refusal; sanctioned overlap BMS outranks Book")
 
     assert run_id_root(compiled) == compiled.fingerprint == ledger_key(compiled)
     door = _unwrap(
@@ -292,8 +289,8 @@ def main() -> None:
     assert _unwrap(canonical_bytes(identity), "canonical") == _unwrap(
         compiled.artifact_bytes(), "artifact"
     )
-    sys.stdout.write(f"run-id root / ledger key {compiled.fingerprint.value}\n")
-    sys.stdout.write(f"artifact path {path}\n")
+    print(f"run-id root / ledger key {compiled.fingerprint.value}")
+    print(f"artifact path {path}")
 
     tainted = compile_run_config(
         port,
@@ -307,7 +304,7 @@ def main() -> None:
     )
     assert is_refusal(tainted)
     assert tainted.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write("replay clock + synthetic-tainted data: invalid input\n")
+    print("replay clock + synthetic-tainted data: invalid input")
 
     dummy = compile_run_config(
         port,
@@ -318,10 +315,10 @@ def main() -> None:
     )
     assert is_refusal(dummy)
     assert dummy.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write("dummy Book/bot cite (NULL_BOT) is invalid input\n")
+    print("dummy Book/bot cite (NULL_BOT) is invalid input")
 
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("resolved run-config ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("resolved run-config ok")
 
 
 if __name__ == "__main__":

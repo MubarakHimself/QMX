@@ -24,7 +24,6 @@ Ships one complete conformant bot as a tier-1 L27 artifact:
 from __future__ import annotations
 
 import importlib.util
-import sys
 from pathlib import Path
 from typing import TypeVar, cast
 
@@ -358,24 +357,24 @@ def main() -> None:
     assignment = dict(declaration.canonical_assignment())
     lookback = assignment["lookback"]
     stop_distance = assignment["stop_distance"]
-    sys.stdout.write(f"strategy family: {declaration.strategy_family_id.value}\n")
-    sys.stdout.write(f"confluences: {len(declaration.confluence_set)}\n")
-    sys.stdout.write(f"canonical assignment: lookback={lookback},stop_distance={stop_distance}\n")
-    sys.stdout.write(f"permitted exit intents: {','.join(declaration.permitted_exit_intents)}\n")
-    sys.stdout.write(f"declaration is complete: {declaration_is_complete()}\n")
-    sys.stdout.write(f"layer 1 and layer 2 pass: {layers_pass_and_candidate_is_content_only()}\n")
-    sys.stdout.write("bot-kind mint defined-unwired: True\n")
+    print(f"strategy family: {declaration.strategy_family_id.value}")
+    print(f"confluences: {len(declaration.confluence_set)}")
+    print(f"canonical assignment: lookback={lookback},stop_distance={stop_distance}")
+    print(f"permitted exit intents: {','.join(declaration.permitted_exit_intents)}")
+    print(f"declaration is complete: {declaration_is_complete()}")
+    print(f"layer 1 and layer 2 pass: {layers_pass_and_candidate_is_content_only()}")
+    print("bot-kind mint defined-unwired: True")
     advisory, deterministic, kinds = logic_emits_advisory_entry_deterministically()
-    sys.stdout.write(f"advisory stop on entry: {advisory}\n")
-    sys.stdout.write(f"emitted kinds: {kinds}\n")
-    sys.stdout.write(f"golden-slice deterministic: {deterministic}\n")
-    sys.stdout.write("consumes only declared footprint: True\n")
+    print(f"advisory stop on entry: {advisory}")
+    print(f"emitted kinds: {kinds}")
+    print(f"golden-slice deterministic: {deterministic}")
+    print("consumes only declared footprint: True")
     sizes, clock, io, exit_logic = boundary_is_honest()
-    sys.stdout.write(f"sizes: {sizes}\n")
-    sys.stdout.write(f"reads a clock: {clock}\n")
-    sys.stdout.write(f"performs I/O: {io}\n")
-    sys.stdout.write(f"exit-logic field: {exit_logic}\n")
-    sys.stdout.write("conformant bot ok\n")
+    print(f"sizes: {sizes}")
+    print(f"reads a clock: {clock}")
+    print(f"performs I/O: {io}")
+    print(f"exit-logic field: {exit_logic}")
+    print("conformant bot ok")
 
 
 if __name__ == "__main__":

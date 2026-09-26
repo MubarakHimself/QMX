@@ -157,32 +157,6 @@ def parse_download_request(resources: Mapping[str, object]) -> Result[DownloadRe
     symbols = _as_symbols(resources.get("symbol", resources.get("symbols")))
     if is_refusal(symbols):
         return symbols
-    window = _parse_download_window(resources)
-    if is_refusal(window):
-        return window
-    start_ns, end_ns = window.value
-    rest = _parse_download_rest(resources, end_ns=end_ns)
-    if is_refusal(rest):
-        return rest
-    resolution, side, destination, overwrite, license_tag, world, revision = rest.value
-    return Ok(
-        DownloadRequest(
-            venue=venue,
-            symbols=symbols.value,
-            start_ns=start_ns,
-            end_ns=end_ns,
-            resolution=resolution,
-            side=side,
-            destination=destination,
-            overwrite=overwrite,
-            license_tag=license_tag,
-            world=world,
-            revision=revision,
-        )
-    )
-
-
-def _parse_download_window(resources: Mapping[str, object]) -> Result[tuple[int, int]]:
     start = _as_ns(resources.get("start", resources.get("start_ns")), field="start")
     if is_refusal(start):
         return start
@@ -203,14 +177,9 @@ def _parse_download_window(resources: Mapping[str, object]) -> Result[tuple[int,
             start_ns=start.value,
             end_ns=end.value,
         )
-    return Ok((start.value, end.value))
-
-
-def _parse_download_rest(
-    resources: Mapping[str, object], *, end_ns: int
-) -> Result[tuple[str, DownloadSide, str, bool, LicenseTag, World, str]]:
     resolution = clean_token(resources.get("resolution")) or "tick"
-    side = _as_side(resources.get("side", DownloadSide.BOTH.value))
+    side_raw = resources.get("side", DownloadSide.BOTH.value)
+    side = _as_side(side_raw)
     if is_refusal(side):
         return side
     destination = clean_token(resources.get("destination"))
@@ -225,47 +194,27 @@ def _parse_download_rest(
     world = _as_world(resources.get("world", World.REPLAY))
     if is_refusal(world):
         return world
-    revision = _download_revision(resources, overwrite=overwrite, end_ns=end_ns)
-    return Ok((resolution, side.value, destination, overwrite, license_tag, world.value, revision))
-
-
-def _download_revision(resources: Mapping[str, object], *, overwrite: bool, end_ns: int) -> str:
     receive = resources.get("receive_wall_time")
     if overwrite:
-        stamp = receive if isinstance(receive, int) and not isinstance(receive, bool) else end_ns
-        return clean_token(resources.get("revision")) or f"r-{stamp}"
-    return clean_token(resources.get("revision")) or "r1"
-
-
-@dataclass(frozen=True, slots=True)
-class _DownloadDeps:
-    port: ProviderAdapter
-    evidence: EvidenceStore | None
-    gate: SourceObservationBoundary
-    writer: WriterId
-    sink: ProgressSink | None
-    receive: int
-
-
-class _DownloadAcc:
-    __slots__ = (
-        "admitted",
-        "idempotent",
-        "known_keys",
-        "produced",
-        "samples",
-        "sequence",
-        "windows",
+        stamp = receive if isinstance(receive, int) and not isinstance(receive, bool) else end.value
+        revision = clean_token(resources.get("revision")) or f"r-{stamp}"
+    else:
+        revision = clean_token(resources.get("revision")) or "r1"
+    return Ok(
+        DownloadRequest(
+            venue=venue,
+            symbols=symbols.value,
+            start_ns=start.value,
+            end_ns=end.value,
+            resolution=resolution,
+            side=side.value,
+            destination=destination,
+            overwrite=overwrite,
+            license_tag=license_tag,
+            world=world.value,
+            revision=revision,
+        )
     )
-
-    def __init__(self, known_keys: set[IntakeKey]) -> None:
-        self.known_keys = known_keys
-        self.produced = 0
-        self.idempotent = 0
-        self.admitted = 0
-        self.sequence = 0
-        self.samples: list[DownloadProgress] = []
-        self.windows: list[Mapping[str, object]] = []
 
 
 def download(
@@ -282,69 +231,6 @@ def download(
     if is_refusal(parsed):
         return parsed
     request = parsed.value
-    deps = _bind_download_deps(
-        resources,
-        request,
-        adapter=adapter,
-        store=store,
-        boundary=boundary,
-        writer=writer,
-        progress=progress,
-    )
-    if is_refusal(deps):
-        return deps
-    loaded_keys = _load_intake_keys(Path(request.destination))
-    if is_refusal(loaded_keys):
-        return loaded_keys
-    # CT-15 ingest owns CT-10 minting; durable intake keys make overlapping
-    # re-runs idempotent across processes via (source, native id, revision).
-    ingest = ExternalSourceIngest(_IngestBridge(deps.value.port))
-    acc = _DownloadAcc(known_keys=loaded_keys.value)
-    for index, symbol in enumerate(request.symbols):
-        stepped = _download_symbol(request, deps.value, ingest, acc, symbol=symbol, index=index)
-        if is_refusal(stepped):
-            return stepped
-    return Ok(_download_receipt(request, deps.value.port, acc))
-
-
-def _bind_download_deps(
-    resources: Mapping[str, object],
-    request: DownloadRequest,
-    *,
-    adapter: ProviderAdapter | None,
-    store: EvidenceStore | None,
-    boundary: SourceObservationBoundary | None,
-    writer: WriterId | None,
-    progress: ProgressSink | None,
-) -> Result[_DownloadDeps]:
-    port = _bind_download_port(adapter, resources)
-    if is_refusal(port):
-        return port
-    rooms = _bind_download_rooms(store, boundary, resources, request)
-    if is_refusal(rooms):
-        return rooms
-    evidence, gate = rooms.value
-    active_writer = _bind_download_writer(writer, resources)
-    if is_refusal(active_writer):
-        return active_writer
-    receive = resources.get("receive_wall_time")
-    if isinstance(receive, bool) or not isinstance(receive, int):
-        receive = request.end_ns
-    return Ok(
-        _DownloadDeps(
-            port=port.value,
-            evidence=evidence,
-            gate=gate,
-            writer=active_writer.value,
-            sink=_bind_download_sink(progress, resources),
-            receive=receive,
-        )
-    )
-
-
-def _bind_download_port(
-    adapter: ProviderAdapter | None, resources: Mapping[str, object]
-) -> Result[ProviderAdapter]:
     port = adapter if adapter is not None else resources.get("adapter")
     if not isinstance(port, ProviderAdapter):
         return unavailable(
@@ -353,15 +239,6 @@ def _bind_download_port(
             "qmb never opens a provider socket itself",
             given=repr(type(port).__name__ if port is not None else None),
         )
-    return Ok(port)
-
-
-def _bind_download_rooms(
-    store: EvidenceStore | None,
-    boundary: SourceObservationBoundary | None,
-    resources: Mapping[str, object],
-    request: DownloadRequest,
-) -> Result[tuple[EvidenceStore | None, SourceObservationBoundary]]:
     evidence = store
     if evidence is None:
         raw_store = resources.get("store")
@@ -376,12 +253,7 @@ def _bind_download_rooms(
         if evidence is None:
             evidence = EvidenceStore(Path(request.destination))
         gate = SourceObservationBoundary(evidence)
-    return Ok((evidence, gate))
 
-
-def _bind_download_writer(
-    writer: WriterId | None, resources: Mapping[str, object]
-) -> Result[WriterId]:
     active_writer = writer
     if active_writer is None:
         raw_writer = resources.get("writer")
@@ -392,270 +264,190 @@ def _bind_download_writer(
         if is_refusal(minted):
             return minted
         active_writer = minted.value
-    return Ok(active_writer)
 
-
-def _bind_download_sink(
-    progress: ProgressSink | None, resources: Mapping[str, object]
-) -> ProgressSink | None:
     sink = progress
     if sink is None:
         raw_sink = resources.get("progress")
         if isinstance(raw_sink, ProgressSink):
             sink = raw_sink
-    return sink
 
+    receive = resources.get("receive_wall_time")
+    if isinstance(receive, bool) or not isinstance(receive, int):
+        receive = request.end_ns
 
-def _download_symbol(
-    request: DownloadRequest,
-    deps: _DownloadDeps,
-    ingest: ExternalSourceIngest,
-    acc: _DownloadAcc,
-    *,
-    symbol: str,
-    index: int,
-) -> Result[None]:
-    fetched = deps.port.fetch(_symbol_fetch_request(request, deps.port, symbol))
-    if is_refusal(fetched):
-        return fetched
-    window_meta = _symbol_window_meta(request, deps.port, symbol)
-    stored_side = (
-        DownloadSide.ASK.value if request.side is DownloadSide.ASK else DownloadSide.BID.value
-    )
-    market_data = _symbol_market_data(request, symbol, stored_side, window_meta)
-    if is_refusal(market_data):
-        return market_data
-    covered = _admit_fetched_records(request, deps, ingest, acc, fetched.value, market_data.value)
-    if is_refusal(covered):
-        return covered
-    persisted = _persist_symbol_coverage(
-        request, deps.evidence, window_meta, stored_side, symbol, covered.value
-    )
-    if is_refusal(persisted):
-        return persisted
-    acc.windows.append(window_meta)
-    sample = _download_progress_sample(request, symbol=symbol, index=index, produced=acc.produced)
-    acc.samples.append(sample)
-    if deps.sink is not None:
-        deps.sink.on_progress(sample)
-    return Ok(None)
+    # CT-15 ingest owns CT-10 minting; durable intake keys make overlapping
+    # re-runs idempotent across processes via (source, native id, revision).
+    ingest = ExternalSourceIngest(_IngestBridge(port))
+    loaded_keys = _load_intake_keys(Path(request.destination))
+    if is_refusal(loaded_keys):
+        return loaded_keys
+    known_keys = loaded_keys.value
 
-
-def _symbol_fetch_request(
-    request: DownloadRequest, port: ProviderAdapter, symbol: str
-) -> ProviderFetchRequest:
-    return ProviderFetchRequest(
-        source=port.source,
-        symbol=symbol,
-        start_ns=request.start_ns,
-        end_ns=request.end_ns,
-        resolution=request.resolution,
-        side=request.side,
-        revision=request.revision,
-        license_tag=request.license_tag.value,
-    )
-
-
-def _symbol_market_data(
-    request: DownloadRequest,
-    symbol: str,
-    stored_side: str,
-    window_meta: Mapping[str, object],
-) -> Result[MarketDataContext]:
-    return MarketDataContext.try_create(
-        venue=request.venue,
-        symbol=symbol,
-        resolution=request.resolution,
-        side=stored_side,
-        license_tag=window_meta["license_tag"],
-        provenance=window_meta["provenance"],
-    )
-
-
-def _symbol_window_meta(
-    request: DownloadRequest, port: ProviderAdapter, symbol: str
-) -> dict[str, object]:
-    window_meta: dict[str, object] = {
-        "venue": request.venue,
-        "symbol": symbol,
-        "start_ns": request.start_ns,
-        "end_ns": request.end_ns,
-        "resolution": request.resolution,
-        "side": request.side.value,
-        "revision": request.revision,
-        "license_tag": request.license_tag.value,
-        "source": port.source,
-        "provenance": {
-            "acquisition": "download-once",
-            "component": "COMP-QMB",
-            "provider": port.source,
-        },
-    }
-    inner = getattr(port, "inner", None)
-    last_window = getattr(inner, "last_window", None) if inner is not None else None
-    if last_window is not None:
-        window_meta["license_tag"] = last_window.license_tag.value
-        window_meta["provenance"] = dict(last_window.provenance)
-        window_meta["partition_key"] = last_window.partition.partition_key
-    return window_meta
-
-
-def _admit_fetched_records(
-    request: DownloadRequest,
-    deps: _DownloadDeps,
-    ingest: ExternalSourceIngest,
-    acc: _DownloadAcc,
-    records: Sequence[ProviderRecord],
-    market_data: MarketDataContext,
-) -> Result[list[int]]:
-    covered_event_ns: list[int] = []
-    for record in records:
-        admitted = _admit_one_record(request, deps, ingest, acc, record, market_data)
-        if is_refusal(admitted):
-            return admitted
-        if admitted.value is not None:
-            covered_event_ns.append(admitted.value)
-    return Ok(covered_event_ns)
-
-
-def _admit_one_record(
-    request: DownloadRequest,
-    deps: _DownloadDeps,
-    ingest: ExternalSourceIngest,
-    acc: _DownloadAcc,
-    record: ProviderRecord,
-    market_data: MarketDataContext,
-) -> Result[int | None]:
-    key = IntakeKey.try_create(record.source, record.source_native_id, record.revision)
-    if is_refusal(key):
-        return key
-    if key.value in acc.known_keys:
-        acc.idempotent += 1
-        return Ok(None)
-    receipt = ingest.intake(
-        record,
-        writer=deps.writer,
-        sequence=acc.sequence,
-        world=request.world,
-        receive_wall_time=deps.receive,
-    )
-    if is_refusal(receipt):
-        return receipt
-    if receipt.value.outcome is not IntakeOutcome.PRODUCED:
-        acc.idempotent += 1
-        acc.known_keys.add(key.value)
-        return Ok(None)
-    produced = _admit_produced_record(
-        request, deps, ingest, acc, receipt.value, market_data, key.value
-    )
-    if is_refusal(produced):
-        return produced
-    return Ok(produced.value)
-
-
-def _admit_produced_record(
-    request: DownloadRequest,
-    deps: _DownloadDeps,
-    ingest: ExternalSourceIngest,
-    acc: _DownloadAcc,
-    receipt: IntakeReceipt,
-    market_data: MarketDataContext,
-    key: IntakeKey,
-) -> Result[int]:
-    acc.produced += 1
-    acc.sequence += 1
-    observation = _observation_for_archive(receipt, request.side, market_data)
-    if is_refusal(observation):
-        return observation
-    stored = ingest.submit(observation.value, deps.gate)
-    if is_refusal(stored):
-        return stored
-    acc.admitted += 1
-    acc.known_keys.add(key)
-    appended = _append_intake_key(Path(request.destination), key)
-    if is_refusal(appended):
-        return appended
-    return Ok(observation.value.event_time.value_ns)
-
-
-def _persist_symbol_coverage(
-    request: DownloadRequest,
-    evidence: EvidenceStore | None,
-    window_meta: Mapping[str, object],
-    stored_side: str,
-    symbol: str,
-    covered_event_ns: Sequence[int],
-) -> Result[None]:
-    # The envelope is only a rebuildable cache.  Stamp it from observations
-    # actually admitted, never from the requested window or requested sides.
-    if not covered_event_ns:
-        return Ok(None)
-    coverage_store = evidence if evidence is not None else EvidenceStore(Path(request.destination))
-    persisted = persist_coverage_windows(
-        coverage_store,
-        world=request.world,
-        venue=str(window_meta["venue"]),
-        symbol=symbol,
-        resolution=str(window_meta["resolution"]),
-        side=stored_side,
-        start_ns=min(covered_event_ns),
-        end_ns=max(covered_event_ns) + 1,
-        observation_count=len(covered_event_ns),
-        license_tag=str(window_meta["license_tag"]),
-        revision=str(window_meta["revision"]),
-        source=str(window_meta["source"]),
-        provenance=cast("Mapping[str, object]", window_meta["provenance"]),
-    )
-    if is_refusal(persisted):
-        return persisted
-    return Ok(None)
-
-
-def _download_progress_sample(
-    request: DownloadRequest, *, symbol: str, index: int, produced: int
-) -> DownloadProgress:
+    produced = 0
+    idempotent = 0
+    admitted = 0
+    samples: list[DownloadProgress] = []
+    windows: list[Mapping[str, object]] = []
     total = len(request.symbols)
-    percent = int(((index + 1) * 100) // total) if total else 100
-    # ETA is derived from the declared window, never a wall-clock read below
-    # the composition root (DEC-0106). The half-open window [start, end) is
-    # apportioned evenly across the batches; the ETA is the remaining batches
-    # scaled by that per-batch span (ns). It is a data-derived remaining span
-    # in ns that falls to zero as the last batch completes — monotone with the
-    # completed-batch count, deterministic and clock-free.
-    remaining_batches = total - (index + 1)
-    per_batch_span_ns = (request.end_ns - request.start_ns) // total if total else 0
-    return DownloadProgress(
-        percent=percent,
-        date_reached_ns=request.end_ns,
-        eta_ns=remaining_batches * per_batch_span_ns,
-        symbol=symbol,
-        produced=produced,
-        total_batches=total,
-        completed_batches=index + 1,
-    )
+    sequence = 0
 
+    for index, symbol in enumerate(request.symbols):
+        fetch_req = ProviderFetchRequest(
+            source=port.source,
+            symbol=symbol,
+            start_ns=request.start_ns,
+            end_ns=request.end_ns,
+            resolution=request.resolution,
+            side=request.side,
+            revision=request.revision,
+            license_tag=request.license_tag.value,
+        )
+        fetched = port.fetch(fetch_req)
+        if is_refusal(fetched):
+            return fetched
+        window_meta: dict[str, object] = {
+            "venue": request.venue,
+            "symbol": symbol,
+            "start_ns": request.start_ns,
+            "end_ns": request.end_ns,
+            "resolution": request.resolution,
+            "side": request.side.value,
+            "revision": request.revision,
+            "license_tag": request.license_tag.value,
+            "source": port.source,
+            "provenance": {
+                "acquisition": "download-once",
+                "component": "COMP-QMB",
+                "provider": port.source,
+            },
+        }
+        inner = getattr(port, "inner", None)
+        last_window = getattr(inner, "last_window", None) if inner is not None else None
+        if last_window is not None:
+            window_meta["license_tag"] = last_window.license_tag.value
+            window_meta["provenance"] = dict(last_window.provenance)
+            window_meta["partition_key"] = last_window.partition.partition_key
+        stored_side = (
+            DownloadSide.ASK.value if request.side is DownloadSide.ASK else DownloadSide.BID.value
+        )
+        market_data = MarketDataContext.try_create(
+            venue=request.venue,
+            symbol=symbol,
+            resolution=request.resolution,
+            side=stored_side,
+            license_tag=window_meta["license_tag"],
+            provenance=window_meta["provenance"],
+        )
+        if is_refusal(market_data):
+            return market_data
+        covered_event_ns: list[int] = []
+        for record in fetched.value:
+            key = IntakeKey.try_create(record.source, record.source_native_id, record.revision)
+            if is_refusal(key):
+                return key
+            if key.value in known_keys:
+                idempotent += 1
+                continue
+            receipt = ingest.intake(
+                record,
+                writer=active_writer,
+                sequence=sequence,
+                world=request.world,
+                receive_wall_time=receive,
+            )
+            if is_refusal(receipt):
+                return receipt
+            if receipt.value.outcome is IntakeOutcome.PRODUCED:
+                produced += 1
+                sequence += 1
+                observation = _observation_for_archive(
+                    receipt.value,
+                    request.side,
+                    market_data.value,
+                )
+                if is_refusal(observation):
+                    return observation
+                stored = ingest.submit(observation.value, gate)
+                if is_refusal(stored):
+                    return stored
+                admitted += 1
+                covered_event_ns.append(observation.value.event_time.value_ns)
+                known_keys.add(key.value)
+                appended = _append_intake_key(Path(request.destination), key.value)
+                if is_refusal(appended):
+                    return appended
+            else:
+                idempotent += 1
+                known_keys.add(key.value)
 
-def _download_receipt(
-    request: DownloadRequest, port: ProviderAdapter, acc: _DownloadAcc
-) -> DownloadReceipt:
-    return DownloadReceipt(
-        command="download",
-        venue=request.venue,
-        symbols=request.symbols,
-        start_ns=request.start_ns,
-        end_ns=request.end_ns,
-        resolution=request.resolution,
-        side=request.side.value,
-        destination=request.destination,
-        revision=request.revision,
-        license_tag=request.license_tag.value,
-        produced=acc.produced,
-        idempotent=acc.idempotent,
-        admitted=acc.admitted,
-        overwrite=request.overwrite,
-        source=port.source,
-        progress=tuple(acc.samples),
-        windows=tuple(acc.windows),
+        # The envelope is only a rebuildable cache.  Stamp it from observations
+        # actually admitted, never from the requested window or requested sides.
+        if covered_event_ns:
+            coverage_store = (
+                evidence if evidence is not None else EvidenceStore(Path(request.destination))
+            )
+            persisted = persist_coverage_windows(
+                coverage_store,
+                world=request.world,
+                venue=str(window_meta["venue"]),
+                symbol=symbol,
+                resolution=str(window_meta["resolution"]),
+                side=stored_side,
+                start_ns=min(covered_event_ns),
+                end_ns=max(covered_event_ns) + 1,
+                observation_count=len(covered_event_ns),
+                license_tag=str(window_meta["license_tag"]),
+                revision=str(window_meta["revision"]),
+                source=str(window_meta["source"]),
+                provenance=cast("Mapping[str, object]", window_meta["provenance"]),
+            )
+            if is_refusal(persisted):
+                return persisted
+        windows.append(window_meta)
+
+        percent = int(((index + 1) * 100) // total) if total else 100
+        # ETA is derived from the declared window, never a wall-clock read below
+        # the composition root (DEC-0106). The half-open window [start, end) is
+        # apportioned evenly across the batches; the ETA is the remaining batches
+        # scaled by that per-batch span (ns). It is a data-derived remaining span
+        # in ns that falls to zero as the last batch completes — monotone with the
+        # completed-batch count, deterministic and clock-free.
+        remaining_batches = total - (index + 1)
+        per_batch_span_ns = (request.end_ns - request.start_ns) // total if total else 0
+        eta_ns = remaining_batches * per_batch_span_ns
+        sample = DownloadProgress(
+            percent=percent,
+            date_reached_ns=request.end_ns,
+            eta_ns=eta_ns,
+            symbol=symbol,
+            produced=produced,
+            total_batches=total,
+            completed_batches=index + 1,
+        )
+        samples.append(sample)
+        if sink is not None:
+            sink.on_progress(sample)
+
+    return Ok(
+        DownloadReceipt(
+            command="download",
+            venue=request.venue,
+            symbols=request.symbols,
+            start_ns=request.start_ns,
+            end_ns=request.end_ns,
+            resolution=request.resolution,
+            side=request.side.value,
+            destination=request.destination,
+            revision=request.revision,
+            license_tag=request.license_tag.value,
+            produced=produced,
+            idempotent=idempotent,
+            admitted=admitted,
+            overwrite=request.overwrite,
+            source=port.source,
+            progress=tuple(samples),
+            windows=tuple(windows),
+        )
     )
 
 
@@ -755,26 +547,23 @@ def _as_ns(value: object, *, field: str) -> Result[int]:
     if isinstance(value, int):
         return Ok(value)
     if isinstance(value, str) and value.strip() != "":
-        return _ns_from_token(value.strip(), field=field, given=value)
+        token = value.strip()
+        if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
+            return Ok(int(token))
+        try:
+            if token.endswith("Z"):
+                token = token[:-1] + "+00:00"
+            parsed = datetime.fromisoformat(token)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return Ok(int(parsed.timestamp() * 1_000_000_000))
+        except ValueError:
+            return invalid(
+                field,
+                f"{field} is int64 UTC-ns or an ISO-8601 timestamp",
+                given=repr(value),
+            )
     return invalid(field, f"{field} is required: int64 UTC-ns or ISO-8601", given=repr(value))
-
-
-def _ns_from_token(token: str, *, field: str, given: object) -> Result[int]:
-    if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
-        return Ok(int(token))
-    try:
-        if token.endswith("Z"):
-            token = token[:-1] + "+00:00"
-        parsed = datetime.fromisoformat(token)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return Ok(int(parsed.timestamp() * 1_000_000_000))
-    except ValueError:
-        return invalid(
-            field,
-            f"{field} is int64 UTC-ns or an ISO-8601 timestamp",
-            given=repr(given),
-        )
 
 
 def _as_side(value: object) -> Result[DownloadSide]:

@@ -203,17 +203,17 @@ def main() -> None:
     assert qmb.abort_run is abort_run
     assert qmb.TIME_LIMIT_KEY == TIME_LIMIT_KEY
     identity_names_declared_per_run_limits()
-    sys.stdout.write("declared per-run limits qmb_run_time_limit and qmb_run_memory_limit\n")
+    print("declared per-run limits qmb_run_time_limit and qmb_run_memory_limit")
     with tempfile.TemporaryDirectory(prefix="qmb_abort_", ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
         submitted_run_carries_token_and_limits(root)
-        sys.stdout.write("every submitted run carries a cancel token and declared limits\n")
+        print("every submitted run carries a cancel token and declared limits")
         cancel_and_limit_breach_are_typed_aborted(root)
-        sys.stdout.write("limit breach or cancel is typed aborted with context\n")
+        print("limit breach or cancel is typed aborted with context")
         abort_one_leaves_the_sibling(root)
-        sys.stdout.write("aborting one process does not touch siblings\n")
-        sys.stdout.write("no partial governed result; output stays in the run directory\n")
-    sys.stdout.write("orchestrator abort ok\n")
+        print("aborting one process does not touch siblings")
+        print("no partial governed result; output stays in the run directory")
+    print("orchestrator abort ok")
 
 
 if __name__ == "__main__":

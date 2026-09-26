@@ -63,11 +63,7 @@ from qma.daemon.sessions.product_session import (
     ReconnectSnapshot,
     refuse_reconnect_replays_intent,
 )
-from qma.daemon.staging.change_request import (
-    ChangeApplyRecord,
-    ChangeRequest,
-    ChangeRequestFixture,
-)
+from qma.daemon.staging.change_request import ChangeRequest, ChangeRequestFixture
 from qma.wire.contribution_listing import refuse_hit_as_grant
 from qma.wire.copilot_profile import parse_wire_copilot_profile
 from qma.wire.invocation_envelope import (
@@ -106,6 +102,10 @@ _DEFAULT_AS_OF: Final[str] = "2026-09-20T00:00:00Z"
 _DEFAULT_CONTRIBUTION: Final[Mapping[str, str]] = MappingProxyType(
     {"package_version": "0.1.0", "qualified_id": "analysis-backtest:qmb"}
 )
+
+
+def _invalid(field: str, reason: str, **extra: object) -> Result[object]:
+    return invalid_input(field, reason, **extra)
 
 
 @dataclass
@@ -481,7 +481,7 @@ class CopilotHost:
         from_session: object,
         operator_principal: object,
         applied_at: object,
-    ) -> Result[ChangeApplyRecord]:
+    ) -> Result[object]:
         """Story 58.4 remains the apply oracle. App-use cannot apply."""
         loaded = self.sessions.get(from_session)
         if is_refusal(loaded):

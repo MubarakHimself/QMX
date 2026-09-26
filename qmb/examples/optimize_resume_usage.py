@@ -22,7 +22,6 @@ Shows the things B-8 / B-4 / OPT-17 / OPT-23 / OPT-24 / Story 21.5 pin down:
 
 from __future__ import annotations
 
-import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -109,25 +108,23 @@ def main() -> None:
 
     # (2) Resume from the ledger view — only generation 0 completed.
     resumed, plan = _ok(qmb.resume_stepper(_fresh(), _priors(gen0)))
-    sys.stdout.write("study resume ok\n")
-    sys.stdout.write(
+    print("study resume ok")
+    print(
         f"completed_generations={plan.completed_generations} "
-        f"resume_generation={plan.resume_generation}\n"
+        f"resume_generation={plan.resume_generation}"
     )
-    sys.stdout.write("resumes from the last completed generation\n")
-    sys.stdout.write(
-        f"ledger is the sole source: consults_optuna_store={qmb.RESUME_CONSULTS_OPTUNA_STORE}\n"
-    )
+    print("resumes from the last completed generation")
+    print(f"ledger is the sole source: consults_optuna_store={qmb.RESUME_CONSULTS_OPTUNA_STORE}")
     _next, resumed_gen1 = _ok(resumed.ask())
     if _ok(resumed_gen1.fingerprint()) != target_gen1:
         raise AssertionError("resume must re-propose the same generation")
-    sys.stdout.write("completed trials are not re-run (re-proposal is byte-identical)\n")
+    print("completed trials are not re-run (re-proposal is byte-identical)")
 
     # (3) Partial generation: two of four asks of generation 1 already in the ledger.
     partial_plan = _ok(qmb.plan_study_resume(_priors(gen0) + _priors(gen1, {1, 3}), batch_size=4))
-    sys.stdout.write(
+    print(
         f"partial resume: resumed_asks={partial_plan.resumed_asks} "
-        f"pending_asks={partial_plan.pending_asks}\n"
+        f"pending_asks={partial_plan.pending_asks}"
     )
 
     # (4) Pre-flight cost estimate — measured baseline, spawns no trial.
@@ -139,16 +136,14 @@ def main() -> None:
             concurrency_cap=4,
         )
     )
-    sys.stdout.write(
-        f"estimate status={estimate.status} projected_wall_ns={estimate.projected_wall_ns}\n"
-    )
-    sys.stdout.write(f"spawns no trial: spawns_trial={estimate.spawns_trial}\n")
+    print(f"estimate status={estimate.status} projected_wall_ns={estimate.projected_wall_ns}")
+    print(f"spawns no trial: spawns_trial={estimate.spawns_trial}")
 
     # (5) No measured baseline -> not-yet-measured, never an invented figure.
     blank = _ok(qmb.estimate_study_cost(budget, per_trial_runtime=None, concurrency_cap=4))
     if blank.projected_wall_ns is not None:
         raise AssertionError("an unmeasured baseline invents no wall")
-    sys.stdout.write(f"no baseline -> {blank.status}\n")
+    print(f"no baseline -> {blank.status}")
 
     # (6) Reachable through the qmb CLI door; a missing budget is a typed refusal.
     through_door = _ok(
@@ -162,7 +157,7 @@ def main() -> None:
         invoke_optimize_estimate(concurrency_cap=4)
     ):
         raise AssertionError("the CLI door estimates and refuses a missing budget")
-    sys.stdout.write("through the qmb CLI door\n")
+    print("through the qmb CLI door")
 
 
 if __name__ == "__main__":

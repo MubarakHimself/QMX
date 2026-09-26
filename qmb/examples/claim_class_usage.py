@@ -23,7 +23,6 @@ Shows the things AC1-AC6 pin down for a synthetic run's claim class:
 
 from __future__ import annotations
 
-import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -58,7 +57,7 @@ def main() -> None:
     assert identity["claim_class"] == "infra-stress"
     assert identity["world"] == _SIMULATED
     assert identity["claim_class"] != identity["world"]
-    sys.stdout.write("exactly one claim class, a field distinct from world; claims_edge=False\n")
+    print("exactly one claim class, a field distinct from world; claims_edge=False")
 
     # 2. claim class bounded by generator lineage (AC2)
     gbm_robust = resolve_claim_label(process="gbm", claim_class="robustness", world=_REPLAY)
@@ -67,12 +66,8 @@ def main() -> None:
         resolve_claim_label(process="block-bootstrap", claim_class="robustness", world=_REPLAY)
     )
     assert seeded.is_verdict_bearing is True
-    sys.stdout.write(
-        "from-scratch gbm robustness is a policy rejection; history-seeded permits robustness\n"
-    )
-    sys.stdout.write(
-        " ".join(["gbm permits:", str(" ".join(_ok(permittable_claim_classes("gbm"))))]) + "\n"
-    )
+    print("from-scratch gbm robustness is a policy rejection; history-seeded permits robustness")
+    print("gbm permits:", " ".join(_ok(permittable_claim_classes("gbm"))))
 
     # 3. L20 as a contract — edge / alpha / validation refused under any process (AC3)
     for forbidden in ("edge", "alpha", "validation"):
@@ -82,9 +77,7 @@ def main() -> None:
         assert is_refusal(refusal) and refusal.category is RefusalCategory.POLICY_REJECTION
     direct = refuse_edge_claim("edge", process="gbm")
     assert is_refusal(direct) and direct.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write(
-        "edge / alpha / validation claim on synthetic data refused under any process\n"
-    )
+    print("edge / alpha / validation claim on synthetic data refused under any process")
 
     # 4. percentile-band / p-value fields exist as interface only; no threshold invented (AC4)
     interface = _ok(robustness_report_interface())
@@ -96,12 +89,8 @@ def main() -> None:
     assert isinstance(threshold, PreregisteredThreshold) and threshold.recorded_before_run is True
     post_hoc = robustness_report_interface(threshold="0.05")
     assert is_refusal(post_hoc) and post_hoc.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write(
-        "percentile-band / p-value exist as interface only; no numeric threshold invented\n"
-    )
-    sys.stdout.write(
-        "a pass/fail threshold is a config-declared configurable recorded before the run\n"
-    )
+    print("percentile-band / p-value exist as interface only; no numeric threshold invented")
+    print("a pass/fail threshold is a config-declared configurable recorded before the run")
 
     # 5. world=simulated ships no verdict-bearing claim until GAP-0048 (AC5)
     simulated_robust = resolve_claim_label(
@@ -112,11 +101,9 @@ def main() -> None:
     gate = refuse_governed_evidence_use(_SIMULATED)
     assert is_refusal(gate) and gate.context.get("gap") == "GAP-0048"
     assert _ok(refuse_governed_evidence_use(_REPLAY)) is World.REPLAY
-    sys.stdout.write(
-        "world=simulated refuses for governed evidence; infra-stress and logic-smoke only\n"
-    )
+    print("world=simulated refuses for governed evidence; infra-stress and logic-smoke only")
     simulated_permits = _ok(permittable_claim_classes("block-bootstrap", _SIMULATED))
-    sys.stdout.write(" ".join(["simulated permits:", str(" ".join(simulated_permits))]) + "\n")
+    print("simulated permits:", " ".join(simulated_permits))
 
     # 6. Gaussian-family robustness carries a destroy-structure caveat (AC6)
     caveated = _ok(
@@ -129,11 +116,9 @@ def main() -> None:
         "fat-tails",
     }
     assert caveated.caveat.hides_black_swan_risk is True
-    sys.stdout.write(
-        "gaussian-family robustness carries a caveat: destroys autocorrelation / vol / fat tails\n"
-    )
+    print("gaussian-family robustness carries a caveat: destroys autocorrelation / vol / fat tails")
 
-    sys.stdout.write("claim class labeling ok\n")
+    print("claim class labeling ok")
 
 
 if __name__ == "__main__":

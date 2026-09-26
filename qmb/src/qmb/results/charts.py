@@ -868,16 +868,6 @@ def _infer_leveraged(marks: tuple[HoldingMark, ...], path: tuple[EquityPoint, ..
     return False
 
 
-class _HoldingsAcc:
-    __slots__ = ("allocation_pts", "exposure_pts", "holding_pts", "leverage_pts")
-
-    def __init__(self, universe: tuple[str, ...]) -> None:
-        self.holding_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
-        self.exposure_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
-        self.allocation_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
-        self.leverage_pts: list[SeriesPoint] = []
-
-
 def _reconstruct_holdings(
     marks: tuple[HoldingMark, ...],
     path: tuple[EquityPoint, ...],
@@ -886,136 +876,75 @@ def _reconstruct_holdings(
     emit_leverage: bool,
 ) -> Result[tuple[ChartSeries, ...]]:
     grouped = _group_holdings(marks)
-    acc = _HoldingsAcc(universe)
+    holding_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
+    exposure_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
+    allocation_pts: dict[str, list[SeriesPoint]] = {name: [] for name in universe}
+    leverage_pts: list[SeriesPoint] = []
     for at in sorted(grouped, key=lambda instant: instant.value_ns):
-        filled = _fill_holdings_instant(
-            acc,
-            at,
-            grouped[at],
-            path,
-            universe,
-            marks,
-            emit_leverage=emit_leverage,
-        )
-        if is_refusal(filled):
-            return filled
-    return _mint_holdings_series(acc, universe)
-
-
-def _fill_holdings_instant(
-    acc: _HoldingsAcc,
-    at: Instant,
-    rows: tuple[HoldingMark, ...],
-    path: tuple[EquityPoint, ...],
-    universe: tuple[str, ...],
-    marks: tuple[HoldingMark, ...],
-    *,
-    emit_leverage: bool,
-) -> Result[None]:
-    by_name = {item.instrument: item for item in rows}
-    equity = _equity_at(path, at)
-    gross = sum((item.notional.as_fraction() for item in rows), Fraction(0))
-    for name in universe:
-        added = _append_instrument_points(
-            acc, name=name, item=by_name.get(name), at=at, equity=equity, marks=marks
-        )
-        if is_refusal(added):
-            return added
-    if emit_leverage and equity is not None and equity.as_fraction() != 0:
-        return _append_leverage_point(acc, at, gross, equity)
-    return Ok(None)
-
-
-def _append_instrument_points(
-    acc: _HoldingsAcc,
-    *,
-    name: str,
-    item: HoldingMark | None,
-    at: Instant,
-    equity: Money | None,
-    marks: tuple[HoldingMark, ...],
-) -> Result[None]:
-    qty = _signed_quantity(item) if item is not None else _zero_quantity()
-    if is_refusal(qty):
-        return qty
-    qty_pt = SeriesPoint.try_create(at, qty.value)
-    if is_refusal(qty_pt):
-        return qty_pt
-    acc.holding_pts[name].append(qty_pt.value)
-    value = _zero_money(marks[0].market_value) if item is None else item.market_value
-    exp_pt = SeriesPoint.try_create(at, value)
-    if is_refusal(exp_pt):
-        return exp_pt
-    acc.exposure_pts[name].append(exp_pt.value)
-    if equity is None or equity.as_fraction() == 0:
-        return Ok(None)
-    alloc = _ratio(value.as_fraction() / equity.as_fraction())
-    if is_refusal(alloc):
-        return alloc
-    alloc_pt = SeriesPoint.try_create(at, alloc.value)
-    if is_refusal(alloc_pt):
-        return alloc_pt
-    acc.allocation_pts[name].append(alloc_pt.value)
-    return Ok(None)
-
-
-def _append_leverage_point(
-    acc: _HoldingsAcc,
-    at: Instant,
-    gross: Fraction,
-    equity: Money,
-) -> Result[None]:
-    lev = _ratio(gross / abs(equity.as_fraction()))
-    if is_refusal(lev):
-        return lev
-    lev_pt = SeriesPoint.try_create(at, lev.value)
-    if is_refusal(lev_pt):
-        return lev_pt
-    acc.leverage_pts.append(lev_pt.value)
-    return Ok(None)
-
-
-def _mint_holdings_series(
-    acc: _HoldingsAcc, universe: tuple[str, ...]
-) -> Result[tuple[ChartSeries, ...]]:
+        rows = grouped[at]
+        by_name = {item.instrument: item for item in rows}
+        equity = _equity_at(path, at)
+        gross = sum((item.notional.as_fraction() for item in rows), Fraction(0))
+        for name in universe:
+            item = by_name.get(name)
+            qty = _signed_quantity(item) if item is not None else _zero_quantity()
+            if is_refusal(qty):
+                return qty
+            qty_pt = SeriesPoint.try_create(at, qty.value)
+            if is_refusal(qty_pt):
+                return qty_pt
+            holding_pts[name].append(qty_pt.value)
+            value = _zero_money(marks[0].market_value) if item is None else item.market_value
+            exp_pt = SeriesPoint.try_create(at, value)
+            if is_refusal(exp_pt):
+                return exp_pt
+            exposure_pts[name].append(exp_pt.value)
+            if equity is not None and equity.as_fraction() != 0:
+                alloc = _ratio(value.as_fraction() / equity.as_fraction())
+                if is_refusal(alloc):
+                    return alloc
+                alloc_pt = SeriesPoint.try_create(at, alloc.value)
+                if is_refusal(alloc_pt):
+                    return alloc_pt
+                allocation_pts[name].append(alloc_pt.value)
+        if emit_leverage and equity is not None and equity.as_fraction() != 0:
+            lev = _ratio(gross / abs(equity.as_fraction()))
+            if is_refusal(lev):
+                return lev
+            lev_pt = SeriesPoint.try_create(at, lev.value)
+            if is_refusal(lev_pt):
+                return lev_pt
+            leverage_pts.append(lev_pt.value)
     series: list[ChartSeries] = []
     for name in universe:
-        minted = _mint_instrument_series(acc, name)
-        if is_refusal(minted):
-            return minted
-        series.extend(minted.value)
-    if acc.leverage_pts:
+        holdings = ChartSeries.try_create(
+            f"holdings.{name}", UnitKind.QUANTITY, tuple(holding_pts[name])
+        )
+        if is_refusal(holdings):
+            return holdings
+        series.append(holdings.value)
+        exposure = ChartSeries.try_create(
+            f"exposure.{name}", UnitKind.MONEY, tuple(exposure_pts[name])
+        )
+        if is_refusal(exposure):
+            return exposure
+        series.append(exposure.value)
+        if allocation_pts[name]:
+            allocation = ChartSeries.try_create(
+                f"allocation.{name}",
+                UnitKind.DIMENSIONLESS_RATIO,
+                tuple(allocation_pts[name]),
+            )
+            if is_refusal(allocation):
+                return allocation
+            series.append(allocation.value)
+    if leverage_pts:
         leverage = ChartSeries.try_create(
-            "leverage", UnitKind.DIMENSIONLESS_RATIO, tuple(acc.leverage_pts)
+            "leverage", UnitKind.DIMENSIONLESS_RATIO, tuple(leverage_pts)
         )
         if is_refusal(leverage):
             return leverage
         series.append(leverage.value)
-    return Ok(tuple(series))
-
-
-def _mint_instrument_series(acc: _HoldingsAcc, name: str) -> Result[tuple[ChartSeries, ...]]:
-    holdings = ChartSeries.try_create(
-        f"holdings.{name}", UnitKind.QUANTITY, tuple(acc.holding_pts[name])
-    )
-    if is_refusal(holdings):
-        return holdings
-    exposure = ChartSeries.try_create(
-        f"exposure.{name}", UnitKind.MONEY, tuple(acc.exposure_pts[name])
-    )
-    if is_refusal(exposure):
-        return exposure
-    series = [holdings.value, exposure.value]
-    if not acc.allocation_pts[name]:
-        return Ok(tuple(series))
-    allocation = ChartSeries.try_create(
-        f"allocation.{name}",
-        UnitKind.DIMENSIONLESS_RATIO,
-        tuple(acc.allocation_pts[name]),
-    )
-    if is_refusal(allocation):
-        return allocation
-    series.append(allocation.value)
     return Ok(tuple(series))
 
 

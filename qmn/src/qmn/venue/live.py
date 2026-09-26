@@ -53,7 +53,6 @@ from qmf.core import (
     Instant,
     MonotonicReading,
     Ok,
-    Price,
     Quantity,
     RefusalCategory,
     Result,
@@ -352,56 +351,159 @@ class LiveCTraderClient:
         declared_lookback: object = None,
     ) -> Result[LiveCTraderClient]:
         """Build a live client for ``(world, VenueId)`` with injected Clock/ErrorMap."""
-        identity = _live_world_venue(world, venue_id)
-        if is_refusal(identity):
-            return identity
-        world_v, venue = identity.value
-        deps = _live_injected_deps(
-            clock=clock,
-            error_map=error_map,
-            session_epoch=session_epoch,
-            connection_manager=connection_manager,
-            recorder=recorder,
-            intake=intake,
-        )
-        if is_refusal(deps):
-            return deps
-        cm, rec, bound_intake, epoch = deps.value
-        wire = _live_wire_fields(
-            event_loop=event_loop,
-            open_api_host=open_api_host,
-            proto_tag=proto_tag,
-            open_api_port=open_api_port,
-            ssl_context=ssl_context,
-            server_hostname=server_hostname,
-            credential_ref=credential_ref,
-            declared_lookback=declared_lookback,
-        )
-        if is_refusal(wire):
-            return wire
-        loop, host, tag, port, tls, hostname, cred, lookback = wire.value
-        guarded = _live_production_guards(
-            host=host, cm=cm, loop=loop, tag=tag, proto_tag=proto_tag, cred=cred
-        )
-        if is_refusal(guarded):
-            return guarded
+        if not isinstance(world, World):
+            return _invalid(
+                "world", "live client is selected by (world, VenueId)", given=repr(world)
+            )
+        if world is World.REPLAY:
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "world",
+                    "reason": "replay compositions bind the replay VenueClientPort, "
+                    "never the live cTrader client",
+                    "world": world.value,
+                },
+            )
+        if not isinstance(venue_id, VenueId) or venue_id.value.strip() == "":
+            return _invalid(
+                "venue_id", "live client requires a valid VenueId", given=repr(venue_id)
+            )
+        if venue_id.value.startswith("conformance:"):
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "venue_id",
+                    "reason": "conformance: VenueId selects the FEAT-0023 double, "
+                    "not the live cTrader client",
+                    "venue_id": venue_id.value,
+                },
+            )
+        if not isinstance(clock, Clock):
+            return _invalid(
+                "clock",
+                "the composition root injects a Clock; the live client never reads "
+                "the system clock",
+                given=repr(clock),
+            )
+        if not isinstance(error_map, ErrorMap):
+            return _invalid(
+                "error_map",
+                "the live client resolves venue codes against a pinned ErrorMap",
+                given=repr(error_map),
+            )
+        if not isinstance(session_epoch, str) or session_epoch.strip() == "":
+            return _invalid(
+                "session_epoch",
+                "a non-empty session-epoch id rides every observation",
+                given=repr(session_epoch),
+            )
+        cm: ConnectionManager | None
+        if connection_manager is None:
+            cm = None
+        elif isinstance(connection_manager, ConnectionManager):
+            cm = connection_manager
+        else:
+            return _invalid(
+                "connection_manager",
+                "when supplied, connection_manager must be a ConnectionManager",
+                given=repr(connection_manager),
+            )
+        rec: EventRecorder | None
+        if recorder is None:
+            rec = None
+        elif isinstance(recorder, EventRecorder):
+            rec = recorder
+        else:
+            return _invalid(
+                "recorder",
+                "when supplied, recorder must be an EventRecorder",
+                given=repr(recorder),
+            )
+        bound_intake: _LiveIntake | None
+        if intake is None:
+            bound_intake = None
+        elif callable(getattr(intake, "record", None)):
+            bound_intake = cast("_LiveIntake", intake)
+        else:
+            return _invalid(
+                "intake",
+                "when supplied, intake is a GovernedLiveIntake (record method)",
+                given=repr(type(intake).__name__),
+            )
+        loop = _coerce_event_loop(event_loop)
+        if is_refusal(loop):
+            return loop
+        host = _coerce_optional_host(open_api_host)
+        if is_refusal(host):
+            return host
+        tag = _coerce_optional_proto_tag(proto_tag)
+        if is_refusal(tag):
+            return tag
+        port = _coerce_open_api_port(open_api_port)
+        if is_refusal(port):
+            return port
+        tls = _coerce_optional_ssl_context(ssl_context)
+        if is_refusal(tls):
+            return tls
+        hostname = _coerce_optional_host(server_hostname, field_name="server_hostname")
+        if is_refusal(hostname):
+            return hostname
+        cred = _coerce_optional_credential_ref(credential_ref)
+        if is_refusal(cred):
+            return cred
+        lookback: Duration | None = None
+        if declared_lookback is not None:
+            resolved_lookback = _coerce_declared_lookback(declared_lookback)
+            if is_refusal(resolved_lookback):
+                return resolved_lookback
+            lookback = resolved_lookback.value
+        production_host = host.value
+        if production_host is not None:
+            if cm is None:
+                return _invalid(
+                    "connection_manager",
+                    "production Open API connect uses the node's injected "
+                    "ConnectionManager; LiveCTraderClient never constructs one",
+                )
+            if loop.value is None:
+                return _invalid(
+                    "event_loop",
+                    "production Open API connect requires the node's injected "
+                    "asyncio loop; LiveCTraderClient never creates one",
+                )
+            if tag.value is None:
+                return _invalid(
+                    "proto_tag",
+                    "the Spotware proto release tag is a positive integer injected "
+                    "from registry:venue_protocol_artifact",
+                    given=repr(proto_tag),
+                )
+        if cred.value is not None and cm is None:
+            return _invalid(
+                "connection_manager",
+                "credential session open uses the node's injected ConnectionManager; "
+                "LiveCTraderClient never constructs one",
+            )
         return Ok(
             cls(
-                _world=world_v,
-                _venue_id=venue,
-                _clock=cast("Clock", clock),
-                _error_map=cast("ErrorMap", error_map),
-                _session_epoch=epoch,
+                _world=world,
+                _venue_id=venue_id,
+                _clock=clock,
+                _error_map=error_map,
+                _session_epoch=session_epoch.strip(),
                 _connection_manager=cm,
                 _recorder=rec,
                 _intake=bound_intake,
-                _event_loop=loop,
-                _open_api_host=host,
-                _proto_tag=tag,
-                _open_api_port=port,
-                _ssl_context=tls,
-                _server_hostname=hostname,
-                _credential_ref=cred,
+                _event_loop=loop.value,
+                _open_api_host=production_host,
+                _proto_tag=tag.value,
+                _open_api_port=port.value,
+                _ssl_context=tls.value,
+                _server_hostname=hostname.value,
+                _credential_ref=cred.value,
                 _declared_lookback=lookback,
             )
         )
@@ -1007,20 +1109,84 @@ class LiveCTraderClient:
         read-backs persist verbatim and journal as ``data quality``; the adapter
         never synthesizes them.
         """
-        prelude = self._receive_prelude(
-            wire_kind, raw_payload, native_id, venue_time_raw, venue_time_unit
+        kind = _coerce_wire(wire_kind)
+        if kind is None:
+            return _invalid(
+                "wire_kind",
+                "receive requires a WireKind",
+                given=repr(wire_kind),
+                allowed=[m.value for m in WireKind],
+            )
+        if not isinstance(raw_payload, Mapping):
+            return _invalid(
+                "raw_payload",
+                "the raw payload is recorded verbatim as a present mapping",
+                given=type(raw_payload).__name__,
+            )
+        if not isinstance(native_id, str) or native_id.strip() == "":
+            return _invalid(
+                "native_id",
+                "every inbound frame carries a non-empty venue-native id",
+                given=repr(native_id),
+            )
+        wall = self._clock.wall_now()
+        if is_refusal(wall):
+            return wall
+        mono = self._clock.monotonic_now()
+        if is_refusal(mono):
+            return mono
+        receive_wall = wall.value
+        monotonic = mono.value
+
+        journal_type = ct13_journal_event_type(kind)
+        if is_refusal(journal_type):
+            return journal_type
+        if journal_type.value not in CT13_SEVEN_EVENT_TYPES:
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "event_type",
+                    "reason": "journal mapping must land on CT-13's closed seven; "
+                    "an eighth type is refused",
+                    "given": journal_type.value,
+                },
+            )
+
+        # --- venue event time (optional; distinct from receive wall) ----------
+        venue_instant: Instant | None = None
+        if venue_time_raw is not None:
+            decoded_ts = decode_timestamp(venue_time_raw, venue_time_unit, receive_wall)
+            if is_refusal(decoded_ts):
+                return decoded_ts
+            venue_instant = decoded_ts.value.instant
+
+        verbatim: dict[str, object] = {
+            "kind": "verbatim-wire",
+            "wire_kind": kind.value,
+            "native_id": native_id.strip(),
+            "raw_payload": dict(cast("Mapping[str, object]", raw_payload)),
+            "receive_wall_time_ns": receive_wall.value_ns,
+            "monotonic_ns": monotonic.value_ns,
+            "boot_epoch": monotonic.boot_epoch_id,
+            "session_epoch": self._session_epoch,
+            "venue_instant_ns": venue_instant.value_ns if venue_instant is not None else None,
+            "interpreted": False,
+        }
+        mapping = JournalMapping(
+            event_type=journal_type.value,
+            wire_kind=kind.value,
+            receive_wall_time_ns=receive_wall.value_ns,
+            venue_instant_ns=venue_instant.value_ns if venue_instant is not None else None,
+            native_id=native_id.strip(),
         )
-        if is_refusal(prelude):
-            return prelude
-        kind, native, receive_wall, monotonic, venue_instant, journal_type = prelude.value
-        verbatim, mapping = self._verbatim_and_mapping(
-            kind, raw_payload, native, receive_wall, monotonic, venue_instant, journal_type
-        )
+
+        # Record-before-interpret: accumulator (when bound) is the single first writer.
         persisted = self._persist_before_interpret(
             verbatim,
             mapping,
             kind=kind,
-            native_id=native,
+            native_id=native_id.strip(),
             receive_wall=receive_wall,
             venue_instant=venue_instant,
             revision=revision,
@@ -1028,10 +1194,11 @@ class LiveCTraderClient:
         )
         if is_refusal(persisted):
             return persisted
+
         decoded = self._interpret(
             kind=kind,
             raw_payload=cast("Mapping[str, object]", raw_payload),
-            native_id=native,
+            native_id=native_id.strip(),
             revision=revision,
             receive_wall=receive_wall,
             monotonic=monotonic,
@@ -1053,115 +1220,8 @@ class LiveCTraderClient:
         )
         if is_refusal(decoded):
             return decoded
-        return self._finish_receive(decoded.value, mapping, receive_wall, venue_instant)
 
-    def _receive_prelude(
-        self,
-        wire_kind: object,
-        raw_payload: object,
-        native_id: object,
-        venue_time_raw: object,
-        venue_time_unit: object,
-    ) -> Result[tuple[WireKind, str, Instant, MonotonicReading, Instant | None, str]]:
-        kind = _coerce_wire(wire_kind)
-        if kind is None:
-            return _invalid(
-                "wire_kind",
-                "receive requires a WireKind",
-                given=repr(wire_kind),
-                allowed=[m.value for m in WireKind],
-            )
-        if not isinstance(raw_payload, Mapping):
-            return _invalid(
-                "raw_payload",
-                "the raw payload is recorded verbatim as a present mapping",
-                given=type(raw_payload).__name__,
-            )
-        if not isinstance(native_id, str) or native_id.strip() == "":
-            return _invalid(
-                "native_id",
-                "every inbound frame carries a non-empty venue-native id",
-                given=repr(native_id),
-            )
-        clocks = self._receive_clocks()
-        if is_refusal(clocks):
-            return clocks
-        receive_wall, monotonic = clocks.value
-        journal_type = _require_ct13_journal_type(kind)
-        if is_refusal(journal_type):
-            return journal_type
-        venue_instant = self._optional_venue_instant(venue_time_raw, venue_time_unit, receive_wall)
-        if is_refusal(venue_instant):
-            return venue_instant
-        return Ok(
-            (
-                kind,
-                native_id.strip(),
-                receive_wall,
-                monotonic,
-                venue_instant.value,
-                journal_type.value,
-            )
-        )
-
-    def _receive_clocks(self) -> Result[tuple[Instant, MonotonicReading]]:
-        wall = self._clock.wall_now()
-        if is_refusal(wall):
-            return wall
-        mono = self._clock.monotonic_now()
-        if is_refusal(mono):
-            return mono
-        return Ok((wall.value, mono.value))
-
-    def _optional_venue_instant(
-        self, venue_time_raw: object, venue_time_unit: object, receive_wall: Instant
-    ) -> Result[Instant | None]:
-        if venue_time_raw is None:
-            return Ok(None)
-        decoded_ts = decode_timestamp(venue_time_raw, venue_time_unit, receive_wall)
-        if is_refusal(decoded_ts):
-            return decoded_ts
-        return Ok(decoded_ts.value.instant)
-
-    def _verbatim_and_mapping(
-        self,
-        kind: WireKind,
-        raw_payload: object,
-        native_id: str,
-        receive_wall: Instant,
-        monotonic: MonotonicReading,
-        venue_instant: Instant | None,
-        journal_type: str,
-    ) -> tuple[dict[str, object], JournalMapping]:
-        venue_ns = venue_instant.value_ns if venue_instant is not None else None
-        verbatim: dict[str, object] = {
-            "kind": "verbatim-wire",
-            "wire_kind": kind.value,
-            "native_id": native_id,
-            "raw_payload": dict(cast("Mapping[str, object]", raw_payload)),
-            "receive_wall_time_ns": receive_wall.value_ns,
-            "monotonic_ns": monotonic.value_ns,
-            "boot_epoch": monotonic.boot_epoch_id,
-            "session_epoch": self._session_epoch,
-            "venue_instant_ns": venue_ns,
-            "interpreted": False,
-        }
-        mapping = JournalMapping(
-            event_type=journal_type,
-            wire_kind=kind.value,
-            receive_wall_time_ns=receive_wall.value_ns,
-            venue_instant_ns=venue_ns,
-            native_id=native_id,
-        )
-        return verbatim, mapping
-
-    def _finish_receive(
-        self,
-        record: dict[str, object],
-        mapping: JournalMapping,
-        receive_wall: Instant,
-        venue_instant: Instant | None,
-    ) -> Result[Mapping[str, object]]:
+        record = decoded.value
         record["verbatim_recorded"] = True
         record["journal_mapping"] = dict(mapping.as_mapping())
         record["receive_wall_time_ns"] = receive_wall.value_ns
@@ -1263,35 +1323,82 @@ class LiveCTraderClient:
             "interpreted": True,
             "raw_payload": dict(raw_payload),
         }
-        decoded = _decode_market_fields(
-            out,
-            instrument=instrument,
-            market_price_wire=market_price_wire,
-            volume_wire=volume_wire,
-            depth_size_wire=depth_size_wire,
-            money_message=money_message,
-            money_units=money_units,
-            money_currency=money_currency,
-            money_digits=money_digits,
-        )
-        if is_refusal(decoded):
-            return decoded
-        return self._interpret_kind(
-            kind=kind,
-            out=out,
-            native_id=native_id,
-            revision=revision,
-            receive_wall=receive_wall,
-            monotonic=monotonic,
-            venue_instant=venue_instant,
-            instrument=instrument,
-            lifecycle_kind=lifecycle_kind,
-            fill_price_wire=fill_price_wire,
-            fill_price_is_execution_double=fill_price_is_execution_double,
-            fill_digits=fill_digits,
-            fill_rounding=fill_rounding,
-            fill_volume_wire=fill_volume_wire,
-        )
+
+        if market_price_wire is not None:
+            if instrument is None:
+                return _invalid(
+                    "instrument",
+                    "market-data price decode requires an Instrument",
+                    given=repr(instrument),
+                )
+            price = decode_market_data_price(market_price_wire, instrument)
+            if is_refusal(price):
+                return price
+            out["market_price"] = {
+                "value": price.value.value,
+                "scale": price.value.scale,
+                "wire_scale": MARKET_DATA_WIRE_SCALE_EXPONENT,
+            }
+
+        vol_source = volume_wire if volume_wire is not None else depth_size_wire
+        if vol_source is not None:
+            qty = decode_volume(vol_source)
+            if is_refusal(qty):
+                return qty
+            out["volume"] = {
+                "value": qty.value.value,
+                "scale": qty.value.scale,
+                "unit": qty.value.unit,
+                "wire_scale": VOLUME_WIRE_SCALE_EXPONENT,
+            }
+
+        if money_message is not None or money_units is not None:
+            money = decode_money(money_message, money_units, money_currency, money_digits)
+            if is_refusal(money):
+                return money
+            out["money"] = {
+                "value": money.value.value,
+                "scale": money.value.scale,
+                "currency": money.value.currency,
+            }
+
+        if kind is WireKind.FILL:
+            return self._interpret_fill(
+                out=out,
+                native_id=native_id,
+                revision=revision,
+                receive_wall=receive_wall,
+                monotonic=monotonic,
+                venue_instant=venue_instant,
+                instrument=instrument,
+                fill_price_wire=fill_price_wire,
+                fill_price_is_execution_double=fill_price_is_execution_double,
+                fill_digits=fill_digits,
+                fill_rounding=fill_rounding,
+                fill_volume_wire=fill_volume_wire,
+            )
+
+        if kind is WireKind.LIFECYCLE:
+            return self._interpret_lifecycle(
+                out=out,
+                native_id=native_id,
+                revision=revision,
+                receive_wall=receive_wall,
+                monotonic=monotonic,
+                venue_instant=venue_instant,
+                lifecycle_kind=lifecycle_kind,
+            )
+
+        if kind in READBACK_WIRE_KINDS:
+            out["observation_kind"] = (
+                "position-read-back" if kind is WireKind.POSITION_READBACK else "balance-read-back"
+            )
+            out["ct13_event_type"] = "data quality"
+            out["synthesized"] = False
+            return Ok(out)
+
+        # spots / trendbars-in-spots / depth — market-data only path
+        return Ok(out)
 
     def _interpret_fill(
         self,
@@ -1316,90 +1423,43 @@ class LiveCTraderClient:
             )
         if instrument is None:
             return _invalid("instrument", "a fill price decode requires an Instrument")
-        priced = _decode_fill_price(
-            out,
-            instrument=instrument,
-            fill_price_wire=fill_price_wire,
-            fill_price_is_execution_double=fill_price_is_execution_double,
-            fill_digits=fill_digits,
-            fill_rounding=fill_rounding,
-        )
-        if is_refusal(priced):
-            return priced
-        return self._commit_fill_event(
-            out=out,
-            native_id=native_id,
-            revision=revision,
-            receive_wall=receive_wall,
-            monotonic=monotonic,
-            venue_instant=venue_instant,
-            fill_price=priced.value,
-            fill_volume_wire=fill_volume_wire,
-        )
-
-    def _interpret_kind(
-        self,
-        *,
-        kind: WireKind,
-        out: dict[str, object],
-        native_id: str,
-        revision: object,
-        receive_wall: Instant,
-        monotonic: MonotonicReading,
-        venue_instant: Instant | None,
-        instrument: object,
-        lifecycle_kind: object,
-        fill_price_wire: object,
-        fill_price_is_execution_double: bool,
-        fill_digits: object,
-        fill_rounding: object,
-        fill_volume_wire: object,
-    ) -> Result[dict[str, object]]:
-        if kind is WireKind.FILL:
-            return self._interpret_fill(
-                out=out,
-                native_id=native_id,
-                revision=revision,
-                receive_wall=receive_wall,
-                monotonic=monotonic,
-                venue_instant=venue_instant,
-                instrument=instrument,
-                fill_price_wire=fill_price_wire,
-                fill_price_is_execution_double=fill_price_is_execution_double,
-                fill_digits=fill_digits,
-                fill_rounding=fill_rounding,
-                fill_volume_wire=fill_volume_wire,
+        if fill_price_is_execution_double:
+            if fill_rounding is None:
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "fill_rounding",
+                        "reason": "a float crossing without a declared rounding rule "
+                        "is refused at the venue money-path boundary",
+                        "given": repr(fill_price_wire),
+                    },
+                )
+            crossed = decode_execution_price(
+                fill_price_wire, instrument, fill_digits, fill_rounding
             )
-        if kind is WireKind.LIFECYCLE:
-            return self._interpret_lifecycle(
-                out=out,
-                native_id=native_id,
-                revision=revision,
-                receive_wall=receive_wall,
-                monotonic=monotonic,
-                venue_instant=venue_instant,
-                lifecycle_kind=lifecycle_kind,
-            )
-        if kind in READBACK_WIRE_KINDS:
-            out["observation_kind"] = (
-                "position-read-back" if kind is WireKind.POSITION_READBACK else "balance-read-back"
-            )
-            out["ct13_event_type"] = "data quality"
-            out["synthesized"] = False
-        return Ok(out)
-
-    def _commit_fill_event(
-        self,
-        *,
-        out: dict[str, object],
-        native_id: str,
-        revision: object,
-        receive_wall: Instant,
-        monotonic: MonotonicReading,
-        venue_instant: Instant,
-        fill_price: Price,
-        fill_volume_wire: object,
-    ) -> Result[dict[str, object]]:
+            if is_refusal(crossed):
+                return crossed
+            fill_price = crossed.value.price
+            out["execution_price_raw_double"] = crossed.value.raw_double
+            out["rounding"] = crossed.value.rounding.value
+        else:
+            if isinstance(fill_price_wire, float):
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "fill_price_wire",
+                        "reason": "a float crossing without a declared rounding rule "
+                        "is refused; set fill_price_is_execution_double with an "
+                        "explicit RoundingMode",
+                        "given": repr(fill_price_wire),
+                    },
+                )
+            price = decode_market_data_price(fill_price_wire, instrument)
+            if is_refusal(price):
+                return price
+            fill_price = price.value
         if fill_volume_wire is None:
             return _invalid("fill_volume_wire", "a fill requires an exact volume in cents")
         qty = decode_volume(fill_volume_wire)
@@ -1554,313 +1614,6 @@ def _unknown_after_encode(
         observation=observation,
         journal_event=JournalEvent.for_outcome(fp, command.kind, SubmissionOutcome.UNKNOWN),
     )
-
-
-def _live_world_venue(world: object, venue_id: object) -> Result[tuple[World, VenueId]]:
-    if not isinstance(world, World):
-        return _invalid("world", "live client is selected by (world, VenueId)", given=repr(world))
-    if world is World.REPLAY:
-        return TypedRefusal(
-            category=RefusalCategory.POLICY_REJECTION,
-            retryability=Retryability.NO,
-            context={
-                "field": "world",
-                "reason": "replay compositions bind the replay VenueClientPort, "
-                "never the live cTrader client",
-                "world": world.value,
-            },
-        )
-    if not isinstance(venue_id, VenueId) or venue_id.value.strip() == "":
-        return _invalid("venue_id", "live client requires a valid VenueId", given=repr(venue_id))
-    if venue_id.value.startswith("conformance:"):
-        return TypedRefusal(
-            category=RefusalCategory.POLICY_REJECTION,
-            retryability=Retryability.NO,
-            context={
-                "field": "venue_id",
-                "reason": "conformance: VenueId selects the FEAT-0023 double, "
-                "not the live cTrader client",
-                "venue_id": venue_id.value,
-            },
-        )
-    return Ok((world, venue_id))
-
-
-def _live_injected_deps(
-    *,
-    clock: object,
-    error_map: object,
-    session_epoch: object,
-    connection_manager: object,
-    recorder: object,
-    intake: object,
-) -> Result[tuple[ConnectionManager | None, EventRecorder | None, _LiveIntake | None, str]]:
-    if not isinstance(clock, Clock):
-        return _invalid(
-            "clock",
-            "the composition root injects a Clock; the live client never reads the system clock",
-            given=repr(clock),
-        )
-    if not isinstance(error_map, ErrorMap):
-        return _invalid(
-            "error_map",
-            "the live client resolves venue codes against a pinned ErrorMap",
-            given=repr(error_map),
-        )
-    if not isinstance(session_epoch, str) or session_epoch.strip() == "":
-        return _invalid(
-            "session_epoch",
-            "a non-empty session-epoch id rides every observation",
-            given=repr(session_epoch),
-        )
-    cm: ConnectionManager | None
-    if connection_manager is None:
-        cm = None
-    elif isinstance(connection_manager, ConnectionManager):
-        cm = connection_manager
-    else:
-        return _invalid(
-            "connection_manager",
-            "when supplied, connection_manager must be a ConnectionManager",
-            given=repr(connection_manager),
-        )
-    rec: EventRecorder | None
-    if recorder is None:
-        rec = None
-    elif isinstance(recorder, EventRecorder):
-        rec = recorder
-    else:
-        return _invalid(
-            "recorder",
-            "when supplied, recorder must be an EventRecorder",
-            given=repr(recorder),
-        )
-    bound_intake: _LiveIntake | None
-    if intake is None:
-        bound_intake = None
-    elif callable(getattr(intake, "record", None)):
-        bound_intake = cast("_LiveIntake", intake)
-    else:
-        return _invalid(
-            "intake",
-            "when supplied, intake is a GovernedLiveIntake (record method)",
-            given=repr(type(intake).__name__),
-        )
-    return Ok((cm, rec, bound_intake, session_epoch.strip()))
-
-
-def _live_wire_fields(
-    *,
-    event_loop: object,
-    open_api_host: object,
-    proto_tag: object,
-    open_api_port: object,
-    ssl_context: object,
-    server_hostname: object,
-    credential_ref: object,
-    declared_lookback: object,
-) -> Result[
-    tuple[
-        asyncio.AbstractEventLoop | None,
-        str | None,
-        int | None,
-        int,
-        ssl.SSLContext | None,
-        str | None,
-        SecretRef | None,
-        Duration | None,
-    ]
-]:
-    loop = _coerce_event_loop(event_loop)
-    if is_refusal(loop):
-        return loop
-    host = _coerce_optional_host(open_api_host)
-    if is_refusal(host):
-        return host
-    tag = _coerce_optional_proto_tag(proto_tag)
-    if is_refusal(tag):
-        return tag
-    port = _coerce_open_api_port(open_api_port)
-    if is_refusal(port):
-        return port
-    tls = _coerce_optional_ssl_context(ssl_context)
-    if is_refusal(tls):
-        return tls
-    hostname = _coerce_optional_host(server_hostname, field_name="server_hostname")
-    if is_refusal(hostname):
-        return hostname
-    cred = _coerce_optional_credential_ref(credential_ref)
-    if is_refusal(cred):
-        return cred
-    lookback: Duration | None = None
-    if declared_lookback is not None:
-        resolved_lookback = _coerce_declared_lookback(declared_lookback)
-        if is_refusal(resolved_lookback):
-            return resolved_lookback
-        lookback = resolved_lookback.value
-    return Ok(
-        (
-            loop.value,
-            host.value,
-            tag.value,
-            port.value,
-            tls.value,
-            hostname.value,
-            cred.value,
-            lookback,
-        )
-    )
-
-
-def _live_production_guards(
-    *,
-    host: str | None,
-    cm: ConnectionManager | None,
-    loop: asyncio.AbstractEventLoop | None,
-    tag: int | None,
-    proto_tag: object,
-    cred: SecretRef | None,
-) -> Result[None]:
-    if host is not None:
-        if cm is None:
-            return _invalid(
-                "connection_manager",
-                "production Open API connect uses the node's injected "
-                "ConnectionManager; LiveCTraderClient never constructs one",
-            )
-        if loop is None:
-            return _invalid(
-                "event_loop",
-                "production Open API connect requires the node's injected "
-                "asyncio loop; LiveCTraderClient never creates one",
-            )
-        if tag is None:
-            return _invalid(
-                "proto_tag",
-                "the Spotware proto release tag is a positive integer injected "
-                "from registry:venue_protocol_artifact",
-                given=repr(proto_tag),
-            )
-    if cred is not None and cm is None:
-        return _invalid(
-            "connection_manager",
-            "credential session open uses the node's injected ConnectionManager; "
-            "LiveCTraderClient never constructs one",
-        )
-    return Ok(None)
-
-
-def _require_ct13_journal_type(kind: WireKind) -> Result[str]:
-    journal_type = ct13_journal_event_type(kind)
-    if is_refusal(journal_type):
-        return journal_type
-    if journal_type.value not in CT13_SEVEN_EVENT_TYPES:
-        return TypedRefusal(
-            category=RefusalCategory.POLICY_REJECTION,
-            retryability=Retryability.NO,
-            context={
-                "field": "event_type",
-                "reason": "journal mapping must land on CT-13's closed seven; "
-                "an eighth type is refused",
-                "given": journal_type.value,
-            },
-        )
-    return Ok(journal_type.value)
-
-
-def _decode_market_fields(
-    out: dict[str, object],
-    *,
-    instrument: object,
-    market_price_wire: object,
-    volume_wire: object,
-    depth_size_wire: object,
-    money_message: object,
-    money_units: object,
-    money_currency: object,
-    money_digits: object,
-) -> Result[None]:
-    if market_price_wire is not None:
-        if instrument is None:
-            return _invalid(
-                "instrument",
-                "market-data price decode requires an Instrument",
-                given=repr(instrument),
-            )
-        price = decode_market_data_price(market_price_wire, instrument)
-        if is_refusal(price):
-            return price
-        out["market_price"] = {
-            "value": price.value.value,
-            "scale": price.value.scale,
-            "wire_scale": MARKET_DATA_WIRE_SCALE_EXPONENT,
-        }
-    vol_source = volume_wire if volume_wire is not None else depth_size_wire
-    if vol_source is not None:
-        qty = decode_volume(vol_source)
-        if is_refusal(qty):
-            return qty
-        out["volume"] = {
-            "value": qty.value.value,
-            "scale": qty.value.scale,
-            "unit": qty.value.unit,
-            "wire_scale": VOLUME_WIRE_SCALE_EXPONENT,
-        }
-    if money_message is not None or money_units is not None:
-        money = decode_money(money_message, money_units, money_currency, money_digits)
-        if is_refusal(money):
-            return money
-        out["money"] = {
-            "value": money.value.value,
-            "scale": money.value.scale,
-            "currency": money.value.currency,
-        }
-    return Ok(None)
-
-
-def _decode_fill_price(
-    out: dict[str, object],
-    *,
-    instrument: object,
-    fill_price_wire: object,
-    fill_price_is_execution_double: bool,
-    fill_digits: object,
-    fill_rounding: object,
-) -> Result[Price]:
-    if fill_price_is_execution_double:
-        if fill_rounding is None:
-            return TypedRefusal(
-                category=RefusalCategory.INVALID_INPUT,
-                retryability=Retryability.NO,
-                context={
-                    "field": "fill_rounding",
-                    "reason": "a float crossing without a declared rounding rule "
-                    "is refused at the venue money-path boundary",
-                    "given": repr(fill_price_wire),
-                },
-            )
-        crossed = decode_execution_price(fill_price_wire, instrument, fill_digits, fill_rounding)
-        if is_refusal(crossed):
-            return crossed
-        out["execution_price_raw_double"] = crossed.value.raw_double
-        out["rounding"] = crossed.value.rounding.value
-        return Ok(crossed.value.price)
-    if isinstance(fill_price_wire, float):
-        return TypedRefusal(
-            category=RefusalCategory.INVALID_INPUT,
-            retryability=Retryability.NO,
-            context={
-                "field": "fill_price_wire",
-                "reason": "a float crossing without a declared rounding rule "
-                "is refused; set fill_price_is_execution_double with an "
-                "explicit RoundingMode",
-                "given": repr(fill_price_wire),
-            },
-        )
-    price = decode_market_data_price(fill_price_wire, instrument)
-    if is_refusal(price):
-        return price
-    return Ok(price.value)
 
 
 def _invalid(field_name: str, reason: str, **extra: object) -> TypedRefusal:

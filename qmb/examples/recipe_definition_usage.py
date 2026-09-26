@@ -16,7 +16,6 @@ Shows the things AD-31 / Story 58.3 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.data import (
@@ -136,26 +135,26 @@ def main() -> None:
         wrap={"book_fp1": "fp1:sha256:" + "ab" * 32},
     )
     ct06 = run_recipe_definition(reviewed, run_id="run:ct06", writer=writer, register_ct06=True)
-    sys.stdout.write("recipe definition ok\n")
-    sys.stdout.write(
+    print("recipe definition ok")
+    print(
         "identity "
         f"{reviewed.recipe_def_id} v{reviewed.recipe_def_version} "
-        f"{reviewed.recipe_def_hash.value}\n"
+        f"{reviewed.recipe_def_hash.value}"
     )
-    sys.stdout.write("display recipe_id is not identity\n")
+    print("display recipe_id is not identity")
     if hashed == renamed:
-        sys.stdout.write("display rename does not change recipe_def_hash\n")
-    sys.stdout.write(f"release one {first.output_release.value}\n")
-    sys.stdout.write(f"release two {second.output_release.value}\n")
+        print("display rename does not change recipe_def_hash")
+    print(f"release one {first.output_release.value}")
+    print(f"release two {second.output_release.value}")
     if first.output_release != second.output_release:
-        sys.stdout.write("two runs of one definition are two releases, not two recipes\n")
-    sys.stdout.write(f"CT-07 to recipe_def_hash {first.lineage.to_ref.value}\n")
+        print("two runs of one definition are two releases, not two recipes")
+    print(f"CT-07 to recipe_def_hash {first.lineage.to_ref.value}")
     if preview.output_release != first.output_release:
-        sys.stdout.write("preview ≠ export ≠ stream\n")
+        print("preview ≠ export ≠ stream")
     if is_refusal(wrap):
-        sys.stdout.write("non-trading output needs no Book wrap\n")
+        print("non-trading output needs no Book wrap")
     if is_refusal(ct06):
-        sys.stdout.write("CT-06 recipe kind stays deferred\n")
+        print("CT-06 recipe kind stays deferred")
 
 
 if __name__ == "__main__":

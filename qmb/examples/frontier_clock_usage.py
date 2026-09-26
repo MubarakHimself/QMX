@@ -20,7 +20,6 @@ Shows the things AR-16 / B-2 / FR-037 / SC-06 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import CLOCK_REPLAY, CLOCK_SIMULATED
@@ -131,19 +130,19 @@ def main() -> None:
     assert qmb.frontier_clock_name() == frontier_clock_name()
 
     injected_clock_drives_time()
-    sys.stdout.write("injected Clock read via read_frontier\n")
+    print("injected Clock read via read_frontier")
 
     pulled = min_next_emit_is_deterministic()
-    sys.stdout.write(f"min next-emit pull = {pulled.value_ns} ns (deterministic)\n")
+    print(f"min next-emit pull = {pulled.value_ns} ns (deterministic)")
 
     rewind_is_refused(pulled)
-    sys.stdout.write("rewind refused: invalid input\n")
+    print("rewind refused: invalid input")
 
     monotonic_and_simulated_are_refused()
-    sys.stdout.write("monotonic-as-wall refused; simulated Instant refused until GAP-0048\n")
+    print("monotonic-as-wall refused; simulated Instant refused until GAP-0048")
 
     stream_driven_frontier_clock()
-    sys.stdout.write("frontier clock ok; clock does not choose world\n")
+    print("frontier clock ok; clock does not choose world")
 
 
 if __name__ == "__main__":

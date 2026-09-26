@@ -23,7 +23,6 @@ Shows the four things Story 7.5 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -163,10 +162,8 @@ def main() -> None:
             ]
         )
     )
-    sys.stdout.write(f"conformance concepts checked: {len(report.checks)}\n")
-    sys.stdout.write(
-        f"conformance all expressible: {all(check.expressible for check in report.checks)}\n"
-    )
+    print(f"conformance concepts checked: {len(report.checks)}")
+    print(f"conformance all expressible: {all(check.expressible for check in report.checks)}")
 
     # 2. Benchmark: the gate passes within budget and fails on a peak-memory regression.
     heavy_config = _config()
@@ -182,18 +179,18 @@ def main() -> None:
         )
     )
     within = regression_gate(baseline, _measurement(fingerprint, latency_ns=500, peak_bytes=1_000))
-    sys.stdout.write(f"benchmark within budget: {is_ok(within)}\n")
+    print(f"benchmark within budget: {is_ok(within)}")
     regressed = regression_gate(
         baseline, _measurement(fingerprint, latency_ns=500, peak_bytes=4_000)
     )
-    sys.stdout.write(f"peak-memory regression refused: {is_refusal(regressed)}\n")
+    print(f"peak-memory regression refused: {is_refusal(regressed)}")
 
     # 3. Budget: heavy by default; the synchronous entry is unsupported; a proven claim is light.
     heavy = _unwrap(evaluate_light_claim(heavy_config))
-    sys.stdout.write(f"heavy by default: {heavy.verdict is LightHeavyVerdict.HEAVY}\n")
+    print(f"heavy by default: {heavy.verdict is LightHeavyVerdict.HEAVY}")
     heavy_entry = guard_synchronous_entry(heavy)
     assert is_refusal(heavy_entry)
-    sys.stdout.write(f"heavy synchronous entry: {heavy_entry.context['reason']}\n")
+    print(f"heavy synchronous entry: {heavy_entry.context['reason']}")
     light_config = _config(
         declared_budget=_unwrap(
             DeclaredBudget.try_create(
@@ -222,7 +219,7 @@ def main() -> None:
             measurement=_measurement(light_fp, latency_ns=500, peak_bytes=1_000),
         )
     )
-    sys.stdout.write(f"proven light claim: {light.verdict is LightHeavyVerdict.LIGHT}\n")
+    print(f"proven light claim: {light.verdict is LightHeavyVerdict.LIGHT}")
 
     # 4. Catalog + graduation: a plain-Python experiment graduates with a lineage edge.
     extension = _unwrap(
@@ -235,14 +232,10 @@ def main() -> None:
     )
     catalog = _unwrap(Catalog.empty().register(extension))
     resolved = _unwrap(catalog.resolve_formula("research_zigzag"))
-    sys.stdout.write(f"graduated lineage: {resolved.lineage.research_artifact}\n")
+    print(f"graduated lineage: {resolved.lineage.research_artifact}")
     artifact = _unwrap(stamp_extension_identity(extension.identity, {"class": "extension-output"}))
-    sys.stdout.write(
-        f"artifact carries extension distribution: {artifact[EXTENSION_DISTRIBUTION_FIELD]}\n"
-    )
-    sys.stdout.write(
-        f"artifact identity mandatory-check: {is_ok(require_extension_identity(artifact))}\n"
-    )
+    print(f"artifact carries extension distribution: {artifact[EXTENSION_DISTRIBUTION_FIELD]}")
+    print(f"artifact identity mandatory-check: {is_ok(require_extension_identity(artifact))}")
 
 
 if __name__ == "__main__":

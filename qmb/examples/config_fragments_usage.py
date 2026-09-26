@@ -19,7 +19,6 @@ Shows the things B-3 / Story 13.3 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -184,8 +183,8 @@ def main() -> None:
     assert book_fragment.lineage.edge_type is EdgeType.OCCURRENCE_OF
     assert book_fragment.lineage.from_ref == book_fragment.fingerprint
     assert book_fragment.lineage.to_ref == book_fp
-    sys.stdout.write(f"book fragment cites source {book_fragment.source_fp1.value}\n")
-    sys.stdout.write(f"lineage {book_fragment.lineage.edge_type.value} -> CT-22\n")
+    print(f"book fragment cites source {book_fragment.source_fp1.value}")
+    print(f"lineage {book_fragment.lineage.edge_type.value} -> CT-22")
 
     assert BOOK_NAMESPACES.isdisjoint(BMS_NAMESPACES)
     assert set(book_fragment.keys).issubset(BOOK_NAMESPACES)
@@ -198,12 +197,12 @@ def main() -> None:
     assert "accounting" in bms_fragment.keys
     assert "kill-line" in bms_fragment.keys
     assert "reporting" in bms_fragment.keys
-    sys.stdout.write("Book vs BMS namespaces: DISJOINT\n")
+    print("Book vs BMS namespaces: DISJOINT")
 
     assert CONFIG_FRAGMENT_CLASS not in RESERVED_KIND_NAMES
     kinds = KindRegistry()
     assert is_refusal(kinds.contract_for(CONFIG_FRAGMENT_CLASS))
-    sys.stdout.write("config-fragment is derived, not a registry kind\n")
+    print("config-fragment is derived, not a registry kind")
 
     reread = _unwrap(
         ConfigFragment.try_read(
@@ -213,7 +212,7 @@ def main() -> None:
         "format-1 re-read under a later reader",
     )
     assert reread.fingerprint == book_fragment.fingerprint
-    sys.stdout.write("format 1 stays readable after a later format version ships\n")
+    print("format 1 stays readable after a later format version ships")
 
     preset = _unwrap(
         materialize_condition_preset(
@@ -229,7 +228,7 @@ def main() -> None:
     assert preset.preset_name == "stress-spread"
     assert preset.lineage is not None
     assert preset.lineage.to_ref == book_fp
-    sys.stdout.write("named condition preset stress-spread is a config fragment\n")
+    print("named condition preset stress-spread is a config fragment")
 
     envelope = _unwrap(book_fragment.as_registry_fragment(), "registry envelope")
     from_envelope = _unwrap(ConfigFragment.try_read(envelope.body), "envelope re-read")
@@ -239,8 +238,8 @@ def main() -> None:
     assert qmb.__version__ not in str(identity)
     derived = _unwrap(fingerprint(identity), "fragment fp1")
     assert derived == book_fragment.fingerprint
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("config fragments ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("config fragments ok")
 
 
 if __name__ == "__main__":

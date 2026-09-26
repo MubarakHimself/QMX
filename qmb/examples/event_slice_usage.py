@@ -16,7 +16,6 @@ Shows the things AR-57 / B-2 / FR-037 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.runloop import (
@@ -167,13 +166,13 @@ def main() -> None:
     assert qmb.SUBPHASES == SUBPHASES
     assert qmb.run is run
     pinned_order()
-    sys.stdout.write("pinned sub-phase order is identity-bearing\n")
+    print("pinned sub-phase order is identity-bearing")
     same_slice_ineligibility()
-    sys.stdout.write("new intents rest; they never fill against this slice's path\n")
+    print("new intents rest; they never fill against this slice's path")
     forming_bar_is_not_closed_data()
-    sys.stdout.write("forming bar skipped: closed-data indicators/structure only\n")
+    print("forming bar skipped: closed-data indicators/structure only")
     run_is_pure()
-    sys.stdout.write("event-slice loop ok; run is pure\n")
+    print("event-slice loop ok; run is pure")
 
 
 if __name__ == "__main__":

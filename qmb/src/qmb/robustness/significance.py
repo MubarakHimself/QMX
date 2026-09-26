@@ -299,11 +299,11 @@ class SignalOnlyHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[None]:
-        _ = (stream_id, observation, frontier)
+        del stream_id, observation, frontier
         return Ok(None)
 
     def scheduled_position_event(self, stream_id: str, frontier: Instant) -> Result[None]:
-        _ = (stream_id, frontier)
+        del stream_id, frontier
         return Ok(None)
 
     def execute_resting(
@@ -312,7 +312,7 @@ class SignalOnlyHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[bool]:
-        _ = (intent, observation, frontier)
+        del intent, observation, frontier
         return Ok(False)
 
     def update_closed_data(
@@ -321,11 +321,11 @@ class SignalOnlyHandler:
         observation: SliceObservation,
         frontier: Instant,
     ) -> Result[None]:
-        _ = (stream_id, observation, frontier)
+        del stream_id, observation, frontier
         return Ok(None)
 
     def mint_intents(self, stream_id: str, frontier: Instant) -> Result[object]:
-        _ = stream_id
+        del stream_id
         # Orders disabled: the entry rule is evaluated and its raw signal recorded,
         # but no intent is minted — the strategy stays permanently flat (AC1).
         self.recorded[frontier.value_ns] = bool(self.fired_by_instant.get(frontier.value_ns, False))

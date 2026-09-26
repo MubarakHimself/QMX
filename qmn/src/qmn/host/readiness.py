@@ -421,9 +421,27 @@ def settings_status_from_config(config: object) -> Result[SettingsStatusReport]:
             given=len(config.rows),
             failure_id=_ID_SETTINGS,
         )
-    blank_boot = _blank_effect_names(config, BLANK_EFFECT_BOOT)
-    blank_live = _blank_effect_names(config, BLANK_EFFECT_LIVE)
-    blank_soak = _blank_effect_names(config, BLANK_EFFECT_SOAK)
+    blank_boot = tuple(
+        sorted(
+            name
+            for name, row in config.rows.items()
+            if BLANK_EFFECT_BOOT in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
+        )
+    )
+    blank_live = tuple(
+        sorted(
+            name
+            for name, row in config.rows.items()
+            if BLANK_EFFECT_LIVE in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
+        )
+    )
+    blank_soak = tuple(
+        sorted(
+            name
+            for name, row in config.rows.items()
+            if BLANK_EFFECT_SOAK in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
+        )
+    )
     ftr07 = tuple(
         sorted(
             name
@@ -444,16 +462,6 @@ def settings_status_from_config(config: object) -> Result[SettingsStatusReport]:
             may_boot=config.may_boot(),
             may_bind_role_live=config.may_bind_role_live(),
             may_start_soak=config.may_start_soak(),
-        )
-    )
-
-
-def _blank_effect_names(config: ResolvedNodeConfig, effect: object) -> tuple[str, ...]:
-    return tuple(
-        sorted(
-            name
-            for name, row in config.rows.items()
-            if effect in row.blank_effect and row.value_status == VALUE_STATUS_BLANK
         )
     )
 
@@ -498,7 +506,15 @@ def list_readiness_human_inputs(
     return tuple(records)
 
 
-def _require_demo_binding(demo_binding: object) -> Result[AccountBindingDecl]:
+def compile_demo_roster(
+    *,
+    demo_binding: object,
+    paired: object,
+    extra_bindings: object = (),
+    sensing_only: object = (),
+    protective_reserve_capacity: object,
+) -> Result[CompiledDemoRoster]:
+    """Compose a demo roster and require the paired paper target (TN-9)."""
     if not isinstance(demo_binding, AccountBindingDecl):
         return invalid(
             "demo_binding",
@@ -521,12 +537,6 @@ def _require_demo_binding(demo_binding: object) -> Result[AccountBindingDecl]:
             world=demo_binding.world.value,
             failure_id=_ID_ROSTER,
         )
-    return Ok(demo_binding)
-
-
-def _require_paired_paper_target(
-    demo_binding: AccountBindingDecl, paired: object
-) -> Result[PairedDemoBinding]:
     if not isinstance(paired, PairedDemoBinding):
         return invalid(
             "paired",
@@ -562,29 +572,11 @@ def _require_paired_paper_target(
             paper_account=paired.paper_target.account_id,
             failure_id=_ID_ROSTER,
         )
-    return Ok(paired)
-
-
-def compile_demo_roster(
-    *,
-    demo_binding: object,
-    paired: object,
-    extra_bindings: object = (),
-    sensing_only: object = (),
-    protective_reserve_capacity: object,
-) -> Result[CompiledDemoRoster]:
-    """Compose a demo roster and require the paired paper target (TN-9)."""
-    bound = _require_demo_binding(demo_binding)
-    if is_refusal(bound):
-        return bound
-    paired_ok = _require_paired_paper_target(bound.value, paired)
-    if is_refusal(paired_ok):
-        return paired_ok
     extras = _as_binding_tuple(extra_bindings)
     if is_refusal(extras):
         return extras
     composition = compose_roster_runtime(
-        account_bindings=(bound.value, *extras.value),
+        account_bindings=(demo_binding, *extras.value),
         sensing_only=sensing_only,
         protective_reserve_capacity=protective_reserve_capacity,
     )
@@ -599,7 +591,7 @@ def compile_demo_roster(
             "compiled demo roster must seal at least one demo command stream",
             failure_id=_ID_ROSTER,
         )
-    return Ok(CompiledDemoRoster(composition=composition.value, paired=paired_ok.value))
+    return Ok(CompiledDemoRoster(composition=composition.value, paired=paired))
 
 
 def assemble_paper_milestone_readiness(
@@ -618,49 +610,6 @@ def assemble_paper_milestone_readiness(
     treat_soak_local_as_unrelated_blocker: object = False,
 ) -> Result[ReadinessPacket]:
     """Assemble the Story 28.1 readiness packet from recorded machine evidence."""
-    refused = _refuse_readiness_surface(
-        procure_vps=procure_vps,
-        invented_ksa_value=invented_ksa_value,
-        invented_latency_value=invented_latency_value,
-        vps_ratified_minimum=vps_ratified_minimum,
-        treat_soak_local_as_unrelated_blocker=treat_soak_local_as_unrelated_blocker,
-    )
-    if is_refusal(refused):
-        return refused
-    parts = _bind_readiness_evidence(
-        config=config,
-        gate_results=gate_results,
-        demo_roster=demo_roster,
-        branch_commit=branch_commit,
-        base_commit=base_commit,
-        human_input_presence=human_input_presence,
-        vps_procured=vps_procured,
-    )
-    if is_refusal(parts):
-        return parts
-    return _stamp_readiness_packet(parts.value)
-
-
-@dataclass(frozen=True, slots=True)
-class _ReadinessParts:
-    branch: str
-    base: str
-    settings: SettingsStatusReport
-    gates: tuple[GateResult, ...]
-    demo_roster: CompiledDemoRoster
-    humans: tuple[HumanInputRecord, ...]
-    register: FailuresCompletenessReport
-    vps: VpsProcurementEvidence
-
-
-def _refuse_readiness_surface(
-    *,
-    procure_vps: object,
-    invented_ksa_value: object,
-    invented_latency_value: object,
-    vps_ratified_minimum: object,
-    treat_soak_local_as_unrelated_blocker: object,
-) -> Result[None]:
     if procure_vps is True:
         return refuse_procure_vps()
     if invented_ksa_value is not None or invented_latency_value is not None:
@@ -679,80 +628,28 @@ def _refuse_readiness_surface(
             "or serializing unrelated work",
             failure_id=_ID_UNRELATED,
         )
-    return Ok(None)
 
-
-def _bind_readiness_evidence(
-    *,
-    config: object,
-    gate_results: object,
-    demo_roster: object,
-    branch_commit: object,
-    base_commit: object,
-    human_input_presence: object,
-    vps_procured: object,
-) -> Result[_ReadinessParts]:
-    commits = _bind_readiness_commits(branch_commit, base_commit)
-    if is_refusal(commits):
-        return commits
-    branch, base = commits.value
-    settings = _bind_readiness_settings(config)
-    if is_refusal(settings):
-        return settings
-    gates = _parse_gate_results(gate_results)
-    if is_refusal(gates):
-        return gates
-    roster = _bind_readiness_roster_and_humans(demo_roster, human_input_presence)
-    if is_refusal(roster):
-        return roster
-    compiled, humans = roster.value
-    register = _bind_readiness_register()
-    if is_refusal(register):
-        return register
-    vps = _bind_vps_evidence(vps_procured)
-    if is_refusal(vps):
-        return vps
-    return Ok(
-        _ReadinessParts(
-            branch=branch,
-            base=base,
-            settings=settings.value,
-            gates=gates.value,
-            demo_roster=compiled,
-            humans=humans,
-            register=register.value,
-            vps=vps.value,
-        )
-    )
-
-
-def _bind_readiness_commits(
-    branch_commit: object, base_commit: object
-) -> Result[tuple[str, str]]:
     branch = _as_commit(branch_commit, "branch_commit")
     if is_refusal(branch):
         return branch
     base = _as_commit(base_commit, "base_commit")
     if is_refusal(base):
         return base
-    return Ok((branch.value, base.value))
 
-
-def _bind_readiness_settings(config: object) -> Result[SettingsStatusReport]:
     settings = settings_status_from_config(config)
     if is_refusal(settings):
         return settings
     if not isinstance(config, ResolvedNodeConfig):
         return invalid("config", "settings status reads a ResolvedNodeConfig")
+
     numeric = _refuse_numeric_ftr07(config)
     if numeric is not None:
         return numeric
-    return settings
 
+    gates = _parse_gate_results(gate_results)
+    if is_refusal(gates):
+        return gates
 
-def _bind_readiness_roster_and_humans(
-    demo_roster: object, human_input_presence: object
-) -> Result[tuple[CompiledDemoRoster, tuple[HumanInputRecord, ...]]]:
     if not isinstance(demo_roster, CompiledDemoRoster):
         return invalid(
             "demo_roster",
@@ -760,13 +657,12 @@ def _bind_readiness_roster_and_humans(
             given=type(demo_roster).__name__,
             failure_id=_ID_ROSTER,
         )
+
     presence = _parse_presence(human_input_presence)
     if is_refusal(presence):
         return presence
-    return Ok((demo_roster, list_readiness_human_inputs(presence.value)))
+    humans = list_readiness_human_inputs(presence.value)
 
-
-def _bind_readiness_register() -> Result[FailuresCompletenessReport]:
     register = validate_failures_completeness()
     if is_refusal(register):
         return policy(
@@ -775,10 +671,7 @@ def _bind_readiness_register() -> Result[FailuresCompletenessReport]:
             failure_id=_ID_REGISTER,
             cause=str(register.context.get("reason", "")),
         )
-    return register
 
-
-def _bind_vps_evidence(vps_procured: object) -> Result[VpsProcurementEvidence]:
     if not isinstance(vps_procured, bool):
         return invalid(
             "vps_procured",
@@ -786,123 +679,96 @@ def _bind_vps_evidence(vps_procured: object) -> Result[VpsProcurementEvidence]:
             given=repr(vps_procured),
             failure_id=_ID_PROCURE,
         )
-    return Ok(
-        VpsProcurementEvidence(
-            procured=vps_procured,
-            os=str(VPS_PROCUREMENT_STARTING_POINT["os"]),
-            approx_vcpu=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_vcpu"])),
-            approx_ram_gib=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_ram_gib"])),
-            approx_ssd_gib=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_ssd_gib"])),
-            siting=str(VPS_PROCUREMENT_STARTING_POINT["siting"]),
-            label=str(VPS_PROCUREMENT_STARTING_POINT["label"]),
-            ratified_minimum=False,
-        )
+
+    vps = VpsProcurementEvidence(
+        procured=vps_procured,
+        os=str(VPS_PROCUREMENT_STARTING_POINT["os"]),
+        approx_vcpu=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_vcpu"])),
+        approx_ram_gib=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_ram_gib"])),
+        approx_ssd_gib=int(cast("int", VPS_PROCUREMENT_STARTING_POINT["approx_ssd_gib"])),
+        siting=str(VPS_PROCUREMENT_STARTING_POINT["siting"]),
+        label=str(VPS_PROCUREMENT_STARTING_POINT["label"]),
+        ratified_minimum=False,
     )
 
-
-def _stamp_readiness_packet(parts: _ReadinessParts) -> Result[ReadinessPacket]:
-    register_fp = fingerprint(_register_identity(parts.register))
+    register_fp = fingerprint(_register_identity(register.value))
     if is_refusal(register_fp):
         return register_fp
+    roster_fp = demo_roster.composition.composition_fp
     artifacts = (
         ArtifactCitation(
             name="node-config",
-            fingerprint=parts.settings.config_fingerprint,
-            branch_commit=parts.branch,
-            base_commit=parts.base,
+            fingerprint=settings.value.config_fingerprint,
+            branch_commit=branch.value,
+            base_commit=base.value,
         ),
         ArtifactCitation(
             name="failure-register",
             fingerprint=register_fp.value,
-            branch_commit=parts.branch,
-            base_commit=parts.base,
+            branch_commit=branch.value,
+            base_commit=base.value,
         ),
         ArtifactCitation(
             name="demo-roster",
-            fingerprint=parts.demo_roster.composition.composition_fp,
-            branch_commit=parts.branch,
-            base_commit=parts.base,
+            fingerprint=roster_fp,
+            branch_commit=branch.value,
+            base_commit=base.value,
         ),
     )
-    gates_green = all(item.ok for item in parts.gates)
-    machine_green = gates_green and bool(parts.demo_roster.as_mapping()["demo_streams"])
+
+    gates_green = all(item.ok for item in gates.value)
+    machine_green = gates_green and bool(demo_roster.as_mapping()["demo_streams"])
     blocked = tuple(
         item.name
-        for item in parts.humans
+        for item in humans
         if item.scope is HumanInputScope.SOAK_LOCAL and item.blocked_acceptance
     )
     soak_ready = (
         machine_green
-        and parts.settings.no_boot_live_soak_blanks
-        and parts.settings.may_start_soak
+        and settings.value.no_boot_live_soak_blanks
+        and settings.value.may_start_soak
         and not blocked
-        and parts.vps.procured
-    )
-    return _fingerprint_readiness_packet(
-        parts=parts,
-        artifacts=artifacts,
-        machine_green=machine_green,
-        soak_ready=soak_ready,
-        blocked=blocked,
+        and vps.procured
     )
 
-
-def _fingerprint_readiness_packet(
-    *,
-    parts: _ReadinessParts,
-    artifacts: tuple[ArtifactCitation, ...],
-    machine_green: bool,
-    soak_ready: bool,
-    blocked: tuple[str, ...],
-) -> Result[ReadinessPacket]:
-    provisional = _readiness_packet(
-        fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
-        parts=parts,
-        artifacts=artifacts,
-        machine_green=machine_green,
-        soak_ready=soak_ready,
-        blocked=blocked,
-    )
-    packet_fp = fingerprint(provisional.fp1_identity())
-    if is_refusal(packet_fp):
-        return packet_fp
-    return Ok(
-        _readiness_packet(
-            fingerprint=packet_fp.value,
-            parts=parts,
-            artifacts=artifacts,
-            machine_green=machine_green,
-            soak_ready=soak_ready,
-            blocked=blocked,
-        )
-    )
-
-
-def _readiness_packet(
-    *,
-    fingerprint: Fingerprint,
-    parts: _ReadinessParts,
-    artifacts: tuple[ArtifactCitation, ...],
-    machine_green: bool,
-    soak_ready: bool,
-    blocked: tuple[str, ...],
-) -> ReadinessPacket:
-    return ReadinessPacket(
+    provisional = ReadinessPacket(
         format_version=READINESS_PACKET_FORMAT_VERSION,
-        fingerprint=fingerprint,
+        fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
         artifacts=artifacts,
-        machine_gates=parts.gates,
-        settings=parts.settings,
-        failure_register=parts.register,
-        demo_roster=parts.demo_roster,
-        human_inputs=parts.humans,
-        vps_procurement=parts.vps,
+        machine_gates=gates.value,
+        settings=settings.value,
+        failure_register=register.value,
+        demo_roster=demo_roster,
+        human_inputs=humans,
+        vps_procurement=vps,
         machine_prerequisites_green=machine_green,
         soak_start_ready=soak_ready,
         blocked_acceptance=blocked,
         procures_vps=False,
         invents_ksa_or_latency=False,
         blocks_unrelated_epics=False,
+    )
+    packet_fp = fingerprint(provisional.fp1_identity())
+    if is_refusal(packet_fp):
+        return packet_fp
+    return Ok(
+        ReadinessPacket(
+            format_version=READINESS_PACKET_FORMAT_VERSION,
+            fingerprint=packet_fp.value,
+            artifacts=artifacts,
+            machine_gates=gates.value,
+            settings=settings.value,
+            failure_register=register.value,
+            demo_roster=demo_roster,
+            human_inputs=humans,
+            vps_procurement=vps,
+            machine_prerequisites_green=machine_green,
+            soak_start_ready=soak_ready,
+            blocked_acceptance=blocked,
+            procures_vps=False,
+            invents_ksa_or_latency=False,
+            blocks_unrelated_epics=False,
+        )
     )
 
 
@@ -972,52 +838,49 @@ def _parse_gate_results(value: object) -> Result[tuple[GateResult, ...]]:
         )
     parsed: list[GateResult] = []
     for name in MACHINE_GATES:
-        item = _parse_one_gate(name, body[name])
-        if is_refusal(item):
-            return item
-        parsed.append(item.value)
-    return Ok(tuple(parsed))
-
-
-def _parse_one_gate(name: str, raw: object) -> Result[GateResult]:
-    if isinstance(raw, GateResult):
-        if raw.name != name:
+        raw = body[name]
+        if isinstance(raw, GateResult):
+            if raw.name != name:
+                return invalid(
+                    "gate_results",
+                    "gate result name must match the mapping key",
+                    given=raw.name,
+                    expected=name,
+                    failure_id=_ID_GATE,
+                )
+            parsed.append(raw)
+            continue
+        if not isinstance(raw, Mapping):
             return invalid(
-                "gate_results",
-                "gate result name must match the mapping key",
-                given=raw.name,
-                expected=name,
+                name,
+                "a gate result is GateResult or a mapping with ok and evidence_fp1",
+                given=type(raw).__name__,
                 failure_id=_ID_GATE,
             )
-        return Ok(raw)
-    if not isinstance(raw, Mapping):
-        return invalid(
-            name,
-            "a gate result is GateResult or a mapping with ok and evidence_fp1",
-            given=type(raw).__name__,
-            failure_id=_ID_GATE,
-        )
-    entry = cast("Mapping[str, object]", raw)
-    ok = entry.get("ok")
-    if not isinstance(ok, bool):
-        return invalid(
-            name,
-            "gate ok is a bool",
-            given=repr(ok),
-            failure_id=_ID_GATE,
-        )
-    evidence = entry.get("evidence_fp1")
-    if isinstance(evidence, Fingerprint):
-        return Ok(GateResult(name=name, ok=ok, evidence_fp1=evidence))
-    parsed_fp = Fingerprint.try_create(evidence)
-    if is_refusal(parsed_fp):
-        return invalid(
-            name,
-            "gate evidence_fp1 is a Fingerprint",
-            given=repr(evidence),
-            failure_id=_ID_GATE,
-        )
-    return Ok(GateResult(name=name, ok=ok, evidence_fp1=parsed_fp.value))
+        entry = cast("Mapping[str, object]", raw)
+        ok = entry.get("ok")
+        if not isinstance(ok, bool):
+            return invalid(
+                name,
+                "gate ok is a bool",
+                given=repr(ok),
+                failure_id=_ID_GATE,
+            )
+        evidence = entry.get("evidence_fp1")
+        if isinstance(evidence, Fingerprint):
+            fp = evidence
+        else:
+            parsed_fp = Fingerprint.try_create(evidence)
+            if is_refusal(parsed_fp):
+                return invalid(
+                    name,
+                    "gate evidence_fp1 is a Fingerprint",
+                    given=repr(evidence),
+                    failure_id=_ID_GATE,
+                )
+            fp = parsed_fp.value
+        parsed.append(GateResult(name=name, ok=ok, evidence_fp1=fp))
+    return Ok(tuple(parsed))
 
 
 def _parse_presence(value: object) -> Result[Mapping[str, bool]]:

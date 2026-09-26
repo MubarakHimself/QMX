@@ -21,7 +21,6 @@ Shows the five things CT-01 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core.exact import Money, Price, PriceDelta, Quantity, RoundingMode, UnitKind, ValueFactor
@@ -101,25 +100,21 @@ def main() -> None:
     instrument = _unwrap(Instrument.try_create(venue, "EURUSD"), "instrument")
 
     exact, converted = scaled_integers_ban_float()
-    sys.stdout.write(f"exact money 1.50 stored as {exact.value} at scale {exact.scale}\n")
-    sys.stdout.write(
-        f"float refused; boundary-converted to {converted.value} at scale {converted.scale}\n"
-    )
+    print(f"exact money 1.50 stored as {exact.value} at scale {exact.scale}")
+    print(f"float refused; boundary-converted to {converted.value} at scale {converted.scale}")
 
     total = mixed_scale_promotes(exact)
-    sys.stdout.write(f"mixed-scale sum promoted to {total.value} at scale {total.scale}\n")
+    print(f"mixed-scale sum promoted to {total.value} at scale {total.scale}")
 
     delta = price_minus_price_is_a_delta(instrument)
-    sys.stdout.write(
-        f"price delta is a {type(delta).__name__} of {delta.value} at scale {delta.scale}\n"
-    )
+    print(f"price delta is a {type(delta).__name__} of {delta.value} at scale {delta.scale}")
 
     money = delta_needs_metadata(delta, instrument)
-    sys.stdout.write(
-        f"delta converted via value-factor to {money.value} {money.currency} at scale {money.scale}\n"  # noqa: E501
+    print(
+        f"delta converted via value-factor to {money.value} {money.currency} at scale {money.scale}"
     )
 
-    sys.stdout.write(f"equal value equal fingerprint: {equal_value_equal_fingerprint()}\n")
+    print(f"equal value equal fingerprint: {equal_value_equal_fingerprint()}")
 
 
 if __name__ == "__main__":

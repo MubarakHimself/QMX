@@ -309,7 +309,7 @@ def admit_risk_non_increasing_amend_protection(
     ``registry:amend_min_improvement`` is Book origination policy only. The command
     path must not re-apply it as a suppression once the act has been originated.
     """
-    _ = amend_min_improvement  # origination policy only — never a command-path gate
+    del amend_min_improvement  # origination policy only — never a command-path gate
     if not isinstance(command, Command):
         return _invalid(
             "command",

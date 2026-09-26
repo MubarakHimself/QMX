@@ -875,7 +875,7 @@ def fold_oos_bar_outcome(window: object = None) -> str:
     canonical-assignment fold does for a world/role miss. The optional ``window`` argument
     is accepted for read-site symmetry and does not change the fold while the seam is open.
     """
-    _ = window
+    del window
     return OOS_BAR_OUTCOME_NOT_YET_RULED
 
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-
 from qmf.core import is_ok, is_refusal
 
 import qmb
@@ -25,12 +23,12 @@ def main() -> None:
     assert is_refusal(flagged)
     graduation = qmb.graduate_ungoverned_via_spawn()
     assert is_refusal(graduation)
-    sys.stdout.write("workbench lanes ok\n")
-    sys.stdout.write("ungoverned writes nothing\n")
-    sys.stdout.write("qmb ledger workbench_lane=governed\n")
-    sys.stdout.write("experiment ledger workbench_lane=coordinated\n")
-    sys.stdout.write("caller-declared lane refused\n")
-    sys.stdout.write("L33 is not this spawn\n")
+    print("workbench lanes ok")
+    print("ungoverned writes nothing")
+    print("qmb ledger workbench_lane=governed")
+    print("experiment ledger workbench_lane=coordinated")
+    print("caller-declared lane refused")
+    print("L33 is not this spawn")
 
 
 if __name__ == "__main__":

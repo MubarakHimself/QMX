@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from fractions import Fraction
 from types import MappingProxyType
-from typing import Final, TypeAlias, cast
+from typing import Final, cast
 
 from qmf.core import (
     ExactRational,
@@ -303,21 +303,85 @@ def fit_label_quantile_edges(
     inspect_sealed_holdout_outcomes: object = False,
 ) -> Result[LabelEdgeFit]:
     """Fit nearest-rank quantile edges on train-eligible forward ranges only."""
-    peek = _refuse_holdout_peek(
-        inspect_sealed_holdout_outcomes,
-        action="fit_on_sealed_holdout",
-        reason="inspect_sealed_holdout_outcomes is False for label edge fitting",
+    if inspect_sealed_holdout_outcomes is True:
+        return refuse_sealed_holdout_outcome_peek(action="fit_on_sealed_holdout")
+    if inspect_sealed_holdout_outcomes not in (False, None):
+        return invalid(
+            "inspect_sealed_holdout_outcomes",
+            "inspect_sealed_holdout_outcomes is False for label edge fitting",
+            given=repr(inspect_sealed_holdout_outcomes),
+        )
+    resolved = _resolve_inputs(cleaned, splits, design=design, contract=contract)
+    if is_refusal(resolved):
+        return resolved
+    cleaned_corpus, split_bundle, resolved_contract, cleaned_fp = resolved.value
+    label_contract = resolved_contract.label_contract
+    method_check = _require_label_method(label_contract)
+    if is_refusal(method_check):
+        return method_check
+
+    boundaries = _split_boundaries_ns(split_bundle)
+    if is_refusal(boundaries):
+        return boundaries
+    train_end, _validation_end, _holdout_end = boundaries.value
+    purge_ns = resolved_contract.leakage.purge_bars * BAR_INTERVAL_M5_NS
+    horizon = label_contract.horizon_bars
+
+    by_instrument = _group_rows(cleaned_corpus.rows)
+    samples: list[int] = []
+    for rows in by_instrument.values():
+        for index, row in enumerate(rows):
+            role = _role_for_time(row.event_time_ns, boundaries.value)
+            if role != SegmentRole.TRAIN.value:
+                continue
+            if row.event_time_ns >= train_end - purge_ns:
+                continue
+            measured = _forward_range_ppb(rows, index, horizon)
+            if is_refusal(measured):
+                continue
+            _reason, value = measured.value
+            if value is None:
+                continue
+            samples.append(value)
+
+    if len(samples) < len(label_contract.quantile_edges) + 1:
+        return policy(
+            "train_samples",
+            "train-eligible forward ranges are insufficient to fit the ruled "
+            "quantile edges; return to Story 30.1 rather than inventing edges",
+            sample_count=len(samples),
+            required_edges=len(label_contract.quantile_edges),
+            failure_id="mis.regime_labels.ad_hoc_tweak",
+        )
+
+    edge_values: list[int] = []
+    for edge_token in label_contract.quantile_edges:
+        ratio = _edge_as_rational(edge_token)
+        if is_refusal(ratio):
+            return ratio
+        point = exact_nearest_rank_quantile(samples, ratio.value)
+        if is_refusal(point):
+            return point
+        edge_values.append(point.value)
+
+    if edge_values != sorted(edge_values):
+        return policy(
+            "quantile_edges",
+            "fitted quantile edges must be non-decreasing; refuse rather than reorder",
+            edges=edge_values,
+            failure_id="mis.regime_labels.ad_hoc_tweak",
+        )
+
+    return Ok(
+        LabelEdgeFit(
+            edge_values_ppb=tuple(edge_values),
+            quantile_edges=tuple(label_contract.quantile_edges),
+            train_sample_count=len(samples),
+            method=label_contract.method,
+            design_fp=resolved_contract.design_fp,
+            cleaned_fp=cleaned_fp,
+        )
     )
-    if is_refusal(peek):
-        return peek
-    prepared = _prepare_edge_fit(cleaned, splits, design=design, contract=contract)
-    if is_refusal(prepared):
-        return prepared
-    cleaned_corpus, split_bundle, resolved_contract, cleaned_fp = prepared.value
-    samples = _collect_train_forward_ranges(cleaned_corpus, split_bundle, resolved_contract)
-    if is_refusal(samples):
-        return samples
-    return _fit_edge_values(samples.value, resolved_contract, cleaned_fp)
 
 
 def generate_regime_labels(
@@ -331,99 +395,6 @@ def generate_regime_labels(
     train_model: object = False,
 ) -> Result[tuple[LabeledRow, ...]]:
     """Generate deterministic labels for every cleaned row under the label contract."""
-    flags = _refuse_label_generation_flags(
-        train_model=train_model,
-        inspect_sealed_holdout_outcomes=inspect_sealed_holdout_outcomes,
-    )
-    if is_refusal(flags):
-        return flags
-    prepared = _prepare_label_generation(
-        cleaned, splits, design=design, contract=contract, edges=edges
-    )
-    if is_refusal(prepared):
-        return prepared
-    return _label_cleaned_rows(*prepared.value)
-
-
-def audit_regime_labels(
-    rows: object,
-    *,
-    edges: object,
-    inspect_sealed_holdout_outcomes: object = False,
-) -> Result[LabelAuditReport]:
-    """Audit counts, balance, transitions, gaps, missingness, and leakage checks."""
-    admitted = _admitted_labeled_rows(
-        rows,
-        edges=edges,
-        inspect_sealed_holdout_outcomes=inspect_sealed_holdout_outcomes,
-    )
-    if is_refusal(admitted):
-        return admitted
-    tallies = _tally_labeled_rows(admitted.value)
-    if is_refusal(tallies):
-        return tallies
-    return Ok(_label_audit_from_tallies(admitted.value, tallies.value, edges))
-
-
-def materialize_labeled_corpus(
-    cleaned: object,
-    splits: object,
-    *,
-    design: RegimeClassifierDesign | None = None,
-    contract: ExecutableRegimeContract | None = None,
-    train_model: object = False,
-    inspect_sealed_holdout_outcomes: object = False,
-    allow_unsupported_classes: object = False,
-) -> Result[LabeledCorpus]:
-    """Persist the fingerprinted labeled derivative with lineage and audit."""
-    flags = _refuse_materialize_label_flags(
-        train_model=train_model,
-        inspect_sealed_holdout_outcomes=inspect_sealed_holdout_outcomes,
-        allow_unsupported_classes=allow_unsupported_classes,
-    )
-    if is_refusal(flags):
-        return flags
-    resolved = _resolve_inputs(cleaned, splits, design=design, contract=contract)
-    if is_refusal(resolved):
-        return resolved
-    return _mint_labeled_corpus(*resolved.value, design=design)
-
-
-@dataclass
-class _LabelTallies:
-    labeled_counts: dict[str, int]
-    class_counts: dict[str, int]
-    missingness: dict[str, int]
-    session_distribution: dict[str, dict[str, int]]
-    instrument_distribution: dict[str, dict[str, int]]
-    split_distribution: dict[str, dict[str, int]]
-    window_distribution: dict[str, int]
-    transition_frequencies: dict[str, int]
-    gap_count: int
-    by_instrument: dict[str, list[LabeledRow]]
-
-
-@dataclass(frozen=True, slots=True)
-class _LabeledCorpusFps:
-    contract_fp: Fingerprint
-    splits_fp: Fingerprint
-    edges_fp: Fingerprint
-    label_design_fp: Fingerprint
-    generator_fp: Fingerprint
-    config_fp: Fingerprint
-    code_fp: Fingerprint
-    data_fp: Fingerprint
-
-
-def _refuse_holdout_peek(flag: object, *, action: str, reason: str) -> Result[None]:
-    if flag is True:
-        return refuse_sealed_holdout_outcome_peek(action=action)
-    if flag not in (False, None):
-        return invalid("inspect_sealed_holdout_outcomes", reason, given=repr(flag))
-    return Ok(None)
-
-
-def _refuse_training_claim(train_model: object) -> Result[None]:
     if train_model is True:
         return refuse_label_training(claim="train_model=True")
     if train_model not in (False, None):
@@ -432,166 +403,20 @@ def _refuse_training_claim(train_model: object) -> Result[None]:
             "train_model is False; Story 30.3 does not train",
             given=repr(train_model),
         )
-    return Ok(None)
-
-
-def _refuse_label_generation_flags(
-    *,
-    train_model: object,
-    inspect_sealed_holdout_outcomes: object,
-) -> Result[None]:
-    training = _refuse_training_claim(train_model)
-    if is_refusal(training):
-        return training
-    return _refuse_holdout_peek(
-        inspect_sealed_holdout_outcomes,
-        action="generate_with_sealed_peek",
-        reason="inspect_sealed_holdout_outcomes is False for label generation",
-    )
-
-
-def _refuse_materialize_label_flags(
-    *,
-    train_model: object,
-    inspect_sealed_holdout_outcomes: object,
-    allow_unsupported_classes: object,
-) -> Result[None]:
-    training = _refuse_training_claim(train_model)
-    if is_refusal(training):
-        return training
     if inspect_sealed_holdout_outcomes is True:
-        return refuse_sealed_holdout_outcome_peek(action="materialize_sealed_peek")
-    if allow_unsupported_classes is True:
-        return refuse_ad_hoc_label_tweak(unsupported="allow_unsupported_classes=True")
-    if allow_unsupported_classes not in (False, None):
+        return refuse_sealed_holdout_outcome_peek(action="generate_with_sealed_peek")
+    if inspect_sealed_holdout_outcomes not in (False, None):
         return invalid(
-            "allow_unsupported_classes",
-            "allow_unsupported_classes is False; unsupported classes need a design change",
-            given=repr(allow_unsupported_classes),
+            "inspect_sealed_holdout_outcomes",
+            "inspect_sealed_holdout_outcomes is False for label generation",
+            given=repr(inspect_sealed_holdout_outcomes),
         )
-    return Ok(None)
 
-
-def _prepare_edge_fit(
-    cleaned: object,
-    splits: object,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract | None,
-) -> Result[tuple[CleanedCorpus, CorpusSplitBundle, ExecutableRegimeContract, Fingerprint]]:
     resolved = _resolve_inputs(cleaned, splits, design=design, contract=contract)
     if is_refusal(resolved):
         return resolved
     cleaned_corpus, split_bundle, resolved_contract, cleaned_fp = resolved.value
-    method_check = _require_label_method(resolved_contract.label_contract)
-    if is_refusal(method_check):
-        return method_check
-    return Ok((cleaned_corpus, split_bundle, resolved_contract, cleaned_fp))
-
-
-def _train_forward_range_sample(
-    row: CleanedCorpusRow,
-    index: int,
-    rows: Sequence[CleanedCorpusRow],
-    *,
-    boundaries: tuple[int, int, int],
-    train_end: int,
-    purge_ns: int,
-    horizon: int,
-) -> int | None:
-    if _role_for_time(row.event_time_ns, boundaries) != SegmentRole.TRAIN.value:
-        return None
-    if row.event_time_ns >= train_end - purge_ns:
-        return None
-    measured = _forward_range_ppb(rows, index, horizon)
-    if is_refusal(measured):
-        return None
-    _reason, value = measured.value
-    return value
-
-
-def _collect_train_forward_ranges(
-    cleaned: CleanedCorpus,
-    splits: CorpusSplitBundle,
-    contract: ExecutableRegimeContract,
-) -> Result[list[int]]:
-    boundaries = _split_boundaries_ns(splits)
-    if is_refusal(boundaries):
-        return boundaries
-    train_end, _validation_end, _holdout_end = boundaries.value
-    purge_ns = contract.leakage.purge_bars * BAR_INTERVAL_M5_NS
-    horizon = contract.label_contract.horizon_bars
-    samples: list[int] = []
-    for rows in _group_rows(cleaned.rows).values():
-        for index, row in enumerate(rows):
-            sample = _train_forward_range_sample(
-                row,
-                index,
-                rows,
-                boundaries=boundaries.value,
-                train_end=train_end,
-                purge_ns=purge_ns,
-                horizon=horizon,
-            )
-            if sample is not None:
-                samples.append(sample)
-    return Ok(samples)
-
-
-def _nearest_rank_edges(
-    samples: Sequence[int],
-    quantile_edges: Sequence[str],
-) -> Result[list[int]]:
-    edge_values: list[int] = []
-    for edge_token in quantile_edges:
-        ratio = _edge_as_rational(edge_token)
-        if is_refusal(ratio):
-            return ratio
-        point = exact_nearest_rank_quantile(samples, ratio.value)
-        if is_refusal(point):
-            return point
-        edge_values.append(point.value)
-    return Ok(edge_values)
-
-
-def _fit_edge_values(
-    samples: list[int],
-    contract: ExecutableRegimeContract,
-    cleaned_fp: Fingerprint,
-) -> Result[LabelEdgeFit]:
-    label_contract = contract.label_contract
-    if len(samples) < len(label_contract.quantile_edges) + 1:
-        return policy(
-            "train_samples",
-            "train-eligible forward ranges are insufficient to fit the ruled "
-            "quantile edges; return to Story 30.1 rather than inventing edges",
-            sample_count=len(samples),
-            required_edges=len(label_contract.quantile_edges),
-            failure_id="mis.regime_labels.ad_hoc_tweak",
-        )
-    edge_values = _nearest_rank_edges(samples, label_contract.quantile_edges)
-    if is_refusal(edge_values):
-        return edge_values
-    if edge_values.value != sorted(edge_values.value):
-        return policy(
-            "quantile_edges",
-            "fitted quantile edges must be non-decreasing; refuse rather than reorder",
-            edges=edge_values.value,
-            failure_id="mis.regime_labels.ad_hoc_tweak",
-        )
-    return Ok(
-        LabelEdgeFit(
-            edge_values_ppb=tuple(edge_values.value),
-            quantile_edges=tuple(label_contract.quantile_edges),
-            train_sample_count=len(samples),
-            method=label_contract.method,
-            design_fp=contract.design_fp,
-            cleaned_fp=cleaned_fp,
-        )
-    )
-
-
-def _require_generation_label_contract(label_contract: LabelContract) -> Result[None]:
+    label_contract = resolved_contract.label_contract
     method_check = _require_label_method(label_contract)
     if is_refusal(method_check):
         return method_check
@@ -609,201 +434,114 @@ def _require_generation_label_contract(label_contract: LabelContract) -> Result[
             given=list(label_contract.class_vocabulary),
             required=list(REGIME_CLASS_VOCABULARY),
         )
-    return Ok(None)
 
+    resolved_edges = edges
+    if resolved_edges is None:
+        fitted = fit_label_quantile_edges(
+            cleaned_corpus,
+            split_bundle,
+            design=design,
+            contract=resolved_contract,
+        )
+        if is_refusal(fitted):
+            return fitted
+        resolved_edges = fitted.value
 
-def _resolve_generation_edges(
-    cleaned: CleanedCorpus,
-    splits: CorpusSplitBundle,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract,
-    edges: LabelEdgeFit | None,
-) -> Result[LabelEdgeFit]:
-    if edges is not None:
-        return Ok(edges)
-    return fit_label_quantile_edges(cleaned, splits, design=design, contract=contract)
-
-
-_LabelGenerationPrep: TypeAlias = tuple[
-    CleanedCorpus,
-    LabelContract,
-    LabelEdgeFit,
-    tuple[int, int, int],
-    int,
-    tuple[Fingerprint, Fingerprint, Fingerprint, Fingerprint],
-]
-
-
-def _prepare_label_generation(
-    cleaned: object,
-    splits: object,
-    *,
-    design: RegimeClassifierDesign | None,
-    contract: ExecutableRegimeContract | None,
-    edges: LabelEdgeFit | None,
-) -> Result[_LabelGenerationPrep]:
-    resolved = _resolve_inputs(cleaned, splits, design=design, contract=contract)
-    if is_refusal(resolved):
-        return resolved
-    cleaned_corpus, split_bundle, resolved_contract, cleaned_fp = resolved.value
-    label_contract = resolved_contract.label_contract
-    method_check = _require_generation_label_contract(label_contract)
-    if is_refusal(method_check):
-        return method_check
-    resolved_edges = _resolve_generation_edges(
-        cleaned_corpus,
-        split_bundle,
-        design=design,
-        contract=resolved_contract,
-        edges=edges,
-    )
-    if is_refusal(resolved_edges):
-        return resolved_edges
     provenance = _provenance_fps(
         label_contract=label_contract,
-        edges=resolved_edges.value,
+        edges=resolved_edges,
         cleaned_fp=cleaned_fp,
         design_fp=resolved_contract.design_fp,
     )
     if is_refusal(provenance):
         return provenance
+    generator_fp, config_fp, code_fp, data_fp = provenance.value
+
     boundaries = _split_boundaries_ns(split_bundle)
     if is_refusal(boundaries):
         return boundaries
+    train_end, validation_end, holdout_end = boundaries.value
     purge_ns = resolved_contract.leakage.purge_bars * BAR_INTERVAL_M5_NS
-    return Ok(
-        (
-            cleaned_corpus,
-            label_contract,
-            resolved_edges.value,
-            boundaries.value,
-            purge_ns,
-            provenance.value,
-        )
-    )
+    horizon = label_contract.horizon_bars
+    by_instrument = _group_rows(cleaned_corpus.rows)
 
-
-def _row_exclusion_and_range(
-    row: CleanedCorpusRow,
-    index: int,
-    rows: Sequence[CleanedCorpusRow],
-    *,
-    horizon: int,
-    purge_ns: int,
-    boundaries: tuple[int, int, int],
-) -> tuple[ExclusionReason | None, int | None, int]:
-    knowledge_bound = row.knowledge_time_ns
-    measured = _forward_range_ppb(rows, index, horizon)
-    if is_refusal(measured):
-        return ExclusionReason.INSUFFICIENT_HORIZON, None, knowledge_bound
-    reason, value = measured.value
-    if reason is not None:
-        return reason, None, knowledge_bound
-    knowledge_bound = rows[index + horizon].knowledge_time_ns
-    next_boundary = _next_boundary_ns(row.event_time_ns, boundaries)
-    if next_boundary is not None and row.event_time_ns >= next_boundary - purge_ns:
-        return ExclusionReason.BOUNDARY_PURGE, value, knowledge_bound
-    return None, value, knowledge_bound
-
-
-def _class_and_split_role(
-    role: str | None,
-    exclusion: ExclusionReason | None,
-    range_ppb: int | None,
-    edges: Sequence[int],
-) -> tuple[str, str, ExclusionReason | None]:
-    if role is None:
-        return EXCLUSION_CLASS, "unknown", ExclusionReason.UNKNOWN_SPLIT
-    if exclusion is not None or range_ppb is None:
-        if exclusion is None:
-            exclusion = ExclusionReason.INSUFFICIENT_HORIZON
-        return EXCLUSION_CLASS, role, exclusion
-    return _bucket_class(range_ppb, edges), role, None
-
-
-def _label_one_row(
-    row: CleanedCorpusRow,
-    index: int,
-    rows: Sequence[CleanedCorpusRow],
-    *,
-    horizon: int,
-    purge_ns: int,
-    boundaries: tuple[int, int, int],
-    edges: Sequence[int],
-    generator_fp: Fingerprint,
-    config_fp: Fingerprint,
-    code_fp: Fingerprint,
-    data_fp: Fingerprint,
-) -> LabeledRow:
-    role = _role_for_time(row.event_time_ns, boundaries)
-    exclusion, range_ppb, knowledge_bound = _row_exclusion_and_range(
-        row, index, rows, horizon=horizon, purge_ns=purge_ns, boundaries=boundaries
-    )
-    class_label, split_role, exclusion = _class_and_split_role(role, exclusion, range_ppb, edges)
-    return LabeledRow(
-        row_id=row.row_id,
-        instrument=row.instrument,
-        session=row.session,
-        event_time_ns=row.event_time_ns,
-        knowledge_time_ns=row.knowledge_time_ns,
-        split_role=split_role,
-        class_label=class_label,
-        forward_range_ppb=range_ppb,
-        event_bound_ns=row.event_time_ns,
-        knowledge_bound_ns=knowledge_bound,
-        generator_fp=generator_fp.value,
-        config_fp=config_fp.value,
-        code_fp=code_fp.value,
-        data_fp=data_fp.value,
-        exclusion_reason=exclusion.value if exclusion is not None else None,
-    )
-
-
-def _label_cleaned_rows(
-    cleaned: CleanedCorpus,
-    label_contract: LabelContract,
-    edges: LabelEdgeFit,
-    boundaries: tuple[int, int, int],
-    purge_ns: int,
-    provenance: tuple[Fingerprint, Fingerprint, Fingerprint, Fingerprint],
-) -> Result[tuple[LabeledRow, ...]]:
-    generator_fp, config_fp, code_fp, data_fp = provenance
     labeled: list[LabeledRow] = []
-    for rows in _group_rows(cleaned.rows).values():
+    for rows in by_instrument.values():
         for index, row in enumerate(rows):
+            role = _role_for_time(row.event_time_ns, (train_end, validation_end, holdout_end))
+            measured = _forward_range_ppb(rows, index, horizon)
+            exclusion: ExclusionReason | None = None
+            range_ppb: int | None = None
+            knowledge_bound = row.knowledge_time_ns
+            if is_refusal(measured):
+                exclusion = ExclusionReason.INSUFFICIENT_HORIZON
+            else:
+                reason, value = measured.value
+                if reason is not None:
+                    exclusion = reason
+                else:
+                    range_ppb = value
+                    knowledge_bound = rows[index + horizon].knowledge_time_ns
+                    next_boundary = _next_boundary_ns(
+                        row.event_time_ns,
+                        (train_end, validation_end, holdout_end),
+                    )
+                    if next_boundary is not None and row.event_time_ns >= next_boundary - purge_ns:
+                        exclusion = ExclusionReason.BOUNDARY_PURGE
+                        range_ppb = value
+
+            if role is None:
+                exclusion = ExclusionReason.UNKNOWN_SPLIT
+                class_label = EXCLUSION_CLASS
+                split_role = "unknown"
+            elif exclusion is not None or range_ppb is None:
+                class_label = EXCLUSION_CLASS
+                split_role = role
+                if exclusion is None:
+                    exclusion = ExclusionReason.INSUFFICIENT_HORIZON
+            else:
+                class_label = _bucket_class(range_ppb, resolved_edges.edge_values_ppb)
+                split_role = role
+
             labeled.append(
-                _label_one_row(
-                    row,
-                    index,
-                    rows,
-                    horizon=label_contract.horizon_bars,
-                    purge_ns=purge_ns,
-                    boundaries=boundaries,
-                    edges=edges.edge_values_ppb,
-                    generator_fp=generator_fp,
-                    config_fp=config_fp,
-                    code_fp=code_fp,
-                    data_fp=data_fp,
+                LabeledRow(
+                    row_id=row.row_id,
+                    instrument=row.instrument,
+                    session=row.session,
+                    event_time_ns=row.event_time_ns,
+                    knowledge_time_ns=row.knowledge_time_ns,
+                    split_role=split_role,
+                    class_label=class_label,
+                    forward_range_ppb=range_ppb,
+                    event_bound_ns=row.event_time_ns,
+                    knowledge_bound_ns=knowledge_bound,
+                    generator_fp=generator_fp.value,
+                    config_fp=config_fp.value,
+                    code_fp=code_fp.value,
+                    data_fp=data_fp.value,
+                    exclusion_reason=exclusion.value if exclusion is not None else None,
                 )
             )
+
     labeled.sort(key=lambda item: (item.instrument, item.event_time_ns, item.row_id))
     return Ok(tuple(labeled))
 
 
-def _admitted_labeled_rows(
+def audit_regime_labels(
     rows: object,
     *,
     edges: object,
-    inspect_sealed_holdout_outcomes: object,
-) -> Result[list[LabeledRow]]:
-    peek = _refuse_holdout_peek(
-        inspect_sealed_holdout_outcomes,
-        action="audit_sealed_outcomes",
-        reason="inspect_sealed_holdout_outcomes is False for label audit",
-    )
-    if is_refusal(peek):
-        return peek
+    inspect_sealed_holdout_outcomes: object = False,
+) -> Result[LabelAuditReport]:
+    """Audit counts, balance, transitions, gaps, missingness, and leakage checks."""
+    if inspect_sealed_holdout_outcomes is True:
+        return refuse_sealed_holdout_outcome_peek(action="audit_sealed_outcomes")
+    if inspect_sealed_holdout_outcomes not in (False, None):
+        return invalid(
+            "inspect_sealed_holdout_outcomes",
+            "inspect_sealed_holdout_outcomes is False for label audit",
+            given=repr(inspect_sealed_holdout_outcomes),
+        )
     if not isinstance(edges, LabelEdgeFit):
         return invalid(
             "edges",
@@ -816,6 +554,7 @@ def _admitted_labeled_rows(
             "label audit takes a sequence of LabeledRow values",
             given=type(rows).__name__,
         )
+
     admitted: list[LabeledRow] = []
     for index, raw in enumerate(cast("Sequence[object]", rows)):
         if not isinstance(raw, LabeledRow):
@@ -826,65 +565,54 @@ def _admitted_labeled_rows(
                 given=type(raw).__name__,
             )
         admitted.append(raw)
-    return Ok(admitted)
 
-
-def _empty_label_tallies() -> _LabelTallies:
     labeled_counts: dict[str, int] = dict.fromkeys(REGIME_CLASS_VOCABULARY, 0)
     labeled_counts[EXCLUSION_CLASS] = 0
-    class_keys = (*REGIME_CLASS_VOCABULARY, EXCLUSION_CLASS)
-    return _LabelTallies(
-        labeled_counts=labeled_counts,
-        class_counts=dict.fromkeys(REGIME_CLASS_VOCABULARY, 0),
-        missingness={reason.value: 0 for reason in ExclusionReason},
-        session_distribution={
-            session: dict.fromkeys(class_keys, 0) for session in DECLARED_TRADING_SESSIONS
-        },
-        instrument_distribution={},
-        split_distribution={},
-        window_distribution={},
-        transition_frequencies={},
-        gap_count=0,
-        by_instrument={},
-    )
-
-
-def _accumulate_exclusion(row: LabeledRow, tallies: _LabelTallies) -> None:
-    if row.exclusion_reason is None:
-        return
-    if row.exclusion_reason not in tallies.missingness:
-        tallies.missingness[row.exclusion_reason] = 0
-    tallies.missingness[row.exclusion_reason] += 1
-    if row.exclusion_reason == ExclusionReason.FORWARD_GAP.value:
-        tallies.gap_count += 1
-
-
-def _accumulate_labeled_row(row: LabeledRow, tallies: _LabelTallies) -> Result[None]:
-    if row.class_label not in tallies.labeled_counts:
-        return policy(
-            "class_label",
-            "audited labels must stay inside the closed vocabulary or exclusion class",
-            given=row.class_label,
-        )
-    tallies.labeled_counts[row.class_label] += 1
-    if row.class_label in tallies.class_counts:
-        tallies.class_counts[row.class_label] += 1
-    _accumulate_exclusion(row, tallies)
-    if row.session in tallies.session_distribution:
-        tallies.session_distribution[row.session][row.class_label] += 1
-    class_keys = (*REGIME_CLASS_VOCABULARY, EXCLUSION_CLASS)
-    tallies.instrument_distribution.setdefault(row.instrument, dict.fromkeys(class_keys, 0))
-    tallies.instrument_distribution[row.instrument][row.class_label] += 1
-    tallies.split_distribution.setdefault(row.split_role, dict.fromkeys(class_keys, 0))
-    tallies.split_distribution[row.split_role][row.class_label] += 1
-    window_key = f"{row.split_role}:{row.session}"
-    tallies.window_distribution[window_key] = tallies.window_distribution.get(window_key, 0) + 1
-    tallies.by_instrument.setdefault(row.instrument, []).append(row)
-    return Ok(None)
-
-
-def _count_transitions(by_instrument: Mapping[str, list[LabeledRow]]) -> dict[str, int]:
+    class_counts: dict[str, int] = dict.fromkeys(REGIME_CLASS_VOCABULARY, 0)
+    missingness: dict[str, int] = {reason.value: 0 for reason in ExclusionReason}
+    session_distribution: dict[str, dict[str, int]] = {
+        session: dict.fromkeys((*REGIME_CLASS_VOCABULARY, EXCLUSION_CLASS), 0)
+        for session in DECLARED_TRADING_SESSIONS
+    }
+    instrument_distribution: dict[str, dict[str, int]] = {}
+    split_distribution: dict[str, dict[str, int]] = {}
+    window_distribution: dict[str, int] = {}
     transition_frequencies: dict[str, int] = {}
+    gap_count = 0
+
+    by_instrument: dict[str, list[LabeledRow]] = {}
+    for row in admitted:
+        if row.class_label not in labeled_counts:
+            return policy(
+                "class_label",
+                "audited labels must stay inside the closed vocabulary or exclusion class",
+                given=row.class_label,
+            )
+        labeled_counts[row.class_label] += 1
+        if row.class_label in class_counts:
+            class_counts[row.class_label] += 1
+        if row.exclusion_reason is not None:
+            if row.exclusion_reason not in missingness:
+                missingness[row.exclusion_reason] = 0
+            missingness[row.exclusion_reason] += 1
+            if row.exclusion_reason == ExclusionReason.FORWARD_GAP.value:
+                gap_count += 1
+        if row.session in session_distribution:
+            session_distribution[row.session][row.class_label] += 1
+        instrument_distribution.setdefault(
+            row.instrument,
+            dict.fromkeys((*REGIME_CLASS_VOCABULARY, EXCLUSION_CLASS), 0),
+        )
+        instrument_distribution[row.instrument][row.class_label] += 1
+        split_distribution.setdefault(
+            row.split_role,
+            dict.fromkeys((*REGIME_CLASS_VOCABULARY, EXCLUSION_CLASS), 0),
+        )
+        split_distribution[row.split_role][row.class_label] += 1
+        window_key = f"{row.split_role}:{row.session}"
+        window_distribution[window_key] = window_distribution.get(window_key, 0) + 1
+        by_instrument.setdefault(row.instrument, []).append(row)
+
     for series in by_instrument.values():
         ordered = sorted(series, key=lambda item: item.event_time_ns)
         previous: str | None = None
@@ -893,169 +621,123 @@ def _count_transitions(by_instrument: Mapping[str, list[LabeledRow]]) -> dict[st
                 key = f"{previous}->{row.class_label}"
                 transition_frequencies[key] = transition_frequencies.get(key, 0) + 1
             previous = row.class_label
-    return transition_frequencies
 
-
-def _tally_labeled_rows(admitted: Sequence[LabeledRow]) -> Result[_LabelTallies]:
-    tallies = _empty_label_tallies()
-    for row in admitted:
-        accumulated = _accumulate_labeled_row(row, tallies)
-        if is_refusal(accumulated):
-            return accumulated
-    tallies.transition_frequencies = _count_transitions(tallies.by_instrument)
-    return Ok(tallies)
-
-
-def _frozen_inner_maps(
-    mapping: Mapping[str, Mapping[str, int]],
-) -> Mapping[str, Mapping[str, int]]:
-    return MappingProxyType(
-        {
-            key: MappingProxyType(dict(sorted(inner.items())))
-            for key, inner in sorted(mapping.items())
-        }
+    train_counts = split_distribution.get(SegmentRole.TRAIN.value, {})
+    unsupported = tuple(
+        name
+        for name in REGIME_CLASS_VOCABULARY
+        if train_counts.get(name, 0) <= 0
     )
+    total_classed = sum(class_counts.values())
+    balance: dict[str, tuple[int, int]] = {}
+    for name, count in class_counts.items():
+        balance[name] = (count, total_classed if total_classed > 0 else 1)
 
-
-def _label_leakage_checks(
-    admitted: Sequence[LabeledRow],
-    edges: LabelEdgeFit,
-    labeled_counts: Mapping[str, int],
-) -> dict[str, bool]:
-    return {
+    leakage_checks = {
         "edges_fitted_on_train_only": edges.train_sample_count > 0,
         "sealed_holdout_not_used_for_edges": True,
         "as_of_event_knowledge_bounds_present": all(
             row.event_bound_ns == row.event_time_ns and row.knowledge_bound_ns >= row.event_time_ns
             for row in admitted
         ),
-        "closed_vocabulary_only": all(row.class_label in labeled_counts for row in admitted),
+        "closed_vocabulary_only": all(
+            row.class_label in labeled_counts for row in admitted
+        ),
         "exclusion_class_is_insufficient_evidence": all(
             row.class_label != EXCLUSION_CLASS or row.exclusion_reason is not None
             for row in admitted
         ),
     }
 
-
-def _label_audit_from_tallies(
-    admitted: Sequence[LabeledRow],
-    tallies: _LabelTallies,
-    edges: object,
-) -> LabelAuditReport:
-    fitted = cast("LabelEdgeFit", edges)
-    train_counts = tallies.split_distribution.get(SegmentRole.TRAIN.value, {})
-    unsupported = tuple(name for name in REGIME_CLASS_VOCABULARY if train_counts.get(name, 0) <= 0)
-    total_classed = sum(tallies.class_counts.values())
-    denom = total_classed if total_classed > 0 else 1
-    balance = {name: (count, denom) for name, count in tallies.class_counts.items()}
-    leakage = _label_leakage_checks(admitted, fitted, tallies.labeled_counts)
-    return LabelAuditReport(
-        total_rows=len(admitted),
-        class_counts=MappingProxyType(dict(sorted(tallies.class_counts.items()))),
-        exclusion_count=tallies.labeled_counts[EXCLUSION_CLASS],
-        labeled_counts=MappingProxyType(dict(sorted(tallies.labeled_counts.items()))),
-        balance_ratios=MappingProxyType(dict(sorted(balance.items()))),
-        transition_frequencies=MappingProxyType(
-            dict(sorted(tallies.transition_frequencies.items()))
-        ),
-        gap_count=tallies.gap_count,
-        missingness=MappingProxyType(dict(sorted(tallies.missingness.items()))),
-        session_distribution=_frozen_inner_maps(tallies.session_distribution),
-        instrument_distribution=_frozen_inner_maps(tallies.instrument_distribution),
-        split_distribution=_frozen_inner_maps(tallies.split_distribution),
-        window_distribution=MappingProxyType(dict(sorted(tallies.window_distribution.items()))),
-        leakage_checks=MappingProxyType(dict(sorted(leakage.items()))),
-        unsupported_classes=unsupported,
-        sealed_holdout_outcomes_inspected=False,
-        materially_unsupported=bool(unsupported),
-        design_change_required=bool(unsupported),
-    )
-
-
-def _labeled_corpus_fps(
-    cleaned_fp: Fingerprint,
-    splits: CorpusSplitBundle,
-    contract: ExecutableRegimeContract,
-    edges: LabelEdgeFit,
-) -> Result[_LabeledCorpusFps]:
-    contract_fp = contract.fingerprint()
-    if is_refusal(contract_fp):
-        return contract_fp
-    splits_fp = splits.fingerprint()
-    if is_refusal(splits_fp):
-        return splits_fp
-    edges_fp = edges.fingerprint()
-    if is_refusal(edges_fp):
-        return edges_fp
-    label_design = fingerprint(contract.label_contract.fp1_identity())
-    if is_refusal(label_design):
-        return label_design
-    provenance = _provenance_fps(
-        label_contract=contract.label_contract,
-        edges=edges,
-        cleaned_fp=cleaned_fp,
-        design_fp=contract.design_fp,
-    )
-    if is_refusal(provenance):
-        return provenance
-    generator_fp, config_fp, code_fp, data_fp = provenance.value
     return Ok(
-        _LabeledCorpusFps(
-            contract_fp=contract_fp.value,
-            splits_fp=splits_fp.value,
-            edges_fp=edges_fp.value,
-            label_design_fp=label_design.value,
-            generator_fp=generator_fp,
-            config_fp=config_fp,
-            code_fp=code_fp,
-            data_fp=data_fp,
+        LabelAuditReport(
+            total_rows=len(admitted),
+            class_counts=MappingProxyType(dict(sorted(class_counts.items()))),
+            exclusion_count=labeled_counts[EXCLUSION_CLASS],
+            labeled_counts=MappingProxyType(dict(sorted(labeled_counts.items()))),
+            balance_ratios=MappingProxyType(dict(sorted(balance.items()))),
+            transition_frequencies=MappingProxyType(
+                dict(sorted(transition_frequencies.items()))
+            ),
+            gap_count=gap_count,
+            missingness=MappingProxyType(dict(sorted(missingness.items()))),
+            session_distribution=MappingProxyType(
+                {
+                    key: MappingProxyType(dict(sorted(inner.items())))
+                    for key, inner in sorted(session_distribution.items())
+                }
+            ),
+            instrument_distribution=MappingProxyType(
+                {
+                    key: MappingProxyType(dict(sorted(inner.items())))
+                    for key, inner in sorted(instrument_distribution.items())
+                }
+            ),
+            split_distribution=MappingProxyType(
+                {
+                    key: MappingProxyType(dict(sorted(inner.items())))
+                    for key, inner in sorted(split_distribution.items())
+                }
+            ),
+            window_distribution=MappingProxyType(dict(sorted(window_distribution.items()))),
+            leakage_checks=MappingProxyType(dict(sorted(leakage_checks.items()))),
+            unsupported_classes=unsupported,
+            sealed_holdout_outcomes_inspected=False,
+            materially_unsupported=bool(unsupported),
+            design_change_required=bool(unsupported),
         )
     )
 
 
-def _labeled_corpus_result(
-    contract: ExecutableRegimeContract,
-    cleaned_fp: Fingerprint,
-    fps: _LabeledCorpusFps,
-    rows: tuple[LabeledRow, ...],
-    edges: LabelEdgeFit,
-    audit: LabelAuditReport,
-) -> Result[LabeledCorpus]:
-    return Ok(
-        LabeledCorpus(
-            artifact_id=REGIME_LABELS_ARTIFACT_ID,
-            design_fp=contract.design_fp,
-            contract_fp=fps.contract_fp,
-            cleaned_fp=cleaned_fp,
-            splits_fp=fps.splits_fp,
-            label_design_fp=fps.label_design_fp,
-            edges_fp=fps.edges_fp,
-            generator_fp=fps.generator_fp,
-            config_fp=fps.config_fp,
-            code_fp=fps.code_fp,
-            data_fp=fps.data_fp,
-            rows=rows,
-            edges=edges,
-            audit=audit,
-            grants_money_path_authority=False,
-            trains_model=False,
-        )
-    )
-
-
-def _mint_labeled_corpus(
-    cleaned: CleanedCorpus,
-    splits: CorpusSplitBundle,
-    contract: ExecutableRegimeContract,
-    cleaned_fp: Fingerprint,
+def materialize_labeled_corpus(
+    cleaned: object,
+    splits: object,
     *,
-    design: RegimeClassifierDesign | None,
+    design: RegimeClassifierDesign | None = None,
+    contract: ExecutableRegimeContract | None = None,
+    train_model: object = False,
+    inspect_sealed_holdout_outcomes: object = False,
+    allow_unsupported_classes: object = False,
 ) -> Result[LabeledCorpus]:
-    edges = fit_label_quantile_edges(cleaned, splits, design=design, contract=contract)
+    """Persist the fingerprinted labeled derivative with lineage and audit."""
+    if train_model is True:
+        return refuse_label_training(claim="train_model=True")
+    if train_model not in (False, None):
+        return invalid(
+            "train_model",
+            "train_model is False; Story 30.3 does not train",
+            given=repr(train_model),
+        )
+    if inspect_sealed_holdout_outcomes is True:
+        return refuse_sealed_holdout_outcome_peek(action="materialize_sealed_peek")
+    if allow_unsupported_classes is True:
+        return refuse_ad_hoc_label_tweak(unsupported="allow_unsupported_classes=True")
+    if allow_unsupported_classes not in (False, None):
+        return invalid(
+            "allow_unsupported_classes",
+            "allow_unsupported_classes is False; unsupported classes need a design change",
+            given=repr(allow_unsupported_classes),
+        )
+
+    resolved = _resolve_inputs(cleaned, splits, design=design, contract=contract)
+    if is_refusal(resolved):
+        return resolved
+    cleaned_corpus, split_bundle, resolved_contract, cleaned_fp = resolved.value
+
+    edges = fit_label_quantile_edges(
+        cleaned_corpus,
+        split_bundle,
+        design=design,
+        contract=resolved_contract,
+    )
     if is_refusal(edges):
         return edges
     rows = generate_regime_labels(
-        cleaned, splits, design=design, contract=contract, edges=edges.value
+        cleaned_corpus,
+        split_bundle,
+        design=design,
+        contract=resolved_contract,
+        edges=edges.value,
     )
     if is_refusal(rows):
         return rows
@@ -1064,11 +746,48 @@ def _mint_labeled_corpus(
         return audit
     if audit.value.materially_unsupported:
         return refuse_ad_hoc_label_tweak(unsupported=audit.value.unsupported_classes)
-    fps = _labeled_corpus_fps(cleaned_fp, splits, contract, edges.value)
-    if is_refusal(fps):
-        return fps
-    return _labeled_corpus_result(
-        contract, cleaned_fp, fps.value, rows.value, edges.value, audit.value
+
+    contract_fp = resolved_contract.fingerprint()
+    if is_refusal(contract_fp):
+        return contract_fp
+    splits_fp = split_bundle.fingerprint()
+    if is_refusal(splits_fp):
+        return splits_fp
+    edges_fp = edges.value.fingerprint()
+    if is_refusal(edges_fp):
+        return edges_fp
+    label_design = fingerprint(resolved_contract.label_contract.fp1_identity())
+    if is_refusal(label_design):
+        return label_design
+    provenance = _provenance_fps(
+        label_contract=resolved_contract.label_contract,
+        edges=edges.value,
+        cleaned_fp=cleaned_fp,
+        design_fp=resolved_contract.design_fp,
+    )
+    if is_refusal(provenance):
+        return provenance
+    generator_fp, config_fp, code_fp, data_fp = provenance.value
+
+    return Ok(
+        LabeledCorpus(
+            artifact_id=REGIME_LABELS_ARTIFACT_ID,
+            design_fp=resolved_contract.design_fp,
+            contract_fp=contract_fp.value,
+            cleaned_fp=cleaned_fp,
+            splits_fp=splits_fp.value,
+            label_design_fp=label_design.value,
+            edges_fp=edges_fp.value,
+            generator_fp=generator_fp,
+            config_fp=config_fp,
+            code_fp=code_fp,
+            data_fp=data_fp,
+            rows=rows.value,
+            edges=edges.value,
+            audit=audit.value,
+            grants_money_path_authority=False,
+            trains_model=False,
+        )
     )
 
 
@@ -1222,11 +941,11 @@ def _group_rows(
     return grouped
 
 
-def _forward_window(
+def _forward_range_ppb(
     rows: Sequence[CleanedCorpusRow],
     index: int,
     horizon_bars: int,
-) -> Result[tuple[ExclusionReason | None, Sequence[CleanedCorpusRow] | None]]:
+) -> Result[tuple[ExclusionReason | None, int | None]]:
     if horizon_bars < 1:
         return invalid(
             "horizon_bars",
@@ -1236,41 +955,25 @@ def _forward_window(
     end = index + horizon_bars
     if end >= len(rows):
         return Ok((ExclusionReason.INSUFFICIENT_HORIZON, None))
-    if rows[index].close_scaled == 0:
+    anchor = rows[index]
+    if anchor.close_scaled == 0:
         return Ok((ExclusionReason.ZERO_CLOSE, None))
     window = rows[index + 1 : end + 1]
     if len(window) != horizon_bars:
         return Ok((ExclusionReason.INSUFFICIENT_HORIZON, None))
-    return Ok((None, window))
-
-
-def _forward_window_gap(anchor: CleanedCorpusRow, window: Sequence[CleanedCorpusRow]) -> bool:
     prev_time = anchor.event_time_ns
     for bar in window:
-        if bar.event_time_ns - prev_time != BAR_INTERVAL_M5_NS:
-            return True
+        delta = bar.event_time_ns - prev_time
+        if delta != BAR_INTERVAL_M5_NS:
+            return Ok((ExclusionReason.FORWARD_GAP, None))
         prev_time = bar.event_time_ns
-    return False
-
-
-def _forward_range_ppb(
-    rows: Sequence[CleanedCorpusRow],
-    index: int,
-    horizon_bars: int,
-) -> Result[tuple[ExclusionReason | None, int | None]]:
-    admitted = _forward_window(rows, index, horizon_bars)
-    if is_refusal(admitted):
-        return admitted
-    reason, window = admitted.value
-    if reason is not None or window is None:
-        return Ok((reason, None))
-    anchor = rows[index]
-    if _forward_window_gap(anchor, window):
-        return Ok((ExclusionReason.FORWARD_GAP, None))
-    span = max(bar.high_scaled for bar in window) - min(bar.low_scaled for bar in window)
+    high = max(bar.high_scaled for bar in window)
+    low = min(bar.low_scaled for bar in window)
+    span = high - low
     if span < 0:
         return Ok((ExclusionReason.FORWARD_GAP, None))
-    return Ok((None, (span * _RANGE_PPB_SCALE) // anchor.close_scaled))
+    ppb = (span * _RANGE_PPB_SCALE) // anchor.close_scaled
+    return Ok((None, ppb))
 
 
 def _edge_as_rational(token: object) -> Result[ExactRational]:

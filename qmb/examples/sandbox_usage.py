@@ -19,7 +19,6 @@ Shows the things QL-8 / Story 12.5 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.host import (
@@ -189,16 +188,16 @@ def network_scan_fails_before_spawn() -> str:
 def main() -> None:
     identity = v1_enforcement_identity()
     assert identity["class"] == "qmb-host-sandbox-v1"
-    sys.stdout.write(f"v1 mechanisms: {','.join(V1_ENFORCEMENT_MECHANISMS)}\n")
-    sys.stdout.write(f"deferred os confinement: {','.join(V1_DEFERRED_OS_CONFINEMENT)}\n")
-    sys.stdout.write(f"out of scope: {','.join(V1_OUT_OF_SCOPE)}\n")
-    sys.stdout.write(f"v1 scope is honest: {v1_scope_is_honest()}\n")
-    sys.stdout.write(f"isolated run matches in-process: {isolated_run_matches_in_process()}\n")
-    sys.stdout.write(f"two hosts identical verdict: {two_hosts_identical_verdict()}\n")
-    sys.stdout.write(f"clock import before spawn: {clock_scan_fails_before_spawn()}\n")
-    sys.stdout.write(f"filesystem open before spawn: {filesystem_scan_fails_before_spawn()}\n")
-    sys.stdout.write(f"network import before spawn: {network_scan_fails_before_spawn()}\n")
-    sys.stdout.write("sandbox runner ok\n")
+    print(f"v1 mechanisms: {','.join(V1_ENFORCEMENT_MECHANISMS)}")
+    print(f"deferred os confinement: {','.join(V1_DEFERRED_OS_CONFINEMENT)}")
+    print(f"out of scope: {','.join(V1_OUT_OF_SCOPE)}")
+    print(f"v1 scope is honest: {v1_scope_is_honest()}")
+    print(f"isolated run matches in-process: {isolated_run_matches_in_process()}")
+    print(f"two hosts identical verdict: {two_hosts_identical_verdict()}")
+    print(f"clock import before spawn: {clock_scan_fails_before_spawn()}")
+    print(f"filesystem open before spawn: {filesystem_scan_fails_before_spawn()}")
+    print(f"network import before spawn: {network_scan_fails_before_spawn()}")
+    print("sandbox runner ok")
 
 
 if __name__ == "__main__":

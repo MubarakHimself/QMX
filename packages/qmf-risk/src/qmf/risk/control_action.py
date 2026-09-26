@@ -437,16 +437,6 @@ def check_flatten_authority(
             given=repr(authority_kind),
             allowed=[member.value for member in AuthorityKind],
         )
-    flags = _flatten_authority_flags(trigger_class_declared, protection_declares_close_all)
-    if is_refusal(flags):
-        return flags
-    declared, close_all = flags.value
-    return _flatten_authority_decision(resolved, declared, close_all)
-
-
-def _flatten_authority_flags(
-    trigger_class_declared: object, protection_declares_close_all: object
-) -> Result[tuple[bool, bool]]:
     if not isinstance(trigger_class_declared, bool):
         return invalid(
             "trigger_class_declared",
@@ -459,12 +449,6 @@ def _flatten_authority_flags(
             "protection_authority flatten requires a boolean close_all declaration flag",
             given=repr(protection_declares_close_all),
         )
-    return _Ok((trigger_class_declared, protection_declares_close_all))
-
-
-def _flatten_authority_decision(
-    resolved: AuthorityKind, trigger_class_declared: bool, protection_declares_close_all: bool
-) -> Result[None]:
     if resolved is AuthorityKind.OPERATOR:
         return _Ok(None)
     if resolved is AuthorityKind.BOOK_POLICY:
@@ -570,36 +554,6 @@ def resolve_subject_scope(
     indistinguishable from a wider one, the action **refuses** rather than executing
     wider (AD-29).
     """
-    inputs = _scope_resolution_inputs(subject_scope, scope_ref, stream, position_model)
-    if is_refusal(inputs):
-        return inputs
-    resolved_scope, ref, resolved_stream, model = inputs.value
-    if not isinstance(netting_indistinguishable_from_wider, bool):
-        return invalid(
-            "netting_indistinguishable_from_wider",
-            "the netting-indistinguishable flag is a boolean",
-            given=repr(netting_indistinguishable_from_wider),
-        )
-    refused = _refuse_netting_wider(
-        resolved_scope, model, netting_indistinguishable_from_wider
-    )
-    if is_refusal(refused):
-        return refused
-    enforcement = EnforcementScope(
-        subject_scope=resolved_scope, scope_ref=ref, stream=resolved_stream
-    )
-    return _Ok(
-        ScopeResolution(
-            enforcement=enforcement,
-            table_version=CT30_SCOPE_RESOLUTION_TABLE_VERSION,
-            position_model=model,
-        )
-    )
-
-
-def _scope_resolution_inputs(
-    subject_scope: object, scope_ref: object, stream: object, position_model: object
-) -> Result[tuple[SubjectScope, str, CommandStreamKey, PositionModel]]:
     resolved_scope = coerce_enum(SubjectScope, subject_scope)
     if resolved_scope is None:
         return unsupported(
@@ -631,15 +585,17 @@ def _scope_resolution_inputs(
             "model is an unsupported-capability refusal",
             given=repr(position_model),
         )
-    return _Ok((resolved_scope, ref, stream, model))
-
-
-def _refuse_netting_wider(
-    resolved_scope: SubjectScope,
-    model: PositionModel,
-    netting_indistinguishable_from_wider: bool,
-) -> Result[None]:
-    narrower = {SubjectScope.INSTRUMENT, SubjectScope.BOOK, SubjectScope.BINDING}
+    if not isinstance(netting_indistinguishable_from_wider, bool):
+        return invalid(
+            "netting_indistinguishable_from_wider",
+            "the netting-indistinguishable flag is a boolean",
+            given=repr(netting_indistinguishable_from_wider),
+        )
+    narrower = {
+        SubjectScope.INSTRUMENT,
+        SubjectScope.BOOK,
+        SubjectScope.BINDING,
+    }
     if (
         model is PositionModel.NETTING
         and resolved_scope in narrower
@@ -654,219 +610,14 @@ def _refuse_netting_wider(
             position_model=model.value,
             table_version=CT30_SCOPE_RESOLUTION_TABLE_VERSION,
         )
-    return _Ok(None)
-
-
-def _control_action_identity(
-    action_kind: object,
-    authority: object,
-    authority_kind: object,
-    subject_scope: object,
-    scope_ref: object,
-) -> Result[tuple[ControlActionKind, str, AuthorityKind, SubjectScope, str]]:
-    kind_check = reject_blanket_command_pipe_block(action_kind)
-    if is_refusal(kind_check):
-        return kind_check
-    authority_token = clean_str(authority)
-    if authority_token is None:
-        return invalid(
-            "authority",
-            "every action carries an issuing authority instance so the act has an "
-            "issuer and a rank",
-            given=repr(authority),
+    enforcement = EnforcementScope(subject_scope=resolved_scope, scope_ref=ref, stream=stream)
+    return _Ok(
+        ScopeResolution(
+            enforcement=enforcement,
+            table_version=CT30_SCOPE_RESOLUTION_TABLE_VERSION,
+            position_model=model,
         )
-    resolved_authority = coerce_enum(AuthorityKind, authority_kind)
-    if resolved_authority is None:
-        return invalid(
-            "authority_kind",
-            "authority_kind is operator|book_policy|protection_authority|"
-            "venue-delegated|adapter_self",
-            given=repr(authority_kind),
-            allowed=[member.value for member in AuthorityKind],
-        )
-    resolved_scope = coerce_enum(SubjectScope, subject_scope)
-    if resolved_scope is None:
-        return invalid(
-            "subject_scope",
-            "subject_scope is instrument|book|binding|account|venue|global",
-            given=repr(subject_scope),
-            allowed=[member.value for member in SubjectScope],
-        )
-    ref = clean_str(scope_ref)
-    if ref is None:
-        return invalid(
-            "scope_ref",
-            "a control action names its subject by a non-empty opaque scope_ref",
-            given=repr(scope_ref),
-        )
-    return _Ok((kind_check.value, authority_token, resolved_authority, resolved_scope, ref))
-
-
-def _control_action_predicate_match(
-    kind: ControlActionKind, predicate: SatisfactionPredicate
-) -> Result[None]:
-    if kind in NEVER_AUTO_KINDS and predicate is not SatisfactionPredicate.NEVER_AUTO:
-        return invalid(
-            "satisfaction_predicate",
-            "suspend_new and drain are never-auto by rule — clearing only by an "
-            "operator resume",
-            action_kind=kind.value,
-            given=predicate.value,
-        )
-    if kind is ControlActionKind.RESUME and predicate is not SatisfactionPredicate.NEVER_AUTO:
-        return invalid(
-            "satisfaction_predicate",
-            "resume is operator-only and never-auto",
-            given=predicate.value,
-        )
-    if kind is ControlActionKind.FLATTEN and (
-        predicate is not SatisfactionPredicate.SCOPE_FLAT_AT_RECONCILED_VERDICT
-    ):
-        return invalid(
-            "satisfaction_predicate",
-            "flatten satisfies only on a reconciled verdict showing the scope flat",
-            given=predicate.value,
-        )
-    return _Ok(None)
-
-
-def _control_action_predicate_fields(
-    kind: ControlActionKind,
-    satisfaction_predicate: object,
-    rank: object,
-    reason_class: object,
-    stream: object,
-    issued_at: object,
-) -> Result[tuple[SatisfactionPredicate, int, str, CommandStreamKey, Instant]]:
-    predicate = coerce_enum(SatisfactionPredicate, satisfaction_predicate)
-    if predicate is None:
-        return invalid(
-            "satisfaction_predicate",
-            "every action declares a mandatory satisfaction predicate from the "
-            "closed vocabulary",
-            given=repr(satisfaction_predicate),
-            allowed=[member.value for member in SatisfactionPredicate],
-        )
-    matched = _control_action_predicate_match(kind, predicate)
-    if is_refusal(matched):
-        return matched
-    if isinstance(rank, bool) or not isinstance(rank, int) or rank < 0:
-        return invalid(
-            "rank",
-            "rank is a mandatory, non-defaultable non-negative integer (BMS-declared)",
-            given=repr(rank),
-        )
-    reason = clean_str(reason_class)
-    if reason is None:
-        return invalid(
-            "reason_class",
-            "a control action carries a typed reason class",
-            given=repr(reason_class),
-        )
-    if not isinstance(stream, CommandStreamKey):
-        return invalid(
-            "stream",
-            "a control action is scoped to one (VenueId, account) command stream",
-            given=repr(stream),
-        )
-    if not isinstance(issued_at, Instant):
-        return invalid(
-            "issued_at",
-            "a control action is dated with an injected Instant (never a clock read "
-            "below the composition root); a standing intent never time-expires",
-            given=repr(issued_at),
-        )
-    return _Ok((predicate, rank, reason, stream, issued_at))
-
-
-def _control_action_policy_guards(
-    kind: ControlActionKind, resolved_authority: AuthorityKind
-) -> Result[None]:
-    if kind is ControlActionKind.RESUME and resolved_authority is not AuthorityKind.OPERATOR:
-        return policy(
-            "authority_kind",
-            "resume is operator-only — escalation automates, de-escalation does not",
-            authority_kind=resolved_authority.value,
-        )
-    if resolved_authority is AuthorityKind.ADAPTER_SELF and kind in ADAPTER_SELF_FLATTEN_KINDS:
-        return policy(
-            "authority_kind",
-            "the venue adapter never initiates a flatten; adapter_self actions are "
-            "limited to suspend_new, drain, throttle and session state",
-            action_kind=kind.value,
-        )
-    return _Ok(None)
-
-
-def _control_action_close_ref(
-    kind: ControlActionKind, resolved_authority: AuthorityKind, close_reason_ref: object
-) -> Result[CloseReason | None]:
-    if close_reason_ref is not None:
-        close_ref = coerce_enum(CloseReason, close_reason_ref)
-        if close_ref is None:
-            return invalid(
-                "close_reason_ref",
-                "close_reason_ref is a CloseReason from the CT-29 taxonomy when present",
-                given=repr(close_reason_ref),
-            )
-    else:
-        mapped = close_reason_for(kind, resolved_authority)
-        if is_refusal(mapped):
-            return mapped
-        close_ref = mapped.value
-    if kind is ControlActionKind.FLATTEN and close_ref is None:
-        return invalid(
-            "close_reason_ref",
-            "a flatten that closes a position carries close_reason_ref through the "
-            "pinned (kind x authority) mapping",
-        )
-    if kind is not ControlActionKind.FLATTEN and close_ref is not None:
-        return invalid(
-            "close_reason_ref",
-            "suspend_new, drain and resume that close nothing omit close_reason_ref",
-            given=close_ref.value,
-        )
-    return _Ok(close_ref)
-
-
-def _control_action_extras(
-    kind: ControlActionKind,
-    resolved_authority: AuthorityKind,
-    *,
-    trigger_class: object,
-    protection_declares_close_all: object,
-    close_reason_ref: object,
-) -> Result[tuple[str | None, CloseReason | None, bool]]:
-    guarded = _control_action_policy_guards(kind, resolved_authority)
-    if is_refusal(guarded):
-        return guarded
-    if not isinstance(protection_declares_close_all, bool):
-        return invalid(
-            "protection_declares_close_all",
-            "protection_declares_close_all is a boolean",
-            given=repr(protection_declares_close_all),
-        )
-    trigger_token: str | None = None
-    if trigger_class is not None:
-        trigger_token = clean_str(trigger_class)
-        if trigger_token is None:
-            return invalid(
-                "trigger_class",
-                "a Book-policy trigger class is a non-empty token when present",
-                given=repr(trigger_class),
-            )
-    if kind is ControlActionKind.FLATTEN:
-        auth = check_flatten_authority(
-            resolved_authority,
-            trigger_class_declared=trigger_token is not None,
-            protection_declares_close_all=protection_declares_close_all,
-        )
-        if is_refusal(auth):
-            return auth
-    close_ref = _control_action_close_ref(kind, resolved_authority, close_reason_ref)
-    if is_refusal(close_ref):
-        return close_ref
-    return _Ok((trigger_token, close_ref.value, protection_declares_close_all))
+    )
 
 
 # --- the control-action record -----------------------------------------------
@@ -915,28 +666,171 @@ class ControlActionRecord:
         protection_declares_close_all: object = False,
     ) -> Result[ControlActionRecord]:
         """Validate and build a :class:`ControlActionRecord`, value-or-refusal."""
-        identity = _control_action_identity(
-            action_kind, authority, authority_kind, subject_scope, scope_ref
-        )
-        if is_refusal(identity):
-            return identity
-        kind, authority_token, resolved_authority, resolved_scope, ref = identity.value
-        predicate_fields = _control_action_predicate_fields(
-            kind, satisfaction_predicate, rank, reason_class, stream, issued_at
-        )
-        if is_refusal(predicate_fields):
-            return predicate_fields
-        predicate, resolved_rank, reason, resolved_stream, instant = predicate_fields.value
-        extras = _control_action_extras(
-            kind,
-            resolved_authority,
-            trigger_class=trigger_class,
-            protection_declares_close_all=protection_declares_close_all,
-            close_reason_ref=close_reason_ref,
-        )
-        if is_refusal(extras):
-            return extras
-        trigger_token, close_ref, declares_close_all = extras.value
+        kind_check = reject_blanket_command_pipe_block(action_kind)
+        if is_refusal(kind_check):
+            return kind_check
+        kind = kind_check.value
+
+        authority_token = clean_str(authority)
+        if authority_token is None:
+            return invalid(
+                "authority",
+                "every action carries an issuing authority instance so the act has an "
+                "issuer and a rank",
+                given=repr(authority),
+            )
+        resolved_authority = coerce_enum(AuthorityKind, authority_kind)
+        if resolved_authority is None:
+            return invalid(
+                "authority_kind",
+                "authority_kind is operator|book_policy|protection_authority|"
+                "venue-delegated|adapter_self",
+                given=repr(authority_kind),
+                allowed=[member.value for member in AuthorityKind],
+            )
+        resolved_scope = coerce_enum(SubjectScope, subject_scope)
+        if resolved_scope is None:
+            return invalid(
+                "subject_scope",
+                "subject_scope is instrument|book|binding|account|venue|global",
+                given=repr(subject_scope),
+                allowed=[member.value for member in SubjectScope],
+            )
+        ref = clean_str(scope_ref)
+        if ref is None:
+            return invalid(
+                "scope_ref",
+                "a control action names its subject by a non-empty opaque scope_ref",
+                given=repr(scope_ref),
+            )
+        predicate = coerce_enum(SatisfactionPredicate, satisfaction_predicate)
+        if predicate is None:
+            return invalid(
+                "satisfaction_predicate",
+                "every action declares a mandatory satisfaction predicate from the "
+                "closed vocabulary",
+                given=repr(satisfaction_predicate),
+                allowed=[member.value for member in SatisfactionPredicate],
+            )
+        if kind in NEVER_AUTO_KINDS and predicate is not SatisfactionPredicate.NEVER_AUTO:
+            return invalid(
+                "satisfaction_predicate",
+                "suspend_new and drain are never-auto by rule — clearing only by an "
+                "operator resume",
+                action_kind=kind.value,
+                given=predicate.value,
+            )
+        if kind is ControlActionKind.RESUME and predicate is not SatisfactionPredicate.NEVER_AUTO:
+            return invalid(
+                "satisfaction_predicate",
+                "resume is operator-only and never-auto",
+                given=predicate.value,
+            )
+        if kind is ControlActionKind.FLATTEN and (
+            predicate is not SatisfactionPredicate.SCOPE_FLAT_AT_RECONCILED_VERDICT
+        ):
+            return invalid(
+                "satisfaction_predicate",
+                "flatten satisfies only on a reconciled verdict showing the scope flat",
+                given=predicate.value,
+            )
+        if isinstance(rank, bool) or not isinstance(rank, int) or rank < 0:
+            return invalid(
+                "rank",
+                "rank is a mandatory, non-defaultable non-negative integer (BMS-declared)",
+                given=repr(rank),
+            )
+        reason = clean_str(reason_class)
+        if reason is None:
+            return invalid(
+                "reason_class",
+                "a control action carries a typed reason class",
+                given=repr(reason_class),
+            )
+        if not isinstance(stream, CommandStreamKey):
+            return invalid(
+                "stream",
+                "a control action is scoped to one (VenueId, account) command stream",
+                given=repr(stream),
+            )
+        if not isinstance(issued_at, Instant):
+            return invalid(
+                "issued_at",
+                "a control action is dated with an injected Instant (never a clock read "
+                "below the composition root); a standing intent never time-expires",
+                given=repr(issued_at),
+            )
+        if not isinstance(protection_declares_close_all, bool):
+            return invalid(
+                "protection_declares_close_all",
+                "protection_declares_close_all is a boolean",
+                given=repr(protection_declares_close_all),
+            )
+
+        # resume is operator-only
+        if kind is ControlActionKind.RESUME and resolved_authority is not AuthorityKind.OPERATOR:
+            return policy(
+                "authority_kind",
+                "resume is operator-only — escalation automates, de-escalation does not",
+                authority_kind=resolved_authority.value,
+            )
+
+        # adapter_self may not flatten
+        if resolved_authority is AuthorityKind.ADAPTER_SELF and kind in ADAPTER_SELF_FLATTEN_KINDS:
+            return policy(
+                "authority_kind",
+                "the venue adapter never initiates a flatten; adapter_self actions are "
+                "limited to suspend_new, drain, throttle and session state",
+                action_kind=kind.value,
+            )
+
+        trigger_token: str | None = None
+        if trigger_class is not None:
+            trigger_token = clean_str(trigger_class)
+            if trigger_token is None:
+                return invalid(
+                    "trigger_class",
+                    "a Book-policy trigger class is a non-empty token when present",
+                    given=repr(trigger_class),
+                )
+
+        if kind is ControlActionKind.FLATTEN:
+            auth = check_flatten_authority(
+                resolved_authority,
+                trigger_class_declared=trigger_token is not None,
+                protection_declares_close_all=protection_declares_close_all,
+            )
+            if is_refusal(auth):
+                return auth
+
+        close_ref: CloseReason | None = None
+        if close_reason_ref is not None:
+            close_ref = coerce_enum(CloseReason, close_reason_ref)
+            if close_ref is None:
+                return invalid(
+                    "close_reason_ref",
+                    "close_reason_ref is a CloseReason from the CT-29 taxonomy when present",
+                    given=repr(close_reason_ref),
+                )
+        else:
+            mapped = close_reason_for(kind, resolved_authority)
+            if is_refusal(mapped):
+                return mapped
+            close_ref = mapped.value
+
+        if kind is ControlActionKind.FLATTEN and close_ref is None:
+            return invalid(
+                "close_reason_ref",
+                "a flatten that closes a position carries close_reason_ref through the "
+                "pinned (kind x authority) mapping",
+            )
+        if kind is not ControlActionKind.FLATTEN and close_ref is not None:
+            return invalid(
+                "close_reason_ref",
+                "suspend_new, drain and resume that close nothing omit close_reason_ref",
+                given=close_ref.value,
+            )
+
         return _Ok(
             cls(
                 action_kind=kind,
@@ -945,13 +839,13 @@ class ControlActionRecord:
                 subject_scope=resolved_scope,
                 scope_ref=ref,
                 satisfaction_predicate=predicate,
-                rank=resolved_rank,
+                rank=rank,
                 reason_class=reason,
-                stream=resolved_stream,
-                issued_at=instant,
+                stream=stream,
+                issued_at=issued_at,
                 close_reason_ref=close_ref,
                 trigger_class=trigger_token,
-                protection_declares_close_all=declares_close_all,
+                protection_declares_close_all=protection_declares_close_all,
             )
         )
 
@@ -1303,14 +1197,6 @@ def evaluate_satisfaction(
             given=repr(verdict),
             allowed=[member.value for member in ReconciliationVerdict],
         )
-    flags = _satisfaction_flags(scope_flat, no_pending_orders)
-    if is_refusal(flags):
-        return flags
-    flat, no_pending = flags.value
-    return _Ok(_satisfaction_status(resolved_pred, resolved_verdict, flat, no_pending))
-
-
-def _satisfaction_flags(scope_flat: object, no_pending_orders: object) -> Result[tuple[bool, bool]]:
     if not isinstance(scope_flat, bool):
         return invalid("scope_flat", "scope_flat is a boolean", given=repr(scope_flat))
     if not isinstance(no_pending_orders, bool):
@@ -1319,24 +1205,17 @@ def _satisfaction_flags(scope_flat: object, no_pending_orders: object) -> Result
             "no_pending_orders is a boolean",
             given=repr(no_pending_orders),
         )
-    return _Ok((scope_flat, no_pending_orders))
-
-
-def _satisfaction_status(
-    predicate: SatisfactionPredicate,
-    verdict: ReconciliationVerdict,
-    scope_flat: bool,
-    no_pending_orders: bool,
-) -> StandingIntentStatus:
-    if predicate is SatisfactionPredicate.NEVER_AUTO:
-        return StandingIntentStatus.OPEN
-    if verdict is not ReconciliationVerdict.RECONCILED:
-        return StandingIntentStatus.HELD_ALARM
-    if predicate is SatisfactionPredicate.SCOPE_FLAT_AT_RECONCILED_VERDICT:
-        return StandingIntentStatus.SATISFIED if scope_flat else StandingIntentStatus.OPEN
+    if resolved_pred is SatisfactionPredicate.NEVER_AUTO:
+        return _Ok(StandingIntentStatus.OPEN)
+    if resolved_verdict is not ReconciliationVerdict.RECONCILED:
+        return _Ok(StandingIntentStatus.HELD_ALARM)
+    if resolved_pred is SatisfactionPredicate.SCOPE_FLAT_AT_RECONCILED_VERDICT:
+        if scope_flat:
+            return _Ok(StandingIntentStatus.SATISFIED)
+        return _Ok(StandingIntentStatus.OPEN)
     if no_pending_orders:
-        return StandingIntentStatus.SATISFIED
-    return StandingIntentStatus.OPEN
+        return _Ok(StandingIntentStatus.SATISFIED)
+    return _Ok(StandingIntentStatus.OPEN)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1449,77 +1328,56 @@ def fold_standing_intents(
             "the standing-intent fold is scoped to one command stream",
             given=repr(command_stream),
         )
-    flat_map = _coerce_scope_flat_map(scope_flat_by_ref)
-    if is_refusal(flat_map):
-        return flat_map
+    flat_map: dict[str, bool] = {}
+    if scope_flat_by_ref is not None:
+        if not isinstance(scope_flat_by_ref, Mapping):
+            return invalid(
+                "scope_flat_by_ref",
+                "scope_flat_by_ref is a mapping of scope_ref → bool when present",
+                given=type_name(scope_flat_by_ref),
+            )
+        for key, value in cast("Mapping[object, object]", scope_flat_by_ref).items():
+            if not isinstance(key, str) or not isinstance(value, bool):
+                return invalid(
+                    "scope_flat_by_ref",
+                    "scope_flat_by_ref carries string keys and boolean values",
+                    given=repr((key, value)),
+                )
+            flat_map[key] = value
+
     records = stream.records_for(command_stream)
+    # Collect operator resumes by scope — they clear never-auto intents at that scope.
     resumed_scopes: set[str] = {
         r.scope_ref
         for r in records
         if r.action_kind is ControlActionKind.RESUME and r.authority_kind is AuthorityKind.OPERATOR
     }
+
     folds: list[StandingIntentFold] = []
     for record in records:
-        folded = _fold_one_standing_intent(
-            record, verdict=verdict, flat_map=flat_map.value, resumed_scopes=resumed_scopes
-        )
-        if is_refusal(folded):
-            return folded
-        if folded.value is not None:
-            folds.append(folded.value)
+        if record.action_kind is ControlActionKind.RESUME:
+            continue
+        scope_flat = flat_map.get(record.scope_ref, False)
+        if (
+            record.satisfaction_predicate is SatisfactionPredicate.NEVER_AUTO
+            and record.scope_ref in resumed_scopes
+        ):
+            fp = record.fingerprint()
+            if is_refusal(fp):
+                return fp
+            folds.append(
+                StandingIntentFold(
+                    record=record,
+                    record_fingerprint=fp.value,
+                    status=StandingIntentStatus.SATISFIED,
+                )
+            )
+            continue
+        evaluated = reevaluate_standing_intent(record, verdict=verdict, scope_flat=scope_flat)
+        if is_refusal(evaluated):
+            return evaluated
+        folds.append(evaluated.value)
     return _Ok(tuple(folds))
-
-
-def _coerce_scope_flat_map(scope_flat_by_ref: object) -> Result[dict[str, bool]]:
-    if scope_flat_by_ref is None:
-        return _Ok({})
-    if not isinstance(scope_flat_by_ref, Mapping):
-        return invalid(
-            "scope_flat_by_ref",
-            "scope_flat_by_ref is a mapping of scope_ref → bool when present",
-            given=type_name(scope_flat_by_ref),
-        )
-    flat_map: dict[str, bool] = {}
-    for key, value in cast("Mapping[object, object]", scope_flat_by_ref).items():
-        if not isinstance(key, str) or not isinstance(value, bool):
-            return invalid(
-                "scope_flat_by_ref",
-                "scope_flat_by_ref carries string keys and boolean values",
-                given=repr((key, value)),
-            )
-        flat_map[key] = value
-    return _Ok(flat_map)
-
-
-def _fold_one_standing_intent(
-    record: ControlActionRecord,
-    *,
-    verdict: object,
-    flat_map: dict[str, bool],
-    resumed_scopes: set[str],
-) -> Result[StandingIntentFold | None]:
-    if record.action_kind is ControlActionKind.RESUME:
-        return _Ok(None)
-    if (
-        record.satisfaction_predicate is SatisfactionPredicate.NEVER_AUTO
-        and record.scope_ref in resumed_scopes
-    ):
-        fp = record.fingerprint()
-        if is_refusal(fp):
-            return fp
-        return _Ok(
-            StandingIntentFold(
-                record=record,
-                record_fingerprint=fp.value,
-                status=StandingIntentStatus.SATISFIED,
-            )
-        )
-    evaluated = reevaluate_standing_intent(
-        record, verdict=verdict, scope_flat=flat_map.get(record.scope_ref, False)
-    )
-    if is_refusal(evaluated):
-        return evaluated
-    return _Ok(evaluated.value)
 
 
 # --- same-tick arbitration ---------------------------------------------------
@@ -1657,32 +1515,18 @@ def arbitrate_same_tick(
     preserved = check_exit_preservation(blocked_act=blocked_act)
     if is_refusal(preserved):
         return preserved
-    context = _arbitration_context(pending, rank_table, stream, arbitration_seed)
-    if is_refusal(context):
-        return context
-    items, arbitration_ref, resolved_stream = context.value
-    emit: list[PendingControlAction] = []
-    suppressed: list[SuppressedControlAction] = []
-    by_scope: dict[tuple[str, str], list[PendingControlAction]] = {}
-    for item in items:
-        by_scope.setdefault(_scope_key(item.enforcement), []).append(item)
-    for group in by_scope.values():
-        group_emit, group_suppressed = _arbitrate_scope_group(group, arbitration_ref)
-        emit.extend(group_emit)
-        suppressed.extend(group_suppressed)
-    return _Ok(
-        ArbitrationOutcome(
-            stream=resolved_stream,
-            emit=tuple(emit),
-            suppressed=tuple(suppressed),
-            arbitration_record_ref=arbitration_ref,
+    if not isinstance(stream, CommandStreamKey):
+        return invalid(
+            "stream",
+            "same-tick arbitration runs at exactly one (VenueId, account) point",
+            given=repr(stream),
         )
-    )
-
-
-def _coerce_pending_actions(
-    pending: object, stream: CommandStreamKey
-) -> Result[list[PendingControlAction]]:
+    if not isinstance(rank_table, ControlRankTable):
+        return invalid(
+            "rank_table",
+            "arbitration reads the BMS-declared ControlRankTable for this stream",
+            given=repr(rank_table),
+        )
     pending_given = type_name(pending)
     if isinstance(pending, (str, bytes, Mapping)) or not isinstance(pending, Iterable):
         return invalid(
@@ -1707,12 +1551,8 @@ def _coerce_pending_actions(
         items.append(item)
     if not items:
         return invalid("pending", "arbitration requires at least one pending action")
-    return _Ok(items)
 
-
-def _validate_pending_ranks(
-    items: list[PendingControlAction], ranks: Mapping[ControlActionKind, int]
-) -> Result[None]:
+    ranks = rank_table.ranks_by_kind()
     for item in items:
         if item.record.action_kind not in ranks:
             return invalid(
@@ -1728,30 +1568,7 @@ def _validate_pending_ranks(
                 record_rank=item.record.rank,
                 table_rank=ranks[item.record.action_kind],
             )
-    return _Ok(None)
 
-
-def _arbitration_context(
-    pending: object, rank_table: object, stream: object, arbitration_seed: object
-) -> Result[tuple[list[PendingControlAction], Fingerprint, CommandStreamKey]]:
-    if not isinstance(stream, CommandStreamKey):
-        return invalid(
-            "stream",
-            "same-tick arbitration runs at exactly one (VenueId, account) point",
-            given=repr(stream),
-        )
-    if not isinstance(rank_table, ControlRankTable):
-        return invalid(
-            "rank_table",
-            "arbitration reads the BMS-declared ControlRankTable for this stream",
-            given=repr(rank_table),
-        )
-    items = _coerce_pending_actions(pending, stream)
-    if is_refusal(items):
-        return items
-    ranked = _validate_pending_ranks(items.value, rank_table.ranks_by_kind())
-    if is_refusal(ranked):
-        return ranked
     seed = clean_str(arbitration_seed)
     if seed is None:
         return invalid(
@@ -1764,113 +1581,106 @@ def _arbitration_context(
             "class": "arbitration-record",
             "stream": stream.fp1_identity(),
             "seed": seed,
-            "pending": sorted(p.record_fingerprint.value for p in items.value),
+            "pending": sorted(p.record_fingerprint.value for p in items),
             "format_version": CT30_CONTRACT_FORMAT_VERSION,
         }
     )
     if is_refusal(arb_fp):
         return arb_fp
-    return _Ok((items.value, arb_fp.value, stream))
+    arbitration_ref = arb_fp.value
 
+    # Group by enforcement scope.
+    by_scope: dict[tuple[str, str], list[PendingControlAction]] = {}
+    for item in items:
+        by_scope.setdefault(_scope_key(item.enforcement), []).append(item)
 
-def _suppress(
-    loser: PendingControlAction,
-    winner: PendingControlAction,
-    *,
-    reason_class: str,
-    arbitration_ref: Fingerprint,
-) -> SuppressedControlAction:
-    return SuppressedControlAction(
-        suppressed=loser,
-        suppressing_authority=winner.record.authority,
-        suppressing_authority_kind=winner.record.authority_kind,
-        reason_class=reason_class,
-        arbitration_record_ref=arbitration_ref,
-    )
-
-
-def _collapse_same_command(
-    group: list[PendingControlAction], arbitration_ref: Fingerprint
-) -> tuple[list[PendingControlAction], list[SuppressedControlAction]]:
-    by_command: dict[ControlActionKind, list[PendingControlAction]] = {}
-    for item in group:
-        by_command.setdefault(item.mechanical_command, []).append(item)
-    survivors: list[PendingControlAction] = []
+    emit: list[PendingControlAction] = []
     suppressed: list[SuppressedControlAction] = []
-    for _command, cohort in by_command.items():
-        ordered = sorted(cohort, key=lambda p: (p.record.rank, p.record_fingerprint.value))
-        winner = ordered[0]
-        survivors.append(winner)
-        for loser in ordered[1:]:
-            suppressed.append(
-                _suppress(
-                    loser,
-                    winner,
-                    reason_class="collapse-same-mechanical-command",
-                    arbitration_ref=arbitration_ref,
+
+    for group in by_scope.values():
+        # Collapse identical mechanical commands first.
+        by_command: dict[ControlActionKind, list[PendingControlAction]] = {}
+        for item in group:
+            by_command.setdefault(item.mechanical_command, []).append(item)
+
+        survivors: list[PendingControlAction] = []
+        for _command, cohort in by_command.items():
+            ordered = sorted(cohort, key=lambda p: (p.record.rank, p.record_fingerprint.value))
+            winner = ordered[0]
+            survivors.append(winner)
+            for loser in ordered[1:]:
+                suppressed.append(
+                    SuppressedControlAction(
+                        suppressed=loser,
+                        suppressing_authority=winner.record.authority,
+                        suppressing_authority_kind=winner.record.authority_kind,
+                        reason_class="collapse-same-mechanical-command",
+                        arbitration_record_ref=arbitration_ref,
+                    )
                 )
-            )
-    return survivors, suppressed
 
-
-def _rank_pair(
-    candidate: PendingControlAction, incumbent: PendingControlAction
-) -> tuple[PendingControlAction, PendingControlAction]:
-    if candidate.record.rank < incumbent.record.rank:
-        return candidate, incumbent
-    if candidate.record.rank > incumbent.record.rank:
-        return incumbent, candidate
-    if candidate.record_fingerprint.value < incumbent.record_fingerprint.value:
-        return candidate, incumbent
-    return incumbent, candidate
-
-
-def _conflict_candidate(
-    candidate: PendingControlAction,
-    kept: list[PendingControlAction],
-    suppressed: list[SuppressedControlAction],
-    arbitration_ref: Fingerprint,
-) -> bool:
-    for incumbent in list(kept):
-        if candidate.mechanical_command == incumbent.mechanical_command:
-            continue
-        if _compose(candidate.mechanical_command, incumbent.mechanical_command):
-            continue
-        higher, lower = _rank_pair(candidate, incumbent)
-        if _protection(higher.mechanical_command) < _protection(lower.mechanical_command):
-            continue
-        if lower is candidate:
-            suppressed.append(
-                _suppress(
-                    lower,
-                    higher,
-                    reason_class="conflict-higher-rank-wins",
-                    arbitration_ref=arbitration_ref,
-                )
-            )
-            return True
-        kept.remove(incumbent)
-        suppressed.append(
-            _suppress(
-                lower,
-                higher,
-                reason_class="conflict-higher-rank-wins",
-                arbitration_ref=arbitration_ref,
-            )
+        # Across distinct mechanical commands: compose, conflict, or preserve.
+        survivors_sorted = sorted(
+            survivors, key=lambda p: (p.record.rank, p.record_fingerprint.value)
         )
-    return False
+        kept: list[PendingControlAction] = []
+        for candidate in survivors_sorted:
+            drop = False
+            for incumbent in list(kept):
+                if candidate.mechanical_command == incumbent.mechanical_command:
+                    continue
+                if _compose(candidate.mechanical_command, incumbent.mechanical_command):
+                    continue
+                # Mutually exclusive — higher rank (lower number) wins, unless that
+                # would reduce the protection the lower-ranked action would deliver.
+                if candidate.record.rank < incumbent.record.rank:
+                    higher, lower = candidate, incumbent
+                elif candidate.record.rank > incumbent.record.rank:
+                    higher, lower = incumbent, candidate
+                else:
+                    # Unique ranks at Layer 1 make this unreachable for distinct kinds;
+                    # fingerprint tie-break keeps determinism if a table is partial.
+                    higher, lower = (
+                        (candidate, incumbent)
+                        if candidate.record_fingerprint.value < incumbent.record_fingerprint.value
+                        else (incumbent, candidate)
+                    )
+                if _protection(higher.mechanical_command) < _protection(lower.mechanical_command):
+                    # Standing invariant: higher may not reduce lower's protection —
+                    # both execute (treat as compose).
+                    continue
+                # Higher wins; suppress lower.
+                if lower is candidate:
+                    drop = True
+                    suppressed.append(
+                        SuppressedControlAction(
+                            suppressed=lower,
+                            suppressing_authority=higher.record.authority,
+                            suppressing_authority_kind=higher.record.authority_kind,
+                            reason_class="conflict-higher-rank-wins",
+                            arbitration_record_ref=arbitration_ref,
+                        )
+                    )
+                    break
+                kept.remove(incumbent)
+                suppressed.append(
+                    SuppressedControlAction(
+                        suppressed=lower,
+                        suppressing_authority=higher.record.authority,
+                        suppressing_authority_kind=higher.record.authority_kind,
+                        reason_class="conflict-higher-rank-wins",
+                        arbitration_record_ref=arbitration_ref,
+                    )
+                )
+            if not drop:
+                kept.append(candidate)
+        emit.extend(kept)
 
-
-def _arbitrate_scope_group(
-    group: list[PendingControlAction], arbitration_ref: Fingerprint
-) -> tuple[list[PendingControlAction], list[SuppressedControlAction]]:
-    survivors, suppressed = _collapse_same_command(group, arbitration_ref)
-    survivors_sorted = sorted(
-        survivors, key=lambda p: (p.record.rank, p.record_fingerprint.value)
+    return _Ok(
+        ArbitrationOutcome(
+            stream=stream,
+            emit=tuple(emit),
+            suppressed=tuple(suppressed),
+            arbitration_record_ref=arbitration_ref,
+        )
     )
-    kept: list[PendingControlAction] = []
-    for candidate in survivors_sorted:
-        drop = _conflict_candidate(candidate, kept, suppressed, arbitration_ref)
-        if not drop:
-            kept.append(candidate)
-    return kept, suppressed

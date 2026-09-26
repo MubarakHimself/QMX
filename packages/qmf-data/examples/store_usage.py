@@ -19,7 +19,6 @@ Shows the five things Story 3.1 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -119,19 +118,19 @@ def main() -> None:
         world = _unwrap(store.for_world(World.LIVE), "live world store")
 
         four_boundaries_over_four_engines(world)
-        sys.stdout.write("four boundaries over four engines: parquet, duckdb, jsonl, sqlite\n")
+        print("four boundaries over four engines: parquet, duckdb, jsonl, sqlite")
 
         outcome = idempotent_rewrite(world)
-        sys.stdout.write(f"byte-identical re-write is: {outcome}\n")
+        print(f"byte-identical re-write is: {outcome}")
 
         simulated_and_cross_world_refused(store, world)
-        sys.stdout.write("simulated store and cross-world read: both policy rejection\n")
+        print("simulated store and cross-world read: both policy rejection")
 
         writer_outcome = one_writer_per_stream(world)
-        sys.stdout.write(f"second writer on a held stream: {writer_outcome}\n")
+        print(f"second writer on a held stream: {writer_outcome}")
 
         count = backup_reads_verbatim(world)
-        sys.stdout.write(f"backup input read raw-archive records verbatim: {count}\n")
+        print(f"backup input read raw-archive records verbatim: {count}")
 
 
 if __name__ == "__main__":

@@ -22,7 +22,6 @@ Shows the four things Story 7.6 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -105,15 +104,15 @@ def main() -> None:
 
     # 1 + 2. The first wrapper set: each a both-modes configured indicator with warm-up at
     # the reference lookback, and a mechanically stated capability term (no trading school).
-    sys.stdout.write(f"wrapper set: {' '.join(WRAPPER_FORMULAS)}\n")
+    print(f"wrapper set: {' '.join(WRAPPER_FORMULAS)}")
     for formula_id in WRAPPER_FORMULAS:
         spec = WRAPPER_SET[formula_id]
         config = build(formula_id)
         lookback = _unwrap(reference_lookback(formula_id, period))
         both = {SupportedMode.BATCH, SupportedMode.STREAMING} == set(config.supported_modes)
-        sys.stdout.write(
+        print(
             f"  {formula_id}: warm_up={config.warm_up} lookback={lookback} "
-            f"both_modes={both} term={spec.capability_term!r}\n"
+            f"both_modes={both} term={spec.capability_term!r}"
         )
 
     # 3. The tier-2 equality law: streaming equals batch by construction (SMA period 3).
@@ -144,26 +143,24 @@ def main() -> None:
         )
     streaming = _unwrap(stream.result())
     equal = _unwrap(assert_mode_equality(sma, batch, streaming))
-    sys.stdout.write(f"equality law (streaming == batch): {equal}\n")
+    print(f"equality law (streaming == batch): {equal}")
 
     # 4. FM-4: an output-changing upgrade over identical canonical inputs is caught and
     # mints the per-configured-indicator version; an unchanged output does not.
     unchanged = _unwrap(compare_reference_outputs(sma, batch, batch))
-    sys.stdout.write(
-        f"upgrade with no output change: {unchanged.verdict.value} (mint={unchanged.mint})\n"
-    )
+    print(f"upgrade with no output change: {unchanged.verdict.value} (mint={unchanged.mint})")
 
     after = _perturb(batch, "sma")
     changed = _unwrap(compare_reference_outputs(sma, batch, after))
     mint = changed.mint
     assert mint is not None, changed
-    sys.stdout.write(
+    print(
         f"upgrade that changes output: {changed.verdict.value} "
         f"mint {mint.previous_format_version}->{mint.minted_format_version} "
-        f"protocol_unchanged={changed.protocol_format_version}\n"
+        f"protocol_unchanged={changed.protocol_format_version}"
     )
     evidence_differs = mint.before_evidence["sma"] != mint.after_evidence["sma"]
-    sys.stdout.write(f"before/after evidence differ: {evidence_differs}\n")
+    print(f"before/after evidence differ: {evidence_differs}")
 
 
 def _perturb(result: BatchResult, channel: str) -> BatchResult:

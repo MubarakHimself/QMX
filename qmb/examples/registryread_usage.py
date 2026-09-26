@@ -20,7 +20,6 @@ Shows the things B-15 / Story 13.2 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.registryread import (
@@ -99,11 +98,11 @@ def main() -> None:
     )
     resolved = _unwrap(port.resolve("scalping"), "alias resolve")
     assert resolved.cite() == first.stable_id.value
-    sys.stdout.write(f"alias scalping cites {resolved.cite()}\n")
+    print(f"alias scalping cites {resolved.cite()}")
 
     banned = port.resolve("scalping@1")
     assert is_refusal(banned) and banned.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write("name@version refused: invalid input\n")
+    print("name@version refused: invalid input")
 
     second = _record("v2", "node-b")
     fresher = _unwrap(
@@ -136,9 +135,7 @@ def main() -> None:
     assert is_refusal(stale_ref) and stale_ref.category is RefusalCategory.STALE_EVIDENCE
     assert stale_ref.context["severity_key"] == STALE_EVIDENCE_SEVERITY_KEY
     assert stale_ref.context["severity"] == _SEVERITY
-    sys.stdout.write(
-        f"superseded ref: stale evidence (severity_key={stale_ref.context['severity_key']})\n"
-    )
+    print(f"superseded ref: stale evidence (severity_key={stale_ref.context['severity_key']})")
 
     frozen = _unwrap(
         RegistryReadPort.try_create(
@@ -153,9 +150,9 @@ def main() -> None:
     assert trial.cite() == first.stable_id.value
     late = frozen.resolve("scalping@latest")
     assert is_refusal(late) and late.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write("sweep freeze: fp1 resolved; name@latest refused\n")
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("registry-read port ok\n")
+    print("sweep freeze: fp1 resolved; name@latest refused")
+    print(f"qmb {qmb.__version__}")
+    print("registry-read port ok")
 
 
 if __name__ == "__main__":

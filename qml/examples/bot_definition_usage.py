@@ -30,7 +30,6 @@ Shows the things QL-3 / Story 11.6 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core.chrono import CalendarIdentity, Instant
@@ -229,15 +228,13 @@ def two_sandboxes_one_fp1() -> bool:
 
 
 def main() -> None:
-    sys.stdout.write(f"identity excludes AD-16 header: {identity_excludes_ad16_header()}\n")
-    sys.stdout.write(f"canonical assignment is derived: {canonical_assignment_is_derived()}\n")
-    sys.stdout.write(f"zero family ids is invalid input: {cardinality_and_confluence_order()}\n")
-    sys.stdout.write(f"entry-only bot is legal: {no_sizing_or_exit_logic()}\n")
-    sys.stdout.write(
-        f"changed default mints new Bot: {versioning_multiple_heads_and_changed_default()}\n"
-    )
-    sys.stdout.write(f"two sandboxes one Bot fp1: {two_sandboxes_one_fp1()}\n")
-    sys.stdout.write("bot definition authoring ok\n")
+    print(f"identity excludes AD-16 header: {identity_excludes_ad16_header()}")
+    print(f"canonical assignment is derived: {canonical_assignment_is_derived()}")
+    print(f"zero family ids is invalid input: {cardinality_and_confluence_order()}")
+    print(f"entry-only bot is legal: {no_sizing_or_exit_logic()}")
+    print(f"changed default mints new Bot: {versioning_multiple_heads_and_changed_default()}")
+    print(f"two sandboxes one Bot fp1: {two_sandboxes_one_fp1()}")
+    print("bot definition authoring ok")
 
 
 if __name__ == "__main__":

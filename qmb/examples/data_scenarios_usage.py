@@ -24,7 +24,6 @@ Shows the things R5/R3/R7/R8 pin down for multi-scenario synthetic generation:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar, cast
 
 from qmb.data import (
@@ -117,9 +116,9 @@ def main() -> None:
     # 1. QMX-owned, version-pinned RNG — never a runtime stdlib Random.
     provenance = rng_provenance()
     assert provenance["is_runtime_stdlib_random"] is False
-    sys.stdout.write(
+    print(
         f"RNG is QMX-owned {RNG_FAMILY}, version-pinned; "
-        f"is_runtime_stdlib_random={provenance['is_runtime_stdlib_random']}\n"
+        f"is_runtime_stdlib_random={provenance['is_runtime_stdlib_random']}"
     )
 
     # 2. Reproduce-or-refuse from {process, seed, source-dataset id, config fp1}.
@@ -136,9 +135,7 @@ def main() -> None:
         calendar=calendar,
     )
     assert is_refusal(mismatch) and mismatch.context["field"] == "artifact_fingerprint"
-    sys.stdout.write(
-        "reproduce-or-refuse: same inputs reproduce the artifact fingerprint; a mismatch refuses\n"
-    )
+    print("reproduce-or-refuse: same inputs reproduce the artifact fingerprint; a mismatch refuses")
 
     # 3. Per-scenario substreams base_seed + scenario_index, tagged by index, isolated.
     fanout = _ok(generate_scenarios(_gbm(scenario_count=4), calendar=calendar))
@@ -149,9 +146,9 @@ def main() -> None:
     assert inside is not None
     assert isolated.series_fingerprint.value == inside.series_fingerprint.value
     assert seeds == [derive_substream_seed(7, i) for i in indices]
-    sys.stdout.write(
+    print(
         f"scenario substreams seed=base+index {seeds}; scenario 2 reproduces in isolation="
-        f"{isolated.series_fingerprint.value == inside.series_fingerprint.value}\n"
+        f"{isolated.series_fingerprint.value == inside.series_fingerprint.value}"
     )
 
     # 4. History-seeded scenario 0 is the untouched original; scenarios >0 perturbed.
@@ -167,18 +164,18 @@ def main() -> None:
         for i, bar in enumerate(anchor.bars)
     )
     perturbed = hist.scenarios[1].bars != anchor.bars
-    sys.stdout.write(
+    print(
         f"history-seeded scenario 0 is the untouched original real path (untouched={untouched}); "
-        f"scenarios >0 are perturbed (perturbed={perturbed})\n"
+        f"scenarios >0 are perturbed (perturbed={perturbed})"
     )
 
     # 5. From-scratch gbm has no anchor and no computable robustness band or p-value.
     assert fanout.has_original_anchor is False and fanout.robustness_band_computable is False
     band_refusal = fanout.robustness_band_refusal()
     assert band_refusal is not None and band_refusal.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write(
+    print(
         "from-scratch gbm has no scenario-0 anchor and no robustness band or p-value; "
-        f"the run emits only {list(fanout.permittable_claim_classes)} verdicts\n"
+        f"the run emits only {list(fanout.permittable_claim_classes)} verdicts"
     )
 
     # 6. Governed process-per-run fan-out (min(cpu, memory), enqueue-when-full); typed failures.
@@ -199,12 +196,12 @@ def main() -> None:
         )
     )
     assert failing.produced_count + failing.filtered_count == failing.scenario_count
-    sys.stdout.write(
+    print(
         f"governor min(cpu,memory) bound={plan.parallelism_bound}, admitted={len(plan.admitted)}, "
         f"queued={len(plan.queued)}, never silent oversubscription; "
-        f"scenario failures counted as typed refusals (filtered_count={failing.filtered_count})\n"
+        f"scenario failures counted as typed refusals (filtered_count={failing.filtered_count})"
     )
-    sys.stdout.write("data scenarios ok\n")
+    print("data scenarios ok")
 
 
 if __name__ == "__main__":

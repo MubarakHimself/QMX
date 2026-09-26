@@ -670,28 +670,14 @@ def run_paper_milestone_qa_debt_gate(
 ) -> Result[QaDebtClosureMatrix]:
     """Resolve every named node QA-debt ID plus the permanent battery."""
     spec = inputs if inputs is not None else QaDebtGateInputs()
-    refused = _refuse_qa_debt_input_flags(spec)
-    if is_refusal(refused):
-        return refused
-    workspace = _bind_qa_debt_workspace(spec)
-    if is_refusal(workspace):
-        return workspace
-    root, rows, battery = workspace.value
-    indexed = _index_qa_debt_rows(root, rows)
-    if is_refusal(indexed):
-        return indexed
-    checked = _validate_qa_debt_workspace_gates(root, battery)
-    if is_refusal(checked):
-        return checked
-    mutation = _resolve_mutation_status(spec)
-    if is_refusal(mutation):
-        return mutation
-    return _stamp_qa_debt_matrix(indexed.value, battery, mutation.value)
+    if spec.mark_inherited is True or spec.mark_implicit is True:
+        return refuse_inherited_or_implicit(
+            inherited=spec.mark_inherited,
+            implicit=spec.mark_implicit,
+        )
+    if spec.reclassify_foundation is True:
+        return refuse_foundation_reclassified(attempted=list(FOUNDATION_DEBT_IDS))
 
-
-def _bind_qa_debt_workspace(
-    spec: QaDebtGateInputs,
-) -> Result[tuple[Path, tuple[QaDebtRow, ...], tuple[BatteryItem, ...]]]:
     root = spec.workspace if spec.workspace is not None else workspace_root()
     if not root.is_dir():
         return invalid(
@@ -700,41 +686,38 @@ def _bind_qa_debt_workspace(
             given=str(root),
             failure_id=_ID_INPUTS,
         )
+
     rows = spec.rows if spec.rows is not None else NODE_QA_DEBT_ROWS
     battery = spec.battery if spec.battery is not None else PERMANENT_BATTERY_ITEMS
-    return Ok((root, rows, battery))
-
-
-def _validate_qa_debt_workspace_gates(
-    root: Path, battery: tuple[BatteryItem, ...]
-) -> Result[None]:
-    checked = _validate_qa_debt_battery(root, battery)
-    if is_refusal(checked):
-        return checked
-    return _validate_mutation_modules(root)
-
-
-def _refuse_qa_debt_input_flags(spec: QaDebtGateInputs) -> Result[None]:
-    if spec.mark_inherited is True or spec.mark_implicit is True:
-        return refuse_inherited_or_implicit(
-            inherited=spec.mark_inherited,
-            implicit=spec.mark_implicit,
-        )
-    if spec.reclassify_foundation is True:
-        return refuse_foundation_reclassified(attempted=list(FOUNDATION_DEBT_IDS))
-    return Ok(None)
-
-
-def _index_qa_debt_rows(
-    root: Path, rows: tuple[QaDebtRow, ...]
-) -> Result[tuple[QaDebtRow, ...]]:
     if not rows:
         return refuse_missing_qa_debt_link(missing=list(NODE_QA_DEBT_IDS))
+
     seen: dict[str, QaDebtRow] = {}
     for row in rows:
-        accepted = _accept_qa_debt_row(root, row, seen)
-        if is_refusal(accepted):
-            return accepted
+        canonical = _canonical(row.debt_id)
+        if canonical in FOUNDATION_DEBT_IDS:
+            return refuse_foundation_reclassified(debt_id=canonical)
+        if row.inherited is True or row.implicit is True:
+            return refuse_inherited_or_implicit(
+                debt_id=canonical,
+                inherited=row.inherited,
+                implicit=row.implicit,
+            )
+        if row.status in _FORBIDDEN_STATUSES:
+            return refuse_inherited_or_implicit(debt_id=canonical, status=row.status)
+        if row.status not in _ALLOWED_STATUSES:
+            return refuse_missing_qa_debt_link(debt_id=canonical, status=row.status)
+        if row.story.strip() == "" or not row.evidence:
+            return refuse_missing_qa_debt_link(
+                debt_id=canonical,
+                story=row.story,
+                evidence=list(row.evidence),
+            )
+        missing = _missing_paths(root, row.evidence)
+        if missing:
+            return refuse_missing_qa_debt_link(debt_id=canonical, missing_evidence=missing)
+        seen[canonical] = row
+
     missing_ids = [debt_id for debt_id in NODE_QA_DEBT_IDS if debt_id not in seen]
     if missing_ids:
         return refuse_missing_qa_debt_link(missing=missing_ids)
@@ -746,41 +729,8 @@ def _index_qa_debt_rows(
             failure_id=_ID_ROSTER,
             extra=extra,
         )
-    return Ok(tuple(seen[debt_id] for debt_id in NODE_QA_DEBT_IDS))
 
-
-def _accept_qa_debt_row(
-    root: Path, row: QaDebtRow, seen: dict[str, QaDebtRow]
-) -> Result[None]:
-    canonical = _canonical(row.debt_id)
-    if canonical in FOUNDATION_DEBT_IDS:
-        return refuse_foundation_reclassified(debt_id=canonical)
-    if row.inherited is True or row.implicit is True:
-        return refuse_inherited_or_implicit(
-            debt_id=canonical,
-            inherited=row.inherited,
-            implicit=row.implicit,
-        )
-    if row.status in _FORBIDDEN_STATUSES:
-        return refuse_inherited_or_implicit(debt_id=canonical, status=row.status)
-    if row.status not in _ALLOWED_STATUSES:
-        return refuse_missing_qa_debt_link(debt_id=canonical, status=row.status)
-    if row.story.strip() == "" or not row.evidence:
-        return refuse_missing_qa_debt_link(
-            debt_id=canonical,
-            story=row.story,
-            evidence=list(row.evidence),
-        )
-    missing = _missing_paths(root, row.evidence)
-    if missing:
-        return refuse_missing_qa_debt_link(debt_id=canonical, missing_evidence=missing)
-    seen[canonical] = row
-    return Ok(None)
-
-
-def _validate_qa_debt_battery(
-    root: Path, battery: tuple[BatteryItem, ...]
-) -> Result[None]:
+    ordered = tuple(seen[debt_id] for debt_id in NODE_QA_DEBT_IDS)
     factory_names = {item.name for item in battery if item.factory_gate}
     if factory_names != set(FACTORY_GATES):
         return policy(
@@ -799,6 +749,7 @@ def _validate_qa_debt_battery(
             "mutmut is not a factory gate (AR-86)",
             failure_id=_ID_BATTERY,
         )
+
     battery_names = [item.name for item in battery]
     if len(set(battery_names)) != len(battery_names):
         return policy(
@@ -806,12 +757,6 @@ def _validate_qa_debt_battery(
             "permanent battery item names must be unique",
             failure_id=_ID_BATTERY,
         )
-    return _validate_battery_evidence(root, battery)
-
-
-def _validate_battery_evidence(
-    root: Path, battery: tuple[BatteryItem, ...]
-) -> Result[None]:
     for item in battery:
         if not item.evidence:
             return policy(
@@ -829,10 +774,7 @@ def _validate_battery_evidence(
                 name=item.name,
                 missing_evidence=missing,
             )
-    return Ok(None)
 
-
-def _validate_mutation_modules(root: Path) -> Result[None]:
     configured = _mutation_config_modules(root)
     if is_refusal(configured):
         return configured
@@ -853,10 +795,7 @@ def _validate_mutation_modules(root: Path) -> Result[None]:
             failure_id=_ID_MUT_ROSTER,
             missing_evidence=module_missing,
         )
-    return Ok(None)
 
-
-def _resolve_mutation_status(spec: QaDebtGateInputs) -> Result[MutationStatus]:
     killed = spec.mutation_killed
     survived = spec.mutation_survived
     if killed is not None or survived is not None:
@@ -876,24 +815,16 @@ def _resolve_mutation_status(spec: QaDebtGateInputs) -> Result[MutationStatus]:
         mutation_state = verdict.value
     else:
         mutation_state = "configured"
-    return Ok(
-        MutationStatus(
-            modules=MappingProxyType(dict(MUTATION_MONEY_PATH_MODULES)),
-            zero_classified_fails_closed=ZERO_CLASSIFIED_MUTANT_FAILS_CLOSED,
-            classified_killed=killed,
-            classified_survived=survived,
-            triaged_survivors=tuple(spec.triaged_survivors),
-            status=mutation_state,
-            ran_in_factory=False,
-        )
+
+    mutation = MutationStatus(
+        modules=MappingProxyType(dict(MUTATION_MONEY_PATH_MODULES)),
+        zero_classified_fails_closed=ZERO_CLASSIFIED_MUTANT_FAILS_CLOSED,
+        classified_killed=killed,
+        classified_survived=survived,
+        triaged_survivors=tuple(spec.triaged_survivors),
+        status=mutation_state,
+        ran_in_factory=False,
     )
-
-
-def _stamp_qa_debt_matrix(
-    ordered: tuple[QaDebtRow, ...],
-    battery: tuple[BatteryItem, ...],
-    mutation: MutationStatus,
-) -> Result[QaDebtClosureMatrix]:
     identity = {
         "battery": [dict(item.as_mapping()) for item in battery],
         "class": QA_DEBT_MATRIX_CLASS,

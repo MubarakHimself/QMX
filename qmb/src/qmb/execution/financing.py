@@ -601,24 +601,6 @@ def mint_financing_journal_event(
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _RolloverBound:
-    frontier: Instant
-    calendar: RolloverCalendar
-    writer: WriterId
-    world: World
-    start_sequence: int
-    positions: tuple[OpenPosition, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _RolloverSchedule:
-    calibration: SwapCalibration
-    trading_date: TradingDate
-    weekday: str
-    closed: bool
-
-
 def apply_financing_rollover(
     port: object,
     positions: object,
@@ -635,73 +617,6 @@ def apply_financing_rollover(
     The rollover instant is answered by ``calendar`` — never hardcoded. Missing
     calibration or a missing swap-table cell is a typed refusal, never zero.
     """
-    bound = _bind_rollover(
-        positions,
-        frontier=frontier,
-        calendar=calendar,
-        writer=writer,
-        world=world,
-        start_sequence=start_sequence,
-        stream_id=stream_id,
-    )
-    if is_refusal(bound):
-        return bound
-    schedule = _rollover_schedule(port, bound.value)
-    if is_refusal(schedule):
-        return schedule
-    if schedule.value is None:
-        return Ok(FinancingRollover(instant=bound.value.frontier, events=(), skipped=()))
-    return _charge_cohort(bound.value, schedule.value)
-
-
-def _bind_rollover(
-    positions: object,
-    *,
-    frontier: object,
-    calendar: object,
-    writer: object,
-    world: object,
-    start_sequence: object,
-    stream_id: object,
-) -> Result[_RolloverBound]:
-    typed = _require_rollover_types(
-        frontier=frontier, calendar=calendar, writer=writer, world=world
-    )
-    if is_refusal(typed):
-        return typed
-    frontier_i, calendar_i, writer_i, world_i = typed.value
-    if (
-        isinstance(start_sequence, bool)
-        or not isinstance(start_sequence, int)
-        or start_sequence < 0
-    ):
-        return invalid(
-            "start_sequence",
-            "journal sequence is a non-negative integer",
-            given=repr(start_sequence),
-        )
-    cohort = _filter_positions(positions, stream_id=stream_id)
-    if is_refusal(cohort):
-        return cohort
-    return Ok(
-        _RolloverBound(
-            frontier=frontier_i,
-            calendar=calendar_i,
-            writer=writer_i,
-            world=world_i,
-            start_sequence=start_sequence,
-            positions=cohort.value,
-        )
-    )
-
-
-def _require_rollover_types(
-    *,
-    frontier: object,
-    calendar: object,
-    writer: object,
-    world: object,
-) -> Result[tuple[Instant, RolloverCalendar, WriterId, World]]:
     if not isinstance(frontier, Instant):
         return invalid(
             "frontier",
@@ -727,119 +642,97 @@ def _require_rollover_types(
             "a CT-13 financing event is instantiated per world",
             given=repr(world),
         )
-    return Ok((frontier, calendar, writer, world))
-
-
-def _filter_positions(positions: object, *, stream_id: object) -> Result[tuple[OpenPosition, ...]]:
+    if (
+        isinstance(start_sequence, bool)
+        or not isinstance(start_sequence, int)
+        or start_sequence < 0
+    ):
+        return invalid(
+            "start_sequence",
+            "journal sequence is a non-negative integer",
+            given=repr(start_sequence),
+        )
     parsed = _as_positions(positions)
     if is_refusal(parsed):
         return parsed
-    if stream_id is None:
-        return parsed
-    token = clean_token(stream_id)
-    if token is None:
-        return invalid(
-            "stream_id",
-            "a stream filter is a non-empty instrument stream id",
-            given=repr(stream_id),
-        )
-    return Ok(tuple(item for item in parsed.value if item.stream_id == token))
-
-
-def _rollover_schedule(
-    port: object, bound: _RolloverBound
-) -> Result[_RolloverSchedule | None]:
-    at_rollover = bound.calendar.is_rollover_instant(bound.frontier)
+    cohort = parsed.value
+    if stream_id is not None:
+        token = clean_token(stream_id)
+        if token is None:
+            return invalid(
+                "stream_id",
+                "a stream filter is a non-empty instrument stream id",
+                given=repr(stream_id),
+            )
+        cohort = tuple(item for item in cohort if item.stream_id == token)
+    at_rollover = calendar.is_rollover_instant(frontier)
     if is_refusal(at_rollover):
         return at_rollover
     if not at_rollover.value:
-        return Ok(None)
+        return Ok(
+            FinancingRollover(instant=frontier, events=(), skipped=()),
+        )
     calibration = _calibration_of(port)
     if is_refusal(calibration):
         return calibration
-    trading = bound.calendar.trading_date_of(bound.frontier)
+    trading = calendar.trading_date_of(frontier)
     if is_refusal(trading):
         return trading
-    weekday = bound.calendar.weekday_of(trading.value)
+    weekday = calendar.weekday_of(trading.value)
     if is_refusal(weekday):
         return weekday
-    closed = bound.calendar.is_weekend_or_holiday(trading.value)
+    closed = calendar.is_weekend_or_holiday(trading.value)
     if is_refusal(closed):
         return closed
-    return Ok(
-        _RolloverSchedule(
-            calibration=calibration.value,
-            trading_date=trading.value,
+    events: list[FinancingCashEvent] = []
+    skipped: list[OpenPosition] = []
+    sequence = start_sequence
+    for position in cohort:
+        charged = charge_swap(
+            position,
+            calibration.value,
             weekday=weekday.value,
             closed=closed.value,
         )
-    )
-
-
-def _charge_cohort(bound: _RolloverBound, schedule: _RolloverSchedule) -> Result[FinancingRollover]:
-    events: list[FinancingCashEvent] = []
-    skipped: list[OpenPosition] = []
-    sequence = bound.start_sequence
-    for position in bound.positions:
-        charged = _charge_one_position(bound, schedule, position, sequence)
         if is_refusal(charged):
             return charged
-        if charged.value is None:
+        if charged.value.skipped or charged.value.amount is None:
             skipped.append(position)
             continue
-        events.append(charged.value)
-        sequence += 1
-    return Ok(
-        FinancingRollover(
-            instant=bound.frontier,
-            events=tuple(events),
-            skipped=tuple(skipped),
-        )
-    )
-
-
-def _charge_one_position(
-    bound: _RolloverBound,
-    schedule: _RolloverSchedule,
-    position: OpenPosition,
-    sequence: int,
-) -> Result[FinancingCashEvent | None]:
-    charged = charge_swap(
-        position,
-        schedule.calibration,
-        weekday=schedule.weekday,
-        closed=schedule.closed,
-    )
-    if is_refusal(charged):
-        return charged
-    if charged.value.skipped or charged.value.amount is None:
-        return Ok(None)
-    journaled = mint_financing_journal_event(
-        position=position,
-        amount=charged.value.amount,
-        day_multiplier=charged.value.day_multiplier,
-        instant=bound.frontier,
-        writer=bound.writer,
-        world=bound.world,
-        sequence=sequence,
-    )
-    if is_refusal(journaled):
-        return journaled
-    component = CostComponent.try_create(
-        COST_COMPONENT_FINANCING,
-        charged.value.amount,
-        FINANCING_ADAPTER_SCHEDULED,
-    )
-    if is_refusal(component):
-        return component
-    return Ok(
-        FinancingCashEvent(
+        journaled = mint_financing_journal_event(
             position=position,
             amount=charged.value.amount,
             day_multiplier=charged.value.day_multiplier,
-            trading_date=schedule.trading_date,
-            journal_event=journaled.value,
-            component=component.value,
+            instant=frontier,
+            writer=writer,
+            world=world,
+            sequence=sequence,
+        )
+        if is_refusal(journaled):
+            return journaled
+        component = CostComponent.try_create(
+            COST_COMPONENT_FINANCING,
+            charged.value.amount,
+            FINANCING_ADAPTER_SCHEDULED,
+        )
+        if is_refusal(component):
+            return component
+        events.append(
+            FinancingCashEvent(
+                position=position,
+                amount=charged.value.amount,
+                day_multiplier=charged.value.day_multiplier,
+                trading_date=trading.value,
+                journal_event=journaled.value,
+                component=component.value,
+            )
+        )
+        sequence += 1
+    return Ok(
+        FinancingRollover(
+            instant=frontier,
+            events=tuple(events),
+            skipped=tuple(skipped),
         )
     )
 

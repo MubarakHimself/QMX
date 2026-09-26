@@ -20,7 +20,6 @@ Shows the things Story 34.3 / FR-W20 / FR-W24 pin down:
 from __future__ import annotations
 
 import json
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -94,7 +93,7 @@ def main() -> None:
     assert identity["dec_0084_dead"] is True
     assert identity["rank"] == "sweep.rank"
     assert qmb.__version__ not in identity.values()
-    sys.stdout.write(str("surfaces: " + ", ".join(QUERY_SURFACES)) + "\n")
+    print("surfaces: " + ", ".join(QUERY_SURFACES))
 
     live = _record("bot-definition", "live-bot", "node-a", zone="live")
     dev = _record(
@@ -164,7 +163,7 @@ def main() -> None:
     )
     cites = {item.cite() for item in found.candidates}
     assert dev.stable_id.value in cites
-    sys.stdout.write("dev-zone candidate included\n")
+    print("dev-zone candidate included")
 
     ranked = _unwrap(
         query_candidates(
@@ -183,12 +182,12 @@ def main() -> None:
     assert ranked.ranking.fp1_identity() == library.fp1_identity()
     assert ranked.ranking.publishes_never_acts is True
     assert qmb.sweep_rank_identity()["candidate_set_view"] is True
-    sys.stdout.write("sweep.rank is the candidate-set rank\n")
+    print("sweep.rank is the candidate-set rank")
 
     ungoverned = _unwrap(save_candidate_view(found, home="ungoverned"), "ungoverned")
     assert ungoverned.durable is False
     assert ungoverned.is_library_object is False
-    sys.stdout.write("ungoverned is a return value\n")
+    print("ungoverned is a return value")
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -201,23 +200,23 @@ def main() -> None:
         payload = json.loads(sidecar.read_text(encoding="utf-8"))
         assert payload["method"] == "candidate-set"
         assert governed.durable is True
-        sys.stdout.write("governed sidecar written\n")
+        print("governed sidecar written")
 
     cited = save_candidate_view(home="ungoverned", cite=dev.stable_id)
     assert is_refusal(cited) and cited.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write("citation without a body refused\n")
+    print("citation without a body refused")
 
     sqlite = query_candidates(sqlite=True)
     minted = query_candidates(mint_registry_kind=True)
     assert is_refusal(sqlite) and sqlite.context["dec_0084_dead"] is True
     assert is_refusal(minted) and minted.context["mints_registry_kind"] is False
-    sys.stdout.write("sqlite and registry-kind refused\n")
+    print("sqlite and registry-kind refused")
 
     staging = query_candidates(port=port, staging=({"proposal": 1},))
     assert is_refusal(staging) and staging.context["reads_staging"] is False
-    sys.stdout.write("staging is not read\n")
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("library candidates ok\n")
+    print("staging is not read")
+    print(f"qmb {qmb.__version__}")
+    print("library candidates ok")
 
 
 if __name__ == "__main__":

@@ -55,12 +55,10 @@ from qmf.risk.control_action import (
 )
 from qmf.risk.control_rank import ControlActionKind, ControlRankRow, ControlRankTable
 from qmf.risk.control_window import (
-    ControlWindowRecord,
     ControlWindowRevisionLog,
     CurrencyExposureRecord,
     FeedQuadruple,
     ProposedWindowAct,
-    ResolvedInstrumentScope,
     WindowBounds,
     WindowKind,
     mint_control_window,
@@ -78,7 +76,6 @@ from qmf.risk.exit_record import (
 from qmf.risk.paper import (
     BindingTransitionStream,
     BookMode,
-    ExecutionResolution,
     ExecutionTarget,
     PaperEpochLog,
     PaperTargetLog,
@@ -92,12 +89,7 @@ from qmn.capital import (
     refuse_stale_exit_before_intent,
     restore_kill_line_stand_down,
 )
-from qmn.capital.bench_fold import (
-    BENCH_FOLD_FIXTURE,
-    BenchCrossingEffect,
-    BenchFoldReport,
-    evaluate_qualifying_loss_bench,
-)
+from qmn.capital.bench_fold import BENCH_FOLD_FIXTURE, evaluate_qualifying_loss_bench
 from qmn.data.news_calendar import (
     FOREX_FACTORY_WEEKLY_JSON,
     SOLE_V1_PROVIDER,
@@ -135,8 +127,6 @@ from qmn.paper import (
     mint_operator_paper_flip,
     resolve_book_execution_target,
 )
-from qmn.paper.routing import PairedDemoBinding
-from qmn.paper.transition import PaperFlipPackage
 from qmn.protection import (
     CandidateOrigin,
     DispatchCandidate,
@@ -444,29 +434,29 @@ class _Fixtures:
 
 class _SecretStore:
     def read(self, ref: object, /) -> Result[object]:
-        _ = ref
+        del ref
         return unpersistable("no such credential")
 
     def atomic_replace(self, ref: object, new_value: object, /) -> Result[object]:
-        _ = new_value
+        del new_value
         return Ok(ref)
 
 
 class _ObsSink:
     def emit(self, observation: object, /) -> SinkResult:
-        _ = observation
+        del observation
         return Ok(SinkAck())
 
 
 class _JournalSink:
     def append(self, event: object, /) -> SinkResult:
-        _ = event
+        del event
         return Ok(SinkAck())
 
 
 class _RecordSink:
     def write(self, record: object, /) -> SinkResult:
-        _ = record
+        del record
         return Ok(SinkAck())
 
 
@@ -523,10 +513,7 @@ def run_paper_milestone_golden_scenarios(
         )
     if not matrix_supplies_no_default_values():
         return refuse_golden_invented_ksa_or_latency(matrix_defaulted=True)
-    return _run_golden_proofs(inputs)
 
-
-def _run_golden_proofs(inputs: GoldenScenarioInputs) -> Result[GoldenScenarioReport]:
     now = _unwrap(inputs.clock.wall_now())
     if isinstance(now, TypedRefusal):
         return now
@@ -540,19 +527,7 @@ def _run_golden_proofs(inputs: GoldenScenarioInputs) -> Result[GoldenScenarioRep
         bench_consecutive_loss_threshold=inputs.bench_consecutive_loss_threshold,
         news_calendar_max_staleness=inputs.news_calendar_max_staleness,
     )
-    evidence = _golden_scenario_evidence(fx)
-    if is_refusal(evidence):
-        return evidence
-    composed, evidence_by_key = evidence.value
-    fixtures = _unwrap(_stamp_fixtures(fx, evidence_by_key))
-    if isinstance(fixtures, TypedRefusal):
-        return fixtures
-    return _golden_report(composed, fixtures)
 
-
-def _golden_scenario_evidence(
-    fx: _Fixtures,
-) -> Result[tuple[Mapping[str, object], dict[str, Mapping[str, object]]]]:
     composed = _unwrap(_exercise_compose(fx))
     if isinstance(composed, TypedRefusal):
         return composed
@@ -568,24 +543,17 @@ def _golden_scenario_evidence(
     scn0011 = _unwrap(_exercise_scn0011(fx))
     if isinstance(scn0011, TypedRefusal):
         return scn0011
-    return Ok(
-        (
-            composed,
-            {
-                "qmn/paper-transition": scn0006,
-                "qmn/news-window": scn0008,
-                "qmn/news-window/narrowing-revision": scn0008,
-                "qmn/compose-pair/suspend-plus-flatten": scn0010,
-                BENCH_FOLD_FIXTURE: scn0011,
-            },
-        )
-    )
 
-
-def _golden_report(
-    composed: Mapping[str, object],
-    fixtures: tuple[GoldenFixtureProof, ...],
-) -> Result[GoldenScenarioReport]:
+    evidence_by_key: dict[str, Mapping[str, object]] = {
+        "qmn/paper-transition": scn0006,
+        "qmn/news-window": scn0008,
+        "qmn/news-window/narrowing-revision": scn0008,
+        "qmn/compose-pair/suspend-plus-flatten": scn0010,
+        BENCH_FOLD_FIXTURE: scn0011,
+    }
+    fixtures = _unwrap(_stamp_fixtures(fx, evidence_by_key))
+    if isinstance(fixtures, TypedRefusal):
+        return fixtures
     proven = tuple(dict.fromkeys(item.scenario for item in fixtures))
     if proven != GOLDEN_SCENARIO_IDS:
         return policy(
@@ -731,39 +699,6 @@ def _exercise_compose(fx: _Fixtures) -> Result[Mapping[str, object]]:
 
 
 def _exercise_scn0006(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    setup = _scn0006_setup(fx)
-    if is_refusal(setup):
-        return setup
-    flipped = _scn0006_flip(fx, setup.value)
-    if is_refusal(flipped):
-        return flipped
-    guarded = _scn0006_invariants(fx, flipped.value)
-    if is_refusal(guarded):
-        return guarded
-    return _scn0006_protection_report(fx, flipped.value)
-
-
-@dataclass(frozen=True, slots=True)
-class _Scn0006Setup:
-    live_fp: Fingerprint
-    paired: PairedDemoBinding
-    live_target: ExecutionTarget
-
-
-@dataclass(frozen=True, slots=True)
-class _Scn0006Flip:
-    live_fp: Fingerprint
-    paired: PairedDemoBinding
-    live_target: ExecutionTarget
-    frozen: ExecutionResolution
-    epochs: PaperEpochLog
-    flip: PaperFlipPackage
-    mode: BookMode
-    restarted: BookMode
-    after_flip: ExecutionResolution
-
-
-def _scn0006_setup(fx: _Fixtures) -> Result[_Scn0006Setup]:
     live_fp = _unwrap(_fp(fx, "live-binding-scn0006"))
     if isinstance(live_fp, TypedRefusal):
         return live_fp
@@ -791,16 +726,12 @@ def _scn0006_setup(fx: _Fixtures) -> Result[_Scn0006Setup]:
     live_target = ExecutionTarget.try_create(AccountRole.LIVE, fx.venue_id, "acct-live")
     if is_refusal(live_target):
         return live_target
-    return Ok(_Scn0006Setup(live_fp=live_fp, paired=paired.value, live_target=live_target.value))
-
-
-def _scn0006_flip(fx: _Fixtures, setup: _Scn0006Setup) -> Result[_Scn0006Flip]:
     frozen = resolve_book_execution_target(
         book_mode=BookMode.LIVE,
         seat_state=SeatState.ACTIVE,
         active_controls=(),
-        live_target=setup.live_target,
-        paper_target=setup.paired.paper_target,
+        live_target=live_target.value,
+        paper_target=paired.value.paper_target,
         blocked_act="entry",
     )
     if is_refusal(frozen):
@@ -813,11 +744,11 @@ def _scn0006_flip(fx: _Fixtures, setup: _Scn0006Setup) -> Result[_Scn0006Flip]:
         return book_id
     flip = mint_operator_paper_flip(
         book_instance_id=book_id.value,
-        live_binding_epoch=setup.live_fp,
+        live_binding_epoch=live_fp,
         transition_instant=fx.now,
         operator_signature="operator:sig-28-5",
         starting_balance=fx.paper_starting_balance,
-        paired=setup.paired,
+        paired=paired.value,
         transition_stream=stream,
         paper_target_log=targets,
         paper_epoch_log=epochs,
@@ -834,30 +765,14 @@ def _scn0006_flip(fx: _Fixtures, setup: _Scn0006Setup) -> Result[_Scn0006Flip]:
         book_mode=mode.value,
         seat_state=SeatState.ACTIVE,
         active_controls=(),
-        live_target=setup.live_target,
-        paper_target=setup.paired.paper_target,
+        live_target=live_target.value,
+        paper_target=paired.value.paper_target,
         blocked_act="entry",
     )
     if is_refusal(after_flip):
         return after_flip
-    return Ok(
-        _Scn0006Flip(
-            live_fp=setup.live_fp,
-            paired=setup.paired,
-            live_target=setup.live_target,
-            frozen=frozen.value,
-            epochs=epochs,
-            flip=flip.value,
-            mode=mode.value,
-            restarted=restarted.value,
-            after_flip=after_flip.value,
-        )
-    )
-
-
-def _scn0006_invariants(fx: _Fixtures, flipped: _Scn0006Flip) -> Result[None]:
-    frozen_target = flipped.frozen.execution_target
-    new_target = flipped.after_flip.execution_target
+    frozen_target = frozen.value.execution_target
+    new_target = after_flip.value.execution_target
     if frozen_target is None or new_target is None:
         return policy("execution_target", "SCN-0006 routing must resolve an execution target")
     if frozen_target.role is not AccountRole.LIVE or new_target.role is not AccountRole.DEMO:
@@ -868,7 +783,7 @@ def _scn0006_invariants(fx: _Fixtures, flipped: _Scn0006Flip) -> Result[None]:
             frozen=frozen_target.role.value,
             later=new_target.role.value,
         )
-    current_epoch = flipped.epochs.current_epoch(flipped.live_fp)
+    current_epoch = epochs.current_epoch(live_fp)
     if is_refusal(current_epoch):
         return current_epoch
     if current_epoch.value.starting_balance != fx.paper_starting_balance:
@@ -899,12 +814,6 @@ def _scn0006_invariants(fx: _Fixtures, flipped: _Scn0006Flip) -> Result[None]:
         return journey
     if journey.value.paper_performance_gate is True:
         return policy("return", "paper performance never authorizes a return to live")
-    return Ok(None)
-
-
-def _scn0006_protection_report(
-    fx: _Fixtures, flipped: _Scn0006Flip
-) -> Result[Mapping[str, object]]:
     unknown = _unwrap(_separate_stream_unknown(fx))
     if isinstance(unknown, TypedRefusal):
         return unknown
@@ -937,7 +846,7 @@ def _scn0006_protection_report(
     )
     if is_refusal(redecided):
         return redecided
-    if flipped.restarted is not BookMode.PAPER:
+    if restarted.value is not BookMode.PAPER:
         return policy(
             "restart",
             "a restart must re-decide standing intents and must not re-arm a Book left in PAPER",
@@ -946,9 +855,9 @@ def _scn0006_protection_report(
         MappingProxyType(
             {
                 "append_only_epoch": True,
-                "book_mode": flipped.mode.value,
-                "book_twin_minted": flipped.flip.book_twin_minted,
-                "bot_twin_minted": flipped.flip.bot_twin_minted,
+                "book_mode": mode.value.value,
+                "book_twin_minted": flip.value.book_twin_minted,
+                "bot_twin_minted": flip.value.bot_twin_minted,
                 "clears_only_by": OPERATOR_KILL_LINE_RESUME,
                 "frozen_per_intent_target": True,
                 "human_signed_return": True,
@@ -964,53 +873,6 @@ def _scn0006_protection_report(
 
 
 def _exercise_scn0008(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    sources = _scn0008_sources()
-    if is_refusal(sources):
-        return sources
-    windows = _scn0008_windows(fx)
-    if is_refusal(windows):
-        return windows
-    blocked = _scn0008_entries(fx, windows.value)
-    if is_refusal(blocked):
-        return blocked
-    stale = _scn0008_staleness(fx, windows.value)
-    if is_refusal(stale):
-        return stale
-    held = _scn0008_narrowing(fx, windows.value)
-    if is_refusal(held):
-        return held
-    return Ok(
-        MappingProxyType(
-            {
-                "declared_exposure": True,
-                "entry_only_block": True,
-                "exit_preservation": True,
-                "fail_closed_missing_scope": True,
-                "fail_closed_staleness": True,
-                "live_and_paper_blocked": True,
-                "narrowing_held": True,
-                "sole_free_source": sources.value,
-                "sole_weekly_file": FOREX_FACTORY_WEEKLY_JSON,
-                "trading_edge_claimed": False,
-                "widen_not_shrink": held.value,
-            }
-        )
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class _Scn0008Windows:
-    eurusd: Instrument
-    xauusd: Instrument
-    scope: ResolvedInstrumentScope
-    news: ControlWindowRecord
-    dead: ControlWindowRecord
-    known: Instant
-    end: Instant
-    news_cal: CalendarIdentity
-
-
-def _scn0008_sources() -> Result[object]:
     sole = require_sole_free_provider(SOLE_V1_PROVIDER)
     if is_refusal(sole):
         return sole
@@ -1020,10 +882,6 @@ def _scn0008_sources() -> Result[object]:
     second = refuse_second_news_source(provider="second-free")
     if is_ok(second):
         return policy("news_source", "a second news-calendar source must be refused")
-    return Ok(sole.value)
-
-
-def _scn0008_windows(fx: _Fixtures) -> Result[_Scn0008Windows]:
     eurusd = _instrument(fx.venue_id, "EURUSD")
     xauusd = _instrument(fx.venue_id, "XAUUSD")
     if is_refusal(eurusd):
@@ -1042,14 +900,7 @@ def _scn0008_windows(fx: _Fixtures) -> Result[_Scn0008Windows]:
     )
     if is_refusal(scope):
         return scope
-    exposed = _scn0008_exposure_ok(xauusd.value, scope.value)
-    if is_refusal(exposed):
-        return exposed
-    return _scn0008_mint_windows(fx, eurusd.value, xauusd.value, scope.value)
-
-
-def _scn0008_exposure_ok(xauusd: Instrument, scope: ResolvedInstrumentScope) -> Result[None]:
-    if xauusd not in scope.treated_as_affected_missing_exposure:
+    if xauusd.value not in scope.value.treated_as_affected_missing_exposure:
         return policy(
             "exposure",
             "a missing currency-exposure record must treat the instrument as affected",
@@ -1057,15 +908,6 @@ def _scn0008_exposure_ok(xauusd: Instrument, scope: ResolvedInstrumentScope) -> 
     symbol_parse = refuse_symbol_currency_parse_at_door("EURUSD")
     if is_ok(symbol_parse):
         return policy("exposure", "currency must never be parsed from the instrument symbol")
-    return Ok(None)
-
-
-def _scn0008_mint_windows(
-    fx: _Fixtures,
-    eurusd: Instrument,
-    xauusd: Instrument,
-    scope: ResolvedInstrumentScope,
-) -> Result[_Scn0008Windows]:
     start = _unwrap(Instant.try_create(fx.now.value_ns - 2_000_000_000))
     if isinstance(start, TypedRefusal):
         return start
@@ -1090,7 +932,7 @@ def _scn0008_mint_windows(
     news = mint_control_window(
         bounds.value,
         WindowKind.NEWS,
-        scope,
+        scope.value,
         "high-impact-news",
         news_cal.value,
         "win-nfp-28-5",
@@ -1101,54 +943,39 @@ def _scn0008_mint_windows(
     dead = mint_control_window(
         bounds.value,
         WindowKind.DAILY_DEAD_ZONE,
-        scope,
+        scope.value,
         WindowKind.DAILY_DEAD_ZONE.value,
         hours_cal.value,
         "win-dead-28-5",
     )
     if is_refusal(dead):
         return dead
-    return Ok(
-        _Scn0008Windows(
-            eurusd=eurusd,
-            xauusd=xauusd,
-            scope=scope,
-            news=news.value,
-            dead=dead.value,
-            known=known,
-            end=end,
-            news_cal=news_cal.value,
-        )
-    )
-
-
-def _scn0008_entries(fx: _Fixtures, windows: _Scn0008Windows) -> Result[None]:
     live_entry = enforce_entry_at_book_door(
-        instrument=windows.eurusd,
+        instrument=eurusd.value,
         book_mode=BookMode.LIVE,
         decision_at=fx.now,
-        windows=[windows.news],
+        windows=[news.value],
         would_have_been_action={"class": "would-have-been-entry", "symbol": "EURUSD"},
     )
     paper_entry = enforce_entry_at_book_door(
-        instrument=windows.eurusd,
+        instrument=eurusd.value,
         book_mode=BookMode.PAPER,
         decision_at=fx.now,
-        windows=[windows.news],
+        windows=[news.value],
         would_have_been_action={"class": "would-have-been-entry", "symbol": "EURUSD"},
     )
     dead_entry = enforce_entry_at_book_door(
-        instrument=windows.eurusd,
+        instrument=eurusd.value,
         book_mode=BookMode.LIVE,
         decision_at=fx.now,
-        windows=[windows.dead],
+        windows=[dead.value],
         would_have_been_action={"class": "would-have-been-entry", "kind": "daily_dead_zone"},
     )
     missing = enforce_entry_at_book_door(
-        instrument=windows.xauusd,
+        instrument=xauusd.value,
         book_mode=BookMode.LIVE,
         decision_at=fx.now,
-        windows=[windows.news],
+        windows=[news.value],
         would_have_been_action={"class": "would-have-been-entry", "symbol": "XAUUSD"},
     )
     if is_refusal(live_entry):
@@ -1174,27 +1001,21 @@ def _scn0008_entries(fx: _Fixtures, windows: _Scn0008Windows) -> Result[None]:
     live_skip = refuse_live_skip_at_door()
     if is_ok(live_skip):
         return policy("window", "there is no live skip over an in-force window")
-    return Ok(None)
-
-
-def _scn0008_staleness(fx: _Fixtures, windows: _Scn0008Windows) -> Result[None]:
-    stale_at = Instant.try_create(
-        windows.known.value_ns + fx.news_calendar_max_staleness.value_ns + 1
-    )
+    stale_at = Instant.try_create(known.value_ns + fx.news_calendar_max_staleness.value_ns + 1)
     if is_refusal(stale_at):
         return stale_at
     stale = stale_news_calendar_blocks_entries(
-        last_refresh_at=windows.known,
+        last_refresh_at=known,
         decision_at=stale_at.value,
         max_staleness=fx.news_calendar_max_staleness,
     )
     if is_ok(stale):
         return policy("staleness", "a stale news calendar must fail closed")
     fail_closed = enforce_entry_at_book_door(
-        instrument=windows.eurusd,
+        instrument=eurusd.value,
         book_mode=BookMode.LIVE,
         decision_at=fx.now,
-        windows=[windows.news],
+        windows=[news.value],
         would_have_been_action={"class": "entry"},
         news_calendar_fresh=False,
     )
@@ -1202,10 +1023,6 @@ def _scn0008_staleness(fx: _Fixtures, windows: _Scn0008Windows) -> Result[None]:
         return fail_closed
     if fail_closed.value.disposition is not WindowActDisposition.FAIL_CLOSED:
         return policy("staleness", "unknown coverage must fail closed at the Book door")
-    return Ok(None)
-
-
-def _scn0008_narrowing(fx: _Fixtures, windows: _Scn0008Windows) -> Result[str]:
     narrow_start = _unwrap(Instant.try_create(fx.now.value_ns - 1_000_000_000))
     if isinstance(narrow_start, TypedRefusal):
         return narrow_start
@@ -1221,34 +1038,50 @@ def _scn0008_narrowing(fx: _Fixtures, windows: _Scn0008Windows) -> Result[str]:
     narrow = mint_control_window(
         narrow_bounds.value,
         WindowKind.NEWS,
-        windows.scope,
+        scope.value,
         "high-impact-news",
-        windows.news_cal,
+        news_cal.value,
         "win-nfp-28-5",
         feed_quadruple=feed2.value,
     )
     if is_refusal(narrow):
         return narrow
     log = ControlWindowRevisionLog(window_id="win-nfp-28-5")
-    first = apply_news_revision(log, windows.news, decision_at=fx.now)
+    first = apply_news_revision(log, news.value, decision_at=fx.now)
     if is_refusal(first):
         return first
     held = apply_news_revision(
         first.value[0],
         narrow.value,
         decision_at=fx.now,
-        prior_in_force=windows.news,
+        prior_in_force=news.value,
     )
     if is_refusal(held):
         return held
     if held.value[2] is not NewsRevisionDisposition.NARROWING_HELD:
         return policy("revision", "narrowing an in-force window must be held")
-    if held.value[1].bounds.end.value_ns != windows.end.value_ns:
+    if held.value[1].bounds.end.value_ns != end.value_ns:
         return policy(
             "revision",
             "a narrowing revision must not open entries before the declared end",
         )
-    return Ok(held.value[2].value)
+    return Ok(
+        MappingProxyType(
+            {
+                "declared_exposure": True,
+                "entry_only_block": True,
+                "exit_preservation": True,
+                "fail_closed_missing_scope": True,
+                "fail_closed_staleness": True,
+                "live_and_paper_blocked": True,
+                "narrowing_held": True,
+                "sole_free_source": sole.value,
+                "sole_weekly_file": FOREX_FACTORY_WEEKLY_JSON,
+                "trading_edge_claimed": False,
+                "widen_not_shrink": held.value[2].value,
+            }
+        )
+    )
 
 
 def _exercise_scn0010(fx: _Fixtures) -> Result[Mapping[str, object]]:
@@ -1317,78 +1150,48 @@ def _exercise_scn0011(fx: _Fixtures) -> Result[Mapping[str, object]]:
     epoch = _unwrap(_fp(fx, "epoch-scn0011"))
     if isinstance(epoch, TypedRefusal):
         return epoch
-    if fx.qualifying_loss_threshold.unit_kind is not UnitKind.R_MULTIPLE:
+    q = fx.qualifying_loss_threshold
+    if q.unit_kind is not UnitKind.R_MULTIPLE:
         return invalid(
             "qualifying_loss_threshold",
             "q is a Book-declared r-multiple, never a spine constant",
         )
-    records = _scn0011_exit_records(fx, epoch)
-    if is_refusal(records):
-        return records
-    benched = _scn0011_bench_effect(fx, epoch, records.value)
-    if is_refusal(benched):
-        return benched
-    bounded = _scn0011_epoch_bound(fx, epoch, records.value)
-    if is_refusal(bounded):
-        return bounded
-    report, effect = benched.value
-    return Ok(
-        MappingProxyType(
-            {
-                "binding_epoch_bounded": True,
-                "book_mode": effect.book_mode.value,
-                "breakeven_excluded": True,
-                "one_ct29_per_close": True,
-                "qualifying_loss_count": report.qualifying_loss_count,
-                "routed_paper": True,
-                "seat_state": effect.seat_state.value,
-                "stale_evidence_refused": True,
-                "threshold_crossed": report.threshold_crossed,
-                "trading_edge_claimed": False,
-            }
-        )
-    )
-
-
-_SCN0011_EXITS: tuple[tuple[str, int, CloseOutcome, CloseReason, ClosingAuthority, int], ...] = (
-    (
-        "be-1",
-        -50,
-        CloseOutcome.BREAKEVEN,
-        CloseReason.PROTECTIVE_STOP_FILL,
-        ClosingAuthority.VENUE,
-        50,
-    ),
-    (
-        "scratch-1",
-        -1_500,
-        CloseOutcome.LOSS,
-        CloseReason.BOT_INTENT,
-        ClosingAuthority.BOOK_POLICY,
-        0,
-    ),
-    (
-        "ql-1",
-        -10_000,
-        CloseOutcome.LOSS,
-        CloseReason.PROTECTIVE_STOP_FILL,
-        ClosingAuthority.VENUE,
-        200,
-    ),
-    (
-        "ql-2",
-        -12_000,
-        CloseOutcome.LOSS,
-        CloseReason.HOLD_TIME_FORCE_FLAT,
-        ClosingAuthority.BOOK_POLICY,
-        0,
-    ),
-)
-
-
-def _scn0011_exit_records(fx: _Fixtures, epoch: Fingerprint) -> Result[tuple[ExitRecord, ...]]:
     records: list[ExitRecord] = []
-    for seed, pnl, outcome, reason, authority, commission in _SCN0011_EXITS:
+    sequence: tuple[tuple[str, int, CloseOutcome, CloseReason, ClosingAuthority, int], ...] = (
+        (
+            "be-1",
+            -50,
+            CloseOutcome.BREAKEVEN,
+            CloseReason.PROTECTIVE_STOP_FILL,
+            ClosingAuthority.VENUE,
+            50,
+        ),
+        (
+            "scratch-1",
+            -1_500,
+            CloseOutcome.LOSS,
+            CloseReason.BOT_INTENT,
+            ClosingAuthority.BOOK_POLICY,
+            0,
+        ),
+        (
+            "ql-1",
+            -10_000,
+            CloseOutcome.LOSS,
+            CloseReason.PROTECTIVE_STOP_FILL,
+            ClosingAuthority.VENUE,
+            200,
+        ),
+        (
+            "ql-2",
+            -12_000,
+            CloseOutcome.LOSS,
+            CloseReason.HOLD_TIME_FORCE_FLAT,
+            ClosingAuthority.BOOK_POLICY,
+            0,
+        ),
+    )
+    for seed, pnl, outcome, reason, authority, commission in sequence:
         minted = _mint_exit(
             fx,
             seed=seed,
@@ -1404,18 +1207,10 @@ def _scn0011_exit_records(fx: _Fixtures, epoch: Fingerprint) -> Result[tuple[Exi
         records.append(minted.value)
     if len(records) != 4:
         return policy("ct29", "each virtual-position close must mint exactly one CT-29 record")
-    return Ok(tuple(records))
-
-
-def _scn0011_bench_effect(
-    fx: _Fixtures,
-    epoch: Fingerprint,
-    records: tuple[ExitRecord, ...],
-) -> Result[tuple[BenchFoldReport, BenchCrossingEffect]]:
     report = evaluate_qualifying_loss_bench(
-        records,
+        tuple(records),
         binding_epoch=epoch,
-        q=fx.qualifying_loss_threshold,
+        q=q,
         threshold=fx.bench_consecutive_loss_threshold,
     )
     if is_refusal(report):
@@ -1455,14 +1250,6 @@ def _scn0011_bench_effect(
     )
     if is_ok(stale):
         return policy("stale_evidence", "an unpersisted exit must refuse the next same-seat intent")
-    return Ok((report.value, effect.value))
-
-
-def _scn0011_epoch_bound(
-    fx: _Fixtures,
-    epoch: Fingerprint,
-    records: tuple[ExitRecord, ...],
-) -> Result[None]:
     other_epoch = _unwrap(_fp(fx, "epoch-other"))
     if isinstance(other_epoch, TypedRefusal):
         return other_epoch
@@ -1481,27 +1268,32 @@ def _scn0011_epoch_bound(
     bounded = evaluate_qualifying_loss_bench(
         (*records, outsider.value),
         binding_epoch=epoch,
-        q=fx.qualifying_loss_threshold,
+        q=q,
         threshold=fx.bench_consecutive_loss_threshold,
     )
     if is_refusal(bounded):
         return bounded
     if len(bounded.value.fold.considered) != 4:
         return policy("binding_epoch", "the bench fold is bounded by the binding epoch")
-    return Ok(None)
+    return Ok(
+        MappingProxyType(
+            {
+                "binding_epoch_bounded": True,
+                "book_mode": effect.value.book_mode.value,
+                "breakeven_excluded": True,
+                "one_ct29_per_close": True,
+                "qualifying_loss_count": report.value.qualifying_loss_count,
+                "routed_paper": True,
+                "seat_state": effect.value.seat_state.value,
+                "stale_evidence_refused": True,
+                "threshold_crossed": report.value.threshold_crossed,
+                "trading_edge_claimed": False,
+            }
+        )
+    )
 
 
 def _separate_stream_unknown(fx: _Fixtures) -> Result[Mapping[str, object]]:
-    bounds = _unknown_stream_bounds(fx)
-    if is_refusal(bounds):
-        return bounds
-    live_b, demo_b, live_acct, demo_acct = bounds.value
-    return _prove_unknown_isolation(fx, live_b, demo_b, live_acct, demo_acct)
-
-
-def _unknown_stream_bounds(
-    fx: _Fixtures,
-) -> Result[tuple[CommandStreamUnknownBoundary, CommandStreamUnknownBoundary, Account, Account]]:
     live_acct = _account(fx.venue_id, "acct-live", AccountRole.LIVE)
     demo_acct = _account(fx.venue_id, "acct-demo", AccountRole.DEMO)
     if is_refusal(live_acct):
@@ -1546,40 +1338,32 @@ def _unknown_stream_bounds(
         return live_b
     if is_refusal(demo_b):
         return demo_b
-    return Ok((live_b.value, demo_b.value, live_acct.value, demo_acct.value))
-
-
-def _prove_unknown_isolation(
-    fx: _Fixtures,
-    live_b: CommandStreamUnknownBoundary,
-    demo_b: CommandStreamUnknownBoundary,
-    live_acct: Account,
-    demo_acct: Account,
-) -> Result[Mapping[str, object]]:
-    command = _place_command(fx.venue_id, live_acct, 1)
+    command = _place_command(fx.venue_id, live_acct.value, 1)
     if is_refusal(command):
         return command
     unknown = _unknown_submission(command.value, fx.now)
     if is_refusal(unknown):
         return unknown
-    blocked = live_b.record_unknown(unknown.value)
+    blocked = live_b.value.record_unknown(unknown.value)
     if is_refusal(blocked):
         return blocked
-    paper_cmd = _place_command(fx.venue_id, demo_acct, 1)
+    paper_cmd = _place_command(fx.venue_id, demo_acct.value, 1)
     if is_refusal(paper_cmd):
         return paper_cmd
-    admitted = demo_b.admit(paper_cmd.value, receive_instant=fx.now)
+    admitted = demo_b.value.admit(paper_cmd.value, receive_instant=fx.now)
     if is_refusal(admitted):
         return admitted
-    live_next = _place_command(fx.venue_id, live_acct, 2)
+    live_next = _place_command(fx.venue_id, live_acct.value, 2)
     if is_refusal(live_next):
         return live_next
-    live_refused = live_b.admit(live_next.value, receive_instant=fx.now)
+    live_refused = live_b.value.admit(live_next.value, receive_instant=fx.now)
     if is_refusal(live_refused):
         return live_refused
-    paper_ok = getattr(admitted.value, "disposition", None) is AdmissionDisposition.ADMITTED
-    live_blocked = getattr(live_refused.value, "disposition", None) is AdmissionDisposition.REFUSED
-    live_cause = getattr(live_refused.value, "block_cause", None)
+    paper_result = admitted.value
+    live_result = live_refused.value
+    paper_ok = getattr(paper_result, "disposition", None) is AdmissionDisposition.ADMITTED
+    live_blocked = getattr(live_result, "disposition", None) is AdmissionDisposition.REFUSED
+    live_cause = getattr(live_result, "block_cause", None)
     if not paper_ok or not live_blocked or live_cause is not StreamBlockCause.OUTSTANDING_UNKNOWN:
         return policy(
             "unknown",
@@ -1588,8 +1372,8 @@ def _prove_unknown_isolation(
     return Ok(
         MappingProxyType(
             {
-                "live_stream_open": live_b.stream_open,
-                "paper_stream_open": demo_b.stream_open,
+                "live_stream_open": live_b.value.stream_open,
+                "paper_stream_open": demo_b.value.stream_open,
             }
         )
     )
@@ -1684,38 +1468,6 @@ def _collapse_flats(
     stream: CommandStreamKey,
     table: ControlRankTable,
 ) -> Result[Mapping[str, object]]:
-    actions = _flatten_control_actions(fx, stream)
-    if is_refusal(actions):
-        return actions
-    candidates = _flatten_dispatch_candidates(actions.value, stream)
-    if is_refusal(candidates):
-        return candidates
-    plan = dispatch_ranked_controls(
-        candidates.value,
-        table,
-        stream=stream,
-        arbitration_seed=f"{fx.seed}-collapse",
-    )
-    if is_refusal(plan):
-        return plan
-    emit_flatten = sum(
-        1 for item in plan.value.emit if item.record.action_kind is ControlActionKind.FLATTEN
-    )
-    if emit_flatten != 1 or len(plan.value.suppressed) != 2:
-        return policy(
-            "collapse",
-            "identical mechanical close commands collapse to one emission",
-            emit_flatten=emit_flatten,
-            suppressed=len(plan.value.suppressed),
-        )
-    return Ok(
-        MappingProxyType({"emit_flatten": emit_flatten, "suppressed": len(plan.value.suppressed)})
-    )
-
-
-def _flatten_control_actions(
-    fx: _Fixtures, stream: CommandStreamKey
-) -> Result[tuple[object, object, object]]:
     kill_line = mint_control_action(
         ControlActionKind.FLATTEN,
         "book-1",
@@ -1761,12 +1513,6 @@ def _flatten_control_actions(
         return window
     if is_refusal(bot_close):
         return bot_close
-    return Ok((kill_line.value, window.value, bot_close.value))
-
-
-def _flatten_dispatch_candidates(
-    actions: tuple[object, object, object], stream: CommandStreamKey
-) -> Result[list[DispatchCandidate]]:
     enforcement = EnforcementScope(
         subject_scope=SubjectScope.BINDING,
         scope_ref="binding-1",
@@ -1774,9 +1520,9 @@ def _flatten_dispatch_candidates(
     )
     candidates: list[DispatchCandidate] = []
     for record, origin, ordinal in (
-        (actions[0], CandidateOrigin.CT30, 0),
-        (actions[1], CandidateOrigin.CT30, 1),
-        (actions[2], CandidateOrigin.RISK_NON_INCREASING, 2),
+        (kill_line.value, CandidateOrigin.CT30, 0),
+        (window.value, CandidateOrigin.CT30, 1),
+        (bot_close.value, CandidateOrigin.RISK_NON_INCREASING, 2),
     ):
         cand = DispatchCandidate.try_create(
             record, enforcement, origin=origin, arrival_ordinal=ordinal
@@ -1784,7 +1530,27 @@ def _flatten_dispatch_candidates(
         if is_refusal(cand):
             return cand
         candidates.append(cand.value)
-    return Ok(candidates)
+    plan = dispatch_ranked_controls(
+        candidates,
+        table,
+        stream=stream,
+        arbitration_seed=f"{fx.seed}-collapse",
+    )
+    if is_refusal(plan):
+        return plan
+    emit_flatten = sum(
+        1 for item in plan.value.emit if item.record.action_kind is ControlActionKind.FLATTEN
+    )
+    if emit_flatten != 1 or len(plan.value.suppressed) != 2:
+        return policy(
+            "collapse",
+            "identical mechanical close commands collapse to one emission",
+            emit_flatten=emit_flatten,
+            suppressed=len(plan.value.suppressed),
+        )
+    return Ok(
+        MappingProxyType({"emit_flatten": emit_flatten, "suppressed": len(plan.value.suppressed)})
+    )
 
 
 def _conflict_pair(
@@ -1866,77 +1632,6 @@ def _mint_exit(
     authority: ClosingAuthority,
     commission: int,
 ) -> Result[ExitRecord]:
-    parts = _golden_exit_parts(fx, seed, realized_pnl, authority, commission)
-    if is_refusal(parts):
-        return parts
-    distance, amount, pnl, fill, pos, label, costs, arb_fp, vobs_fp = parts.value
-    return mint_exit_record(
-        virtual_position_ref=pos,
-        opening_bot_id="bot-scn0011",
-        original_risk_distance=distance,
-        original_risk_amount=amount,
-        fill_references=(fill,),
-        realized_pnl=pnl,
-        cost_components=costs,
-        close_reason=close_reason,
-        mechanism=close_reason,
-        outcome=outcome,
-        closing_authority=authority,
-        close_reason_mapping_version=1,
-        result_label=label,
-        loss_predicate_format_version=1,
-        binding_epoch=epoch,
-        recorded_at=fx.now,
-        arbitration_record_ref=arb_fp,
-        venue_observation_ref=vobs_fp,
-    )
-
-
-def _golden_exit_costs(commission: int) -> Result[tuple[CostComponent, ...]]:
-    if not commission:
-        return Ok(())
-    fee = _money(commission)
-    if is_refusal(fee):
-        return fee
-    cost = CostComponent.try_create("commission", fee.value, "broker")
-    if is_refusal(cost):
-        return cost
-    return Ok((cost.value,))
-
-
-def _golden_exit_refs(
-    fx: _Fixtures, seed: str, authority: ClosingAuthority
-) -> Result[tuple[Fingerprint | None, Fingerprint | None]]:
-    if authority is ClosingAuthority.VENUE:
-        vobs = _unwrap(_fp(fx, f"venue-obs-{seed}"))
-        if isinstance(vobs, TypedRefusal):
-            return vobs
-        return Ok((None, vobs))
-    arb = _unwrap(_fp(fx, f"arb-{seed}"))
-    if isinstance(arb, TypedRefusal):
-        return arb
-    return Ok((arb, None))
-
-
-def _golden_exit_parts(
-    fx: _Fixtures,
-    seed: str,
-    realized_pnl: int,
-    authority: ClosingAuthority,
-    commission: int,
-) -> Result[
-    tuple[
-        PriceDelta,
-        Money,
-        Money,
-        Fingerprint,
-        Fingerprint,
-        ExitResultLabel,
-        tuple[CostComponent, ...],
-        Fingerprint | None,
-        Fingerprint | None,
-    ]
-]:
     instrument = _instrument(fx.venue_id)
     if is_refusal(instrument):
         return instrument
@@ -1958,25 +1653,46 @@ def _golden_exit_parts(
     label = ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE)
     if is_refusal(label):
         return label
-    costs = _golden_exit_costs(commission)
-    if is_refusal(costs):
-        return costs
-    refs = _golden_exit_refs(fx, seed, authority)
-    if is_refusal(refs):
-        return refs
-    arb_fp, vobs_fp = refs.value
-    return Ok(
-        (
-            distance.value,
-            amount.value,
-            pnl.value,
-            fill,
-            pos,
-            label.value,
-            costs.value,
-            arb_fp,
-            vobs_fp,
-        )
+    costs: tuple[CostComponent, ...] = ()
+    if commission:
+        fee = _money(commission)
+        if is_refusal(fee):
+            return fee
+        cost = CostComponent.try_create("commission", fee.value, "broker")
+        if is_refusal(cost):
+            return cost
+        costs = (cost.value,)
+    arb_fp: Fingerprint | None = None
+    vobs_fp: Fingerprint | None = None
+    if authority is ClosingAuthority.VENUE:
+        vobs = _unwrap(_fp(fx, f"venue-obs-{seed}"))
+        if isinstance(vobs, TypedRefusal):
+            return vobs
+        vobs_fp = vobs
+    else:
+        arb = _unwrap(_fp(fx, f"arb-{seed}"))
+        if isinstance(arb, TypedRefusal):
+            return arb
+        arb_fp = arb
+    return mint_exit_record(
+        virtual_position_ref=pos,
+        opening_bot_id="bot-scn0011",
+        original_risk_distance=distance.value,
+        original_risk_amount=amount.value,
+        fill_references=(fill,),
+        realized_pnl=pnl.value,
+        cost_components=costs,
+        close_reason=close_reason,
+        mechanism=close_reason,
+        outcome=outcome,
+        closing_authority=authority,
+        close_reason_mapping_version=1,
+        result_label=label.value,
+        loss_predicate_format_version=1,
+        binding_epoch=epoch,
+        recorded_at=fx.now,
+        arbitration_record_ref=arb_fp,
+        venue_observation_ref=vobs_fp,
     )
 
 
@@ -2010,51 +1726,68 @@ def _windows_for(binding_id: str) -> Result[tuple[WindowRecord, ...]]:
 
 
 def _risk_graph(venue: VenueId) -> Result[RuntimeRiskGraph]:
-    core = _risk_graph_core(venue)
-    if is_refusal(core):
-        return core
-    extras = _risk_graph_extras(venue)
-    if is_refusal(extras):
-        return extras
-    bms, book_a, book_b, bind_a, bind_b, seat_a, seat_b, paired = core.value
-    _ranks, priority, cap_a, cap_b, scope, windows_a, windows_b = extras.value
-    return RuntimeRiskGraph.try_create(
-        bms=(bms,),
-        books=(book_a, book_b),
-        bindings=(bind_a, bind_b),
-        seats=(seat_a, seat_b),
-        paired_targets=(paired,),
-        windows=windows_a + windows_b,
-        priorities=(priority,),
-        capabilities=(cap_a, cap_b),
-        scopes=(scope,),
-    )
-
-
-def _risk_graph_core(
-    venue: VenueId,
-) -> Result[
-    tuple[
-        PopulationBmsRecord,
-        PopulationBookRecord,
-        PopulationBookRecord,
-        PopulationBindingRecord,
-        PopulationBindingRecord,
-        SeatRecord,
-        SeatRecord,
-        PairedTargetRecord,
-    ]
-]:
     venue_token = venue.value
-    books = _golden_risk_books(venue_token)
-    if is_refusal(books):
-        return books
-    bms, book_a, book_b = books.value
-    bind_a = _risk_binding(venue_token, "bind-1", "book-1", "EURUSD")
-    if is_refusal(bind_a):
+    bms = _unwrap(
+        PopulationBmsRecord.try_create(
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            definition_fp1="bms-def-1",
+        )
+    )
+    if isinstance(bms, TypedRefusal):
+        return bms
+    book_a = _unwrap(
+        PopulationBookRecord.try_create(
+            book_instance_id="book-1",
+            bms_instance_id="bms-1",
+            definition_fp1="book-def-1",
+        )
+    )
+    if isinstance(book_a, TypedRefusal):
+        return book_a
+    book_b = _unwrap(
+        PopulationBookRecord.try_create(
+            book_instance_id="book-2",
+            bms_instance_id="bms-1",
+            definition_fp1="book-def-2",
+        )
+    )
+    if isinstance(book_b, TypedRefusal):
+        return book_b
+    bind_a = _unwrap(
+        PopulationBindingRecord.try_create(
+            binding_id="bind-1",
+            book_instance_id="book-1",
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            role=AccountRole.LIVE,
+            world=World.LIVE,
+            environment="live",
+            position_model="netting",
+            instruments=frozenset({"EURUSD"}),
+            attribution_instruments=frozenset({"EURUSD"}),
+        )
+    )
+    if isinstance(bind_a, TypedRefusal):
         return bind_a
-    bind_b = _risk_binding(venue_token, "bind-2", "book-2", "GBPUSD")
-    if is_refusal(bind_b):
+    bind_b = _unwrap(
+        PopulationBindingRecord.try_create(
+            binding_id="bind-2",
+            book_instance_id="book-2",
+            bms_instance_id="bms-1",
+            venue_id=venue_token,
+            account_id="acct-1",
+            role=AccountRole.LIVE,
+            world=World.LIVE,
+            environment="live",
+            position_model="netting",
+            instruments=frozenset({"GBPUSD"}),
+            attribution_instruments=frozenset({"GBPUSD"}),
+        )
+    )
+    if isinstance(bind_b, TypedRefusal):
         return bind_b
     seat_a = _unwrap(
         SeatRecord.try_create(
@@ -2086,85 +1819,12 @@ def _risk_graph_core(
     )
     if isinstance(paired, TypedRefusal):
         return paired
-    return Ok((bms, book_a, book_b, bind_a.value, bind_b.value, seat_a, seat_b, paired))
-
-
-def _golden_risk_books(
-    venue_token: str,
-) -> Result[tuple[PopulationBmsRecord, PopulationBookRecord, PopulationBookRecord]]:
-    bms = _unwrap(
-        PopulationBmsRecord.try_create(
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            definition_fp1="bms-def-1",
-        )
-    )
-    if isinstance(bms, TypedRefusal):
-        return bms
-    book_a = _unwrap(
-        PopulationBookRecord.try_create(
-            book_instance_id="book-1",
-            bms_instance_id="bms-1",
-            definition_fp1="book-def-1",
-        )
-    )
-    if isinstance(book_a, TypedRefusal):
-        return book_a
-    book_b = _unwrap(
-        PopulationBookRecord.try_create(
-            book_instance_id="book-2",
-            bms_instance_id="bms-1",
-            definition_fp1="book-def-2",
-        )
-    )
-    if isinstance(book_b, TypedRefusal):
-        return book_b
-    return Ok((bms, book_a, book_b))
-
-
-def _risk_binding(
-    venue_token: str, binding_id: str, book_instance_id: str, instrument: str
-) -> Result[PopulationBindingRecord]:
-    bind = _unwrap(
-        PopulationBindingRecord.try_create(
-            binding_id=binding_id,
-            book_instance_id=book_instance_id,
-            bms_instance_id="bms-1",
-            venue_id=venue_token,
-            account_id="acct-1",
-            role=AccountRole.LIVE,
-            world=World.LIVE,
-            environment="live",
-            position_model="netting",
-            instruments=frozenset({instrument}),
-            attribution_instruments=frozenset({instrument}),
-        )
-    )
-    if isinstance(bind, TypedRefusal):
-        return bind
-    return Ok(bind)
-
-
-def _risk_graph_extras(
-    venue: VenueId,
-) -> Result[
-    tuple[
-        object,
-        PriorityRecord,
-        CapabilityRecord,
-        CapabilityRecord,
-        ScopeRecord,
-        tuple[WindowRecord, ...],
-        tuple[WindowRecord, ...],
-    ]
-]:
     ranks = _unwrap(_rank_table())
     if isinstance(ranks, TypedRefusal):
         return ranks
     priority = _unwrap(
         PriorityRecord.try_create(
-            venue_id=venue.value,
+            venue_id=venue_token,
             account_id="acct-1",
             rank_table=ranks,
         )
@@ -2198,7 +1858,17 @@ def _risk_graph_extras(
     windows_b = _unwrap(_windows_for("bind-2"))
     if isinstance(windows_b, TypedRefusal):
         return windows_b
-    return Ok((ranks, priority, cap_a, cap_b, scope, windows_a, windows_b))
+    return RuntimeRiskGraph.try_create(
+        bms=(bms,),
+        books=(book_a, book_b),
+        bindings=(bind_a, bind_b),
+        seats=(seat_a, seat_b),
+        paired_targets=(paired,),
+        windows=windows_a + windows_b,
+        priorities=(priority,),
+        capabilities=(cap_a, cap_b),
+        scopes=(scope,),
+    )
 
 
 def _composition_inputs() -> Result[CompositionFingerprintInputs]:

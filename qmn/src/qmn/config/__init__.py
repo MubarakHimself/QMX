@@ -31,7 +31,6 @@ from qmn.config.compiler import (
 )
 from qmn.config.countersign import apply_settings_edit, countersign_value_status
 from qmn.config.gating import (
-    AR80_BLANK_EFFECT_TOTALS,
     blank_effect_coverage,
     live_role_blocked_by,
     provisional_live_gates_like_blank,
@@ -73,7 +72,6 @@ CONFIG_SURFACE: Final[str] = "qmn.config"
 
 __all__ = [
     "ADDING_BROKER_REQUIRES_CORE_CODE_CHANGE",
-    "AR80_BLANK_EFFECT_TOTALS",
     "COMPILE_LAYERS",
     "COMPONENT_COUNTS",
     "CONFIG_SURFACE",

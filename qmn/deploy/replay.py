@@ -219,9 +219,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.apply and args.fixture_root is None:
-        sys.stderr.write(
+        print(
             "refusing --apply without --fixture-root: factory tests spawn against "
-            "an isolated sealed-archive fixture; live VPS replay is soak-local\n"
+            "an isolated sealed-archive fixture; live VPS replay is soak-local",
+            file=sys.stderr,
         )
         return 2
 
@@ -253,7 +254,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out is not None:
         write_plan(plan, args.out)
     else:
-        sys.stdout.write(str(payload) + "\n")
+        print(payload)
     return 0 if plan.ok else 1
 
 

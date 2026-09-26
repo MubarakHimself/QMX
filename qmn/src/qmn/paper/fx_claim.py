@@ -14,7 +14,7 @@ routing remains one paired demo with its own BMS and virtual ledger.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
@@ -403,154 +403,6 @@ def evaluate_fx_paper_claim(
     request_go_live: object = False,
 ) -> Result[FxPaperClaim]:
     """Seal an honest FX paper claim, or refuse. Credential-free; no live token."""
-    blocked = _refuse_fx_paper_openers(
-        run_soak_week=run_soak_week,
-        invent_ksa=invent_ksa,
-        treat_profit_as_evidence=treat_profit_as_evidence,
-        local_matching_engine=local_matching_engine,
-        skip=skip,
-        request_live_binding=request_live_binding,
-        request_command_stream=request_command_stream,
-        request_sequencer=request_sequencer,
-        request_execution_target=request_execution_target,
-        request_promotion=request_promotion,
-        request_go_live=request_go_live,
-        proposed_kind=proposed_kind,
-    )
-    if is_refusal(blocked):
-        return blocked
-    parts = _bind_fx_paper_parts(
-        vendor_host=vendor_host,
-        client=client,
-        paired=paired,
-        declared_kinds=declared_kinds,
-        encoded_kinds=encoded_kinds,
-        readback_kinds=readback_kinds,
-        reconcile_result=reconcile_result,
-        paper_virtual_ledger=paper_virtual_ledger,
-        live_sensing=live_sensing,
-        proposed_kind=proposed_kind,
-    )
-    if is_refusal(parts):
-        return parts
-    client_obj, paired_obj, declared, encoded, readbacks, reconcile, sensing_only = parts.value
-    return _seal_fx_paper_claim(
-        client=client_obj,
-        paired=paired_obj,
-        declared=declared,
-        encoded=encoded,
-        readbacks=readbacks,
-        reconcile=reconcile,
-        sensing_only=sensing_only,
-    )
-
-
-def _refuse_fx_paper_openers(
-    *,
-    run_soak_week: object,
-    invent_ksa: object,
-    treat_profit_as_evidence: object,
-    local_matching_engine: object,
-    skip: object,
-    request_live_binding: object,
-    request_command_stream: object,
-    request_sequencer: object,
-    request_execution_target: object,
-    request_promotion: object,
-    request_go_live: object,
-    proposed_kind: object,
-) -> Result[None]:
-    blocked = _refuse_fx_paper_policy_flags(
-        run_soak_week=run_soak_week,
-        invent_ksa=invent_ksa,
-        treat_profit_as_evidence=treat_profit_as_evidence,
-        local_matching_engine=local_matching_engine,
-        skip=skip,
-    )
-    if is_refusal(blocked):
-        return blocked
-    blocked = _refuse_fx_paper_live_requests(
-        request_live_binding=request_live_binding,
-        request_command_stream=request_command_stream,
-        request_sequencer=request_sequencer,
-        request_execution_target=request_execution_target,
-        request_promotion=request_promotion,
-        request_go_live=request_go_live,
-    )
-    if is_refusal(blocked):
-        return blocked
-    if proposed_kind is not None:
-        impl = live_client_implementation_for(proposed_kind)
-        if is_refusal(impl):
-            return impl
-    return Ok(None)
-
-
-def _bind_fx_paper_parts(
-    *,
-    vendor_host: object,
-    client: object,
-    paired: object,
-    declared_kinds: object,
-    encoded_kinds: object,
-    readback_kinds: object,
-    reconcile_result: object,
-    paper_virtual_ledger: object,
-    live_sensing: object,
-    proposed_kind: object,
-) -> Result[
-    tuple[
-        LiveCTraderClient,
-        PairedDemoBinding,
-        frozenset[str],
-        frozenset[str],
-        frozenset[str],
-        Reconciliation,
-        bool,
-    ]
-]:
-    sensing = _bind_fx_paper_sensing(live_sensing)
-    if is_refusal(sensing):
-        return sensing
-    bound_client = _bind_fx_paper_client(vendor_host, client)
-    if is_refusal(bound_client):
-        return bound_client
-    bound_paired = _bind_fx_paper_paired(paired, paper_virtual_ledger)
-    if is_refusal(bound_paired):
-        return bound_paired
-    kinds = _bind_fx_paper_kinds(declared_kinds, encoded_kinds)
-    if is_refusal(kinds):
-        return kinds
-    readbacks = _bind_fx_paper_readbacks(readback_kinds, reconcile_result)
-    if is_refusal(readbacks):
-        return readbacks
-    if proposed_kind is not None:
-        selected = _bind_fx_paper_proposed_kind(bound_client.value, proposed_kind)
-        if is_refusal(selected):
-            return selected
-    declared, encoded = kinds.value
-    readback_set, reconcile = readbacks.value
-    return Ok(
-        (
-            bound_client.value,
-            bound_paired.value,
-            declared,
-            encoded,
-            readback_set,
-            reconcile,
-            sensing.value,
-        )
-    )
-
-
-def _refuse_fx_paper_policy_flags(
-    *,
-    run_soak_week: object,
-    invent_ksa: object,
-    treat_profit_as_evidence: object,
-    local_matching_engine: object,
-    skip: object,
-) -> Result[None]:
     if RUNS_SOAK_WEEK or run_soak_week is True:
         return refuse_fx_paper_soak_week()
     if INVENTS_KSA_VALUES or invent_ksa is True:
@@ -561,18 +413,6 @@ def _refuse_fx_paper_policy_flags(
         return refuse_fx_paper_local_matching()
     if skip is not None:
         return refuse_fx_paper_illegal_skip(skip)
-    return Ok(None)
-
-
-def _refuse_fx_paper_live_requests(
-    *,
-    request_live_binding: object,
-    request_command_stream: object,
-    request_sequencer: object,
-    request_execution_target: object,
-    request_promotion: object,
-    request_go_live: object,
-) -> Result[None]:
     if request_live_binding is True:
         return refuse_fx_paper_live_authority("live-binding")
     if request_command_stream is True:
@@ -585,30 +425,46 @@ def _refuse_fx_paper_live_requests(
         return refuse_fx_paper_live_authority("promotion")
     if request_go_live is True:
         return refuse_fx_paper_live_authority("go-live")
-    return Ok(None)
 
+    if proposed_kind is not None:
+        impl = live_client_implementation_for(proposed_kind)
+        if is_refusal(impl):
+            return impl
 
-def _bind_fx_paper_sensing(live_sensing: object) -> Result[bool]:
-    if live_sensing is None:
-        return Ok(True)
-    if not isinstance(live_sensing, LiveSensingAdmission):
-        return invalid(
-            "live_sensing",
-            "live sensing is a LiveSensingAdmission or omitted",
-            given=type(live_sensing).__name__,
+    sensing_only = True
+    if live_sensing is not None:
+        if not isinstance(live_sensing, LiveSensingAdmission):
+            return invalid(
+                "live_sensing",
+                "live sensing is a LiveSensingAdmission or omitted",
+                given=type(live_sensing).__name__,
+            )
+        if live_sensing.has_live_binding:
+            return refuse_fx_paper_live_authority("live-binding")
+        if live_sensing.has_command_stream:
+            return refuse_fx_paper_live_authority("command-stream")
+        if live_sensing.opens_sequencer:
+            return refuse_fx_paper_live_authority("sequencer")
+        if live_sensing.resolves_execution_target:
+            return refuse_fx_paper_live_authority("execution-target")
+        sensing_only = True
+
+    host = clean_token(vendor_host)
+    if host != VENDOR_DEMO_HOST:
+        return _missing(
+            "vendor_demo_host",
+            "vendor host must be demo.ctraderapi.com",
+            given=host if host is not None else repr(vendor_host),
+            expected=VENDOR_DEMO_HOST,
         )
-    if live_sensing.has_live_binding:
-        return refuse_fx_paper_live_authority("live-binding")
-    if live_sensing.has_command_stream:
-        return refuse_fx_paper_live_authority("command-stream")
-    if live_sensing.opens_sequencer:
-        return refuse_fx_paper_live_authority("sequencer")
-    if live_sensing.resolves_execution_target:
-        return refuse_fx_paper_live_authority("execution-target")
-    return Ok(True)
 
-
-def _require_fx_paper_client_shape(client: LiveCTraderClient) -> Result[None]:
+    if not isinstance(client, LiveCTraderClient):
+        return _missing(
+            "live_ctrader_client",
+            "FX paper uses LiveCTraderClient, the same implementation used for live",
+            given=type(client).__name__,
+            expected="LiveCTraderClient",
+        )
     if client.kind is not VenueClientKind.CTRADER:
         return _missing(
             "venue_client_kind_ctrader",
@@ -645,34 +501,7 @@ def _require_fx_paper_client_shape(client: LiveCTraderClient) -> Result[None]:
             "submit encode requires an open session and verified capabilities",
             given="capabilities_unverified",
         )
-    return Ok(None)
 
-
-def _bind_fx_paper_client(vendor_host: object, client: object) -> Result[LiveCTraderClient]:
-    host = clean_token(vendor_host)
-    if host != VENDOR_DEMO_HOST:
-        return _missing(
-            "vendor_demo_host",
-            "vendor host must be demo.ctraderapi.com",
-            given=host if host is not None else repr(vendor_host),
-            expected=VENDOR_DEMO_HOST,
-        )
-    if not isinstance(client, LiveCTraderClient):
-        return _missing(
-            "live_ctrader_client",
-            "FX paper uses LiveCTraderClient, the same implementation used for live",
-            given=type(client).__name__,
-            expected="LiveCTraderClient",
-        )
-    shaped = _require_fx_paper_client_shape(client)
-    if is_refusal(shaped):
-        return shaped
-    return Ok(client)
-
-
-def _bind_fx_paper_paired(
-    paired: object, paper_virtual_ledger: object
-) -> Result[PairedDemoBinding]:
     if not isinstance(paired, PairedDemoBinding):
         return invalid(
             "paired",
@@ -714,12 +543,7 @@ def _bind_fx_paper_paired(
             failure_id=_ID_MISSING,
             missing_element="paired_demo",
         )
-    return Ok(paired)
 
-
-def _bind_fx_paper_kinds(
-    declared_kinds: object, encoded_kinds: object
-) -> Result[tuple[frozenset[str], frozenset[str]]]:
     declared = _as_kind_set(declared_kinds, "declared_kinds")
     if is_refusal(declared):
         return declared
@@ -741,12 +565,7 @@ def _bind_fx_paper_kinds(
             declared=sorted(declared.value),
             encoded=sorted(encoded.value),
         )
-    return Ok((declared.value, encoded.value))
 
-
-def _bind_fx_paper_readbacks(
-    readback_kinds: object, reconcile_result: object
-) -> Result[tuple[frozenset[str], Reconciliation]]:
     readbacks = _as_readback_set(readback_kinds)
     if is_refusal(readbacks):
         return readbacks
@@ -778,39 +597,25 @@ def _bind_fx_paper_readbacks(
             "reconcile verdict is reconciled | drift | unknown | out-of-lookback",
             given=repr(reconcile_result.verdict),
         )
-    return Ok((readbacks.value, reconcile_result))
 
+    if proposed_kind is not None:
+        selection = select_venue_client(client.world, client.venue_id, proposed_kind)
+        if is_refusal(selection):
+            return selection
+        if selection.value.kind is not VenueClientKind.CTRADER:
+            return refuse_non_ctrader_live_mapping(proposed_kind)
 
-def _bind_fx_paper_proposed_kind(client: LiveCTraderClient, proposed_kind: object) -> Result[None]:
-    selection = select_venue_client(client.world, client.venue_id, proposed_kind)
-    if is_refusal(selection):
-        return selection
-    if selection.value.kind is not VenueClientKind.CTRADER:
-        return refuse_non_ctrader_live_mapping(proposed_kind)
-    return Ok(None)
-
-
-def _provisional_fx_paper_claim(
-    *,
-    client: LiveCTraderClient,
-    paired: PairedDemoBinding,
-    declared: frozenset[str],
-    encoded: frozenset[str],
-    readbacks: frozenset[str],
-    reconcile: Reconciliation,
-    sensing_only: bool,
-) -> FxPaperClaim:
-    return FxPaperClaim(
+    provisional = FxPaperClaim(
         fingerprint=Fingerprint(value="fp1:sha256:" + ("0" * 64)),
         vendor_host=VENDOR_DEMO_HOST,
         account_role=NODE_PAPER_ACCOUNT_ROLE,
         world=NODE_PAPER_WORLD,
         venue_client_kind=VenueClientKind.CTRADER,
         client_type=type(client).__name__,
-        declared_kinds=declared,
-        encoded_kinds=encoded,
-        readback_kinds=readbacks,
-        reconcile_verdict=reconcile.verdict,
+        declared_kinds=declared.value,
+        encoded_kinds=encoded.value,
+        readback_kinds=readbacks.value,
+        reconcile_verdict=reconcile_result.verdict,
         paired_demo_account=paired.paper_target.account_id,
         own_bms=True,
         paper_virtual_ledger=True,
@@ -825,31 +630,36 @@ def _provisional_fx_paper_claim(
         invents_ksa=False,
         canonical_source_token=CANONICAL_SOURCE_TOKEN,
     )
-
-
-def _seal_fx_paper_claim(
-    *,
-    client: LiveCTraderClient,
-    paired: PairedDemoBinding,
-    declared: frozenset[str],
-    encoded: frozenset[str],
-    readbacks: frozenset[str],
-    reconcile: Reconciliation,
-    sensing_only: bool,
-) -> Result[FxPaperClaim]:
-    provisional = _provisional_fx_paper_claim(
-        client=client,
-        paired=paired,
-        declared=declared,
-        encoded=encoded,
-        readbacks=readbacks,
-        reconcile=reconcile,
-        sensing_only=sensing_only,
-    )
     packet_fp = fingerprint(dict(provisional.fp1_identity()))
     if is_refusal(packet_fp):
         return packet_fp
-    return Ok(replace(provisional, fingerprint=packet_fp.value))
+    return Ok(
+        FxPaperClaim(
+            fingerprint=packet_fp.value,
+            vendor_host=provisional.vendor_host,
+            account_role=provisional.account_role,
+            world=provisional.world,
+            venue_client_kind=provisional.venue_client_kind,
+            client_type=provisional.client_type,
+            declared_kinds=provisional.declared_kinds,
+            encoded_kinds=provisional.encoded_kinds,
+            readback_kinds=provisional.readback_kinds,
+            reconcile_verdict=provisional.reconcile_verdict,
+            paired_demo_account=provisional.paired_demo_account,
+            own_bms=provisional.own_bms,
+            paper_virtual_ledger=provisional.paper_virtual_ledger,
+            live_sensing_only=provisional.live_sensing_only,
+            spot_fx_included=provisional.spot_fx_included,
+            bot_twin_minted=provisional.bot_twin_minted,
+            book_twin_minted=provisional.book_twin_minted,
+            local_matching_engine=provisional.local_matching_engine,
+            runs_soak_week=provisional.runs_soak_week,
+            grants_live_money=provisional.grants_live_money,
+            profit_is_evidence=provisional.profit_is_evidence,
+            invents_ksa=provisional.invents_ksa,
+            canonical_source_token=provisional.canonical_source_token,
+        )
+    )
 
 
 def _missing(element: str, reason: str, **extra: object) -> TypedRefusal:
@@ -882,19 +692,6 @@ def _skip_token(value: object) -> str | None:
     return _SKIP_ALIASES.get(raw.strip().lower(), raw.strip().lower())
 
 
-def _readback_token_from_payload(payload_obj: object) -> str | None:
-    if not isinstance(payload_obj, dict):
-        return None
-    payload = cast("Mapping[str, object]", payload_obj)
-    nested = _normalize_readback(payload.get("wire_kind"))
-    if nested in _REQUIRED_READBACKS:
-        return nested
-    nested_kind = _normalize_readback(payload.get("kind"))
-    if nested_kind in _REQUIRED_READBACKS:
-        return nested_kind
-    return None
-
-
 def _readback_token_from_row(row: Mapping[str, object]) -> str | None:
     token = _normalize_readback(row.get("kind"))
     if token in _REQUIRED_READBACKS:
@@ -902,7 +699,16 @@ def _readback_token_from_row(row: Mapping[str, object]) -> str | None:
     token = _normalize_readback(row.get("wire_kind"))
     if token in _REQUIRED_READBACKS:
         return token
-    return _readback_token_from_payload(row.get("payload"))
+    payload_obj = row.get("payload")
+    if isinstance(payload_obj, dict):
+        payload = cast("Mapping[str, object]", payload_obj)
+        nested = _normalize_readback(payload.get("wire_kind"))
+        if nested in _REQUIRED_READBACKS:
+            return nested
+        nested_kind = _normalize_readback(payload.get("kind"))
+        if nested_kind in _REQUIRED_READBACKS:
+            return nested_kind
+    return None
 
 
 def _normalize_readback(value: object) -> str | None:

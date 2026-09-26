@@ -639,7 +639,6 @@ def _as_roster_identity(raw: object) -> Result[Mapping[str, object]]:
 
 
 def _as_fingerprint(raw: object, field: str) -> Result[Fingerprint]:
-    _ = field
     if isinstance(raw, Fingerprint):
         return Ok(raw)
     return Fingerprint.try_create(raw)

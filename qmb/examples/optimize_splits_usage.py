@@ -27,7 +27,6 @@ Shows the things B-8 / OPT-9 / Story 21.3 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.doors import api
@@ -102,18 +101,14 @@ def main() -> None:
     assert plan.test_run.contributes_to_objective is False
     assert plan.train_run.split_fp1 == train_manifest.fingerprint
     assert plan.test_run.split_fp1 == test_manifest.fingerprint
-    sys.stdout.write(
-        "objective on train, recorded-only on test: two runs share one parameter set\n"
-    )
+    print("objective on train, recorded-only on test: two runs share one parameter set")
 
     # Only the training run computes the objective; the testing run cannot feed it.
     assert is_ok(api.admit_objective_run(plan.train_run))
     refused_objective = api.admit_objective_run(plan.test_run)
     assert is_refusal(refused_objective)
     assert refused_objective.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write(
-        "only the training run computes the objective; the testing run cannot feed it\n"
-    )
+    print("only the training run computes the objective; the testing run cannot feed it")
 
     # 2. Both fingerprints ride on the trial label; train/test are display aliases only.
     label = plan.trial_label()
@@ -129,16 +124,14 @@ def main() -> None:
     assert identity["train_split_fp1"] == train_manifest.split_id
     assert identity["test_split_fp1"] == test_manifest.split_id
     assert "train" not in identity and "test" not in identity  # aliases never substitute the fp
-    sys.stdout.write(
-        "both split-manifest fingerprints on the trial label; train/test are display aliases only\n"
+    print(
+        "both split-manifest fingerprints on the trial label; train/test are display aliases only"
     )
 
     # A distinct train and test are required: one fingerprint for both is refused.
     same = api.coerce_study_splits({"train": train_manifest, "test": train_manifest})
     assert is_refusal(same) and same.category is RefusalCategory.INVALID_INPUT
-    sys.stdout.write(
-        "naming one fingerprint for both splits is invalid input; no out-of-sample content\n"
-    )
+    print("naming one fingerprint for both splits is invalid input; no out-of-sample content")
 
     # 3. Any split read is served through qmf-data: seal, calendar, embargo, knowledge-time.
     seal = _unwrap(HoldoutSeal.from_manifest(train_manifest, 12), "holdout seal")
@@ -166,16 +159,14 @@ def main() -> None:
         record=record,
     )
     assert is_ok(partitioned)
-    sys.stdout.write(
-        "12-month seal, calendar-in-band, embargo and knowledge-time enforced at the boundary\n"
-    )
+    print("12-month seal, calendar-in-band, embargo and knowledge-time enforced at the boundary")
 
     # The sealed holdout is excluded from default access; only train/validation are default.
     assert is_ok(api.admit_default_split_access(SegmentRole.TRAIN))
     assert is_ok(api.admit_default_split_access(SegmentRole.VALIDATION))
     holdout = api.admit_default_split_access(SegmentRole.SEALED_TEST)
     assert is_refusal(holdout) and holdout.category is RefusalCategory.POLICY_REJECTION
-    sys.stdout.write("the sealed holdout is excluded from default access\n")
+    print("the sealed holdout is excluded from default access")
 
     # 4. Every fill is optimistic; the run spends no split budget and claims no edge.
     assert is_ok(api.refuse_split_edge_or_budget())
@@ -183,9 +174,7 @@ def main() -> None:
     assert is_refusal(api.refuse_split_edge_or_budget(spends_split_budget=True))
     assert api.SPLIT_RUN_TAINT == "optimistic"
     assert api.SPLIT_RUN_CLAIMS_EDGE is False and api.SPLIT_RUN_SPENDS_BUDGET is False
-    sys.stdout.write(
-        "every fill optimistic; the run spends no split budget and claims no edge until GAP-0048\n"
-    )
+    print("every fill optimistic; the run spends no split budget and claims no edge until GAP-0048")
 
     # 5. A world=simulated Study is a policy rejection; Studies run world=replay only.
     simulated_splits = api.StudySplits.try_create(
@@ -195,7 +184,7 @@ def main() -> None:
     assert simulated_splits.category is RefusalCategory.POLICY_REJECTION
     assert is_refusal(api.admit_study_world(World.SIMULATED))
     assert is_ok(api.admit_study_world(World.REPLAY))
-    sys.stdout.write("world=simulated is a policy rejection; Studies run world=replay only in V1\n")
+    print("world=simulated is a policy rejection; Studies run world=replay only in V1")
 
     # 6. Warm-up length is the embargo observation count, never a Duration; evidence
     #    range is the trading interval only.
@@ -208,21 +197,19 @@ def main() -> None:
         "evidence range",
     )
     assert evidence.start.value_ns == 10 and evidence.end.value_ns == 21  # trading interval only
-    sys.stdout.write(
+    print(
         "warm-up length is the embargo observation count, never a Duration; "
-        "evidence range is the trading interval only\n"
+        "evidence range is the trading interval only"
     )
 
     # The qmb door is a thin wrapper over the one pure library surface.
     assert api.plan_trial_runs is qmb.plan_trial_runs
     assert api.coerce_study_splits is qmb.coerce_study_splits
     assert api.serve_split_read is qmb.serve_split_read
-    sys.stdout.write(
-        "the qmb door is a thin wrapper over one pure library split-discipline surface\n"
-    )
+    print("the qmb door is a thin wrapper over one pure library split-discipline surface")
 
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("train/test split discipline ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("train/test split discipline ok")
 
 
 if __name__ == "__main__":

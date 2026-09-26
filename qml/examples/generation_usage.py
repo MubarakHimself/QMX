@@ -16,7 +16,6 @@ Shows the things Story 38.1 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core.chrono import CalendarIdentity, Instant, WriterId
@@ -69,12 +68,12 @@ def _pinned(tag: str) -> ProducerBinding:
 
 
 def main() -> None:
-    sys.stdout.write(f"qml {qml.__version__}\n")
+    print(f"qml {qml.__version__}")
     bot_fp = _unwrap(fingerprint({"class": "bot", "id": "same"}), "bot fp")
     search = classify_parameter_search(bot_fp1=bot_fp, trial_bot_fp1s=(bot_fp, bot_fp))
     assert is_ok(search)
     assert search.value.value == ACT_SEARCH
-    sys.stdout.write(f"parameter variation is {ACT_SEARCH}, not {ACT_GENERATION}\n")
+    print(f"parameter variation is {ACT_SEARCH}, not {ACT_GENERATION}")
 
     calendar = _unwrap(CalendarIdentity.try_create("forex-17NY", "v3", "2025.2"), "calendar")
     footprint = _unwrap(
@@ -132,12 +131,12 @@ def main() -> None:
     )
     assert minted.host_mints_envelope is True
     assert minted.qmb_authors is False
-    sys.stdout.write("qml authors; host mints CT-06; qmb does not author\n")
+    print("qml authors; host mints CT-06; qmb does not author")
 
     assert is_refusal(refuse_qml_dsl(".qml"))
     assert is_refusal(refuse_random_condition_schema({"slots": []}))
-    sys.stdout.write("dsl and RandomCondition schema refused\n")
-    sys.stdout.write("generation ownership ok\n")
+    print("dsl and RandomCondition schema refused")
+    print("generation ownership ok")
 
 
 if __name__ == "__main__":

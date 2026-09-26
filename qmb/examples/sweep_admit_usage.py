@@ -23,7 +23,6 @@ Shows the things B-15 / SC-11 / Story 20.2 pin down:
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Mapping
 from typing import TypeVar, cast
 
@@ -186,16 +185,16 @@ def main() -> None:
     assert admitted.registry_as_of == as_of.registry_as_of
     assert admitted.set_fingerprint == as_of.fingerprint
     assert admitted.run_count == 12
-    sys.stdout.write(
+    print(
         "one registry as-of resolved at admission, frozen for every combination: "
-        f"{admitted.run_count} combos share as-of {admitted.set_fingerprint.value[:19]}...\n"
+        f"{admitted.run_count} combos share as-of {admitted.set_fingerprint.value[:19]}..."
     )
 
     stamp = admitted.registry_as_of_stamp()
     for combo in admitted.combos:
         run_label = _unwrap(admitted.run_label(combo), "run label")
         assert run_label["registry_as_of"] == stamp
-    sys.stdout.write("sweep label and every combo run label carry the identical frozen as-of\n")
+    print("sweep label and every combo run label carry the identical frozen as-of")
 
     settings = _run_settings()
     configs = _unwrap(admitted.compile_all(**settings), "compile all")
@@ -205,19 +204,17 @@ def main() -> None:
     assert book_fps == {admitted.label.book_fp1}
     assert bms_fps == {admitted.label.bms_fp1}
     assert bot_fps == {admitted.label.bot_fp1}
-    sys.stdout.write("two combos citing the same Book resolve the identical Book fp1\n")
+    print("two combos citing the same Book resolve the identical Book fp1")
 
     assert is_refusal(admitted.port.resolve("mean-reversion"))
     assert is_refusal(admitted.port.resolve("scalping@latest"))
-    sys.stdout.write("after admission fragments resolve by explicit fp1, never name@latest\n")
+    print("after admission fragments resolve by explicit fp1, never name@latest")
 
     stale = _stale_admission()
     assert is_refusal(stale)
     assert stale.category is RefusalCategory.STALE_EVIDENCE
     assert stale.context["severity"] == _SEVERITY
-    sys.stdout.write(
-        "a superseded reference at admission is an AD-11 stale-evidence refusal; no default\n"
-    )
+    print("a superseded reference at admission is an AD-11 stale-evidence refusal; no default")
 
     registry_input = _unwrap(
         fingerprint(
@@ -247,9 +244,9 @@ def main() -> None:
             "ct-32",
         )
         assert registry_input in result.result_label.input_fingerprints
-    sys.stdout.write("registry_as_of appears verbatim in every combo's CT-32 label set\n")
+    print("registry_as_of appears verbatim in every combo's CT-32 label set")
 
-    sys.stdout.write("sweep admission ok\n")
+    print("sweep admission ok")
 
 
 def _stale_admission() -> Result[qmb.AdmittedSweep]:

@@ -99,7 +99,7 @@ class ExecutionSliceHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[None]:
-        _ = (stream_id, observation, frontier)
+        del stream_id, observation, frontier
         return Ok(None)
 
     def scheduled_position_event(self, stream_id: str, frontier: Instant) -> Result[None]:
@@ -142,11 +142,11 @@ class ExecutionSliceHandler:
         observation: SliceObservation,
         frontier: Instant,
     ) -> Result[None]:
-        _ = (stream_id, observation, frontier)
+        del stream_id, observation, frontier
         return Ok(None)
 
     def mint_intents(self, stream_id: str, frontier: Instant) -> Result[object]:
-        _ = (stream_id, frontier)
+        del stream_id, frontier
         return Ok(())
 
     def bind_path(self, stream_id: str, path: SlicePath) -> Result[None]:
@@ -163,7 +163,7 @@ class ExecutionSliceHandler:
         frontier: Instant,
     ) -> Result[tuple[RestingIntent, ...]]:
         """Deterministic path-split order for this stream's resting cohort (FILL-6)."""
-        _ = (observation, frontier)
+        del observation, frontier
         path = self.remaining_paths.get(stream_id, self.paths.get(stream_id))
         if path is None:
             return Ok(tuple(intents))
@@ -185,7 +185,7 @@ class ExecutionSliceHandler:
         resizes, the COST port itemizes the post-slip fill (never resizing), and
         the itemized :class:`CostedFill` is retained on :attr:`costed_fills`.
         """
-        _ = (observation, frontier)
+        del observation, frontier
         path = self.remaining_paths.get(intent.stream_id, self.paths.get(intent.stream_id))
         if path is None:
             return Ok(False)

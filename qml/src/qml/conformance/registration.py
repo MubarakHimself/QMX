@@ -277,7 +277,7 @@ def cite_registered_bot(
 
 def cite_ungoverned_bot(*, cited_fp1: object = None, kind: object = None) -> TypedRefusal:
     """Ungoverned bots cannot be cited by governed evidence or seats (DEC-0178)."""
-    _ = (cited_fp1, kind)
+    del cited_fp1, kind
     return policy(
         "citation",
         "ungoverned plain-Python bots keep full tunnel access and cannot be cited "

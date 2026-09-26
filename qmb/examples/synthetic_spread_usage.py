@@ -17,7 +17,6 @@ Shows the things SPREAD-1 / SPREAD-2 / B-2 / B-6 / B-10 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import CLOCK_REPLAY, PROVENANCE_RECORDED, mint_replay_binding
@@ -138,16 +137,16 @@ def main() -> None:
     assert synthetic.price_basis == PRICE_BASIS_QUOTE_SYNTHETIC
     assert synthetic.bid.as_fraction() != synthetic.ask.as_fraction()
     assert _unwrap(quote_side(synthetic, Direction.LONG), "ask") is synthetic.ask
-    sys.stdout.write("trade-only bars use instrument x hour-UTC x session calibration\n")
+    print("trade-only bars use instrument x hour-UTC x session calibration")
 
     equal = SpreadCell.try_create(
         inst, hour, "london", _price(1_10000, inst), _price(1_10000, inst)
     )
     assert is_refusal(equal)
-    sys.stdout.write("equal buy/sell refused\n")
+    print("equal buy/sell refused")
     missing = bind_spread_model(_resolved({}))
     assert is_refusal(missing)
-    sys.stdout.write("missing calibration is typed refusal, never zero spread\n")
+    print("missing calibration is typed refusal, never zero spread")
 
     real_feed = _unwrap(
         SpreadFeed.try_create(inst, bid=_price(1_10000, inst), ask=_price(1_10030, inst)),
@@ -156,7 +155,7 @@ def main() -> None:
     real = _unwrap(model.resolve(real_feed, at=_instant(), session="london"), "real")
     assert real.price_basis == PRICE_BASIS_QUOTE_REAL
     assert real.ask.as_fraction() != synthetic.ask.as_fraction()
-    sys.stdout.write("real quotes take precedence\n")
+    print("real quotes take precedence")
     taxonomy = _unwrap(
         FidelityTaxonomy.try_create({PRICE_BASIS_QUOTE_REAL: 1, PRICE_BASIS_QUOTE_SYNTHETIC: 0}),
         "taxonomy",
@@ -178,7 +177,7 @@ def main() -> None:
     )
     mixed = compare_book_bar_fidelity(ranked_real, ranked_synth)
     assert is_refusal(mixed)
-    sys.stdout.write("quote-real ranks higher; ordinal taxonomy is not invented here\n")
+    print("quote-real ranks higher; ordinal taxonomy is not invented here")
 
     series = _unwrap(
         modeled_spread_series(
@@ -190,7 +189,7 @@ def main() -> None:
     consumed = _unwrap(sqs_spread_input(series, world=World.REPLAY), "sqs")
     assert consumed.points[0].quote.bid.__class__ is Price
     assert is_refusal(sqs_spread_input(series, world=World.LIVE))
-    sys.stdout.write("non-live SQS door consumes modeled-spread series of exact Prices\n")
+    print("non-live SQS door consumes modeled-spread series of exact Prices")
 
     stamp = _unwrap(fingerprint({"n": "spread-label"}), "stamp")
     outcome = _unwrap(
@@ -222,8 +221,8 @@ def main() -> None:
     )
     assert outcome.performance_result is not None
     assert cal.fingerprint in outcome.performance_result.result_label.input_fingerprints
-    sys.stdout.write("CT-32 label declares the spread calibration fingerprint\n")
-    sys.stdout.write("synthetic spread ok\n")
+    print("CT-32 label declares the spread calibration fingerprint")
+    print("synthetic spread ok")
 
 
 if __name__ == "__main__":

@@ -16,7 +16,6 @@ from types import MappingProxyType
 from typing import Final, TypeVar
 
 from qmf.core import (
-    Fingerprint,
     Instant,
     Ok,
     Result,
@@ -328,20 +327,6 @@ def run_paper_milestone_lifecycle_campaign(
     inputs: object,
 ) -> Result[LifecycleCampaignReport]:
     """Inject the named lifecycle faults and fold every designed degraded state."""
-    bound = _bind_lifecycle_inputs(inputs)
-    if is_refusal(bound):
-        return bound
-    campaign = bound.value
-    now = _unwrap(campaign.clock.wall_now())
-    if isinstance(now, TypedRefusal):
-        return now
-    sections = _unwrap(_exercise_lifecycle_sections(campaign, now))
-    if isinstance(sections, TypedRefusal):
-        return sections
-    return _fold_lifecycle_report(sections)
-
-
-def _bind_lifecycle_inputs(inputs: object) -> Result[LifecycleCampaignInputs]:
     if not isinstance(inputs, LifecycleCampaignInputs):
         return invalid(
             "inputs",
@@ -367,12 +352,12 @@ def _bind_lifecycle_inputs(inputs: object) -> Result[LifecycleCampaignInputs]:
             "never invents a ratified constant (FTR-07)",
             failure_id=_ID_DISK,
         )
-    return Ok(inputs)
 
+    now = _unwrap(inputs.clock.wall_now())
+    if isinstance(now, TypedRefusal):
+        return now
+    started = now.value_ns
 
-def _exercise_lifecycle_sections(
-    inputs: LifecycleCampaignInputs, now: Instant
-) -> Result[dict[str, Mapping[str, object]]]:
     crash = _unwrap(_exercise_crash_loop(inputs))
     if isinstance(crash, TypedRefusal):
         return crash
@@ -394,27 +379,20 @@ def _exercise_lifecycle_sections(
     shutdown = _unwrap(_exercise_shutdown(inputs))
     if isinstance(shutdown, TypedRefusal):
         return shutdown
-    recovery = _unwrap(_exercise_recovery_and_monitoring(inputs, now, now.value_ns))
+    recovery = _unwrap(_exercise_recovery_and_monitoring(inputs, now, started))
     if isinstance(recovery, TypedRefusal):
         return recovery
-    return Ok(
-        {
-            "callback-wedge": quarantine,
-            "clock": clock,
-            "crash-loop": crash,
-            "data-freshness": freshness,
-            "disk": disk,
-            "preflight": preflight,
-            "recovery": recovery,
-            "shutdown": shutdown,
-        }
-    )
 
-
-def _fold_lifecycle_report(
-    raw_sections: dict[str, Mapping[str, object]],
-) -> Result[LifecycleCampaignReport]:
-    sections = {name: dict(body) for name, body in raw_sections.items()}
+    sections = {
+        "callback-wedge": dict(quarantine),
+        "clock": dict(clock),
+        "crash-loop": dict(crash),
+        "data-freshness": dict(freshness),
+        "disk": dict(disk),
+        "preflight": dict(preflight),
+        "recovery": dict(recovery),
+        "shutdown": dict(shutdown),
+    }
     missing = [name for name in LIFECYCLE_INJECTIONS if name not in sections]
     if missing:
         return policy(
@@ -423,14 +401,7 @@ def _fold_lifecycle_report(
             missing=missing,
             failure_id=_ID_INJECTION,
         )
-    crash = sections["crash-loop"]
-    preflight = sections["preflight"]
-    quarantine = sections["callback-wedge"]
-    clock = sections["clock"]
-    disk = sections["disk"]
-    freshness = sections["data-freshness"]
-    shutdown = sections["shutdown"]
-    recovery = sections["recovery"]
+
     protective = (
         crash["protective_admit"] is True
         and preflight["protective_admit"] is True
@@ -439,79 +410,18 @@ def _fold_lifecycle_report(
         and freshness["protection_enactable"] is True
         and shutdown["flattened"] is False
     )
-    identity = _lifecycle_identity(
-        sections, crash, quarantine, clock, disk, shutdown, recovery, protective
-    )
-    stamped = fingerprint(identity)
-    if is_refusal(stamped):
-        return _as_refusal(stamped)
-    return Ok(
-        _lifecycle_report(
-            stamped.value, sections, crash, quarantine, clock, disk, shutdown, recovery, protective
-        )
-    )
-
-
-def _lifecycle_report(
-    stamped: Fingerprint,
-    sections: dict[str, dict[str, object]],
-    crash: dict[str, object],
-    quarantine: dict[str, object],
-    clock: dict[str, object],
-    disk: dict[str, object],
-    shutdown: dict[str, object],
-    recovery: dict[str, object],
-    protective: bool,
-) -> LifecycleCampaignReport:
-    freshness = sections["data-freshness"]
-    preflight = sections["preflight"]
-    return LifecycleCampaignReport(
-        format_version=LIFECYCLE_CAMPAIGN_FORMAT_VERSION,
-        fingerprint=stamped,
-        injections=LIFECYCLE_INJECTIONS,
-        stand_down_doors_serving=crash["doors_serving"] is True,
-        only_resurrect_clears=crash["only_resurrect_clears"] is True,
-        quarantine_survives_restart=quarantine["survives_restart"] is True,
-        seat_reinstate_required=quarantine["seat_reinstate_required"] is True,
-        clock_no_new_entry_separate_from_halt=clock["separate_from_halt"] is True,
-        disk_headroom_degrades_before_full=disk["degrades_before_full"] is True,
-        sigterm_flushes=shutdown["flushed"] is True,
-        sigterm_mints_unknown=shutdown["unknown_minted"] is True,
-        sigterm_never_flattens=shutdown["flattened"] is False,
-        protective_acts_available_or_persistent=protective,
-        runs_live_vps_firewall=RUNS_LIVE_VPS_FIREWALL,
-        runs_live_bucket_restore=RUNS_LIVE_BUCKET_RESTORE,
-        restore_grants_node_authority=False,
-        stack_required=False,
-        watcher_only_notifies=recovery["watcher_only_notifies"] is True,
-        sections=MappingProxyType(sections),
-        measured_ns=MappingProxyType(
-            {
-                "campaign": 0,
-                "clock": _as_int(clock.get("measured_ns", 0)),
-                "crash-loop": _as_int(crash.get("measured_ns", 0)),
-                "data-freshness": _as_int(freshness.get("measured_ns", 0)),
-                "disk": _as_int(disk.get("measured_ns", 0)),
-                "preflight": _as_int(preflight.get("measured_ns", 0)),
-                "quarantine": _as_int(quarantine.get("measured_ns", 0)),
-                "recovery": _as_int(recovery.get("measured_ns", 0)),
-                "shutdown": _as_int(shutdown.get("measured_ns", 0)),
-            }
-        ),
-    )
-
-
-def _lifecycle_identity(
-    sections: dict[str, dict[str, object]],
-    crash: dict[str, object],
-    quarantine: dict[str, object],
-    clock: dict[str, object],
-    disk: dict[str, object],
-    shutdown: dict[str, object],
-    recovery: dict[str, object],
-    protective: bool,
-) -> dict[str, object]:
-    return {
+    measured = {
+        "campaign": 0,
+        "clock": _as_int(clock.get("measured_ns", 0)),
+        "crash-loop": _as_int(crash.get("measured_ns", 0)),
+        "data-freshness": _as_int(freshness.get("measured_ns", 0)),
+        "disk": _as_int(disk.get("measured_ns", 0)),
+        "preflight": _as_int(preflight.get("measured_ns", 0)),
+        "quarantine": _as_int(quarantine.get("measured_ns", 0)),
+        "recovery": _as_int(recovery.get("measured_ns", 0)),
+        "shutdown": _as_int(shutdown.get("measured_ns", 0)),
+    }
+    identity = {
         "class": LIFECYCLE_CAMPAIGN_CLASS,
         "clock_no_new_entry_separate_from_halt": clock["separate_from_halt"] is True,
         "disk_headroom_degrades_before_full": disk["degrades_before_full"] is True,
@@ -533,36 +443,37 @@ def _lifecycle_identity(
         "surface": LIFECYCLE_CAMPAIGN_SURFACE,
         "watcher_only_notifies": recovery["watcher_only_notifies"] is True,
     }
-
-
-def _exercise_crash_loop(inputs: LifecycleCampaignInputs) -> Result[Mapping[str, object]]:
-    supervisor = _supervisor(inputs, boot_epoch_id=_BOOT)
-    folded = _crash_loop_fold(supervisor, inputs)
-    if is_refusal(folded):
-        return folded
-    admitted = _crash_loop_admit()
-    if is_refusal(admitted):
-        return admitted
-    resurrected = _crash_loop_resurrect(supervisor, inputs)
-    if is_refusal(resurrected):
-        return resurrected
+    stamped = fingerprint(identity)
+    if is_refusal(stamped):
+        return _as_refusal(stamped)
     return Ok(
-        MappingProxyType(
-            {
-                "doors_serving": True,
-                "measured_ns": 0,
-                "only_resurrect_clears": True,
-                "protective_admit": True,
-                "restart_clears": False,
-                "trigger": StandDownTrigger.CRASH_LOOP.value,
-            }
+        LifecycleCampaignReport(
+            format_version=LIFECYCLE_CAMPAIGN_FORMAT_VERSION,
+            fingerprint=stamped.value,
+            injections=LIFECYCLE_INJECTIONS,
+            stand_down_doors_serving=crash["doors_serving"] is True,
+            only_resurrect_clears=crash["only_resurrect_clears"] is True,
+            quarantine_survives_restart=quarantine["survives_restart"] is True,
+            seat_reinstate_required=quarantine["seat_reinstate_required"] is True,
+            clock_no_new_entry_separate_from_halt=clock["separate_from_halt"] is True,
+            disk_headroom_degrades_before_full=disk["degrades_before_full"] is True,
+            sigterm_flushes=shutdown["flushed"] is True,
+            sigterm_mints_unknown=shutdown["unknown_minted"] is True,
+            sigterm_never_flattens=shutdown["flattened"] is False,
+            protective_acts_available_or_persistent=protective,
+            runs_live_vps_firewall=RUNS_LIVE_VPS_FIREWALL,
+            runs_live_bucket_restore=RUNS_LIVE_BUCKET_RESTORE,
+            restore_grants_node_authority=False,
+            stack_required=False,
+            watcher_only_notifies=recovery["watcher_only_notifies"] is True,
+            sections=MappingProxyType(sections),
+            measured_ns=MappingProxyType(measured),
         )
     )
 
 
-def _crash_loop_fold(
-    supervisor: LifecycleSupervisor, inputs: LifecycleCampaignInputs
-) -> Result[None]:
+def _exercise_crash_loop(inputs: LifecycleCampaignInputs) -> Result[Mapping[str, object]]:
+    supervisor = _supervisor(inputs, boot_epoch_id=_BOOT)
     base = 5_000_000_000_000
     for index in range(inputs.crash_loop_max_boots):
         recorded = supervisor.record_boot_attempt(
@@ -579,10 +490,7 @@ def _crash_loop_fold(
         return policy("crash-loop", "stand-down trigger must be crash-loop")
     if supervisor.doors_serving is not True:
         return policy("crash-loop", "stand-down keeps doors serving")
-    return Ok(None)
 
-
-def _crash_loop_admit() -> Result[None]:
     protective = _unwrap(
         admit_under_lifecycle(
             state=LifecycleState.STAND_DOWN_ALIVE,
@@ -607,12 +515,7 @@ def _crash_loop_admit() -> Result[None]:
             protective=protective,
             entry=entry,
         )
-    return Ok(None)
 
-
-def _crash_loop_resurrect(
-    supervisor: LifecycleSupervisor, inputs: LifecycleCampaignInputs
-) -> Result[None]:
     fold = supervisor.crash_loop
     if fold is None:
         return policy("crash-loop", "crash-loop fold must be present")
@@ -641,6 +544,7 @@ def _crash_loop_resurrect(
         return policy("crash-loop", "ops principal must not resurrect")
     if restarted.state is not LifecycleState.STAND_DOWN_ALIVE:
         return policy("crash-loop", "restart plus ops resurrect must not clear stand-down")
+
     receipt = restarted.resurrect(
         principal=OPERATOR_PRINCIPAL,
         scope="global",
@@ -650,7 +554,18 @@ def _crash_loop_resurrect(
         return _as_refusal(receipt)
     if receipt.value.clears_by_restart is True:
         return policy("crash-loop", "resurrect must not be a restart-clear")
-    return Ok(None)
+    return Ok(
+        MappingProxyType(
+            {
+                "doors_serving": True,
+                "measured_ns": 0,
+                "only_resurrect_clears": True,
+                "protective_admit": True,
+                "restart_clears": False,
+                "trigger": StandDownTrigger.CRASH_LOOP.value,
+            }
+        )
+    )
 
 
 def _exercise_preflight(inputs: LifecycleCampaignInputs) -> Result[Mapping[str, object]]:
@@ -701,31 +616,6 @@ def _exercise_preflight(inputs: LifecycleCampaignInputs) -> Result[Mapping[str, 
 
 def _exercise_quarantine(now: Instant) -> Result[Mapping[str, object]]:
     stream = SeatTransitionStream()
-    folded = _quarantine_fold(stream, now)
-    if is_refusal(folded):
-        return folded
-    reinstated = _quarantine_reinstate(stream, now)
-    if is_refusal(reinstated):
-        return reinstated
-    after_restart, cleared = folded.value, reinstated.value
-    return Ok(
-        MappingProxyType(
-            {
-                "measured_ns": 0,
-                "restart_clears": False,
-                "seat_reinstate_required": True,
-                "state_after_restart": after_restart.value,
-                "state_after_reinstate": cleared.value,
-                "survives_restart": True,
-                "trigger": QuarantineTrigger.NON_RETURNING_CALLBACK.value,
-            }
-        )
-    )
-
-
-def _quarantine_fold(
-    stream: SeatTransitionStream, now: Instant
-) -> Result[GovernedSeatState]:
     minted = mint_quarantine_transition(
         seat_id=_SEAT,
         binding_ref=_BINDING,
@@ -742,17 +632,13 @@ def _quarantine_fold(
         return _as_refusal(folded)
     if folded.value is not GovernedSeatState.QUARANTINED:
         return policy("quarantine", "callback wedge must auto-quarantine the seat")
+
     after_restart = fold_seat_state(stream, _SEAT, initial=GovernedSeatState.ADMITTED)
     if is_refusal(after_restart):
         return _as_refusal(after_restart)
     if after_restart.value is not GovernedSeatState.QUARANTINED:
         return policy("quarantine", "quarantine must survive restart as a stream fold")
-    return Ok(after_restart.value)
 
-
-def _quarantine_reinstate(
-    stream: SeatTransitionStream, now: Instant
-) -> Result[GovernedSeatState]:
     inferred = mint_seat_reinstate(
         seat_id=_SEAT,
         binding_ref=_BINDING,
@@ -762,6 +648,7 @@ def _quarantine_reinstate(
     )
     if is_ok(inferred):
         return policy("quarantine", "restart must not infer seat_reinstate")
+
     ops = apply_operator_seat_reinstate(
         principal="ops",
         seat_id=_SEAT,
@@ -772,6 +659,7 @@ def _quarantine_reinstate(
     )
     if is_ok(ops):
         return policy("quarantine", "ops principal must not seat_reinstate")
+
     reinstated = apply_operator_seat_reinstate(
         principal=OPERATOR_PRINCIPAL,
         seat_id=_SEAT,
@@ -787,7 +675,19 @@ def _quarantine_reinstate(
         return _as_refusal(cleared)
     if cleared.value is GovernedSeatState.QUARANTINED:
         return policy("quarantine", "operator seat_reinstate must leave quarantined")
-    return Ok(cleared.value)
+    return Ok(
+        MappingProxyType(
+            {
+                "measured_ns": 0,
+                "restart_clears": False,
+                "seat_reinstate_required": True,
+                "state_after_restart": after_restart.value.value,
+                "state_after_reinstate": cleared.value.value,
+                "survives_restart": True,
+                "trigger": QuarantineTrigger.NON_RETURNING_CALLBACK.value,
+            }
+        )
+    )
 
 
 def _exercise_clock(
@@ -818,39 +718,10 @@ def _exercise_clock(
     )
     if is_refusal(halt_truth):
         return _as_refusal(halt_truth)
-    bands = _clock_band_pair(thresholds.value, nne_truth.value, halt_truth.value, now)
-    if is_refusal(bands):
-        return bands
-    nne_band, halt_band = bands.value
-    supervisor = _supervisor(inputs, boot_epoch_id="boot-clock-halt")
-    stood = supervisor.enter_stand_down(trigger=StandDownTrigger.CLOCK_HALT)
-    if is_refusal(stood):
-        return _as_refusal(stood)
-    return Ok(
-        MappingProxyType(
-            {
-                "halt_band": halt_band.value,
-                "halt_stand_down": True,
-                "measured_ns": 0,
-                "no_new_entry_band": nne_band.value,
-                "no_new_entry_stand_down": False,
-                "protection_preserved": True,
-                "separate_from_halt": True,
-            }
-        )
-    )
-
-
-def _clock_band_pair(
-    thresholds: ClockDriftThresholds,
-    nne_truth: MachineVersusTruth,
-    halt_truth: MachineVersusTruth,
-    now: Instant,
-) -> Result[tuple[ClockBand, ClockBand]]:
-    nne = evaluate_clock_band(thresholds=thresholds, truth=nne_truth, now=now)
+    nne = evaluate_clock_band(thresholds=thresholds.value, truth=nne_truth.value, now=now)
     if is_refusal(nne):
         return _as_refusal(nne)
-    halt = evaluate_clock_band(thresholds=thresholds, truth=halt_truth, now=now)
+    halt = evaluate_clock_band(thresholds=thresholds.value, truth=halt_truth.value, now=now)
     if is_refusal(halt):
         return _as_refusal(halt)
     if nne.value.band is not ClockBand.NO_NEW_ENTRY:
@@ -865,7 +736,24 @@ def _clock_band_pair(
         return policy("clock", "no-new-entry refuses entries")
     if clock_band_preserves_protection(nne.value.band, act="flatten") is not True:
         return policy("clock", "no-new-entry preserves protection")
-    return Ok((nne.value.band, halt.value.band))
+
+    supervisor = _supervisor(inputs, boot_epoch_id="boot-clock-halt")
+    stood = supervisor.enter_stand_down(trigger=StandDownTrigger.CLOCK_HALT)
+    if is_refusal(stood):
+        return _as_refusal(stood)
+    return Ok(
+        MappingProxyType(
+            {
+                "halt_band": halt.value.band.value,
+                "halt_stand_down": True,
+                "measured_ns": 0,
+                "no_new_entry_band": nne.value.band.value,
+                "no_new_entry_stand_down": False,
+                "protection_preserved": True,
+                "separate_from_halt": True,
+            }
+        )
+    )
 
 
 def _exercise_disk(
@@ -1014,13 +902,35 @@ def _exercise_recovery_and_monitoring(
     now: Instant,
     started_ns: int,
 ) -> Result[Mapping[str, object]]:
-    _ = inputs
-    watched = _watcher_missing_ping(now)
-    if is_refusal(watched):
-        return watched
-    stacked = _stack_absent_ready()
-    if is_refusal(stacked):
-        return stacked
+    del inputs
+    watcher = WatcherDouble(cadence_ns=1_000_000_000)
+    missing = watcher.evaluate(now.value_ns + 2_000_000_000)
+    if is_refusal(missing):
+        return _as_refusal(missing)
+    if missing.value != "missing-ping":
+        return policy("recovery", "heartbeat loss must notify missing-ping")
+    if not watcher.missing_notifications:
+        return policy("recovery", "watcher must record the missing-ping notification")
+
+    # Observability stack absent: supervisor still announces READY and serves doors.
+    supervisor = LifecycleSupervisor(
+        config=_ok_config(
+            crash_loop_max_boots=3,
+            crash_loop_window_ns=60_000_000_000,
+            drain_window_ns=30_000_000_000,
+            watchdog_interval_ns=5_000_000_000,
+            seat_callback_deadline_ns=1_000_000_000,
+            slice_watch_trip_multiple=3,
+        ),
+        notify=RecordingNotifyTransport(),
+        boot_epoch_id="boot-stack-absent",
+    )
+    ready = supervisor.mark_ready()
+    if is_refusal(ready):
+        return _as_refusal(ready)
+    if supervisor.doors_serving is not True:
+        return policy("recovery", "the node must run with the observability stack absent")
+
     duration = now.value_ns - started_ns
     return Ok(
         MappingProxyType(
@@ -1040,39 +950,6 @@ def _exercise_recovery_and_monitoring(
             }
         )
     )
-
-
-def _watcher_missing_ping(now: Instant) -> Result[None]:
-    watcher = WatcherDouble(cadence_ns=1_000_000_000)
-    missing = watcher.evaluate(now.value_ns + 2_000_000_000)
-    if is_refusal(missing):
-        return _as_refusal(missing)
-    if missing.value != "missing-ping":
-        return policy("recovery", "heartbeat loss must notify missing-ping")
-    if not watcher.missing_notifications:
-        return policy("recovery", "watcher must record the missing-ping notification")
-    return Ok(None)
-
-
-def _stack_absent_ready() -> Result[None]:
-    supervisor = LifecycleSupervisor(
-        config=_ok_config(
-            crash_loop_max_boots=3,
-            crash_loop_window_ns=60_000_000_000,
-            drain_window_ns=30_000_000_000,
-            watchdog_interval_ns=5_000_000_000,
-            seat_callback_deadline_ns=1_000_000_000,
-            slice_watch_trip_multiple=3,
-        ),
-        notify=RecordingNotifyTransport(),
-        boot_epoch_id="boot-stack-absent",
-    )
-    ready = supervisor.mark_ready()
-    if is_refusal(ready):
-        return _as_refusal(ready)
-    if supervisor.doors_serving is not True:
-        return policy("recovery", "the node must run with the observability stack absent")
-    return Ok(None)
 
 
 def _supervisor(inputs: LifecycleCampaignInputs, *, boot_epoch_id: str) -> LifecycleSupervisor:

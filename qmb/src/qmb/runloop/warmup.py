@@ -79,7 +79,7 @@ def guard_trading(*, is_warming_up: bool, action: str) -> Result[None]:
 
 def preseed_indicator_buffers(buffers: object = None) -> Result[None]:
     """Pre-seeding buffers without replaying slices is not warm-up (B-2)."""
-    _ = buffers
+    del buffers
     return policy(
         "warmup",
         "pre-seeding indicator buffers without replaying slices is not warm-up "

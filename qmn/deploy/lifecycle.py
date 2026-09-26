@@ -214,16 +214,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.apply and args.fixture_root is None:
-        sys.stderr.write(
+        print(
             "refusing --apply without --fixture-root: this recipe never SSHes to "
-            "a VPS and never applies a live firewall or live bucket restore\n"
+            "a VPS and never applies a live firewall or live bucket restore",
+            file=sys.stderr,
         )
         return 2
     if args.live_firewall:
-        sys.stderr.write("refusing live VPS firewall campaign: Story 28.4 skips that AC\n")
+        print(
+            "refusing live VPS firewall campaign: Story 28.4 skips that AC",
+            file=sys.stderr,
+        )
         return 2
     if args.live_bucket_restore:
-        sys.stderr.write("refusing live bucket restore: Story 28.4 skips that AC (AR-87)\n")
+        print(
+            "refusing live bucket restore: Story 28.4 skips that AC (AR-87)",
+            file=sys.stderr,
+        )
         return 2
 
     mode: Literal["check", "apply"] = "apply" if args.fixture_root is not None else "check"
@@ -237,7 +244,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out is not None:
         write_plan(plan, args.out)
     else:
-        sys.stdout.write(str(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True)) + "\n")
+        print(json.dumps(plan.to_jsonable(), indent=2, sort_keys=True))
     return 0 if plan.ok else 1
 
 

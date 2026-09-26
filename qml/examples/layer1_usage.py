@@ -24,7 +24,6 @@ Shows the things QL-8 / Story 12.3 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar, cast
 
 from qmf.core.chrono import CalendarIdentity
@@ -377,19 +376,19 @@ def failures_are_journaled() -> bool:
 
 
 def main() -> None:
-    sys.stdout.write(f"layer 1 format version: {CONFORMANCE_FORMAT_VERSION}\n")
-    sys.stdout.write(f"clean declaration passes: {clean_declaration_passes()}\n")
-    sys.stdout.write(f"missing unit-kind: {missing_unit_kind()}\n")
-    sys.stdout.write(f"unresolvable family: {unresolvable_family()}\n")
-    sys.stdout.write(f"unresolvable confluence: {unresolvable_confluence()}\n")
-    sys.stdout.write(f"unresolvable logic: {unresolvable_logic()}\n")
-    sys.stdout.write(f"unresolvable producer formula: {unresolvable_producer_formula()}\n")
-    sys.stdout.write(f"missing confluence-leg producer: {missing_confluence_leg_producer()}\n")
-    sys.stdout.write(f"omitted AD-22 field: {omitted_identity_field()}\n")
-    sys.stdout.write(f"exit kind outside vocabulary: {exit_kind_outside_vocabulary()}\n")
-    sys.stdout.write(f"unknown contract format version: {unknown_format_version()}\n")
-    sys.stdout.write(f"layer 1 failures journaled: {failures_are_journaled()}\n")
-    sys.stdout.write("layer1 linter ok\n")
+    print(f"layer 1 format version: {CONFORMANCE_FORMAT_VERSION}")
+    print(f"clean declaration passes: {clean_declaration_passes()}")
+    print(f"missing unit-kind: {missing_unit_kind()}")
+    print(f"unresolvable family: {unresolvable_family()}")
+    print(f"unresolvable confluence: {unresolvable_confluence()}")
+    print(f"unresolvable logic: {unresolvable_logic()}")
+    print(f"unresolvable producer formula: {unresolvable_producer_formula()}")
+    print(f"missing confluence-leg producer: {missing_confluence_leg_producer()}")
+    print(f"omitted AD-22 field: {omitted_identity_field()}")
+    print(f"exit kind outside vocabulary: {exit_kind_outside_vocabulary()}")
+    print(f"unknown contract format version: {unknown_format_version()}")
+    print(f"layer 1 failures journaled: {failures_are_journaled()}")
+    print("layer1 linter ok")
 
 
 if __name__ == "__main__":

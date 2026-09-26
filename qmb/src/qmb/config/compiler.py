@@ -43,7 +43,6 @@ from qmb.config.qml_compile import (
     ASSIGNMENT_IS_CANONICAL_KEY,
     ASSIGNMENT_KEY,
     RESOLVED_PRODUCERS_KEY,
-    Ct33CompileExtension,
     apply_ct33_compiler_extensions,
 )
 from qmb.config.replay import (
@@ -311,30 +310,173 @@ class ResolvedRunConfig:
         a best-effort read (AD-5). Display keys are accepted and excluded from
         identity.
         """
-        body = _read_run_config_body(identity)
-        if is_refusal(body):
-            return body
-        version = _read_run_config_version(body.value, reader_format_version)
-        if is_refusal(version):
-            return version
-        classified = _read_run_config_classification(body.value)
+        if not isinstance(identity, Mapping):
+            return invalid(
+                "identity",
+                "a resolved run-config identity is a key->value mapping",
+                given=repr(type(identity).__name__),
+            )
+        body = cast("Mapping[str, object]", identity)
+        class_token = clean_token(body.get("class"))
+        if class_token != RUN_CONFIG_CLASS:
+            return invalid(
+                "class",
+                "a resolved run-config identity names class resolved-run-config",
+                given=repr(body.get("class")),
+            )
+        reader = _coerce_format_version(reader_format_version)
+        if reader is None:
+            return unsupported(
+                "reader_format_version",
+                "a run-config reader format version is a positive integer ordinal",
+                given=repr(reader_format_version),
+            )
+        version = _coerce_format_version(body.get("format_version"))
+        if version is None or version not in RUN_CONFIG_KNOWN_FORMAT_VERSIONS:
+            return unsupported(
+                "format_version",
+                "this resolved run-config format version is not one this build "
+                "understands; an unknown version is never best-effort read",
+                given=repr(body.get("format_version")),
+                understood=sorted(RUN_CONFIG_KNOWN_FORMAT_VERSIONS),
+            )
+        if version > reader:
+            return unsupported(
+                "format_version",
+                "a format-1 reader confronting a newer run-config refuses "
+                "unsupported capability; old artifacts stay readable forever",
+                given=version,
+                reader_format_version=reader,
+            )
+        allowed = set(_CLASSIFICATION_IDENTITY_FIELDS) | set(DISPLAY_FIELDS)
+        extra = [key for key in body if key not in allowed]
+        if extra:
+            return invalid(
+                "identity",
+                "a format-1 resolved run-config carries only declared identity and display fields",
+                extra=sorted(extra),
+            )
+        classified = _require_token_tuple(body.get("identity_fields"), "identity_fields")
         if is_refusal(classified):
             return classified
-        cites = _read_run_config_cites(body.value)
-        if is_refusal(cites):
-            return cites
-        worlded = _read_run_config_world(body.value)
-        if is_refusal(worlded):
-            return worlded
-        keys_map, clock, provenance, world, display_payload = worlded.value
-        book, bms, bot, book_frag, bms_frag, binding, presets = cites.value
+        if classified.value != _CLASSIFICATION_IDENTITY_FIELDS:
+            return invalid(
+                "identity_fields",
+                "a format-1 resolved run-config declares the AD-10 identity field set",
+                given=list(classified.value),
+                expected=list(_CLASSIFICATION_IDENTITY_FIELDS),
+            )
+        display_declared = _require_token_tuple(body.get("display_fields"), "display_fields")
+        if is_refusal(display_declared):
+            return display_declared
+        if display_declared.value != DISPLAY_FIELDS:
+            return invalid(
+                "display_fields",
+                "a format-1 resolved run-config declares the AD-10 display field set",
+                given=list(display_declared.value),
+                expected=list(DISPLAY_FIELDS),
+            )
+        precedence = _require_token_tuple(body.get("layer_precedence"), "layer_precedence")
+        if is_refusal(precedence):
+            return precedence
+        if precedence.value != LAYER_PRECEDENCE:
+            return invalid(
+                "layer_precedence",
+                "layer precedence is pinned: invocation flags > run spec > BMS "
+                "fragment > Book fragment > workspace defaults",
+                given=list(precedence.value),
+                expected=list(LAYER_PRECEDENCE),
+            )
+        book = _require_fingerprint(body.get("book_fp1"), "book_fp1")
+        if is_refusal(book):
+            return book
+        bms = _require_fingerprint(body.get("bms_fp1"), "bms_fp1")
+        if is_refusal(bms):
+            return bms
+        bot = _require_fingerprint(body.get("bot_fp1"), "bot_fp1")
+        if is_refusal(bot):
+            return bot
+        book_frag = _require_fingerprint(body.get("book_fragment_fp1"), "book_fragment_fp1")
+        if is_refusal(book_frag):
+            return book_frag
+        bms_frag = _require_fingerprint(body.get("bms_fragment_fp1"), "bms_fragment_fp1")
+        if is_refusal(bms_frag):
+            return bms_frag
+        binding: Fingerprint | None = None
+        if "binding_fp1" in body:
+            bound = _require_fingerprint(body.get("binding_fp1"), "binding_fp1")
+            if is_refusal(bound):
+                return bound
+            binding = bound.value
+        presets: tuple[Fingerprint, ...] = ()
+        if "condition_preset_fp1" in body:
+            parsed_presets = _require_fingerprint_tuple(
+                body.get("condition_preset_fp1"),
+                "condition_preset_fp1",
+            )
+            if is_refusal(parsed_presets):
+                return parsed_presets
+            presets = parsed_presets.value
+        keys = body.get("keys")
+        if not isinstance(keys, Mapping):
+            return invalid(
+                "keys",
+                "resolved run-config keys are a key->value mapping",
+                given=repr(type(keys).__name__),
+            )
+        keys_map = cast("Mapping[str, object]", keys)
+        dummy_keys = refuse_dummy_mapping(keys_map, field="keys")
+        if dummy_keys is not None:
+            return dummy_keys
+        dummy_identity = refuse_dummy_mapping(body, field="identity")
+        if dummy_identity is not None:
+            return dummy_identity
+        special = [key for key in keys_map if key in _SPECIAL_KEYS]
+        if special:
+            return invalid(
+                "keys",
+                "citation, clock, provenance, and world keys are dedicated fields, "
+                "never residual resolved keys",
+                extra=sorted(special),
+            )
+        clock = clean_token(body.get("clock"))
+        provenance = clean_token(body.get("data_provenance"))
+        if clock is None or provenance is None:
+            return invalid(
+                "clock",
+                "a resolved run-config binds a clock and a data-provenance token",
+                clock=repr(body.get("clock")),
+                data_provenance=repr(body.get("data_provenance")),
+            )
+        world = _coerce_world(body.get("world"))
+        if world is None:
+            return invalid(
+                "world",
+                "world is provenance-derived: replay or simulated",
+                given=repr(body.get("world")),
+            )
+        derived = _derive_world(clock, provenance)
+        if is_refusal(derived):
+            return derived
+        if derived.value is not world:
+            return invalid(
+                "world",
+                "world is provenance-derived and must match the bound clock "
+                "and data provenance; a caller may not declare world (B-7)",
+                given=world.value,
+                derived=derived.value.value,
+            )
+        display_payload: dict[str, object] = {}
+        for field in DISPLAY_FIELDS:
+            if field in body:
+                display_payload[field] = body[field]
         return _finish(
-            format_version=version.value,
-            book_fp1=book,
-            bms_fp1=bms,
-            bot_fp1=bot,
-            book_fragment_fp1=book_frag,
-            bms_fragment_fp1=bms_frag,
+            format_version=version,
+            book_fp1=book.value,
+            bms_fp1=bms.value,
+            bot_fp1=bot.value,
+            book_fragment_fp1=book_frag.value,
+            bms_fragment_fp1=bms_frag.value,
             keys=keys_map,
             clock=clock,
             data_provenance=provenance,
@@ -363,272 +505,6 @@ def compile_run_config(
     the artifact cites ``fp1``. Domain failure is a CT-04 value, returned never
     raised.
     """
-    layers = _compile_input_layers(
-        port,
-        book_fragment=book_fragment,
-        bms_fragment=bms_fragment,
-        run_spec=run_spec,
-        invocation_flags=invocation_flags,
-        workspace_defaults=workspace_defaults,
-        condition_presets=condition_presets,
-    )
-    if is_refusal(layers):
-        return layers
-    merged = _compile_overlay_layers(layers.value)
-    if is_refusal(merged):
-        return merged
-    acc, preset_fps = merged.value
-    bound = _compile_clock_and_bot(acc, layers.value.port)
-    if is_refusal(bound):
-        return bound
-    return _compile_seed_keys_and_replay(acc, layers.value, bound.value, preset_fps)
-
-
-@dataclass(frozen=True, slots=True)
-class _CompileLayers:
-    port: RegistryReadPort
-    book: ConfigFragment
-    bms: ConfigFragment
-    spec: Mapping[str, object]
-    flags: Mapping[str, object]
-    defaults: Mapping[str, object]
-    presets: tuple[ConfigFragment, ...]
-    combined: dict[str, object]
-
-
-_RunConfigCites = tuple[
-    Fingerprint,
-    Fingerprint,
-    Fingerprint,
-    Fingerprint,
-    Fingerprint,
-    Fingerprint | None,
-    tuple[Fingerprint, ...],
-]
-_RunConfigWorld = tuple[Mapping[str, object], str, str, World, dict[str, object]]
-_CompileBound = tuple[str, str, World, object, ResolvedRef]
-
-
-def _read_run_config_body(identity: object) -> Result[Mapping[str, object]]:
-    if not isinstance(identity, Mapping):
-        return invalid(
-            "identity",
-            "a resolved run-config identity is a key->value mapping",
-            given=repr(type(identity).__name__),
-        )
-    body = cast("Mapping[str, object]", identity)
-    class_token = clean_token(body.get("class"))
-    if class_token != RUN_CONFIG_CLASS:
-        return invalid(
-            "class",
-            "a resolved run-config identity names class resolved-run-config",
-            given=repr(body.get("class")),
-        )
-    return Ok(body)
-
-
-def _read_run_config_version(
-    body: Mapping[str, object], reader_format_version: object
-) -> Result[int]:
-    reader = _coerce_format_version(reader_format_version)
-    if reader is None:
-        return unsupported(
-            "reader_format_version",
-            "a run-config reader format version is a positive integer ordinal",
-            given=repr(reader_format_version),
-        )
-    version = _coerce_format_version(body.get("format_version"))
-    if version is None or version not in RUN_CONFIG_KNOWN_FORMAT_VERSIONS:
-        return unsupported(
-            "format_version",
-            "this resolved run-config format version is not one this build "
-            "understands; an unknown version is never best-effort read",
-            given=repr(body.get("format_version")),
-            understood=sorted(RUN_CONFIG_KNOWN_FORMAT_VERSIONS),
-        )
-    if version > reader:
-        return unsupported(
-            "format_version",
-            "a format-1 reader confronting a newer run-config refuses "
-            "unsupported capability; old artifacts stay readable forever",
-            given=version,
-            reader_format_version=reader,
-        )
-    allowed = set(_CLASSIFICATION_IDENTITY_FIELDS) | set(DISPLAY_FIELDS)
-    extra = [key for key in body if key not in allowed]
-    if extra:
-        return invalid(
-            "identity",
-            "a format-1 resolved run-config carries only declared identity and display fields",
-            extra=sorted(extra),
-        )
-    return Ok(version)
-
-
-def _read_run_config_classification(body: Mapping[str, object]) -> Result[None]:
-    classified = _require_token_tuple(body.get("identity_fields"), "identity_fields")
-    if is_refusal(classified):
-        return classified
-    if classified.value != _CLASSIFICATION_IDENTITY_FIELDS:
-        return invalid(
-            "identity_fields",
-            "a format-1 resolved run-config declares the AD-10 identity field set",
-            given=list(classified.value),
-            expected=list(_CLASSIFICATION_IDENTITY_FIELDS),
-        )
-    display_declared = _require_token_tuple(body.get("display_fields"), "display_fields")
-    if is_refusal(display_declared):
-        return display_declared
-    if display_declared.value != DISPLAY_FIELDS:
-        return invalid(
-            "display_fields",
-            "a format-1 resolved run-config declares the AD-10 display field set",
-            given=list(display_declared.value),
-            expected=list(DISPLAY_FIELDS),
-        )
-    precedence = _require_token_tuple(body.get("layer_precedence"), "layer_precedence")
-    if is_refusal(precedence):
-        return precedence
-    if precedence.value != LAYER_PRECEDENCE:
-        return invalid(
-            "layer_precedence",
-            "layer precedence is pinned: invocation flags > run spec > BMS "
-            "fragment > Book fragment > workspace defaults",
-            given=list(precedence.value),
-            expected=list(LAYER_PRECEDENCE),
-        )
-    return Ok(None)
-
-
-def _read_required_fp1_cites(
-    body: Mapping[str, object],
-) -> Result[tuple[Fingerprint, Fingerprint, Fingerprint, Fingerprint, Fingerprint]]:
-    book = _require_fingerprint(body.get("book_fp1"), "book_fp1")
-    if is_refusal(book):
-        return book
-    bms = _require_fingerprint(body.get("bms_fp1"), "bms_fp1")
-    if is_refusal(bms):
-        return bms
-    bot = _require_fingerprint(body.get("bot_fp1"), "bot_fp1")
-    if is_refusal(bot):
-        return bot
-    book_frag = _require_fingerprint(body.get("book_fragment_fp1"), "book_fragment_fp1")
-    if is_refusal(book_frag):
-        return book_frag
-    bms_frag = _require_fingerprint(body.get("bms_fragment_fp1"), "bms_fragment_fp1")
-    if is_refusal(bms_frag):
-        return bms_frag
-    return Ok((book.value, bms.value, bot.value, book_frag.value, bms_frag.value))
-
-
-def _read_optional_cites(
-    body: Mapping[str, object],
-) -> Result[tuple[Fingerprint | None, tuple[Fingerprint, ...]]]:
-    binding: Fingerprint | None = None
-    if "binding_fp1" in body:
-        bound = _require_fingerprint(body.get("binding_fp1"), "binding_fp1")
-        if is_refusal(bound):
-            return bound
-        binding = bound.value
-    presets: tuple[Fingerprint, ...] = ()
-    if "condition_preset_fp1" in body:
-        parsed_presets = _require_fingerprint_tuple(
-            body.get("condition_preset_fp1"),
-            "condition_preset_fp1",
-        )
-        if is_refusal(parsed_presets):
-            return parsed_presets
-        presets = parsed_presets.value
-    return Ok((binding, presets))
-
-
-def _read_run_config_cites(body: Mapping[str, object]) -> Result[_RunConfigCites]:
-    required = _read_required_fp1_cites(body)
-    if is_refusal(required):
-        return required
-    optional = _read_optional_cites(body)
-    if is_refusal(optional):
-        return optional
-    book, bms, bot, book_frag, bms_frag = required.value
-    binding, presets = optional.value
-    return Ok((book, bms, bot, book_frag, bms_frag, binding, presets))
-
-
-def _read_clock_world(body: Mapping[str, object]) -> Result[tuple[str, str, World]]:
-    clock = clean_token(body.get("clock"))
-    provenance = clean_token(body.get("data_provenance"))
-    if clock is None or provenance is None:
-        return invalid(
-            "clock",
-            "a resolved run-config binds a clock and a data-provenance token",
-            clock=repr(body.get("clock")),
-            data_provenance=repr(body.get("data_provenance")),
-        )
-    world = _coerce_world(body.get("world"))
-    if world is None:
-        return invalid(
-            "world",
-            "world is provenance-derived: replay or simulated",
-            given=repr(body.get("world")),
-        )
-    derived = _derive_world(clock, provenance)
-    if is_refusal(derived):
-        return derived
-    if derived.value is not world:
-        return invalid(
-            "world",
-            "world is provenance-derived and must match the bound clock "
-            "and data provenance; a caller may not declare world (B-7)",
-            given=world.value,
-            derived=derived.value.value,
-        )
-    return Ok((clock, provenance, world))
-
-
-def _read_run_config_world(body: Mapping[str, object]) -> Result[_RunConfigWorld]:
-    keys = body.get("keys")
-    if not isinstance(keys, Mapping):
-        return invalid(
-            "keys",
-            "resolved run-config keys are a key->value mapping",
-            given=repr(type(keys).__name__),
-        )
-    keys_map = cast("Mapping[str, object]", keys)
-    dummy_keys = refuse_dummy_mapping(keys_map, field="keys")
-    if dummy_keys is not None:
-        return dummy_keys
-    dummy_identity = refuse_dummy_mapping(body, field="identity")
-    if dummy_identity is not None:
-        return dummy_identity
-    special = [key for key in keys_map if key in _SPECIAL_KEYS]
-    if special:
-        return invalid(
-            "keys",
-            "citation, clock, provenance, and world keys are dedicated fields, "
-            "never residual resolved keys",
-            extra=sorted(special),
-        )
-    clocked = _read_clock_world(body)
-    if is_refusal(clocked):
-        return clocked
-    clock, provenance, world = clocked.value
-    display_payload: dict[str, object] = {}
-    for field in DISPLAY_FIELDS:
-        if field in body:
-            display_payload[field] = body[field]
-    return Ok((keys_map, clock, provenance, world, display_payload))
-
-
-def _compile_input_layers(
-    port: object,
-    *,
-    book_fragment: object,
-    bms_fragment: object,
-    run_spec: object,
-    invocation_flags: object,
-    workspace_defaults: object,
-    condition_presets: object,
-) -> Result[_CompileLayers]:
     resolved_port = _require_port(port)
     if is_refusal(resolved_port):
         return resolved_port
@@ -641,48 +517,6 @@ def _compile_input_layers(
     dummy_fragments = refuse_dummy_fragments(book.value, bms.value)
     if dummy_fragments is not None:
         return dummy_fragments
-    mappings = _compile_layer_mappings(
-        run_spec=run_spec,
-        invocation_flags=invocation_flags,
-        workspace_defaults=workspace_defaults,
-        condition_presets=condition_presets,
-        book=book.value,
-        bms=bms.value,
-    )
-    if is_refusal(mappings):
-        return mappings
-    spec, flags, defaults, presets, combined = mappings.value
-    return Ok(
-        _CompileLayers(
-            port=resolved_port.value,
-            book=book.value,
-            bms=bms.value,
-            spec=spec,
-            flags=flags,
-            defaults=defaults,
-            presets=presets,
-            combined=combined,
-        )
-    )
-
-
-def _compile_layer_mappings(
-    *,
-    run_spec: object,
-    invocation_flags: object,
-    workspace_defaults: object,
-    condition_presets: object,
-    book: ConfigFragment,
-    bms: ConfigFragment,
-) -> Result[
-    tuple[
-        Mapping[str, object],
-        Mapping[str, object],
-        Mapping[str, object],
-        tuple[ConfigFragment, ...],
-        dict[str, object],
-    ]
-]:
     spec = _as_mapping(run_spec, "run_spec")
     if is_refusal(spec):
         return spec
@@ -695,23 +529,17 @@ def _compile_layer_mappings(
     presets = _as_presets(condition_presets)
     if is_refusal(presets):
         return presets
-    combined = merge_book_bms_keys(book.keys, bms.keys)
+    combined = merge_book_bms_keys(book.value.keys, bms.value.keys)
     if is_refusal(combined):
         return combined
-    return Ok((spec.value, flags.value, defaults.value, presets.value, combined.value))
-
-
-def _compile_overlay_layers(
-    layers: _CompileLayers,
-) -> Result[tuple[dict[str, object], tuple[Fingerprint, ...]]]:
-    acc = _overlay({}, layers.defaults)
-    acc = _overlay(acc, layers.combined)
+    acc = _overlay({}, defaults.value)
+    acc = _overlay(acc, combined.value)
     preset_fps: list[Fingerprint] = []
-    for preset in layers.presets:
+    for preset in presets.value:
         acc = _overlay(acc, preset.keys)
         preset_fps.append(preset.fingerprint)
-    acc = _overlay(acc, layers.spec)
-    acc = _overlay(acc, layers.flags)
+    acc = _overlay(acc, spec.value)
+    acc = _overlay(acc, flags.value)
     if "world" in acc:
         return invalid(
             "world",
@@ -721,10 +549,6 @@ def _compile_overlay_layers(
     named = _refuse_name_at_cites(acc)
     if named is not None:
         return named
-    return Ok((acc, tuple(preset_fps)))
-
-
-def _compile_clock_world(acc: Mapping[str, object]) -> Result[tuple[str, str, World]]:
     clock = clean_token(acc.get("clock"))
     provenance = clean_token(acc.get("data_provenance"))
     if clock not in _LEGAL_CLOCKS:
@@ -745,12 +569,6 @@ def _compile_clock_world(acc: Mapping[str, object]) -> Result[tuple[str, str, Wo
     world = _derive_world(clock, provenance)
     if is_refusal(world):
         return world
-    return Ok((clock, provenance, world.value))
-
-
-def _compile_bot_cite(
-    acc: Mapping[str, object], port: RegistryReadPort
-) -> Result[tuple[object, ResolvedRef]]:
     bot_ref = acc.get("bot")
     if bot_ref is None:
         return invalid(
@@ -767,31 +585,13 @@ def _compile_bot_cite(
     dummy_layers = refuse_dummy_mapping(acc, field="keys")
     if dummy_layers is not None:
         return dummy_layers
-    bot = _resolve_cite(port, "bot", bot_ref)
+    bot = _resolve_cite(resolved_port.value, "bot", bot_ref)
     if is_refusal(bot):
         return bot
     if bot.value.record is not None:
         dummy_ct33 = refuse_dummy_mapping(bot.value.record.body, field="bot")
         if dummy_ct33 is not None:
             return dummy_ct33
-    return Ok((bot_ref, bot.value))
-
-
-def _compile_clock_and_bot(
-    acc: Mapping[str, object], port: RegistryReadPort
-) -> Result[_CompileBound]:
-    clocked = _compile_clock_world(acc)
-    if is_refusal(clocked):
-        return clocked
-    cited = _compile_bot_cite(acc, port)
-    if is_refusal(cited):
-        return cited
-    clock, provenance, world = clocked.value
-    bot_ref, bot = cited.value
-    return Ok((clock, provenance, world, bot_ref, bot))
-
-
-def _compile_refused_stamps(acc: Mapping[str, object]) -> Result[None]:
     if "binding" in acc:
         return invalid(
             "binding",
@@ -821,34 +621,10 @@ def _compile_refused_stamps(acc: Mapping[str, object]) -> Result[None]:
             "output; it is never caller-declared (DEC-0183)",
             given=repr(acc.get(RESOLVED_PRODUCERS_KEY)),
         )
-    return Ok(None)
-
-
-def _apply_qml_keys(keys: dict[str, object], qml_ext: Ct33CompileExtension | None) -> None:
-    if qml_ext is None:
-        return
-    for name in qml_ext.assignment:
-        keys.pop(name, None)
-    keys.pop(ASSIGNMENT_KEY, None)
-    keys[ASSIGNMENT_KEY] = dict(qml_ext.assignment)
-    keys[ASSIGNMENT_IS_CANONICAL_KEY] = qml_ext.assignment_is_canonical
-    keys[RESOLVED_PRODUCERS_KEY] = list(qml_ext.resolved_producers)
-
-
-def _compile_seed_keys_and_replay(
-    acc: Mapping[str, object],
-    layers: _CompileLayers,
-    bound: _CompileBound,
-    preset_fps: tuple[Fingerprint, ...],
-) -> Result[ResolvedRunConfig]:
-    refused = _compile_refused_stamps(acc)
-    if is_refusal(refused):
-        return refused
-    clock, provenance, world, bot_ref, bot = bound
     seed = resolve_starting_capital(
-        invocation_flags=layers.flags,
-        run_spec=layers.spec,
-        book_fragment_keys=layers.book.keys,
+        invocation_flags=flags.value,
+        run_spec=spec.value,
+        book_fragment_keys=book.value.keys,
     )
     if is_refusal(seed):
         return seed
@@ -862,54 +638,27 @@ def _compile_seed_keys_and_replay(
     keys = {key: value for key, value in acc.items() if key not in _SPECIAL_KEYS}
     keys[STARTING_CAPITAL_KEY] = capital.fp1_identity()
     qml_ext = apply_ct33_compiler_extensions(
-        bot.record,
-        run_spec=layers.spec,
-        invocation_flags=layers.flags,
+        bot.value.record,
+        run_spec=spec.value,
+        invocation_flags=flags.value,
     )
     if is_refusal(qml_ext):
         return qml_ext
-    _apply_qml_keys(keys, qml_ext.value)
-    return _compile_replay_finish(
-        acc,
-        layers,
-        clock=clock,
-        provenance=provenance,
-        world=world,
-        bot_ref=bot_ref,
-        bot=bot,
-        capital=capital,
+    if qml_ext.value is not None:
+        for name in qml_ext.value.assignment:
+            keys.pop(name, None)
+        keys.pop(ASSIGNMENT_KEY, None)
+        keys[ASSIGNMENT_KEY] = dict(qml_ext.value.assignment)
+        keys[ASSIGNMENT_IS_CANONICAL_KEY] = qml_ext.value.assignment_is_canonical
+        keys[RESOLVED_PRODUCERS_KEY] = list(qml_ext.value.resolved_producers)
+    replay = mint_replay_binding(
+        book_fp1=book.value.source_fp1,
+        bms_fp1=bms.value.source_fp1,
+        bot_fp1=bot.value.fingerprint,
+        starting_capital=capital,
         seed_overridden=seed_overridden,
         venue_id=venue.value,
         account_id=account.value,
-        keys=keys,
-        preset_fps=preset_fps,
-    )
-
-
-def _compile_replay_finish(
-    acc: Mapping[str, object],
-    layers: _CompileLayers,
-    *,
-    clock: str,
-    provenance: str,
-    world: World,
-    bot_ref: object,
-    bot: ResolvedRef,
-    capital: Money,
-    seed_overridden: bool,
-    venue_id: VenueId,
-    account_id: str,
-    keys: dict[str, object],
-    preset_fps: tuple[Fingerprint, ...],
-) -> Result[ResolvedRunConfig]:
-    replay = mint_replay_binding(
-        book_fp1=layers.book.source_fp1,
-        bms_fp1=layers.bms.source_fp1,
-        bot_fp1=bot.fingerprint,
-        starting_capital=capital,
-        seed_overridden=seed_overridden,
-        venue_id=venue_id,
-        account_id=account_id,
         clock=clock,
         data_provenance=provenance,
         keys=keys,
@@ -919,17 +668,17 @@ def _compile_replay_finish(
     display = _display_aliases(acc, bot_alias=_alias_if_not_fp1(bot_ref))
     return _finish(
         format_version=RUN_CONFIG_FORMAT_VERSION,
-        book_fp1=layers.book.source_fp1,
-        bms_fp1=layers.bms.source_fp1,
-        bot_fp1=bot.fingerprint,
-        book_fragment_fp1=layers.book.fingerprint,
-        bms_fragment_fp1=layers.bms.fingerprint,
+        book_fp1=book.value.source_fp1,
+        bms_fp1=bms.value.source_fp1,
+        bot_fp1=bot.value.fingerprint,
+        book_fragment_fp1=book.value.fingerprint,
+        bms_fragment_fp1=bms.value.fingerprint,
         keys=keys,
         clock=clock,
         data_provenance=provenance,
-        world=world,
+        world=world.value,
         binding_fp1=replay.value.fingerprint,
-        condition_preset_fp1=preset_fps,
+        condition_preset_fp1=tuple(preset_fps),
         display=display,
         replay_binding=replay.value,
     )
@@ -1379,19 +1128,6 @@ def _coerce_world(value: object) -> World | None:
 
 def _plain(value: object) -> object:
     """JSON-native copy of frozen mappings/tuples for fp1 identity content."""
-    scalar = _plain_identity(value)
-    if scalar is not None:
-        return scalar
-    if isinstance(value, Mapping):
-        nested = cast("Mapping[str, object]", value)
-        return {key: _plain(nested[key]) for key in nested}
-    if isinstance(value, (tuple, list)):
-        sequence = cast("Sequence[object]", value)
-        return [_plain(item) for item in sequence]
-    return value
-
-
-def _plain_identity(value: object) -> object | None:
     if isinstance(value, Fingerprint):
         return value.value
     if isinstance(value, World):
@@ -1402,7 +1138,20 @@ def _plain_identity(value: object) -> object | None:
         return value.fp1_identity()
     if isinstance(value, VenueId):
         return value.value
-    return None
+    if isinstance(value, Mapping):
+        nested = cast("Mapping[str, object]", value)
+        out: dict[str, object] = {}
+        for key in nested:
+            item: object = nested[key]
+            out[key] = _plain(item)
+        return out
+    if isinstance(value, tuple):
+        sequence = cast("Sequence[object]", value)
+        return [_plain(item) for item in sequence]
+    if isinstance(value, list):
+        sequence = cast("Sequence[object]", value)
+        return [_plain(item) for item in sequence]
+    return value
 
 
 def _require_venue(merged: Mapping[str, object]) -> Result[VenueId]:

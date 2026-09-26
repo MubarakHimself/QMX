@@ -18,7 +18,6 @@ Shows the things R-RPT-11..15 / B-10 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.results import (
@@ -106,14 +105,14 @@ def main() -> None:
     for banned in ("color", "style", "bin", "png", "image", "base64"):
         assert banned not in payload
     assert payload["canonical_payload"] == "series-data"
-    sys.stdout.write("each chart is {name, unit_kind, points:[{t, v}]}; t is int64 UTC-ns\n")
-    sys.stdout.write("no image, base64, PNG, color, style, or histogram bin in the data\n")
+    print("each chart is {name, unit_kind, points:[{t, v}]}; t is int64 UTC-ns")
+    print("no image, base64, PNG, color, style, or histogram bin in the data")
 
     omitted = {row.name: row.reason for row in charts.omitted}
     assert omitted["holdings"] == "single-instrument unleveraged run"
     assert omitted["cumulative_returns_benchmark"] == NO_BENCHMARK_DECLARED
-    sys.stdout.write("single-instrument unleveraged run omits holdings rather than faking them\n")
-    sys.stdout.write("benchmark-relative series omitted with 'no benchmark declared'\n")
+    print("single-instrument unleveraged run omits holdings rather than faking them")
+    print("benchmark-relative series omitted with 'no benchmark declared'")
 
     qty = _unwrap(Quantity.try_create(1, "lot", 0), "qty")
     multi = _unwrap(
@@ -148,23 +147,19 @@ def main() -> None:
     )
     assert multi.series_named("holdings.eurusd") is not None
     assert multi.series_named("allocation.gbpusd") is not None
-    sys.stdout.write(
-        "multi-instrument run reconstructs holdings/exposure/allocation from the position stream\n"
-    )
+    print("multi-instrument run reconstructs holdings/exposure/allocation from the position stream")
 
     derived = _unwrap(downsample_chart_series(equity, stride=2), "downsample")
     assert derived.sampler_identity == DISPLAY_SAMPLER_IDENTITY
     assert "sampler_identity" not in payload
     assert result_identity()["chart_series_in_identity"] is False
     assert result_identity()["display_downsample_in_identity"] is False
-    sys.stdout.write(
-        "display downsample is a derivative with declared sampler identity; AD-10-excluded\n"
-    )
+    print("display downsample is a derivative with declared sampler identity; AD-10-excluded")
 
     png = assemble_v1_chart_set(starting_capital=seed, period=period, equity_curve=b"\x89PNG")
     assert is_refusal(png)
-    sys.stdout.write("PNG/base64 is refused as canonical payload\n")
-    sys.stdout.write("chart series as data ok\n")
+    print("PNG/base64 is refused as canonical payload")
+    print("chart series as data ok")
 
 
 if __name__ == "__main__":

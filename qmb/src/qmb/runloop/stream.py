@@ -343,37 +343,6 @@ def shared_feed_consumers(subscription: StreamSubscription, now: Instant) -> tup
     return tuple(lease.consumer_id for lease in live_stream_leases(subscription, now))
 
 
-@dataclass(frozen=True, slots=True)
-class _SubscriptionIdentity:
-    sub_id: str
-    channel: str
-    source_id: str
-    venue_id: str | None
-
-
-@dataclass(frozen=True, slots=True)
-class _SubscriptionPhase:
-    epoch: int
-    sequence_domain: str
-    phase: str
-    cutover_watermark: StreamCursor | None
-
-
-@dataclass(frozen=True, slots=True)
-class _SubscriptionCursorPolicy:
-    cursor: StreamCursor
-    cursor_durable: bool
-    buffer_bound: int
-    backpressure_policy: str
-    shared: bool
-
-
-@dataclass(frozen=True, slots=True)
-class _SubscriptionLeases:
-    leases: tuple[StreamLease, ...]
-    refcount: int
-
-
 def record_stream_subscription(payload: object, *, as_of: object) -> Result[StreamSubscription]:
     """Record a shared tick subscription. ``refcount`` is derived from live leases."""
     now = _parse_instant(as_of, "as_of")
@@ -391,32 +360,6 @@ def record_stream_subscription(payload: object, *, as_of: object) -> Result[Stre
     blocked = _refuse_forbidden_payload(body)
     if blocked is not None:
         return blocked
-    identity = _parse_subscription_identity(body)
-    if is_refusal(identity):
-        return identity
-    phase = _parse_subscription_phase(body)
-    if is_refusal(phase):
-        return phase
-    cursor = _parse_subscription_cursor_policy(body)
-    if is_refusal(cursor):
-        return cursor
-    leases = _parse_subscription_leases(body, now.value)
-    if is_refusal(leases):
-        return leases
-    return Ok(
-        _mint_subscription(
-            identity.value,
-            phase.value,
-            cursor.value,
-            leases.value,
-            now.value,
-        )
-    )
-
-
-def _parse_subscription_identity(
-    body: Mapping[str, object],
-) -> Result[_SubscriptionIdentity]:
     sub_id = clean_token(body.get("sub_id"))
     if sub_id is None:
         return invalid("sub_id", _RECORD_REASON)
@@ -426,31 +369,16 @@ def _parse_subscription_identity(
     source_id = clean_token(body.get("source_id"))
     if source_id is None:
         return invalid("source_id", _RECORD_REASON)
-    venue_id = _parse_subscription_venue(body.get("venue_id"), source_id)
-    if is_refusal(venue_id):
-        return venue_id
-    return Ok(
-        _SubscriptionIdentity(
-            sub_id=sub_id,
-            channel=channel,
-            source_id=source_id,
-            venue_id=venue_id.value,
-        )
-    )
-
-
-def _parse_subscription_venue(venue_raw: object, source_id: str) -> Result[str | None]:
+    venue_raw = body.get("venue_id")
+    venue_id: str | None
     if venue_raw is None:
-        return Ok(None)
-    venue_id = clean_token(venue_raw)
-    if venue_id is None:
-        return invalid("venue_id", _SOURCE_VENUE_REASON, given=repr(venue_raw))
-    if venue_id == source_id:
-        return invalid("venue_id", _SOURCE_VENUE_REASON, source_id=source_id)
-    return Ok(venue_id)
-
-
-def _parse_subscription_phase(body: Mapping[str, object]) -> Result[_SubscriptionPhase]:
+        venue_id = None
+    else:
+        venue_id = clean_token(venue_raw)
+        if venue_id is None:
+            return invalid("venue_id", _SOURCE_VENUE_REASON, given=repr(venue_raw))
+        if venue_id == source_id:
+            return invalid("venue_id", _SOURCE_VENUE_REASON, source_id=source_id)
     epoch = _non_negative_int(body.get("epoch"), "epoch")
     if is_refusal(epoch):
         return epoch
@@ -465,19 +393,6 @@ def _parse_subscription_phase(body: Mapping[str, object]) -> Result[_Subscriptio
     watermark = _parse_optional_cursor(body.get("cutover_watermark"), "cutover_watermark")
     if is_refusal(watermark):
         return watermark
-    return Ok(
-        _SubscriptionPhase(
-            epoch=epoch.value,
-            sequence_domain=domain,
-            phase=phase,
-            cutover_watermark=watermark.value,
-        )
-    )
-
-
-def _parse_subscription_cursor_policy(
-    body: Mapping[str, object],
-) -> Result[_SubscriptionCursorPolicy]:
     cursor = _parse_cursor(body.get("cursor"), "cursor")
     if is_refusal(cursor):
         return cursor
@@ -497,25 +412,10 @@ def _parse_subscription_cursor_policy(
     shared = body.get("shared", True)
     if not isinstance(shared, bool):
         return invalid("shared", "shared is a boolean", given=repr(shared))
-    return Ok(
-        _SubscriptionCursorPolicy(
-            cursor=cursor.value,
-            cursor_durable=durable,
-            buffer_bound=bound.value,
-            backpressure_policy=policy_token,
-            shared=shared,
-        )
-    )
-
-
-def _parse_subscription_leases(
-    body: Mapping[str, object],
-    now: Instant,
-) -> Result[_SubscriptionLeases]:
     leases = _parse_leases(body.get("leases"))
     if is_refusal(leases):
         return leases
-    live = tuple(lease for lease in leases.value if lease.is_live(now))
+    live = tuple(lease for lease in leases.value if lease.is_live(now.value))
     derived = len(live)
     supplied = body.get("refcount")
     if supplied is not None:
@@ -524,33 +424,25 @@ def _parse_subscription_leases(
             return parsed_count
         if parsed_count.value != derived:
             return invalid("refcount", _REFCOUNT_REASON, derived=derived, given=supplied)
-    return Ok(_SubscriptionLeases(leases=leases.value, refcount=derived))
-
-
-def _mint_subscription(
-    identity: _SubscriptionIdentity,
-    phase: _SubscriptionPhase,
-    cursor: _SubscriptionCursorPolicy,
-    leases: _SubscriptionLeases,
-    now: Instant,
-) -> StreamSubscription:
-    return StreamSubscription(
-        sub_id=identity.sub_id,
-        channel=identity.channel,
-        source_id=identity.source_id,
-        venue_id=identity.venue_id,
-        epoch=phase.epoch,
-        sequence_domain=phase.sequence_domain,
-        phase=phase.phase,
-        cutover_watermark=phase.cutover_watermark,
-        cursor=cursor.cursor,
-        cursor_durable=cursor.cursor_durable,
-        buffer_bound=cursor.buffer_bound,
-        backpressure_policy=cursor.backpressure_policy,
-        shared=cursor.shared,
-        leases=leases.leases,
-        refcount=leases.refcount,
-        as_of=now,
+    return Ok(
+        StreamSubscription(
+            sub_id=sub_id,
+            channel=channel,
+            source_id=source_id,
+            venue_id=venue_id,
+            epoch=epoch.value,
+            sequence_domain=domain,
+            phase=phase,
+            cutover_watermark=watermark.value,
+            cursor=cursor.value,
+            cursor_durable=durable,
+            buffer_bound=bound.value,
+            backpressure_policy=policy_token,
+            shared=shared,
+            leases=leases.value,
+            refcount=derived,
+            as_of=now.value,
+        )
     )
 
 

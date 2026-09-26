@@ -19,8 +19,6 @@ Shows the things CT-20 / DEC-0137 / DEC-0140 pin down:
 
 from __future__ import annotations
 
-import sys
-
 from qmf.core import TypedRefusal
 from qmf.venue import (
     FOUR_OUTCOME_LAW,
@@ -67,13 +65,11 @@ def closed_vocabularies_are_nameable() -> tuple[int, int]:
 
 
 def main() -> None:
-    sys.stdout.write(
-        f"observation kinds mapped one-to-one: {every_kind_maps_to_exactly_one_event_type()}\n"
-    )
-    sys.stdout.write(f"malformed kind refused: {malformed_kind_is_a_typed_refusal()}\n")
+    print(f"observation kinds mapped one-to-one: {every_kind_maps_to_exactly_one_event_type()}")
+    print(f"malformed kind refused: {malformed_kind_is_a_typed_refusal()}")
     outcomes, reducing = closed_vocabularies_are_nameable()
-    sys.stdout.write(f"submission outcomes: {outcomes}; risk-reducing kinds: {reducing}\n")
-    sys.stdout.write("observation events usage ok\n")
+    print(f"submission outcomes: {outcomes}; risk-reducing kinds: {reducing}")
+    print("observation events usage ok")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,6 @@ Shows the four things Story 5.4 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -45,7 +44,7 @@ from qmf.data import (
     refuse_numeric_rpo_rto,
     refuse_schedule_ownership,
 )
-from qmf.data.store import RoomRole, WorldStore
+from qmf.data.store import RoomRole
 
 T = TypeVar("T")
 
@@ -102,8 +101,8 @@ class _MemoryBucket:
         return Ok(self.objects[(world, copy_version, source_room_role)])
 
 
-def cadence_pointers() -> None:
-    """Design cadence is nightly; numeric RPO/RTO stay null node/ops pointers."""
+def main() -> None:
+    """Drive one application-owned nightly cycle end-to-end."""
     _require(BACKUP_CADENCE == "nightly", "design cadence pointer is nightly")
     _require(ENCRYPTION_REQUIRED is True, "encryption-required pointer is standing")
     _require(
@@ -111,14 +110,11 @@ def cadence_pointers() -> None:
         and NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE is None,
         "numeric RPO/RTO stay null node/ops pointers",
     )
-    sys.stdout.write(
+    print(
         f"cadence pointer={BACKUP_CADENCE}; encryption_required={ENCRYPTION_REQUIRED}; "
-        "RPO/RTO null (node/ops-owned)\n"
+        "RPO/RTO null (node/ops-owned)"
     )
 
-
-def ownership_refusals() -> None:
-    """Schedule ownership and numeric RPO asks are policy rejection."""
     schedule = refuse_schedule_ownership(request="install-nightly-cron")
     _require(is_refusal(schedule), "schedule ownership refuses")
     _require(
@@ -130,107 +126,90 @@ def ownership_refusals() -> None:
         is_refusal(rpo) and rpo.category.value == "policy rejection",
         "numeric RPO ownership is policy rejection",
     )
-    sys.stdout.write("schedule / numeric RPO ask: policy rejection (primitives only)\n")
+    print("schedule / numeric RPO ask: policy rejection (primitives only)")
 
-
-def _populate_archive(store: EvidenceStore) -> WorldStore:
-    live = _unwrap(store.for_world(World.LIVE), "live world store")
-    _unwrap(
-        live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
-        "raw append",
-    )
-    writer = _unwrap(
-        WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
-        "writer id",
-    )
-    _unwrap(
-        live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
-        "registry record",
-    )
-    _unwrap(
-        live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
-        "lineage edge",
-    )
-    jw = _unwrap(WriterId.try_create("node-a", "data", "dq", "boot-1"), "journal writer")
-    _unwrap(
-        live.journal.append("dq", jw, {"event_type": "data quality", "n": 0}),
-        "journal append",
-    )
-    return live
-
-
-def run_nightly_cycle(root: Path, store: EvidenceStore, cycle: OffMachineCycle) -> None:
-    """One application-owned cycle backs up every room-role including registry."""
-    _require(
-        is_refusal(cycle.own_schedule()) and is_refusal(cycle.start_daemon()),
-        "cycle helpers refuse schedule/daemon ownership",
-    )
-    report = _unwrap(
-        cycle.run_once(
-            store=store,
-            world=World.LIVE,
-            sample_into=EvidenceStore(root / "sample"),
-            full_into=EvidenceStore(root / "full"),
-            include_full_rehearsal=True,
-        ),
-        "one nightly cycle",
-    )
-    _require(report.rooms_backed_up == CYCLE_ROOM_ROLES, "all seven room-roles backed up")
-    _require(
-        RoomRole.REGISTRY_ROOM in report.rooms_backed_up,
-        "registry room included under one backup law",
-    )
-    _require(len(report.backup_receipts) == 7, "seven versioned off-machine copies")
-    _require(report.encryption_required is True, "report carries encryption pointer")
-    _require(
-        "credential" not in report.__dataclass_fields__,
-        "report embeds no credential field",
-    )
-    _require(
-        report.sample_restore.kind is VerifyKind.SAMPLE_RESTORE,
-        "sample-restore issued a recoverability claim",
-    )
-    full = report.full_restore
-    _require(full is not None, "full-restore rehearsal ran this cycle")
-    if full is None:  # narrow for type checkers; _require already guards
-        raise AssertionError("expected full-restore rehearsal to run this cycle")
-    _require(
-        full.kind is VerifyKind.FULL_RESTORE_REHEARSAL,
-        "full-restore rehearsal issued a recoverability claim",
-    )
-    sys.stdout.write(
-        f"cycle: rooms={len(report.rooms_backed_up)} including registry; "
-        f"sample={report.sample_restore.kind.value}; "
-        f"full={full.kind.value}; encrypted; no credentials\n"
-    )
-
-
-def simulated_world_refuses(root: Path, store: EvidenceStore, cycle: OffMachineCycle) -> None:
-    """A simulated-world cycle is policy rejection."""
-    simulated = cycle.run_once(
-        store=store,
-        world=World.SIMULATED,
-        sample_into=EvidenceStore(root / "sim-sample"),
-    )
-    _require(is_refusal(simulated), "simulated world refuses")
-    _require(
-        is_refusal(simulated) and simulated.category.value == "policy rejection",
-        "simulated is policy rejection",
-    )
-    sys.stdout.write("cross-world / simulated path: policy rejection\n")
-
-
-def main() -> None:
-    """Drive one application-owned nightly cycle end-to-end."""
-    cadence_pointers()
-    ownership_refusals()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         store = EvidenceStore(root / "archive")
-        _populate_archive(store)
+        live = _unwrap(store.for_world(World.LIVE), "live world store")
+        _unwrap(
+            live.append_store.append_raw([{"t": 1_700_000_000_000_000_000, "px": 42}]),
+            "raw append",
+        )
+        writer = _unwrap(
+            WriterId.try_create("node-a", "registry", "lineage", "boot-1"),
+            "writer id",
+        )
+        _unwrap(
+            live.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
+            "registry record",
+        )
+        _unwrap(
+            live.registry_room.append_lineage_edge("lineage", writer, {"edge": "a"}),
+            "lineage edge",
+        )
+        jw = _unwrap(WriterId.try_create("node-a", "data", "dq", "boot-1"), "journal writer")
+        _unwrap(
+            live.journal.append("dq", jw, {"event_type": "data quality", "n": 0}),
+            "journal append",
+        )
+
         cycle = OffMachineCycle(_MemoryBucket(), _XorCipher())
-        run_nightly_cycle(root, store, cycle)
-        simulated_world_refuses(root, store, cycle)
+        _require(
+            is_refusal(cycle.own_schedule()) and is_refusal(cycle.start_daemon()),
+            "cycle helpers refuse schedule/daemon ownership",
+        )
+
+        report = _unwrap(
+            cycle.run_once(
+                store=store,
+                world=World.LIVE,
+                sample_into=EvidenceStore(root / "sample"),
+                full_into=EvidenceStore(root / "full"),
+                include_full_rehearsal=True,
+            ),
+            "one nightly cycle",
+        )
+        _require(report.rooms_backed_up == CYCLE_ROOM_ROLES, "all seven room-roles backed up")
+        _require(
+            RoomRole.REGISTRY_ROOM in report.rooms_backed_up,
+            "registry room included under one backup law",
+        )
+        _require(len(report.backup_receipts) == 7, "seven versioned off-machine copies")
+        _require(report.encryption_required is True, "report carries encryption pointer")
+        _require(
+            "credential" not in report.__dataclass_fields__,
+            "report embeds no credential field",
+        )
+        _require(
+            report.sample_restore.kind is VerifyKind.SAMPLE_RESTORE,
+            "sample-restore issued a recoverability claim",
+        )
+        full = report.full_restore
+        _require(full is not None, "full-restore rehearsal ran this cycle")
+        if full is None:  # narrow for type checkers; _require already guards
+            raise AssertionError("expected full-restore rehearsal to run this cycle")
+        _require(
+            full.kind is VerifyKind.FULL_RESTORE_REHEARSAL,
+            "full-restore rehearsal issued a recoverability claim",
+        )
+        print(
+            f"cycle: rooms={len(report.rooms_backed_up)} including registry; "
+            f"sample={report.sample_restore.kind.value}; "
+            f"full={full.kind.value}; encrypted; no credentials"
+        )
+
+        simulated = cycle.run_once(
+            store=store,
+            world=World.SIMULATED,
+            sample_into=EvidenceStore(root / "sim-sample"),
+        )
+        _require(is_refusal(simulated), "simulated world refuses")
+        _require(
+            is_refusal(simulated) and simulated.category.value == "policy rejection",
+            "simulated is policy rejection",
+        )
+        print("cross-world / simulated path: policy rejection")
 
 
 if __name__ == "__main__":

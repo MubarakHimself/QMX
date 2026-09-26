@@ -568,7 +568,7 @@ class FunctionFactory:
         assignment: Mapping[str, object],
         read_surfaces: Mapping[str, object],
     ) -> Result[_FunctionCallback]:
-        _ = read_surfaces
+        del read_surfaces
         return Ok(
             _FunctionCallback(
                 logic=self.logic,

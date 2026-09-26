@@ -15,7 +15,6 @@ Shows the things FR-037 / B-4 / B-5 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.runloop import (
@@ -189,13 +188,13 @@ def main() -> None:
     assert qmb.CANCEL_AT == CANCEL_AT
     assert qmb.TERMINAL_ABORTED == "aborted"
     cooperative_cancel_at_slice_boundary()
-    sys.stdout.write("cooperative cancel at a slice boundary\n")
+    print("cooperative cancel at a slice boundary")
     progress_while_running()
-    sys.stdout.write("progress data-points-processed and is_warming_up while running\n")
+    print("progress data-points-processed and is_warming_up while running")
     limit_breach_aborts()
-    sys.stdout.write("time/memory limit breach is typed aborted, not a hang\n")
-    sys.stdout.write("no partial governed result; run writes no log or ledger\n")
-    sys.stdout.write("cancel and observe ok\n")
+    print("time/memory limit breach is typed aborted, not a hang")
+    print("no partial governed result; run writes no log or ledger")
+    print("cancel and observe ok")
 
 
 if __name__ == "__main__":

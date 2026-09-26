@@ -24,7 +24,6 @@ Shows the things B-8 / B-10 / Story 21.2 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.doors import api
@@ -89,9 +88,7 @@ def main() -> None:
     )
     assert isinstance(criteria, qmb.StudyCriteria)
     assert criteria.objective.direction == "max"
-    sys.stdout.write(
-        "objective { net_profit, max } and one hard constraint validated at Study creation\n"
-    )
+    print("objective { net_profit, max } and one hard constraint validated at Study creation")
 
     # A direction outside {min, max}, and a metric absent from the roster, are both
     # typed refusals returned at creation time, never deferred to trial time.
@@ -102,9 +99,7 @@ def main() -> None:
     assert bad_direction.category is RefusalCategory.INVALID_INPUT
     absent = api.coerce_study_criteria({"objective": {"measure": "made_up", "direction": "max"}})
     assert is_refusal(absent)
-    sys.stdout.write(
-        "direction outside min|max and an off-roster metric refused at creation, not at trial\n"
-    )
+    print("direction outside min|max and an off-roster metric refused at creation, not at trial")
 
     # 2. Winner set over role=trial lines: the constraint-violator is excluded but named.
     lines = [
@@ -119,18 +114,14 @@ def main() -> None:
     assert winner_set.excluded[0].failed_constraints[0]["measure"] == "max_drawdown"
     assert winner_set.winner is not None
     assert winner_set.winner.run_id.value == _fp("run", "t1").value
-    sys.stdout.write(
-        "winner set ranks role=trial lines; the constraint-violating trial is excluded but named\n"
-    )
+    print("winner set ranks role=trial lines; the constraint-violating trial is excluded but named")
 
     # The winner claims no edge and mints no bar verdict; the taint stands until GAP-0048.
     assert winner_set.makes_edge_claim is False
     assert winner_set.makes_bar_verdict is False
     assert winner_set.verdict_deferred_to == "GAP-0048"
     assert all(trial.taint == "optimistic" for trial in winner_set.winners)
-    sys.stdout.write(
-        "the winner keeps the optimistic taint, no edge claim, no bar verdict until GAP-0048\n"
-    )
+    print("the winner keeps the optimistic taint, no edge claim, no bar verdict until GAP-0048")
 
     # 3. The minimum-trades gate: on by default, blank floor invents no number.
     degenerate = [
@@ -145,9 +136,7 @@ def main() -> None:
     assert blank.min_trades_gate.is_active is False  # blank floor excludes nothing
     blank_won = _unwrap(api.compute_winner_set(degenerate, blank, world=World.REPLAY), "blank")
     assert blank_won.winner_count == 2 and blank_won.excluded_count == 0
-    sys.stdout.write(
-        "the min-trades gate is on by default; a blank floor excludes nothing, invents no number\n"
-    )
+    print("the min-trades gate is on by default; a blank floor excludes nothing, invents no number")
 
     floored = _unwrap(
         api.coerce_study_criteria(
@@ -158,9 +147,7 @@ def main() -> None:
     floored_won = _unwrap(api.compute_winner_set(degenerate, floored, world=World.REPLAY), "won")
     assert [t.run_id.value for t in floored_won.winners] == [_fp("run", "d2").value]
     assert floored_won.excluded[0].failed_constraints[0]["measure"] == "total_trades"
-    sys.stdout.write(
-        "a configured UI-editable floor excludes the degenerate low-trade fit as a named bound\n"
-    )
+    print("a configured UI-editable floor excludes the degenerate low-trade fit as a named bound")
 
     # 4. An optional target_value stops the Study early, partial results preserved.
     target = _unwrap(
@@ -181,17 +168,15 @@ def main() -> None:
     assert early.target_reached is True
     assert {t.run_id.value for t in early.target_trials} == {_fp("run", "p2").value}
     assert early.winner_count == 2  # the partial winner set is preserved
-    sys.stdout.write(
-        "an optional target_value stops the Study early with the partial winner set preserved\n"
-    )
+    print("an optional target_value stops the Study early with the partial winner set preserved")
 
     # The qmb door is a thin wrapper over the one pure library function.
     assert api.compute_winner_set is qmb.compute_winner_set
     assert api.coerce_study_criteria is qmb.coerce_study_criteria
-    sys.stdout.write("the qmb door is a thin wrapper over one pure library winner-set function\n")
+    print("the qmb door is a thin wrapper over one pure library winner-set function")
 
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("study objective and constraints ok\n")
+    print(f"qmb {qmb.__version__}")
+    print("study objective and constraints ok")
 
 
 if __name__ == "__main__":

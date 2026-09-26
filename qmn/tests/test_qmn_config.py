@@ -12,7 +12,6 @@ from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import is_ok, is_refusal
 from qmf.core.secret import SecretRef, SecretValue
 from qmn.config import (
-    AR80_BLANK_EFFECT_TOTALS,
     COMPILE_LAYERS,
     COMPONENT_COUNTS,
     EXPECTED_BLANK_EFFECT_COUNTS,
@@ -76,7 +75,6 @@ def test_catalog_matches_registry_file_and_ar80_counts() -> None:
             blank[effect] += 1
     assert dict(blank) == EXPECTED_BLANK_EFFECT_COUNTS
     assert blank_effect_coverage() == EXPECTED_BLANK_EFFECT_COUNTS
-    assert AR80_BLANK_EFFECT_TOTALS == EXPECTED_BLANK_EFFECT_COUNTS
     assert EXPECTED_BLANK_EFFECT_COUNTS == {
         "blocks-boot": 12,
         "blocks-role-live": 41,

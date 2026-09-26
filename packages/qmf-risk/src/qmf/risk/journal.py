@@ -408,167 +408,6 @@ def reject_entity_as_writer(selector: object) -> Result[None]:
     )
 
 
-def _require_fingerprint(value: object, field: str, reason: str) -> Result[Fingerprint]:
-    if isinstance(value, Fingerprint):
-        return _Ok(value)
-    return invalid(field, reason, given=repr(value))
-
-
-def _require_event_instant(recorded_at: object, payload_fingerprint: object) -> Result[
-    tuple[Instant, Fingerprint]
-]:
-    if not isinstance(recorded_at, Instant):
-        return invalid("recorded_at", "the event instant is an Instant", given=repr(recorded_at))
-    payload = _require_fingerprint(
-        payload_fingerprint,
-        "payload_fingerprint",
-        "the event payload is content-fingerprinted",
-    )
-    if isinstance(payload, TypedRefusal):
-        return payload
-    return _Ok((recorded_at, payload.value))
-
-
-def _require_event_sequence(sequence: object) -> Result[int]:
-    if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
-        return invalid(
-            "sequence",
-            "sequence is a non-negative int64, gapless per (writer unit, boot-epoch)",
-            given=repr(sequence),
-        )
-    return _Ok(sequence)
-
-
-def _require_event_role(role: object) -> Result[AccountRole]:
-    resolved_role = coerce_enum(AccountRole, role)
-    if resolved_role is None:
-        return invalid(
-            "role",
-            "role is present on every projected row",
-            given=repr(role),
-            allowed=[member.value for member in AccountRole],
-        )
-    return _Ok(resolved_role)
-
-
-def _risk_event_core(
-    event_type: object,
-    book_definition_fingerprint: object,
-    binding_identity: object,
-    role: object,
-    sequence: object,
-    recorded_at: object,
-    payload_fingerprint: object,
-) -> Result[
-    tuple[JournalEventType, Fingerprint, Fingerprint, AccountRole, int, Instant, Fingerprint]
-]:
-    resolved_type = coerce_enum(JournalEventType, event_type)
-    if resolved_type is None or resolved_type not in RISK_AUTHORED_EVENT_TYPES:
-        return invalid(
-            "event_type",
-            "a risk-authored event is decision | risk transition | control action | promotion",
-            given=repr(event_type),
-            allowed=[member.value for member in RISK_AUTHORED_EVENT_TYPES],
-        )
-    book_fp = _require_fingerprint(
-        book_definition_fingerprint,
-        "book_definition_fingerprint",
-        "a risk-authored event always carries the Book-definition fingerprint",
-    )
-    if isinstance(book_fp, TypedRefusal):
-        return book_fp
-    binding = _require_fingerprint(
-        binding_identity,
-        "binding_identity",
-        "a risk-authored event always carries the binding identity",
-    )
-    if isinstance(binding, TypedRefusal):
-        return binding
-    resolved_role = _require_event_role(role)
-    if is_refusal(resolved_role):
-        return resolved_role
-    resolved_sequence = _require_event_sequence(sequence)
-    if is_refusal(resolved_sequence):
-        return resolved_sequence
-    timed = _require_event_instant(recorded_at, payload_fingerprint)
-    if is_refusal(timed):
-        return timed
-    instant, payload = timed.value
-    return _Ok(
-        (
-            resolved_type,
-            book_fp.value,
-            binding.value,
-            resolved_role.value,
-            resolved_sequence.value,
-            instant,
-            payload,
-        )
-    )
-
-
-def _risk_event_outcome(
-    resolved_type: JournalEventType, decision_outcome: object
-) -> Result[DecisionOutcome | None]:
-    if resolved_type is JournalEventType.DECISION:
-        outcome = coerce_enum(DecisionOutcome, decision_outcome)
-        if outcome is None:
-            return invalid(
-                "decision_outcome",
-                "a decision event always carries a closed outcome "
-                "(authorized | refused-by-door | suppressed), never key-absent",
-                given=repr(decision_outcome),
-                allowed=[member.value for member in DecisionOutcome],
-            )
-        return _Ok(outcome)
-    if decision_outcome is not None:
-        return invalid(
-            "decision_outcome",
-            "decision_outcome is present only on a decision event",
-            given=repr(decision_outcome),
-        )
-    return _Ok(None)
-
-
-def _risk_event_refs(
-    *,
-    bot_identity: object,
-    seat_binding: object,
-    suppressing_authority_ref: object,
-    refusing_door_ref: object,
-    outcome: DecisionOutcome | None,
-) -> Result[tuple[Fingerprint | None, Fingerprint | None, Fingerprint | None, Fingerprint | None]]:
-    bot = _optional_fp(bot_identity, "bot_identity")
-    if isinstance(bot, TypedRefusal):
-        return bot
-    seat = _optional_fp(seat_binding, "seat_binding")
-    if isinstance(seat, TypedRefusal):
-        return seat
-    if (bot is None) != (seat is None):
-        return invalid(
-            "bot_identity",
-            "Bot identity and seat binding are both present where the act concerns "
-            "one bot, and both omitted otherwise",
-        )
-    suppressing = _optional_fp(suppressing_authority_ref, "suppressing_authority_ref")
-    if isinstance(suppressing, TypedRefusal):
-        return suppressing
-    refusing = _optional_fp(refusing_door_ref, "refusing_door_ref")
-    if isinstance(refusing, TypedRefusal):
-        return refusing
-    if outcome is DecisionOutcome.REFUSED_BY_DOOR and refusing is None:
-        return invalid(
-            "refusing_door_ref",
-            "refused-by-door carries the refusing-door reference",
-        )
-    if outcome is DecisionOutcome.SUPPRESSED and suppressing is None:
-        return invalid(
-            "suppressing_authority_ref",
-            "suppressed carries the suppressing-authority reference",
-        )
-    return _Ok((bot, seat, suppressing, refusing))
-
-
 # --- events ------------------------------------------------------------------
 
 
@@ -612,41 +451,113 @@ class RiskAuthoredEvent:
         refusing_door_ref: object = None,
     ) -> Result[RiskAuthoredEvent]:
         """Validate and build a :class:`RiskAuthoredEvent`, value-or-refusal."""
-        core = _risk_event_core(
-            event_type,
-            book_definition_fingerprint,
-            binding_identity,
-            role,
-            sequence,
-            recorded_at,
-            payload_fingerprint,
-        )
-        if is_refusal(core):
-            return core
-        resolved_type, book_fp, binding, resolved_role, seq, instant, payload = core.value
-        outcome = _risk_event_outcome(resolved_type, decision_outcome)
-        if is_refusal(outcome):
-            return outcome
-        refs = _risk_event_refs(
-            bot_identity=bot_identity,
-            seat_binding=seat_binding,
-            suppressing_authority_ref=suppressing_authority_ref,
-            refusing_door_ref=refusing_door_ref,
-            outcome=outcome.value,
-        )
-        if is_refusal(refs):
-            return refs
-        bot, seat, suppressing, refusing = refs.value
+        resolved_type = coerce_enum(JournalEventType, event_type)
+        if resolved_type is None or resolved_type not in RISK_AUTHORED_EVENT_TYPES:
+            return invalid(
+                "event_type",
+                "a risk-authored event is decision | risk transition | control action | promotion",
+                given=repr(event_type),
+                allowed=[member.value for member in RISK_AUTHORED_EVENT_TYPES],
+            )
+        if not isinstance(book_definition_fingerprint, Fingerprint):
+            return invalid(
+                "book_definition_fingerprint",
+                "a risk-authored event always carries the Book-definition fingerprint",
+                given=repr(book_definition_fingerprint),
+            )
+        if not isinstance(binding_identity, Fingerprint):
+            return invalid(
+                "binding_identity",
+                "a risk-authored event always carries the binding identity",
+                given=repr(binding_identity),
+            )
+        resolved_role = coerce_enum(AccountRole, role)
+        if resolved_role is None:
+            return invalid(
+                "role",
+                "role is present on every projected row",
+                given=repr(role),
+                allowed=[member.value for member in AccountRole],
+            )
+        if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
+            return invalid(
+                "sequence",
+                "sequence is a non-negative int64, gapless per (writer unit, boot-epoch)",
+                given=repr(sequence),
+            )
+        if not isinstance(recorded_at, Instant):
+            return invalid(
+                "recorded_at",
+                "the event instant is an Instant",
+                given=repr(recorded_at),
+            )
+        if not isinstance(payload_fingerprint, Fingerprint):
+            return invalid(
+                "payload_fingerprint",
+                "the event payload is content-fingerprinted",
+                given=repr(payload_fingerprint),
+            )
+
+        outcome: DecisionOutcome | None
+        if resolved_type is JournalEventType.DECISION:
+            outcome = coerce_enum(DecisionOutcome, decision_outcome)
+            if outcome is None:
+                return invalid(
+                    "decision_outcome",
+                    "a decision event always carries a closed outcome "
+                    "(authorized | refused-by-door | suppressed), never key-absent",
+                    given=repr(decision_outcome),
+                    allowed=[member.value for member in DecisionOutcome],
+                )
+        elif decision_outcome is not None:
+            return invalid(
+                "decision_outcome",
+                "decision_outcome is present only on a decision event",
+                given=repr(decision_outcome),
+            )
+        else:
+            outcome = None
+
+        bot = _optional_fp(bot_identity, "bot_identity")
+        if isinstance(bot, TypedRefusal):
+            return bot
+        seat = _optional_fp(seat_binding, "seat_binding")
+        if isinstance(seat, TypedRefusal):
+            return seat
+        if (bot is None) != (seat is None):
+            return invalid(
+                "bot_identity",
+                "Bot identity and seat binding are both present where the act concerns "
+                "one bot, and both omitted otherwise",
+            )
+
+        suppressing = _optional_fp(suppressing_authority_ref, "suppressing_authority_ref")
+        if isinstance(suppressing, TypedRefusal):
+            return suppressing
+        refusing = _optional_fp(refusing_door_ref, "refusing_door_ref")
+        if isinstance(refusing, TypedRefusal):
+            return refusing
+        if outcome is DecisionOutcome.REFUSED_BY_DOOR and refusing is None:
+            return invalid(
+                "refusing_door_ref",
+                "refused-by-door carries the refusing-door reference",
+            )
+        if outcome is DecisionOutcome.SUPPRESSED and suppressing is None:
+            return invalid(
+                "suppressing_authority_ref",
+                "suppressed carries the suppressing-authority reference",
+            )
+
         return _Ok(
             cls(
                 event_type=resolved_type,
-                book_definition_fingerprint=book_fp,
-                binding_identity=binding,
+                book_definition_fingerprint=book_definition_fingerprint,
+                binding_identity=binding_identity,
                 role=resolved_role,
-                sequence=seq,
-                recorded_at=instant,
-                payload_fingerprint=payload,
-                decision_outcome=outcome.value,
+                sequence=sequence,
+                recorded_at=recorded_at,
+                payload_fingerprint=payload_fingerprint,
+                decision_outcome=outcome,
                 bot_identity=bot,
                 seat_binding=seat,
                 suppressing_authority_ref=suppressing,
@@ -727,31 +638,46 @@ class VenueAuthoredEvent:
                 given=repr(event_type),
                 allowed=[member.value for member in VENUE_AUTHORED_EVENT_TYPES],
             )
-        command_fp = _require_fingerprint(
-            command_fingerprint,
-            "command_fingerprint",
-            "a venue-authored event always carries the command record's content fingerprint",
-        )
-        if isinstance(command_fp, TypedRefusal):
-            return command_fp
-        resolved_role = _require_event_role(role)
-        if is_refusal(resolved_role):
-            return resolved_role
-        resolved_sequence = _require_event_sequence(sequence)
-        if is_refusal(resolved_sequence):
-            return resolved_sequence
-        timed = _require_event_instant(recorded_at, payload_fingerprint)
-        if is_refusal(timed):
-            return timed
-        instant, payload = timed.value
+        if not isinstance(command_fingerprint, Fingerprint):
+            return invalid(
+                "command_fingerprint",
+                "a venue-authored event always carries the command record's content fingerprint",
+                given=repr(command_fingerprint),
+            )
+        resolved_role = coerce_enum(AccountRole, role)
+        if resolved_role is None:
+            return invalid(
+                "role",
+                "role is present on every projected row",
+                given=repr(role),
+                allowed=[member.value for member in AccountRole],
+            )
+        if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
+            return invalid(
+                "sequence",
+                "sequence is a non-negative int64, gapless per (writer unit, boot-epoch)",
+                given=repr(sequence),
+            )
+        if not isinstance(recorded_at, Instant):
+            return invalid(
+                "recorded_at",
+                "the event instant is an Instant",
+                given=repr(recorded_at),
+            )
+        if not isinstance(payload_fingerprint, Fingerprint):
+            return invalid(
+                "payload_fingerprint",
+                "the event payload is content-fingerprinted",
+                given=repr(payload_fingerprint),
+            )
         return _Ok(
             cls(
                 event_type=resolved_type,
-                command_fingerprint=command_fp.value,
-                role=resolved_role.value,
-                sequence=resolved_sequence.value,
-                recorded_at=instant,
-                payload_fingerprint=payload,
+                command_fingerprint=command_fingerprint,
+                role=resolved_role,
+                sequence=sequence,
+                recorded_at=recorded_at,
+                payload_fingerprint=payload_fingerprint,
             )
         )
 
@@ -841,50 +767,24 @@ def join_via_command_fingerprint(
     Equality of fingerprints is the only legal join; Book identity never enters the
     venue side.
     """
-    operands = _join_operands(venue_event, command_fingerprint, binding_identity, risk_decision)
-    if is_refusal(operands):
-        return operands
-    venue, command_fp, binding, decision = operands.value
-    aligned = _join_fingerprint_equality(venue, command_fp, binding, decision)
-    if is_refusal(aligned):
-        return aligned
-    return _Ok(
-        CommandFingerprintJoin(
-            venue_event=venue,
-            command_fingerprint=command_fp,
-            binding_identity=binding,
-            risk_decision=decision,
-            join_version=CT25_COMMAND_FINGERPRINT_JOIN_VERSION,
-        )
-    )
-
-
-def _join_operands(
-    venue_event: object,
-    command_fingerprint: object,
-    binding_identity: object,
-    risk_decision: object,
-) -> Result[tuple[VenueAuthoredEvent, Fingerprint, Fingerprint, RiskAuthoredEvent]]:
     if not isinstance(venue_event, VenueAuthoredEvent):
         return invalid(
             "venue_event",
             "the join starts from a VenueAuthoredEvent",
             given=type_name(venue_event),
         )
-    command_fp = _require_fingerprint(
-        command_fingerprint,
-        "command_fingerprint",
-        "the command record's content fingerprint is a Fingerprint",
-    )
-    if isinstance(command_fp, TypedRefusal):
-        return command_fp
-    binding = _require_fingerprint(
-        binding_identity,
-        "binding_identity",
-        "the command record supplies the binding identity as an identity field",
-    )
-    if isinstance(binding, TypedRefusal):
-        return binding
+    if not isinstance(command_fingerprint, Fingerprint):
+        return invalid(
+            "command_fingerprint",
+            "the command record's content fingerprint is a Fingerprint",
+            given=repr(command_fingerprint),
+        )
+    if not isinstance(binding_identity, Fingerprint):
+        return invalid(
+            "binding_identity",
+            "the command record supplies the binding identity as an identity field",
+            given=repr(binding_identity),
+        )
     if not isinstance(risk_decision, RiskAuthoredEvent):
         return invalid(
             "risk_decision",
@@ -897,15 +797,6 @@ def _join_operands(
             "the command-fingerprint join targets a decision event",
             given=risk_decision.event_type.value,
         )
-    return _Ok((venue_event, command_fp.value, binding.value, risk_decision))
-
-
-def _join_fingerprint_equality(
-    venue_event: VenueAuthoredEvent,
-    command_fingerprint: Fingerprint,
-    binding_identity: Fingerprint,
-    risk_decision: RiskAuthoredEvent,
-) -> Result[None]:
     if venue_event.command_fingerprint != command_fingerprint:
         return invalid(
             "command_fingerprint",
@@ -922,7 +813,15 @@ def _join_fingerprint_equality(
             decision=risk_decision.binding_identity.value,
             command=binding_identity.value,
         )
-    return _Ok(None)
+    return _Ok(
+        CommandFingerprintJoin(
+            venue_event=venue_event,
+            command_fingerprint=command_fingerprint,
+            binding_identity=binding_identity,
+            risk_decision=risk_decision,
+            join_version=CT25_COMMAND_FINGERPRINT_JOIN_VERSION,
+        )
+    )
 
 
 # --- projections -------------------------------------------------------------
@@ -1045,22 +944,6 @@ def reject_cross_role_silent_union(
             "cross_role_declared is a bool naming an explicit declaration",
             given=repr(cross_role_declared),
         )
-    roles = _coerce_observed_roles(observed_roles)
-    if is_refusal(roles):
-        return roles
-    foreign = roles.value - {resolved_scope}
-    if foreign and not cross_role_declared:
-        return invalid(
-            "cross_role_declared",
-            "a cross-role projection without an explicit declaration is refused — "
-            "never a silent union across roles",
-            role_scope=resolved_scope.value,
-            foreign_roles=sorted(role.value for role in foreign),
-        )
-    return _Ok(None)
-
-
-def _coerce_observed_roles(observed_roles: object) -> Result[set[AccountRole]]:
     if not isinstance(observed_roles, Sequence) or isinstance(observed_roles, (str, bytes)):
         return invalid(
             "observed_roles",
@@ -1078,7 +961,16 @@ def _coerce_observed_roles(observed_roles: object) -> Result[set[AccountRole]]:
                 given=repr(item),
             )
         roles.add(role)
-    return _Ok(roles)
+    foreign = roles - {resolved_scope}
+    if foreign and not cross_role_declared:
+        return invalid(
+            "cross_role_declared",
+            "a cross-role projection without an explicit declaration is refused — "
+            "never a silent union across roles",
+            role_scope=resolved_scope.value,
+            foreign_roles=sorted(role.value for role in foreign),
+        )
+    return _Ok(None)
 
 
 def _row_from_event(event: RiskAuthoredEvent | VenueAuthoredEvent) -> ProjectedJournalRow:
@@ -1130,48 +1022,6 @@ def project_entity_journal(
     The selector is never a WriterId. Role rides every row; a foreign role without
     ``cross_role_declared=True`` is refused.
     """
-    scoped = _projection_scope(selector, role_scope, cross_role_declared, streams)
-    if is_refusal(scoped):
-        return scoped
-    resolved_selector, resolved_scope, declared, resolved_streams = scoped.value
-    allowed_types = _coerce_projection_event_types(event_types)
-    if is_refusal(allowed_types):
-        return allowed_types
-    collected = _collect_projection_rows(
-        resolved_selector,
-        resolved_streams,
-        resolved_scope=resolved_scope,
-        cross_role_declared=declared,
-        allowed_types=allowed_types.value,
-    )
-    if is_refusal(collected):
-        return collected
-    rows, observed_roles = collected.value
-    check = reject_cross_role_silent_union(
-        role_scope=resolved_scope,
-        observed_roles=observed_roles,
-        cross_role_declared=declared,
-    )
-    if is_refusal(check):
-        return check
-    rows.sort(key=lambda row: (row.recorded_at.value_ns, row.sequence))
-    return _Ok(
-        EntityJournalProjection(
-            selector=resolved_selector,
-            role_scope=resolved_scope,
-            cross_role_declared=declared,
-            rows=tuple(rows),
-            mapping_table_version=CT25_MAPPING_TABLE_VERSION,
-        )
-    )
-
-
-def _projection_scope(
-    selector: object,
-    role_scope: object,
-    cross_role_declared: object,
-    streams: object,
-) -> Result[tuple[EntitySelector, AccountRole, bool, Sequence[object]]]:
     as_writer = reject_entity_as_writer(selector)
     if is_refusal(as_writer):
         return as_writer
@@ -1201,71 +1051,32 @@ def _projection_scope(
             "a projection reads a sequence of WriterScopedStream values",
             given=type_name(streams),
         )
-    return _Ok(
-        (selector, resolved_scope, cross_role_declared, cast("Sequence[object]", streams))
-    )
 
-
-def _coerce_projection_event_types(
-    event_types: object,
-) -> Result[frozenset[JournalEventType] | None]:
+    allowed_types: frozenset[JournalEventType] | None
     if event_types is None:
-        return _Ok(None)
-    if not isinstance(event_types, (set, frozenset)):
+        allowed_types = None
+    elif isinstance(event_types, (set, frozenset)):
+        resolved_types: set[JournalEventType] = set()
+        for item in cast("set[object] | frozenset[object]", event_types):
+            et = coerce_enum(JournalEventType, item)
+            if et is None:
+                return invalid(
+                    "event_types",
+                    "event_types members are AD-21 journal event types",
+                    given=repr(item),
+                )
+            resolved_types.add(et)
+        allowed_types = frozenset(resolved_types)
+    else:
         return invalid(
             "event_types",
             "event_types is a set of JournalEventType when provided",
             given=type_name(event_types),
         )
-    resolved_types: set[JournalEventType] = set()
-    for item in cast("set[object] | frozenset[object]", event_types):
-        et = coerce_enum(JournalEventType, item)
-        if et is None:
-            return invalid(
-                "event_types",
-                "event_types members are AD-21 journal event types",
-                given=repr(item),
-            )
-        resolved_types.add(et)
-    return _Ok(frozenset(resolved_types))
 
-
-def _append_projection_row(
-    event: RiskAuthoredEvent | VenueAuthoredEvent,
-    *,
-    resolved_scope: AccountRole,
-    cross_role_declared: bool,
-    rows: list[ProjectedJournalRow],
-    observed_roles: list[AccountRole],
-) -> Result[None]:
-    observed_roles.append(event.role)
-    if event.role is not resolved_scope and not cross_role_declared:
-        return invalid(
-            "cross_role_declared",
-            "a cross-role projection without an explicit declaration is refused — "
-            "never a silent union across roles",
-            role_scope=resolved_scope.value,
-            foreign_roles=[event.role.value],
-        )
-    if event.role is not resolved_scope and cross_role_declared:
-        rows.append(_row_from_event(event))
-        return _Ok(None)
-    if event.role is resolved_scope:
-        rows.append(_row_from_event(event))
-    return _Ok(None)
-
-
-def _collect_projection_rows(
-    selector: EntitySelector,
-    streams: Sequence[object],
-    *,
-    resolved_scope: AccountRole,
-    cross_role_declared: bool,
-    allowed_types: frozenset[JournalEventType] | None,
-) -> Result[tuple[list[ProjectedJournalRow], list[AccountRole]]]:
     rows: list[ProjectedJournalRow] = []
     observed_roles: list[AccountRole] = []
-    for index, stream in enumerate(streams):
+    for index, stream in enumerate(cast("Sequence[object]", streams)):
         if not isinstance(stream, WriterScopedStream):
             return invalid(
                 "streams",
@@ -1278,16 +1089,40 @@ def _collect_projection_rows(
                 continue
             if not _matches_selector(event, selector):
                 continue
-            appended = _append_projection_row(
-                event,
-                resolved_scope=resolved_scope,
-                cross_role_declared=cross_role_declared,
-                rows=rows,
-                observed_roles=observed_roles,
-            )
-            if is_refusal(appended):
-                return appended
-    return _Ok((rows, observed_roles))
+            observed_roles.append(event.role)
+            if event.role is not resolved_scope and not cross_role_declared:
+                return invalid(
+                    "cross_role_declared",
+                    "a cross-role projection without an explicit declaration is refused — "
+                    "never a silent union across roles",
+                    role_scope=resolved_scope.value,
+                    foreign_roles=[event.role.value],
+                )
+            if event.role is not resolved_scope and cross_role_declared:
+                # Explicit cross-role: keep the row with its own role stamped.
+                rows.append(_row_from_event(event))
+                continue
+            if event.role is resolved_scope:
+                rows.append(_row_from_event(event))
+
+    check = reject_cross_role_silent_union(
+        role_scope=resolved_scope,
+        observed_roles=observed_roles,
+        cross_role_declared=cross_role_declared,
+    )
+    if is_refusal(check):
+        return check
+
+    rows.sort(key=lambda row: (row.recorded_at.value_ns, row.sequence))
+    return _Ok(
+        EntityJournalProjection(
+            selector=selector,
+            role_scope=resolved_scope,
+            cross_role_declared=cross_role_declared,
+            rows=tuple(rows),
+            mapping_table_version=CT25_MAPPING_TABLE_VERSION,
+        )
+    )
 
 
 def project_legacy(

@@ -27,7 +27,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from qmf.core import Ok, Result, TypedRefusal, World, is_refusal
+from qmf.core import Ok, Result, World, is_refusal
 from qmf.data.backup import (
     BACKUP_CONTRACT_FORMAT_VERSION,
     ENCRYPTION_REQUIRED,
@@ -38,7 +38,7 @@ from qmf.data.backup import (
     PayloadCipher,
 )
 from qmf.data.store.backup_input import RoomExport
-from qmf.data.store.facade import EvidenceStore, WorldStore
+from qmf.data.store.facade import EvidenceStore
 from qmf.data.store.refusals import invalid_input, policy_rejection
 from qmf.data.store.rooms import ROOM_ROLE_VALUES, RoomRole
 from qmf.data.verify import (
@@ -141,90 +141,6 @@ def refuse_numeric_rpo_rto(
     )
 
 
-class _CycleRun:
-    """One-cycle CT-26 → CT-14 → verify runner. Owns backup/verify ports only."""
-
-    def __init__(self, backup: OffMachineBackup, verify: OffMachineVerify) -> None:
-        self._backup = backup
-        self._verify = verify
-
-    def run_once(
-        self,
-        *,
-        store: EvidenceStore,
-        world: object,
-        sample_into: EvidenceStore,
-        full_into: EvidenceStore | None = None,
-        include_full_rehearsal: bool = False,
-        room_roles: Sequence[object] | None = None,
-        sample_role: object | None = None,
-    ) -> Result[NightlyCycleReport]:
-        bound = _bind_cycle_run(
-            store=store,
-            world=world,
-            sample_into=sample_into,
-            full_into=full_into,
-            include_full_rehearsal=include_full_rehearsal,
-            room_roles=room_roles,
-        )
-        if is_refusal(bound):
-            return bound
-        copied = _backup_cycle_rooms(self._backup, bound.value)
-        if is_refusal(copied):
-            return copied
-        return _finish_cycle_verify(
-            self._verify,
-            bind=bound.value,
-            copies=copied.value,
-            sample_into=sample_into,
-            sample_role=sample_role,
-            store=store,
-        )
-
-
-class _CycleScheduleBoundary:
-    """Schedule/daemon asks that this composition-root never owns (AC2 / FM-9)."""
-
-    def __init__(self) -> None:
-        self._refuse = refuse_schedule_ownership
-
-    def own_schedule(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
-        _ = (args, kwargs)
-        return self._refuse(request="own_schedule")
-
-    def start_daemon(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
-        _ = (args, kwargs)
-        return self._refuse(request="start_daemon")
-
-
-class _CycleRecoveryBoundary:
-    """Numeric RPO/RTO asks that stay node/ops-sitting pointers (AC2)."""
-
-    def __init__(self) -> None:
-        self._refuse = refuse_numeric_rpo_rto
-
-    def set_recovery_point_objective(
-        self, *args: object, **kwargs: object
-    ) -> Result[NightlyCycleReport]:
-        _ = (args, kwargs)
-        return self._refuse(target="backup_recovery_point_objective")
-
-    def set_recovery_time_objective(
-        self, *args: object, **kwargs: object
-    ) -> Result[NightlyCycleReport]:
-        _ = (args, kwargs)
-        return self._refuse(target="backup_recovery_time_objective")
-
-
-@dataclass(frozen=True, slots=True)
-class _CycleCollaborators:
-    """Run primitive plus the schedule and recovery refusal boundaries."""
-
-    run: _CycleRun
-    schedule: _CycleScheduleBoundary
-    recovery: _CycleRecoveryBoundary
-
-
 class OffMachineCycle:
     """Composition-root helper: run **one** nightly encrypted off-machine cycle.
 
@@ -242,17 +158,14 @@ class OffMachineCycle:
         restore: OffMachineRestore | None = None,
         verify: OffMachineVerify | None = None,
     ) -> None:
-        owned_backup = backup if backup is not None else OffMachineBackup(storage, cipher)
-        owned_restore = restore if restore is not None else OffMachineRestore(storage, cipher)
-        owned_verify = (
+        self._storage = storage
+        self._cipher = cipher
+        self._backup = backup if backup is not None else OffMachineBackup(storage, cipher)
+        self._restore = restore if restore is not None else OffMachineRestore(storage, cipher)
+        self._verify = (
             verify
             if verify is not None
-            else OffMachineVerify(storage, cipher, restore=owned_restore)
-        )
-        self._collaborators = _CycleCollaborators(
-            run=_CycleRun(owned_backup, owned_verify),
-            schedule=_CycleScheduleBoundary(),
-            recovery=_CycleRecoveryBoundary(),
+            else OffMachineVerify(storage, cipher, restore=self._restore)
         )
 
     def run_once(
@@ -275,250 +188,145 @@ class OffMachineCycle:
         periodic cadence because the numeric target stays a node/ops null pointer.
         Cross-world / ``simulated`` requests refuse as ``policy rejection``.
         """
-        return self._collaborators.run.run_once(
-            store=store,
-            world=world,
-            sample_into=sample_into,
-            full_into=full_into,
-            include_full_rehearsal=include_full_rehearsal,
-            room_roles=room_roles,
-            sample_role=sample_role,
+        resolved = _coerce_world(world)
+        if resolved is None:
+            return invalid_input(
+                "world",
+                "world is a World or one of the closed set live | replay | simulated",
+                given=repr(world),
+            )
+        if resolved is World.SIMULATED:
+            return policy_rejection(
+                "world",
+                "world = simulated has no governed namespace in V1; a nightly cycle "
+                "into governed evidence is refused (DEC-0110, DEC-0117)",
+                requested=resolved.value,
+            )
+
+        roles = _resolve_cycle_roles(room_roles)
+        if is_refusal(roles):
+            return roles
+
+        blocked = _refuse_overlapping_cycle_roots(
+            store, sample_into, full_into if include_full_rehearsal else None
+        )
+        if blocked is not None:
+            return blocked
+
+        rehearsal_target = full_into if include_full_rehearsal else None
+        if include_full_rehearsal and rehearsal_target is None:
+            return invalid_input(
+                "full_into",
+                "include_full_rehearsal requires a distinct full_into replacement store "
+                "root for the periodic full-restore rehearsal",
+            )
+
+        bundle = store.for_world(resolved)
+        if is_refusal(bundle):
+            return bundle
+
+        exports: dict[RoomRole, RoomExport] = {}
+        receipts: list[BackupCopyReceipt] = []
+        copies: dict[RoomRole, int] = {}
+        for role in roles.value:
+            export = bundle.value.backup_input.read_room(role, for_world=resolved)
+            if is_refusal(export):
+                return export
+            # Encryption-required pointer: cipher is injected; empty ciphertext refused
+            # inside OffMachineBackup.copy_export (AC4 / FM-7).
+            copied = self._backup.copy_export(export.value, for_world=resolved)
+            if is_refusal(copied):
+                return copied
+            exports[role] = export.value
+            receipts.append(copied.value)
+            copies[role] = copied.value.copy_version
+            if copied.value.encryption_required is not True:
+                return policy_rejection(
+                    "encryption_required",
+                    "encryption is required for every off-machine copy; a receipt "
+                    "without the encryption-required pointer is refused (FM-7, DEC-0118)",
+                    signal="encryption-required",
+                    copy_version=copied.value.copy_version,
+                    role=role.value,
+                )
+
+        sample = _resolve_sample_role(sample_role, roles.value, copies)
+        if is_refusal(sample):
+            return sample
+        claim = self._verify.sample_restore(
+            world=resolved,
+            copy_version=copies[sample.value],
+            source_room_role=sample.value,
+            into=sample_into,
+            for_world=resolved,
+            expected=exports[sample.value],
+            source_store=store,
+            documented_restore_path=str(store.root.resolve()),
+        )
+        if is_refusal(claim):
+            return claim
+
+        full_claim: RecoverabilityClaim | None = None
+        if include_full_rehearsal and rehearsal_target is not None:
+            # Full rehearsal covers the V1-restorable subset; empty rebuildable rooms
+            # were still backed up above but have no restore writer in V1.
+            rehearsal_copies = {
+                role: copies[role] for role in RESTORABLE_ROOM_ROLES if role in copies
+            }
+            rehearsal_expected = {role: exports[role] for role in rehearsal_copies}
+            rehearsed = self._verify.full_restore_rehearsal(
+                world=resolved,
+                copies=rehearsal_copies,
+                into=rehearsal_target,
+                for_world=resolved,
+                expected=rehearsal_expected,
+                source_store=store,
+                documented_restore_path=str(store.root.resolve()),
+            )
+            if is_refusal(rehearsed):
+                return rehearsed
+            full_claim = rehearsed.value
+            if full_claim.kind is not VerifyKind.FULL_RESTORE_REHEARSAL:
+                return policy_rejection(
+                    "full_restore",
+                    "full-restore rehearsal must issue a full-restore-rehearsal claim",
+                    signal="unexpected-verify-kind",
+                    kind=full_claim.kind.value,
+                )
+
+        return Ok(
+            NightlyCycleReport(
+                world=resolved,
+                backup_receipts=tuple(receipts),
+                sample_restore=claim.value,
+                full_restore=full_claim,
+                rooms_backed_up=roles.value,
+            )
         )
 
     def own_schedule(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — QMF never owns the nightly schedule (AC2 / FM-9)."""
-        return self._collaborators.schedule.own_schedule(*args, **kwargs)
+        del args, kwargs
+        return refuse_schedule_ownership(request="own_schedule")
 
     def start_daemon(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — no daemon, cron, or thread lives in qmf-data (AC2)."""
-        return self._collaborators.schedule.start_daemon(*args, **kwargs)
+        del args, kwargs
+        return refuse_schedule_ownership(request="start_daemon")
 
     def set_recovery_point_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RPO is a node/ops-sitting item (AC2)."""
-        return self._collaborators.recovery.set_recovery_point_objective(*args, **kwargs)
+        del args, kwargs
+        return refuse_numeric_rpo_rto(target="backup_recovery_point_objective")
 
     def set_recovery_time_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RTO is a node/ops-sitting item (AC2)."""
-        return self._collaborators.recovery.set_recovery_time_objective(*args, **kwargs)
-
-
-@dataclass(frozen=True, slots=True)
-class _CycleBind:
-    """Resolved world, roles, bundle, and optional full-rehearsal target."""
-
-    world: World
-    roles: tuple[RoomRole, ...]
-    bundle: WorldStore
-    rehearsal_target: EvidenceStore | None
-
-
-@dataclass(frozen=True, slots=True)
-class _CycleCopies:
-    """Per-role exports, receipts, and copy versions from one cycle backup pass."""
-
-    exports: dict[RoomRole, RoomExport]
-    receipts: tuple[BackupCopyReceipt, ...]
-    copies: dict[RoomRole, int]
-
-
-def _resolve_cycle_world(world: object) -> Result[World]:
-    """Resolve the cycle world; refuse unknown or simulated."""
-    resolved = _coerce_world(world)
-    if resolved is None:
-        return invalid_input(
-            "world",
-            "world is a World or one of the closed set live | replay | simulated",
-            given=repr(world),
-        )
-    if resolved is World.SIMULATED:
-        return policy_rejection(
-            "world",
-            "world = simulated has no governed namespace in V1; a nightly cycle "
-            "into governed evidence is refused (DEC-0110, DEC-0117)",
-            requested=resolved.value,
-        )
-    return Ok(resolved)
-
-
-def _bind_cycle_run(
-    *,
-    store: EvidenceStore,
-    world: object,
-    sample_into: EvidenceStore,
-    full_into: EvidenceStore | None,
-    include_full_rehearsal: bool,
-    room_roles: Sequence[object] | None,
-) -> Result[_CycleBind]:
-    """Resolve world/roles and refuse overlapping or simulated cycle targets."""
-    resolved = _resolve_cycle_world(world)
-    if is_refusal(resolved):
-        return resolved
-    roles = _resolve_cycle_roles(room_roles)
-    if is_refusal(roles):
-        return roles
-    blocked = _refuse_overlapping_cycle_roots(
-        store, sample_into, full_into if include_full_rehearsal else None
-    )
-    if blocked is not None:
-        return blocked
-    if include_full_rehearsal and full_into is None:
-        return invalid_input(
-            "full_into",
-            "include_full_rehearsal requires a distinct full_into replacement store "
-            "root for the periodic full-restore rehearsal",
-        )
-    bundle = store.for_world(resolved.value)
-    if is_refusal(bundle):
-        return bundle
-    return Ok(
-        _CycleBind(
-            world=resolved.value,
-            roles=roles.value,
-            bundle=bundle.value,
-            rehearsal_target=full_into if include_full_rehearsal else None,
-        )
-    )
-
-
-def _backup_cycle_rooms(backup: OffMachineBackup, bind: _CycleBind) -> Result[_CycleCopies]:
-    """CT-26 export + CT-14 copy every named room-role; encryption is required."""
-    exports: dict[RoomRole, RoomExport] = {}
-    receipts: list[BackupCopyReceipt] = []
-    copies: dict[RoomRole, int] = {}
-    for role in bind.roles:
-        export = bind.bundle.backup_input.read_room(role, for_world=bind.world)
-        if is_refusal(export):
-            return export
-        # Encryption-required pointer: cipher is injected; empty ciphertext refused
-        # inside OffMachineBackup.copy_export (AC4 / FM-7).
-        copied = backup.copy_export(export.value, for_world=bind.world)
-        if is_refusal(copied):
-            return copied
-        gated = _require_encrypted_receipt(copied.value, role)
-        if is_refusal(gated):
-            return gated
-        exports[role] = export.value
-        receipts.append(gated.value)
-        copies[role] = gated.value.copy_version
-    return Ok(_CycleCopies(exports=exports, receipts=tuple(receipts), copies=copies))
-
-
-def _require_encrypted_receipt(
-    receipt: BackupCopyReceipt, role: RoomRole
-) -> Result[BackupCopyReceipt]:
-    """Refuse a copy receipt that dropped the encryption-required pointer (FM-7)."""
-    if receipt.encryption_required is not True:
-        return policy_rejection(
-            "encryption_required",
-            "encryption is required for every off-machine copy; a receipt "
-            "without the encryption-required pointer is refused (FM-7, DEC-0118)",
-            signal="encryption-required",
-            copy_version=receipt.copy_version,
-            role=role.value,
-        )
-    return Ok(receipt)
-
-
-def _sample_cycle_claim(
-    verify: OffMachineVerify,
-    *,
-    bind: _CycleBind,
-    copies: _CycleCopies,
-    sample_into: EvidenceStore,
-    sample_role: object | None,
-    store: EvidenceStore,
-) -> Result[RecoverabilityClaim]:
-    """Automated sample-restore against one V1-restorable backed-up room."""
-    sample = _resolve_sample_role(sample_role, bind.roles, copies.copies)
-    if is_refusal(sample):
-        return sample
-    claim = verify.sample_restore(
-        world=bind.world,
-        copy_version=copies.copies[sample.value],
-        source_room_role=sample.value,
-        into=sample_into,
-        for_world=bind.world,
-        expected=copies.exports[sample.value],
-        source_store=store,
-        documented_restore_path=str(store.root.resolve()),
-    )
-    if is_refusal(claim):
-        return claim
-    return Ok(claim.value)
-
-
-def _full_cycle_rehearsal(
-    verify: OffMachineVerify,
-    *,
-    bind: _CycleBind,
-    copies: _CycleCopies,
-    store: EvidenceStore,
-) -> Result[RecoverabilityClaim | None]:
-    """Optional full-restore rehearsal into the bound replacement root."""
-    if bind.rehearsal_target is None:
-        return Ok(None)
-    # Full rehearsal covers the V1-restorable subset; empty rebuildable rooms
-    # were still backed up above but have no restore writer in V1.
-    rehearsal_copies = {
-        role: copies.copies[role] for role in RESTORABLE_ROOM_ROLES if role in copies.copies
-    }
-    rehearsed = verify.full_restore_rehearsal(
-        world=bind.world,
-        copies=rehearsal_copies,
-        into=bind.rehearsal_target,
-        for_world=bind.world,
-        expected={role: copies.exports[role] for role in rehearsal_copies},
-        source_store=store,
-        documented_restore_path=str(store.root.resolve()),
-    )
-    if is_refusal(rehearsed):
-        return rehearsed
-    if rehearsed.value.kind is not VerifyKind.FULL_RESTORE_REHEARSAL:
-        return policy_rejection(
-            "full_restore",
-            "full-restore rehearsal must issue a full-restore-rehearsal claim",
-            signal="unexpected-verify-kind",
-            kind=rehearsed.value.kind.value,
-        )
-    return Ok(rehearsed.value)
-
-
-def _finish_cycle_verify(
-    verify: OffMachineVerify,
-    *,
-    bind: _CycleBind,
-    copies: _CycleCopies,
-    sample_into: EvidenceStore,
-    sample_role: object | None,
-    store: EvidenceStore,
-) -> Result[NightlyCycleReport]:
-    """Sample-restore, optional full rehearsal, then the cycle report."""
-    claim = _sample_cycle_claim(
-        verify,
-        bind=bind,
-        copies=copies,
-        sample_into=sample_into,
-        sample_role=sample_role,
-        store=store,
-    )
-    if is_refusal(claim):
-        return claim
-    full_claim = _full_cycle_rehearsal(verify, bind=bind, copies=copies, store=store)
-    if is_refusal(full_claim):
-        return full_claim
-    return Ok(
-        NightlyCycleReport(
-            world=bind.world,
-            backup_receipts=copies.receipts,
-            sample_restore=claim.value,
-            full_restore=full_claim.value,
-            rooms_backed_up=bind.roles,
-        )
-    )
+        del args, kwargs
+        return refuse_numeric_rpo_rto(target="backup_recovery_time_objective")
 
 
 def _resolve_cycle_roles(
@@ -593,7 +401,7 @@ def _refuse_overlapping_cycle_roots(
     store: EvidenceStore,
     sample_into: EvidenceStore,
     full_into: EvidenceStore | None,
-) -> TypedRefusal | None:
+) -> Result[NightlyCycleReport] | None:
     """Refuse when verify targets would rewrite the only local copy."""
     source = store.root.resolve()
     sample = sample_into.root.resolve()

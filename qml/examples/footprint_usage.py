@@ -20,7 +20,6 @@ Shows the things QL-4 / Story 11.4 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar, cast
 
 from qmf.core.chrono import CalendarIdentity
@@ -179,16 +178,16 @@ def stream_set_is_nested_and_is_the_host_manifest() -> dict[str, object]:
 
 def main() -> None:
     fp = resolution_is_total_and_single_valued()
-    sys.stdout.write(f"resolved producer fingerprint: {fp[:19]}...\n")
+    print(f"resolved producer fingerprint: {fp[:19]}...")
     refused = omitted_identity_field_is_layer1_refusal()
-    sys.stdout.write(f"omitted AD-22 field at Layer 1: {refused.category.value}\n")
-    sys.stdout.write(f"transitive-union complete: {completeness_reports_the_transitive_union()}\n")
+    print(f"omitted AD-22 field at Layer 1: {refused.category.value}")
+    print(f"transitive-union complete: {completeness_reports_the_transitive_union()}")
     warm = horizon_is_derived_never_hand_declared()
-    sys.stdout.write(f"derived warm-up observations: {warm}\n")
+    print(f"derived warm-up observations: {warm}")
     manifest = stream_set_is_nested_and_is_the_host_manifest()
     streams = cast("list[dict[str, object]]", manifest["stream_set"])
-    sys.stdout.write(f"host feeds nested stream set: {streams[0]['instrument_role']}\n")
-    sys.stdout.write("footprint authoring ok\n")
+    print(f"host feeds nested stream set: {streams[0]['instrument_role']}")
+    print("footprint authoring ok")
 
 
 if __name__ == "__main__":

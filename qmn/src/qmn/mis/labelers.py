@@ -8,8 +8,6 @@ producer reads as-of the slice frontier, never wall-now; late work publishes
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Final
 
 from qmf.core import (
@@ -187,20 +185,7 @@ def evaluate_spread_state(producer: object, frame: object) -> Result[ProducerEmi
         return configured
     if not isinstance(frame, FrontierFrame):
         return invalid("frame", "evaluation reads a FrontierFrame", given=type(frame).__name__)
-    bounds = _spread_state_bounds(configured.value.parameters)
-    if is_refusal(bounds):
-        return bounds
-    points = _spread_state_points(frame)
-    if is_refusal(points):
-        return points
-    if points.value is None:
-        return Ok(_not_ready(configured.value, "spread-missing"))
-    return _spread_state_emission(configured.value, bounds.value, points.value)
-
-
-def _spread_state_bounds(
-    params: Mapping[str, object],
-) -> Result[tuple[ExactRational, ExactRational]]:
+    params = configured.value.parameters
     normal_max = _as_ratio(params.get("normal_max"), "normal_max")
     if is_refusal(normal_max):
         return normal_max
@@ -212,35 +197,24 @@ def _spread_state_bounds(
             "parameters",
             "normal_max must be at or below elevated_max",
         )
-    return Ok((normal_max.value, elevated_max.value))
-
-
-def _spread_state_points(frame: FrontierFrame) -> Result[ExactRational | None]:
-    if frame.spread_points is not None:
-        return Ok(frame.spread_points)
-    spread = live_spread(frame)
-    if is_refusal(spread):
-        return spread
-    if spread.value is None:
-        return Ok(None)
-    if frame.pip is None:
-        return invalid(
-            "pip",
-            "spread-state converts a PriceDelta through the instrument pip "
-            "from metadata; none was supplied (unavailable dependency at "
-            "the call site must not be invented here)",
-        )
-    pip_points = spread.value.in_pips(frame.pip)
-    if is_refusal(pip_points):
-        return pip_points
-    return Ok(pip_points.value)
-
-
-def _spread_state_emission(
-    producer: ConfiguredMisProducer,
-    bounds: tuple[ExactRational, ExactRational],
-    points: ExactRational,
-) -> Result[ProducerEmission]:
+    points = frame.spread_points
+    if points is None:
+        spread = live_spread(frame)
+        if is_refusal(spread):
+            return spread
+        if spread.value is None:
+            return Ok(_not_ready(configured.value, "spread-missing"))
+        if frame.pip is None:
+            return invalid(
+                "pip",
+                "spread-state converts a PriceDelta through the instrument pip "
+                "from metadata; none was supplied (unavailable dependency at "
+                "the call site must not be invented here)",
+            )
+        pip_points = spread.value.in_pips(frame.pip)
+        if is_refusal(pip_points):
+            return pip_points
+        points = pip_points.value
     if points.unit_kind not in {UnitKind.DIMENSIONLESS_RATIO, UnitKind.COUNT}:
         return invalid(
             "spread_points",
@@ -248,10 +222,9 @@ def _spread_state_emission(
             given=points.unit_kind.value,
         )
     value = points.as_fraction()
-    normal_max, elevated_max = bounds
-    if value <= normal_max.as_fraction():
+    if value <= normal_max.value.as_fraction():
         state = SpreadState.NORMAL
-    elif value <= elevated_max.as_fraction():
+    elif value <= elevated_max.value.as_fraction():
         state = SpreadState.ELEVATED
     else:
         state = SpreadState.EXTREME
@@ -259,7 +232,7 @@ def _spread_state_emission(
         ProducerEmission(
             producer_id=SPREAD_STATE_PRODUCER_ID,
             readiness=ProducerReadiness.OK,
-            labeler_version=producer.version,
+            labeler_version=configured.value.version,
             marker_detail=state.value,
             spread_state=state,
         )
@@ -273,26 +246,7 @@ def evaluate_gap_event(producer: object, frame: object) -> Result[ProducerEmissi
         return configured
     if not isinstance(frame, FrontierFrame):
         return invalid("frame", "evaluation reads a FrontierFrame", given=type(frame).__name__)
-    limits = _bind_gap_limits(configured.value.parameters)
-    if is_refusal(limits):
-        return limits
-    measured = _measure_gap(frame, limits.value[0], limits.value[1])
-    if is_refusal(measured):
-        return measured
-    if measured.value is None:
-        return Ok(_not_ready(configured.value, "gap-observation-missing"))
-    return Ok(
-        ProducerEmission(
-            producer_id=GAP_EVENT_PRODUCER_ID,
-            readiness=ProducerReadiness.OK,
-            labeler_version=configured.value.version,
-            marker_detail="true" if measured.value else "false",
-            gap_event=measured.value,
-        )
-    )
-
-
-def _bind_gap_limits(params: Mapping[str, object]) -> Result[tuple[Duration, int]]:
+    params = configured.value.parameters
     max_tick = params.get("max_expected_tick_gap")
     max_bars = params.get("max_expected_bar_gap_count")
     if not isinstance(max_tick, Duration):
@@ -307,12 +261,6 @@ def _bind_gap_limits(params: Mapping[str, object]) -> Result[tuple[Duration, int
             "max expected bar-gap count is a non-negative integer",
             given=repr(max_bars),
         )
-    return Ok((max_tick, max_bars))
-
-
-def _measure_gap(
-    frame: FrontierFrame, max_tick: Duration, max_bars: int
-) -> Result[bool | None]:
     tick_gap: Duration | None = None
     if frame.last_tick_at is not None:
         delta = frame.frontier_instant.difference(frame.last_tick_at)
@@ -321,13 +269,21 @@ def _measure_gap(
         tick_gap = delta.value
     bar_gap = frame.bar_gap_count
     if tick_gap is None and bar_gap is None:
-        return Ok(None)
+        return Ok(_not_ready(configured.value, "gap-observation-missing"))
     gap = False
     if tick_gap is not None and tick_gap.value_ns > max_tick.value_ns:
         gap = True
     if bar_gap is not None and bar_gap > max_bars:
         gap = True
-    return Ok(gap)
+    return Ok(
+        ProducerEmission(
+            producer_id=GAP_EVENT_PRODUCER_ID,
+            readiness=ProducerReadiness.OK,
+            labeler_version=configured.value.version,
+            marker_detail="true" if gap else "false",
+            gap_event=gap,
+        )
+    )
 
 
 def evaluate_feed_state(producer: object, frame: object) -> Result[ProducerEmission]:
@@ -373,12 +329,6 @@ def evaluate_feed_state(producer: object, frame: object) -> Result[ProducerEmiss
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _SqsLimits:
-    horizon: Duration
-    bound: Duration
-
-
 def evaluate_sqs(
     producer: object,
     frame: object,
@@ -392,29 +342,7 @@ def evaluate_sqs(
         return configured
     if not isinstance(frame, FrontierFrame):
         return invalid("frame", "evaluation reads a FrontierFrame", given=type(frame).__name__)
-    limits = _sqs_require_cadence_and_limits(
-        configured.value, frame, decision_freshness_bound
-    )
-    if is_refusal(limits):
-        return limits
-    stale = _sqs_stale_or_unbounded(configured.value, frame, limits.value)
-    if stale is not None:
-        return stale
-    missing = _sqs_missing_baseline(configured.value, frame, baseline)
-    if missing is not None:
-        return missing
-    artifact = _sqs_require_artifact(frame, baseline)
-    if is_refusal(artifact):
-        return artifact
-    return _sqs_score_emission(configured.value, frame, artifact.value)
-
-
-def _sqs_require_cadence_and_limits(
-    producer: ConfiguredMisProducer,
-    frame: FrontierFrame,
-    decision_freshness_bound: object,
-) -> Result[_SqsLimits]:
-    params = producer.parameters
+    params = configured.value.parameters
     cadence = params.get("sample_cadence")
     cadence_token = cadence if isinstance(cadence, str) else frame.sample_cadence
     if cadence_token == _BAR_CADENCE:
@@ -430,12 +358,6 @@ def _sqs_require_cadence_and_limits(
             given=repr(cadence_token),
             allowed=sorted(SQS_TICK_CADENCES),
         )
-    return _sqs_require_horizons(params, decision_freshness_bound)
-
-
-def _sqs_require_horizons(
-    params: Mapping[str, object], decision_freshness_bound: object
-) -> Result[_SqsLimits]:
     horizon = params.get("staleness_horizon")
     if not isinstance(horizon, Duration):
         return invalid(
@@ -458,17 +380,9 @@ def _sqs_require_horizons(
             horizon_ns=horizon.value_ns,
             bound_ns=bound.value_ns,
         )
-    return Ok(_SqsLimits(horizon=horizon, bound=bound))
-
-
-def _sqs_stale_or_unbounded(
-    producer: ConfiguredMisProducer,
-    frame: FrontierFrame,
-    limits: _SqsLimits,
-) -> Result[ProducerEmission] | None:
     if frame.known_at is None:
         return _sqs_non_ok(
-            producer,
+            configured.value,
             frame,
             ProducerReadiness.NOT_READY,
             "unbounded-to-frontier",
@@ -476,100 +390,41 @@ def _sqs_stale_or_unbounded(
     age = frame.frontier_instant.difference(frame.known_at)
     if is_refusal(age):
         return age
-    limit_ns = min(limits.horizon.value_ns, limits.bound.value_ns)
+    limit_ns = min(horizon.value_ns, bound.value_ns)
     if age.value.value_ns > limit_ns:
         return _sqs_non_ok(
-            producer,
+            configured.value,
             frame,
             ProducerReadiness.STALE,
             "sqs-stale",
         )
-    return None
-
-
-def _sqs_missing_baseline(
-    producer: ConfiguredMisProducer,
-    frame: FrontierFrame,
-    baseline: object,
-) -> Result[ProducerEmission] | None:
     if baseline is None:
         return _sqs_non_ok(
-            producer,
+            configured.value,
             frame,
             ProducerReadiness.NOT_READY,
             "baseline-missing",
         )
-    return None
-
-
-def _sqs_require_artifact(
-    frame: FrontierFrame, baseline: object
-) -> Result[SqsBaselineArtifact]:
     if not isinstance(baseline, SqsBaselineArtifact):
         return invalid(
             "baseline",
             "SQS consumes a fingerprinted SqsBaselineArtifact",
             given=type(baseline).__name__,
         )
-    if baseline.key.environment != frame.environment:
+    artifact = baseline
+    key = artifact.key
+    if key.environment != frame.environment:
         return policy(
             "environment",
             "a demo-conditioned SQS baseline never satisfies a live environment (DEC-0230)",
-            baseline_environment=baseline.key.environment,
+            baseline_environment=key.environment,
             frame_environment=frame.environment,
         )
-    if baseline.key.instrument != frame.instrument:
+    if key.instrument != frame.instrument:
         return invalid(
             "instrument",
             "SQS baseline instrument must match the frontier frame",
         )
-    return Ok(baseline)
-
-
-def _sqs_score_emission(
-    producer: ConfiguredMisProducer,
-    frame: FrontierFrame,
-    artifact: SqsBaselineArtifact,
-) -> Result[ProducerEmission]:
-    ratios = _sqs_require_ratios(producer.parameters)
-    if is_refusal(ratios):
-        return ratios
-    threshold, band, guard = ratios.value
-    spread = live_spread(frame)
-    if is_refusal(spread):
-        return spread
-    if spread.value is None or spread.value.value == 0:
-        return _sqs_non_ok(
-            producer,
-            frame,
-            ProducerReadiness.UNAVAILABLE,
-            "live-spread-undefined",
-        )
-    average = artifact.average_spread
-    if average.instrument != frame.instrument:
-        return invalid("average_spread", "baseline spread is a different instrument")
-    if average.value == 0:
-        return _sqs_non_ok(
-            producer,
-            frame,
-            ProducerReadiness.UNAVAILABLE,
-            "baseline-undefined",
-        )
-    return _sqs_emit_ok(
-        producer,
-        frame,
-        artifact,
-        spread.value,
-        average,
-        threshold,
-        band,
-        guard,
-    )
-
-
-def _sqs_require_ratios(
-    params: Mapping[str, object],
-) -> Result[tuple[ExactRational, ExactRational, ExactRational]]:
     threshold = _as_ratio(params.get("hard_block_threshold"), "hard_block_threshold")
     if is_refusal(threshold):
         return threshold
@@ -579,20 +434,27 @@ def _sqs_require_ratios(
     guard = _as_ratio(params.get("outlier_guard_multiple"), "outlier_guard_multiple")
     if is_refusal(guard):
         return guard
-    return Ok((threshold.value, band.value, guard.value))
-
-
-def _sqs_emit_ok(
-    producer: ConfiguredMisProducer,
-    frame: FrontierFrame,
-    artifact: SqsBaselineArtifact,
-    spread: PriceDelta,
-    average: PriceDelta,
-    threshold: ExactRational,
-    band: ExactRational,
-    guard: ExactRational,
-) -> Result[ProducerEmission]:
-    ratio = average.as_fraction() / spread.as_fraction()
+    spread = live_spread(frame)
+    if is_refusal(spread):
+        return spread
+    if spread.value is None or spread.value.value == 0:
+        return _sqs_non_ok(
+            configured.value,
+            frame,
+            ProducerReadiness.UNAVAILABLE,
+            "live-spread-undefined",
+        )
+    average = artifact.average_spread
+    if average.instrument != frame.instrument:
+        return invalid("average_spread", "baseline spread is a different instrument")
+    if average.value == 0:
+        return _sqs_non_ok(
+            configured.value,
+            frame,
+            ProducerReadiness.UNAVAILABLE,
+            "baseline-undefined",
+        )
+    ratio = average.as_fraction() / spread.value.as_fraction()
     score = ExactRational.try_create(
         ratio.numerator, ratio.denominator, UnitKind.DIMENSIONLESS_RATIO
     )
@@ -600,20 +462,20 @@ def _sqs_emit_ok(
         return score
     hard_block = _sqs_hard_block(
         score=score.value,
-        threshold=threshold,
-        band=band,
+        threshold=threshold.value,
+        band=band.value,
         previous=frame.previous_sqs_hard_block,
-        live_spread=spread,
+        live_spread=spread.value,
         average=average,
         dispersion=artifact.dispersion,
-        guard_multiple=guard,
+        guard_multiple=guard.value,
     )
     if is_refusal(hard_block):
         return hard_block
     reading = SqsReading.try_create(
-        artifact.key,
+        key,
         readiness=ProducerReadiness.OK,
-        labeler_version=producer.version,
+        labeler_version=configured.value.version,
         score=score.value,
         hard_block=hard_block.value,
     )
@@ -623,7 +485,7 @@ def _sqs_emit_ok(
         ProducerEmission(
             producer_id=SQS_PRODUCER_ID,
             readiness=ProducerReadiness.OK,
-            labeler_version=producer.version,
+            labeler_version=configured.value.version,
             marker_detail="hard-block" if hard_block.value else "pass",
             sqs=reading.value,
         )
@@ -663,36 +525,6 @@ def assemble_governed_snapshot(
     liquidity_fit: object = None,
 ) -> Result[SignalSnapshot]:
     """Evaluate every registered V1 producer and mint one immutable snapshot."""
-    bound = _bind_snapshot_inputs(catalog, frame)
-    if is_refusal(bound):
-        return bound
-    catalog_value, frame_value = bound.value
-    emissions = _evaluate_snapshot_producers(
-        catalog_value,
-        frame_value,
-        sqs_baseline=sqs_baseline,
-        liquidity_fit=liquidity_fit,
-        decision_freshness_bound=decision_freshness_bound,
-    )
-    if is_refusal(emissions):
-        return emissions
-    folded = _fold_snapshot_emissions(emissions.value)
-    if is_refusal(folded):
-        return folded
-    slots, feed_state, sensors = folded.value
-    return mint_signal_snapshot(
-        frontier_instant=frame_value.frontier_instant,
-        environment=frame_value.environment,
-        feed_state=feed_state,
-        producers=slots,
-        decision_freshness_bound=decision_freshness_bound,
-        degraded_sensors=sensors,
-    )
-
-
-def _bind_snapshot_inputs(
-    catalog: object, frame: object
-) -> Result[tuple[MisProducerCatalog, FrontierFrame]]:
     if not isinstance(catalog, MisProducerCatalog):
         return invalid(
             "catalog",
@@ -706,17 +538,6 @@ def _bind_snapshot_inputs(
             "catalog",
             "the signal snapshot carries the SQS producer slot",
         )
-    return Ok((catalog, frame))
-
-
-def _evaluate_snapshot_producers(
-    catalog: MisProducerCatalog,
-    frame: FrontierFrame,
-    *,
-    sqs_baseline: object,
-    liquidity_fit: object,
-    decision_freshness_bound: object,
-) -> Result[list[ProducerEmission]]:
     emissions: list[ProducerEmission] = []
     remaining = [
         pid
@@ -734,22 +555,7 @@ def _evaluate_snapshot_producers(
         if is_refusal(emission):
             return emission
         emissions.append(emission.value)
-    if DEGRADED_SENSORS_PRODUCER_ID not in catalog.producers:
-        return Ok(emissions)
-    degraded = evaluate_degraded_sensors(
-        catalog.producers[DEGRADED_SENSORS_PRODUCER_ID],
-        _snapshot_peer_frame(frame, emissions),
-    )
-    if is_refusal(degraded):
-        return degraded
-    emissions.append(degraded.value)
-    return Ok(emissions)
-
-
-def _snapshot_peer_frame(
-    frame: FrontierFrame, emissions: list[ProducerEmission]
-) -> FrontierFrame:
-    return FrontierFrame(
+    degraded_frame = FrontierFrame(
         frontier_instant=frame.frontier_instant,
         instrument=frame.instrument,
         environment=frame.environment,
@@ -768,11 +574,14 @@ def _snapshot_peer_frame(
         current_spread_ticks=frame.current_spread_ticks,
         peer_emissions=tuple(emissions),
     )
-
-
-def _fold_snapshot_emissions(
-    emissions: list[ProducerEmission],
-) -> Result[tuple[tuple[ProducerSlot, ...], CanonicalFeedState, tuple[str, ...]]]:
+    if DEGRADED_SENSORS_PRODUCER_ID in catalog.producers:
+        degraded = evaluate_degraded_sensors(
+            catalog.producers[DEGRADED_SENSORS_PRODUCER_ID],
+            degraded_frame,
+        )
+        if is_refusal(degraded):
+            return degraded
+        emissions.append(degraded.value)
     slots: list[ProducerSlot] = []
     feed_state = CanonicalFeedState.DEAD
     sensors: tuple[str, ...] = ()
@@ -792,7 +601,14 @@ def _fold_snapshot_emissions(
             and emission.degraded_sensors is not None
         ):
             sensors = emission.degraded_sensors
-    return Ok((tuple(slots), feed_state, sensors))
+    return mint_signal_snapshot(
+        frontier_instant=frame.frontier_instant,
+        environment=frame.environment,
+        feed_state=feed_state,
+        producers=tuple(slots),
+        decision_freshness_bound=decision_freshness_bound,
+        degraded_sensors=sensors,
+    )
 
 
 def live_spread(frame: FrontierFrame) -> Result[PriceDelta | None]:

@@ -26,7 +26,6 @@ Shows the six things Story 2.3 pins down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -201,21 +200,21 @@ def promotion_event_is_only_a_pointer() -> tuple[str, int]:
 
 def main() -> None:
     card = signed_card_has_a_derived_id()
-    sys.stdout.write(f"signed card, derived id: {card.stable_id.value[:19]}...\n")
+    print(f"signed card, derived id: {card.stable_id.value[:19]}...")
 
     no_card_category, wrong_category = no_card_refuses_but_a_signed_card_authorizes()
-    sys.stdout.write(f"no card present, promotion refused: {no_card_category}\n")
-    sys.stdout.write(f"card attesting another record refused: {wrong_category}\n")
+    print(f"no card present, promotion refused: {no_card_category}")
+    print(f"card attesting another record refused: {wrong_category}")
 
     prior_id, new_id = correcting_the_summary_mints_a_new_card()
-    sys.stdout.write(f"summary correction mints a new card: {prior_id != new_id}\n")
+    print(f"summary correction mints a new card: {prior_id != new_id}")
 
     template_bound = risk_admission_card_binds_the_template_fingerprint()
-    sys.stdout.write(f"risk-admission card binds the template fingerprint: {template_bound}\n")
+    print(f"risk-admission card binds the template fingerprint: {template_bound}")
 
     event_fp1, appended = promotion_event_is_only_a_pointer()
-    sys.stdout.write(f"promotion event is only a pointer to the card: {event_fp1[:19]}...\n")
-    sys.stdout.write(f"promotion event emitted through the JournalSink: {appended}\n")
+    print(f"promotion event is only a pointer to the card: {event_fp1[:19]}...")
+    print(f"promotion event emitted through the JournalSink: {appended}")
 
 
 if __name__ == "__main__":

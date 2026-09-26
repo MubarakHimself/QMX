@@ -21,7 +21,6 @@ Shows the things Story 34.1 / FR-W17 / FR-W18 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.registryread import (
@@ -52,42 +51,42 @@ def main() -> None:
     assert roster.occupancy == "query"
     names = tuple(item.kind for item in roster.kinds)
     assert names == LIBRARY_KIND_NAMES
-    sys.stdout.write(str("library kinds: " + ", ".join(names)) + "\n")
+    print("library kinds: " + ", ".join(names))
     spec = next(item for item in roster.kinds if item.kind == "experiment-spec")
     assert spec.coordinated_lane_only is True
-    sys.stdout.write(f"experiment-spec lane: coordinated only ({spec.contract})\n")
+    print(f"experiment-spec lane: coordinated only ({spec.contract})")
 
     bot = _unwrap(register_library_kind("bot-definition"), "bot library kind")
     assert bot.kind == "bot-definition"
-    sys.stdout.write(f"admitted existing kind: {bot.kind} {bot.contract}\n")
+    print(f"admitted existing kind: {bot.kind} {bot.contract}")
 
     manifest = register_library_kind("logic-source-manifest")
     assert is_refusal(manifest) and manifest.category is RefusalCategory.POLICY_REJECTION
     assert manifest.context["cites"] == LOGIC_SOURCE_MANIFEST_CITES == "CT-33"
-    sys.stdout.write("logic source-manifest cites CT-33, not a Library kind\n")
+    print("logic source-manifest cites CT-33, not a Library kind")
 
     staging = register_library_kind("staging")
     assert is_refusal(staging)
     assert staging.context["present_as_registry"] is False
-    sys.stdout.write("staging refused; not presented as a registry record\n")
+    print("staging refused; not presented as a registry record")
 
     strats = register_library_kind("STRATS")
     assert is_refusal(strats)
     assert strats.context["strats_corpus"] == STRATS_CORPUS
     assert strats.context["writes_registry_kinds"] is False
-    sys.stdout.write("STRATS remains KnowledgeSource; writes no registry kinds\n")
+    print("STRATS remains KnowledgeSource; writes no registry kinds")
 
     project = register_library_kind("project")
     assert is_refusal(project)
     assert project.context["display_alias"] is True
-    sys.stdout.write("project/workspace remain display aliases\n")
+    print("project/workspace remain display aliases")
 
     package = register_library_kind("qmx-library")
     assert is_refusal(package)
     assert package.context["qmx_library_package"] is False
-    sys.stdout.write("no qmx-library package; owner COMP-QMF-REGISTRY\n")
-    sys.stdout.write(f"qmb {qmb.__version__}\n")
-    sys.stdout.write("library kinds ok\n")
+    print("no qmx-library package; owner COMP-QMF-REGISTRY")
+    print(f"qmb {qmb.__version__}")
+    print("library kinds ok")
 
 
 if __name__ == "__main__":

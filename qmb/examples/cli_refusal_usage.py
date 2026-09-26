@@ -18,7 +18,6 @@ Shows the things Story 16.2 / AR-58 / CT-04 pin down:
 from __future__ import annotations
 
 import json
-import sys
 from typing import TypeVar, cast
 
 from click.testing import CliRunner
@@ -47,8 +46,8 @@ def library_returns_door_renders() -> None:
     assert invoked.stdout.strip() == ""
     payload = json.loads(invoked.stderr)
     assert payload == encoded
-    sys.stdout.write("library RETURNED the refusal; door rendered stderr JSON\n")
-    sys.stdout.write("nonzero exit + category/context/retryability\n")
+    print("library RETURNED the refusal; door rendered stderr JSON")
+    print("nonzero exit + category/context/retryability")
 
 
 def success_exits_zero() -> None:
@@ -60,7 +59,7 @@ def success_exits_zero() -> None:
     listed = cast("tuple[str, ...]", commands["commands"])
     for name in listed:
         assert name in catalog.stdout
-    sys.stdout.write("successful run exits zero\n")
+    print("successful run exits zero")
 
 
 def programmer_error_is_not_the_refusal_channel() -> None:
@@ -91,7 +90,7 @@ def programmer_error_is_not_the_refusal_channel() -> None:
         if isinstance(parsed, dict):
             keys = set(cast("dict[str, object]", parsed))
             assert not {"category", "context", "retryability"} <= keys
-    sys.stdout.write("programmer error surfaces as an exception, not stderr JSON\n")
+    print("programmer error surfaces as an exception, not stderr JSON")
 
 
 def door_never_raises_typed_refusal() -> None:
@@ -104,7 +103,7 @@ def door_never_raises_typed_refusal() -> None:
         "unavailable dependency",
         "invalid input",
     }
-    sys.stdout.write("typed refusal was not raised\n")
+    print("typed refusal was not raised")
 
 
 def main_example() -> None:
@@ -112,7 +111,7 @@ def main_example() -> None:
     success_exits_zero()
     programmer_error_is_not_the_refusal_channel()
     door_never_raises_typed_refusal()
-    sys.stdout.write("qmb CLI refusal rendering ok\n")
+    print("qmb CLI refusal rendering ok")
 
 
 if __name__ == "__main__":

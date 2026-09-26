@@ -16,7 +16,6 @@ Shows the things R-RPT-21/22/24 / R-RPT-2/9 / B-10 pin down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -143,19 +142,13 @@ def main() -> None:
         for act in ("size", "promote", "bench", "bind", "change_mode"):
             refused = refuse_downstream_act(act)
             assert is_refusal(refused)
-        sys.stdout.write(
-            "HTML/markdown are token substitution of the stored CT-32; no new number\n"
-        )
-        sys.stdout.write("headline shows world and account-binding role verbatim and unmissably\n")
-        sys.stdout.write("interpretation skills read CT-32 and never parse HTML\n")
-        sys.stdout.write(
-            "re-execute stored run id reproduces the CT-32 fingerprint or typed refusal\n"
-        )
-        sys.stdout.write(
-            "concurrent runs write isolated output directories; no shared render state\n"
-        )
-        sys.stdout.write("rendering, interpretation, and reproduction are publish-only\n")
-        sys.stdout.write("pure downstream reads ok\n")
+        print("HTML/markdown are token substitution of the stored CT-32; no new number")
+        print("headline shows world and account-binding role verbatim and unmissably")
+        print("interpretation skills read CT-32 and never parse HTML")
+        print("re-execute stored run id reproduces the CT-32 fingerprint or typed refusal")
+        print("concurrent runs write isolated output directories; no shared render state")
+        print("rendering, interpretation, and reproduction are publish-only")
+        print("pure downstream reads ok")
 
 
 if __name__ == "__main__":

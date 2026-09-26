@@ -16,8 +16,6 @@ Shows the things Story 38.3 pins down:
 
 from __future__ import annotations
 
-import sys
-
 from qmf.core.refusal import is_refusal
 from qml.generation import (
     DEFAULT_GENERATOR_ALGORITHM,
@@ -37,29 +35,29 @@ import qml
 
 
 def main() -> None:
-    sys.stdout.write(f"qml {qml.__version__}\n")
+    print(f"qml {qml.__version__}")
     assert MECHANISM_VOCABULARY_MINTED is False
     assert write_ownership_is_qml_host() is True
     assert GAP_0085_WRITE_OWNER == "qml-host"
     minted = mint_mechanism_vocabulary({"EntryMechanism": {"kind": "breakout"}})
     assert is_refusal(minted)
-    sys.stdout.write("gap-0085 nouns not minted; write-ownership qml/host later increment\n")
+    print("gap-0085 nouns not minted; write-ownership qml/host later increment")
 
     assert DEFAULT_GENERATOR_ALGORITHM is None
     decided = admit_decided_generator_algorithm("placeholder-fill")
     assert is_refusal(decided)
-    sys.stdout.write("gap-0063 decided default refused as unruled\n")
+    print("gap-0063 decided default refused as unruled")
 
     assert trails_connect_wave() is True
     assert GENERATION_EPIC == 38
     assert blocks_library_whatif_or_door() is False
-    sys.stdout.write(f"trails connect-wave; does not block {', '.join(DOES_NOT_BLOCK_SURFACES)}\n")
+    print(f"trails connect-wave; does not block {', '.join(DOES_NOT_BLOCK_SURFACES)}")
 
     no_code = refuse_no_code_authoring(True)
     assert is_refusal(no_code)
     assert no_code.context["logic_path"] == "ordinary_python"
-    sys.stdout.write("no-code refused; rung 2 ordinary python remains the logic path\n")
-    sys.stdout.write("generation gaps unfilled ok\n")
+    print("no-code refused; rung 2 ordinary python remains the logic path")
+    print("generation gaps unfilled ok")
 
 
 if __name__ == "__main__":

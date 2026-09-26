@@ -49,71 +49,6 @@ _FORBIDDEN_DISCOVERY = frozenset(
         "pkg_resources",
     }
 )
-_DISCOVERY_ATTRS = frozenset({"entry_points", "iter_modules"})
-_DISCOVERY_NAMES = frozenset({"pkgutil", "pkg_resources"})
-_MAX_SOURCE_BYTES = 1 << 20  # 1 MiB
-
-
-def _read_contained_source(path: Path) -> str:
-    """Read one extension source file after a regular in-root size-capped check."""
-    resolved = path.resolve()
-    assert not path.is_symlink(), resolved
-    assert resolved.is_file() and resolved.is_relative_to(_SRC), resolved
-    size = resolved.stat().st_size
-    assert size <= _MAX_SOURCE_BYTES, resolved
-    return resolved.read_text(encoding="utf-8")
-
-
-def _iter_source_trees() -> list[tuple[Path, ast.AST]]:
-    trees: list[tuple[Path, ast.AST]] = []
-    for path in sorted(_SRC.rglob("*.py")):
-        tree = ast.parse(_read_contained_source(path), filename=str(path))
-        trees.append((path, tree))
-    return trees
-
-
-def _shared_noun_hits(path: Path, tree: ast.AST) -> list[str]:
-    hits: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and node.name in _FORBIDDEN_SHARED_NOUNS:
-            hits.append(f"{path.name}:{node.lineno}:{node.name}")
-    return hits
-
-
-def _import_discovery_hits(path: Path, node: ast.Import) -> list[str]:
-    hits: list[str] = []
-    for alias in node.names:
-        root = alias.name.split(".")[0]
-        if root in _FORBIDDEN_DISCOVERY or alias.name in _FORBIDDEN_DISCOVERY:
-            hits.append(f"{path.name}:import {alias.name}")
-    return hits
-
-
-def _from_discovery_hits(path: Path, node: ast.ImportFrom) -> list[str]:
-    mod = node.module or ""
-    root = mod.split(".")[0] if mod else ""
-    if root in _FORBIDDEN_DISCOVERY or mod in _FORBIDDEN_DISCOVERY:
-        return [f"{path.name}:from {mod}"]
-    return []
-
-
-def _discovery_hits_for_node(path: Path, node: ast.AST) -> list[str]:
-    if isinstance(node, ast.Import):
-        return _import_discovery_hits(path, node)
-    if isinstance(node, ast.ImportFrom):
-        return _from_discovery_hits(path, node)
-    if isinstance(node, ast.Attribute) and node.attr in _DISCOVERY_ATTRS:
-        return [f"{path.name}:{node.lineno}:{node.attr}"]
-    if isinstance(node, ast.Name) and node.id in _DISCOVERY_NAMES:
-        return [f"{path.name}:{node.lineno}:{node.id}"]
-    return []
-
-
-def _discovery_hits(path: Path, tree: ast.AST) -> list[str]:
-    hits: list[str] = []
-    for node in ast.walk(tree):
-        hits.extend(_discovery_hits_for_node(path, node))
-    return hits
 
 
 def test_register_forex_17ny_is_explicit_named_surface() -> None:
@@ -241,16 +176,37 @@ def test_describe_tzdata_pin_lineage_refuses_equal_or_cross_rule_set() -> None:
 def test_extension_source_never_defines_shared_nouns() -> None:
     """FM-5: Venue/Account/Instrument/WriterId/TradingDate/CivilDate stay in core."""
     offenders: list[str] = []
-    for path, tree in _iter_source_trees():
-        offenders.extend(_shared_noun_hits(path, tree))
+    for path in sorted(_SRC.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and node.name in _FORBIDDEN_SHARED_NOUNS:
+                offenders.append(f"{path.name}:{node.lineno}:{node.name}")
     assert offenders == [], f"extension defined shared nouns: {offenders}"
 
 
 def test_extension_source_never_uses_ambient_discovery() -> None:
     """Registration is explicit — no pkgutil / entry_points / metadata walk."""
     hits: list[str] = []
-    for path, tree in _iter_source_trees():
-        hits.extend(_discovery_hits(path, tree))
+    for path in sorted(_SRC.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    root = alias.name.split(".")[0]
+                    if root in _FORBIDDEN_DISCOVERY or alias.name in _FORBIDDEN_DISCOVERY:
+                        hits.append(f"{path.name}:import {alias.name}")
+            elif isinstance(node, ast.ImportFrom):
+                mod = node.module or ""
+                root = mod.split(".")[0] if mod else ""
+                if root in _FORBIDDEN_DISCOVERY or mod in _FORBIDDEN_DISCOVERY:
+                    hits.append(f"{path.name}:from {mod}")
+            elif isinstance(node, ast.Attribute) and node.attr in {
+                "entry_points",
+                "iter_modules",
+            }:
+                hits.append(f"{path.name}:{node.lineno}:{node.attr}")
+            elif isinstance(node, ast.Name) and node.id in {"pkgutil", "pkg_resources"}:
+                hits.append(f"{path.name}:{node.lineno}:{node.id}")
     assert hits == [], f"ambient discovery surface found: {hits}"
 
 

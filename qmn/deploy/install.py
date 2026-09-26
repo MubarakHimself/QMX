@@ -63,7 +63,9 @@ def _load_sibling(module_name: str, path: Path) -> ModuleType:
 _boundary = _load_sibling("qmn_deploy_boundary", _DEPLOY_ROOT / "boundary.py")
 _network = _load_sibling("qmn_deploy_network", _DEPLOY_ROOT / "network.py")
 _units = _load_sibling("qmn_deploy_units", _DEPLOY_ROOT / "systemd" / "units.py")
-_obs = _load_sibling("qmn_deploy_obs_stack", _DEPLOY_ROOT / "observability" / "stack.py")
+_obs = _load_sibling(
+    "qmn_deploy_obs_stack", _DEPLOY_ROOT / "observability" / "stack.py"
+)
 _safe_io = _load_sibling("qmn_deploy_safe_io", _DEPLOY_ROOT / "safe_io.py")
 
 
@@ -95,7 +97,9 @@ class InstallPlan:
     def to_jsonable(self) -> dict[str, object]:
         network = self.network
         to_jsonable = getattr(network, "to_jsonable", None)
-        network_payload: object = to_jsonable() if callable(to_jsonable) else repr(network)
+        network_payload: object = (
+            to_jsonable() if callable(to_jsonable) else repr(network)
+        )
         return {
             "recipe": self.recipe,
             "principal": self.principal,
@@ -149,7 +153,9 @@ def build_install_plan(
     )
     inspections = _units.inspect_rendered_units(rendered)
     unit_findings = tuple(
-        f"{item.name}: {finding}" for item in inspections for finding in item.findings
+        f"{item.name}: {finding}"
+        for item in inspections
+        for finding in item.findings
     )
 
     posture = network if network is not None else _network.default_network_posture()
@@ -227,7 +233,10 @@ def build_install_plan(
         InstallStep(
             kind="tree",
             target=VAR_LIB_QMX_OBS,
-            detail=(f"observability storage owned by {_units.OBSERVABILITY_SERVICE_ACCOUNT}"),
+            detail=(
+                "observability storage owned by "
+                f"{_units.OBSERVABILITY_SERVICE_ACCOUNT}"
+            ),
             check_mode_only=check_only,
         )
     )
@@ -294,7 +303,8 @@ def build_install_plan(
             kind="journald",
             target="SystemMaxUse",
             detail=(
-                f"journald limits + read-only LogNamespace={_obs.JOURNAL_NAMESPACE} for qmxobs"
+                "journald limits + read-only LogNamespace="
+                f"{_obs.JOURNAL_NAMESPACE} for qmxobs"
             ),
             check_mode_only=check_only,
         )
@@ -407,7 +417,10 @@ def write_plan(plan: InstallPlan, destination: Path) -> None:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="node-install",
-        description=("Plan or apply the Ubuntu node install (DevOps only). Default is check mode."),
+        description=(
+            "Plan or apply the Ubuntu node install (DevOps only). "
+            "Default is check mode."
+        ),
     )
     parser.add_argument(
         "--check-mode",
@@ -437,9 +450,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.apply:
         # Live apply is a VPS-only privileged path. This story proves the plan
         # via check mode/fixtures and never SSHes to Contabo.
-        sys.stderr.write(
+        print(
             "refusing --apply in this process: run on the VPS under the ops "
-            "principal sudo path; CI and workstations use --check-mode only\n"
+            "principal sudo path; CI and workstations use --check-mode only",
+            file=sys.stderr,
         )
         return 2
 
@@ -449,7 +463,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out is not None:
         write_plan(plan, args.out)
     else:
-        sys.stdout.write(str(payload) + "\n")
+        print(payload)
     return 0 if plan.ok else 1
 
 

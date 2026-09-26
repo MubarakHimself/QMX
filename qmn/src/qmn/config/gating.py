@@ -19,7 +19,6 @@ from qmn.config.registry_catalog import (
 )
 
 __all__ = [
-    "AR80_BLANK_EFFECT_TOTALS",
     "blank_effect_coverage",
     "live_role_blocked_by",
     "provisional_live_gates_like_blank",

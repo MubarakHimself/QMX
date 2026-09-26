@@ -17,7 +17,6 @@ Shows the things Story 35.4 / FR-W27 / SCN-0016 pin down:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TypeVar
@@ -135,8 +134,8 @@ def main() -> None:
     assert identity["shape_owner"] == "COMP-QMF-RISK"
     assert identity["mint"] == "composition-root"
     assert identity["evaluation"] == "analysis.rerun"
-    sys.stdout.write("COMP-QMF-RISK remains the shape owner\n")
-    sys.stdout.write("composition root remains the mint\n")
+    print("COMP-QMF-RISK remains the shape owner")
+    print("composition root remains the mint")
 
     book = _unwrap(
         BookDefinition.try_create(
@@ -157,7 +156,7 @@ def main() -> None:
     assert variant.zone == "dev"
     assert variant.contract == "CT-22"
     assert variant.cite() == _unwrap(book.fingerprint(), "book-fp").value
-    sys.stdout.write("dev-zone candidate is a complete CT-22\n")
+    print("dev-zone candidate is a complete CT-22")
 
     patched = register_book_bms_variant(
         definition=book,
@@ -166,7 +165,7 @@ def main() -> None:
         patch={"loss_floor": 1},
     )
     assert is_refusal(patched)
-    sys.stdout.write("patch record refused as a definition\n")
+    print("patch record refused as a definition")
 
     rescale = register_book_bms_variant(
         definition=book,
@@ -175,7 +174,7 @@ def main() -> None:
         rescale=True,
     )
     assert is_refusal(rescale)
-    sys.stdout.write("trade-list rescale is not Book/BMS truth\n")
+    print("trade-list rescale is not Book/BMS truth")
 
     stolen = register_book_bms_variant(
         definition=book,
@@ -184,7 +183,7 @@ def main() -> None:
         mint_into="qmb",
     )
     assert is_refusal(stolen)
-    sys.stdout.write("mint does not move into QMB or QMA\n")
+    print("mint does not move into QMB or QMA")
 
     qma = register_book_bms_variant(
         definition=book,
@@ -193,7 +192,7 @@ def main() -> None:
         origin="qma",
     )
     assert is_refusal(qma)
-    sys.stdout.write("QMA candidate without field-level diff refused\n")
+    print("QMA candidate without field-level diff refused")
 
     definition_fp = _unwrap(book.fingerprint(), "book-fp")
     qma_ok = _unwrap(
@@ -214,7 +213,7 @@ def main() -> None:
         "qma-variant",
     )
     assert qma_ok.money_path_relevant is True
-    sys.stdout.write("QMA-emitted candidate remains money_path_relevant\n")
+    print("QMA-emitted candidate remains money_path_relevant")
 
     unset = register_book_bms_variant(
         definition=book,
@@ -229,7 +228,7 @@ def main() -> None:
         },
     )
     assert is_refusal(unset)
-    sys.stdout.write("QMA never fills an unset money-path field\n")
+    print("QMA never fills an unset money-path field")
 
     bms = _unwrap(
         BmsDefinition.try_create(
@@ -336,8 +335,8 @@ def main() -> None:
         )
         assert outcome.config.book_fp1 == variant.definition_fp1
         assert outcome.mints_ct32 is True
-        sys.stdout.write("evaluation is analysis.rerun citing that fingerprint\n")
-    sys.stdout.write("book/bms variants ok\n")
+        print("evaluation is analysis.rerun citing that fingerprint")
+    print("book/bms variants ok")
 
 
 if __name__ == "__main__":

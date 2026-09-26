@@ -331,7 +331,6 @@ _TYPED_ID = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$")
 _FR_ID = re.compile(r"^FR-\d+$")
 _RECIPE_HEADER = re.compile(r"^([a-z][a-z0-9-]*)\s")
 _SKIP_SCAN_NAMES: Final[frozenset[str]] = frozenset({"failures_gate.py"})
-_MAX_SOURCE_BYTES: Final[int] = 1 << 20  # 1 MiB
 
 # Phrases in product-user affordance text that resolve to a named capability.
 _AFFORDANCE_PHRASES: Final[Mapping[str, str]] = MappingProxyType(
@@ -400,23 +399,16 @@ def operations_toolkit_recipes(justfile: Path | None = None) -> frozenset[str]:
         return frozenset()
     found: set[str] = set()
     for raw in text.splitlines():
-        name = _node_recipe_name(raw)
-        if name is not None:
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = _RECIPE_HEADER.match(stripped)
+        if match is None:
+            continue
+        name = match.group(1)
+        if name.startswith("node-"):
             found.add(name)
     return frozenset(found)
-
-
-def _node_recipe_name(raw: str) -> str | None:
-    stripped = raw.strip()
-    if not stripped or stripped.startswith("#"):
-        return None
-    match = _RECIPE_HEADER.match(stripped)
-    if match is None:
-        return None
-    name = match.group(1)
-    if name.startswith("node-"):
-        return name
-    return None
 
 
 def collect_emitted_failure_ids(src_root: Path | None = None) -> frozenset[str]:
@@ -426,79 +418,36 @@ def collect_emitted_failure_ids(src_root: Path | None = None) -> frozenset[str]:
     for path in sorted(root.rglob("*.py")):
         if path.name in _SKIP_SCAN_NAMES:
             continue
-        found.update(_emitted_ids_from_path(path, contain_within=root))
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for keyword in node.keywords:
+                    if keyword.arg != "failure_id":
+                        continue
+                    token = _const_str(keyword.value)
+                    if token is not None:
+                        found.add(token)
+                if (
+                    isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "get"
+                    and len(node.args) >= 2
+                ):
+                    key = _const_str(node.args[0])
+                    default = _const_str(node.args[1])
+                    if key == "failure_id" and default is not None:
+                        found.add(default)
+            elif isinstance(node, ast.Dict):
+                for key_node, value_node in zip(node.keys, node.values, strict=False):
+                    if _const_str(key_node) != "failure_id":
+                        continue
+                    token = _const_str(value_node)
+                    if token is not None:
+                        found.add(token)
     found.update(CLOCK_BAND_FAILURE_IDS.values())
     return frozenset(token for token in found if token)
-
-
-def _emitted_ids_from_get_default(node: ast.Call) -> frozenset[str]:
-    if not (
-        isinstance(node.func, ast.Attribute) and node.func.attr == "get" and len(node.args) >= 2
-    ):
-        return frozenset()
-    key = _const_str(node.args[0])
-    default = _const_str(node.args[1])
-    if key == "failure_id" and default is not None:
-        return frozenset({default})
-    return frozenset()
-
-
-def _emitted_ids_from_call(node: ast.Call) -> frozenset[str]:
-    found: set[str] = set()
-    for keyword in node.keywords:
-        if keyword.arg != "failure_id":
-            continue
-        token = _const_str(keyword.value)
-        if token is not None:
-            found.add(token)
-    found.update(_emitted_ids_from_get_default(node))
-    return frozenset(found)
-
-
-def _emitted_ids_from_dict(node: ast.Dict) -> frozenset[str]:
-    found: set[str] = set()
-    for key_node, value_node in zip(node.keys, node.values, strict=False):
-        if _const_str(key_node) != "failure_id":
-            continue
-        token = _const_str(value_node)
-        if token is not None:
-            found.add(token)
-    return frozenset(found)
-
-
-def _emitted_ids_from_tree(tree: ast.AST) -> frozenset[str]:
-    found: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            found.update(_emitted_ids_from_call(node))
-        elif isinstance(node, ast.Dict):
-            found.update(_emitted_ids_from_dict(node))
-    return frozenset(found)
-
-
-def _emitted_ids_from_path(path: Path, *, contain_within: Path) -> frozenset[str]:
-    """Parse one production source after a regular in-root size-capped check.
-
-    The path is resolved and must be a regular file inside ``contain_within`` —
-    never a symlink, never resolving out of the scan root — and its size is
-    capped before the read, so a planted symlink or an oversized file can
-    neither redirect nor unbound it. Unreadable or unparseable files are
-    skipped so the rest of the scan still runs.
-    """
-    try:
-        resolved = path.resolve()
-        root = contain_within.resolve()
-        if path.is_symlink():
-            return frozenset()
-        if not resolved.is_file() or not resolved.is_relative_to(root):
-            return frozenset()
-        size = resolved.stat().st_size
-        if size > _MAX_SOURCE_BYTES:
-            return frozenset()
-        tree = ast.parse(resolved.read_text(encoding="utf-8"), filename=str(resolved))
-    except (OSError, SyntaxError):
-        return frozenset()
-    return _emitted_ids_from_tree(tree)
 
 
 def resolve_operator_affordance(
@@ -512,36 +461,21 @@ def resolve_operator_affordance(
     lowered = text.lower()
     named = recipes if recipes is not None else operations_toolkit_recipes()
     found: set[str] = set()
-    found.update(_affordance_phrase_hits(lowered))
-    found.update(_affordance_catalog_hits(lowered, named))
-    return frozenset(found)
-
-
-def _affordance_phrase_hits(lowered: str) -> set[str]:
-    found: set[str] = set()
+    powers, evidence, power_caps = _door_names()
     for phrase, target in _AFFORDANCE_PHRASES.items():
         if phrase in lowered:
             found.add(target)
-    return found
-
-
-def _affordance_power_hits(lowered: str, powers: frozenset[str]) -> set[str]:
-    found: set[str] = set()
     for power in powers:
         needle = power.replace("_", " ")
         if power in lowered or needle in lowered or power.replace("_", "-") in lowered:
             found.add(power)
-    return found
-
-
-def _affordance_catalog_hits(lowered: str, named: frozenset[str]) -> set[str]:
-    powers, evidence, power_caps = _door_names()
-    found = _affordance_power_hits(lowered, powers)
     for capability in (*evidence, *power_caps):
         if capability in lowered:
             found.add(capability)
-    found.update(recipe for recipe in named if recipe in lowered)
-    return found
+    for recipe in named:
+        if recipe in lowered:
+            found.add(recipe)
+    return frozenset(found)
 
 
 def validate_failures_completeness(
@@ -560,91 +494,43 @@ def validate_failures_completeness(
     parsed = parse_failures_register(target)
     if is_refusal(parsed):
         return parsed
-    indexed = _index_failure_entries(parsed.value)
-    if is_refusal(indexed):
-        return indexed
-    registered, affordances, unresolved = indexed.value
-    emitted, designed = _bind_failures_catalogs(
-        src_root=src_root, emitted_ids=emitted_ids, designed_ids=designed_ids
-    )
-    gated = _gate_failures_coverage(registered, emitted, designed, unresolved)
-    if is_refusal(gated):
-        return gated
-    allow_list = _validate_failures_allow_list(parsed.value)
-    if is_refusal(allow_list):
-        return allow_list
-    return Ok(
-        FailuresCompletenessReport(
-            entries=parsed.value,
-            emitted_ids=emitted,
-            designed_ids=designed,
-            registered_ids=frozenset(registered),
-            allow_list=allow_list.value,
-            affordances=MappingProxyType(affordances),
-        )
-    )
+    entries = parsed.value
 
-
-def _nfr11_blank_fields(entry: FailureRegisterEntry) -> list[str]:
-    mapping = {
-        "Failure class": entry.failure_class,
-        "Detection": entry.detection,
-        "Auto-recovery / retry": entry.auto_recovery,
-        "Visible degraded state": entry.visible_degraded_state,
-        "Notification tier": entry.notification_tier,
-        "Product-user affordance": entry.product_user_affordance,
-    }
-    return [name for name in NFR11_REQUIRED_FIELDS if not mapping[name].strip()]
-
-
-def _accumulate_failure_entry(
-    entry: FailureRegisterEntry,
-    *,
-    seen_fr: set[str],
-    registered: set[str],
-    blank_fields: list[str],
-    duplicate: list[str],
-    affordances: dict[str, frozenset[str]],
-    recipes: frozenset[str],
-    unresolved: list[str],
-) -> None:
-    if entry.fr_id in seen_fr:
-        duplicate.append(entry.fr_id)
-    seen_fr.add(entry.fr_id)
-    registered.add(entry.fr_id)
-    missing = _nfr11_blank_fields(entry)
-    if missing:
-        blank_fields.append(f"{entry.fr_id}:{','.join(missing)}")
-    for detection_id in entry.detection_failure_ids:
-        if _is_typed_failure_id(detection_id):
-            registered.add(detection_id)
-    resolved = resolve_operator_affordance(entry.product_user_affordance, recipes=recipes)
-    affordances[entry.fr_id] = resolved
-    if not resolved:
-        unresolved.append(entry.fr_id)
-
-
-def _index_failure_entries(
-    entries: tuple[FailureRegisterEntry, ...],
-) -> Result[tuple[set[str], dict[str, frozenset[str]], list[str]]]:
     seen_fr: set[str] = set()
     registered: set[str] = set()
     blank_fields: list[str] = []
     duplicate: list[str] = []
     affordances: dict[str, frozenset[str]] = {}
-    unresolved: list[str] = []
     recipes = operations_toolkit_recipes()
+    unresolved: list[str] = []
+
     for entry in entries:
-        _accumulate_failure_entry(
-            entry,
-            seen_fr=seen_fr,
-            registered=registered,
-            blank_fields=blank_fields,
-            duplicate=duplicate,
-            affordances=affordances,
+        if entry.fr_id in seen_fr:
+            duplicate.append(entry.fr_id)
+        seen_fr.add(entry.fr_id)
+        registered.add(entry.fr_id)
+        mapping = {
+            "Failure class": entry.failure_class,
+            "Detection": entry.detection,
+            "Auto-recovery / retry": entry.auto_recovery,
+            "Visible degraded state": entry.visible_degraded_state,
+            "Notification tier": entry.notification_tier,
+            "Product-user affordance": entry.product_user_affordance,
+        }
+        missing = [name for name in NFR11_REQUIRED_FIELDS if not mapping[name].strip()]
+        if missing:
+            blank_fields.append(f"{entry.fr_id}:{','.join(missing)}")
+        for detection_id in entry.detection_failure_ids:
+            if _is_typed_failure_id(detection_id):
+                registered.add(detection_id)
+        resolved = resolve_operator_affordance(
+            entry.product_user_affordance,
             recipes=recipes,
-            unresolved=unresolved,
         )
+        affordances[entry.fr_id] = resolved
+        if not resolved:
+            unresolved.append(entry.fr_id)
+
     if duplicate:
         return invalid(
             "fr_id",
@@ -658,27 +544,15 @@ def _index_failure_entries(
             "every FAILURES.md entry needs all six NFR-11 fields populated",
             blank=tuple(blank_fields),
         )
-    return Ok((registered, affordances, unresolved))
 
-
-def _bind_failures_catalogs(
-    *,
-    src_root: Path | None,
-    emitted_ids: frozenset[str] | None,
-    designed_ids: frozenset[str] | None,
-) -> tuple[frozenset[str], frozenset[str]]:
     emitted = emitted_ids if emitted_ids is not None else collect_emitted_failure_ids(src_root)
     designed = (
         designed_ids
         if designed_ids is not None
         else DESIGNED_TYPED_FAILURE_IDS | frozenset(CLOCK_BAND_FAILURE_IDS.values())
     )
-    return emitted, designed
+    covered = frozenset(registered)
 
-
-def _missing_register_ids(
-    covered: frozenset[str], emitted: frozenset[str], designed: frozenset[str]
-) -> Result[None]:
     missing_emitted = tuple(
         sorted(token for token in emitted if not _covered_by_register(token, covered))
     )
@@ -692,12 +566,7 @@ def _missing_register_ids(
             missing_emitted=missing_emitted,
             missing_designed=missing_designed,
         )
-    return Ok(None)
 
-
-def _orphan_register_ids(
-    covered: frozenset[str], emitted: frozenset[str], designed: frozenset[str]
-) -> Result[None]:
     orphans = tuple(
         sorted(
             token
@@ -711,10 +580,7 @@ def _orphan_register_ids(
             "orphan FAILURES.md detection ids are not designed or emitted",
             orphan=orphans,
         )
-    return Ok(None)
 
-
-def _unresolved_affordance_ids(unresolved: list[str]) -> Result[None]:
     if unresolved:
         return policy(
             "product_user_affordance",
@@ -722,28 +588,7 @@ def _unresolved_affordance_ids(unresolved: list[str]) -> Result[None]:
             "or operations-toolkit recipe that exists",
             unresolved=unresolved,
         )
-    return Ok(None)
 
-
-def _gate_failures_coverage(
-    registered: set[str],
-    emitted: frozenset[str],
-    designed: frozenset[str],
-    unresolved: list[str],
-) -> Result[None]:
-    covered = frozenset(registered)
-    missing = _missing_register_ids(covered, emitted, designed)
-    if is_refusal(missing):
-        return missing
-    orphans = _orphan_register_ids(covered, emitted, designed)
-    if is_refusal(orphans):
-        return orphans
-    return _unresolved_affordance_ids(unresolved)
-
-
-def _validate_failures_allow_list(
-    entries: tuple[FailureRegisterEntry, ...],
-) -> Result[AlertAllowList]:
     generated = generate_alert_allow_list(entries)
     if is_refusal(generated):
         return generated
@@ -757,7 +602,17 @@ def _validate_failures_allow_list(
             expected={name: tuple(sorted(expected_by_class[name])) for name in PUSH_ALERT_CLASSES},
             observed={name: tuple(sorted(observed[name])) for name in PUSH_ALERT_CLASSES},
         )
-    return Ok(allow_list)
+
+    return Ok(
+        FailuresCompletenessReport(
+            entries=entries,
+            emitted_ids=emitted,
+            designed_ids=designed,
+            registered_ids=frozenset(registered),
+            allow_list=allow_list,
+            affordances=MappingProxyType(affordances),
+        )
+    )
 
 
 def _allow_list_from_notification_column(

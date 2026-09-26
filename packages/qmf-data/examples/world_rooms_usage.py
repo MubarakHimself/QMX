@@ -22,7 +22,6 @@ Shows the five things Story 3.3 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -171,25 +170,23 @@ def main() -> None:
         rooms = _unwrap(WorldRooms.for_world(store, World.LIVE), "live rooms")
 
         seven_roles_per_world(store)
-        sys.stdout.write("seven room-roles per world; simulated: policy rejection\n")
+        print("seven room-roles per world; simulated: policy rejection")
 
         engine_major, calendar, tzdata = rebuildable_view_records_pins(rooms)
-        sys.stdout.write(
-            f"rebuildable view pins: engine={engine_major}, calendar={calendar}, tzdata={tzdata}\n"
-        )
+        print(f"rebuildable view pins: engine={engine_major}, calendar={calendar}, tzdata={tzdata}")
 
         raw_forever, view_uncited, view_cited = retention_law(rooms)
-        sys.stdout.write(
+        print(
             "retention: raw deletable="
             f"{raw_forever}, uncited-view deletable={view_uncited}, "
-            f"cited-view deletable={view_cited}\n"
+            f"cited-view deletable={view_cited}"
         )
 
         key = series_resolves_within_partition(rooms)
-        sys.stdout.write(f"series resolves within partition: {key}\n")
+        print(f"series resolves within partition: {key}")
 
         outcome = cross_world_read_refused(rooms)
-        sys.stdout.write(f"cross-world read: {outcome}\n")
+        print(f"cross-world read: {outcome}")
 
 
 if __name__ == "__main__":

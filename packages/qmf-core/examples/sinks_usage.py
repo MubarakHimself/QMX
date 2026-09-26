@@ -22,8 +22,6 @@ the platform's stores.
 
 from __future__ import annotations
 
-import sys
-
 from qmf.core.refusal import Ok, Retryability, TypedRefusal, is_ok
 from qmf.core.sinks import (
     JournalSink,
@@ -115,16 +113,16 @@ def main() -> None:
     journal: JournalSink[str] = CapacityJournalSink(capacity=2)
 
     ack = a_write_that_lands(observations, {"kind": "quote", "bid": "1.10", "ask": "1.11"})
-    sys.stdout.write(f"observation persisted: {ack.detail['stored_count'] == 1}\n")
+    print(f"observation persisted: {ack.detail['stored_count'] == 1}")
 
     record_result = records.write({"kind": "promotion-card", "fp": "fp1:sha256:demo"})
-    sys.stdout.write(f"record persisted: {is_ok(record_result)}\n")
+    print(f"record persisted: {is_ok(record_result)}")
 
     landed, block = block_on_unpersistable(journal, ["e1", "e2", "e3", "e4"])
     assert block is not None
-    sys.stdout.write(f"journal blocked after {landed} events on unpersistable: {landed == 2}\n")
-    sys.stdout.write(f"block refusal category: {block.category.value}\n")
-    sys.stdout.write(f"block retryable after: {block.after_condition_descriptor}\n")
+    print(f"journal blocked after {landed} events on unpersistable: {landed == 2}")
+    print(f"block refusal category: {block.category.value}")
+    print(f"block retryable after: {block.after_condition_descriptor}")
 
 
 if __name__ == "__main__":

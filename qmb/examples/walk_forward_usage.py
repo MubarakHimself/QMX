@@ -29,7 +29,6 @@ Shows what the fourth B-14 ladder rung pins down:
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Mapping
 from typing import TypeVar, cast
 
@@ -198,17 +197,10 @@ def main() -> None:
         "test": first.out_of_sample_split.value,
     }
     assert "train" not in first.fp1_identity()
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "a walk-forward is a sequence of split manifests; each window is two first-class runs; "  # noqa: E501
-                    "train/test are display aliases:"
-                ),
-                str(list(first.display_aliases())),
-            ]
-        )
-        + "\n"
+    print(
+        "a walk-forward is a sequence of split manifests; each window is two first-class runs; "
+        "train/test are display aliases:",
+        list(first.display_aliases()),
     )
 
     # A plan sequences the windows and pins the deferred configurables.
@@ -226,26 +218,18 @@ def main() -> None:
     )
     assert plan.window_count == 2
     assert len(plan.runs) == 4  # two runs per window
-    sys.stdout.write(
-        " ".join(["the ordered window sequence has", str(len(plan.runs)), "first-class runs"])
-        + "\n"
-    )
+    print("the ordered window sequence has", len(plan.runs), "first-class runs")
 
     # 2. In-sample run ledgers role=trial, never a bar verdict; OOS bar outcome is a
     # read-time fold that returns not-yet-ruled while GAP-0048/0049 stay open.
     assert qmb.fold_oos_bar_outcome(first) == qmb.OOS_BAR_OUTCOME_NOT_YET_RULED == "not-yet-ruled"
     assert qmb.VERDICT_BEARING_BACKTEST_SHIPS is False
     assert is_refusal(qmb.refuse_window_bar_verdict("bar-pass"))
-    sys.stdout.write(
-        " ".join(
-            [
-                "in-sample run is role=trial, never a bar verdict; OOS bar outcome is a read-time fold:",  # noqa: E501
-                str(qmb.fold_oos_bar_outcome(first)),
-                "gated behind",
-                str(qmb.OOS_VERDICT_GATED_BEHIND),
-            ]
-        )
-        + "\n"
+    print(
+        "in-sample run is role=trial, never a bar verdict; OOS bar outcome is a read-time fold:",
+        qmb.fold_oos_bar_outcome(first),
+        "gated behind",
+        qmb.OOS_VERDICT_GATED_BEHIND,
     )
 
     # 3. Admission resolves exactly ONE registry as-of, frozen for every window.
@@ -281,22 +265,15 @@ def main() -> None:
     assert admitted.window_count == 2
     assert admitted.run_count == 4
     stamp = admitted.registry_as_of_stamp()
-    sys.stdout.write(
-        " ".join(
-            [
-                "one registry as-of resolved at admission, frozen for every window:",
-                str(
-                    f"{admitted.window_count} windows share as-of {admitted.set_fingerprint.value[:19]}..."  # noqa: E501
-                ),
-            ]
-        )
-        + "\n"
+    print(
+        "one registry as-of resolved at admission, frozen for every window:",
+        f"{admitted.window_count} windows share as-of {admitted.set_fingerprint.value[:19]}...",
     )
 
     # After admission fragments resolve by explicit fp1, never name@latest.
     assert is_refusal(admitted.port.resolve("mean-reversion"))
     assert is_refusal(admitted.port.resolve("scalping@latest"))
-    sys.stdout.write("after admission fragments resolve by explicit fp1, never name@latest\n")
+    print("after admission fragments resolve by explicit fp1, never name@latest")
 
     # 6. Every window's label carries both split fingerprints, the frozen as-of, world,
     # and evidence class; recompiling a run reproduces its run-config fingerprint.
@@ -314,9 +291,9 @@ def main() -> None:
             assert first_cfg.fingerprint == again_cfg.fingerprint
             assert first_cfg.keys["registry_as_of"] == stamp
             assert first_cfg.keys["split_fingerprint"] == run.split_fp1.value
-    sys.stdout.write(
+    print(
         "each window label carries both split fingerprints, registry_as_of, world, and evidence "
-        "class; recompiling a run reproduces its run-config fingerprint\n"
+        "class; recompiling a run reproduces its run-config fingerprint"
     )
 
     # 4. The window count, spans, and step are UI-editable configurables with no ratified
@@ -327,14 +304,9 @@ def main() -> None:
         windows, window_count=2, in_sample_span=500, out_of_sample_span=100
     )
     assert is_refusal(unset)  # step unset -> typed refusal, no baked default
-    sys.stdout.write(
-        " ".join(
-            [
-                "window count / spans / step are UI-editable configurables with no ratified value:",
-                str(list(qmb.WALK_FORWARD_CONFIGURABLE_KEYS)),
-            ]
-        )
-        + "\n"
+    print(
+        "window count / spans / step are UI-editable configurables with no ratified value:",
+        list(qmb.WALK_FORWARD_CONFIGURABLE_KEYS),
     )
 
     # 5. The read-time aggregation view over the window runs — never a merged run.
@@ -364,17 +336,10 @@ def main() -> None:
     # A merged run is refused; the view is read-time only.
     assert is_refusal(qmb.refuse_merged_walk_forward_run())
     assert is_refusal(qmb.refuse_walk_forward_battery_threshold("pbo"))
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "read-time aggregation over the window runs, never a merged run; in-sample / "
-                    "out-of-sample distributions feed the deferred PBO / CSCV battery (no thresholds):"  # noqa: E501
-                ),
-                str(payload["governance_battery_candidates"]),
-            ]
-        )
-        + "\n"
+    print(
+        "read-time aggregation over the window runs, never a merged run; in-sample / "
+        "out-of-sample distributions feed the deferred PBO / CSCV battery (no thresholds):",
+        payload["governance_battery_candidates"],
     )
 
     # Reproducibility: identical window results reproduce the aggregation fingerprint.
@@ -384,11 +349,9 @@ def main() -> None:
     first_fp = _unwrap(aggregation.fingerprint(), "fp1").value
     second_fp = _unwrap(again.fingerprint(), "fp1").value
     assert first_fp == second_fp
-    sys.stdout.write(
-        "re-aggregating the same window results reproduces the view fingerprint bit-for-bit\n"
-    )
+    print("re-aggregating the same window results reproduces the view fingerprint bit-for-bit")
 
-    sys.stdout.write("walk forward ok\n")
+    print("walk forward ok")
 
 
 if __name__ == "__main__":

@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import lzma
 import struct
-import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -98,8 +97,10 @@ class _DemoTransport:
         return Ok(b"")
 
 
-def _hour_bounds() -> dict[str, object]:
-    return {
+def main() -> None:
+    transport = _DemoTransport()
+    adapter = DukascopyAdapter(transport, instruments={"EURUSD": _instrument()})
+    bounds = {
         "symbol": "EURUSD",
         "start_ns": _HOUR_NS,
         "end_ns": _END_NS,
@@ -107,13 +108,13 @@ def _hour_bounds() -> dict[str, object]:
         "revision": "r1",
         "license_tag": PERSONAL_USE_LICENSE,
     }
+    request = SourceRequest(source=DUKASCOPY_SOURCE, bounds=bounds)
 
-
-def download_once_intake(ingest: ExternalSourceIngest, adapter: DukascopyAdapter) -> None:
-    """AC1: bounded fetch → CT-15 records → CT-10 via ingest seam."""
+    # AC1 — bounded fetch → CT-15 records → CT-10 via ingest seam.
+    ingest = ExternalSourceIngest(adapter)
     receipts = _unwrap(
         ingest.fetch_and_intake(
-            SourceRequest(source=DUKASCOPY_SOURCE, bounds=_hour_bounds()),
+            request,
             writer=_writer(),
             world=World.LIVE,
             receive_wall_time=_RECEIVE_NS,
@@ -126,26 +127,29 @@ def download_once_intake(ingest: ExternalSourceIngest, adapter: DukascopyAdapter
     if quote is None:
         raise AssertionError("expected bid/ask preserved on tick")
     _require(first.observation.source == DUKASCOPY_SOURCE, "source identity dukascopy")
-    sys.stdout.write(
+    print(
         f"download-once CT-10: source={first.observation.source} "
-        f"ticks={len(receipts)} bid={quote.bid.verbatim} ask={quote.ask.verbatim}\n"
+        f"ticks={len(receipts)} bid={quote.bid.verbatim} ask={quote.ask.verbatim}"
     )
+
     with tempfile.TemporaryDirectory() as tmp:
         boundary = SourceObservationBoundary(EvidenceStore(Path(tmp) / "store"))
-        admitted = _unwrap(ingest.submit(first.observation, boundary), "CT-10 admit")
-        sys.stdout.write(f"admitted to raw archive: {admitted.archive.outcome.value}\n")
+        admitted = _unwrap(
+            ingest.submit(first.observation, boundary),
+            "CT-10 admit",
+        )
+        print(f"admitted to raw archive: {admitted.archive.outcome.value}")
 
-
-def license_tagged_window(adapter: DukascopyAdapter) -> None:
-    """AC2: personal-use window is offered; unknown tag is policy rejection."""
+    # AC2 — license-tagged window; unlicensed refuses governed evidence.
     window = adapter.last_window
     if window is None:
         raise AssertionError("expected window recorded")
     offered = _unwrap(offer_for_governed_evidence(window), "personal-use governed offer")
-    sys.stdout.write(
+    print(
         f"license-tagged window: tag={offered.license_tag.value} "
-        f"partition={offered.partition.partition_key}\n"
+        f"partition={offered.partition.partition_key}"
     )
+
     unknown = _unwrap(
         LicensedSourceWindow.try_create(
             partition=window.partition,
@@ -160,47 +164,31 @@ def license_tagged_window(adapter: DukascopyAdapter) -> None:
         refused_license.category is RefusalCategory.POLICY_REJECTION,
         "unlicensed is policy rejection",
     )
-    sys.stdout.write("unlicensed window refused for governed evidence\n")
+    print("unlicensed window refused for governed evidence")
 
-
-def malformed_and_unmapped(adapter: DukascopyAdapter) -> None:
-    """AC3: malformed bi5 / unmappable symbol are invalid input."""
+    # AC3 — malformed bi5 / unmappable symbol.
     bad = decode_bi5_ticks(b"not-compressed", hour_start_ns=_HOUR_NS)
     if not is_refusal(bad) or bad.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected bad bi5 invalid input")
     unmapped = adapter.fetch(
         SourceRequest(
             source=DUKASCOPY_SOURCE,
-            bounds={**_hour_bounds(), "symbol": "NOSUCH"},
+            bounds={**bounds, "symbol": "NOSUCH"},
         )
     )
     if not is_refusal(unmapped) or unmapped.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected unmappable instrument invalid input")
-    sys.stdout.write("malformed / unmappable -> invalid input\n")
+    print("malformed / unmappable -> invalid input")
 
-
-def complete_corpus_refused(adapter: DukascopyAdapter) -> None:
-    """AC4: complete-corpus download is refused."""
+    # AC4 — complete corpus refused.
     corpus = adapter.download_complete_corpus()
     _require(is_refusal(corpus), "complete corpus refused")
-    sys.stdout.write("complete-corpus download refused (bounded adapter only)\n")
+    print("complete-corpus download refused (bounded adapter only)")
 
-
-def recovery_ownership_refused(adapter: DukascopyAdapter) -> None:
-    """AC5: external recovery / checkpoint ownership is application-owned."""
+    # AC5 — recovery ownership refused.
     recovery = adapter.recover_external()
     _require(is_refusal(recovery), "external recovery refused")
-    sys.stdout.write("external recovery / checkpoint ownership refused (application-owned)\n")
-
-
-def main() -> None:
-    adapter = DukascopyAdapter(_DemoTransport(), instruments={"EURUSD": _instrument()})
-    ingest = ExternalSourceIngest(adapter)
-    download_once_intake(ingest, adapter)
-    license_tagged_window(adapter)
-    malformed_and_unmapped(adapter)
-    complete_corpus_refused(adapter)
-    recovery_ownership_refused(adapter)
+    print("external recovery / checkpoint ownership refused (application-owned)")
 
 
 if __name__ == "__main__":

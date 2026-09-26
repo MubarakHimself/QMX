@@ -23,7 +23,6 @@ Shows the six things Story 3.4 pins down:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -208,32 +207,24 @@ def foreign_calendar_refused(manifest: SplitManifest) -> str:
 
 def main() -> None:
     manifest, width_ns = build_manifest()
-    sys.stdout.write(
-        f"split manifest: 3 default segments, split_id derived from fp1 (widths={width_ns} ns)\n"
-    )
+    print(f"split manifest: 3 default segments, split_id derived from fp1 (widths={width_ns} ns)")
 
     placed, straddle_category = partition_records(manifest)
-    sys.stdout.write(
-        f"record partition: knowledge-time 1500 -> {placed}; straddle -> {straddle_category}\n"
-    )
+    print(f"record partition: knowledge-time 1500 -> {placed}; straddle -> {straddle_category}")
 
     seal = _unwrap(
         HoldoutSeal.from_manifest(manifest, HISTORICAL_HOLDOUT_MONTHS), "seal from manifest"
     )
     outcomes, pre_seal = seal_enforced_everywhere(seal, manifest.calendar_identity)
-    sys.stdout.write(
-        f"seal at {len(outcomes)} read boundaries: {outcomes[0]}; pre-seal read: {pre_seal}\n"
-    )
+    print(f"seal at {len(outcomes)} read boundaries: {outcomes[0]}; pre-seal read: {pre_seal}")
 
     with tempfile.TemporaryDirectory(prefix="qmf-splits-") as tmp:
         store = EvidenceStore(Path(tmp))
         subtype, second_category, still_category = one_final_look(seal, manifest, store)
-    sys.stdout.write(
-        f"final look: {subtype}; second look: {second_category}; after look: {still_category}\n"
-    )
+    print(f"final look: {subtype}; second look: {second_category}; after look: {still_category}")
 
     foreign = foreign_calendar_refused(manifest)
-    sys.stdout.write(f"foreign calendar row: {foreign}\n")
+    print(f"foreign calendar row: {foreign}")
 
 
 if __name__ == "__main__":

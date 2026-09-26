@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.paper import (
@@ -50,7 +49,7 @@ def main() -> None:
     assert is_ok(notebook)
     alias = resolve_display_alias(display="workspace", lane="governed", over="fp1:bot")
     assert is_ok(alias)
-    sys.stdout.write("research-paper ok\n")
+    print("research-paper ok")
 
 
 if __name__ == "__main__":

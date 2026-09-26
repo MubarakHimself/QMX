@@ -21,7 +21,6 @@ Shows the things B-6 / AR-56 / LABEL-3 / SC-06 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmb.config import (
@@ -158,8 +157,8 @@ def main() -> None:
     bound = _unwrap(bind_execution_ports(_resolved()), "bound execution")
     assert bound.fill_adapter_id == FILL_ADAPTER_DECLARED_PATH
     assert bound.ports.fill is not bound.ports.slippage
-    sys.stdout.write("bound from resolved run-config\n")
-    sys.stdout.write("fill -> slippage -> cost\n")
+    print("bound from resolved run-config")
+    print("fill -> slippage -> cost")
 
     class _BotSized:
         size = 1.0
@@ -172,7 +171,7 @@ def main() -> None:
         lot_step=_qty(1),
     )
     assert is_refusal(refused)
-    sys.stdout.write("never a bot-sized order\n")
+    print("never a bot-sized order")
 
     path = _unwrap(SlicePath.try_create("eurusd", (_price(),)), "path")
     intent = _unwrap(
@@ -208,7 +207,7 @@ def main() -> None:
     )
     assert isinstance(opened, CostedFill)
     assert opened.fill.taint == TAINT_OPTIMISTIC
-    sys.stdout.write("full-loss price required before open\n")
+    print("full-loss price required before open")
     _unwrap(
         bound.execute(
             intent=_unwrap(
@@ -226,24 +225,24 @@ def main() -> None:
         ),
         "close",
     )
-    sys.stdout.write("risk-reducing exit admitted without new full-loss\n")
+    print("risk-reducing exit admitted without new full-loss")
 
     stamped = _unwrap(stamp_fidelity(FILL_ADAPTER_DECLARED_PATH), "fidelity")
     assert stamped.adapter_id == FILL_ADAPTER_DECLARED_PATH
     assert stamped.taint == TAINT_OPTIMISTIC
     assert "taint" not in stamped.fp1_identity()
-    sys.stdout.write("fidelity identity is adapter-id + composition-version + taint\n")
-    sys.stdout.write("optimistic taint\n")
+    print("fidelity identity is adapter-id + composition-version + taint")
+    print("optimistic taint")
     run = _unwrap(lowest_fidelity(bound.fidelity.bound), "run fidelity")
     assert run.taint == TAINT_OPTIMISTIC
-    sys.stdout.write("lowest fidelity of bound adapters\n")
+    print("lowest fidelity of bound adapters")
     other = _unwrap(
         lowest_fidelity((_unwrap(stamp_fidelity("quote-real"), "other"),)),
         "other fidelity",
     )
     mixed = compare_book_bar_fidelity(run, other)
     assert is_refusal(mixed)
-    sys.stdout.write("mixed-fidelity Book-bar comparison refused\n")
+    print("mixed-fidelity Book-bar comparison refused")
     assert is_ok(compare_book_bar_fidelity(run, other, override=True))
 
     simulated = bind_execution_ports(
@@ -254,7 +253,7 @@ def main() -> None:
         )
     )
     assert is_refusal(simulated)
-    sys.stdout.write("world=simulated refused\n")
+    print("world=simulated refused")
     replay_synth = bind_execution_ports(
         _resolved(
             clock=CLOCK_REPLAY,
@@ -263,8 +262,8 @@ def main() -> None:
         )
     )
     assert is_refusal(replay_synth)
-    sys.stdout.write("replay-on-synthetic is invalid input\n")
-    sys.stdout.write("execution composition ok\n")
+    print("replay-on-synthetic is invalid input")
+    print("execution composition ok")
 
 
 if __name__ == "__main__":

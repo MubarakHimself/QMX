@@ -783,7 +783,6 @@ def _label_result(
     evidence_class: EvidenceClass | None,
 ) -> Result[BatchResult]:
     """Assemble the AD-12 result label and the batch result (DEC-0110, DEC-0126)."""
-    _ = names
     producer = configuration.fp1()
     if is_refusal(producer):  # pragma: no cover - config content is canonical by construction
         return producer

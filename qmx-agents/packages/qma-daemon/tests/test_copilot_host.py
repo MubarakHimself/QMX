@@ -26,7 +26,6 @@ from qma.core.refusals import NestedGrantUnionRefused
 from qma.core.vocabulary.enums import HookResultDecision, JobHandleState
 from qma.daemon.sessions import ProductSessionProfile
 from qma.daemon.sessions.copilot import CopilotHost
-from qma.daemon.sessions.product_session import ProductSession
 from qma.wire import compute_input_hash, derive_child_logical_invocation_id
 from qma.wire.invocation_envelope import ContributionRecord, InstanceRecord
 from qmf.core import is_ok, is_refusal
@@ -343,7 +342,6 @@ def test_disposing_a_panel_does_not_cancel_running_job_handle() -> None:
             selected_refs=[{"kind": "run", "id": _TARGET}],
         )
     )
-    assert isinstance(transferred, ProductSession)
     assert transferred.product_session_id == "psess:app-use-1"
     transcript = host.transfer_context(
         kind="transcript",

@@ -16,7 +16,6 @@ Shows the things B-11 / SC-07 pin down for integrity:
 
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 from typing import TypeVar, cast
@@ -73,11 +72,11 @@ def main() -> None:
     _require(identity["edge_guard_requires_explicit_tolerance"] is True, "guard opt-in")
     _require(identity["fills_gaps"] is False, "verify never fills")
     _require(identity["verdict_is_edge_claim"] is False, "factual data-quality only")
-    sys.stdout.write(
+    print(
         "verify identity: "
         f"kind={identity['integrity_kind']} "
         f"edge_opt_in={identity['edge_guard_requires_explicit_tolerance']} "
-        f"fills={identity['fills_gaps']}\n"
+        f"fills={identity['fills_gaps']}"
     )
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -107,10 +106,10 @@ def main() -> None:
         _require(len(passed.interior_gaps) == 1, "interior gap reported")
         _require(passed.interior_gaps[0].as_mapping()["filled"] is False, "gap not filled")
         _require(passed.is_edge_claim is False, "not an edge claim")
-        sys.stdout.write(
+        print(
             f"pass counts={passed.counts.as_mapping()} "
             f"edge_offsets=({passed.edge_start_offset_ns},{passed.edge_end_offset_ns}) "
-            f"interior_gaps={len(passed.interior_gaps)}\n"
+            f"interior_gaps={len(passed.interior_gaps)}"
         )
 
         # Armed edge guard beyond leading offset → CT-04 refusal.
@@ -118,8 +117,8 @@ def main() -> None:
         assert is_refusal(refused)
         _require(refused.category is RefusalCategory.POLICY_REJECTION, "armed edge defect refuses")
         result = cast("dict[str, object]", refused.context["result"])
-        sys.stdout.write(
-            f"armed edge refusal signal={refused.context.get('signal')} verdict={result['verdict']}\n"  # noqa: E501
+        print(
+            f"armed edge refusal signal={refused.context.get('signal')} verdict={result['verdict']}"
         )
 
         # Float price taint → CT-04.
@@ -139,7 +138,7 @@ def main() -> None:
         )
         assert is_refusal(tainted)
         _require(tainted.category is RefusalCategory.POLICY_REJECTION, "float taint refuses")
-        sys.stdout.write(f"float taint refused category={tainted.category.value}\n")
+        print(f"float taint refused category={tainted.category.value}")
 
         # CT-13 journal carries propagated correlation_id.
         world = _unwrap(store.for_world(World.REPLAY), "replay world")
@@ -147,7 +146,7 @@ def main() -> None:
         _require(
             any(event.correlation_id == "demo-verify-18-4" for event in events), "corr propagated"
         )
-        sys.stdout.write(f"CT-13 data-quality events={len(events)} correlation propagated\n")
+        print(f"CT-13 data-quality events={len(events)} correlation propagated")
 
         # Determinism of the factual verdict (correlation_id is linking-only).
         again = _unwrap(
@@ -156,9 +155,9 @@ def main() -> None:
         )
         _require(again.verdict == passed.verdict, "same verdict")
         _require(again.counts.as_mapping() == passed.counts.as_mapping(), "same counts")
-        sys.stdout.write("determinism: same window + config -> same verdict\n")
+        print("determinism: same window + config -> same verdict")
 
-    sys.stdout.write("qmb data verify ok\n")
+    print("qmb data verify ok")
 
 
 if __name__ == "__main__":

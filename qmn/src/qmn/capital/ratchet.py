@@ -270,7 +270,7 @@ def dispatch_originated_breakeven_ratchet(
     command path — Book origination already applied it.
     """
     # Prove the threshold is never a command-path gate.
-    _ = amend_min_improvement
+    del amend_min_improvement
     if not isinstance(command, Command):
         return invalid(
             "command",

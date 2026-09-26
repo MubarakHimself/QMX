@@ -64,7 +64,6 @@ from qmn.order.terminal import (
 from qmn.order.unknown import CommandStreamUnknownBoundary, HeldProtectionAct
 from qmn.venue import (
     AdmissionDisposition,
-    AdmissionResult,
     Command,
     CommandKind,
     CompoundCommand,
@@ -179,37 +178,163 @@ class OrderPath:
         amend_journal: object = None,
         command_journal: object = None,
     ) -> Result[OrderPath]:
-        core = _bind_path_core(ordinal_store, binder, pacer, client)
-        if is_refusal(core):
-            return core
-        store, ident, paced, port = core.value
-        forms = _bind_path_forms_and_deadline(forms_per_order_type, submission_deadline_duration)
-        if is_refusal(forms):
-            return forms
-        form_map, deadline = forms.value
-        extras = _bind_path_options(
-            unknown_boundary=unknown_boundary,
-            amend_atomicity=amend_atomicity,
-            book_dynamic_protection_policy=book_dynamic_protection_policy,
-            amend_journal=amend_journal,
-            command_journal=command_journal,
-        )
-        if is_refusal(extras):
-            return extras
-        options = extras.value
+        if not isinstance(ordinal_store, CommandOrdinalStore):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "ordinal_store",
+                    "reason": "order path requires a CommandOrdinalStore",
+                    "given": type(ordinal_store).__name__,
+                },
+            )
+        if not isinstance(binder, CommandIdentityBinder):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "binder",
+                    "reason": "order path requires a CommandIdentityBinder",
+                    "given": type(binder).__name__,
+                },
+            )
+        if not isinstance(pacer, ConnectionCommandPacer):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "pacer",
+                    "reason": "order path requires a ConnectionCommandPacer",
+                    "given": type(pacer).__name__,
+                },
+            )
+        if not isinstance(client, VenueClientPort):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "client",
+                    "reason": "order path submits through VenueClientPort",
+                    "given": type(client).__name__,
+                },
+            )
+        if not isinstance(forms_per_order_type, Mapping):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "forms_per_order_type",
+                    "reason": "CT-18 protective-stop forms per order type are required",
+                    "given": repr(forms_per_order_type),
+                },
+            )
+        if (
+            not isinstance(submission_deadline_duration, Duration)
+            or submission_deadline_duration.value_ns <= 0
+        ):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "submission_deadline",
+                    "reason": "registry:submission_deadline is a positive Duration",
+                    "given": repr(submission_deadline_duration),
+                },
+            )
+        boundary: CommandStreamUnknownBoundary | None
+        if unknown_boundary is None:
+            boundary = None
+        elif isinstance(unknown_boundary, CommandStreamUnknownBoundary):
+            boundary = unknown_boundary
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "unknown_boundary",
+                    "reason": (
+                        "order path gates through a CommandStreamUnknownBoundary "
+                        "or None"
+                    ),
+                    "given": type(unknown_boundary).__name__,
+                },
+            )
+        resolved_atomicity = resolve_amend_atomicity(amend_atomicity)
+        if isinstance(book_dynamic_protection_policy, BookDynamicProtectionPolicy):
+            policy = book_dynamic_protection_policy
+        elif isinstance(book_dynamic_protection_policy, str):
+            try:
+                policy = BookDynamicProtectionPolicy(
+                    book_dynamic_protection_policy.strip().lower()
+                )
+            except ValueError:
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "book_dynamic_protection_policy",
+                        "reason": (
+                            "Book policy is single-sided-breakeven-ratchet or "
+                            "refuse-before-origination"
+                        ),
+                        "given": book_dynamic_protection_policy,
+                    },
+                )
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "book_dynamic_protection_policy",
+                    "reason": "Book dynamic-protection policy is required",
+                    "given": repr(book_dynamic_protection_policy),
+                },
+            )
+        journal: JournalSink[object] | None
+        if amend_journal is None:
+            journal = None
+        elif isinstance(amend_journal, JournalSink):
+            journal = cast("JournalSink[object]", amend_journal)
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "amend_journal",
+                    "reason": "amend_protection journals through a JournalSink or None",
+                    "given": type(amend_journal).__name__,
+                },
+            )
+        command_sink: JournalSink[object] | None
+        if command_journal is None:
+            command_sink = None
+        elif isinstance(command_journal, JournalSink):
+            command_sink = cast("JournalSink[object]", command_journal)
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "command_journal",
+                    "reason": "commands journal through a JournalSink before dispatch",
+                    "given": type(command_journal).__name__,
+                },
+            )
         return Ok(
             cls(
-                ordinal_store=store,
-                binder=ident,
-                pacer=paced,
-                client=port,
-                forms_per_order_type=form_map,
-                submission_deadline_duration=deadline,
-                unknown_boundary=options.boundary,
-                amend_atomicity=options.atomicity,
-                book_dynamic_protection_policy=options.policy,
-                amend_journal=options.amend_journal,
-                command_journal=options.command_journal,
+                ordinal_store=ordinal_store,
+                binder=binder,
+                pacer=pacer,
+                client=client,
+                forms_per_order_type=dict(
+                    cast("Mapping[str, object]", forms_per_order_type)
+                ),
+                submission_deadline_duration=submission_deadline_duration,
+                unknown_boundary=boundary,
+                amend_atomicity=resolved_atomicity,
+                book_dynamic_protection_policy=policy,
+                amend_journal=journal,
+                command_journal=command_sink,
             )
         )
 
@@ -263,600 +388,291 @@ class OrderPath:
         after handoff. ``amend_min_improvement`` is accepted only to prove it
         never suppresses a risk-non-increasing amend.
         """
-        _ = amend_min_improvement  # origination policy only — never a path gate
-        gated = _gate_submit_command(command, sequencer_open=self._sequencer_open)
-        if is_refusal(gated):
-            return gated
-        typed = gated.value
-        pre = _pre_handoff_submit_gates(
-            self,
-            typed,
-            handed_off_at=handed_off_at,
-            amend_origin=amend_origin,
-            dual_side_requested=dual_side_requested,
-            amend_sequence=amend_sequence,
-            subject_present_at_submission=subject_present_at_submission,
-            subject_observations=subject_observations,
-            venue_close_reason=venue_close_reason,
+        del amend_min_improvement  # origination policy only — never a path gate
+        if isinstance(command, CompoundCommand):
+            return compound_all_rejected_acceptance_blocked()
+        if not isinstance(command, Command):
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "command",
+                    "reason": "order path submits a typed CT-19 Command",
+                    "given": type(command).__name__,
+                },
+            )
+        if not self._sequencer_open:
+            return TypedRefusal(
+                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "command_sequencer",
+                    "reason": "command sequencer is closed until ordinal high-water "
+                    "is recovered",
+                },
+                after_condition_descriptor="recover ordinal high-water then open_sequencer",
+            )
+
+        # Story 24.9: subject absent/terminal before handoff → without submission.
+        if subject_present_at_submission is not None or subject_observations is not None:
+            if not isinstance(handed_off_at, Instant):
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "handed_off_at",
+                        "reason": (
+                            "subject-terminal pre-handoff gate compares against "
+                            "the handoff Instant as submit stamp"
+                        ),
+                        "given": repr(handed_off_at),
+                    },
+                )
+            present = (
+                True
+                if subject_present_at_submission is None
+                else subject_present_at_submission
+            )
+            observations: Sequence[object] | tuple[()] = (
+                ()
+                if subject_observations is None
+                else cast("Sequence[object]", subject_observations)
+            )
+            gated = resolve_node_close_against_subject(
+                command,
+                observations=observations,
+                submit_stamp=handed_off_at,
+                subject_present_at_submission=present,
+                venue_close_reason=venue_close_reason,
+            )
+            if is_refusal(gated):
+                return gated
+            if (
+                is_ok(gated)
+                and gated.value.resolution is SubjectResolution.RESOLVE_WITHOUT_SUBMISSION
+            ):
+                return Ok(
+                    OrderPathTerminalResolution(
+                        command=command,
+                        disposition=gated.value,
+                    )
+                )
+            # SUPERSEDED_BY_TERMINAL_SUBJECT is a post-submit named outcome —
+            # resolve via resolve_node_close_against_subject after observations land.
+
+        # Story 24.7: amend atomicity + never invent a sequence; journal before dispatch.
+        if command.kind is CommandKind.AMEND_PROTECTION:
+            gated = gate_amend_protection(
+                command,
+                atomicity=self.amend_atomicity,
+                book_policy=self.book_dynamic_protection_policy,
+                origin=amend_origin,
+                dual_side_requested=dual_side_requested,
+                amend_sequence=amend_sequence,
+            )
+            if is_refusal(gated):
+                return gated
+            if self.amend_journal is not None:
+                if not isinstance(handed_off_at, Instant):
+                    return TypedRefusal(
+                        category=RefusalCategory.INVALID_INPUT,
+                        retryability=Retryability.NO,
+                        context={
+                            "field": "handed_off_at",
+                            "reason": (
+                                "amend_protection journals before dispatch at a "
+                                "wall Instant"
+                            ),
+                            "given": repr(handed_off_at),
+                        },
+                    )
+                journaled = journal_amend_before_dispatch(
+                    command,
+                    journal=self.amend_journal,
+                    journaled_at=handed_off_at,
+                    atomicity=self.amend_atomicity,
+                    origin=amend_origin,
+                )
+                if is_refusal(journaled):
+                    return journaled
+
+        # Story 24.6: exact (VenueId, account) UNKNOWN boundary before dispatch.
+        if self.unknown_boundary is not None:
+            if not isinstance(handed_off_at, Instant):
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "handed_off_at",
+                        "reason": (
+                            "UNKNOWN boundary admit requires a wall Instant "
+                            "(also used as the receive stamp)"
+                        ),
+                        "given": repr(handed_off_at),
+                    },
+                )
+            gated = self.unknown_boundary.admit(
+                command, receive_instant=handed_off_at
+            )
+            if is_refusal(gated):
+                return gated
+            gate_value = gated.value
+            if isinstance(gate_value, HeldProtectionAct):
+                return TypedRefusal(
+                    category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                    retryability=Retryability.AFTER_CONDITION,
+                    context={
+                        "field": "command_stream",
+                        "reason": gate_value.detail,
+                        "disposition": gate_value.disposition.value,
+                        "held": True,
+                        "journaled_to_extent": gate_value.journaled_to_extent,
+                        "command_fp1": gate_value.command_fp1.value,
+                        "command_kind": gate_value.kind.value,
+                        "outcome": "UNKNOWN",
+                        "never_rejection": True,
+                    },
+                    after_condition_descriptor="resolution",
+                )
+            if gate_value.disposition is not AdmissionDisposition.ADMITTED:
+                if gate_value.refusal is not None:
+                    return gate_value.refusal
+                return TypedRefusal(
+                    category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                    retryability=Retryability.AFTER_CONDITION,
+                    context={
+                        "field": "command_stream",
+                        "reason": gate_value.detail,
+                        "disposition": gate_value.disposition.value,
+                        "outcome": "UNKNOWN",
+                        "never_rejection": True,
+                    },
+                    after_condition_descriptor="resolution",
+                )
+
+        consumed = self.ordinal_store.mark_submitted(command.ordering_ordinal)
+        if is_refusal(consumed):
+            return consumed
+
+        stop_form = require_venue_resident_protective_stop(
+            command,
+            forms_per_order_type=self.forms_per_order_type,
         )
-        if is_refusal(pre):
-            return pre
-        if pre.value is not None:
-            return Ok(pre.value)
-        handed = _admit_bind_and_handoff(
-            self,
-            typed,
-            enqueued_at=enqueued_at,
-            now_mono=now_mono,
-            handed_off_at=handed_off_at,
+        if is_refusal(stop_form):
+            return stop_form
+
+        queued = self.pacer.enqueue(command)
+        if is_refusal(queued):
+            return queued
+        admission = self.pacer.admit(command, enqueued_at=enqueued_at, now=now_mono)
+        if is_refusal(admission):
+            return admission
+
+        client_id = mint_venue_client_id(
+            ordering_ordinal=command.ordering_ordinal,
+            session_epoch=command.session_epoch,
         )
-        if is_refusal(handed):
-            return handed
-        dispatched = _dispatch_after_handoff(self, handed.value)
-        if is_refusal(dispatched):
-            return dispatched
-        return Ok(dispatched.value)
+        if is_refusal(client_id):
+            _ = self.pacer.release(admission.value.admission_class)
+            return client_id
+
+        bound = self.binder.bind_before_wire_handoff(
+            command,
+            venue_client_id=client_id.value,
+        )
+        if is_refusal(bound):
+            _ = self.pacer.release(admission.value.admission_class)
+            return bound
+
+        fp = command.fingerprint()
+        if is_refusal(fp):
+            _ = self.pacer.release(admission.value.admission_class)
+            return fp
+        if not isinstance(handed_off_at, Instant):
+            _ = self.pacer.release(admission.value.admission_class)
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "handed_off_at",
+                    "reason": "submission deadline begins at wire handoff Instant",
+                    "given": repr(handed_off_at),
+                },
+            )
+        deadline_ns = handed_off_at.value_ns + self.submission_deadline_duration.value_ns
+        deadline = Instant.try_create(deadline_ns)
+        if is_refusal(deadline):
+            _ = self.pacer.release(admission.value.admission_class)
+            return deadline
+
+        handoff = self.pacer.begin_wire_handoff(
+            command_fp1=fp.value.value,
+            handed_off_at=handed_off_at,
+            submission_deadline=deadline.value,
+        )
+        if is_refusal(handoff):
+            _ = self.pacer.release(admission.value.admission_class)
+            return handoff
+
+        # Past handoff: never retry — a failed submit is terminal for this mint.
+        if self.command_journal is not None:
+            def _submit(_payload: Mapping[str, object]) -> Result[SubmissionResult]:
+                del _payload
+                return self.client.submit(command)
+
+            receipt = journal_before_effect(
+                kind="command",
+                payload={
+                    "kind": "command",
+                    "command_kind": command.kind.value,
+                    "command_fp1": fp.value.value,
+                    "phase": "before-dispatch",
+                },
+                journal=self.command_journal,
+                dispatcher=CallableDispatcher(_submit),
+                boundary=WriteBoundary.ORDERED_WITH_RECOVERY,
+            )
+            _ = self.pacer.release(admission.value.admission_class)
+            if is_refusal(receipt):
+                return receipt
+            submitted_value = receipt.value.dispatcher_result
+            if not isinstance(submitted_value, SubmissionResult):
+                return TypedRefusal(
+                    category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "command",
+                        "reason": "journal-before-dispatch did not yield a SubmissionResult",
+                    },
+                )
+            return Ok(
+                OrderPathSubmission(
+                    command=command,
+                    venue_client_id=client_id.value,
+                    admission=admission.value,
+                    handoff=handoff.value,
+                    result=submitted_value,
+                    protective_stop_form=stop_form.value,
+                )
+            )
+
+        submitted = self.client.submit(command)
+        _ = self.pacer.release(admission.value.admission_class)
+        if is_refusal(submitted):
+            return submitted
+        if not is_ok(submitted):
+            return submitted
+        return Ok(
+            OrderPathSubmission(
+                command=command,
+                venue_client_id=client_id.value,
+                admission=admission.value,
+                handoff=handoff.value,
+                result=submitted.value,
+                protective_stop_form=stop_form.value,
+            )
+        )
 
     def retry_after_handoff(self, command_fp1: object) -> Result[bool]:
         """Explicit no-retry gate after wire handoff."""
         return self.pacer.refuse_retry_after_handoff(command_fp1)
-
-
-@dataclass(frozen=True, slots=True)
-class _PathOptions:
-    boundary: CommandStreamUnknownBoundary | None
-    atomicity: AmendAtomicity
-    policy: BookDynamicProtectionPolicy
-    amend_journal: JournalSink[object] | None
-    command_journal: JournalSink[object] | None
-
-
-@dataclass(frozen=True, slots=True)
-class _HandoffContext:
-    command: Command
-    venue_client_id: str
-    admission: PacerAdmission
-    handoff: WireHandoff
-    stop_form: str
-    command_fp1: str
-
-
-def _invalid_path_field(field: str, reason: str, given: object) -> TypedRefusal:
-    return TypedRefusal(
-        category=RefusalCategory.INVALID_INPUT,
-        retryability=Retryability.NO,
-        context={"field": field, "reason": reason, "given": given},
-    )
-
-
-def _bind_path_core(
-    ordinal_store: object,
-    binder: object,
-    pacer: object,
-    client: object,
-) -> Result[
-    tuple[CommandOrdinalStore, CommandIdentityBinder, ConnectionCommandPacer, VenueClientPort]
-]:
-    if not isinstance(ordinal_store, CommandOrdinalStore):
-        return _invalid_path_field(
-            "ordinal_store",
-            "order path requires a CommandOrdinalStore",
-            type(ordinal_store).__name__,
-        )
-    if not isinstance(binder, CommandIdentityBinder):
-        return _invalid_path_field(
-            "binder",
-            "order path requires a CommandIdentityBinder",
-            type(binder).__name__,
-        )
-    if not isinstance(pacer, ConnectionCommandPacer):
-        return _invalid_path_field(
-            "pacer",
-            "order path requires a ConnectionCommandPacer",
-            type(pacer).__name__,
-        )
-    if not isinstance(client, VenueClientPort):
-        return _invalid_path_field(
-            "client",
-            "order path submits through VenueClientPort",
-            type(client).__name__,
-        )
-    return Ok((ordinal_store, binder, pacer, client))
-
-
-def _bind_path_forms_and_deadline(
-    forms_per_order_type: object,
-    submission_deadline_duration: object,
-) -> Result[tuple[dict[str, object], Duration]]:
-    if not isinstance(forms_per_order_type, Mapping):
-        return _invalid_path_field(
-            "forms_per_order_type",
-            "CT-18 protective-stop forms per order type are required",
-            repr(forms_per_order_type),
-        )
-    if (
-        not isinstance(submission_deadline_duration, Duration)
-        or submission_deadline_duration.value_ns <= 0
-    ):
-        return _invalid_path_field(
-            "submission_deadline",
-            "registry:submission_deadline is a positive Duration",
-            repr(submission_deadline_duration),
-        )
-    return Ok(
-        (
-            dict(cast("Mapping[str, object]", forms_per_order_type)),
-            submission_deadline_duration,
-        )
-    )
-
-
-def _bind_unknown_boundary(
-    unknown_boundary: object,
-) -> Result[CommandStreamUnknownBoundary | None]:
-    if unknown_boundary is None:
-        return Ok(None)
-    if isinstance(unknown_boundary, CommandStreamUnknownBoundary):
-        return Ok(unknown_boundary)
-    return _invalid_path_field(
-        "unknown_boundary",
-        "order path gates through a CommandStreamUnknownBoundary or None",
-        type(unknown_boundary).__name__,
-    )
-
-
-def _bind_book_policy(
-    book_dynamic_protection_policy: object,
-) -> Result[BookDynamicProtectionPolicy]:
-    if isinstance(book_dynamic_protection_policy, BookDynamicProtectionPolicy):
-        return Ok(book_dynamic_protection_policy)
-    if isinstance(book_dynamic_protection_policy, str):
-        try:
-            return Ok(BookDynamicProtectionPolicy(book_dynamic_protection_policy.strip().lower()))
-        except ValueError:
-            return _invalid_path_field(
-                "book_dynamic_protection_policy",
-                "Book policy is single-sided-breakeven-ratchet or refuse-before-origination",
-                book_dynamic_protection_policy,
-            )
-    return _invalid_path_field(
-        "book_dynamic_protection_policy",
-        "Book dynamic-protection policy is required",
-        repr(book_dynamic_protection_policy),
-    )
-
-
-def _optional_journal_sink(
-    value: object, field: str, reason: str
-) -> Result[JournalSink[object] | None]:
-    if value is None:
-        return Ok(None)
-    if isinstance(value, JournalSink):
-        return Ok(cast("JournalSink[object]", value))
-    return _invalid_path_field(field, reason, type(value).__name__)
-
-
-def _bind_path_options(
-    *,
-    unknown_boundary: object,
-    amend_atomicity: object,
-    book_dynamic_protection_policy: object,
-    amend_journal: object,
-    command_journal: object,
-) -> Result[_PathOptions]:
-    boundary = _bind_unknown_boundary(unknown_boundary)
-    if is_refusal(boundary):
-        return boundary
-    resolved_atomicity = resolve_amend_atomicity(amend_atomicity)
-    policy = _bind_book_policy(book_dynamic_protection_policy)
-    if is_refusal(policy):
-        return policy
-    journal = _optional_journal_sink(
-        amend_journal,
-        "amend_journal",
-        "amend_protection journals through a JournalSink or None",
-    )
-    if is_refusal(journal):
-        return journal
-    command_sink = _optional_journal_sink(
-        command_journal,
-        "command_journal",
-        "commands journal through a JournalSink before dispatch",
-    )
-    if is_refusal(command_sink):
-        return command_sink
-    return Ok(
-        _PathOptions(
-            boundary=boundary.value,
-            atomicity=resolved_atomicity,
-            policy=policy.value,
-            amend_journal=journal.value,
-            command_journal=command_sink.value,
-        )
-    )
-
-
-def _gate_submit_command(command: object, *, sequencer_open: bool) -> Result[Command]:
-    if isinstance(command, CompoundCommand):
-        return compound_all_rejected_acceptance_blocked()
-    if not isinstance(command, Command):
-        return _invalid_path_field(
-            "command",
-            "order path submits a typed CT-19 Command",
-            type(command).__name__,
-        )
-    if not sequencer_open:
-        return TypedRefusal(
-            category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
-            retryability=Retryability.AFTER_CONDITION,
-            context={
-                "field": "command_sequencer",
-                "reason": "command sequencer is closed until ordinal high-water is recovered",
-            },
-            after_condition_descriptor="recover ordinal high-water then open_sequencer",
-        )
-    return Ok(command)
-
-
-def _gate_subject_before_handoff(
-    command: Command,
-    *,
-    handed_off_at: object,
-    subject_present_at_submission: object,
-    subject_observations: object,
-    venue_close_reason: object,
-) -> Result[OrderPathTerminalResolution | None]:
-    # Story 24.9: subject absent/terminal before handoff → without submission.
-    if subject_present_at_submission is None and subject_observations is None:
-        return Ok(None)
-    if not isinstance(handed_off_at, Instant):
-        return _invalid_path_field(
-            "handed_off_at",
-            "subject-terminal pre-handoff gate compares against the handoff Instant "
-            "as submit stamp",
-            repr(handed_off_at),
-        )
-    present = True if subject_present_at_submission is None else subject_present_at_submission
-    observations: Sequence[object] | tuple[()] = (
-        () if subject_observations is None else cast("Sequence[object]", subject_observations)
-    )
-    gated = resolve_node_close_against_subject(
-        command,
-        observations=observations,
-        submit_stamp=handed_off_at,
-        subject_present_at_submission=present,
-        venue_close_reason=venue_close_reason,
-    )
-    if is_refusal(gated):
-        return gated
-    if is_ok(gated) and gated.value.resolution is SubjectResolution.RESOLVE_WITHOUT_SUBMISSION:
-        return Ok(OrderPathTerminalResolution(command=command, disposition=gated.value))
-    # SUPERSEDED_BY_TERMINAL_SUBJECT is a post-submit named outcome —
-    # resolve via resolve_node_close_against_subject after observations land.
-    return Ok(None)
-
-
-def _gate_amend_on_path(
-    path: OrderPath,
-    command: Command,
-    *,
-    handed_off_at: object,
-    amend_origin: object,
-    dual_side_requested: object,
-    amend_sequence: object,
-) -> Result[None]:
-    # Story 24.7: amend atomicity + never invent a sequence; journal before dispatch.
-    if command.kind is not CommandKind.AMEND_PROTECTION:
-        return Ok(None)
-    gated = gate_amend_protection(
-        command,
-        atomicity=path.amend_atomicity,
-        book_policy=path.book_dynamic_protection_policy,
-        origin=amend_origin,
-        dual_side_requested=dual_side_requested,
-        amend_sequence=amend_sequence,
-    )
-    if is_refusal(gated):
-        return gated
-    if path.amend_journal is None:
-        return Ok(None)
-    if not isinstance(handed_off_at, Instant):
-        return _invalid_path_field(
-            "handed_off_at",
-            "amend_protection journals before dispatch at a wall Instant",
-            repr(handed_off_at),
-        )
-    journaled = journal_amend_before_dispatch(
-        command,
-        journal=path.amend_journal,
-        journaled_at=handed_off_at,
-        atomicity=path.amend_atomicity,
-        origin=amend_origin,
-    )
-    if is_refusal(journaled):
-        return journaled
-    return Ok(None)
-
-
-def _unknown_held_refusal(gate_value: HeldProtectionAct) -> TypedRefusal:
-    return TypedRefusal(
-        category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
-        retryability=Retryability.AFTER_CONDITION,
-        context={
-            "field": "command_stream",
-            "reason": gate_value.detail,
-            "disposition": gate_value.disposition.value,
-            "held": True,
-            "journaled_to_extent": gate_value.journaled_to_extent,
-            "command_fp1": gate_value.command_fp1.value,
-            "command_kind": gate_value.kind.value,
-            "outcome": "UNKNOWN",
-            "never_rejection": True,
-        },
-        after_condition_descriptor="resolution",
-    )
-
-
-def _unknown_non_admit_refusal(gate_value: AdmissionResult) -> TypedRefusal:
-    return TypedRefusal(
-        category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
-        retryability=Retryability.AFTER_CONDITION,
-        context={
-            "field": "command_stream",
-            "reason": gate_value.detail,
-            "disposition": gate_value.disposition.value,
-            "outcome": "UNKNOWN",
-            "never_rejection": True,
-        },
-        after_condition_descriptor="resolution",
-    )
-
-
-def _gate_unknown_on_path(
-    path: OrderPath, command: Command, *, handed_off_at: object
-) -> Result[None]:
-    # Story 24.6: exact (VenueId, account) UNKNOWN boundary before dispatch.
-    if path.unknown_boundary is None:
-        return Ok(None)
-    if not isinstance(handed_off_at, Instant):
-        return _invalid_path_field(
-            "handed_off_at",
-            "UNKNOWN boundary admit requires a wall Instant (also used as the receive stamp)",
-            repr(handed_off_at),
-        )
-    gated = path.unknown_boundary.admit(command, receive_instant=handed_off_at)
-    if is_refusal(gated):
-        return gated
-    gate_value = gated.value
-    if isinstance(gate_value, HeldProtectionAct):
-        return _unknown_held_refusal(gate_value)
-    if gate_value.disposition is not AdmissionDisposition.ADMITTED:
-        if gate_value.refusal is not None:
-            return gate_value.refusal
-        return _unknown_non_admit_refusal(gate_value)
-    return Ok(None)
-
-
-def _pre_handoff_submit_gates(
-    path: OrderPath,
-    command: Command,
-    *,
-    handed_off_at: object,
-    amend_origin: object,
-    dual_side_requested: object,
-    amend_sequence: object,
-    subject_present_at_submission: object,
-    subject_observations: object,
-    venue_close_reason: object,
-) -> Result[OrderPathTerminalResolution | None]:
-    pre = _gate_subject_before_handoff(
-        command,
-        handed_off_at=handed_off_at,
-        subject_present_at_submission=subject_present_at_submission,
-        subject_observations=subject_observations,
-        venue_close_reason=venue_close_reason,
-    )
-    if is_refusal(pre):
-        return pre
-    if pre.value is not None:
-        return pre
-    amend = _gate_amend_on_path(
-        path,
-        command,
-        handed_off_at=handed_off_at,
-        amend_origin=amend_origin,
-        dual_side_requested=dual_side_requested,
-        amend_sequence=amend_sequence,
-    )
-    if is_refusal(amend):
-        return amend
-    unknown = _gate_unknown_on_path(path, command, handed_off_at=handed_off_at)
-    if is_refusal(unknown):
-        return unknown
-    return Ok(None)
-
-
-def _consume_stop_and_admit(
-    path: OrderPath,
-    command: Command,
-    *,
-    enqueued_at: object,
-    now_mono: object,
-) -> Result[tuple[str, PacerAdmission]]:
-    consumed = path.ordinal_store.mark_submitted(command.ordering_ordinal)
-    if is_refusal(consumed):
-        return consumed
-    stop_form = require_venue_resident_protective_stop(
-        command,
-        forms_per_order_type=path.forms_per_order_type,
-    )
-    if is_refusal(stop_form):
-        return stop_form
-    queued = path.pacer.enqueue(command)
-    if is_refusal(queued):
-        return queued
-    admission = path.pacer.admit(command, enqueued_at=enqueued_at, now=now_mono)
-    if is_refusal(admission):
-        return admission
-    return Ok((stop_form.value, admission.value))
-
-
-def _release_admission(path: OrderPath, admission: PacerAdmission) -> None:
-    _ = path.pacer.release(admission.admission_class)
-
-
-def _bind_identity_and_fp(
-    path: OrderPath, command: Command, admission: PacerAdmission
-) -> Result[tuple[str, str]]:
-    client_id = mint_venue_client_id(
-        ordering_ordinal=command.ordering_ordinal,
-        session_epoch=command.session_epoch,
-    )
-    if is_refusal(client_id):
-        _release_admission(path, admission)
-        return client_id
-    bound = path.binder.bind_before_wire_handoff(
-        command,
-        venue_client_id=client_id.value,
-    )
-    if is_refusal(bound):
-        _release_admission(path, admission)
-        return bound
-    fp = command.fingerprint()
-    if is_refusal(fp):
-        _release_admission(path, admission)
-        return fp
-    return Ok((client_id.value, fp.value.value))
-
-
-def _begin_wire_handoff(
-    path: OrderPath,
-    *,
-    admission: PacerAdmission,
-    command_fp1: str,
-    handed_off_at: object,
-) -> Result[WireHandoff]:
-    if not isinstance(handed_off_at, Instant):
-        _release_admission(path, admission)
-        return _invalid_path_field(
-            "handed_off_at",
-            "submission deadline begins at wire handoff Instant",
-            repr(handed_off_at),
-        )
-    deadline_ns = handed_off_at.value_ns + path.submission_deadline_duration.value_ns
-    deadline = Instant.try_create(deadline_ns)
-    if is_refusal(deadline):
-        _release_admission(path, admission)
-        return deadline
-    handoff = path.pacer.begin_wire_handoff(
-        command_fp1=command_fp1,
-        handed_off_at=handed_off_at,
-        submission_deadline=deadline.value,
-    )
-    if is_refusal(handoff):
-        _release_admission(path, admission)
-        return handoff
-    return Ok(handoff.value)
-
-
-def _admit_bind_and_handoff(
-    path: OrderPath,
-    command: Command,
-    *,
-    enqueued_at: object,
-    now_mono: object,
-    handed_off_at: object,
-) -> Result[_HandoffContext]:
-    admitted = _consume_stop_and_admit(path, command, enqueued_at=enqueued_at, now_mono=now_mono)
-    if is_refusal(admitted):
-        return admitted
-    stop_form, admission = admitted.value
-    bound = _bind_identity_and_fp(path, command, admission)
-    if is_refusal(bound):
-        return bound
-    venue_client_id, command_fp1 = bound.value
-    handoff = _begin_wire_handoff(
-        path,
-        admission=admission,
-        command_fp1=command_fp1,
-        handed_off_at=handed_off_at,
-    )
-    if is_refusal(handoff):
-        return handoff
-    return Ok(
-        _HandoffContext(
-            command=command,
-            venue_client_id=venue_client_id,
-            admission=admission,
-            handoff=handoff.value,
-            stop_form=stop_form,
-            command_fp1=command_fp1,
-        )
-    )
-
-
-def _submission_from_context(
-    handed: _HandoffContext, result: SubmissionResult
-) -> OrderPathSubmission:
-    return OrderPathSubmission(
-        command=handed.command,
-        venue_client_id=handed.venue_client_id,
-        admission=handed.admission,
-        handoff=handed.handoff,
-        result=result,
-        protective_stop_form=handed.stop_form,
-    )
-
-
-def _journaled_submit(
-    path: OrderPath,
-    handed: _HandoffContext,
-    journal: JournalSink[object],
-) -> Result[OrderPathSubmission]:
-    command = handed.command
-
-    def _submit(_payload: Mapping[str, object]) -> Result[SubmissionResult]:
-        _ = _payload
-        return path.client.submit(command)
-
-    receipt = journal_before_effect(
-        kind="command",
-        payload={
-            "kind": "command",
-            "command_kind": command.kind.value,
-            "command_fp1": handed.command_fp1,
-            "phase": "before-dispatch",
-        },
-        journal=journal,
-        dispatcher=CallableDispatcher(_submit),
-        boundary=WriteBoundary.ORDERED_WITH_RECOVERY,
-    )
-    _release_admission(path, handed.admission)
-    if is_refusal(receipt):
-        return receipt
-    submitted_value = receipt.value.dispatcher_result
-    if not isinstance(submitted_value, SubmissionResult):
-        return TypedRefusal(
-            category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
-            retryability=Retryability.NO,
-            context={
-                "field": "command",
-                "reason": "journal-before-dispatch did not yield a SubmissionResult",
-            },
-        )
-    return Ok(_submission_from_context(handed, submitted_value))
-
-
-def _dispatch_after_handoff(
-    path: OrderPath, handed: _HandoffContext
-) -> Result[OrderPathSubmission]:
-    # Past handoff: never retry — a failed submit is terminal for this mint.
-    if path.command_journal is not None:
-        return _journaled_submit(path, handed, path.command_journal)
-    submitted = path.client.submit(handed.command)
-    _release_admission(path, handed.admission)
-    if is_refusal(submitted):
-        return submitted
-    if not is_ok(submitted):
-        return submitted
-    return Ok(_submission_from_context(handed, submitted.value))

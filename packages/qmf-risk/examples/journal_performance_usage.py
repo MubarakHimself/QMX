@@ -12,7 +12,6 @@ publish-never-act, replay never gates live, bench crossing as governed producer)
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar
 
 from qmf.core import (
@@ -106,13 +105,13 @@ def main() -> None:
     writer = _unwrap(WriterId.try_create("m1", "risk", "decisions", "boot-1"), "writer")
     as_writer = reject_entity_as_writer(writer)
     _require(is_refusal(as_writer), "entity must not be a WriterId")
-    sys.stdout.write("entity journals: entity holds no WriterId (invalid input)\n")
+    print("entity journals: entity holds no WriterId (invalid input)")
 
     # Legacy Records names map onto the seven event types.
     veto_types = _unwrap(map_legacy_projection(LegacyProjectionName.VETO_LEDGER), "map")
     _require(JournalEventType.DECISION in veto_types, "veto_ledger maps to decision")
     mapped_names = [t.value for t in sorted(veto_types, key=lambda t: t.value)]
-    sys.stdout.write(f"legacy mapping: veto_ledger -> {mapped_names}\n")
+    print(f"legacy mapping: veto_ledger -> {mapped_names}")
 
     # Risk-authored vs venue-authored + command-fingerprint join.
     decision = _unwrap(
@@ -162,9 +161,9 @@ def main() -> None:
         ),
         "join",
     )
-    sys.stdout.write(
+    print(
         f"command-fingerprint join: version={joined.join_version} "
-        f"venue={joined.venue_event.event_type.value}\n"
+        f"venue={joined.venue_event.event_type.value}"
     )
 
     stream = _unwrap(
@@ -181,13 +180,13 @@ def main() -> None:
         "veto projection",
     )
     _require(len(veto.rows) == 1, "veto_ledger selects refused-by-door")
-    sys.stdout.write(f"veto_ledger rows: {len(veto.rows)} (outcome=refused-by-door)\n")
+    print(f"veto_ledger rows: {len(veto.rows)} (outcome=refused-by-door)")
 
     live_proj = _unwrap(
         project_entity_journal(selector, (stream,), role_scope=AccountRole.LIVE),
         "live projection",
     )
-    sys.stdout.write(f"book journal live rows: {len(live_proj.rows)}\n")
+    print(f"book journal live rows: {len(live_proj.rows)}")
 
     # Storage failure of a control action journaled before dispatch blocks dispatch.
     venue = _unwrap(VenueId.try_create("ctrader"), "venue")
@@ -210,7 +209,7 @@ def main() -> None:
         action, journal_result=unpersistable("journal sink full")
     )
     _require(is_refusal(blocked) and is_unpersistable(blocked), "storage failure blocks")
-    sys.stdout.write("journal-before-dispatch: storage failure blocks dispatch\n")
+    print("journal-before-dispatch: storage failure blocks dispatch")
 
     # CT-32 performance result — publish never act.
     interval = _unwrap(
@@ -262,7 +261,7 @@ def main() -> None:
         is_refusal(composite) and composite.category is RefusalCategory.POLICY_REJECTION,
         "composite refused",
     )
-    sys.stdout.write("no composite score: composite-score refused (policy rejection)\n")
+    print("no composite score: composite-score refused (policy rejection)")
 
     multi = PopulationDeclaration.try_create(
         _fp("bot-1"),
@@ -282,7 +281,7 @@ def main() -> None:
         measure_set=(measure,),
     )
     _require(is_refusal(multi_result), "multi-role result refused")
-    sys.stdout.write("multi-role result: refused (policy rejection)\n")
+    print("multi-role result: refused (policy rejection)")
 
     suppression = _unwrap(
         SuppressionCount.try_create(AuthorityKind.OPERATOR, "kill_switch", 1),
@@ -302,22 +301,22 @@ def main() -> None:
         ),
         "result",
     )
-    sys.stdout.write(
+    print(
         f"CT-32 result: world={result.result_label.world.value} "
         f"suppressions={result.suppression_accounting[0].count} "
-        f"vetoes={result.veto_accounting[0].count}\n"
+        f"vetoes={result.veto_accounting[0].count}"
     )
 
     act = check_publish_never_act(PublishAct.BENCH)
     _require(is_refusal(act), "measurement must not bench")
-    sys.stdout.write("publish-never-act: bench refused (policy rejection)\n")
+    print("publish-never-act: bench refused (policy rejection)")
 
     gated = check_replay_never_gates_live(result, gating_live=True)
     _require(
         is_refusal(gated) and gated.category is RefusalCategory.POLICY_REJECTION,
         "replay must not gate live",
     )
-    sys.stdout.write("replay-world result: never gates live money\n")
+    print("replay-world result: never gates live money")
 
     fold = BenchFoldResult(
         qualifying_loss_count=3,
@@ -339,9 +338,9 @@ def main() -> None:
         "consume",
     )
     _require(consumed.threshold_crossed is True, "crossing published")
-    sys.stdout.write(
+    print(
         f"bench crossing: governed producer threshold_crossed={consumed.threshold_crossed} "
-        f"consumed by Book door\n"
+        f"consumed by Book door"
     )
 
 

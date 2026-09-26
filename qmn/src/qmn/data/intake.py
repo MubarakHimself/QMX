@@ -160,12 +160,33 @@ class GovernedLiveIntake:
                 "governed live intake writes only through a RecordingAccumulator",
                 given=repr(type(accumulator).__name__),
             )
-        resolved_world = _bind_intake_world(world)
-        if is_refusal(resolved_world):
-            return resolved_world
-        source = _bind_canonical_source(canonical_source)
-        if is_refusal(source):
-            return source
+        resolved_world = world if isinstance(world, World) else None
+        if resolved_world is None and isinstance(world, str):
+            try:
+                resolved_world = World(world)
+            except ValueError:
+                resolved_world = None
+        if resolved_world is None:
+            return invalid(
+                "world",
+                "live intake is world-scoped evidence (live | replay)",
+                given=repr(world),
+            )
+        if resolved_world is World.SIMULATED:
+            return policy(
+                "world",
+                "writing world=simulated into governed evidence is a policy rejection",
+                world=resolved_world.value,
+            )
+        source = clean_token(canonical_source)
+        if source is None:
+            return invalid(
+                "canonical_source",
+                "the pinned canonical sensing feed names a non-empty source",
+                given=repr(canonical_source),
+            )
+        if source in FORBIDDEN_FAILOVER_SOURCES:
+            return refuse_sibling_failover(feed=source, canonical=CANONICAL_LIVE_SOURCE)
         registered = first_writer_for(accumulator.venue_id, accumulator.account)
         if registered is not None and registered != accumulator.writer_name:
             return policy(
@@ -180,8 +201,8 @@ class GovernedLiveIntake:
         return Ok(
             cls(
                 accumulator=accumulator,
-                world=resolved_world.value,
-                canonical_source=source.value,
+                world=resolved_world,
+                canonical_source=source,
             )
         )
 
@@ -217,10 +238,26 @@ class GovernedLiveIntake:
             )
         if feed_token in FORBIDDEN_FAILOVER_SOURCES or feed_token != self.canonical_source:
             return refuse_sibling_failover(feed=feed_token, canonical=self.canonical_source)
-        kinded = _bind_record_kind(kind, payload)
-        if is_refusal(kinded):
-            return kinded
-        kind_token, payload_map, journal_type = kinded.value
+
+        kind_token = clean_token(kind)
+        payload_map = _as_payload(payload)
+        if kind_token is None and payload_map is not None:
+            kind_token = clean_token(
+                payload_map.get("kind")
+                or payload_map.get("wire_kind")
+                or payload_map.get("observation_kind")
+            )
+        if kind_token is not None:
+            normalized_kind = kind_token.strip().lower().replace("_", "-")
+            if normalized_kind == "observation":
+                return refuse_observation_journal_type(given=normalized_kind)
+
+        journal_type = journal_event_for_kind(kind_token if kind_token is not None else "system")
+        if is_refusal(journal_type):
+            return journal_type
+        if journal_type.value not in CT13_SEVEN_EVENT_TYPES:
+            return refuse_observation_journal_type(given=journal_type.value)
+
         identity = _resolve_identity(
             observation_id=observation_id,
             receive_wall=receive_wall,
@@ -234,48 +271,38 @@ class GovernedLiveIntake:
         )
         if is_refusal(identity):
             return identity
-        return self._persist_identity(
-            ident=identity.value,
-            observation_id=observation_id,
-            stream_id=stream_id,
-            receive_wall=receive_wall,
-            venue_instant=venue_instant,
-            event_time=event_time,
-            payload_map=payload_map,
-            raw_payload=raw_payload,
-            kind_token=kind_token,
-            journal_type=journal_type,
-            closed=closed,
-        )
+        ident = identity.value
 
-    def _persist_identity(
-        self,
-        *,
-        ident: IntakeIdentity,
-        observation_id: object,
-        stream_id: object,
-        receive_wall: object,
-        venue_instant: object,
-        event_time: object,
-        payload_map: Mapping[str, object] | None,
-        raw_payload: object,
-        kind_token: str | None,
-        journal_type: str,
-        closed: object,
-    ) -> Result[LiveIntakeReceipt]:
         prior = self._ledger.get(ident.key)
         if prior is not None:
-            return Ok(_idempotent_receipt(prior))
+            return Ok(
+                LiveIntakeReceipt(
+                    observation=prior.observation,
+                    outcome=LiveIntakeOutcome.IDEMPOTENT,
+                    identity=prior.identity,
+                    journal_event_type=prior.journal_event_type,
+                    foldable=False,
+                    raw_payload=prior.raw_payload,
+                )
+            )
+
         previous_rev = self._native_revision.get(ident.native_key)
         outcome = (
             LiveIntakeOutcome.REVISED
             if previous_rev is not None and previous_rev != ident.revision
             else LiveIntakeOutcome.PRODUCED
         )
+
         raw = _resolve_raw(raw_payload, payload_map)
-        body = _intake_push_body(
-            ident, payload_map, raw, journal_type, self.world.value, kind_token
-        )
+        body: dict[str, object] = dict(payload_map) if payload_map is not None else {}
+        body.update(dict(ident.as_mapping()))
+        body["raw_payload"] = dict(raw)
+        body["ct13_event_type"] = journal_type.value
+        body["world"] = self.world.value
+        if kind_token is not None:
+            body.setdefault("kind", kind_token)
+            body.setdefault("wire_kind", kind_token)
+
         pushed = self.accumulator.push(
             observation_id=observation_id,
             stream_id=stream_id,
@@ -287,105 +314,18 @@ class GovernedLiveIntake:
         )
         if is_refusal(pushed):
             return pushed
+
         receipt = LiveIntakeReceipt(
             observation=pushed.value,
             outcome=outcome,
             identity=ident,
-            journal_event_type=journal_type,
+            journal_event_type=journal_type.value,
             foldable=True,
             raw_payload=MappingProxyType(dict(raw)),
         )
         self._ledger[ident.key] = receipt
         self._native_revision[ident.native_key] = ident.revision
         return Ok(receipt)
-
-
-def _idempotent_receipt(prior: LiveIntakeReceipt) -> LiveIntakeReceipt:
-    return LiveIntakeReceipt(
-        observation=prior.observation,
-        outcome=LiveIntakeOutcome.IDEMPOTENT,
-        identity=prior.identity,
-        journal_event_type=prior.journal_event_type,
-        foldable=False,
-        raw_payload=prior.raw_payload,
-    )
-
-
-def _intake_push_body(
-    ident: IntakeIdentity,
-    payload_map: Mapping[str, object] | None,
-    raw: Mapping[str, object],
-    journal_type: str,
-    world: str,
-    kind_token: str | None,
-) -> dict[str, object]:
-    body: dict[str, object] = dict(payload_map) if payload_map is not None else {}
-    body.update(dict(ident.as_mapping()))
-    body["raw_payload"] = dict(raw)
-    body["ct13_event_type"] = journal_type
-    body["world"] = world
-    if kind_token is not None:
-        body.setdefault("kind", kind_token)
-        body.setdefault("wire_kind", kind_token)
-    return body
-
-
-def _bind_intake_world(world: object) -> Result[World]:
-    resolved_world = world if isinstance(world, World) else None
-    if resolved_world is None and isinstance(world, str):
-        try:
-            resolved_world = World(world)
-        except ValueError:
-            resolved_world = None
-    if resolved_world is None:
-        return invalid(
-            "world",
-            "live intake is world-scoped evidence (live | replay)",
-            given=repr(world),
-        )
-    if resolved_world is World.SIMULATED:
-        return policy(
-            "world",
-            "writing world=simulated into governed evidence is a policy rejection",
-            world=resolved_world.value,
-        )
-    return Ok(resolved_world)
-
-
-def _bind_canonical_source(canonical_source: object) -> Result[str]:
-    source = clean_token(canonical_source)
-    if source is None:
-        return invalid(
-            "canonical_source",
-            "the pinned canonical sensing feed names a non-empty source",
-            given=repr(canonical_source),
-        )
-    if source in FORBIDDEN_FAILOVER_SOURCES:
-        return refuse_sibling_failover(feed=source, canonical=CANONICAL_LIVE_SOURCE)
-    return Ok(source)
-
-
-def _bind_record_kind(
-    kind: object, payload: object
-) -> Result[tuple[str | None, Mapping[str, object] | None, str]]:
-    kind_token = clean_token(kind)
-    payload_map = _as_payload(payload)
-    if kind_token is None and payload_map is not None:
-        kind_token = clean_token(
-            payload_map.get("kind")
-            or payload_map.get("wire_kind")
-            or payload_map.get("observation_kind")
-        )
-    if kind_token is not None:
-        normalized_kind = kind_token.strip().lower().replace("_", "-")
-        if normalized_kind == "observation":
-            return refuse_observation_journal_type(given=normalized_kind)
-    journal_type = journal_event_for_kind(kind_token if kind_token is not None else "system")
-    if is_refusal(journal_type):
-        return journal_type
-    if journal_type.value not in CT13_SEVEN_EVENT_TYPES:
-        return refuse_observation_journal_type(given=journal_type.value)
-    return Ok((kind_token, payload_map, journal_type.value))
 
 
 def _as_payload(payload: object) -> Mapping[str, object] | None:
@@ -433,31 +373,6 @@ def _resolve_identity(
     known_at: object,
     payload: Mapping[str, object] | None,
 ) -> Result[IntakeIdentity]:
-    src = _resolve_source_token(source, payload)
-    if is_refusal(src):
-        return src
-    native = _resolve_native_id(source_native_id, observation_id, payload)
-    if is_refusal(native):
-        return native
-    rev = _resolve_revision(revision, payload)
-    times = _resolve_identity_times(receive_wall, venue_instant, event_time, known_at, payload)
-    if is_refusal(times):
-        return times
-    _wall_ns, event_ns, known_ns = times.value
-    return Ok(
-        IntakeIdentity(
-            source=src.value,
-            source_native_id=native.value,
-            revision=rev,
-            event_time_ns=event_ns,
-            known_at_ns=known_ns,
-        )
-    )
-
-
-def _resolve_source_token(
-    source: object, payload: Mapping[str, object] | None
-) -> Result[str]:
     src = clean_token(source)
     if src is None and payload is not None:
         src = clean_token(payload.get("source"))
@@ -467,12 +382,6 @@ def _resolve_source_token(
             "every live observation names a CT-10 source orthogonal to VenueId",
             given=repr(source),
         )
-    return Ok(src)
-
-
-def _resolve_native_id(
-    source_native_id: object, observation_id: object, payload: Mapping[str, object] | None
-) -> Result[str]:
     native = clean_token(source_native_id)
     if native is None and payload is not None:
         native = clean_token(
@@ -488,10 +397,6 @@ def _resolve_native_id(
             "every live observation carries a venue-native identity key",
             given=repr(source_native_id),
         )
-    return Ok(native)
-
-
-def _resolve_revision(revision: object, payload: Mapping[str, object] | None) -> str:
     rev = clean_token(revision)
     if rev is None and payload is not None:
         raw_rev = payload.get("revision")
@@ -500,17 +405,7 @@ def _resolve_revision(revision: object, payload: Mapping[str, object] | None) ->
         else:
             rev = clean_token(raw_rev)
     if rev is None:
-        return "r1"
-    return rev
-
-
-def _resolve_identity_times(
-    receive_wall: object,
-    venue_instant: object,
-    event_time: object,
-    known_at: object,
-    payload: Mapping[str, object] | None,
-) -> Result[tuple[int, int, int]]:
+        rev = "r1"
     wall_ns = _ns_of(receive_wall)
     if wall_ns is None and payload is not None:
         wall_ns = _ns_of(payload.get("receive_wall_time_ns"))
@@ -532,4 +427,12 @@ def _resolve_identity_times(
         known_ns = _ns_of(payload.get("known_at_ns"))
     if known_ns is None:
         known_ns = wall_ns
-    return Ok((wall_ns, event_ns, known_ns))
+    return Ok(
+        IntakeIdentity(
+            source=src,
+            source_native_id=native,
+            revision=rev,
+            event_time_ns=event_ns,
+            known_at_ns=known_ns,
+        )
+    )

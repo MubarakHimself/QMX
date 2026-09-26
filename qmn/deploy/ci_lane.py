@@ -412,7 +412,8 @@ def _step_upgrade_and_rollback_contract() -> LaneStepResult:
         name="upgrade_rollback_contract",
         ok=True,
         detail=(
-            "no auto-reboot; never restart qmn; compensators: " + ",".join(COMPENSATING_CONTROLS)
+            "no auto-reboot; never restart qmn; "
+            "compensators: " + ",".join(COMPENSATING_CONTROLS)
         ),
     )
 
@@ -484,7 +485,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(payload + "\n", encoding="utf-8")
     else:
-        sys.stdout.write(str(payload) + "\n")
+        print(payload)
     return 0 if report.ok else 1
 
 

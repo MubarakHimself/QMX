@@ -27,7 +27,6 @@ Shows what the second B-14 ladder rung pins down:
 
 from __future__ import annotations
 
-import sys
 from fractions import Fraction
 from typing import TypeVar
 
@@ -94,30 +93,18 @@ def main() -> None:
     assert result.persists_synthetic_series is False
     true = result.true_history()
     assert tuple((c.open, c.high, c.low, c.close) for c in true.candles) == _RAW
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "moving-block bootstraps OHLC deltas onto the seed price; scenario 0 is the true "  # noqa: E501
-                    "history; world stays replay:"
-                ),
-                str(result.world),
-            ]
-        )
-        + "\n"
+    print(
+        "moving-block bootstraps OHLC deltas onto the seed price; scenario 0 is the true "
+        "history; world stays replay:",
+        result.world,
     )
     for series in result.series:
         for candle in series.candles:
             assert candle.open > 0 and candle.high > 0 and candle.low > 0 and candle.close > 0
             assert candle.high >= max(candle.open, candle.close) >= candle.low
-    sys.stdout.write(
-        " ".join(
-            [
-                "every scenario rebuilds a valid strictly-positive OHLC series (high/low bounds enforced):",  # noqa: E501
-                str(f"{len(result.series)} scenarios"),
-            ]
-        )
-        + "\n"
+    print(
+        "every scenario rebuilds a valid strictly-positive OHLC series (high/low bounds enforced):",
+        f"{len(result.series)} scenarios",
     )
 
     # 2. Persistence law (B-7, GAP-0048).
@@ -130,19 +117,10 @@ def main() -> None:
     assert is_refusal(persisted)
     replay_synth = api.perturbation_persistence(persist=True, clock="replay")
     assert is_refusal(replay_synth)
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "procedure-ephemeral -> world=replay robustness; persisting -> world=simulated policy "  # noqa: E501
-                    "rejection; replay clock on synthetic-tainted persisted data -> invalid input:"
-                ),
-                str(
-                    f"{ephemeral.world} / {persisted.category.value} / {replay_synth.category.value}"  # noqa: E501
-                ),
-            ]
-        )
-        + "\n"
+    print(
+        "procedure-ephemeral -> world=replay robustness; persisting -> world=simulated policy "
+        "rejection; replay clock on synthetic-tainted persisted data -> invalid input:",
+        f"{ephemeral.world} / {persisted.category.value} / {replay_synth.category.value}",
     )
 
     # 3. Deterministic seeding, full provenance, and reproducibility.
@@ -150,21 +128,12 @@ def main() -> None:
     assert provenance.rng_family == api.RNG_FAMILY
     assert provenance.resampling_scheme == api.RESAMPLING_SCHEME == "moving-block-bootstrap"
     assert provenance.block_length == 3
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "result records RNG family, seed rule, block length, scenario count, resampling "  # noqa: E501
-                    "scheme, data window:"
-                ),
-                str(
-                    f"{provenance.rng_family} block={provenance.block_length} "
-                    f"scheme={provenance.resampling_scheme} "
-                    f"window=[{provenance.data_window_start_ns}..{provenance.data_window_end_ns}]"
-                ),
-            ]
-        )
-        + "\n"
+    print(
+        "result records RNG family, seed rule, block length, scenario count, resampling "
+        "scheme, data window:",
+        f"{provenance.rng_family} block={provenance.block_length} "
+        f"scheme={provenance.resampling_scheme} "
+        f"window=[{provenance.data_window_start_ns}..{provenance.data_window_end_ns}]",
     )
     again = _unwrap(
         api.run_candle_perturbation(
@@ -175,7 +144,7 @@ def main() -> None:
         "second candle-perturbation result",
     )
     assert _unwrap(result.fingerprint(), "fp1").value == _unwrap(again.fingerprint(), "fp2").value
-    sys.stdout.write("re-running the same inputs reproduces the result fingerprint bit-for-bit\n")
+    print("re-running the same inputs reproduces the result fingerprint bit-for-bit")
 
     # 4. Governed role=replicate fan-out under the min(cpu, memory) governor.
     scenarios = _unwrap(
@@ -194,17 +163,10 @@ def main() -> None:
     decisions = [_unwrap(governor.submit(request), "admission").decision for request in requests]
     assert decisions == [api.DECISION_ADMITTED, api.DECISION_ADMITTED, api.DECISION_QUEUED]
     assert is_refusal(api.refuse_perturbation_bar_verdict("bar-pass"))
-    sys.stdout.write(
-        " ".join(
-            [
-                (
-                    "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "  # noqa: E501
-                    "role=replicate, never a bar verdict:"
-                ),
-                str(decisions),
-            ]
-        )
-        + "\n"
+    print(
+        "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "
+        "role=replicate, never a bar verdict:",
+        decisions,
     )
 
     # 5. The objective summarised across the alternate histories, as data, no verdict.
@@ -223,33 +185,21 @@ def main() -> None:
     assert objective.emits_verdict is False
     series = objective.chart_series()
     assert set(series) == {"name", "unit_kind", "values"}
-    sys.stdout.write(
-        " ".join(
-            [
-                "objective summarised across the alternate histories as chart series data, no verdict:",  # noqa: E501
-                str(
-                    f"favorable_rank={objective.observed_favorable_rank} p_value={objective.summary.p_value}"  # noqa: E501
-                ),
-            ]
-        )
-        + "\n"
+    print(
+        "objective summarised across the alternate histories as chart series data, no verdict:",
+        f"favorable_rank={objective.observed_favorable_rank} p_value={objective.summary.p_value}",
     )
 
     # 6. Claim class robustness (alternate-history), never edge; cannot gate live money.
     assert result.claim_class == "robustness"
     assert is_refusal(api.refuse_edge_claim(api.CANDLE_PERTURBATION_PROCEDURE))
     assert is_refusal(api.refuse_live_money_gate(api.CANDLE_PERTURBATION_PROCEDURE))
-    sys.stdout.write(
-        " ".join(
-            [
-                "claim class is robustness (alternate-history), never edge; cannot gate live money:",  # noqa: E501
-                str(api.PERTURBATION_VERDICT_DEFERRED_TO),
-            ]
-        )
-        + "\n"
+    print(
+        "claim class is robustness (alternate-history), never edge; cannot gate live money:",
+        api.PERTURBATION_VERDICT_DEFERRED_TO,
     )
 
-    sys.stdout.write("candle perturbation ok\n")
+    print("candle perturbation ok")
 
 
 if __name__ == "__main__":

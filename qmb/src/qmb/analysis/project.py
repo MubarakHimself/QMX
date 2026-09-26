@@ -500,32 +500,6 @@ def cite_projection(
     )
     if listed is not None:
         return _refuse_copied_trade_list(listed)
-    if isinstance(body, ProjectionView):
-        return Ok(body)
-    mapping = _cite_require_mapping(body, cite)
-    if is_refusal(mapping):
-        return mapping
-    return _cite_view_from_mapping(mapping.value)
-
-
-def _cite_missing_body(cite: object, *, extra: Mapping[str, object] | None = None) -> TypedRefusal:
-    context: dict[str, object] = {
-        "occupancy": ANALYSIS_PROJECT_OCCUPANCY,
-        "mints_ct32": False,
-    }
-    if extra is not None:
-        context.update(dict(extra))
-    return policy(
-        "body",
-        "a citation of a projection without that JSON body is not a saved view; "
-        "the durable body is the canonical JSON "
-        "{method: projection, source_ct32, source_ct29, predicate, as_of} "
-        "(FR-W22, DEC-0273)",
-        **context,
-    )
-
-
-def _cite_require_mapping(body: object, cite: object) -> Result[Mapping[str, object]]:
     if body is None and cite is None:
         return invalid(
             "body",
@@ -533,21 +507,45 @@ def _cite_require_mapping(body: object, cite: object) -> Result[Mapping[str, obj
             "{method: projection, source_ct32, source_ct29, predicate, as_of}",
         )
     if body is None:
-        return _cite_missing_body(
-            cite,
-            extra={
-                "given": repr(cite),
-                "mints_experiment_spec": False,
-                "claim_class": CLAIM_CLASS_PROJECTION,
-            },
+        return policy(
+            "body",
+            "a citation of a projection without that JSON body is not a saved view; "
+            "the durable body is the canonical JSON "
+            "{method: projection, source_ct32, source_ct29, predicate, as_of} "
+            "(FR-W22, DEC-0273)",
+            given=repr(cite),
+            occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+            mints_ct32=False,
+            mints_experiment_spec=False,
+            claim_class=CLAIM_CLASS_PROJECTION,
         )
+    if isinstance(body, ProjectionView):
+        return Ok(body)
     if not isinstance(body, Mapping) or isinstance(body, (str, bytes)):
         if isinstance(body, Sequence):
             return _refuse_copied_trade_list("body")
-        return _cite_missing_body(cite, extra={"given": repr(type(body).__name__)})
+        return policy(
+            "body",
+            "a citation of a projection without that JSON body is not a saved view; "
+            "the durable body is the canonical JSON "
+            "{method: projection, source_ct32, source_ct29, predicate, as_of} "
+            "(FR-W22, DEC-0273)",
+            given=repr(type(body).__name__),
+            occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+            mints_ct32=False,
+        )
     mapping = cast("Mapping[str, object]", body)
     if not mapping:
-        return _cite_missing_body(cite, extra={"given": "empty-body"})
+        return policy(
+            "body",
+            "a citation of a projection without that JSON body is not a saved view; "
+            "the durable body is the canonical JSON "
+            "{method: projection, source_ct32, source_ct29, predicate, as_of} "
+            "(FR-W22, DEC-0273)",
+            given="empty-body",
+            occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+            mints_ct32=False,
+        )
     copied = [key for key in _TRADE_LIST_KEYS if key in mapping]
     if copied:
         return _refuse_copied_trade_list(copied[0])
@@ -562,11 +560,16 @@ def _cite_require_mapping(body: object, cite: object) -> Result[Mapping[str, obj
         )
     missing = [field for field in _BODY_FIELDS if field not in mapping]
     if missing:
-        return _cite_missing_body(cite, extra={"missing": missing})
-    return Ok(mapping)
-
-
-def _cite_view_from_mapping(mapping: Mapping[str, object]) -> Result[ProjectionView]:
+        return policy(
+            "body",
+            "a citation of a projection without that JSON body is not a saved view; "
+            "the durable body is the canonical JSON "
+            "{method: projection, source_ct32, source_ct29, predicate, as_of} "
+            "(FR-W22, DEC-0273)",
+            missing=missing,
+            occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+            mints_ct32=False,
+        )
     method = clean_token(mapping.get("method"))
     if method != METHOD_PROJECTION:
         return invalid(
@@ -589,7 +592,8 @@ def _cite_view_from_mapping(mapping: Mapping[str, object]) -> Result[ProjectionV
             "as_of is the source CT-32's registry_as_of Instant identity, never query time",
             given=repr(type(as_of_raw).__name__),
         )
-    canonical = _canonicalize_predicate(mapping.get("predicate"))
+    predicate_raw = mapping.get("predicate")
+    canonical = _canonicalize_predicate(predicate_raw)
     if is_refusal(canonical):
         return canonical
     body_json = {
@@ -692,27 +696,6 @@ def _predicate_from_parts(
 
 
 def _canonicalize_predicate(raw: object) -> Result[dict[str, object]]:
-    shaped = _predicate_shape(raw)
-    if is_refusal(shaped):
-        return shaped
-    if shaped.value is not None:
-        return Ok(shaped.value)
-    if not isinstance(raw, Mapping):
-        return invalid(
-            "predicate",
-            "a predicate is a mapping of permitted keys "
-            "(hours/days/session window, max-trades cap, include/exclude)",
-            given=repr(type(raw).__name__),
-            legal=list(PERMITTED_PREDICATE_KEYS),
-        )
-    mapping = {str(key): value for key, value in cast("Mapping[object, object]", raw).items()}
-    folded = _fold_predicate_kind(mapping)
-    if is_refusal(folded):
-        return folded
-    return _canonical_predicate_fields(mapping)
-
-
-def _predicate_shape(raw: object) -> Result[dict[str, object] | None]:
     if raw is None:
         return invalid(
             "predicate",
@@ -731,11 +714,7 @@ def _predicate_shape(raw: object) -> Result[dict[str, object] | None]:
                     "a predicate JSON string is canonical JSON of a permitted predicate",
                     given=type(exc).__name__,
                 )
-            nested = _canonicalize_predicate(parsed)
-            if is_refusal(nested):
-                return nested
-            shaped: dict[str, object] | None = nested.value
-            return Ok(shaped)
+            return _canonicalize_predicate(parsed)
         return invalid(
             "predicate",
             "a predicate is a mapping of permitted keys, not a bare string",
@@ -743,71 +722,62 @@ def _predicate_shape(raw: object) -> Result[dict[str, object] | None]:
             legal=list(PERMITTED_PREDICATE_KEYS),
         )
     if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
-        merged = _merge_predicate_sequence(cast("Sequence[object]", raw))
-        if is_refusal(merged):
-            return merged
-        shaped = merged.value
-        return Ok(shaped)
-    return Ok(None)
-
-
-def _merge_predicate_sequence(raw: Sequence[object]) -> Result[dict[str, object]]:
-    merged: dict[str, object] = {}
-    for index, item in enumerate(raw):
-        part = _canonicalize_predicate(item)
-        if is_refusal(part):
-            return part
-        overlap = [key for key in part.value if key in merged]
-        if overlap:
+        merged: dict[str, object] = {}
+        for index, item in enumerate(cast("Sequence[object]", raw)):
+            part = _canonicalize_predicate(item)
+            if is_refusal(part):
+                return part
+            overlap = [key for key in part.value if key in merged]
+            if overlap:
+                return invalid(
+                    "predicate",
+                    "a sequence of predicates is AND-combined; duplicate keys are refused",
+                    index=index,
+                    overlap=overlap,
+                )
+            merged.update(part.value)
+        if not merged:
             return invalid(
                 "predicate",
-                "a sequence of predicates is AND-combined; duplicate keys are refused",
-                index=index,
-                overlap=overlap,
+                "analysis.project requires a permitted predicate "
+                "(hours/days/session window, max-trades cap, include/exclude filter)",
+                legal=list(PERMITTED_PREDICATE_KEYS),
             )
-        merged.update(part.value)
-    if not merged:
+        return Ok(merged)
+    if not isinstance(raw, Mapping):
         return invalid(
             "predicate",
-            "analysis.project requires a permitted predicate "
-            "(hours/days/session window, max-trades cap, include/exclude filter)",
+            "a predicate is a mapping of permitted keys "
+            "(hours/days/session window, max-trades cap, include/exclude)",
+            given=repr(type(raw).__name__),
             legal=list(PERMITTED_PREDICATE_KEYS),
         )
-    return Ok(merged)
-
-
-def _fold_predicate_kind(mapping: dict[str, object]) -> Result[None]:
+    mapping = {str(key): value for key, value in cast("Mapping[object, object]", raw).items()}
     kind_token = clean_token(mapping.pop("kind", None))
-    if kind_token is None:
-        return Ok(None)
-    folded = _KIND_ALIASES.get(_fold(kind_token))
-    if folded is None:
-        forbidden = _forbidden_axis(kind_token)
-        if forbidden is not None:
-            return _refuse_forbidden_axis(forbidden, field=kind_token)
-        return invalid(
-            "predicate",
-            "a permitted predicate kind is hours, days, session, max_trades, "
-            "include, or exclude",
-            given=kind_token,
-            legal=list(PERMITTED_PREDICATE_KEYS),
-        )
-    if folded in mapping:
-        return Ok(None)
-    if folded in {"hours", "session"}:
-        mapping[folded] = {
-            key: mapping.pop(key) for key in ("start", "end", "name") if key in mapping
-        }
-    elif folded == "days":
-        mapping["days"] = mapping.pop("value", mapping.pop("day", ()))
-    elif folded == "max_trades":
-        mapping["max_trades"] = mapping.pop("value", mapping.pop("max-trades", None))
-    elif folded in {"include", "exclude"}:
-        mapping[folded] = mapping.pop("value", mapping.pop("ids", ()))
-    return Ok(None)
-
-
-def _canonical_predicate_fields(mapping: dict[str, object]) -> Result[dict[str, object]]:
+    if kind_token is not None:
+        folded = _KIND_ALIASES.get(_fold(kind_token))
+        if folded is None:
+            forbidden = _forbidden_axis(kind_token)
+            if forbidden is not None:
+                return _refuse_forbidden_axis(forbidden, field=kind_token)
+            return invalid(
+                "predicate",
+                "a permitted predicate kind is hours, days, session, max_trades, "
+                "include, or exclude",
+                given=kind_token,
+                legal=list(PERMITTED_PREDICATE_KEYS),
+            )
+        if folded not in mapping:
+            if folded in {"hours", "session"}:
+                mapping[folded] = {
+                    key: mapping.pop(key) for key in ("start", "end", "name") if key in mapping
+                }
+            elif folded == "days" and "days" not in mapping:
+                mapping["days"] = mapping.pop("value", mapping.pop("day", ()))
+            elif folded == "max_trades" and "max_trades" not in mapping:
+                mapping["max_trades"] = mapping.pop("value", mapping.pop("max-trades", None))
+            elif folded in {"include", "exclude"} and folded not in mapping:
+                mapping[folded] = mapping.pop("value", mapping.pop("ids", ()))
     copied = [key for key in _TRADE_LIST_KEYS if key in mapping]
     if copied:
         return _refuse_copied_trade_list(copied[0])
@@ -825,35 +795,7 @@ def _canonical_predicate_fields(mapping: dict[str, object]) -> Result[dict[str, 
             given=sorted(unknown),
             legal=list(PERMITTED_PREDICATE_KEYS),
         )
-    canonical = _fill_canonical_fields(mapping, folded_keys)
-    if is_refusal(canonical):
-        return canonical
-    if not canonical.value:
-        return invalid(
-            "predicate",
-            "analysis.project requires a permitted predicate "
-            "(hours/days/session window, max-trades cap, include/exclude filter)",
-            legal=list(PERMITTED_PREDICATE_KEYS),
-        )
-    return canonical
-
-
-def _fill_canonical_fields(
-    mapping: dict[str, object], folded_keys: dict[str, str]
-) -> Result[dict[str, object]]:
     canonical: dict[str, object] = {}
-    windows = _fill_window_fields(canonical, mapping, folded_keys)
-    if is_refusal(windows):
-        return windows
-    filters = _fill_filter_fields(canonical, mapping, folded_keys)
-    if is_refusal(filters):
-        return filters
-    return Ok(canonical)
-
-
-def _fill_window_fields(
-    canonical: dict[str, object], mapping: dict[str, object], folded_keys: dict[str, str]
-) -> Result[None]:
     if "hours" in folded_keys:
         window = _coerce_hour_window(mapping[folded_keys["hours"]], field="hours")
         if is_refusal(window):
@@ -869,12 +811,6 @@ def _fill_window_fields(
         if is_refusal(days):
             return days
         canonical["days"] = days.value
-    return Ok(None)
-
-
-def _fill_filter_fields(
-    canonical: dict[str, object], mapping: dict[str, object], folded_keys: dict[str, str]
-) -> Result[None]:
     if "max_trades" in folded_keys:
         cap = _coerce_max_trades(mapping[folded_keys["max_trades"]])
         if is_refusal(cap):
@@ -890,7 +826,14 @@ def _fill_filter_fields(
         if is_refusal(ids):
             return ids
         canonical["exclude"] = ids.value
-    return Ok(None)
+    if not canonical:
+        return invalid(
+            "predicate",
+            "analysis.project requires a permitted predicate "
+            "(hours/days/session window, max-trades cap, include/exclude filter)",
+            legal=list(PERMITTED_PREDICATE_KEYS),
+        )
+    return Ok(canonical)
 
 
 def _resolve_source_ct32(
@@ -1448,13 +1391,6 @@ def _utc_hour_and_weekday(instant: Instant) -> tuple[int, int]:
 def _refuse_side_effects(
     **fields: object,
 ) -> TypedRefusal | None:
-    run_effect = _refuse_run_effects(fields)
-    if run_effect is not None:
-        return run_effect
-    return _refuse_claim_effects(fields)
-
-
-def _refuse_run_effects(fields: Mapping[str, object]) -> TypedRefusal | None:
     occupancy = fields.get("occupancy")
     if occupancy is not None:
         token = _fold(clean_token(occupancy) or "")
@@ -1515,10 +1451,6 @@ def _refuse_run_effects(fields: Mapping[str, object]) -> TypedRefusal | None:
             opens_sqlite=False,
             mints_ct32=False,
         )
-    return None
-
-
-def _refuse_claim_effects(fields: Mapping[str, object]) -> TypedRefusal | None:
     role = fields.get("role", fields.get("b4_role"))
     role_token = _fold(clean_token(role) or "") if role is not None else ""
     if role_token == _ROLE_CONFIRMATION:

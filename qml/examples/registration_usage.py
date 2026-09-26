@@ -25,7 +25,6 @@ Shows the things QL-8 / Story 12.7 pin down:
 
 from __future__ import annotations
 
-import sys
 from typing import TypeVar, cast
 
 from qmf.core.chrono import CalendarIdentity
@@ -303,23 +302,21 @@ def complexity_is_not_a_gate() -> bool:
 
 
 def main() -> None:
-    sys.stdout.write(f"layer 1 and layer 2 pass: {both_layers_pass()}\n")
-    sys.stdout.write(
-        f"qml returns fingerprintable content: {qml_returns_fingerprintable_content()}\n"
-    )
-    sys.stdout.write("bot-kind mint defined-unwired: True\n")
-    sys.stdout.write(f"layer 1 fail is policy rejection: {layer1_fail_is_policy()}\n")
-    sys.stdout.write(f"layer 2 fail is policy rejection: {layer2_fail_is_policy()}\n")
-    sys.stdout.write(f"no probation: {no_probation()}\n")
+    print(f"layer 1 and layer 2 pass: {both_layers_pass()}")
+    print(f"qml returns fingerprintable content: {qml_returns_fingerprintable_content()}")
+    print("bot-kind mint defined-unwired: True")
+    print(f"layer 1 fail is policy rejection: {layer1_fail_is_policy()}")
+    print(f"layer 2 fail is policy rejection: {layer2_fail_is_policy()}")
+    print(f"no probation: {no_probation()}")
     evidence, seat = citations()
-    sys.stdout.write(f"governed evidence cite: {evidence}\n")
-    sys.stdout.write(f"seat cite: {seat}\n")
+    print(f"governed evidence cite: {evidence}")
+    print(f"seat cite: {seat}")
     tunnel, ungoverned_cite = ungoverned_tunnel()
-    sys.stdout.write(f"ungoverned tunnel open: {tunnel}\n")
-    sys.stdout.write(f"ungoverned cannot be cited: {ungoverned_cite}\n")
-    sys.stdout.write(f"graduation lineage: {graduation_lineage()}\n")
-    sys.stdout.write(f"complexity is not a gate: {complexity_is_not_a_gate()}\n")
-    sys.stdout.write("registration gate ok\n")
+    print(f"ungoverned tunnel open: {tunnel}")
+    print(f"ungoverned cannot be cited: {ungoverned_cite}")
+    print(f"graduation lineage: {graduation_lineage()}")
+    print(f"complexity is not a gate: {complexity_is_not_a_gate()}")
+    print("registration gate ok")
 
 
 if __name__ == "__main__":

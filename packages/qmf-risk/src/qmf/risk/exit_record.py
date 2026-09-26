@@ -437,117 +437,6 @@ def mint_exit_record(
     money field, or a venue/node reference mismatch (venue-authored closes carry
     ``venue_observation_ref`` and no node arbitration record; node closes the reverse).
     """
-    core = _exit_record_core(
-        virtual_position_ref=virtual_position_ref,
-        opening_bot_id=opening_bot_id,
-        original_risk_distance=original_risk_distance,
-        original_risk_amount=original_risk_amount,
-        fill_references=fill_references,
-        realized_pnl=realized_pnl,
-        cost_components=cost_components,
-    )
-    if is_refusal(core):
-        return core
-    position, bot, faces, fills, pnl, costs = core.value
-    taxonomy = _exit_record_taxonomy(
-        close_reason=close_reason,
-        mechanism=mechanism,
-        outcome=outcome,
-        closing_authority=closing_authority,
-        result_label=result_label,
-        close_reason_mapping_version=close_reason_mapping_version,
-        loss_predicate_format_version=loss_predicate_format_version,
-        binding_epoch=binding_epoch,
-        recorded_at=recorded_at,
-    )
-    if is_refusal(taxonomy):
-        return taxonomy
-    reason, mech, out, authority, label, mapping_version, predicate_version, epoch, instant = (
-        taxonomy.value
-    )
-    refs = _exit_record_authority_refs(
-        reason, authority, arbitration_record_ref, venue_observation_ref
-    )
-    if is_refusal(refs):
-        return refs
-    arb, venue_obs = refs.value
-    return _finish_exit_record(
-        position=position,
-        bot=bot,
-        faces=faces,
-        fills=fills,
-        pnl=pnl,
-        costs=costs,
-        reason=reason,
-        mech=mech,
-        out=out,
-        authority=authority,
-        arb=arb,
-        venue_obs=venue_obs,
-        mapping_version=mapping_version,
-        label=label,
-        predicate_version=predicate_version,
-        epoch=epoch,
-        instant=instant,
-    )
-
-
-def _finish_exit_record(
-    *,
-    position: Fingerprint,
-    bot: str,
-    faces: RFaces,
-    fills: tuple[Fingerprint, ...],
-    pnl: Money,
-    costs: tuple[CostComponent, ...],
-    reason: CloseReason,
-    mech: CloseReason,
-    out: CloseOutcome,
-    authority: ClosingAuthority,
-    arb: Fingerprint | None,
-    venue_obs: Fingerprint | None,
-    mapping_version: int,
-    label: ExitResultLabel,
-    predicate_version: int,
-    epoch: Fingerprint,
-    instant: Instant,
-) -> Result[ExitRecord]:
-    return _Ok(
-        ExitRecord(
-            virtual_position_ref=position,
-            opening_bot_id=bot,
-            original_risk_distance=faces.original_risk_distance,
-            original_risk_amount=faces.original_risk_amount,
-            fill_references=fills,
-            realized_pnl=pnl,
-            cost_components=costs,
-            close_reason=reason,
-            mechanism=mech,
-            outcome=out,
-            closing_authority=authority,
-            arbitration_record_ref=arb,
-            venue_observation_ref=venue_obs,
-            close_reason_mapping_version=mapping_version,
-            result_label=label,
-            loss_predicate_format_version=predicate_version,
-            binding_epoch=epoch,
-            recorded_at=instant,
-        )
-    )
-
-
-def _exit_record_core(
-    *,
-    virtual_position_ref: object,
-    opening_bot_id: object,
-    original_risk_distance: object,
-    original_risk_amount: object,
-    fill_references: object,
-    realized_pnl: object,
-    cost_components: object,
-) -> Result[
-    tuple[Fingerprint, str, RFaces, tuple[Fingerprint, ...], Money, tuple[CostComponent, ...]]
-]:
     if not isinstance(virtual_position_ref, Fingerprint):
         return invalid(
             "virtual_position_ref",
@@ -584,21 +473,6 @@ def _exit_record_core(
     costs = _coerce_cost_components(cost_components)
     if isinstance(costs, TypedRefusal):
         return costs
-    return _Ok((virtual_position_ref, bot, faces.value, fills.value, realized_pnl, costs.value))
-
-
-def _positive_ordinal(value: object, field: str, reason: str) -> Result[int]:
-    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        return invalid(field, reason, given=repr(value))
-    return _Ok(value)
-
-
-def _exit_record_enums(
-    close_reason: object,
-    mechanism: object,
-    outcome: object,
-    closing_authority: object,
-) -> Result[tuple[CloseReason, CloseReason, CloseOutcome, ClosingAuthority]]:
     reason = coerce_enum(CloseReason, close_reason)
     if reason is None:
         return invalid(
@@ -631,57 +505,32 @@ def _exit_record_enums(
             given=repr(closing_authority),
             allowed=[member.value for member in ClosingAuthority],
         )
-    return _Ok((reason, mech, out, authority))
-
-
-def _exit_record_taxonomy(
-    *,
-    close_reason: object,
-    mechanism: object,
-    outcome: object,
-    closing_authority: object,
-    result_label: object,
-    close_reason_mapping_version: object,
-    loss_predicate_format_version: object,
-    binding_epoch: object,
-    recorded_at: object,
-) -> Result[
-    tuple[
-        CloseReason,
-        CloseReason,
-        CloseOutcome,
-        ClosingAuthority,
-        ExitResultLabel,
-        int,
-        int,
-        Fingerprint,
-        Instant,
-    ]
-]:
-    enums = _exit_record_enums(close_reason, mechanism, outcome, closing_authority)
-    if is_refusal(enums):
-        return enums
-    reason, mech, out, authority = enums.value
-    mapping_version = _positive_ordinal(
-        close_reason_mapping_version,
-        "close_reason_mapping_version",
-        "the close-reason mapping version is a positive integer ordinal",
-    )
-    if is_refusal(mapping_version):
-        return mapping_version
+    if (
+        isinstance(close_reason_mapping_version, bool)
+        or not isinstance(close_reason_mapping_version, int)
+        or close_reason_mapping_version < 1
+    ):
+        return invalid(
+            "close_reason_mapping_version",
+            "the close-reason mapping version is a positive integer ordinal",
+            given=repr(close_reason_mapping_version),
+        )
     if not isinstance(result_label, ExitResultLabel):
         return invalid(
             "result_label",
             "the exit record carries ExitResultLabel parts including the account-binding role",
             given=repr(result_label),
         )
-    predicate_version = _positive_ordinal(
-        loss_predicate_format_version,
-        "loss_predicate_format_version",
-        "the Book-declared loss-predicate format version is a positive integer ordinal",
-    )
-    if is_refusal(predicate_version):
-        return predicate_version
+    if (
+        isinstance(loss_predicate_format_version, bool)
+        or not isinstance(loss_predicate_format_version, int)
+        or loss_predicate_format_version < 1
+    ):
+        return invalid(
+            "loss_predicate_format_version",
+            "the Book-declared loss-predicate format version is a positive integer ordinal",
+            given=repr(loss_predicate_format_version),
+        )
     if not isinstance(binding_epoch, Fingerprint):
         return invalid(
             "binding_epoch",
@@ -694,27 +543,6 @@ def _exit_record_taxonomy(
             "the exit record carries the Instant it was minted (injected; no clock below)",
             given=repr(recorded_at),
         )
-    return _Ok(
-        (
-            reason,
-            mech,
-            out,
-            authority,
-            result_label,
-            mapping_version.value,
-            predicate_version.value,
-            binding_epoch,
-            recorded_at,
-        )
-    )
-
-
-def _exit_record_authority_refs(
-    reason: CloseReason,
-    authority: ClosingAuthority,
-    arbitration_record_ref: object,
-    venue_observation_ref: object,
-) -> Result[tuple[Fingerprint | None, Fingerprint | None]]:
     arb = _optional_fingerprint("arbitration_record_ref", arbitration_record_ref)
     if isinstance(arb, TypedRefusal):
         return arb
@@ -724,7 +552,28 @@ def _exit_record_authority_refs(
     refs = _check_authority_refs(reason, authority, arb.value, venue_obs.value)
     if isinstance(refs, TypedRefusal):
         return refs
-    return _Ok((arb.value, venue_obs.value))
+    return _Ok(
+        ExitRecord(
+            virtual_position_ref=virtual_position_ref,
+            opening_bot_id=bot,
+            original_risk_distance=faces.value.original_risk_distance,
+            original_risk_amount=faces.value.original_risk_amount,
+            fill_references=fills.value,
+            realized_pnl=realized_pnl,
+            cost_components=costs.value,
+            close_reason=reason,
+            mechanism=mech,
+            outcome=out,
+            closing_authority=authority,
+            arbitration_record_ref=arb.value,
+            venue_observation_ref=venue_obs.value,
+            close_reason_mapping_version=close_reason_mapping_version,
+            result_label=result_label,
+            loss_predicate_format_version=loss_predicate_format_version,
+            binding_epoch=binding_epoch,
+            recorded_at=recorded_at,
+        )
+    )
 
 
 def _coerce_fill_references(value: object) -> Result[tuple[Fingerprint, ...]]:
@@ -977,31 +826,6 @@ def fold_bench(
     optional knowledge-time bound (only records at or before it count). Measurement
     never acts: this publishes a count; the authority to bench belongs to the Book door.
     """
-    inputs = _bench_fold_inputs(records, binding_epoch, threshold, as_of)
-    if is_refusal(inputs):
-        return inputs
-    resolved_records, epoch, limit, bound_ns = inputs.value
-    accumulated = _accumulate_bench(resolved_records, epoch=epoch, q=q, bound_ns=bound_ns)
-    if is_refusal(accumulated):
-        return accumulated
-    considered, dispositions, qualifying, breakevens, scratches, gains = accumulated.value
-    return _Ok(
-        BenchFoldResult(
-            qualifying_loss_count=qualifying,
-            breakeven_count=breakevens,
-            scratch_or_partial_count=scratches,
-            gain_count=gains,
-            threshold=limit,
-            threshold_crossed=qualifying >= limit,
-            dispositions=tuple(dispositions),
-            considered=tuple(considered),
-        )
-    )
-
-
-def _bench_fold_inputs(
-    records: object, binding_epoch: object, threshold: object, as_of: object
-) -> Result[tuple[Sequence[object], Fingerprint, int, int | None]]:
     if not isinstance(records, Sequence) or isinstance(records, (str, bytes)):
         return invalid(
             "records",
@@ -1014,52 +838,30 @@ def _bench_fold_inputs(
             "the bench fold is bounded by the binding epoch",
             given=repr(binding_epoch),
         )
-    limit = _positive_ordinal(
-        threshold,
-        "threshold",
-        "bench_consecutive_loss_threshold is a positive count — a configurable "
-        "UI-editable per-family variable, never a spine constant",
-    )
-    if is_refusal(limit):
-        return limit
+    if isinstance(threshold, bool) or not isinstance(threshold, int) or threshold < 1:
+        return invalid(
+            "threshold",
+            "bench_consecutive_loss_threshold is a positive count — a configurable "
+            "UI-editable per-family variable, never a spine constant",
+            given=repr(threshold),
+        )
     bound_ns: int | None = None
     if as_of is not None:
         if not isinstance(as_of, Instant):
-            return invalid("as_of", "the knowledge-time bound is an Instant", given=repr(as_of))
+            return invalid(
+                "as_of",
+                "the knowledge-time bound is an Instant",
+                given=repr(as_of),
+            )
         bound_ns = as_of.value_ns
-    return _Ok((cast("Sequence[object]", records), binding_epoch, limit.value, bound_ns))
 
-
-def _count_bench_disposition(
-    disposition: BenchDisposition,
-    qualifying: int,
-    breakevens: int,
-    scratches: int,
-    gains: int,
-) -> tuple[int, int, int, int]:
-    if disposition is BenchDisposition.QUALIFYING_LOSS_EXIT:
-        return qualifying + 1, breakevens, scratches, gains
-    if disposition is BenchDisposition.BREAKEVEN:
-        return qualifying, breakevens + 1, scratches, gains
-    if disposition is BenchDisposition.SCRATCH_OR_PARTIAL_LOSS:
-        return qualifying, breakevens, scratches + 1, gains
-    return qualifying, breakevens, scratches, gains + 1
-
-
-def _accumulate_bench(
-    records: Sequence[object],
-    *,
-    epoch: Fingerprint,
-    q: object,
-    bound_ns: int | None,
-) -> Result[tuple[list[ExitRecord], list[BenchDisposition], int, int, int, int]]:
     considered: list[ExitRecord] = []
     dispositions: list[BenchDisposition] = []
     qualifying = 0
     breakevens = 0
     scratches = 0
     gains = 0
-    for index, item in enumerate(records):
+    for index, item in enumerate(cast("Sequence[object]", records)):
         if not isinstance(item, ExitRecord):
             return invalid(
                 "records",
@@ -1067,7 +869,7 @@ def _accumulate_bench(
                 index=index,
                 given=type_name(item),
             )
-        if item.binding_epoch != epoch:
+        if item.binding_epoch != binding_epoch:
             continue
         if bound_ns is not None and item.recorded_at.value_ns > bound_ns:
             continue
@@ -1076,10 +878,26 @@ def _accumulate_bench(
             return disposition
         considered.append(item)
         dispositions.append(disposition.value)
-        qualifying, breakevens, scratches, gains = _count_bench_disposition(
-            disposition.value, qualifying, breakevens, scratches, gains
+        if disposition.value is BenchDisposition.QUALIFYING_LOSS_EXIT:
+            qualifying += 1
+        elif disposition.value is BenchDisposition.BREAKEVEN:
+            breakevens += 1
+        elif disposition.value is BenchDisposition.SCRATCH_OR_PARTIAL_LOSS:
+            scratches += 1
+        else:
+            gains += 1
+    return _Ok(
+        BenchFoldResult(
+            qualifying_loss_count=qualifying,
+            breakeven_count=breakevens,
+            scratch_or_partial_count=scratches,
+            gain_count=gains,
+            threshold=threshold,
+            threshold_crossed=qualifying >= threshold,
+            dispositions=tuple(dispositions),
+            considered=tuple(considered),
         )
-    return _Ok((considered, dispositions, qualifying, breakevens, scratches, gains))
+    )
 
 
 # --- recording precedes interpretation ---------------------------------------
@@ -1168,47 +986,44 @@ def check_move_to_breakeven_ratchet(
             "the proposed stop distance is a PriceDelta",
             given=repr(proposed_risk_distance),
         )
-    offset = _breakeven_offset(original_risk_distance, breakeven_offset)
-    if is_refusal(offset):
-        return offset
-    if proposed_risk_distance.as_fraction() != offset.value.as_fraction():
-        return policy(
-            "proposed_risk_distance",
-            "V1 dynamic SL/TP is the move-to-breakeven ratchet only; the proposed stop "
-            "distance must equal the declared breakeven offset",
-            proposed=str(proposed_risk_distance.as_fraction()),
-            breakeven_offset=str(offset.value.as_fraction()),
-        )
-    return _Ok(None)
-
-
-def _breakeven_offset(
-    original_risk_distance: PriceDelta, breakeven_offset: object
-) -> Result[PriceDelta]:
     if breakeven_offset is None:
-        return PriceDelta.try_create(
+        # Zero-magnitude offset at the original instrument/scale: stop at entry.
+        offset_result = PriceDelta.try_create(
             0, original_risk_distance.instrument, original_risk_distance.scale
         )
-    if not isinstance(breakeven_offset, PriceDelta):
+        if is_refusal(offset_result):
+            return offset_result
+        offset = offset_result.value
+    elif isinstance(breakeven_offset, PriceDelta):
+        if breakeven_offset.instrument != original_risk_distance.instrument:
+            return invalid(
+                "breakeven_offset",
+                "the breakeven offset is a PriceDelta of the same instrument",
+                left=repr(original_risk_distance.instrument),
+                right=repr(breakeven_offset.instrument),
+            )
+        if breakeven_offset.as_fraction() < 0:
+            return invalid(
+                "breakeven_offset",
+                "the breakeven offset is a non-negative magnitude",
+                given=str(breakeven_offset.as_fraction()),
+            )
+        offset = breakeven_offset
+    else:
         return invalid(
             "breakeven_offset",
             "the breakeven offset is a PriceDelta magnitude (or absent for a zero offset)",
             given=repr(breakeven_offset),
         )
-    if breakeven_offset.instrument != original_risk_distance.instrument:
-        return invalid(
-            "breakeven_offset",
-            "the breakeven offset is a PriceDelta of the same instrument",
-            left=repr(original_risk_distance.instrument),
-            right=repr(breakeven_offset.instrument),
+    if proposed_risk_distance.as_fraction() != offset.as_fraction():
+        return policy(
+            "proposed_risk_distance",
+            "V1 dynamic SL/TP is the move-to-breakeven ratchet only; the proposed stop "
+            "distance must equal the declared breakeven offset",
+            proposed=str(proposed_risk_distance.as_fraction()),
+            breakeven_offset=str(offset.as_fraction()),
         )
-    if breakeven_offset.as_fraction() < 0:
-        return invalid(
-            "breakeven_offset",
-            "the breakeven offset is a non-negative magnitude",
-            given=str(breakeven_offset.as_fraction()),
-        )
-    return _Ok(breakeven_offset)
+    return _Ok(None)
 
 
 # --- append-only exit-record stream ------------------------------------------

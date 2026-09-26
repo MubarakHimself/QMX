@@ -227,7 +227,7 @@ def entry_side_refused(band: CycleBand, *, act: object) -> bool:
 
 def protection_enactable(band: CycleBand, *, act: object) -> bool:
     """True when an exit/protection act remains enactable under ``band`` (L39)."""
-    _ = band  # entry-side bands never suppress protection.
+    del band  # entry-side bands never suppress protection.
     token = str(act).strip().lower()
     return token in {
         "cancel_order",
