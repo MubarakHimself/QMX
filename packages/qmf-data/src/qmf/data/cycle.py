@@ -141,32 +141,12 @@ def refuse_numeric_rpo_rto(
     )
 
 
-class OffMachineCycle:
-    """Composition-root helper: run **one** nightly encrypted off-machine cycle.
+class _CycleRun:
+    """One-cycle CT-26 → CT-14 → verify runner. Owns backup/verify ports only."""
 
-    Constructed with the same :class:`ObjectStorage` / :class:`PayloadCipher` ports
-    as backup and verify. Call :meth:`run_once` from the application when the
-    nightly cadence arrives — never from a library-owned timer, thread, or cron.
-    """
-
-    def __init__(
-        self,
-        storage: ObjectStorage,
-        cipher: PayloadCipher,
-        *,
-        backup: OffMachineBackup | None = None,
-        restore: OffMachineRestore | None = None,
-        verify: OffMachineVerify | None = None,
-    ) -> None:
-        self._storage = storage
-        self._cipher = cipher
-        self._backup = backup if backup is not None else OffMachineBackup(storage, cipher)
-        self._restore = restore if restore is not None else OffMachineRestore(storage, cipher)
-        self._verify = (
-            verify
-            if verify is not None
-            else OffMachineVerify(storage, cipher, restore=self._restore)
-        )
+    def __init__(self, backup: OffMachineBackup, verify: OffMachineVerify) -> None:
+        self._backup = backup
+        self._verify = verify
 
     def run_once(
         self,
@@ -179,15 +159,6 @@ class OffMachineCycle:
         room_roles: Sequence[object] | None = None,
         sample_role: object | None = None,
     ) -> Result[NightlyCycleReport]:
-        """Run one CT-26 → CT-14 → verify cycle for ``world`` (AC1, AC3, AC4).
-
-        Backs up every named room-role (default: all seven, including the registry
-        room). Always runs sample-restore into ``sample_into``. When
-        ``include_full_rehearsal`` is true, also runs full-restore rehearsal into
-        ``full_into`` (required in that case) — the application decides the
-        periodic cadence because the numeric target stays a node/ops null pointer.
-        Cross-world / ``simulated`` requests refuse as ``policy rejection``.
-        """
         bound = _bind_cycle_run(
             store=store,
             world=world,
@@ -210,29 +181,129 @@ class OffMachineCycle:
             store=store,
         )
 
+
+class _CycleScheduleBoundary:
+    """Schedule/daemon asks that this composition-root never owns (AC2 / FM-9)."""
+
+    def __init__(self) -> None:
+        self._refuse = refuse_schedule_ownership
+
+    def own_schedule(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
+        _ = (args, kwargs)
+        return self._refuse(request="own_schedule")
+
+    def start_daemon(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
+        _ = (args, kwargs)
+        return self._refuse(request="start_daemon")
+
+
+class _CycleRecoveryBoundary:
+    """Numeric RPO/RTO asks that stay node/ops-sitting pointers (AC2)."""
+
+    def __init__(self) -> None:
+        self._refuse = refuse_numeric_rpo_rto
+
+    def set_recovery_point_objective(
+        self, *args: object, **kwargs: object
+    ) -> Result[NightlyCycleReport]:
+        _ = (args, kwargs)
+        return self._refuse(target="backup_recovery_point_objective")
+
+    def set_recovery_time_objective(
+        self, *args: object, **kwargs: object
+    ) -> Result[NightlyCycleReport]:
+        _ = (args, kwargs)
+        return self._refuse(target="backup_recovery_time_objective")
+
+
+@dataclass(frozen=True, slots=True)
+class _CycleCollaborators:
+    """Run primitive plus the schedule and recovery refusal boundaries."""
+
+    run: _CycleRun
+    schedule: _CycleScheduleBoundary
+    recovery: _CycleRecoveryBoundary
+
+
+class OffMachineCycle:
+    """Composition-root helper: run **one** nightly encrypted off-machine cycle.
+
+    Constructed with the same :class:`ObjectStorage` / :class:`PayloadCipher` ports
+    as backup and verify. Call :meth:`run_once` from the application when the
+    nightly cadence arrives — never from a library-owned timer, thread, or cron.
+    """
+
+    def __init__(
+        self,
+        storage: ObjectStorage,
+        cipher: PayloadCipher,
+        *,
+        backup: OffMachineBackup | None = None,
+        restore: OffMachineRestore | None = None,
+        verify: OffMachineVerify | None = None,
+    ) -> None:
+        owned_backup = backup if backup is not None else OffMachineBackup(storage, cipher)
+        owned_restore = restore if restore is not None else OffMachineRestore(storage, cipher)
+        owned_verify = (
+            verify
+            if verify is not None
+            else OffMachineVerify(storage, cipher, restore=owned_restore)
+        )
+        self._collaborators = _CycleCollaborators(
+            run=_CycleRun(owned_backup, owned_verify),
+            schedule=_CycleScheduleBoundary(),
+            recovery=_CycleRecoveryBoundary(),
+        )
+
+    def run_once(
+        self,
+        *,
+        store: EvidenceStore,
+        world: object,
+        sample_into: EvidenceStore,
+        full_into: EvidenceStore | None = None,
+        include_full_rehearsal: bool = False,
+        room_roles: Sequence[object] | None = None,
+        sample_role: object | None = None,
+    ) -> Result[NightlyCycleReport]:
+        """Run one CT-26 → CT-14 → verify cycle for ``world`` (AC1, AC3, AC4).
+
+        Backs up every named room-role (default: all seven, including the registry
+        room). Always runs sample-restore into ``sample_into``. When
+        ``include_full_rehearsal`` is true, also runs full-restore rehearsal into
+        ``full_into`` (required in that case) — the application decides the
+        periodic cadence because the numeric target stays a node/ops null pointer.
+        Cross-world / ``simulated`` requests refuse as ``policy rejection``.
+        """
+        return self._collaborators.run.run_once(
+            store=store,
+            world=world,
+            sample_into=sample_into,
+            full_into=full_into,
+            include_full_rehearsal=include_full_rehearsal,
+            room_roles=room_roles,
+            sample_role=sample_role,
+        )
+
     def own_schedule(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — QMF never owns the nightly schedule (AC2 / FM-9)."""
-        _ = (args, kwargs)
-        return refuse_schedule_ownership(request="own_schedule")
+        return self._collaborators.schedule.own_schedule(*args, **kwargs)
 
     def start_daemon(self, *args: object, **kwargs: object) -> Result[NightlyCycleReport]:
         """Always refuse — no daemon, cron, or thread lives in qmf-data (AC2)."""
-        _ = (args, kwargs)
-        return refuse_schedule_ownership(request="start_daemon")
+        return self._collaborators.schedule.start_daemon(*args, **kwargs)
 
     def set_recovery_point_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RPO is a node/ops-sitting item (AC2)."""
-        _ = (args, kwargs)
-        return refuse_numeric_rpo_rto(target="backup_recovery_point_objective")
+        return self._collaborators.recovery.set_recovery_point_objective(*args, **kwargs)
 
     def set_recovery_time_objective(
         self, *args: object, **kwargs: object
     ) -> Result[NightlyCycleReport]:
         """Always refuse — numeric RTO is a node/ops-sitting item (AC2)."""
-        _ = (args, kwargs)
-        return refuse_numeric_rpo_rto(target="backup_recovery_time_objective")
+        return self._collaborators.recovery.set_recovery_time_objective(*args, **kwargs)
 
 
 @dataclass(frozen=True, slots=True)

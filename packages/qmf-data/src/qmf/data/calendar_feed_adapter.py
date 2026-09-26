@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Protocol
 
@@ -54,53 +55,28 @@ def currency_instrument(currency: str, instruments: Mapping[str, Instrument]) ->
     return Instrument.try_create(venue.value, key)
 
 
-class CalendarFeedAdapter:
-    """CT-15 news-calendar adapter — provider-native identity, verbatim impact.
-
-    Constructed with an injected :class:`CalendarFeedTransport` and an optional
-    currency→:class:`~qmf.core.Instrument` map. Implements the ingest
-    :class:`~qmf.data.ingest.ExternalSourcePort` ``fetch`` shape. Does not schedule,
-    does not define windows, and does not claim retention authorization.
-    """
+class _CalendarSnapshotPort:
+    """Fetch one news-calendar snapshot and remember its verbatim events."""
 
     def __init__(
         self,
         transport: CalendarFeedTransport,
-        *,
-        instruments: Mapping[str, Instrument] | None = None,
+        instruments: Mapping[str, Instrument],
     ) -> None:
         self._transport = transport
-        self._instruments = {
-            code.strip().upper(): instrument for code, instrument in (instruments or {}).items()
-        }
+        self._instruments = dict(instruments)
         self._last_events: tuple[CalendarEvent, ...] = ()
+        self._source = CALENDAR_FEED_SOURCE
 
     @property
     def source(self) -> str:
-        return CALENDAR_FEED_SOURCE
+        return self._source
 
     @property
     def last_events(self) -> tuple[CalendarEvent, ...]:
-        """Events from the most recent successful fetch, with verbatim impact."""
         return self._last_events
 
-    def mint_severity_scale(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — QMX mints no severity scale (AC2)."""
-        return refuse_minted_severity_scale(request="mint_severity_scale")
-
-    def claim_retention_authorized(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — legal archiving stays an open operator item (AC5)."""
-        return refuse_authorized_retention_claim(request="claim_retention_authorized")
-
-    def live_skip(self, *_args: object, **_kwargs: object) -> Result[object]:
-        """Always refuse — no live skip button (AC4)."""
-        return refuse_live_skip(request="live_skip")
-
     def fetch(self, request: SourceRequest, /) -> Result[tuple[ProviderRecord, ...]]:
-        """Fetch one snapshot and emit CT-15 :class:`ProviderRecord` values (AC1).
-
-        Required bounds: ``known_at_ns``. Optional: ``revision`` (default ``r1``).
-        """
         header = self._fetch_header(request)
         if is_refusal(header):
             return header
@@ -112,7 +88,7 @@ class CalendarFeedAdapter:
             fetched.value,
             known_at_ns=known_at,
             revision=revision,
-            source=CALENDAR_FEED_SOURCE,
+            source=self._source,
         )
         if is_refusal(decoded):
             return decoded
@@ -123,7 +99,7 @@ class CalendarFeedAdapter:
         return Ok(tuple(records.value))
 
     def _fetch_header(self, request: SourceRequest) -> Result[tuple[int, str, dict[str, object]]]:
-        if request.source != CALENDAR_FEED_SOURCE:
+        if request.source != self._source:
             return invalid_input(
                 "source",
                 "CalendarFeedAdapter serves source 'news-calendar' only",
@@ -176,3 +152,87 @@ class CalendarFeedAdapter:
                 )
             records.append(event.to_provider_record(instrument.value))
         return Ok(records)
+
+
+class _CalendarFeedPolicy:
+    """Asks this adapter always refuses: severity scale, retention, live skip."""
+
+    def __init__(self) -> None:
+        self._refusers: tuple[
+            Callable[..., Result[object]],
+            Callable[..., Result[object]],
+            Callable[..., Result[object]],
+        ] = (
+            refuse_minted_severity_scale,
+            refuse_authorized_retention_claim,
+            refuse_live_skip,
+        )
+
+    def mint_severity_scale(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refusers[0](request="mint_severity_scale")
+
+    def claim_retention_authorized(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refusers[1](request="claim_retention_authorized")
+
+    def live_skip(self, *_args: object, **_kwargs: object) -> Result[object]:
+        return self._refusers[2](request="live_skip")
+
+
+@dataclass(frozen=True, slots=True)
+class _CalendarFeedCollaborators:
+    """Snapshot fetch port plus the always-refuse policy asks."""
+
+    port: _CalendarSnapshotPort
+    policy: _CalendarFeedPolicy
+
+
+class CalendarFeedAdapter:
+    """CT-15 news-calendar adapter — provider-native identity, verbatim impact.
+
+    Constructed with an injected :class:`CalendarFeedTransport` and an optional
+    currency→:class:`~qmf.core.Instrument` map. Implements the ingest
+    :class:`~qmf.data.ingest.ExternalSourcePort` ``fetch`` shape. Does not schedule,
+    does not define windows, and does not claim retention authorization.
+    """
+
+    def __init__(
+        self,
+        transport: CalendarFeedTransport,
+        *,
+        instruments: Mapping[str, Instrument] | None = None,
+    ) -> None:
+        mapped = {
+            code.strip().upper(): instrument for code, instrument in (instruments or {}).items()
+        }
+        self._collaborators = _CalendarFeedCollaborators(
+            port=_CalendarSnapshotPort(transport, mapped),
+            policy=_CalendarFeedPolicy(),
+        )
+
+    @property
+    def source(self) -> str:
+        return self._collaborators.port.source
+
+    @property
+    def last_events(self) -> tuple[CalendarEvent, ...]:
+        """Events from the most recent successful fetch, with verbatim impact."""
+        return self._collaborators.port.last_events
+
+    def mint_severity_scale(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — QMX mints no severity scale (AC2)."""
+        return self._collaborators.policy.mint_severity_scale(*_args, **_kwargs)
+
+    def claim_retention_authorized(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — legal archiving stays an open operator item (AC5)."""
+        return self._collaborators.policy.claim_retention_authorized(*_args, **_kwargs)
+
+    def live_skip(self, *_args: object, **_kwargs: object) -> Result[object]:
+        """Always refuse — no live skip button (AC4)."""
+        return self._collaborators.policy.live_skip(*_args, **_kwargs)
+
+    def fetch(self, request: SourceRequest, /) -> Result[tuple[ProviderRecord, ...]]:
+        """Fetch one snapshot and emit CT-15 :class:`ProviderRecord` values (AC1).
+
+        Required bounds: ``known_at_ns``. Optional: ``revision`` (default ``r1``).
+        """
+        return self._collaborators.port.fetch(request)
