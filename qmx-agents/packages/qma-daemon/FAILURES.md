@@ -39,7 +39,10 @@ door as one CLI/MCP run invocation and treats query-steps as Epic 35/33
 door queries (FR-69 through FR-70). Epic 37 Story 37.3 mints an
 ExperimentSpec successor via `create_successor` plus the existing CT-07
 `branches-from` edge when a door step changes resolved-config (FR-71
-through FR-72).
+through FR-72). Epic 61 Story 61.1 adds stdlib JSON-lines operator logs:
+secret values, a fourth observability COMP, a new sqlite class, and a
+claim that the logger existed at inspect SHA `34c148b` are refused
+(FR-74 through FR-76).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -1116,3 +1119,48 @@ through FR-72).
 - **Product-user affordance:** conclusions stay on a pinned snapshot.
   Pin first (Mission start, or browse session), then retrieve or cite.
   Re-pinning is a recorded act; the live seed tree is not substituted.
+
+### FR-74: Secret values in operator JSON-lines are refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-22; DEC-0456).
+- **Detection:** `emit_operator_event` refuses extra fields whose names
+  match the secret-key deny-list (`secret`, `secret_value`, `password`,
+  `token`, `credential`, `account_number`, `raw_account`, `api_key`,
+  `private_key`). The JSON-lines formatter also scrubs those keys. Logs
+  are never journals and never enter `fp1` identity.
+- **Auto-recovery / retry:** none — drop the secret field; log the
+  reference id only.
+- **Visible degraded state:** the line is not emitted; the journal and
+  telemetry store are unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** operator logs never print secret values.
+  Retry without the secret field; use a credential reference id.
+
+### FR-75: A fourth observability COMP or operator-log sqlite class is refused
+
+- **Failure class:** `policy rejection` (CT-04; NFR-PG-02; DEC-0456).
+- **Detection:** `DaemonProcess.mint_fourth_observability_comp` and
+  `mint_operator_log_sqlite_class` always refuse. Operator logs are
+  stdlib JSON-lines on COMP-QMA-DAEMON. The closed AD-6 store list is
+  unchanged. QMA telemetry store remains the trace/metric plane; OTel
+  remains export-port only. `qmn/FAILURES.md` is not extended.
+- **Auto-recovery / retry:** none — use the existing daemon logger and
+  telemetry store.
+- **Visible degraded state:** no new COMP, sqlite class, or QMN
+  allow-list row is minted.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** diagnosis is the JSON-line plus existing
+  JobHandle and telemetry. Do not add a log database.
+
+### FR-76: Claiming the operator logger existed at inspect SHA 34c148b is refused
+
+- **Failure class:** `policy rejection` (CT-04; NFR-PG-04; DEC-0465).
+- **Detection:** `claim_operator_logger_at_inspect_sha(True)` refuses.
+  The stdlib JSON-lines operator logger was absent at `34c148b` and at
+  epic 60 tip `7223e1a`. Story 61.1 is the first emission.
+- **Auto-recovery / retry:** none — record honesty as absent-then-landed.
+- **Visible degraded state:** the claim is refused; current emission
+  after this story is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** do not treat inspect-SHA fixtures as
+  proof the daemon already logged JSON-lines.

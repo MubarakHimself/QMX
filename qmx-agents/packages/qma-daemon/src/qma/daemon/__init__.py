@@ -43,6 +43,17 @@ from qma.daemon.journal import (
 )
 from qma.daemon.knowledge import KnowledgeService, KnowledgeSourceRegistry
 from qma.daemon.memory import MemoryAdmissionGate, MemoryProviderRegistry
+from qma.daemon.operator_log import (
+    FOURTH_OBSERVABILITY_COMP_MINTED,
+    LOGS_ARE_NOT_EVIDENCE,
+    LOGS_ARE_NOT_JOURNALS,
+    OPERATOR_LOG_REQUIRED_FIELDS,
+    OPERATOR_LOGGER_EXISTED_AT_INSPECT_SHA,
+    JsonLineFormatter,
+    claim_operator_logger_at_inspect_sha,
+    configure_daemon_logging,
+    emit_operator_event,
+)
 from qma.daemon.persistence import (
     PersistenceStartupEvidence,
     PersistenceSubstrate,
@@ -91,6 +102,11 @@ __all__ = [
     "BYPASS_WRITE_PATHS",
     "CONTRIBUTION_LISTING_OCCUPANCY",
     "FEDERATED_SEARCH_OCCUPANCY",
+    "FOURTH_OBSERVABILITY_COMP_MINTED",
+    "LOGS_ARE_NOT_EVIDENCE",
+    "LOGS_ARE_NOT_JOURNALS",
+    "OPERATOR_LOGGER_EXISTED_AT_INSPECT_SHA",
+    "OPERATOR_LOG_REQUIRED_FIELDS",
     "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
     "PRODUCT_SESSION_OCCUPANCY",
     "PRODUCT_SESSION_OWNER",
@@ -112,6 +128,7 @@ __all__ = [
     "FoldMetadata",
     "GovernedVariableRegistry",
     "HookRegistry",
+    "JsonLineFormatter",
     "KnowledgeService",
     "KnowledgeSourceRegistry",
     "MemoryAdmissionGate",
@@ -136,6 +153,9 @@ __all__ = [
     "__version__",
     "claim_durable_edges_at_inspect_sha",
     "claim_gap_0098_closed",
+    "claim_operator_logger_at_inspect_sha",
+    "configure_daemon_logging",
+    "emit_operator_event",
     "order_by_announcement_journal_seq",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",

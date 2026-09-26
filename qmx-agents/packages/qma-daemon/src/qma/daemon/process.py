@@ -1,4 +1,4 @@
-"""Composed asyncio daemon process (Story 36.1 / 36.3; FR-W09; FR-W10; NFR-W04).
+"""Composed asyncio daemon process (Story 36.1 / 36.3 / 61.1; FR-W09; FR-W10).
 
 One long-running process from existing modules: the CT-40 loopback listener,
 the Story 42.1 sole sqlite writer, the ExperimentSpec / Experiment Ledger /
@@ -6,11 +6,16 @@ CT-07 sqlite product truth, and the Epic 48 desk-pack roster. Connect, not a
 sixth application: no new COMP, no HTTP experiment service, and no second
 daemon runtime. QMB JSONL stays in QMB and is not merged into sqlite.
 ``analysis-backtest`` remains the Backtesting Service's daemon half.
+
+Story 61.1: the process emits stdlib JSON-lines operator logs. Those lines
+are not a journal, not a new sqlite class, and not a fourth observability
+product. QMA telemetry store remains the trace/metric plane.
 """
 
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -38,6 +43,21 @@ from qma.daemon.experiments import EXPERIMENT_SQLITE_TABLES, ExperimentSpecServi
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.clock import InjectedUtcClock
 from qma.daemon.ledgers.experiment import ExperimentLedgerStore
+from qma.daemon.operator_log import (
+    FOURTH_OBSERVABILITY_COMP_MINTED,
+    LOGS_ARE_NOT_JOURNALS,
+    LOGS_ENTER_FP1_IDENTITY,
+    OPERATOR_LOG_SQLITE_CLASS_MINTED,
+    OTEL_REMAINS_EXPORT_PORT_ONLY,
+    QMN_FAILURES_MD_EXTENDED,
+    TELEMETRY_STORE_REMAINS_TRACE_METRIC_PLANE,
+    configure_daemon_logging,
+    refuse_fourth_observability_comp,
+    refuse_operator_log_sqlite_class,
+    refuse_qmn_failures_extension,
+)
+from qma.daemon.operator_log import emit_operator_event as write_operator_json_line
+from qma.daemon.operator_log import fingerprint_operator_log as refuse_operator_log_fp1
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
 from qma.daemon.persistence.substrate import PersistenceSubstrate
 from qma.daemon.plugins.packs import DeskPluginRoster
@@ -128,6 +148,7 @@ class DaemonProcess:
         self._bound: BoundListener | None = None
         self._accepted = 0
         self._closed = False
+        self._operator_logger = configure_daemon_logging()
 
     @classmethod
     def compose(
@@ -141,6 +162,7 @@ class DaemonProcess:
         plugins_root: Path | None = None,
         plugin_load_configs: Mapping[str, Mapping[str, object]] | None = None,
         world: World = World.LIVE,
+        log_handler: logging.Handler | None = None,
     ) -> Result[DaemonProcess]:
         """Compose the daemon from existing modules. Does not mint a new COMP."""
         if COMP_EXP_MINTED or SIXTH_APPLICATION_MINTED or HTTP_EXPERIMENT_SERVICE_MINTED:
@@ -253,6 +275,10 @@ class DaemonProcess:
                 experiments=experiments,
                 task_graphs=task_graphs,
             )
+            process._bind_operator_logger(
+                boot_epoch_id=boot_epoch_id,
+                handler=log_handler,
+            )
             _process_gate.holder = process
             return Ok(process)
 
@@ -355,6 +381,60 @@ class DaemonProcess:
         """QMB keeps its run ledger, parallelism, and artifact contract."""
         return refuse_qmb_owned_concern(concern=concern)
 
+    def _bind_operator_logger(
+        self,
+        *,
+        boot_epoch_id: str,
+        handler: logging.Handler | None,
+    ) -> None:
+        """Stdlib JSON-lines only — not a journal and not a new sqlite class."""
+        self._operator_logger = configure_daemon_logging(handler=handler)
+        self.emit_operator_event(
+            "daemon.composed",
+            correlation_id=f"daemon-process:{boot_epoch_id}",
+        )
+
+    def emit_operator_event(
+        self,
+        event: str,
+        *,
+        correlation_id: str,
+        level: int = logging.INFO,
+        instance_id: str | None = None,
+        op_id: str | None = None,
+        logical_invocation_id: str | None = None,
+        graph_run_id: str | None = None,
+        **extra: object,
+    ) -> Result[None]:
+        """Emit one operator JSON-line for a public operation or Task Graph run."""
+        return write_operator_json_line(
+            self._operator_logger,
+            level,
+            event,
+            correlation_id=correlation_id,
+            instance_id=instance_id,
+            op_id=op_id,
+            logical_invocation_id=logical_invocation_id,
+            graph_run_id=graph_run_id,
+            **extra,
+        )
+
+    def mint_fourth_observability_comp(self) -> Result[None]:
+        """Refused — operator logs are not a fourth observability product."""
+        return refuse_fourth_observability_comp()
+
+    def mint_operator_log_sqlite_class(self) -> Result[None]:
+        """Refused — operator logs are not a new sqlite class."""
+        return refuse_operator_log_sqlite_class()
+
+    def extend_qmn_failures_md(self) -> Result[None]:
+        """Refused — qmn/FAILURES.md stays the QMN alert allow-list."""
+        return refuse_qmn_failures_extension()
+
+    def fingerprint_operator_log(self, payload: object = None) -> Result[None]:
+        """Refused — operator logs do not enter fp1 identity."""
+        return refuse_operator_log_fp1(payload)
+
     async def bind(self) -> Result[BoundListener]:
         """Bind the loopback listener. Does not start an HTTP experiment service."""
         if self._closed:
@@ -398,6 +478,10 @@ class DaemonProcess:
         )
         self._server = server
         self._bound = bound
+        self.emit_operator_event(
+            "daemon.listener_bound",
+            correlation_id=f"daemon-listener:{bound.host}:{bound.port}",
+        )
         return Ok(bound)
 
     async def serve(self) -> Result[None]:
@@ -481,6 +565,14 @@ class DaemonProcess:
                 "backtest_state": self.backtesting.backtest_state,
                 "bound_host": None if bound is None else bound.host,
                 "bound_port": None if bound is None else bound.port,
+                "operator_json_lines": True,
+                "operator_logs_are_journal": not LOGS_ARE_NOT_JOURNALS,
+                "operator_logs_enter_fp1": LOGS_ENTER_FP1_IDENTITY,
+                "fourth_observability_comp": FOURTH_OBSERVABILITY_COMP_MINTED,
+                "operator_log_sqlite_class": OPERATOR_LOG_SQLITE_CLASS_MINTED,
+                "qmn_failures_extended": QMN_FAILURES_MD_EXTENDED,
+                "telemetry_store_remains": TELEMETRY_STORE_REMAINS_TRACE_METRIC_PLANE,
+                "otel_export_port_only": OTEL_REMAINS_EXPORT_PORT_ONLY,
             }
         )
 

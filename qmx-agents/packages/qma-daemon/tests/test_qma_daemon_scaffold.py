@@ -17,6 +17,7 @@ import qma.daemon.journal
 import qma.daemon.knowledge
 import qma.daemon.ledgers
 import qma.daemon.memory
+import qma.daemon.operator_log
 import qma.daemon.persistence
 import qma.daemon.plugins
 import qma.daemon.process
@@ -53,6 +54,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.experiments,
         qma.daemon.handles,
         qma.daemon.context,
+        qma.daemon.operator_log,
         qma.daemon.plugins,
         qma.daemon.process,
         qma.daemon.telemetry,

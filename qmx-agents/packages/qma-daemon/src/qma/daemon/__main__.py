@@ -7,6 +7,7 @@ QMB remains the platform's single CLI (DEC-0336).
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 
@@ -28,6 +29,7 @@ def main() -> int:
         machine=machine,
         boot_epoch_id=boot,
         bind_port=bind_port,
+        log_handler=logging.StreamHandler(),
     )
     if is_refusal(composed):
         return 2
