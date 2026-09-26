@@ -1,19 +1,23 @@
-"""L27 reference usage: host retries none/read on the same logical_invocation_id (Story 62.1)."""
+"""L27 reference usage: host retry none/read; no blind external-egress retry (62.1 / 62.2)."""
 
 from __future__ import annotations
 
 from qma.core.operations import public_operation_descriptors
+from qma.core.refusals.variants import BlindRetryRefused, StaleObservation
 from qma.core.vocabulary.enums import EffectClass, ReconcilePolicy
 from qma.daemon.journal.variables import (
     HOST_RETRY_ATTEMPT_CEILING_KEY,
     GovernedVariableRegistry,
 )
 from qma.daemon.retry import (
+    BLIND_EXTERNAL_EGRESS_RETRY,
+    CAS_CONFLICT_IS_RETRY,
     EFFECT_CLASS_TYPES_EXISTED_AT_INSPECT_SHA,
     HOST_RETRY_INSPECT_SHA,
     HOST_RETRY_LOOP_EXISTED_AT_INSPECT_SHA,
     OPERATOR_IS_RECOVERY_LOOP,
     RECONCILE_POLICY_TYPES_EXISTED_AT_INSPECT_SHA,
+    UNKNOWN_BLOCKED_AUTO_RETRY,
     HostRetryLoop,
     HostRetryStopReason,
     claim_effect_class_or_reconcile_policy_absent_at_inspect_sha,
@@ -90,6 +94,47 @@ def main() -> None:
     assert result.value.stop_reason is HostRetryStopReason.SUCCESS
     assert result.value.operator_is_recovery_loop is False
     print("host retried read on the same logical_invocation_id")
+
+    assert BLIND_EXTERNAL_EGRESS_RETRY is False
+    assert CAS_CONFLICT_IS_RETRY is False
+    assert UNKNOWN_BLOCKED_AUTO_RETRY is False
+    egress_seen: list[int] = []
+
+    def egress_call(envelope: InvocationEnvelope) -> Result[object]:
+        egress_seen.append(envelope.attempt_id)
+        return TypedRefusal(
+            category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+            retryability=Retryability.YES,
+            context={"reason": "no-receipt"},
+        )
+
+    lost = loop.run({**_envelope(), "effect_class": "external-egress"}, egress_call)
+    assert is_ok(lost)
+    assert egress_seen == [1]
+    assert lost.value.stop_reason is HostRetryStopReason.UNKNOWN
+    assert lost.value.effect_outcome is not None
+    assert lost.value.effect_outcome.disposition == "unknown"
+    blind = loop.run(
+        {**_envelope(), "effect_class": "external-egress", "attempt_id": 2},
+        egress_call,
+    )
+    assert is_refusal(blind)
+    assert BlindRetryRefused.matches(blind)
+    assert egress_seen == [1]
+
+    def cas_call(envelope: InvocationEnvelope) -> Result[object]:
+        return StaleObservation.of(
+            field="config_revision",
+            bound=envelope.config_revision,
+            live=5,
+            cas=True,
+            reason="cas_mismatch",
+        )
+
+    conflict = loop.run({**_envelope(), "effect_class": "mutate-config"}, cas_call)
+    assert is_ok(conflict)
+    assert conflict.value.stop_reason is HostRetryStopReason.CAS_CONFLICT
+    print("no blind external-egress retry; CAS conflict is not a retry")
 
 
 if __name__ == "__main__":

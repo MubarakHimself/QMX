@@ -1,4 +1,4 @@
-"""Story 62.1 — host retries none/read on the same logical_invocation_id."""
+"""Story 62.1 / 62.2 — host retry none/read; effect-class matrix does not loosen."""
 
 from __future__ import annotations
 
@@ -6,17 +6,28 @@ import runpy
 from pathlib import Path
 
 from qma.core.operations import (
+    CAS_CONFLICT_IS_RETRY,
     EFFECT_RETRY_BY_CLASS,
     HOST_RETRY_EFFECT_CLASSES,
+    OUTBOX_REPLAY_IS_SECOND_DISPATCH,
+    PER_PACK_RETRY_ENUM_MINTED,
+    UNKNOWN_BLOCKED_AUTO_RETRY,
     public_operation_descriptors,
 )
-from qma.core.vocabulary.enums import EffectClass, EffectRetryOutcome, ReconcilePolicy
+from qma.core.refusals.variants import BlindRetryRefused, StaleObservation
+from qma.core.vocabulary.enums import (
+    EffectClass,
+    EffectRetryOutcome,
+    JobHandleState,
+    ReconcilePolicy,
+)
 from qma.daemon.journal.variables import (
     HOST_RETRY_ATTEMPT_CEILING_KEY,
     HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY,
     GovernedVariableRegistry,
 )
 from qma.daemon.retry import (
+    BLIND_EXTERNAL_EGRESS_RETRY,
     EFFECT_CLASS_TYPES_EXISTED_AT_INSPECT_SHA,
     HOST_RETRY_INSPECT_SHA,
     HOST_RETRY_LOOP_EXISTED_AT_INSPECT_SHA,
@@ -100,6 +111,11 @@ def test_inspect_sha_honesty_loop_absent_types_present_at_34c148b() -> None:
     assert EFFECT_CLASS_TYPES_EXISTED_AT_INSPECT_SHA is True
     assert RECONCILE_POLICY_TYPES_EXISTED_AT_INSPECT_SHA is True
     assert STORY_54_3_EFFECT_RETRY_MATRIX_LOOSENED is False
+    assert BLIND_EXTERNAL_EGRESS_RETRY is False
+    assert CAS_CONFLICT_IS_RETRY is False
+    assert UNKNOWN_BLOCKED_AUTO_RETRY is False
+    assert OUTBOX_REPLAY_IS_SECOND_DISPATCH is False
+    assert PER_PACK_RETRY_ENUM_MINTED is False
     assert OPERATOR_IS_RECOVERY_LOOP is False
     assert HOST_RETRY_LOOP_OWNER == "COMP-QMA-DAEMON"
     claimed_loop = claim_host_retry_loop_at_inspect_sha(True)
@@ -220,7 +236,22 @@ def test_effect_class_matrix_is_not_loosened_for_external_egress() -> None:
     result = _ok(loop.run(_envelope(effect_class="external-egress"), call))
     assert seen == [1]
     assert result.attempt_ids == (1,)
+    assert result.stop_reason is HostRetryStopReason.UNKNOWN
+    assert result.effect_outcome is not None
+    assert result.effect_outcome.disposition == "unknown"
+    assert result.effect_outcome.handle_state is JobHandleState.UNKNOWN
+    assert result.to_payload()["handle_state"] == "unknown"
     assert result.operator_is_recovery_loop is False
+    assert BLIND_EXTERNAL_EGRESS_RETRY is False
+
+    def boom(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        raise AssertionError("must not blind-retry external-egress")
+
+    blind = loop.run(_envelope(effect_class="external-egress", attempt_id=2), boom)
+    assert is_refusal(blind)
+    assert BlindRetryRefused.matches(blind)
+    assert seen == [1]
 
 
 def test_run_refuses_unfilled_ceiling_invalid_envelope_and_over_ceiling() -> None:
@@ -248,6 +279,7 @@ def test_never_retry_policy_does_not_take_a_second_attempt() -> None:
     result = _ok(loop.run(_envelope(reconcile_policy="never-retry"), call))
     assert seen == [1]
     assert result.attempt_ids == (1,)
+    assert result.stop_reason is HostRetryStopReason.RECONCILE_POLICY
     assert result.to_payload()["retryability"] == "yes"
 
 
@@ -270,3 +302,159 @@ def test_copilot_host_retries_public_call() -> None:
 def test_example_host_retry_usage() -> None:
     namespace = runpy.run_path(str(_EXAMPLE))
     assert namespace["main"] is not None
+
+
+def test_external_egress_success_without_receipt_is_unknown() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return Ok({"order": "maybe-sent"})
+
+    result = _ok(loop.run(_envelope(effect_class="external-egress"), call))
+    assert seen == [1]
+    assert result.stop_reason is HostRetryStopReason.UNKNOWN
+    assert result.effect_outcome is not None
+    assert result.effect_outcome.receipt is False
+    receipted = _ok(
+        loop.run(
+            _envelope(effect_class="external-egress", logical_invocation_id="inv:ack"),
+            call,
+            receipt={"ack": "ok"},
+        )
+    )
+    assert seen == [1, 1]
+    assert receipted.stop_reason is HostRetryStopReason.SUCCESS
+    assert receipted.effect_outcome is not None
+    assert receipted.effect_outcome.disposition == "receipt"
+
+
+def test_mutate_config_cas_conflict_is_not_retried() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return StaleObservation.of(
+            field="config_revision",
+            bound=envelope.config_revision,
+            live=5,
+            cas=True,
+            reason="cas_mismatch",
+        )
+
+    result = _ok(loop.run(_envelope(effect_class="mutate-config"), call))
+    assert seen == [1]
+    assert result.stop_reason is HostRetryStopReason.CAS_CONFLICT
+    assert result.cas_conflict is True
+    assert result.refusal is not None
+    assert StaleObservation.matches(result.refusal)
+    assert result.refusal.context["cas"] is True
+    assert CAS_CONFLICT_IS_RETRY is False
+
+    def boom(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        raise AssertionError("CAS conflict is not a retry")
+
+    blocked = _ok(loop.run(_envelope(effect_class="mutate-config", attempt_id=2), boom))
+    assert seen == [1]
+    assert blocked.stop_reason is HostRetryStopReason.CAS_CONFLICT
+    flagged = _ok(loop.run(_envelope(effect_class="mutate-config"), boom, cas_conflict=True))
+    assert seen == [1]
+    assert flagged.stop_reason is HostRetryStopReason.CAS_CONFLICT
+
+
+def test_unknown_manual_wins_over_default_host_retry() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return _flake(retryability=Retryability.YES)
+
+    result = _ok(loop.run(_envelope(reconcile_policy="unknown-manual"), call))
+    assert seen == [1]
+    assert result.stop_reason is HostRetryStopReason.RECONCILE_POLICY
+    assert result.attempt_ids == (1,)
+
+
+def test_unknown_blocked_is_never_auto_retried() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.YES,
+            context={"field": "unknown-blocked", "reason": "unknown-blocked"},
+        )
+
+    result = _ok(loop.run(_envelope(), call))
+    assert seen == [1]
+    assert result.stop_reason is HostRetryStopReason.UNKNOWN_BLOCKED
+    assert result.unknown_blocked is True
+    assert UNKNOWN_BLOCKED_AUTO_RETRY is False
+
+    def boom(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        raise AssertionError("unknown-blocked is never auto-retried")
+
+    gated = _ok(loop.run(_envelope(), boom, unknown_blocked=True))
+    assert seen == [1]
+    assert gated.stop_reason is HostRetryStopReason.UNKNOWN_BLOCKED
+    assert gated.attempt_ids == ()
+
+
+def test_append_evidence_dedupes_place_run_identity_outbox_replay_is_not_dispatch() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def boom(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        raise AssertionError("replay and dedupe are not a second dispatch")
+
+    deduped = _ok(
+        loop.run(
+            _envelope(effect_class="append-evidence"),
+            boom,
+            prior_result={"entry": "already-appended"},
+        )
+    )
+    assert seen == []
+    assert deduped.effect_outcome is not None
+    assert deduped.effect_outcome.disposition == "dedupe"
+    assert deduped.effect_outcome.duplicated is False
+    placed = _ok(
+        loop.run(
+            _envelope(effect_class="place-run", logical_invocation_id="inv:run-7"),
+            boom,
+            prior_result={"run": "inv:run-7"},
+        )
+    )
+    assert seen == []
+    assert placed.effect_outcome is not None
+    assert placed.effect_outcome.disposition == "run-identity"
+    assert placed.effect_outcome.run_identity == "inv:run-7"
+    replayed = _ok(
+        loop.run(
+            _envelope(effect_class="external-egress"),
+            boom,
+            prior_result={"order": "already-sent"},
+        )
+    )
+    assert seen == []
+    assert OUTBOX_REPLAY_IS_SECOND_DISPATCH is False
+    assert replayed.stop_reason is HostRetryStopReason.UNKNOWN
+    assert replayed.effect_outcome is not None
+    assert replayed.effect_outcome.disposition == "replay"
+    assert replayed.effect_outcome.duplicated is False
+
+    def flake(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return _flake(retryability=Retryability.YES)
+
+    append_once = _ok(loop.run(_envelope(effect_class="append-evidence"), flake))
+    assert seen == [1]
+    assert append_once.stop_reason is HostRetryStopReason.EFFECT_CLASS

@@ -363,9 +363,21 @@ class CopilotHost:
         self,
         envelope: object,
         call: Callable[[InvocationEnvelope], Result[object]],
+        *,
+        receipt: object | None = None,
+        prior_result: Mapping[str, object] | None = None,
+        unknown_blocked: bool = False,
+        cas_conflict: bool = False,
     ) -> Result[HostRetryResult]:
         """Host retries none/read flakes on the same logical_invocation_id."""
-        return self.retry_loop.run(envelope, call)
+        return self.retry_loop.run(
+            envelope,
+            call,
+            receipt=receipt,
+            prior_result=prior_result,
+            unknown_blocked=unknown_blocked,
+            cas_conflict=cas_conflict,
+        )
 
     def submit_job(
         self,

@@ -1,10 +1,14 @@
-"""Effect-specific retry and reconcile outcomes (Story 54.3; FR-WF-22).
+"""Effect-specific retry and reconcile outcomes (Story 54.3 / 62.2; FR-WF-22).
 
 ``none`` / ``read`` may retry. ``append-evidence`` dedupes on the key.
 ``mutate-config`` is compare-and-set on ``config_revision``. ``place-run``
 treats ``logical_invocation_id`` as the run identity. ``external-egress`` MUST
 obtain a receipt or become ``unknown`` and MUST NOT blind-retry (SCN-0021
-Then 3). ``reconcile_policy`` is the closed AD-24 set.
+Then 3; SCN-0026 Then 2). ``reconcile_policy`` ``never-retry`` and
+``unknown-manual`` win over default host retry. CAS ``conflict`` is not a
+retry. Parent AD-25 ``unknown-blocked`` is never auto-retried. Outbox replay
+is not a second dispatch (Story 57.2). This module does not mint a per-pack
+retry enum.
 """
 
 from __future__ import annotations
@@ -25,19 +29,30 @@ from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal
 
 __all__ = [
+    "CAS_CONFLICT_IS_RETRY",
     "EFFECT_RETRY_BY_CLASS",
     "HOST_RETRY_EFFECT_CLASSES",
+    "HOST_RETRY_POLICY_OVERRIDE",
+    "OUTBOX_REPLAY_IS_SECOND_DISPATCH",
+    "PER_PACK_RETRY_ENUM_MINTED",
     "RECONCILE_POLICIES",
+    "UNKNOWN_BLOCKED_AUTO_RETRY",
+    "UNKNOWN_BLOCKED_FIELD",
     "EffectOutcome",
     "apply_effect_outcome",
     "cas_config_revision",
     "effect_retry_kind",
+    "host_may_dispatch",
+    "host_may_send_again",
     "host_retry_applies",
+    "is_cas_conflict",
+    "is_unknown_blocked",
     "may_retry_effect",
     "parse_reconcile_policy",
     "parse_retryability",
     "place_run_identity",
     "reconcile_external_egress",
+    "reconcile_policy_wins_over_host_retry",
 ]
 
 
@@ -58,6 +73,14 @@ EFFECT_RETRY_BY_CLASS: Final[Mapping[EffectClass, EffectRetryOutcome]] = Mapping
 HOST_RETRY_EFFECT_CLASSES: Final[frozenset[EffectClass]] = frozenset(
     effect for effect, kind in EFFECT_RETRY_BY_CLASS.items() if kind is EffectRetryOutcome.MAY_RETRY
 )
+HOST_RETRY_POLICY_OVERRIDE: Final[frozenset[ReconcilePolicy]] = frozenset(
+    {ReconcilePolicy.NEVER_RETRY, ReconcilePolicy.UNKNOWN_MANUAL}
+)
+CAS_CONFLICT_IS_RETRY: Final[bool] = False
+UNKNOWN_BLOCKED_AUTO_RETRY: Final[bool] = False
+OUTBOX_REPLAY_IS_SECOND_DISPATCH: Final[bool] = False
+PER_PACK_RETRY_ENUM_MINTED: Final[bool] = False
+UNKNOWN_BLOCKED_FIELD: Final[str] = "unknown-blocked"
 
 _Disposition = Literal[
     "retry",
@@ -143,6 +166,100 @@ def host_retry_applies(*, effect_class: object, retryability: object) -> Result[
     if not isinstance(parsed, Ok):
         return parsed
     return Ok(bool(allowed.value and parsed.value is not Retryability.NO))
+
+
+def reconcile_policy_wins_over_host_retry(reconcile_policy: object) -> Result[bool]:
+    """``never-retry`` and ``unknown-manual`` win over default host retry (FR-PG-25)."""
+    parsed = parse_reconcile_policy(reconcile_policy)
+    if not isinstance(parsed, Ok):
+        return parsed
+    return Ok(parsed.value in HOST_RETRY_POLICY_OVERRIDE)
+
+
+def is_cas_conflict(value: object) -> bool:
+    """True when a mutate-config CAS result is ``conflict`` (not a retry)."""
+    if value is True:
+        return True
+    if not isinstance(value, TypedRefusal):
+        return False
+    return value.context.get("cas") is True
+
+
+def is_unknown_blocked(value: object) -> bool:
+    """True when parent AD-25 ``unknown-blocked`` is the outcome (never auto-retried)."""
+    if value is True:
+        return True
+    if not isinstance(value, TypedRefusal):
+        return False
+    return (
+        value.context.get("field") == UNKNOWN_BLOCKED_FIELD
+        or value.context.get("unknown_blocked") is True
+    )
+
+
+def host_may_dispatch(
+    *,
+    effect_class: object,
+    reconcile_policy: object,
+    attempt_id: object,
+    prior_result: Mapping[str, object] | None = None,
+    unknown_blocked: bool = False,
+    cas_conflict: bool = False,
+) -> Result[bool]:
+    """Whether the host may perform a send for this envelope attempt.
+
+    Attempt 1 may send. A later attempt is a host retry only for ``none`` /
+    ``read`` when ``reconcile_policy`` does not win. ``prior_result`` is outbox
+    replay / dedupe, not a second dispatch. ``unknown-blocked`` and CAS
+    ``conflict`` never dispatch again.
+    """
+    if unknown_blocked or cas_conflict or prior_result is not None:
+        return Ok(False)
+    if isinstance(attempt_id, bool) or not isinstance(attempt_id, int) or attempt_id < 1:
+        return _invalid(
+            "attempt_id",
+            "attempt_id must be a positive integer",
+            given=repr(attempt_id),
+        )
+    if attempt_id == 1:
+        return Ok(True)
+    wins = reconcile_policy_wins_over_host_retry(reconcile_policy)
+    if not isinstance(wins, Ok):
+        return wins
+    if wins.value:
+        return Ok(False)
+    return may_retry_effect(effect_class)
+
+
+def host_may_send_again(
+    *,
+    effect_class: object,
+    reconcile_policy: object,
+    retryability: object,
+    cas_conflict: bool = False,
+    unknown_blocked: bool = False,
+    receipt: object | None = None,
+) -> Result[bool]:
+    """Whether the host may take another send after a first attempt (FR-PG-24).
+
+    External-egress without a receipt stays unknown. CAS conflict is not a
+    retry. ``unknown-blocked`` is never auto-retried. Policy override wins.
+    """
+    if unknown_blocked:
+        return Ok(UNKNOWN_BLOCKED_AUTO_RETRY)
+    if cas_conflict:
+        return Ok(CAS_CONFLICT_IS_RETRY)
+    wins = reconcile_policy_wins_over_host_retry(reconcile_policy)
+    if not isinstance(wins, Ok):
+        return wins
+    if wins.value:
+        return Ok(False)
+    parsed_effect = _parse_effect(effect_class)
+    if not isinstance(parsed_effect, Ok):
+        return parsed_effect
+    if parsed_effect.value is EffectClass.EXTERNAL_EGRESS and receipt is None:
+        return Ok(False)
+    return host_retry_applies(effect_class=effect_class, retryability=retryability)
 
 
 def cas_config_revision(*, bound: object, live: object) -> Result[int]:
@@ -364,10 +481,10 @@ def apply_effect_outcome(
             )
         )
 
-    if is_retry and policy.value is ReconcilePolicy.NEVER_RETRY:
+    if is_retry and policy.value in HOST_RETRY_POLICY_OVERRIDE:
         return _invalid(
             "reconcile_policy",
-            "never-retry forbids a second attempt",
+            "never-retry and unknown-manual win over default host retry",
             reconcile_policy=policy.value.value,
             effect_class=effect.value.value,
         )

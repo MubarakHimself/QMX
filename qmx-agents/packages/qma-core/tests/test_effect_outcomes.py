@@ -3,18 +3,29 @@
 from __future__ import annotations
 
 from qma.core.operations import (
+    CAS_CONFLICT_IS_RETRY,
     EFFECT_RETRY_BY_CLASS,
     HOST_RETRY_EFFECT_CLASSES,
+    HOST_RETRY_POLICY_OVERRIDE,
+    OUTBOX_REPLAY_IS_SECOND_DISPATCH,
+    PER_PACK_RETRY_ENUM_MINTED,
     RECONCILE_POLICIES,
+    UNKNOWN_BLOCKED_AUTO_RETRY,
+    UNKNOWN_BLOCKED_FIELD,
     apply_effect_outcome,
     cas_config_revision,
     effect_retry_kind,
+    host_may_dispatch,
+    host_may_send_again,
     host_retry_applies,
+    is_cas_conflict,
+    is_unknown_blocked,
     may_retry_effect,
     parse_reconcile_policy,
     parse_retryability,
     place_run_identity,
     reconcile_external_egress,
+    reconcile_policy_wins_over_host_retry,
 )
 from qma.core.ports.permissions import (
     NESTED_INVOCATION_UNIONS_GRANTS,
@@ -30,7 +41,7 @@ from qma.core.refusals import (
 )
 from qma.core.vocabulary import EffectClass, EffectRetryOutcome, JobHandleState, ReconcilePolicy
 from qmf.core import is_ok, is_refusal
-from qmf.core.refusal import Retryability
+from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 
 def test_every_effect_class_has_a_closed_retry_outcome() -> None:
@@ -113,6 +124,19 @@ def test_none_and_read_may_retry() -> None:
             is_retry=True,
         )
         assert is_refusal(blocked)
+        manual = apply_effect_outcome(
+            effect_class=effect,
+            reconcile_policy="unknown-manual",
+            logical_invocation_id="inv:1",
+            is_retry=True,
+        )
+        assert is_refusal(manual)
+        first_manual = apply_effect_outcome(
+            effect_class=effect,
+            reconcile_policy="unknown-manual",
+            logical_invocation_id="inv:1",
+        )
+        assert is_ok(first_manual)
 
 
 def test_append_evidence_dedupes_on_the_key() -> None:
@@ -151,6 +175,8 @@ def test_mutate_config_is_cas_on_config_revision() -> None:
     assert is_refusal(conflict)
     assert isinstance(conflict, StaleObservation)
     assert conflict.context["cas"] is True
+    assert is_cas_conflict(conflict) is True
+    assert CAS_CONFLICT_IS_RETRY is False
     refused = apply_effect_outcome(
         effect_class="mutate-config",
         reconcile_policy="query-then-decide",
@@ -228,6 +254,91 @@ def test_external_egress_without_receipt_is_unknown_and_must_not_blind_retry() -
     assert is_ok(receipted)
     assert receipted.value.disposition == "receipt"
     assert receipted.value.handle_state is JobHandleState.DONE
+
+
+def test_reconcile_policy_and_unknown_blocked_win_over_host_retry() -> None:
+    assert (
+        frozenset({ReconcilePolicy.NEVER_RETRY, ReconcilePolicy.UNKNOWN_MANUAL})
+        == HOST_RETRY_POLICY_OVERRIDE
+    )
+    never = reconcile_policy_wins_over_host_retry("never-retry")
+    manual = reconcile_policy_wins_over_host_retry("unknown-manual")
+    query = reconcile_policy_wins_over_host_retry("query-then-decide")
+    assert is_ok(never) and never.value is True
+    assert is_ok(manual) and manual.value is True
+    assert is_ok(query) and query.value is False
+    assert UNKNOWN_BLOCKED_AUTO_RETRY is False
+    blocked = TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.YES,
+        context={"field": UNKNOWN_BLOCKED_FIELD},
+    )
+    assert is_unknown_blocked(blocked) is True
+    assert is_unknown_blocked(True) is True
+    again = host_may_send_again(
+        effect_class="read",
+        reconcile_policy="query-then-decide",
+        retryability="yes",
+        unknown_blocked=True,
+    )
+    assert is_ok(again) and again.value is False
+
+
+def test_host_may_dispatch_does_not_loosen_the_effect_class_matrix() -> None:
+    first_egress = host_may_dispatch(
+        effect_class="external-egress",
+        reconcile_policy="query-then-decide",
+        attempt_id=1,
+    )
+    second_egress = host_may_dispatch(
+        effect_class="external-egress",
+        reconcile_policy="query-then-decide",
+        attempt_id=2,
+    )
+    assert is_ok(first_egress) and first_egress.value is True
+    assert is_ok(second_egress) and second_egress.value is False
+    cas = host_may_dispatch(
+        effect_class="mutate-config",
+        reconcile_policy="query-then-decide",
+        attempt_id=1,
+        cas_conflict=True,
+    )
+    assert is_ok(cas) and cas.value is False
+    replay = host_may_dispatch(
+        effect_class="place-run",
+        reconcile_policy="query-then-decide",
+        attempt_id=1,
+        prior_result={"run": "inv:run-7"},
+    )
+    assert is_ok(replay) and replay.value is False
+    assert OUTBOX_REPLAY_IS_SECOND_DISPATCH is False
+    assert PER_PACK_RETRY_ENUM_MINTED is False
+    assert set(EffectRetryOutcome) == {
+        EffectRetryOutcome.MAY_RETRY,
+        EffectRetryOutcome.DEDUPE,
+        EffectRetryOutcome.CAS,
+        EffectRetryOutcome.RUN_IDENTITY,
+        EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
+    }
+    read_again = host_may_send_again(
+        effect_class="read",
+        reconcile_policy="query-then-decide",
+        retryability="yes",
+    )
+    assert is_ok(read_again) and read_again.value is True
+    policy = host_may_send_again(
+        effect_class="read",
+        reconcile_policy="unknown-manual",
+        retryability="yes",
+    )
+    assert is_ok(policy) and policy.value is False
+    egress = host_may_send_again(
+        effect_class="external-egress",
+        reconcile_policy="query-then-decide",
+        retryability="yes",
+        receipt=None,
+    )
+    assert is_ok(egress) and egress.value is False
 
 
 def test_nested_invocation_does_not_union_permissions() -> None:
