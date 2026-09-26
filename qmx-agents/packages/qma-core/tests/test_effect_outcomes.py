@@ -13,6 +13,7 @@ from qma.core.operations import (
     UNKNOWN_BLOCKED_AUTO_RETRY,
     UNKNOWN_BLOCKED_FIELD,
     apply_effect_outcome,
+    bind_pack_retry_attempts,
     cas_config_revision,
     effect_retry_kind,
     host_may_dispatch,
@@ -21,6 +22,7 @@ from qma.core.operations import (
     is_cas_conflict,
     is_unknown_blocked,
     may_retry_effect,
+    parse_pack_retry_attempts,
     parse_reconcile_policy,
     parse_retryability,
     place_run_identity,
@@ -339,6 +341,66 @@ def test_host_may_dispatch_does_not_loosen_the_effect_class_matrix() -> None:
         receipt=None,
     )
     assert is_ok(egress) and egress.value is False
+
+
+def test_pack_may_zero_attempts_and_must_not_exceed_ceiling_or_matrix() -> None:
+    zero = parse_pack_retry_attempts(0)
+    assert is_ok(zero) and zero.value == 0
+    assert PER_PACK_RETRY_ENUM_MINTED is False
+    dialect = parse_pack_retry_attempts("aggressive")
+    assert is_refusal(dialect)
+    assert dialect.context["per_pack_retry_enum"] is False
+    assert dialect.context["branch"] == "A"
+    bound_zero = bind_pack_retry_attempts(
+        pack_attempts=0,
+        host_ceiling=4,
+        effect_class="read",
+    )
+    assert is_ok(bound_zero)
+    assert bound_zero.value.zero_attempts is True
+    assert bound_zero.value.send_cap == 1
+    bound_two = bind_pack_retry_attempts(
+        pack_attempts=2,
+        host_ceiling=4,
+        effect_class="read",
+    )
+    assert is_ok(bound_two)
+    assert bound_two.value.send_cap == 2
+    over = bind_pack_retry_attempts(
+        pack_attempts=5,
+        host_ceiling=4,
+        effect_class="read",
+    )
+    assert is_refusal(over)
+    assert over.context["host_ceiling"] == 4
+    matrix = bind_pack_retry_attempts(
+        pack_attempts=2,
+        host_ceiling=4,
+        effect_class="external-egress",
+    )
+    assert is_refusal(matrix)
+    assert "effect-class matrix" in str(matrix.context["reason"])
+    egress_zero = bind_pack_retry_attempts(
+        pack_attempts=0,
+        host_ceiling=4,
+        effect_class="external-egress",
+    )
+    assert is_ok(egress_zero)
+    assert egress_zero.value.send_cap == 1
+    no_retry = host_may_send_again(
+        effect_class="read",
+        reconcile_policy="query-then-decide",
+        retryability="yes",
+        pack_attempts=0,
+    )
+    assert is_ok(no_retry) and no_retry.value is False
+    still_retry = host_may_send_again(
+        effect_class="read",
+        reconcile_policy="query-then-decide",
+        retryability="yes",
+        pack_attempts=2,
+    )
+    assert is_ok(still_retry) and still_retry.value is True
 
 
 def test_nested_invocation_does_not_union_permissions() -> None:

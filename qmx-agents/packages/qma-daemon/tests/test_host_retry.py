@@ -1,4 +1,4 @@
-"""Story 62.1 / 62.2 — host retry none/read; effect-class matrix does not loosen."""
+"""Story 62.1 / 62.2 / 62.3 — host retry; pack may zero attempts; repair is change_request."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from qma.core.operations import (
     UNKNOWN_BLOCKED_AUTO_RETRY,
     public_operation_descriptors,
 )
+from qma.core.ports.copilot import APP_USE_MAY_APPLY
 from qma.core.refusals.variants import BlindRetryRefused, StaleObservation
 from qma.core.vocabulary.enums import (
     EffectClass,
@@ -25,6 +26,14 @@ from qma.daemon.journal.variables import (
     HOST_RETRY_ATTEMPT_CEILING_KEY,
     HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY,
     GovernedVariableRegistry,
+)
+from qma.daemon.repair import (
+    ALERTS_AUTHORIZE_REPAIR,
+    HMR_LIVE,
+    HOT_APPLY_LIVE,
+    IMPLEMENTATION_REPAIR_KINDS,
+    REPAIR_IS_CHANGE_REQUEST,
+    STORY_58_4_IS_APPLY_ORACLE,
 )
 from qma.daemon.retry import (
     BLIND_EXTERNAL_EGRESS_RETRY,
@@ -41,6 +50,7 @@ from qma.daemon.retry import (
     claim_host_retry_loop_at_inspect_sha,
 )
 from qma.daemon.sessions.copilot import CopilotHost
+from qma.daemon.sessions.product_session import ProductSessionProfile
 from qma.wire import compute_input_hash
 from qma.wire.invocation_envelope import InvocationEnvelope
 from qmf.core import is_ok, is_refusal
@@ -458,3 +468,170 @@ def test_append_evidence_dedupes_place_run_identity_outbox_replay_is_not_dispatc
     append_once = _ok(loop.run(_envelope(effect_class="append-evidence"), flake))
     assert seen == [1]
     assert append_once.stop_reason is HostRetryStopReason.EFFECT_CLASS
+
+
+_HASH_A = "fp1:sha256:" + "aa" * 32
+_SOURCE = "fp1:sha256:" + "11" * 32
+_TARGET = "fp1:sha256:" + "22" * 32
+_AS_OF = "2026-09-20T13:12:00Z"
+
+
+def test_pack_zero_attempts_is_not_retried() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return _flake(retryability=Retryability.YES)
+
+    result = _ok(loop.run(_envelope(), call, pack_attempts=0))
+    assert seen == [1]
+    assert result.attempt_ids == (1,)
+    assert result.stop_reason is HostRetryStopReason.PACK_ZERO_ATTEMPTS
+    assert result.refusal is not None
+    assert result.refusal.retryability is Retryability.YES
+    assert PER_PACK_RETRY_ENUM_MINTED is False
+
+    capped = _ok(loop.run(_envelope(logical_invocation_id="inv:cap-2"), call, pack_attempts=2))
+    assert seen == [1, 1, 2]
+    assert capped.attempt_ids == (1, 2)
+    assert capped.stop_reason is HostRetryStopReason.ATTEMPT_CEILING
+
+
+def test_pack_must_not_exceed_host_ceiling_or_effect_class_matrix() -> None:
+    loop = HostRetryLoop(injected_ceiling=4)
+
+    def boom(_envelope: InvocationEnvelope) -> Result[object]:
+        raise AssertionError("must not dispatch a refused pack retry bound")
+
+    over = loop.run(_envelope(), boom, pack_attempts=5)
+    assert is_refusal(over)
+    assert over.context["host_ceiling"] == 4
+    dialect = loop.run(_envelope(), boom, pack_attempts="aggressive")
+    assert is_refusal(dialect)
+    assert dialect.context["per_pack_retry_enum"] is False
+    matrix = loop.run(
+        _envelope(effect_class="external-egress"),
+        boom,
+        pack_attempts=2,
+    )
+    assert is_refusal(matrix)
+    assert "effect-class matrix" in str(matrix.context["reason"])
+
+
+def test_repair_after_failure_is_change_request_not_hot_apply() -> None:
+    assert HMR_LIVE is False
+    assert HOT_APPLY_LIVE is False
+    assert ALERTS_AUTHORIZE_REPAIR is False
+    assert APP_USE_MAY_APPLY is False
+    assert REPAIR_IS_CHANGE_REQUEST is True
+    assert STORY_58_4_IS_APPLY_ORACLE is True
+    assert frozenset({"account_target", "code", "graph", "grants"}) == IMPLEMENTATION_REPAIR_KINDS
+    host = CopilotHost(retry_loop=HostRetryLoop(injected_ceiling=4))
+    _ok(
+        host.open_app_use(
+            product_session_id="psess:app-use-1",
+            instance_id="inst:1",
+            granted_ops=("grant:app",),
+        )
+    )
+    _ok(
+        host.changes.install_v1(
+            instance_id="inst:1",
+            package_id="sector-intel",
+            version="1.0.0",
+            package_source_hash=_SOURCE,
+            config_revision=4,
+            granted_ops=("grant:app",),
+            running_jobs=("job:run-1",),
+            live_hashes=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+        )
+    )
+    seen: list[int] = []
+
+    def call(envelope: InvocationEnvelope) -> Result[object]:
+        seen.append(envelope.attempt_id)
+        return _flake(retryability=Retryability.YES)
+
+    failed = _ok(host.retry_public_call(_envelope(), call, pack_attempts=0))
+    assert seen == [1]
+    assert failed.stop_reason is HostRetryStopReason.PACK_ZERO_ATTEMPTS
+
+    minted = _ok(
+        host.request_implementation_repair(
+            from_session="psess:app-use-1",
+            change_request_id="cr:repair-code-1",
+            targets=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+            repair_kind="code",
+        )
+    )
+    assert minted.patch["kind"] == "runtime_input"
+    assert minted.patch["path"] == "repair.code"
+    app_use_apply = host.apply_implementation_repair(
+        change_request_id=minted.change_request_id,
+        from_session="psess:app-use-1",
+        operator_principal="operator",
+        applied_at=_AS_OF,
+    )
+    assert is_refusal(app_use_apply)
+    assert app_use_apply.context["applies"] is False
+    alerted = host.request_implementation_repair(
+        from_session="psess:app-use-1",
+        change_request_id="cr:repair-alert-1",
+        targets=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+        repair_kind="graph",
+        authorized_by="alert",
+    )
+    assert is_refusal(alerted)
+    assert alerted.context["alerts_authorize"] is False
+    hot = host.hot_apply_implementation_edit(kind="code")
+    assert is_refusal(hot)
+    assert hot.context["hot_apply"] is False
+    assert hot.context["hmr"] is False
+    hmr = host.request_implementation_repair(
+        from_session="psess:app-use-1",
+        change_request_id="cr:repair-hmr-1",
+        targets=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+        repair_kind="grants",
+        hmr=True,
+    )
+    assert is_refusal(hmr)
+    assert hmr.context["repair_is_change_request"] is True
+    grants = _ok(
+        host.request_implementation_repair(
+            from_session="psess:app-use-1",
+            change_request_id="cr:repair-grants-1",
+            targets=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+            repair_kind="grants",
+        )
+    )
+    account = _ok(
+        host.request_implementation_repair(
+            from_session="psess:app-use-1",
+            change_request_id="cr:repair-account-1",
+            targets=[{"target_ref": _TARGET, "base_hash": _HASH_A}],
+            repair_kind="account_target",
+        )
+    )
+    assert grants.patch["path"] == "repair.grants"
+    assert account.patch["path"] == "repair.account_target"
+    authoring = _ok(host.changes.open_authoring_handoff(minted))
+    assert authoring.profile is ProductSessionProfile.AUTHORING
+    _ok(
+        host.changes.validate(
+            change_request_id=minted.change_request_id,
+            authoring_session=authoring.product_session_id,
+            validated_at="2026-09-20T13:10:00Z",
+        )
+    )
+    applied = _ok(
+        host.apply_implementation_repair(
+            change_request_id=minted.change_request_id,
+            from_session=authoring.product_session_id,
+            operator_principal="operator",
+            applied_at=_AS_OF,
+        )
+    )
+    assert applied.outcome == "applied"
+    still = _ok(host.sessions.get("psess:app-use-1"))
+    assert still.granted_ops == ("grant:app",)

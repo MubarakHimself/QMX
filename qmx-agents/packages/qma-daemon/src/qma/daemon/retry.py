@@ -1,4 +1,4 @@
-"""Host retry loop for effect ``none`` / ``read`` (Story 62.1 / 62.2; DEC-0457).
+"""Host retry loop for effect ``none`` / ``read`` (Story 62.1 / 62.2 / 62.3).
 
 A public call whose effect class is ``none`` or ``read`` and whose typed
 retryability is not ``NO`` retries in the host until success, until
@@ -13,7 +13,8 @@ becomes ``unknown`` and MUST NOT blind-retry (no second send). CAS
 still uses ``logical_invocation_id`` as run identity; outbox replay is not a
 second dispatch (Story 57.2). ``reconcile_policy`` ``never-retry`` and
 ``unknown-manual`` win over default host retry. Parent AD-25
-``unknown-blocked`` is never auto-retried. No per-pack retry enum.
+``unknown-blocked`` is never auto-retried. A pack may set attempts to zero;
+it MUST NOT exceed the host ceiling or the matrix. No per-pack retry enum.
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ from qma.core.operations.effects import (
     UNKNOWN_BLOCKED_AUTO_RETRY,
     EffectOutcome,
     apply_effect_outcome,
+    bind_pack_retry_attempts,
     host_may_dispatch,
     host_may_send_again,
     is_cas_conflict,
@@ -85,11 +87,12 @@ BLIND_EXTERNAL_EGRESS_RETRY: Final[bool] = False
 
 
 class HostRetryStopReason(StrEnum):
-    """Why the host retry loop stopped (FR-PG-23 / FR-PG-24 / FR-PG-25)."""
+    """Why the host retry loop stopped (FR-PG-23 / FR-PG-24 / FR-PG-25 / FR-PG-26)."""
 
     SUCCESS = "success"
     RETRYABILITY_NO = "retryability_no"
     ATTEMPT_CEILING = "attempt_ceiling"
+    PACK_ZERO_ATTEMPTS = "pack_zero_attempts"
     UNKNOWN = "unknown"
     CAS_CONFLICT = "cas_conflict"
     RECONCILE_POLICY = "reconcile_policy"
@@ -337,11 +340,13 @@ class HostRetryLoop:
         prior_result: Mapping[str, object] | None = None,
         unknown_blocked: bool = False,
         cas_conflict: bool = False,
+        pack_attempts: object | None = None,
     ) -> Result[HostRetryResult]:
         """Retry a public ``none`` / ``read`` call on one ``logical_invocation_id``.
 
         Other effect classes consult the parent matrix and never take a second
-        send. ``prior_result`` is replay/dedupe, not a dispatch.
+        send. ``prior_result`` is replay/dedupe, not a dispatch. Pack attempts
+        of zero means the host does not retry that op (FR-PG-26).
         """
         parsed = (
             Ok(envelope)
@@ -355,6 +360,19 @@ class HostRetryLoop:
         if is_refusal(ceiling):
             return ceiling
         cap = ceiling.value
+        pack_zero = False
+        bound_pack = pack_attempts
+        if pack_attempts is not None:
+            bound = bind_pack_retry_attempts(
+                pack_attempts=pack_attempts,
+                host_ceiling=ceiling.value,
+                effect_class=current.effect_class,
+            )
+            if is_refusal(bound):
+                return bound
+            cap = bound.value.send_cap
+            pack_zero = bound.value.zero_attempts
+            bound_pack = bound.value.pack_attempts
         if current.attempt_id > cap:
             return invalid_input(
                 "attempt_id",
@@ -470,10 +488,15 @@ class HostRetryLoop:
                 )
             next_id = current.attempt_id + 1
             if next_id > cap:
+                reason = (
+                    HostRetryStopReason.PACK_ZERO_ATTEMPTS
+                    if pack_zero
+                    else HostRetryStopReason.ATTEMPT_CEILING
+                )
                 return _finish(
                     current,
                     ids,
-                    HostRetryStopReason.ATTEMPT_CEILING,
+                    reason,
                     refusal=last,
                 )
             again = host_may_send_again(
@@ -483,10 +506,18 @@ class HostRetryLoop:
                 cas_conflict=is_cas_conflict(last),
                 unknown_blocked=is_unknown_blocked(last),
                 receipt=None,
+                pack_attempts=bound_pack,
             )
             if is_refusal(again):
                 return again
             if not again.value:
+                if pack_zero:
+                    return _finish(
+                        current,
+                        ids,
+                        HostRetryStopReason.PACK_ZERO_ATTEMPTS,
+                        refusal=last,
+                    )
                 wins = reconcile_policy_wins_over_host_retry(current.reconcile_policy)
                 reason = HostRetryStopReason.EFFECT_CLASS
                 if is_ok(wins) and wins.value:

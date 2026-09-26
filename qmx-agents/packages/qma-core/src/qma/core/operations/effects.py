@@ -1,4 +1,4 @@
-"""Effect-specific retry and reconcile outcomes (Story 54.3 / 62.2; FR-WF-22).
+"""Effect-specific retry and reconcile outcomes (Story 54.3 / 62.2 / 62.3).
 
 ``none`` / ``read`` may retry. ``append-evidence`` dedupes on the key.
 ``mutate-config`` is compare-and-set on ``config_revision``. ``place-run``
@@ -7,8 +7,9 @@ obtain a receipt or become ``unknown`` and MUST NOT blind-retry (SCN-0021
 Then 3; SCN-0026 Then 2). ``reconcile_policy`` ``never-retry`` and
 ``unknown-manual`` win over default host retry. CAS ``conflict`` is not a
 retry. Parent AD-25 ``unknown-blocked`` is never auto-retried. Outbox replay
-is not a second dispatch (Story 57.2). This module does not mint a per-pack
-retry enum.
+is not a second dispatch (Story 57.2). A pack may set attempts to zero; it
+MUST NOT exceed the host ceiling or this matrix. This module does not mint
+a per-pack retry enum (FR-PG-26; SCN-0026 Branch A).
 """
 
 from __future__ import annotations
@@ -39,7 +40,9 @@ __all__ = [
     "UNKNOWN_BLOCKED_AUTO_RETRY",
     "UNKNOWN_BLOCKED_FIELD",
     "EffectOutcome",
+    "PackRetryBound",
     "apply_effect_outcome",
+    "bind_pack_retry_attempts",
     "cas_config_revision",
     "effect_retry_kind",
     "host_may_dispatch",
@@ -48,6 +51,7 @@ __all__ = [
     "is_cas_conflict",
     "is_unknown_blocked",
     "may_retry_effect",
+    "parse_pack_retry_attempts",
     "parse_reconcile_policy",
     "parse_retryability",
     "place_run_identity",
@@ -98,6 +102,16 @@ def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
     context.update(extra)
     return TypedRefusal(
         category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def _policy(field: str, reason: str, **extra: object) -> TypedRefusal:
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
         retryability=Retryability.NO,
         context=context,
     )
@@ -166,6 +180,102 @@ def host_retry_applies(*, effect_class: object, retryability: object) -> Result[
     if not isinstance(parsed, Ok):
         return parsed
     return Ok(bool(allowed.value and parsed.value is not Retryability.NO))
+
+
+def parse_pack_retry_attempts(value: object) -> Result[int]:
+    """Pack attempts is a non-negative integer. A per-pack retry enum is refused."""
+    if isinstance(value, str):
+        return _policy(
+            "pack_retry_attempts",
+            "a per-pack retry enum is refused; pack attempts is a non-negative "
+            "integer (FR-PG-26; SCN-0026 Branch A)",
+            given=value,
+            per_pack_retry_enum=PER_PACK_RETRY_ENUM_MINTED,
+            branch="A",
+        )
+    if isinstance(value, bool) or not isinstance(value, int):
+        return _invalid(
+            "pack_retry_attempts",
+            "pack attempts is a non-negative integer, never a retry dialect",
+            given=repr(value),
+            per_pack_retry_enum=PER_PACK_RETRY_ENUM_MINTED,
+        )
+    if value < 0:
+        return _invalid(
+            "pack_retry_attempts",
+            "pack attempts must be >= 0",
+            given=value,
+        )
+    return Ok(value)
+
+
+@dataclass(frozen=True, slots=True)
+class PackRetryBound:
+    """Host-capped send budget for one pack op (FR-PG-26).
+
+    ``pack_attempts=0`` means the host does not retry: one send, then stop.
+    """
+
+    pack_attempts: int
+    host_ceiling: int
+    send_cap: int
+    zero_attempts: bool
+
+
+def bind_pack_retry_attempts(
+    *,
+    pack_attempts: object,
+    host_ceiling: object,
+    effect_class: object,
+) -> Result[PackRetryBound]:
+    """Bind pack attempts under the host ceiling and the effect-class matrix.
+
+    Zero is allowed and means no retry. A pack MUST NOT exceed the host
+    ceiling or retry an effect class the parent matrix forbids.
+    """
+    parsed = parse_pack_retry_attempts(pack_attempts)
+    if not isinstance(parsed, Ok):
+        return parsed
+    if isinstance(host_ceiling, bool) or not isinstance(host_ceiling, int) or host_ceiling < 1:
+        return _invalid(
+            "attempt_ceiling",
+            "host-registered attempt ceiling is a positive integer",
+            given=repr(host_ceiling),
+        )
+    if parsed.value > host_ceiling:
+        return _policy(
+            "pack_retry_attempts",
+            "pack MUST NOT exceed the host-registered attempt ceiling (FR-PG-26)",
+            pack_attempts=parsed.value,
+            host_ceiling=host_ceiling,
+            branch="A",
+        )
+    if parsed.value >= 2:
+        allowed = may_retry_effect(effect_class)
+        if not isinstance(allowed, Ok):
+            return allowed
+        if not allowed.value:
+            effect = _parse_effect(effect_class)
+            shown = effect.value.value if isinstance(effect, Ok) else repr(effect_class)
+            return _policy(
+                "pack_retry_attempts",
+                "pack MUST NOT exceed the effect-class matrix (FR-PG-26)",
+                pack_attempts=parsed.value,
+                effect_class=shown,
+                host_retry_effect_classes=sorted(
+                    member.value for member in HOST_RETRY_EFFECT_CLASSES
+                ),
+                branch="A",
+            )
+    send_cap = 1 if parsed.value == 0 else parsed.value
+    return Ok(
+        PackRetryBound(
+            pack_attempts=parsed.value,
+            host_ceiling=host_ceiling,
+            send_cap=send_cap,
+            zero_attempts=parsed.value == 0,
+        )
+    )
 
 
 def reconcile_policy_wins_over_host_retry(reconcile_policy: object) -> Result[bool]:
@@ -239,16 +349,24 @@ def host_may_send_again(
     cas_conflict: bool = False,
     unknown_blocked: bool = False,
     receipt: object | None = None,
+    pack_attempts: object | None = None,
 ) -> Result[bool]:
     """Whether the host may take another send after a first attempt (FR-PG-24).
 
     External-egress without a receipt stays unknown. CAS conflict is not a
     retry. ``unknown-blocked`` is never auto-retried. Policy override wins.
+    Pack attempts ``0`` or ``1`` means the host does not retry (FR-PG-26).
     """
     if unknown_blocked:
         return Ok(UNKNOWN_BLOCKED_AUTO_RETRY)
     if cas_conflict:
         return Ok(CAS_CONFLICT_IS_RETRY)
+    if pack_attempts is not None:
+        parsed_pack = parse_pack_retry_attempts(pack_attempts)
+        if not isinstance(parsed_pack, Ok):
+            return parsed_pack
+        if parsed_pack.value < 2:
+            return Ok(False)
     wins = reconcile_policy_wins_over_host_retry(reconcile_policy)
     if not isinstance(wins, Ok):
         return wins

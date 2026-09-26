@@ -50,6 +50,12 @@ from qma.core.ports.jobs import JobHandle
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.daemon.discovery.listing import ContributionListingService
 from qma.daemon.envs.jobs import JobHandleService
+from qma.daemon.repair import (
+    HMR_LIVE,
+    implementation_repair_patch,
+    parse_implementation_repair_kind,
+    refuse_repair_shortcuts,
+)
 from qma.daemon.retry import HostRetryLoop, HostRetryResult
 from qma.daemon.sessions.chrome import ProductSessionChrome
 from qma.daemon.sessions.grant_binding import BoundSessionGrant
@@ -368,6 +374,7 @@ class CopilotHost:
         prior_result: Mapping[str, object] | None = None,
         unknown_blocked: bool = False,
         cas_conflict: bool = False,
+        pack_attempts: object | None = None,
     ) -> Result[HostRetryResult]:
         """Host retries none/read flakes on the same logical_invocation_id."""
         return self.retry_loop.run(
@@ -377,6 +384,7 @@ class CopilotHost:
             prior_result=prior_result,
             unknown_blocked=unknown_blocked,
             cas_conflict=cas_conflict,
+            pack_attempts=pack_attempts,
         )
 
     def submit_job(
@@ -496,6 +504,59 @@ class CopilotHost:
             patch=patch,
             copied_private_memory=copied_private_memory,
         )
+
+    def request_implementation_repair(
+        self,
+        *,
+        from_session: object,
+        change_request_id: object,
+        targets: object,
+        repair_kind: object,
+        copied_private_memory: object = False,
+        authorized_by: object | None = None,
+        hot_apply: object = False,
+        hmr: object = False,
+    ) -> Result[ChangeRequest]:
+        """After a failure, mint a change_request. App-use may mint; it cannot apply."""
+        blocked = refuse_repair_shortcuts(authorized_by=authorized_by, hot_apply=hot_apply, hmr=hmr)
+        if is_refusal(blocked):
+            return blocked
+        kind = parse_implementation_repair_kind(repair_kind)
+        if is_refusal(kind):
+            return kind
+        return self.mint_change_request(
+            from_session=from_session,
+            change_request_id=change_request_id,
+            targets=targets,
+            patch=dict(implementation_repair_patch(kind.value)),
+            copied_private_memory=copied_private_memory,
+        )
+
+    def apply_implementation_repair(
+        self,
+        *,
+        change_request_id: object,
+        from_session: object,
+        operator_principal: object,
+        applied_at: object,
+        authorized_by: object | None = None,
+        hot_apply: object = False,
+        hmr: object = False,
+    ) -> Result[ChangeApplyRecord]:
+        """Story 58.4 remains the apply oracle. Alerts never authorize."""
+        blocked = refuse_repair_shortcuts(authorized_by=authorized_by, hot_apply=hot_apply, hmr=hmr)
+        if is_refusal(blocked):
+            return blocked
+        return self.apply_change_request(
+            change_request_id=change_request_id,
+            from_session=from_session,
+            operator_principal=operator_principal,
+            applied_at=applied_at,
+        )
+
+    def hot_apply_implementation_edit(self, **_extra: object) -> Result[None]:
+        """Refused — HMR and hot-apply stay dead (DEC-0366)."""
+        return refuse_repair_shortcuts(hot_apply=True, hmr=HMR_LIVE)
 
     def apply_change_request(
         self,
