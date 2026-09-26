@@ -172,8 +172,8 @@ def test_inspect_sha_honesty_occupancy_absent_connect_present() -> None:
     assert _ok(claim_nested_connect_surface_absent_at_inspect_sha(False)) is False
     assert SECOND_VERB_SET_MINTED is False
     assert FIFTH_COMPOSITION_MODE_MINTED is False
-    assert INCLUDE_AT_AUTHOR_IMPLEMENTED is False
-    assert RECURSION_CEILING_ROW_IMPLEMENTED is False
+    assert INCLUDE_AT_AUTHOR_IMPLEMENTED is True
+    assert RECURSION_CEILING_ROW_IMPLEMENTED is True
     assert len(PARENT_AD10_COMPOSITION_MODES) == 4
 
 

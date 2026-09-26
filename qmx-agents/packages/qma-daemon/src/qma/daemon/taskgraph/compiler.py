@@ -69,6 +69,7 @@ class CompileRequest:
     termination_criteria: Sequence[str] = ()
     approval_route: str | None = None
     require_decomposition_reasoning: bool | None = None
+    graph_template_version: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,37 +101,45 @@ class GraphTemplateCatalog:
     """
 
     def __init__(self) -> None:
-        self._templates: dict[str, GraphTemplate] = {}
+        self._templates: dict[tuple[str, str], GraphTemplate] = {}
+        self._order: dict[str, list[str]] = {}
 
     def register(self, template: GraphTemplate) -> Result[str]:
-        if template.qualified_id in self._templates:
+        identity = (template.qualified_id, template.version)
+        if identity in self._templates:
             return invalid_input(
                 "graph_template_ref",
                 "duplicate graph_template registration refused",
                 given=template.qualified_id,
+                version=template.version,
             )
         validated = validate_graph_template_topology(template)
         if not is_ok(validated):
             return validated
         # Store the validated authored template; never a Task Graph projection.
-        self._templates[template.qualified_id] = validated.value
+        self._templates[identity] = validated.value
+        self._order.setdefault(template.qualified_id, []).append(template.version)
         return Ok(template.qualified_id)
 
     def get(self, qualified_id: str) -> GraphTemplate | None:
-        return self._templates.get(qualified_id)
+        """Return the sole registered version. Multiple versions are not latest."""
+        versions = self._order.get(qualified_id)
+        if versions is None or len(versions) != 1:
+            return None
+        return self._templates.get((qualified_id, versions[0]))
 
     def get_versioned(self, qualified_id: str, version: str) -> GraphTemplate | None:
         """Lookup by compile identity ``(qualified_id, version)`` (AD-13)."""
-        template = self._templates.get(qualified_id)
-        if template is None or template.version != version:
-            return None
-        return template
+        return self._templates.get((qualified_id, version))
+
+    def versions_of(self, qualified_id: str) -> tuple[str, ...]:
+        return tuple(self._order.get(qualified_id, ()))
 
     def __contains__(self, qualified_id: object) -> bool:
-        return isinstance(qualified_id, str) and qualified_id in self._templates
+        return isinstance(qualified_id, str) and qualified_id in self._order
 
     def ids(self) -> tuple[str, ...]:
-        return tuple(sorted(self._templates))
+        return tuple(sorted(self._order))
 
 
 def validate_approval_route(
@@ -221,6 +230,53 @@ class MissionCompiler:
         token = actor_id.value if isinstance(actor_id, ActorId) else actor_id
         self._known_quants.add(token)
 
+    def _resolve_template(
+        self,
+        qualified_id: str,
+        *,
+        version: str | None,
+    ) -> Result[GraphTemplate]:
+        if version is not None:
+            template = self._templates.get_versioned(qualified_id, version)
+            if template is None:
+                return invalid_input(
+                    "graph_template_ref",
+                    "graph_template_ref must name a registered Graph Template "
+                    "(qualified_id, version) (AD-13); qma-daemon ships none of its own",
+                    given=qualified_id,
+                    version=version,
+                    substituted=False,
+                )
+            return Ok(template)
+        versions = self._templates.versions_of(qualified_id)
+        sole = next(iter(versions), None)
+        if sole is None:
+            return invalid_input(
+                "graph_template_ref",
+                "graph_template_ref must name a registered Graph Template "
+                "(AD-13); qma-daemon ships none of its own",
+                given=qualified_id,
+            )
+        if len(versions) > 1:
+            return invalid_input(
+                "graph_template_version",
+                "multiple Graph Template versions are registered; name version, "
+                "never silent latest",
+                given=qualified_id,
+                versions=list(versions),
+                substituted=False,
+            )
+        found = self._templates.get_versioned(qualified_id, sole)
+        if found is None:
+            return invalid_input(
+                "graph_template_ref",
+                "graph_template_ref must name a registered Graph Template "
+                "(AD-13); qma-daemon ships none of its own",
+                given=qualified_id,
+                substituted=False,
+            )
+        return Ok(found)
+
     def compile(self, request: CompileRequest) -> Result[CompileResult]:
         """Compile a Goal into exactly one Mission and its initial Task Graph."""
         owner = request.owner
@@ -241,21 +297,24 @@ class MissionCompiler:
 
         template: GraphTemplate | None = None
         if request.graph_template_ref is not None:
-            template = self._templates.get(request.graph_template_ref)
-            if template is None:
-                return invalid_input(
-                    "graph_template_ref",
-                    "graph_template_ref must name a registered Graph Template "
-                    "(AD-13); qma-daemon ships none of its own",
-                    given=request.graph_template_ref,
-                )
+            resolved = self._resolve_template(
+                request.graph_template_ref,
+                version=request.graph_template_version,
+            )
+            if not is_ok(resolved):
+                return resolved
+            template = resolved.value
 
         needs_decomposition = request.require_decomposition_reasoning
         if needs_decomposition is None:
             needs_decomposition = template is None
 
         intent = request.intent if request.intent is not None else request.goal.text
-        mission_token = _stable_token(owner.actor_id.value, request.goal.text, intent)
+        token_parts = [owner.actor_id.value, request.goal.text, intent]
+        if request.graph_template_version is not None:
+            token_parts.append(request.graph_template_ref or "")
+            token_parts.append(request.graph_template_version)
+        mission_token = _stable_token(*token_parts)
         mission_id = f"mission:{mission_token}"
         task_graph_id = f"taskgraph:{mission_token}"
 

@@ -67,7 +67,11 @@ from qma.daemon.taskgraph.join import (
 )
 from qma.daemon.taskgraph.nested import (
     CALL_DEPTH_EXISTED_AT_INSPECT_SHA,
+    CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW,
     FIFTH_COMPOSITION_MODE_MINTED,
+    GAP_0108_IS_RETRY_ATTEMPT_CEILING,
+    HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY,
+    HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
     INCLUDE_AT_AUTHOR_IMPLEMENTED,
     LIFECYCLE_VERBS_EXISTED_AT_INSPECT_SHA,
     NESTED_MISSION_CALLEE_OP_ID,
@@ -82,10 +86,13 @@ from qma.daemon.taskgraph.nested import (
     NestedMissionHost,
     NestedMissionOccupancy,
     ParentMissionRun,
+    bind_call_depth_ceiling_key,
     claim_nested_connect_surface_absent_at_inspect_sha,
     claim_nested_mission_occupancy_at_inspect_sha,
+    include_subgraph_at_author,
     nested_callee_from_node,
     refuse_live_graph_splice,
+    refuse_live_task_graph_merge,
 )
 from qma.daemon.taskgraph.outbox import (
     DEFAULT_PARTITION_ID,
@@ -155,6 +162,7 @@ from qma.daemon.taskgraph.state import (
 
 __all__ = [
     "CALL_DEPTH_EXISTED_AT_INSPECT_SHA",
+    "CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW",
     "DAEMON_CONTRIBUTED_GRAPH_TEMPLATES",
     "DEFAULT_PARTITION_ID",
     "DEFERRED_GRAPH_EXCLUSIONS",
@@ -162,6 +170,9 @@ __all__ = [
     "EDGE_MAPPINGS",
     "FIFTH_COMPOSITION_MODE_MINTED",
     "FIRST_WINS_ORDER",
+    "GAP_0108_IS_RETRY_ATTEMPT_CEILING",
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY",
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY",
     "INCLUDE_AT_AUTHOR_IMPLEMENTED",
     "JOIN_GUESSED_FROM_JSON_SHAPE",
     "JOIN_LATE_EVENT_TABLE",
@@ -249,6 +260,7 @@ __all__ = [
     "apply_join_arrival",
     "apply_retry_result",
     "assert_template_not_interchanged",
+    "bind_call_depth_ceiling_key",
     "claim_durable_edges_at_inspect_sha",
     "claim_nested_connect_surface_absent_at_inspect_sha",
     "claim_nested_mission_occupancy_at_inspect_sha",
@@ -262,6 +274,7 @@ __all__ = [
     "execute_procedure_door_step",
     "first_wins_key",
     "holds_dispatch_lease",
+    "include_subgraph_at_author",
     "instantiate_procedure",
     "loop_state_from_node_config",
     "mint_loop_iteration_task",
@@ -273,6 +286,7 @@ __all__ = [
     "plan_partial_retry",
     "refuse_guessed_join_from_json",
     "refuse_live_graph_splice",
+    "refuse_live_task_graph_merge",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
     "refuse_second_scheduler",

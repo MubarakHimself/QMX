@@ -29,6 +29,8 @@ from qmf.core import Ok, Result, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY",
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY",
     "HOST_RETRY_ATTEMPT_CEILING_KEY",
     "HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY",
     "REGISTRY_HOME",
@@ -53,6 +55,11 @@ VARIABLE_SET_EVENT: Final[str] = "variable.set"
 REGISTRY_HOME: Final[str] = "registry"
 HOST_RETRY_ATTEMPT_CEILING_KEY: Final[str] = "host.retry_attempt_ceiling"
 HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY: Final[str] = "registry:host.retry_attempt_ceiling"
+# Story 63.2 / FR-PG-32: nested Mission call_depth ceiling. Not GAP-0108.
+HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY: Final[str] = "host.nested_mission_call_depth_ceiling"
+HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY: Final[str] = (
+    "registry:host.nested_mission_call_depth_ceiling"
+)
 
 # Cite by key — never copy a registry value into code (FR-Q36; AD-26).
 STORE_BACKUP_CADENCE_KEY: Final[str] = "registry:store.backup_cadence"
@@ -275,6 +282,16 @@ def builtin_qma_variable_rows() -> tuple[VariableRow, ...]:
             value_type="count",
             units="count",
             # GAP-0108 / cheap-veto A9: registry row exists; this story mints no number.
+            default=None,
+        ),
+        _row(
+            HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY,
+            owning_subsystem=daemon,
+            scope=g,
+            value_type="count",
+            units="count",
+            # FR-PG-32: host-registered recursion ceiling; this story mints no
+            # number. Distinct from GAP-0108 retry-attempt ceiling.
             default=None,
         ),
         _row(

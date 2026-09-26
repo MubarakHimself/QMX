@@ -5,7 +5,14 @@ template at runtime as parent-AD-3 invoke of the callee's existing
 ``start | query-state | cancel | await``. Result is one nested Mission, one
 Task Graph, one JobHandle. Occupancy and cancel follow that JobHandle.
 Nested invoke does not union grants. Crash of A does not splice B's graph
-into A. Include-at-author and the recursion-ceiling row are not this story.
+into A.
+
+Story 63.2 / FR-PG-30..32. Include-at-author writes a new versioned Graph
+Template; it is not a runtime merge of live Task Graphs. Merging two live
+Task Graphs is ``INVALID_INPUT`` (or the owner COMP illegal-topology
+refusal). Envelope ``call_depth`` is checked against the host-registered
+recursion ceiling; this story mints no number and does not reuse the
+GAP-0108 retry-attempt ceiling row.
 
 Nested Mission occupancy was absent at inspect SHA ``34c148b``. Envelope
 ``call_depth`` / ``parent_logical_invocation_id`` and AD-3 lifecycle verbs
@@ -27,7 +34,15 @@ from qma.core.ports.permissions import nested_invocation_grants
 from qma.core.vocabulary.enums import CallerKind, LifecycleVerb
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.envs.jobs import JobHandleService
+from qma.daemon.journal.variables import (
+    HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY,
+    HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+    HOST_RETRY_ATTEMPT_CEILING_KEY,
+    HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY,
+    GovernedVariableRegistry,
+)
 from qma.daemon.taskgraph.compiler import CompileRequest, GraphTemplateCatalog, MissionCompiler
+from qma.daemon.taskgraph.execution import TOPOLOGY_REFUSAL_FAMILY
 from qma.daemon.taskgraph.projection import TaskGraphStateService, empty_occupancy
 from qma.daemon.taskgraph.records import (
     GraphTemplate,
@@ -42,7 +57,11 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
     "CALL_DEPTH_EXISTED_AT_INSPECT_SHA",
+    "CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW",
     "FIFTH_COMPOSITION_MODE_MINTED",
+    "GAP_0108_IS_RETRY_ATTEMPT_CEILING",
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY",
+    "HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY",
     "INCLUDE_AT_AUTHOR_IMPLEMENTED",
     "LIFECYCLE_VERBS_EXISTED_AT_INSPECT_SHA",
     "NESTED_MISSION_CALLEE_OP_ID",
@@ -57,10 +76,13 @@ __all__ = [
     "NestedMissionHost",
     "NestedMissionOccupancy",
     "ParentMissionRun",
+    "bind_call_depth_ceiling_key",
     "claim_nested_connect_surface_absent_at_inspect_sha",
     "claim_nested_mission_occupancy_at_inspect_sha",
+    "include_subgraph_at_author",
     "nested_callee_from_node",
     "refuse_live_graph_splice",
+    "refuse_live_task_graph_merge",
 ]
 
 
@@ -71,8 +93,22 @@ PARENT_LOGICAL_INVOCATION_ID_EXISTED_AT_INSPECT_SHA: Final[bool] = True
 LIFECYCLE_VERBS_EXISTED_AT_INSPECT_SHA: Final[bool] = True
 SECOND_VERB_SET_MINTED: Final[bool] = False
 FIFTH_COMPOSITION_MODE_MINTED: Final[bool] = False
-INCLUDE_AT_AUTHOR_IMPLEMENTED: Final[bool] = False
-RECURSION_CEILING_ROW_IMPLEMENTED: Final[bool] = False
+INCLUDE_AT_AUTHOR_IMPLEMENTED: Final[bool] = True
+RECURSION_CEILING_ROW_IMPLEMENTED: Final[bool] = True
+CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW: Final[bool] = False
+GAP_0108_IS_RETRY_ATTEMPT_CEILING: Final[bool] = True
+_RETRY_CEILING_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        HOST_RETRY_ATTEMPT_CEILING_KEY,
+        HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY,
+    }
+)
+_CALL_DEPTH_CEILING_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY,
+        HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+    }
+)
 NESTED_MISSION_OCCUPANCY_FOLLOWS: Final[str] = "job_handle"
 NESTED_MISSION_LIFECYCLE_VERBS: Final[frozenset[str]] = frozenset(
     member.value for member in LifecycleVerb
@@ -148,6 +184,209 @@ def refuse_live_graph_splice(
         parent_node_ids=[node.id for node in parent.nodes],
         child_node_ids=[node.id for node in child.nodes],
     )
+
+
+def refuse_live_task_graph_merge(
+    *,
+    left_graph_id: object | None = None,
+    right_graph_id: object | None = None,
+    left_found: bool = False,
+    right_found: bool = False,
+    instance_id: object | None = None,
+    version: object | None = None,
+    account: object | None = None,
+    substitute_instance_id: object | None = None,
+    substitute_version: object | None = None,
+    substitute_account: object | None = None,
+    other_live_graph_ids: Sequence[str] = (),
+) -> TypedRefusal:
+    """Merging two live Task Graphs is illegal topology (FR-PG-31)."""
+    return invalid_input(
+        "task_graph",
+        "merging two live Task Graphs is refused; include-at-author is a new "
+        "versioned Graph Template, not a runtime merge (DEC-0455; FR-PG-31; "
+        "SCN-0025 Then 4)",
+        code="INVALID_INPUT",
+        family=TOPOLOGY_REFUSAL_FAMILY,
+        merged=False,
+        substituted=False,
+        substituted_instance=False,
+        substituted_version=False,
+        substituted_account=False,
+        left_graph_id=left_graph_id,
+        right_graph_id=right_graph_id,
+        left_found=left_found,
+        right_found=right_found,
+        instance_id=instance_id,
+        version=version,
+        account=account,
+        substitute_instance_id=substitute_instance_id,
+        substitute_version=substitute_version,
+        substitute_account=substitute_account,
+        other_live_graph_ids=list(other_live_graph_ids),
+    )
+
+
+def bind_call_depth_ceiling_key(key: object) -> Result[str]:
+    """Bind the nested-mission call_depth ceiling; never the GAP-0108 retry row."""
+    if not isinstance(key, str) or key.strip() == "":
+        return invalid_input(
+            "call_depth",
+            "call_depth uses the host-registered nested-mission recursion ceiling",
+            given=repr(key),
+            call_depth_registry_key=HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+            gap_0108=False,
+            reused_retry_row=CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW,
+        )
+    token = key.strip()
+    if token in _RETRY_CEILING_KEYS:
+        return invalid_input(
+            "call_depth",
+            "call_depth ceiling is not GAP-0108; do not reuse the retry-attempt "
+            "ceiling registry row (FR-PG-32; AR-PG-10)",
+            given=token,
+            retry_registry_key=HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY,
+            call_depth_registry_key=HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+            gap_0108=False,
+            reused_retry_row=False,
+            code="INVALID_INPUT",
+        )
+    if token not in _CALL_DEPTH_CEILING_KEYS:
+        return invalid_input(
+            "call_depth",
+            "call_depth uses the host-registered nested-mission recursion ceiling",
+            given=token,
+            call_depth_registry_key=HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+            gap_0108=False,
+            reused_retry_row=CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW,
+        )
+    return Ok(HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY)
+
+
+def _validate_call_depth_ceiling(value: object, *, source: str) -> Result[int]:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        shown: object = value if isinstance(value, (str, int, type(None))) else repr(value)
+        return invalid_input(
+            "call_depth",
+            "host nested-mission call_depth ceiling is a host-registered "
+            "registry row; this story mints no number (FR-PG-32; DEC-0455)",
+            given=shown,
+            registry_key=HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+            invented_default=False,
+            source=source,
+            gap_0108=False,
+            code="INVALID_INPUT",
+        )
+    return Ok(value)
+
+
+def _starts_identity(node: Mapping[str, object]) -> tuple[str, str] | None:
+    raw = node.get("starts")
+    if not isinstance(raw, Mapping):
+        return None
+    body = cast("Mapping[object, object]", raw)
+    qualified = body.get("qualified_id")
+    version = body.get("version")
+    if not isinstance(qualified, str) or qualified.strip() == "":
+        return None
+    if not isinstance(version, str) or version.strip() == "":
+        return None
+    return (qualified.strip(), version.strip())
+
+
+def include_subgraph_at_author(
+    parent: object,
+    included: object,
+    *,
+    new_version: object,
+) -> Result[GraphTemplate]:
+    """Compose B's subgraph into a new version of A. Never a live-graph merge."""
+    if isinstance(parent, TaskGraph) or isinstance(included, TaskGraph):
+        return invalid_input(
+            "graph_template",
+            "include-at-author composes Graph Templates, not a runtime merge of "
+            "live Task Graphs (FR-PG-30; DEC-0455)",
+            runtime_merge=False,
+            code="INVALID_INPUT",
+        )
+    if not isinstance(parent, GraphTemplate):
+        return invalid_input(
+            "parent",
+            "include-at-author names parent Graph Template A",
+            given=type(parent).__name__,
+        )
+    if not isinstance(included, GraphTemplate):
+        return invalid_input(
+            "included",
+            "include-at-author names included Graph Template B",
+            given=type(included).__name__,
+        )
+    if not isinstance(new_version, str) or new_version.strip() == "":
+        return invalid_input(
+            "version",
+            "include-at-author writes a new versioned Graph Template",
+            given=repr(new_version),
+        )
+    version = new_version.strip()
+    if version == parent.version:
+        return invalid_input(
+            "version",
+            "include-at-author must write a new version, not overwrite the authored parent version",
+            given=version,
+            parent_version=parent.version,
+        )
+    if parent.qualified_id == included.qualified_id:
+        return invalid_input(
+            "graph_template_ref",
+            "include-at-author includes another template's subgraph, not a self-merge",
+            parent=parent.qualified_id,
+            included=included.qualified_id,
+        )
+    included_id = (included.qualified_id, included.version)
+    parent_nodes: list[dict[str, object]] = []
+    for node in parent.nodes:
+        body = dict(node)
+        if _starts_identity(body) == included_id:
+            continue
+        parent_nodes.append(body)
+    included_nodes = [dict(node) for node in included.nodes]
+    seen: set[object] = {node.get("id") for node in parent_nodes}
+    for node in included_nodes:
+        node_id = node.get("id")
+        if node_id in seen:
+            return invalid_input(
+                "node.id",
+                "include-at-author does not silently rename colliding node ids",
+                given=node_id,
+                substituted=False,
+                code="INVALID_INPUT",
+            )
+        seen.add(node_id)
+    parent_ids = {node.get("id") for node in parent_nodes}
+    included_ids = {node.get("id") for node in included_nodes}
+
+    def _keep_edge(edge: Mapping[str, object], *, allow: set[object]) -> bool:
+        return edge.get("from") in allow and edge.get("to") in allow
+
+    edges = [dict(edge) for edge in parent.edges if _keep_edge(edge, allow=parent_ids)] + [
+        dict(edge) for edge in included.edges if _keep_edge(edge, allow=included_ids)
+    ]
+    nodes = tuple(parent_nodes + included_nodes)
+    if not nodes:
+        return invalid_input(
+            "nodes",
+            "include-at-author produced an empty Graph Template",
+        )
+    try:
+        authored = GraphTemplate(
+            qualified_id=parent.qualified_id,
+            version=version,
+            nodes=nodes,
+            edges=tuple(edges),
+        )
+    except ValueError as exc:
+        return invalid_input("graph_template", str(exc))
+    return Ok(authored)
 
 
 def nested_callee_from_node(node: TaskGraphNode) -> Result[tuple[str, str]]:
@@ -293,6 +532,10 @@ class NestedMissionHost:
     compiler: MissionCompiler = field(default_factory=MissionCompiler)
     jobs: JobHandleService = field(default_factory=JobHandleService)
     graphs: TaskGraphStateService = field(default_factory=TaskGraphStateService)
+    variables: GovernedVariableRegistry = field(
+        default_factory=GovernedVariableRegistry.with_builtins
+    )
+    injected_call_depth_ceiling: int | None = None
     _parents: dict[str, ParentMissionRun] = field(
         default_factory=dict[str, ParentMissionRun], init=False
     )
@@ -320,8 +563,93 @@ class NestedMissionHost:
     def recursion_ceiling_row_implemented(self) -> bool:
         return RECURSION_CEILING_ROW_IMPLEMENTED
 
+    @property
+    def call_depth_ceiling_key(self) -> str:
+        return HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY
+
+    def call_depth_ceiling(self) -> Result[int | None]:
+        """Read the host-registered call_depth ceiling. Tests may inject a fixture."""
+        if self.injected_call_depth_ceiling is not None:
+            validated = _validate_call_depth_ceiling(
+                self.injected_call_depth_ceiling, source="fixture"
+            )
+            if is_refusal(validated):
+                return validated
+            bound: int | None = validated.value
+            return Ok(bound)
+        raw = self.variables.get_value(HOST_NESTED_MISSION_CALL_DEPTH_CEILING_KEY)
+        if is_refusal(raw):
+            return raw
+        if raw.value is None:
+            empty: int | None = None
+            return Ok(empty)
+        validated = _validate_call_depth_ceiling(raw.value, source="registry")
+        if is_refusal(validated):
+            return validated
+        bound: int | None = validated.value
+        return Ok(bound)
+
     def register_template(self, template: GraphTemplate) -> Result[str]:
         return self.templates.register(template)
+
+    def include_at_author(
+        self,
+        parent: object,
+        included: object,
+        *,
+        new_version: object,
+    ) -> Result[GraphTemplate]:
+        """Save include-of-B-into-A as a new versioned Graph Template."""
+        parent_t = self._resolve_template(parent, field="parent")
+        if is_refusal(parent_t):
+            return parent_t
+        included_t = self._resolve_template(included, field="included")
+        if is_refusal(included_t):
+            return included_t
+        authored = include_subgraph_at_author(
+            parent_t.value,
+            included_t.value,
+            new_version=new_version,
+        )
+        if is_refusal(authored):
+            return authored
+        stored = self.register_template(authored.value)
+        if is_refusal(stored):
+            return stored
+        return Ok(authored.value)
+
+    def merge_live_task_graphs(
+        self,
+        left_graph_id: object,
+        right_graph_id: object,
+        *,
+        instance_id: object | None = None,
+        version: object | None = None,
+        account: object | None = None,
+        substitute_instance_id: object | None = None,
+        substitute_version: object | None = None,
+        substitute_account: object | None = None,
+    ) -> Result[TaskGraph]:
+        """Always refuse. Partial failure does not substitute another identity."""
+        left = self._live_graph(left_graph_id)
+        right = self._live_graph(right_graph_id)
+        known = {left_graph_id, right_graph_id}
+        others = [graph_id for graph_id in self._live if graph_id not in known]
+        return refuse_live_task_graph_merge(
+            left_graph_id=left_graph_id if isinstance(left_graph_id, str) else repr(left_graph_id),
+            right_graph_id=(
+                right_graph_id if isinstance(right_graph_id, str) else repr(right_graph_id)
+            ),
+            left_found=left is not None,
+            right_found=right is not None,
+            instance_id=instance_id,
+            version=version,
+            account=account,
+            substitute_instance_id=substitute_instance_id,
+            substitute_version=substitute_version,
+            substitute_account=substitute_account,
+            other_live_graph_ids=others,
+        )
 
     def compile_parent(
         self,
@@ -342,6 +670,7 @@ class NestedMissionHost:
                 goal=Goal(text=goal),
                 owner=owner,
                 graph_template_ref=template.qualified_id,
+                graph_template_version=template.version,
                 intent=intent if intent is not None else goal,
             )
         )
@@ -430,6 +759,9 @@ class NestedMissionHost:
                 "nested public calls carry parent_logical_invocation_id and call_depth",
                 call_depth=env.call_depth,
             )
+        enforced = self._enforce_call_depth(env)
+        if is_refusal(enforced):
+            return enforced
         descriptor = _descriptor_for(env.op_id, env.op_version)
         if is_refusal(descriptor):
             return descriptor
@@ -655,6 +987,7 @@ class NestedMissionHost:
                 goal=Goal(text=f"nested {qualified_id}@{version}"),
                 owner=parent.owner,
                 graph_template_ref=qualified_id,
+                graph_template_version=version,
                 intent=(f"nested:{parent.mission.id}:{node.value.id}:{qualified_id}:{version}"),
             )
         )
@@ -732,6 +1065,79 @@ class NestedMissionHost:
         self._by_job[started.value.job_id] = occupancy
         self._by_parent_node[(parent.task_graph.id, node.value.id)] = started.value.job_id
         return Ok(occupancy)
+
+    def _live_graph(self, graph_id: object) -> TaskGraph | None:
+        if not isinstance(graph_id, str) or graph_id.strip() == "":
+            return None
+        return self._live.get(graph_id.strip())
+
+    def _enforce_call_depth(self, env: InvocationEnvelope) -> Result[None]:
+        ceiling = self.call_depth_ceiling()
+        if is_refusal(ceiling):
+            return ceiling
+        cap = ceiling.value
+        if cap is None:
+            return Ok(None)
+        if env.call_depth > cap:
+            return invalid_input(
+                "call_depth",
+                "envelope call_depth exceeds the host-registered recursion ceiling",
+                call_depth=env.call_depth,
+                ceiling=cap,
+                registry_key=HOST_NESTED_MISSION_CALL_DEPTH_CEILING_REGISTRY_KEY,
+                code="INVALID_INPUT",
+                gap_0108=False,
+                reused_retry_row=CALL_DEPTH_REUSES_RETRY_REGISTRY_ROW,
+            )
+        return Ok(None)
+
+    def _resolve_template(self, value: object, *, field: str) -> Result[GraphTemplate]:
+        if isinstance(value, TaskGraph):
+            return invalid_input(
+                field,
+                "include-at-author composes Graph Templates, not live Task Graphs",
+                runtime_merge=False,
+                code="INVALID_INPUT",
+            )
+        if isinstance(value, GraphTemplate):
+            found = self.templates.get_versioned(value.qualified_id, value.version)
+            if found is None:
+                stored = self.register_template(value)
+                if is_refusal(stored):
+                    return stored
+                found = self.templates.get_versioned(value.qualified_id, value.version)
+            if found is None:
+                return invalid_input(
+                    field,
+                    "Graph Template failed to register",
+                    qualified_id=value.qualified_id,
+                    version=value.version,
+                    substituted=False,
+                )
+            return Ok(found)
+        if isinstance(value, Mapping):
+            body = cast("Mapping[object, object]", value)
+            qualified = body.get("qualified_id")
+            version = body.get("version")
+            if isinstance(qualified, str) and isinstance(version, str):
+                found = self.templates.get_versioned(qualified.strip(), version.strip())
+                if found is None:
+                    return invalid_input(
+                        field,
+                        "include-at-author names a registered Graph Template "
+                        "(qualified_id, version)",
+                        qualified_id=qualified,
+                        version=version,
+                        substituted=False,
+                    )
+                return Ok(found)
+        shown = "mapping" if isinstance(value, Mapping) else "value"
+        return invalid_input(
+            field,
+            "include-at-author names Graph Template (qualified_id, version)",
+            given=shown,
+            substituted=False,
+        )
 
     def _parent_node(
         self,
