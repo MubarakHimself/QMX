@@ -14,18 +14,22 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final
 
+from qma.core.plugins.hooks import HookSource
 from qma.core.ports.telemetry import (
     GAP_0089_TRIM_WINDOW,
     GAP_0090_CONTEXT_COMPACTION,
     HARNESS_AUTHOR,
+    MODEL_HOOK_TELEMETRY_AUTHORS,
     TELEMETRY_RETENTION_EXEMPT_KINDS,
     TELEMETRY_RETENTION_KEYS,
     TelemetryExportPort,
     TelemetryRecord,
     parse_telemetry_record,
     refuse_context_compaction,
+    refuse_model_authored_hook_telemetry,
     refuse_trim_window_decision,
 )
+from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.journal.stores import TELEMETRY_STORE
 from qma.daemon.journal.variables import registry_key
 from qma.daemon.telemetry.export import NullTelemetryExporter
@@ -184,6 +188,33 @@ class TelemetryStore:
 
         self._records.append(record)
         return Ok(record)
+
+    def append_from_hook(
+        self,
+        raw: Mapping[str, object] | TelemetryRecord,
+        *,
+        source: HookSource | str,
+        authored_by: str,
+    ) -> Result[TelemetryRecord]:
+        """Refuse mission/model/agent hook authors; harness appends still go through."""
+        try:
+            resolved = (
+                source if isinstance(source, HookSource) else parse_closed(HookSource, source)
+            )
+        except VocabularyError as exc:
+            return invalid_input("source", str(exc), given=repr(source))
+        if (
+            resolved is HookSource.MISSION
+            or authored_by != HARNESS_AUTHOR
+            or authored_by in MODEL_HOOK_TELEMETRY_AUTHORS
+        ):
+            return refuse_model_authored_hook_telemetry(
+                given=authored_by,
+                source=resolved.value,
+                agents_write_telemetry=False,
+                model_authored_hook_emits=False,
+            )
+        return self.append(raw)
 
     def export_pending(self) -> Result[int]:
         """Push current store contents through the bound export port."""

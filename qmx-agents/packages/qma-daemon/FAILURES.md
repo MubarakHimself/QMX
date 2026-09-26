@@ -46,7 +46,11 @@ claim that the logger existed at inspect SHA `34c148b` are refused
 query: invented `failure_class`, `view` as an invoke, join on `fp1`,
 QMN alert nouns, forbidden JobHandle states, a fourth store, and a
 claim that the query existed at inspect SHA `34c148b` are refused
-(FR-77 through FR-82).
+(FR-77 through FR-82). Epic 61 Story 61.3 keeps mini-app typed
+failure first ids in this owning package's FAILURES.md, refuses
+QMN allow-list reuse, refuses model-authored hook telemetry, and
+refuses a third logger besides stdlib JSON-lines and QMB LogSink
+(FR-83 through FR-85).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -1245,3 +1249,46 @@ claim that the query existed at inspect SHA `34c148b` are refused
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** do not treat inspect-SHA fixtures as
   proof this diagnosis query already existed.
+
+### FR-83: Mini-app typed failures added to qmn/FAILURES.md
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-22; NFR-PG-14; DEC-0456).
+- **Detection:** `place_typed_failure` / `page_qmn_alert_with_mini_app_failure`
+  / `extend_qmn_failures_md` refuse a mini-app first id whose target is
+  `qmn/FAILURES.md`. First ids live in this owning package's FAILURES.md
+  (`qmx-agents/packages/qma-daemon/FAILURES.md`) or the owning plugin
+  pack's FAILURES.md. `qmn/FAILURES.md` is not extended.
+- **Auto-recovery / retry:** none — write the id in the owning package
+  register; QMN's alert allow-list stays QMN.
+- **Visible degraded state:** no QMN allow-list row is minted; the
+  mini-app failure remains a host diagnosis, not a node alert.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a pack cannot page the node with a fake
+  alert. Mini-app failures stay off the QMN allow-list.
+
+### FR-84: Model-authored hook emitting QMA telemetry
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-22; DEC-0456).
+- **Detection:** `emit_telemetry_from_hook` / `TelemetryStore.append_from_hook`
+  / `AgentAuthoredHookRegistrar.emit_telemetry` refuse `HookSource.MISSION`
+  and any `authored_by` other than `harness` (`model`, `agent`, `mission`,
+  `hook`). Harness-authored timeout telemetry remains legal.
+- **Auto-recovery / retry:** none — agents must not write the trace plane.
+- **Visible degraded state:** the telemetry store is unchanged; operator
+  JSON-lines and JobHandle evidence are unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a model cannot write QMA telemetry. The
+  harness authors traces and metrics; hooks only observe or deny.
+
+### FR-85: A third logger besides JSON-lines and QMB LogSink
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-22; kit AD-5).
+- **Detection:** `mint_third_logger` always refuses. Daemon operator logs
+  are stdlib `logging` JSON-lines (`JsonLineFormatter`). QMB `LogSink` may
+  remain. New daemon code does not invent a third logger product.
+- **Auto-recovery / retry:** none — use the daemon JSON-lines logger or
+  the existing QMB LogSink.
+- **Visible degraded state:** no third logger class or store is minted.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** logs remain logs. Do not add another
+  logger beside the daemon JSON-lines stream and QMB's LogSink.

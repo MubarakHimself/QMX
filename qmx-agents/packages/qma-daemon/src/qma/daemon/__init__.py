@@ -52,6 +52,13 @@ from qma.daemon.journal import (
 )
 from qma.daemon.knowledge import KnowledgeService, KnowledgeSourceRegistry
 from qma.daemon.memory import MemoryAdmissionGate, MemoryProviderRegistry
+from qma.daemon.observability_boundary import (
+    QMB_LOGSINK_MAY_REMAIN,
+    THIRD_LOGGER_MINTED,
+    emit_telemetry_from_hook,
+    mint_third_logger,
+    place_typed_failure,
+)
 from qma.daemon.operator_log import (
     FOURTH_OBSERVABILITY_COMP_MINTED,
     LOGS_ARE_NOT_EVIDENCE,
@@ -122,6 +129,8 @@ __all__ = [
     "PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA",
     "PRODUCT_SESSION_OCCUPANCY",
     "PRODUCT_SESSION_OWNER",
+    "QMB_LOGSINK_MAY_REMAIN",
+    "THIRD_LOGGER_MINTED",
     "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
@@ -172,7 +181,10 @@ __all__ = [
     "classify_failure_class",
     "configure_daemon_logging",
     "emit_operator_event",
+    "emit_telemetry_from_hook",
+    "mint_third_logger",
     "order_by_announcement_journal_seq",
+    "place_typed_failure",
     "refuse_merge_remote_worker_outbox",
     "refuse_qmb_occupancy_write",
     "refuse_second_logical_b",

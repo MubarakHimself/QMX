@@ -23,6 +23,7 @@ __all__ = [
     "GAP_0089_TRIM_WINDOW",
     "GAP_0090_CONTEXT_COMPACTION",
     "HARNESS_AUTHOR",
+    "MODEL_HOOK_TELEMETRY_AUTHORS",
     "TELEMETRY_EXPORT_OPERATIONS",
     "TELEMETRY_FORBIDDEN_LEDGER_KEYS",
     "TELEMETRY_KINDS",
@@ -36,6 +37,7 @@ __all__ = [
     "refuse_agent_authored_telemetry",
     "refuse_context_compaction",
     "refuse_ledger_back_reference",
+    "refuse_model_authored_hook_telemetry",
     "refuse_trim_window_decision",
 ]
 
@@ -77,6 +79,17 @@ TELEMETRY_RETENTION_EXEMPT_KINDS: Final[frozenset[str]] = frozenset(
 )
 
 HARNESS_AUTHOR: Final[str] = "harness"
+
+# Model/agent/mission/hook authors may never write the QMA telemetry plane (FR-PG-22).
+MODEL_HOOK_TELEMETRY_AUTHORS: Final[frozenset[str]] = frozenset(
+    {
+        "agent",
+        "model",
+        "mission",
+        "hook",
+        "plugin",
+    }
+)
 
 TELEMETRY_EXPORT_OPERATIONS: Final[frozenset[str]] = frozenset({"export", "flush"})
 
@@ -131,6 +144,19 @@ def refuse_agent_authored_telemetry(**extra: object) -> TypedRefusal:
         "telemetry records are harness-authored and never agent-authored ledger "
         "entries (AD-23; FR-Q67; DEC-0322)",
         author=HARNESS_AUTHOR,
+        **extra,
+    )
+
+
+def refuse_model_authored_hook_telemetry(**extra: object) -> TypedRefusal:
+    """A model-authored hook must not emit QMA telemetry (FR-PG-22; SCN-0027 D)."""
+    extra.setdefault("author", HARNESS_AUTHOR)
+    extra.setdefault("agents_write_telemetry", False)
+    extra.setdefault("model_authored_hook_emits", False)
+    return _policy(
+        str(extra.pop("field", "authored_by")),
+        "QMA telemetry is harness-authored; a model-authored hook that emits "
+        "QMA telemetry is forbidden (AD-23; FR-PG-22; DEC-0456; SCN-0027 Branch D)",
         **extra,
     )
 
@@ -289,6 +315,8 @@ def parse_telemetry_record(value: object) -> Result[TelemetryRecord]:
     """Validate a harness-authored telemetry record (AD-23; FR-Q67)."""
     if isinstance(value, TelemetryRecord):
         if value.authored_by != HARNESS_AUTHOR:
+            if value.authored_by in MODEL_HOOK_TELEMETRY_AUTHORS:
+                return refuse_model_authored_hook_telemetry(given=value.authored_by)
             return refuse_agent_authored_telemetry(given=value.authored_by)
         return Ok(value)
     if not isinstance(value, Mapping):
@@ -309,6 +337,8 @@ def parse_telemetry_record(value: object) -> Result[TelemetryRecord]:
 
     authored = body.get("authored_by", HARNESS_AUTHOR)
     if authored != HARNESS_AUTHOR:
+        if authored in MODEL_HOOK_TELEMETRY_AUTHORS:
+            return refuse_model_authored_hook_telemetry(given=authored)
         return refuse_agent_authored_telemetry(given=authored)
 
     forbidden = TELEMETRY_FORBIDDEN_LEDGER_KEYS.intersection(body)

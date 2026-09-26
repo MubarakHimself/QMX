@@ -16,6 +16,7 @@ from qma.core.ports import (
     refuse_agent_authored_telemetry,
     refuse_context_compaction,
     refuse_ledger_back_reference,
+    refuse_model_authored_hook_telemetry,
     refuse_trim_window_decision,
 )
 from qmf.core import is_ok, is_refusal
@@ -109,6 +110,9 @@ def test_retention_exempt_kinds_and_deferred_gaps() -> None:
     assert refuse_trim_window_decision().context["gap"] == GAP_0089_TRIM_WINDOW
     assert refuse_context_compaction().context["gap"] == GAP_0090_CONTEXT_COMPACTION
     assert refuse_agent_authored_telemetry().context["author"] == HARNESS_AUTHOR
+    model_hook = refuse_model_authored_hook_telemetry(given="model")
+    assert model_hook.context["author"] == HARNESS_AUTHOR
+    assert model_hook.context["model_authored_hook_emits"] is False
     assert refuse_ledger_back_reference(key="ledger_ref").context["field"] == "ledger_ref"
 
 

@@ -492,6 +492,7 @@ from qma.core.ports.telemetry import (
     GAP_0089_TRIM_WINDOW,
     GAP_0090_CONTEXT_COMPACTION,
     HARNESS_AUTHOR,
+    MODEL_HOOK_TELEMETRY_AUTHORS,
     TELEMETRY_EXPORT_OPERATIONS,
     TELEMETRY_FORBIDDEN_LEDGER_KEYS,
     TELEMETRY_KINDS,
@@ -505,6 +506,7 @@ from qma.core.ports.telemetry import (
     refuse_agent_authored_telemetry,
     refuse_context_compaction,
     refuse_ledger_back_reference,
+    refuse_model_authored_hook_telemetry,
     refuse_trim_window_decision,
 )
 from qma.core.ports.tools import (
@@ -632,6 +634,7 @@ __all__ = [
     "MEMORY_VALIDATION_STATE_VALUES",
     "MESSAGE_KIND_VALUES",
     "MODEL_FAMILY_ASSIGN_COMMAND",
+    "MODEL_HOOK_TELEMETRY_AUTHORS",
     "MONEY_PATH_FIELD_DIFF_SCHEMA",
     "MULTI_CONTRIBUTION_POINTS",
     "NESTED_INVOCATION_UNIONS_GRANTS",
@@ -951,6 +954,7 @@ __all__ = [
     "refuse_ledger_back_reference",
     "refuse_llm_self_judgment",
     "refuse_memory_promote",
+    "refuse_model_authored_hook_telemetry",
     "refuse_model_wake_policy_write",
     "refuse_money_path_edit_target",
     "refuse_no_code_authoring",

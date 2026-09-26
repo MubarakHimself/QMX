@@ -9,7 +9,9 @@ daemon runtime. QMB JSONL stays in QMB and is not merged into sqlite.
 
 Story 61.1: the process emits stdlib JSON-lines operator logs. Those lines
 are not a journal, not a new sqlite class, and not a fourth observability
-product. QMA telemetry store remains the trace/metric plane.
+product. QMA telemetry store remains the trace/metric plane. Story 61.3:
+mini-app failures stay off ``qmn/FAILURES.md``; agents do not write telemetry;
+QMB LogSink may remain and no third logger is minted.
 """
 
 from __future__ import annotations
@@ -23,6 +25,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
+from qma.core.plugins.hooks import HookSource
 from qma.core.plugins.packs import DESK_PLUGIN_PACK_IDS
 from qma.core.ports.paper import (
     EPIC_PROMOTION_AUTHORITY,
@@ -37,6 +40,7 @@ from qma.core.ports.qmb import (
     refuse_qmb_import_edge,
     refuse_qmb_owned_concern,
 )
+from qma.core.ports.telemetry import TelemetryRecord
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.daemon.backtest.service import BacktestingService
 from qma.daemon.diagnosis import (
@@ -53,6 +57,15 @@ from qma.daemon.experiments import EXPERIMENT_SQLITE_TABLES, ExperimentSpecServi
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.clock import InjectedUtcClock
 from qma.daemon.ledgers.experiment import ExperimentLedgerStore
+from qma.daemon.observability_boundary import (
+    LOGS_REMAIN_LOGS,
+    QMB_LOGSINK_MAY_REMAIN,
+    THIRD_LOGGER_MINTED,
+    emit_telemetry_from_hook,
+    mint_third_logger,
+    page_qmn_alert_with_mini_app_failure,
+    place_typed_failure,
+)
 from qma.daemon.operator_log import (
     FOURTH_OBSERVABILITY_COMP_MINTED,
     LOGS_ARE_NOT_JOURNALS,
@@ -75,6 +88,7 @@ from qma.daemon.taskgraph.projection import (
     TASK_GRAPH_STATE_SQLITE_TABLES,
     TaskGraphStateService,
 )
+from qma.daemon.telemetry.store import TelemetryStore
 from qma.wire.listener import (
     DEFAULT_BIND_HOST,
     ListenerBindConfig,
@@ -442,6 +456,33 @@ class DaemonProcess:
         """Refused — qmn/FAILURES.md stays the QMN alert allow-list."""
         return refuse_qmn_failures_extension()
 
+    def place_typed_failure(self, *, owner: str, target_failures_md: str) -> Result[str]:
+        """Mini-app first ids stay in the owning package FAILURES.md."""
+        return place_typed_failure(owner=owner, target_failures_md=target_failures_md)
+
+    def page_qmn_alert_with_mini_app_failure(self, failure_id: object) -> Result[None]:
+        """Refused — a pack cannot page the node with a mini-app failure."""
+        return page_qmn_alert_with_mini_app_failure(failure_id)
+
+    def emit_telemetry_from_hook(
+        self,
+        raw: Mapping[str, object],
+        *,
+        source: HookSource | str,
+        authored_by: str,
+    ) -> Result[TelemetryRecord]:
+        """Refused for mission/model/agent authors — telemetry is harness-authored."""
+        return emit_telemetry_from_hook(
+            TelemetryStore(),
+            raw,
+            source=source,
+            authored_by=authored_by,
+        )
+
+    def mint_third_logger(self, name: object = None) -> Result[None]:
+        """Refused — QMB LogSink may remain; no third daemon logger is minted."""
+        return mint_third_logger(name)
+
     def fingerprint_operator_log(self, payload: object = None) -> Result[None]:
         """Refused — operator logs do not enter fp1 identity."""
         return refuse_operator_log_fp1(payload)
@@ -637,6 +678,9 @@ class DaemonProcess:
                 "diagnosis_existed_at_inspect_sha": DIAGNOSIS_EXISTED_AT_INSPECT_SHA,
                 "diagnosis_sqlite_class": DIAGNOSIS_SQLITE_CLASS_MINTED,
                 "qmn_alert_failure_class_is_kit": QMN_FAILURES_MD_EXTENDED_BY_KIT,
+                "logs_remain_logs": LOGS_REMAIN_LOGS,
+                "qmb_logsink_may_remain": QMB_LOGSINK_MAY_REMAIN,
+                "third_logger_minted": THIRD_LOGGER_MINTED,
             }
         )
 

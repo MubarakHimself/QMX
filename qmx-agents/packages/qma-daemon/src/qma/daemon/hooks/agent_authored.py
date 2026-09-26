@@ -26,15 +26,18 @@ from qma.core.plugins.hooks import (
     build_hook_result,
     parse_hook_implementation_kind,
 )
+from qma.core.ports.telemetry import TelemetryRecord
 from qma.core.vocabulary.enums import HookResultDecision, HookVerb
 from qma.core.vocabulary.hooks import HOOK_RESULT_FIELDS, parse_hook_event_name
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.hooks.registry import HookRegistry, PrimitiveInvocation
 from qma.daemon.hooks.source_bounds import HookSourceBinding, assert_matcher_within_source
+from qma.daemon.observability_boundary import emit_telemetry_from_hook
 from qma.daemon.staging.proposal import (
     AGENT_DIRECT_DEFINITION_EXCEPTION,
     register_mission_scoped_hook_exception,
 )
+from qma.daemon.telemetry.store import TelemetryStore
 from qma.wire.vocabulary import WireQuery
 from qmf.core import Ok, Result, is_ok, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -400,9 +403,7 @@ class AgentAuthoredHookRegistrar:
         default_factory=dict[str, ApprovedHookTemplate]
     )
     _missions: dict[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
-    _exit_stacks: dict[str, MissionExitStack] = field(
-        default_factory=dict[str, MissionExitStack]
-    )
+    _exit_stacks: dict[str, MissionExitStack] = field(default_factory=dict[str, MissionExitStack])
     _registrations: dict[str, MissionHookRegistration] = field(
         default_factory=dict[str, MissionHookRegistration]
     )
@@ -464,6 +465,22 @@ class AgentAuthoredHookRegistrar:
         self._exit_stacks[mid] = stack
         self._by_mission.setdefault(mid, [])
         return Ok(stack)
+
+    def emit_telemetry(
+        self,
+        raw: Mapping[str, object],
+        *,
+        authored_by: str = "agent",
+        store: TelemetryStore | None = None,
+    ) -> Result[TelemetryRecord]:
+        """Agents must not write the QMA telemetry plane (FR-PG-22; SCN-0027 D)."""
+        target = store if store is not None else TelemetryStore()
+        return emit_telemetry_from_hook(
+            target,
+            raw,
+            source=HookSource.MISSION,
+            authored_by=authored_by,
+        )
 
     def register(
         self,
@@ -557,9 +574,7 @@ class AgentAuthoredHookRegistrar:
             return exception_gate
 
         requested = (
-            frozenset(permissions)
-            if permissions is not None
-            else frozenset(template.permissions)
+            frozenset(permissions) if permissions is not None else frozenset(template.permissions)
         )
         for perm in requested:
             if perm.strip() == "":
@@ -597,8 +612,7 @@ class AgentAuthoredHookRegistrar:
         else:
             return invalid_input(
                 "correlation_id",
-                "registration journal entry requires a non-empty correlation_id "
-                "(FR-Q35; AD-11)",
+                "registration journal entry requires a non-empty correlation_id (FR-Q35; AD-11)",
                 given=repr(correlation_id),
             )
 
@@ -795,7 +809,5 @@ class AgentAuthoredHookRegistrar:
     def folded_under_mission(self, mission_id: str) -> tuple[MissionHookRegistration, ...]:
         """Inspect definition-store fold rows for one Mission."""
         return tuple(
-            self._fold[rid]
-            for rid in self._by_mission.get(mission_id, ())
-            if rid in self._fold
+            self._fold[rid] for rid in self._by_mission.get(mission_id, ()) if rid in self._fold
         )
