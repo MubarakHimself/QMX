@@ -26,13 +26,16 @@ from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRef
 
 __all__ = [
     "EFFECT_RETRY_BY_CLASS",
+    "HOST_RETRY_EFFECT_CLASSES",
     "RECONCILE_POLICIES",
     "EffectOutcome",
     "apply_effect_outcome",
     "cas_config_revision",
     "effect_retry_kind",
+    "host_retry_applies",
     "may_retry_effect",
     "parse_reconcile_policy",
+    "parse_retryability",
     "place_run_identity",
     "reconcile_external_egress",
 ]
@@ -49,6 +52,11 @@ EFFECT_RETRY_BY_CLASS: Final[Mapping[EffectClass, EffectRetryOutcome]] = Mapping
         EffectClass.PLACE_RUN: EffectRetryOutcome.RUN_IDENTITY,
         EffectClass.EXTERNAL_EGRESS: EffectRetryOutcome.RECEIPT_OR_UNKNOWN,
     }
+)
+
+# Derived from Story 54.3 — do not add classes here; that would loosen the matrix.
+HOST_RETRY_EFFECT_CLASSES: Final[frozenset[EffectClass]] = frozenset(
+    effect for effect, kind in EFFECT_RETRY_BY_CLASS.items() if kind is EffectRetryOutcome.MAY_RETRY
 )
 
 _Disposition = Literal[
@@ -101,6 +109,40 @@ def may_retry_effect(effect_class: object) -> Result[bool]:
     if not isinstance(kind, Ok):
         return kind
     return Ok(kind.value is EffectRetryOutcome.MAY_RETRY)
+
+
+def parse_retryability(value: object) -> Result[Retryability]:
+    """Parse CT-04 retryability. Host retry is on when the value is not ``no``."""
+    if isinstance(value, Retryability):
+        return Ok(value)
+    if isinstance(value, str):
+        try:
+            return Ok(Retryability(value))
+        except ValueError:
+            return _invalid(
+                "retryability",
+                "retryability is yes | no | after-condition",
+                given=value,
+            )
+    return _invalid(
+        "retryability",
+        "retryability is yes | no | after-condition",
+        given=repr(value),
+    )
+
+
+def host_retry_applies(*, effect_class: object, retryability: object) -> Result[bool]:
+    """Default host retry is on only for ``none`` / ``read`` when retryability is not ``NO``.
+
+    Does not loosen the Story 54.3 matrix: other effect classes stay off.
+    """
+    allowed = may_retry_effect(effect_class)
+    if not isinstance(allowed, Ok):
+        return allowed
+    parsed = parse_retryability(retryability)
+    if not isinstance(parsed, Ok):
+        return parsed
+    return Ok(bool(allowed.value and parsed.value is not Retryability.NO))
 
 
 def cas_config_revision(*, bound: object, live: object) -> Result[int]:

@@ -24,6 +24,7 @@ import qma.daemon.persistence
 import qma.daemon.plugins
 import qma.daemon.process
 import qma.daemon.proxy
+import qma.daemon.retry
 import qma.daemon.scheduler
 import qma.daemon.sessions
 import qma.daemon.staging
@@ -61,6 +62,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.operator_log,
         qma.daemon.plugins,
         qma.daemon.process,
+        qma.daemon.retry,
         qma.daemon.telemetry,
     )
     assert all(m.__doc__ for m in modules)
@@ -85,6 +87,8 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
     assert qma.daemon.TelemetryStore.__name__ == "TelemetryStore"
     assert qma.daemon.RetentionJob.__name__ == "RetentionJob"
+    assert qma.daemon.HostRetryLoop.__name__ == "HostRetryLoop"
+    assert qma.daemon.retry.HostRetryLoop is qma.daemon.HostRetryLoop
     assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler
     from qma.daemon.experiments import ExperimentSpecService
     from qma.daemon.ledgers import ExperimentLedger, TaskLedgerStore

@@ -82,6 +82,15 @@ from qma.daemon.plugins import (
     claim_gap_0098_closed,
 )
 from qma.daemon.process import DaemonProcess
+from qma.daemon.retry import (
+    EFFECT_CLASS_TYPES_EXISTED_AT_INSPECT_SHA,
+    HOST_RETRY_LOOP_EXISTED_AT_INSPECT_SHA,
+    RECONCILE_POLICY_TYPES_EXISTED_AT_INSPECT_SHA,
+    HostRetryLoop,
+    HostRetryResult,
+    claim_effect_class_or_reconcile_policy_absent_at_inspect_sha,
+    claim_host_retry_loop_at_inspect_sha,
+)
 from qma.daemon.sessions import (
     PRODUCT_SESSION_EXISTED_AT_INSPECT_SHA,
     PRODUCT_SESSION_OCCUPANCY,
@@ -120,8 +129,10 @@ __all__ = [
     "DIAGNOSIS_EXISTED_AT_INSPECT_SHA",
     "DIAGNOSIS_OWNER",
     "DIAGNOSIS_QUERY_NAME",
+    "EFFECT_CLASS_TYPES_EXISTED_AT_INSPECT_SHA",
     "FEDERATED_SEARCH_OCCUPANCY",
     "FOURTH_OBSERVABILITY_COMP_MINTED",
+    "HOST_RETRY_LOOP_EXISTED_AT_INSPECT_SHA",
     "LOGS_ARE_NOT_EVIDENCE",
     "LOGS_ARE_NOT_JOURNALS",
     "OPERATOR_LOGGER_EXISTED_AT_INSPECT_SHA",
@@ -130,6 +141,7 @@ __all__ = [
     "PRODUCT_SESSION_OCCUPANCY",
     "PRODUCT_SESSION_OWNER",
     "QMB_LOGSINK_MAY_REMAIN",
+    "RECONCILE_POLICY_TYPES_EXISTED_AT_INSPECT_SHA",
     "THIRD_LOGGER_MINTED",
     "AdmissionPipeline",
     "AgentCapabilityStore",
@@ -151,6 +163,8 @@ __all__ = [
     "FoldMetadata",
     "GovernedVariableRegistry",
     "HookRegistry",
+    "HostRetryLoop",
+    "HostRetryResult",
     "JsonLineFormatter",
     "KnowledgeService",
     "KnowledgeSourceRegistry",
@@ -176,7 +190,9 @@ __all__ = [
     "__version__",
     "claim_diagnosis_query_at_inspect_sha",
     "claim_durable_edges_at_inspect_sha",
+    "claim_effect_class_or_reconcile_policy_absent_at_inspect_sha",
     "claim_gap_0098_closed",
+    "claim_host_retry_loop_at_inspect_sha",
     "claim_operator_logger_at_inspect_sha",
     "classify_failure_class",
     "configure_daemon_logging",

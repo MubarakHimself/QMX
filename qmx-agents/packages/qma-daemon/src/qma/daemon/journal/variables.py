@@ -29,6 +29,8 @@ from qmf.core import Ok, Result, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
+    "HOST_RETRY_ATTEMPT_CEILING_KEY",
+    "HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY",
     "REGISTRY_HOME",
     "STORE_BACKUP_CADENCE_KEY",
     "STORE_FULL_RESTORE_REHEARSAL_CADENCE_KEY",
@@ -49,6 +51,8 @@ __all__ = [
 VARIABLE_SET_COMMAND: Final[str] = "variable.set"
 VARIABLE_SET_EVENT: Final[str] = "variable.set"
 REGISTRY_HOME: Final[str] = "registry"
+HOST_RETRY_ATTEMPT_CEILING_KEY: Final[str] = "host.retry_attempt_ceiling"
+HOST_RETRY_ATTEMPT_CEILING_REGISTRY_KEY: Final[str] = "registry:host.retry_attempt_ceiling"
 
 # Cite by key — never copy a registry value into code (FR-Q36; AD-26).
 STORE_BACKUP_CADENCE_KEY: Final[str] = "registry:store.backup_cadence"
@@ -263,6 +267,15 @@ def builtin_qma_variable_rows() -> tuple[VariableRow, ...]:
             value_type="count",
             units="count",
             default=2,
+        ),
+        _row(
+            HOST_RETRY_ATTEMPT_CEILING_KEY,
+            owning_subsystem=daemon,
+            scope=g,
+            value_type="count",
+            units="count",
+            # GAP-0108 / cheap-veto A9: registry row exists; this story mints no number.
+            default=None,
         ),
         _row(
             "rlm.fanout_cost_ceiling_usd",

@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from qma.core.operations import (
     EFFECT_RETRY_BY_CLASS,
+    HOST_RETRY_EFFECT_CLASSES,
     RECONCILE_POLICIES,
     apply_effect_outcome,
     cas_config_revision,
     effect_retry_kind,
+    host_retry_applies,
     may_retry_effect,
     parse_reconcile_policy,
+    parse_retryability,
     place_run_identity,
     reconcile_external_egress,
 )
@@ -27,6 +30,7 @@ from qma.core.refusals import (
 )
 from qma.core.vocabulary import EffectClass, EffectRetryOutcome, JobHandleState, ReconcilePolicy
 from qmf.core import is_ok, is_refusal
+from qmf.core.refusal import Retryability
 
 
 def test_every_effect_class_has_a_closed_retry_outcome() -> None:
@@ -63,6 +67,27 @@ def test_reconcile_policy_is_the_closed_ad24_set() -> None:
     refused = parse_reconcile_policy("blind-retry")
     assert is_refusal(refused)
     assert refused.context["field"] == "reconcile_policy"
+
+
+def test_host_retry_applies_only_to_none_and_read_when_retryability_is_not_no() -> None:
+    assert frozenset({EffectClass.NONE, EffectClass.READ}) == HOST_RETRY_EFFECT_CLASSES
+    yes = parse_retryability("yes")
+    assert is_ok(yes) and yes.value is Retryability.YES
+    after = parse_retryability(Retryability.AFTER_CONDITION)
+    assert is_ok(after)
+    for effect in ("none", "read"):
+        applies_yes = host_retry_applies(effect_class=effect, retryability="yes")
+        applies_after = host_retry_applies(
+            effect_class=effect,
+            retryability=Retryability.AFTER_CONDITION,
+        )
+        applies_no = host_retry_applies(effect_class=effect, retryability="no")
+        assert is_ok(applies_yes) and applies_yes.value is True
+        assert is_ok(applies_after) and applies_after.value is True
+        assert is_ok(applies_no) and applies_no.value is False
+    for effect in ("append-evidence", "mutate-config", "place-run", "external-egress"):
+        applies = host_retry_applies(effect_class=effect, retryability="yes")
+        assert is_ok(applies) and applies.value is False
 
 
 def test_none_and_read_may_retry() -> None:

@@ -50,6 +50,7 @@ from qma.core.ports.jobs import JobHandle
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.daemon.discovery.listing import ContributionListingService
 from qma.daemon.envs.jobs import JobHandleService
+from qma.daemon.retry import HostRetryLoop, HostRetryResult
 from qma.daemon.sessions.chrome import ProductSessionChrome
 from qma.daemon.sessions.grant_binding import BoundSessionGrant
 from qma.daemon.sessions.product_session import (
@@ -63,13 +64,18 @@ from qma.daemon.sessions.product_session import (
     ReconnectSnapshot,
     refuse_reconnect_replays_intent,
 )
-from qma.daemon.staging.change_request import ChangeRequest, ChangeRequestFixture
+from qma.daemon.staging.change_request import (
+    ChangeApplyRecord,
+    ChangeRequest,
+    ChangeRequestFixture,
+)
 from qma.wire.contribution_listing import refuse_hit_as_grant
 from qma.wire.copilot_profile import parse_wire_copilot_profile
 from qma.wire.invocation_envelope import (
     BoundInvocation,
     ContributionRecord,
     InstanceRecord,
+    InvocationEnvelope,
     PublicCallTransport,
 )
 from qmf.core.refusal import Ok, Result, is_refusal
@@ -104,10 +110,6 @@ _DEFAULT_CONTRIBUTION: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
-def _invalid(field: str, reason: str, **extra: object) -> Result[object]:
-    return invalid_input(field, reason, **extra)
-
-
 @dataclass
 class CopilotHost:
     """One copilot product identity over independently scoped ``psess:`` seats."""
@@ -115,6 +117,7 @@ class CopilotHost:
     sessions: ProductSessionService = field(default_factory=ProductSessionService)
     jobs: JobHandleService = field(default_factory=JobHandleService)
     listings: ContributionListingService | None = None
+    retry_loop: HostRetryLoop = field(default_factory=HostRetryLoop)
     chrome: ProductSessionChrome = field(init=False)
     changes: ChangeRequestFixture = field(init=False)
     _published: set[str] = field(default_factory=set[str], init=False)
@@ -356,6 +359,14 @@ class CopilotHost:
             union_grants=union_grants,
         )
 
+    def retry_public_call(
+        self,
+        envelope: object,
+        call: Callable[[InvocationEnvelope], Result[object]],
+    ) -> Result[HostRetryResult]:
+        """Host retries none/read flakes on the same logical_invocation_id."""
+        return self.retry_loop.run(envelope, call)
+
     def submit_job(
         self,
         *,
@@ -481,7 +492,7 @@ class CopilotHost:
         from_session: object,
         operator_principal: object,
         applied_at: object,
-    ) -> Result[object]:
+    ) -> Result[ChangeApplyRecord]:
         """Story 58.4 remains the apply oracle. App-use cannot apply."""
         loaded = self.sessions.get(from_session)
         if is_refusal(loaded):
