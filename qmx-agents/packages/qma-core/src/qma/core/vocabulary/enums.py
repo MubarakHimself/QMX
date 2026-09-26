@@ -26,6 +26,7 @@ __all__ = [
     "EnvironmentLifecycle",
     "ExecutionEnvironmentKind",
     "ExecutionModel",
+    "FailureClass",
     "GovernedAct",
     "GrantEvaluationMoment",
     "GraphArtifactKind",
@@ -613,6 +614,21 @@ class CallerKind(StrEnum):
     USER = "user"
     AGENT = "agent"
     WORKFLOW = "workflow"
+
+
+class FailureClass(StrEnum):
+    """Closed kit diagnosis failure_class (kit AD-5; DEC-0456; cheap-veto A7).
+
+    ``view`` means a wire DTO failed to mount, was stale, or was unhealthy —
+    it is not an invoke. Distinct from QMN alert ``failure_class`` and from
+    CT-04 ``RefusalCategory``. Spellings are sitting machinery.
+    """
+
+    GRANT = "grant"
+    WORKFLOW = "workflow"
+    VIEW = "view"
+    DEPENDENCY = "dependency"
+    HOST = "host"
 
 
 class EffectRetryOutcome(StrEnum):

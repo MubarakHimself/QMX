@@ -189,6 +189,17 @@ class JobHandleStore:
             return None
         return self._by_id.get(job_id)
 
+    def for_correlation(self, correlation_id: str) -> JobHandle | None:
+        """Join a JobHandle by correlation_id (diagnosis join key, never fp1)."""
+        if not correlation_id:
+            return None
+        matches = [
+            handle for handle in self._by_id.values() if handle.correlation_id == correlation_id
+        ]
+        if not matches:
+            return None
+        return matches[-1]
+
     def put(self, handle: JobHandle) -> JobHandle:
         self._by_id[handle.job_id] = handle
         self._by_task[handle.task_id] = handle.job_id
@@ -255,6 +266,9 @@ class JobHandleService:
 
     def handle_for_task(self, task_id: str) -> JobHandle | None:
         return self._store.for_task(task_id)
+
+    def handle_for_correlation(self, correlation_id: str) -> JobHandle | None:
+        return self._store.for_correlation(correlation_id)
 
     def snapshot(self) -> tuple[Mapping[str, object], ...]:
         return self._store.snapshot()

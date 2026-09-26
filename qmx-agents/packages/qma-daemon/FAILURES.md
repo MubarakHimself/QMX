@@ -42,7 +42,11 @@ ExperimentSpec successor via `create_successor` plus the existing CT-07
 through FR-72). Epic 61 Story 61.1 adds stdlib JSON-lines operator logs:
 secret values, a fourth observability COMP, a new sqlite class, and a
 claim that the logger existed at inspect SHA `34c148b` are refused
-(FR-74 through FR-76).
+(FR-74 through FR-76). Epic 61 Story 61.2 adds the headless diagnosis
+query: invented `failure_class`, `view` as an invoke, join on `fp1`,
+QMN alert nouns, forbidden JobHandle states, a fourth store, and a
+claim that the query existed at inspect SHA `34c148b` are refused
+(FR-77 through FR-82).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -1164,3 +1168,80 @@ claim that the logger existed at inspect SHA `34c148b` are refused
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** do not treat inspect-SHA fixtures as
   proof the daemon already logged JSON-lines.
+
+### FR-77: Invented or QMN alert failure_class is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-19; NFR-PG-14; DEC-0456).
+- **Detection:** diagnosis parse accepts only closed kit
+  `grant | workflow | view | dependency | host`. `widget`, QMN alert
+  nouns (`money-boundary`, `protection-escalation`, `silent-degradation`),
+  and CT-04 category names used as kit class are refused.
+  `qmn/FAILURES.md` is not extended.
+- **Auto-recovery / retry:** none — emit a closed kit class.
+- **Visible degraded state:** the diagnosis query does not return; the
+  failed run's JobHandle and logs are unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** “it broke” is never an untyped string.
+  Ask why with a closed `failure_class`. QMN alerts stay QMN.
+
+### FR-78: view diagnosis as an invoke is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-19; DEC-0456).
+- **Detection:** `failure_class=view` with a JobHandle, or a
+  `view_reason` on a non-view class, is refused. `view` means the wire
+  DTO failed to mount, was stale, or was unhealthy.
+- **Auto-recovery / retry:** none — remount or refresh the DTO; do not
+  invoke.
+- **Visible degraded state:** no JobHandle is accepted for a view
+  failure; occupancy stays none.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a stale widget is not an invoke failure.
+
+### FR-79: Joining diagnosis on fp1 is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-20; DEC-0456).
+- **Detection:** `correlation_id` that looks like `fp1` or a diagnosis
+  payload carrying `fp1` identity is refused. The join key is
+  `correlation_id`.
+- **Auto-recovery / retry:** none — copy the originating
+  `correlation_id` verbatim.
+- **Visible degraded state:** the query does not return a diagnosis.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** join logs, JobHandle, and refusal on
+  `correlation_id`, never a fingerprint.
+
+### FR-80: JobHandle succeeded or awaiting_approval on diagnosis is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-PG-20; Story 57.3).
+- **Detection:** diagnosis `job_handle.state` of `succeeded` or
+  `awaiting_approval` is refused. Parent AD-17 vocabulary only.
+- **Auto-recovery / retry:** none — use `done | failed | cancelled |
+  aborted | queued | running | unknown`.
+- **Visible degraded state:** the diagnosis query does not return.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** JobHandle never says `succeeded`;
+  `awaiting_approval` is a Mission/Task gate, not a handle state.
+
+### FR-81: A fourth store for diagnosis is refused
+
+- **Failure class:** `policy rejection` (CT-04; NFR-PG-02; DEC-0456).
+- **Detection:** `mint_diagnosis_sqlite_class` / `refuse_diagnosis_fourth_store`
+  always refuse. How-it-failed is the log line plus JobHandle
+  `attempt_id` plus typed refusal. Closed AD-6 store list is unchanged.
+- **Auto-recovery / retry:** none — query existing surfaces.
+- **Visible degraded state:** no diagnosis sqlite class is minted.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** diagnosis is a query, not a new database.
+
+### FR-82: Claiming the diagnosis query existed at inspect SHA 34c148b is refused
+
+- **Failure class:** `policy rejection` (CT-04; NFR-PG-04; DEC-0465).
+- **Detection:** `claim_diagnosis_query_at_inspect_sha(True)` refuses.
+  Kit `failure_class` diagnosis was absent at `34c148b`. Story 61.2 is
+  the first query.
+- **Auto-recovery / retry:** none — record honesty as absent-then-landed.
+- **Visible degraded state:** the claim is refused; current query after
+  this story is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** do not treat inspect-SHA fixtures as
+  proof this diagnosis query already existed.

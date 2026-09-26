@@ -21,7 +21,8 @@
         "list_mission_hooks",
         "plugin_install_preflight",
         "facade_search",
-        "facade_get"
+        "facade_get",
+        "get_diagnosis"
       ]
     },
     "args": { "type": "object" }

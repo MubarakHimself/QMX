@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/diagnosis.v1.schema.json",
+  "title": "QMA kit diagnosis query DTO (CT-40 additive; Story 61.2)",
+  "description": "Headless diagnosis of a failed public operation or Task Graph run (kit AD-5; DEC-0456). Returns failure_class grant|workflow|view|dependency|host, job_handle or null, correlation_id, and healthy. How-it-failed is the operator log line plus JobHandle attempt_id plus typed refusal. view is mount/stale/unhealthy of a wire DTO, not an invoke. correlation_id is the join key (never fp1). No new CT number — do not mint CT-52. Absent at inspect SHA 34c148b.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "failure_class",
+    "job_handle",
+    "correlation_id",
+    "healthy",
+    "how_it_failed"
+  ],
+  "properties": {
+    "failure_class": {
+      "type": "string",
+      "enum": ["grant", "workflow", "view", "dependency", "host"]
+    },
+    "job_handle": {
+      "type": ["object", "null"]
+    },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "healthy": { "type": "boolean" },
+    "view_reason": {
+      "type": "string",
+      "enum": ["unmounted", "stale", "unhealthy"]
+    },
+    "how_it_failed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["log_line", "attempt_id", "refusal"],
+      "properties": {
+        "log_line": {
+          "type": "object",
+          "required": ["ts", "level", "event", "correlation_id"],
+          "properties": {
+            "ts": { "type": "string", "minLength": 1 },
+            "level": { "type": "string", "minLength": 1 },
+            "event": { "type": "string", "minLength": 1 },
+            "correlation_id": { "type": "string", "minLength": 1 }
+          }
+        },
+        "attempt_id": { "type": ["integer", "null"], "minimum": 1 },
+        "refusal": {
+          "type": "object",
+          "required": ["category", "retryability", "context"],
+          "properties": {
+            "category": { "type": "string", "minLength": 1 },
+            "retryability": { "type": "string", "minLength": 1 },
+            "context": { "type": "object" },
+            "after_condition_descriptor": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

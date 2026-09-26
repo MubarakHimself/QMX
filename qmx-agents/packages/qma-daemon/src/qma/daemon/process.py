@@ -39,6 +39,16 @@ from qma.core.ports.qmb import (
 )
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.daemon.backtest.service import BacktestingService
+from qma.daemon.diagnosis import (
+    DIAGNOSIS_EXISTED_AT_INSPECT_SHA,
+    DIAGNOSIS_SQLITE_CLASS_MINTED,
+    QMN_FAILURES_MD_EXTENDED_BY_KIT,
+    Diagnosis,
+    DiagnosisQueryService,
+    claim_diagnosis_query_at_inspect_sha,
+    refuse_diagnosis_fourth_store,
+    refuse_qmn_alert_failure_class,
+)
 from qma.daemon.experiments import EXPERIMENT_SQLITE_TABLES, ExperimentSpecService
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.clock import InjectedUtcClock
@@ -149,6 +159,7 @@ class DaemonProcess:
         self._accepted = 0
         self._closed = False
         self._operator_logger = configure_daemon_logging()
+        self._diagnosis = DiagnosisQueryService()
 
     @classmethod
     def compose(
@@ -435,6 +446,55 @@ class DaemonProcess:
         """Refused — operator logs do not enter fp1 identity."""
         return refuse_operator_log_fp1(payload)
 
+    def diagnose_failure(
+        self,
+        *,
+        correlation_id: str,
+        refusal: object,
+        healthy: bool,
+        log_line: Mapping[str, object],
+        failure_class: object = None,
+        job_handle: object = None,
+        view_reason: str | None = None,
+    ) -> Result[Diagnosis]:
+        """Headless diagnosis of a failed public operation or Task Graph run."""
+        from qmf.core.refusal import TypedRefusal  # noqa: PLC0415
+
+        if not isinstance(refusal, TypedRefusal):
+            return policy_rejection(
+                "refusal",
+                "how-it-failed includes a typed refusal (FR-PG-20)",
+                given=type(refusal).__name__,
+            )
+        return self._diagnosis.observe(
+            correlation_id=correlation_id,
+            refusal=refusal,
+            healthy=healthy,
+            log_line=log_line,
+            failure_class=failure_class,
+            job_handle=job_handle,
+            view_reason=view_reason,
+        )
+
+    def get_diagnosis(self, correlation_id: str) -> Result[Diagnosis]:
+        """CT-40 ``get_diagnosis`` query — join on correlation_id, never fp1."""
+        return self._diagnosis.query(correlation_id)
+
+    def claim_diagnosis_query_at_inspect_sha(self, existed: object) -> Result[bool]:
+        """Claiming this diagnosis query existed at 34c148b fails."""
+        return claim_diagnosis_query_at_inspect_sha(existed)
+
+    def mint_diagnosis_sqlite_class(self) -> Result[None]:
+        """Refused — diagnosis is not a fourth store."""
+        return refuse_diagnosis_fourth_store(
+            minted=DIAGNOSIS_SQLITE_CLASS_MINTED,
+            on_closed_list="diagnosis" in self.sqlite_table_names(),
+        )
+
+    def use_qmn_alert_failure_class(self, value: object) -> Result[None]:
+        """Refused — QMN alert failure_class is a different noun."""
+        return refuse_qmn_alert_failure_class(given=repr(value))
+
     async def bind(self) -> Result[BoundListener]:
         """Bind the loopback listener. Does not start an HTTP experiment service."""
         if self._closed:
@@ -573,6 +633,10 @@ class DaemonProcess:
                 "qmn_failures_extended": QMN_FAILURES_MD_EXTENDED,
                 "telemetry_store_remains": TELEMETRY_STORE_REMAINS_TRACE_METRIC_PLANE,
                 "otel_export_port_only": OTEL_REMAINS_EXPORT_PORT_ONLY,
+                "diagnosis_query": True,
+                "diagnosis_existed_at_inspect_sha": DIAGNOSIS_EXISTED_AT_INSPECT_SHA,
+                "diagnosis_sqlite_class": DIAGNOSIS_SQLITE_CLASS_MINTED,
+                "qmn_alert_failure_class_is_kit": QMN_FAILURES_MD_EXTENDED_BY_KIT,
             }
         )
 

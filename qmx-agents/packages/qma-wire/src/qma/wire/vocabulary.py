@@ -38,8 +38,9 @@ SEED_EVENT_COUNT: Final[int] = 10
 SEED_VOCABULARY_COUNT: Final[int] = SEED_COMMAND_COUNT + SEED_QUERY_COUNT + SEED_EVENT_COUNT
 # Closed-and-addable extensions beyond the packet seed:
 # list_mission_hooks (FR-Q35; AD-11), plugin_install_preflight (FR-Q69; AD-21),
-# and facade_search / facade_get for federated discovery (FR-RES-18; DEC-0449).
-ADDABLE_QUERY_COUNT: Final[int] = 4
+# facade_search / facade_get for federated discovery (FR-RES-18; DEC-0449),
+# and get_diagnosis for kit failure_class (Story 61.2; DEC-0456).
+ADDABLE_QUERY_COUNT: Final[int] = 5
 
 
 class MessageFamily(StrEnum):
@@ -73,9 +74,10 @@ class WireQuery(StrEnum):
 
     The seven packet-seed queries (DEC-0304, DEC-0331) plus ``list_mission_hooks``
     (FR-Q35; AD-11), ``plugin_install_preflight`` returning rollback mode
-    (FR-Q69; AD-21), and ``facade_search`` / ``facade_get`` for the federated
+    (FR-Q69; AD-21), ``facade_search`` / ``facade_get`` for the federated
     discovery DTO KnowledgeHit | ArtifactHit | ContributionHit (FR-RES-18;
-    DEC-0449; Story 53.1). The packet seed ``get bot`` reads ``get_quant``
+    DEC-0449; Story 53.1), and ``get_diagnosis`` for kit ``failure_class``
+    (Story 61.2; DEC-0456). The packet seed ``get bot`` reads ``get_quant``
     under the Bot-to-Quant rule.
     """
 
@@ -90,6 +92,7 @@ class WireQuery(StrEnum):
     PLUGIN_INSTALL_PREFLIGHT = "plugin_install_preflight"
     FACADE_SEARCH = "facade_search"
     FACADE_GET = "facade_get"
+    GET_DIAGNOSIS = "get_diagnosis"
 
 
 class WireEvent(StrEnum):

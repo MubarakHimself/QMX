@@ -9,6 +9,7 @@ import qma.daemon
 import qma.daemon.bus
 import qma.daemon.capabilities
 import qma.daemon.context
+import qma.daemon.diagnosis
 import qma.daemon.envs
 import qma.daemon.experiments
 import qma.daemon.handles
@@ -54,6 +55,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.experiments,
         qma.daemon.handles,
         qma.daemon.context,
+        qma.daemon.diagnosis,
         qma.daemon.operator_log,
         qma.daemon.plugins,
         qma.daemon.process,
